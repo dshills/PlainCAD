@@ -40,6 +40,7 @@ export function rebuildDocument(document: CadDocument): RebuildResult {
 
   const bodies: CadBody[] = [];
   const meshes = [];
+  const shapesToDispose = [];
 
   if (errors.length === 0) {
     for (const feature of document.features) {
@@ -61,6 +62,7 @@ export function rebuildDocument(document: CadDocument): RebuildResult {
       }
       try {
         const shape = kernel.extrudeProfile(profile, distance.quantity.value);
+        shapesToDispose.push(shape);
         const mesh = kernel.tessellate(shape, { linearDeflection: 0.5, angularDeflection: 0.2 });
         meshes.push(mesh);
         bodies.push({ id: shape.id, name: feature.name, featureId: feature.id });
@@ -68,6 +70,10 @@ export function rebuildDocument(document: CadDocument): RebuildResult {
         errors.push({ id: `kernel:${feature.id}`, source: "kernel", sourceId: feature.id, message: error instanceof Error ? error.message : String(error) });
       }
     }
+  }
+
+  for (const shape of shapesToDispose) {
+    kernel.disposeShape?.(shape);
   }
 
   return {

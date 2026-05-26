@@ -35,5 +35,6 @@ export interface KernelAdapter {
   fillet?(shape: KernelShape, edgeRefs: TopologyRef[], radius: number): KernelShape;
   tessellate(shape: KernelShape, options: TessellationOptions): RenderMesh;
   exportStl(shape: KernelShape): ArrayBuffer;
+  disposeShape?(shape: KernelShape): void;
   exportStep?(shape: KernelShape): ArrayBuffer;
 }
