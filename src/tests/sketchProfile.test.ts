@@ -30,9 +30,11 @@ describe("sketch helpers and profile detection", () => {
     const sketch = addCircleAt(createXySketch(), "5mm", "6mm", "4mm");
     const solved = solveSketch(sketch, {});
     const profiles = detectProfiles(solved);
+    const circle = Object.values(sketch.entities).find((entity) => entity.type === "circle")!;
     expect(profiles.errors).toEqual([]);
     expect(profiles.profiles).toHaveLength(1);
     expect(profiles.profiles[0].outerLoop.type).toBe("circle");
+    expect(profiles.profiles[0].alternateIds).toContain(`${sketch.id}:profile:${circle.id}`);
     expect(profiles.profiles[0].bounds).toMatchObject({ minX: 1, maxX: 9, minY: 2, maxY: 10 });
   });
 
@@ -51,7 +53,7 @@ describe("sketch helpers and profile detection", () => {
     expect(profiles.errors[0]).toContain("open profile");
   });
 
-  it("reports unsupported triangles without calling them open", () => {
+  it("detects a triangular line-loop profile", () => {
     let sketch = createXySketch();
     const p1 = addPoint(sketch, "0mm", "0mm");
     sketch = p1.sketch;
@@ -63,27 +65,115 @@ describe("sketch helpers and profile detection", () => {
     sketch = addLine(sketch, p2.pointId, p3.pointId).sketch;
     sketch = addLine(sketch, p3.pointId, p1.pointId).sketch;
     const profiles = detectProfiles(solveSketch(sketch, {}));
-    expect(profiles.profiles).toHaveLength(0);
-    expect(profiles.errors[0]).toContain("Triangular profiles");
+    expect(profiles.errors).toEqual([]);
+    expect(profiles.profiles).toHaveLength(1);
+    expect(profiles.profiles[0].outerLoop.entityIds).toHaveLength(3);
   });
 
-  it("reports circles outside a rectangular profile", () => {
+  it("detects circles outside a rectangular profile as separate profiles", () => {
     let sketch = addCenterRectangle(createXySketch(), "20mm", "10mm");
     sketch = addCircleAt(sketch, "20mm", "0mm", "2mm");
     const profiles = detectProfiles(solveSketch(sketch, {}));
-    expect(profiles.profiles).toHaveLength(1);
-    expect(profiles.errors[0]).toContain("outside");
+    expect(profiles.errors).toEqual([]);
+    expect(profiles.profiles).toHaveLength(2);
   });
 
-  it("rejects ambiguous standalone circles", () => {
+  it("detects multiple standalone circle profiles", () => {
     let sketch = addCircleAt(createXySketch(), "0mm", "0mm", "2mm");
     sketch = addCircleAt(sketch, "6mm", "0mm", "2mm");
     const profiles = detectProfiles(solveSketch(sketch, {}));
-    expect(profiles.profiles).toHaveLength(0);
-    expect(profiles.errors[0]).toContain("ambiguous");
+    expect(profiles.errors).toEqual([]);
+    expect(profiles.profiles).toHaveLength(2);
+    expect(profiles.profiles.every((profile) => profile.outerLoop.type === "circle")).toBe(true);
   });
 
-  it("reports mixed partial line and circle geometry as missing an outer profile", () => {
+  it("detects nested circle islands and holes", () => {
+    let sketch = addCircleAt(createXySketch(), "0mm", "0mm", "10mm");
+    sketch = addCircleAt(sketch, "0mm", "0mm", "6mm");
+    sketch = addCircleAt(sketch, "0mm", "0mm", "2mm");
+
+    const profiles = detectProfiles(solveSketch(sketch, {}));
+
+    expect(profiles.errors).toEqual([]);
+    expect(profiles.profiles).toHaveLength(2);
+    expect(profiles.profiles.map((profile) => profile.holes.length).sort()).toEqual([0, 1]);
+  });
+
+  it("detects nested line-loop and circular holes", () => {
+    let sketch = addCenterRectangle(createXySketch(), "100mm", "80mm");
+    sketch = addCornerRectangle(sketch, "20mm", "10mm");
+    sketch = addCircleAt(sketch, "-25mm", "0mm", "5mm");
+
+    const profiles = detectProfiles(solveSketch(sketch, {}));
+
+    expect(profiles.errors).toEqual([]);
+    expect(profiles.profiles).toHaveLength(1);
+    expect(profiles.profiles[0].innerLoops).toHaveLength(2);
+    expect(profiles.profiles[0].holes).toMatchObject([{ x: -25, y: 0, radius: 5 }]);
+  });
+
+  it("detects profile islands inside line-loop holes", () => {
+    let sketch = addCenterRectangle(createXySketch(), "100mm", "80mm");
+    sketch = addCenterRectangle(sketch, "30mm", "20mm");
+    sketch = addCenterRectangle(sketch, "10mm", "8mm");
+    sketch = addCircleAt(sketch, "0mm", "0mm", "2mm");
+
+    const profiles = detectProfiles(solveSketch(sketch, {}));
+
+    expect(profiles.errors).toEqual([]);
+    expect(profiles.profiles).toHaveLength(2);
+    expect(profiles.profiles.filter((profile) => profile.outerLoop.type === "polygon")).toHaveLength(2);
+    expect(profiles.profiles.some((profile) => profile.holes.some((hole) => hole.radius === 2))).toBe(true);
+  });
+
+  it("keeps profile identity stable across ordinary dimension edits", () => {
+    const sketch = addCenterRectangle(createXySketch(), "plate_width", "50mm");
+    const narrow = detectProfiles(solveSketch(sketch, { plate_width: normalizeQuantity(80, "mm") }));
+    const wide = detectProfiles(solveSketch(sketch, { plate_width: normalizeQuantity(120, "mm") }));
+
+    expect(narrow.profiles[0].id).toBe(wide.profiles[0].id);
+    expect(narrow.profiles[0].signature).toBe(wide.profiles[0].signature);
+    expect(narrow.profiles[0].alternateIds).toContain(`${sketch.id}:profile:rectangle`);
+  });
+
+  it("rejects duplicate and self-intersecting line geometry", () => {
+    let duplicate = createXySketch();
+    const a = addPoint(duplicate, "0mm", "0mm");
+    duplicate = a.sketch;
+    const b = addPoint(duplicate, "10mm", "0mm");
+    duplicate = b.sketch;
+    duplicate = addLine(duplicate, a.pointId, b.pointId).sketch;
+    duplicate = addLine(duplicate, b.pointId, a.pointId).sketch;
+    expect(detectProfiles(solveSketch(duplicate, {})).errors[0]).toContain("duplicates");
+
+    let crossing = createXySketch();
+    const p1 = addPoint(crossing, "0mm", "0mm");
+    crossing = p1.sketch;
+    const p2 = addPoint(crossing, "10mm", "10mm");
+    crossing = p2.sketch;
+    const p3 = addPoint(crossing, "0mm", "10mm");
+    crossing = p3.sketch;
+    const p4 = addPoint(crossing, "10mm", "0mm");
+    crossing = p4.sketch;
+    crossing = addLine(crossing, p1.pointId, p2.pointId).sketch;
+    crossing = addLine(crossing, p3.pointId, p4.pointId).sketch;
+    expect(detectProfiles(solveSketch(crossing, {})).errors[0]).toContain("intersect");
+
+    let overlap = createXySketch();
+    const o1 = addPoint(overlap, "0mm", "0mm");
+    overlap = o1.sketch;
+    const o2 = addPoint(overlap, "10mm", "0mm");
+    overlap = o2.sketch;
+    const o3 = addPoint(overlap, "5mm", "0mm");
+    overlap = o3.sketch;
+    const o4 = addPoint(overlap, "15mm", "0mm");
+    overlap = o4.sketch;
+    overlap = addLine(overlap, o1.pointId, o2.pointId).sketch;
+    overlap = addLine(overlap, o3.pointId, o4.pointId).sketch;
+    expect(detectProfiles(solveSketch(overlap, {})).errors[0]).toContain("overlap");
+  });
+
+  it("reports mixed partial line and circle geometry as open", () => {
     let sketch = createXySketch();
     const p1 = addPoint(sketch, "0mm", "0mm");
     sketch = p1.sketch;
@@ -92,7 +182,7 @@ describe("sketch helpers and profile detection", () => {
     sketch = addLine(sketch, p1.pointId, p2.pointId).sketch;
     sketch = addCircleAt(sketch, "5mm", "5mm", "1mm");
     const profiles = detectProfiles(solveSketch(sketch, {}));
-    expect(profiles.errors[0]).toContain("no supported rectangular outer profile");
+    expect(profiles.errors[0]).toContain("open profile");
   });
 
   it("rejects invalid circle radius", () => {

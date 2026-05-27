@@ -60,7 +60,7 @@ export function rebuildDocument(document: CadDocument): RebuildResult {
         continue;
       }
       const profileResult = profilesBySketch.get(feature.sketchId);
-      const profile = profileResult?.profiles.find((item) => item.id === feature.profileId);
+      const profile = profileResult?.profiles.find((item) => item.id === feature.profileId || item.alternateIds?.includes(feature.profileId));
       if (!profile) {
         errors.push({ id: `feature:${feature.id}:profile`, source: "feature", sourceId: feature.id, message: `Extrude failed: profile "${feature.profileId}" was not found in sketch "${feature.sketchId}".` });
         continue;
