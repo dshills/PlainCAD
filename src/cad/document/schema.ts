@@ -16,6 +16,7 @@ export interface CadDocument {
   unitSettings: UnitSettings;
   createdAt: string;
   updatedAt: string;
+  timelineCursor?: number;
   parameters: Record<string, CadParameter>;
   sketches: Record<string, Sketch>;
   features: Feature[];
@@ -43,6 +44,7 @@ export interface Sketch {
   id: string;
   name: string;
   plane: "XY";
+  timelineStep?: number;
   createdAt?: string;
   entities: Record<string, SketchEntity>;
   constraints: SketchConstraint[];
@@ -99,6 +101,7 @@ export interface FeatureBase {
   name: string;
   type: string;
   suppressed?: boolean;
+  timelineStep?: number;
   createdAt?: string;
 }
 

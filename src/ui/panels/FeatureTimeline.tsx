@@ -74,7 +74,7 @@ export function FeatureTimeline({ commandContext = emptyCommandContext }: Featur
   );
 }
 
-function buildTimelineItems(sketches: Sketch[], features: Feature[]): TimelineItem[] {
+export function buildTimelineItems(sketches: Sketch[], features: Feature[]): TimelineItem[] {
   const sketchById = new Map(sketches.map((sketch) => [sketch.id, sketch]));
   const firstFeatureTimeBySketchId = new Map<string, string>();
   features.forEach((feature) => {
@@ -83,29 +83,55 @@ function buildTimelineItems(sketches: Sketch[], features: Feature[]): TimelineIt
       firstFeatureTimeBySketchId.set(sketchId, feature.createdAt);
     }
   });
-
-  return [
+  const records = [
     ...sketches.map((sketch, index) => ({
       item: { kind: "sketch", sketch } as TimelineItem,
+      timelineStep: sketch.timelineStep,
       order: sketch.createdAt ?? firstFeatureTimeBySketchId.get(sketch.id),
       fallbackIndex: index,
     })),
     ...features.map((feature, index) => ({
       item: { kind: "feature", feature } as TimelineItem,
+      timelineStep: feature.timelineStep,
       order: feature.createdAt,
       fallbackIndex: sketches.length + index,
     })),
-  ]
+  ];
+  const legacyOrder = records
+    .filter((record) => record.timelineStep === undefined)
+    .sort(compareLegacyTimelineRecords);
+  const legacyRankByIndex = new Map(legacyOrder.map((record, index) => [record.fallbackIndex, index + 1]));
+
+  return records
     .sort((a, b) => {
-      if (a.order && b.order) {
-        const byTime = a.order.localeCompare(b.order);
-        if (byTime !== 0) return byTime;
-      }
-      if (a.order && !b.order) return -1;
-      if (!a.order && b.order) return 1;
-      return a.fallbackIndex - b.fallbackIndex;
+      const byStep = effectiveTimelineStep(a, legacyRankByIndex) - effectiveTimelineStep(b, legacyRankByIndex);
+      if (byStep !== 0) return byStep;
+      return compareLegacyTimelineRecords(a, b);
     })
     .map(({ item }) => item);
+}
+
+function effectiveTimelineStep(
+  record: { timelineStep?: number; fallbackIndex: number },
+  legacyRankByIndex: Map<number, number>,
+): number {
+  const legacyCount = legacyRankByIndex.size;
+  return record.timelineStep === undefined
+    ? legacyRankByIndex.get(record.fallbackIndex) ?? record.fallbackIndex + 1
+    : legacyCount + record.timelineStep;
+}
+
+function compareLegacyTimelineRecords(
+  a: { order?: string; fallbackIndex: number },
+  b: { order?: string; fallbackIndex: number },
+): number {
+  if (a.order !== b.order) {
+    if (a.order && b.order) return a.order.localeCompare(b.order);
+    if (a.order) return -1;
+    if (b.order) return 1;
+  }
+
+  return a.fallbackIndex - b.fallbackIndex;
 }
 
 function featureGlyph(feature: Feature): string {
