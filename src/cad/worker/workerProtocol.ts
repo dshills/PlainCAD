@@ -4,6 +4,8 @@ export interface CadBody {
   id: string;
   name: string;
   featureId?: string;
+  triangleCount?: number;
+  bounds?: RenderMesh["bounds"];
 }
 
 export interface RebuildResult {

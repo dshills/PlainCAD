@@ -8,6 +8,7 @@ import { evaluateParameters } from "../parameters/expressionEvaluator";
 import { validateDocument } from "../document/validate";
 import { RenderMesh } from "../kernel/KernelAdapter";
 import { sketchPlaneTransform } from "../sketch/planes";
+import { planFeatureGraph, stableBodyIdForFeature } from "./featureGraph";
 
 const kernel = new OpenCascadeKernel();
 
@@ -18,6 +19,13 @@ export function rebuildDocument(document: CadDocument): RebuildResult {
   const validation = validateDocument(document);
   for (const issue of validation) {
     errors.push({ id: `validation:${issue.sourceId ?? issue.message}`, source: issue.source === "document" ? "feature" : issue.source, sourceId: issue.sourceId, message: issue.message });
+  }
+  const graphPlan = planFeatureGraph(document);
+  for (const issue of graphPlan.errors) {
+    errors.push({ id: issue.id, source: issue.source, sourceId: issue.sourceId, message: issue.message });
+  }
+  for (const issue of graphPlan.warnings) {
+    warnings.push({ id: issue.id, source: issue.source, sourceId: issue.sourceId, message: issue.message });
   }
 
   const evaluated = evaluateParameters(document.parameters);
@@ -45,7 +53,7 @@ export function rebuildDocument(document: CadDocument): RebuildResult {
   const shapesToDispose = [];
 
   if (errors.length === 0) {
-    for (const feature of document.features) {
+    for (const feature of graphPlan.orderedFeatures) {
       if (feature.suppressed) continue;
       if (feature.type !== "extrude") {
         warnings.push({ id: `feature:${feature.id}`, source: "feature", sourceId: feature.id, message: `${feature.type} is not implemented in the MVP rebuild path.` });
@@ -79,18 +87,17 @@ export function rebuildDocument(document: CadDocument): RebuildResult {
       try {
         const shape = kernel.extrudeProfile(profile, distanceValue);
         shapesToDispose.push(shape);
-        const mesh = transformMeshToSketchPlane(kernel.tessellate(shape, { linearDeflection: 0.5, angularDeflection: 0.2 }), sketch);
+        const bodyId = stableBodyIdForFeature(feature.id);
+        const mesh = withStableBodyId(transformMeshToSketchPlane(kernel.tessellate(shape, { linearDeflection: 0.5, angularDeflection: 0.2 }), sketch), bodyId);
         meshes.push(mesh);
-        bodies.push({ id: shape.id, name: feature.name, featureId: feature.id });
+        bodies.push({ id: bodyId, name: feature.name, featureId: feature.id, triangleCount: Math.floor(mesh.indices.length / 3), bounds: mesh.bounds });
       } catch (error) {
         errors.push({ id: `kernel:${feature.id}`, source: "kernel", sourceId: feature.id, message: error instanceof Error ? error.message : String(error) });
       }
     }
   }
 
-  for (const shape of shapesToDispose) {
-    kernel.disposeShape?.(shape);
-  }
+  shapesToDispose.forEach((shape) => kernel.disposeShape?.(shape));
 
   return {
     documentId: document.id,
@@ -101,6 +108,10 @@ export function rebuildDocument(document: CadDocument): RebuildResult {
     warnings,
     durationMs: performance.now() - started,
   };
+}
+
+function withStableBodyId(mesh: RenderMesh, bodyId: string): RenderMesh {
+  return { ...mesh, id: bodyId, bodyId };
 }
 
 function transformMeshToSketchPlane(mesh: RenderMesh, sketch: CadDocument["sketches"][string]): RenderMesh {

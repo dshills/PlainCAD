@@ -184,14 +184,26 @@ export function InspectorPanel() {
               </div>
               <div>
                 <dt>Triangles</dt>
-                <dd>{bodyMesh.indices.length / 3}</dd>
+                <dd>{body.triangleCount !== undefined ? body.triangleCount : Math.floor(bodyMesh.indices.length / 3)}</dd>
               </div>
+              {body.bounds ? (
+                <div>
+                  <dt>Bounds</dt>
+                  <dd>
+                    {formatBounds(body.bounds.min)} to {formatBounds(body.bounds.max)}
+                  </dd>
+                </div>
+              ) : null}
             </dl>
           ) : null}
         </div>
       ) : null}
     </section>
   );
+}
+
+function formatBounds(value: [number, number, number]): string {
+  return value.map((item) => item.toFixed(3)).join(", ");
 }
 
 function CommitInput({ value, onCommit }: { value: string; onCommit: (value: string) => void }) {
