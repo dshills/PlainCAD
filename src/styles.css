@@ -43,8 +43,8 @@ input:focus-visible {
 
 .app-shell {
   min-height: 100vh;
-  display: grid;
-  grid-template-rows: 58px 1fr;
+  display: flex;
+  flex-direction: column;
 }
 
 .top-toolbar {
@@ -102,7 +102,30 @@ input:focus-visible {
   background: #fff2f1;
 }
 
+.rebuild-pill.loadingKernel,
+.rebuild-pill.queued,
+.rebuild-pill.rebuilding {
+  color: #6c5200;
+  background: #fff8df;
+}
+
+.kernel-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.85rem;
+  border-bottom: 1px solid #ded4a8;
+  background: #fff8df;
+  color: #4c421f;
+  font-size: 0.88rem;
+}
+
+.kernel-banner span {
+  color: #6b6040;
+}
+
 .workspace {
+  flex: 1;
   min-height: 0;
   display: grid;
   grid-template-columns: 285px minmax(360px, 1fr) 360px;

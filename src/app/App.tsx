@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { CadViewer } from "../viewer/CadViewer";
 import { runCommand } from "../ui/commands/commandRegistry";
 import { CommandPalette } from "../ui/commands/CommandPalette";
@@ -13,7 +13,12 @@ export function App() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const documentName = useCadStore((state) => state.history.present.name);
   const rebuild = useCadStore((state) => state.rebuild);
+  const initializeKernel = useCadStore((state) => state.initializeKernel);
   const commandContext = useMemo(() => ({ fileInputRef }), []);
+
+  useEffect(() => {
+    initializeKernel();
+  }, [initializeKernel]);
 
   return (
     <div className="app-shell">
@@ -37,6 +42,12 @@ export function App() {
         </nav>
         <div className={`rebuild-pill ${rebuild.status}`}>{rebuild.status}</div>
       </header>
+      {rebuild.status === "loadingKernel" ? (
+        <div className="kernel-banner" role="status">
+          <strong>Loading CAD kernel...</strong>
+          <span>{rebuild.message ?? "OpenCascade is starting in a worker. Geometry commands will run when it is ready."}</span>
+        </div>
+      ) : null}
       <main className="workspace">
         <aside className="left-panel">
           <SketchPanel />

@@ -14,8 +14,10 @@ export interface HistoryState {
 }
 
 interface RebuildState {
-  status: "idle" | "queued" | "rebuilding" | "succeeded" | "failed";
+  status: "idle" | "loadingKernel" | "queued" | "rebuilding" | "succeeded" | "failed";
   result?: RebuildResult;
+  kernelReady: boolean;
+  message?: string;
 }
 
 interface CadStore {
@@ -32,34 +34,80 @@ interface CadStore {
   undo(): void;
   redo(): void;
   select(selection: SelectionState["selectedIds"][number] | undefined): void;
+  initializeKernel(): void;
   rebuildNow(): void;
 }
 
 const initialDocument = createEmptyDocument();
 const initialRebuild = rebuildDocument(initialDocument);
 let rebuildRequestId = 0;
+let latestKernelInitRequestId = 0;
+let nextWorkerRequestId = 0;
 let geometryWorker: Worker | undefined;
-let latestWorkerResult: (requestId: number, result: RebuildResult) => void = () => undefined;
-let latestWorkerError: (requestId: number, message: string) => void = () => undefined;
+let kernelInitialized = false;
+let kernelInitializing = false;
+let queuedRebuildDocument: CadDocument | undefined;
+let rebuildDebounce: ReturnType<typeof setTimeout> | undefined;
+const pendingWorkerRequests = new Map<
+  number,
+  {
+    kind: WorkerRequest["type"];
+    onResult?: (result: RebuildResult) => void;
+    onError?: (message: string) => void;
+    onInitialized?: () => void;
+  }
+>();
 
-function getGeometryWorker(onResult: (requestId: number, result: RebuildResult) => void, onError: (requestId: number, message: string) => void): Worker | undefined {
+function getGeometryWorker(): Worker | undefined {
   if (typeof Worker === "undefined") return undefined;
-  latestWorkerResult = onResult;
-  latestWorkerError = onError;
   if (!geometryWorker) {
     geometryWorker = new GeometryWorker();
     geometryWorker.onmessage = (event: MessageEvent<WorkerResponse>) => {
-      if (event.data.type === "rebuildResult") latestWorkerResult(event.data.requestId, event.data.result);
-      if (event.data.type === "error") latestWorkerError(event.data.requestId, event.data.message);
+      try {
+        const pending = pendingWorkerRequests.get(event.data.requestId);
+        if (!pending) return;
+        if (event.data.type === "initialized") {
+          pendingWorkerRequests.delete(event.data.requestId);
+          pending.onInitialized?.();
+        }
+        if (event.data.type === "rebuildResult") {
+          pendingWorkerRequests.delete(event.data.requestId);
+          pending.onResult?.(event.data.result);
+        }
+        if (event.data.type === "error") {
+          pendingWorkerRequests.delete(event.data.requestId);
+          pending.onError?.(event.data.message);
+        }
+      } catch (error) {
+        failPendingWorkerRequests(error instanceof Error ? error.message : String(error));
+      }
+    };
+    geometryWorker.onerror = (event) => {
+      failPendingWorkerRequests(event.message || "Geometry worker failed.");
+    };
+    geometryWorker.onmessageerror = () => {
+      failPendingWorkerRequests("Geometry worker sent an unreadable response.");
     };
   }
   return geometryWorker;
 }
 
+function failPendingWorkerRequests(message: string) {
+  const pendingRequests = [...pendingWorkerRequests.values()];
+  pendingWorkerRequests.clear();
+  geometryWorker?.terminate();
+  geometryWorker = undefined;
+  kernelInitialized = false;
+  kernelInitializing = false;
+  for (const pending of pendingRequests) {
+    pending.onError?.(message);
+  }
+}
+
 export const useCadStore = create<CadStore>((set, get) => ({
   history: { past: [], present: initialDocument, future: [] },
   selection: { selectedIds: [] },
-  rebuild: { status: initialRebuild.success ? "succeeded" : "failed", result: initialRebuild },
+  rebuild: { status: initialRebuild.success ? "succeeded" : "failed", result: initialRebuild, kernelReady: false },
   paletteOpen: false,
   setPaletteOpen: (open) => set({ paletteOpen: open }),
   setDocument: (document) => {
@@ -129,18 +177,96 @@ export const useCadStore = create<CadStore>((set, get) => ({
     get().rebuildNow();
   },
   select: (selection) => set({ selection: { selectedIds: selection ? [selection] : [] } }),
+  initializeKernel: () => {
+    if (kernelInitialized || kernelInitializing) return;
+    const requestId = nextRequestId();
+    latestKernelInitRequestId = requestId;
+    kernelInitializing = true;
+    set({ rebuild: { ...get().rebuild, status: "loadingKernel", message: "Loading CAD kernel...", kernelReady: false } });
+    const worker = getGeometryWorker();
+    if (worker) {
+      pendingWorkerRequests.set(requestId, {
+        kind: "initialize",
+        onError: (message) => {
+          if (requestId !== latestKernelInitRequestId) return;
+          kernelInitializing = false;
+          set({
+            rebuild: {
+              status: "failed",
+              result: {
+                documentId: get().history.present.id,
+                success: false,
+                bodies: [],
+                meshes: [],
+                errors: [{ id: `worker:${requestId}`, source: "kernel", message }],
+                warnings: [],
+                durationMs: 0,
+              },
+              kernelReady: false,
+              message,
+            },
+          });
+        },
+        onInitialized: () => {
+          if (requestId !== latestKernelInitRequestId) return;
+          kernelInitializing = false;
+          kernelInitialized = true;
+          set({ rebuild: { ...get().rebuild, status: "queued", kernelReady: true, message: "CAD kernel ready." } });
+          flushQueuedRebuild(set, get);
+        },
+      });
+      const request: WorkerRequest = { type: "initialize", requestId };
+      worker.postMessage(request);
+      return;
+    }
+    kernelInitializing = false;
+    kernelInitialized = true;
+    set({ rebuild: { ...get().rebuild, status: "queued", kernelReady: true, message: "CAD kernel unavailable; using fallback rebuild." } });
+    flushQueuedRebuild(set, get);
+  },
   rebuildNow: () => {
-    const document = get().history.present;
-    const requestId = rebuildRequestId + 1;
-    rebuildRequestId = requestId;
-    set({ rebuild: { ...get().rebuild, status: "rebuilding" } });
-    const worker = getGeometryWorker(
-      (responseId, result) => {
-        if (responseId !== rebuildRequestId) return;
-        set({ rebuild: { status: result.success ? "succeeded" : "failed", result } });
+    queuedRebuildDocument = get().history.present;
+    if (rebuildDebounce) clearTimeout(rebuildDebounce);
+    set({ rebuild: { ...get().rebuild, status: kernelInitialized ? "queued" : "loadingKernel", message: kernelInitialized ? "Rebuild queued." : "Loading CAD kernel..." } });
+    if (!kernelInitialized) {
+      get().initializeKernel();
+      return;
+    }
+    rebuildDebounce = setTimeout(() => flushQueuedRebuild(set, get), 180);
+  },
+}));
+
+function deleteParameterSafe(document: CadDocument, name: string): CadDocument {
+  return removeParameter(document, name);
+}
+
+function flushQueuedRebuild(
+  set: (partial: Partial<CadStore>) => void,
+  get: () => CadStore,
+) {
+  if (rebuildDebounce) {
+    clearTimeout(rebuildDebounce);
+    rebuildDebounce = undefined;
+  }
+  const document = queuedRebuildDocument ?? get().history.present;
+  queuedRebuildDocument = undefined;
+  const requestId = nextRequestId();
+  rebuildRequestId = requestId;
+  for (const [pendingRequestId, pending] of pendingWorkerRequests) {
+    if (pending.kind === "rebuild") pendingWorkerRequests.delete(pendingRequestId);
+  }
+  set({ rebuild: { ...get().rebuild, status: "rebuilding", kernelReady: kernelInitialized, message: "Rebuilding geometry..." } });
+  const worker = getGeometryWorker();
+  if (worker) {
+    pendingWorkerRequests.set(requestId, {
+      kind: "rebuild",
+      onResult: (result) => {
+        if (requestId !== rebuildRequestId) return;
+        set({ rebuild: { status: result.success ? "succeeded" : "failed", result, kernelReady: kernelInitialized, message: result.success ? "Rebuild complete." : "Rebuild failed." } });
+        if (queuedRebuildDocument) flushQueuedRebuild(set, get);
       },
-      (responseId, message) => {
-        if (responseId !== rebuildRequestId) return;
+      onError: (message) => {
+        if (requestId !== rebuildRequestId) return;
         set({
           rebuild: {
             status: "failed",
@@ -149,24 +275,25 @@ export const useCadStore = create<CadStore>((set, get) => ({
               success: false,
               bodies: [],
               meshes: [],
-              errors: [{ id: `worker:${responseId}`, source: "kernel", message }],
+              errors: [{ id: `worker:${requestId}`, source: "kernel", message }],
               warnings: [],
               durationMs: 0,
             },
+            kernelReady: kernelInitialized,
+            message,
           },
         });
       },
-    );
-    if (worker) {
-      const request: WorkerRequest = { type: "rebuild", requestId, document };
-      worker.postMessage(request);
-      return;
-    }
-    const result = rebuildDocument(document);
-    set({ rebuild: { status: result.success ? "succeeded" : "failed", result } });
-  },
-}));
+    });
+    const request: WorkerRequest = { type: "rebuild", requestId, document };
+    worker.postMessage(request);
+    return;
+  }
+  const result = rebuildDocument(document);
+  set({ rebuild: { status: result.success ? "succeeded" : "failed", result, kernelReady: kernelInitialized, message: result.success ? "Rebuild complete." : "Rebuild failed." } });
+}
 
-function deleteParameterSafe(document: CadDocument, name: string): CadDocument {
-  return removeParameter(document, name);
+function nextRequestId(): number {
+  nextWorkerRequestId += 1;
+  return nextWorkerRequestId;
 }
