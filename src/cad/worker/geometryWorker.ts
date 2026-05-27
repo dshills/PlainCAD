@@ -25,34 +25,42 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
 };
 
 async function handleRequest(request: WorkerRequest) {
+  const started = performance.now();
+  const heartbeat = (stage: string) => post({ type: "heartbeat", requestId: request.requestId, epoch: request.epoch, stage, elapsedMs: performance.now() - started });
   try {
     switch (request.type) {
       case "initialize": {
+        heartbeat("kernel_init");
         await OpenCascadeKernel.initialize();
-        post({ type: "initialized", requestId: request.requestId });
+        post({ type: "initialized", requestId: request.requestId, epoch: request.epoch });
         return;
       }
       case "rebuild": {
+        heartbeat("rebuild_init");
         await OpenCascadeKernel.initialize();
+        heartbeat("rebuilding");
         const result = rebuildDocument(request.document as CadDocument);
-        post({ type: "rebuildResult", requestId: request.requestId, result });
+        post({ type: "rebuildResult", requestId: request.requestId, epoch: request.epoch, result });
         return;
       }
       case "exportStl": {
+        heartbeat("export_init");
         await OpenCascadeKernel.initialize();
+        heartbeat("rebuilding");
         const result = rebuildDocument(request.document as CadDocument);
+        heartbeat("exporting");
         const bytes = exportMeshesToStl(result.meshes);
-        post({ type: "exportResult", requestId: request.requestId, bytes });
+        post({ type: "exportResult", requestId: request.requestId, epoch: request.epoch, bytes });
         return;
       }
       default: {
-        const unknownRequest = request as unknown as { requestId: number; type: string };
-        post({ type: "error", requestId: unknownRequest.requestId, message: `Unknown worker request: ${unknownRequest.type}` });
+        const unknownRequest = request as unknown as { requestId: number; epoch: number; type: string };
+        post({ type: "error", requestId: unknownRequest.requestId, epoch: unknownRequest.epoch, message: `Unknown worker request: ${unknownRequest.type}` });
         return;
       }
     }
   } catch (error) {
-    post({ type: "error", requestId: request.requestId, message: error instanceof Error ? error.message : String(error) });
+    post({ type: "error", requestId: request.requestId, epoch: request.epoch, message: error instanceof Error ? error.message : String(error) });
   }
 }
 

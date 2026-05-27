@@ -7,6 +7,8 @@ import { OpenCascadeKernel } from "../kernel/OpenCascadeKernel";
 import { evaluateParameters } from "../parameters/expressionEvaluator";
 import { validateDocument } from "../document/validate";
 import { KernelAdapter, KernelShape, RenderMesh } from "../kernel/KernelAdapter";
+import { TESSELLATION_LOD } from "../kernel/tessellationCache";
+import { getDisposableScopeMetrics } from "../kernel/disposableScope";
 import { sketchPlaneTransform } from "../sketch/planes";
 import { planFeatureGraph, stableBodyIdForFeature } from "./featureGraph";
 import { resolveSupportedEdgeRefs } from "./topologyRefs";
@@ -15,8 +17,10 @@ const kernel = new OpenCascadeKernel();
 
 export function rebuildDocument(document: CadDocument): RebuildResult {
   const started = performance.now();
+  const disposableMetricsStarted = getDisposableScopeMetrics();
   const errors: RebuildError[] = [];
   const warnings: RebuildWarning[] = [];
+  let operationCount = 0;
   const validation = validateDocument(document);
   for (const issue of validation) {
     errors.push({ id: `validation:${issue.sourceId ?? issue.message}`, source: issue.source === "document" ? "feature" : issue.source, sourceId: issue.sourceId, message: issue.message });
@@ -29,11 +33,14 @@ export function rebuildDocument(document: CadDocument): RebuildResult {
     warnings.push({ id: issue.id, source: issue.source, sourceId: issue.sourceId, message: issue.message });
   }
 
+  const parameterStarted = performance.now();
   const evaluated = evaluateParameters(document.parameters);
+  const parameterEvaluationMs = performance.now() - parameterStarted;
   for (const error of evaluated.errors) {
     errors.push({ id: `parameter:${error.parameterName}`, source: "parameter", sourceId: error.parameterName, message: error.message });
   }
 
+  const sketchStarted = performance.now();
   const solvedSketches = new Map<string, ReturnType<typeof solveSketch>>();
   const profilesBySketch = new Map<string, ReturnType<typeof detectProfiles>>();
   for (const sketch of Object.values(document.sketches)) {
@@ -48,15 +55,18 @@ export function rebuildDocument(document: CadDocument): RebuildResult {
       warnings.push({ id: `profile:${sketch.id}:${message}`, source: "sketch", sourceId: sketch.id, message });
     }
   }
+  const sketchSolveMs = performance.now() - sketchStarted;
 
   const bodies: CadBody[] = [];
   const meshes = [];
   const shapesToDispose = new Set<KernelShape>();
   const runtimeBodies = new Map<string, RuntimeBody>();
+  const featureStarted = performance.now();
 
   if (errors.length === 0) {
     for (const feature of graphPlan.orderedFeatures) {
       if (feature.suppressed) continue;
+      operationCount += 1;
       if (feature.type === "revolve") {
         rebuildRevolveFeature(feature, document, profilesBySketch, evaluated.values, runtimeBodies, shapesToDispose, errors);
         continue;
@@ -103,7 +113,7 @@ export function rebuildDocument(document: CadDocument): RebuildResult {
         const bodyId = stableBodyIdForFeature(feature.id);
         const output = applyExtrudeOperation(kernel, feature, shape, targetBodies, bodyId);
         shapesToDispose.add(output.shape);
-        const outputMesh = withStableBodyId(transformMeshToSketchPlane(kernel.tessellate(output.shape, { linearDeflection: 0.5, angularDeflection: 0.2 }), sketch), output.bodyId);
+        const outputMesh = withStableBodyId(transformMeshToSketchPlane(kernel.tessellate(output.shape, TESSELLATION_LOD.default), sketch), output.bodyId);
         output.mesh = outputMesh;
         output.planeKey = feature.operation === "newBody" ? sketchPlaneKey(sketch) : output.planeKey;
         runtimeBodies.set(output.bodyId, output);
@@ -112,14 +122,28 @@ export function rebuildDocument(document: CadDocument): RebuildResult {
       }
     }
   }
+  const featureRebuildMs = performance.now() - featureStarted;
 
   for (const body of runtimeBodies.values()) {
     if (!body.mesh) continue;
-    meshes.push(body.mesh);
-    bodies.push({ id: body.mesh.bodyId, name: body.name, featureId: body.featureId, triangleCount: Math.floor(body.mesh.indices.length / 3), bounds: body.mesh.bounds });
+    const mesh = sanitizeTriangleMesh(body.mesh);
+    if (mesh !== body.mesh) {
+      warnings.push({ id: `mesh:${body.mesh.bodyId}:indices`, source: "kernel", sourceId: body.mesh.bodyId, message: "Mesh index buffer length is not divisible by 3." });
+    }
+    meshes.push(mesh);
+    bodies.push({ id: mesh.bodyId, name: body.name, featureId: body.featureId, triangleCount: Math.floor(mesh.indices.length / 3), bounds: mesh.bounds });
   }
 
-  shapesToDispose.forEach((shape) => kernel.disposeShape?.(shape));
+  let disposalFailures = 0;
+  shapesToDispose.forEach((shape) => {
+    try {
+      kernel.disposeShape?.(shape);
+    } catch {
+      disposalFailures += 1;
+    }
+  });
+
+  const disposableMetricsFinished = getDisposableScopeMetrics();
 
   return {
     documentId: document.id,
@@ -129,6 +153,14 @@ export function rebuildDocument(document: CadDocument): RebuildResult {
     errors,
     warnings,
     durationMs: performance.now() - started,
+    metrics: {
+      parameterEvaluationMs,
+      sketchSolveMs,
+      featureRebuildMs,
+      operationCount,
+      cacheSize: runtimeBodies.size,
+      disposalFailures: disposalFailures + (disposableMetricsFinished.failures - disposableMetricsStarted.failures),
+    },
   };
 }
 
@@ -165,7 +197,7 @@ function rebuildRevolveFeature(
     const shape = kernel.revolveProfile(profile, feature.axis, angle.quantity.value);
     shapesToDispose.add(shape);
     const bodyId = stableBodyIdForFeature(feature.id);
-    const mesh = withStableBodyId(transformMeshToSketchPlane(kernel.tessellate(shape, { linearDeflection: 0.5, angularDeflection: 0.2 }), sketch), bodyId);
+    const mesh = withStableBodyId(transformMeshToSketchPlane(kernel.tessellate(shape, TESSELLATION_LOD.default), sketch), bodyId);
     runtimeBodies.set(bodyId, { shape, featureId: feature.id, name: feature.name, mesh, planeKey: sketchPlaneKey(sketch) });
   } catch (error) {
     errors.push({ id: `kernel:${feature.id}`, source: "kernel", sourceId: feature.id, message: error instanceof Error ? error.message : String(error) });
@@ -262,7 +294,7 @@ function rebuildHoleFeature(
     errors.push({ id: `kernel:${feature.id}`, source: "kernel", sourceId: feature.id, message: error instanceof Error ? error.message : String(error) });
     return;
   }
-  const mesh = withStableBodyId(transformMeshToSketchPlane(kernel.tessellate(current.shape, { linearDeflection: 0.5, angularDeflection: 0.2 }), sketch), targetBodyId);
+  const mesh = withStableBodyId(transformMeshToSketchPlane(kernel.tessellate(current.shape, TESSELLATION_LOD.default), sketch), targetBodyId);
   runtimeBodies.set(targetBodyId, { ...current, mesh });
 }
 
@@ -299,7 +331,7 @@ function rebuildEdgeTreatmentFeature(
   try {
     const shape = operation(target.shape, feature.targetEdgeRefs, evaluated.quantity.value);
     shapesToDispose.add(shape);
-    const mesh = withStableBodyId(kernel.tessellate(shape, { linearDeflection: 0.5, angularDeflection: 0.2 }), targetBodyId);
+    const mesh = withStableBodyId(kernel.tessellate(shape, TESSELLATION_LOD.default), targetBodyId);
     runtimeBodies.set(targetBodyId, { ...target, shape, mesh, featureId: feature.id, name: feature.name });
   } catch (error) {
     errors.push({ id: `kernel:${feature.id}`, source: "kernel", sourceId: feature.id, message: error instanceof Error ? error.message : String(error) });
@@ -393,6 +425,14 @@ function applyExtrudeOperation(
 
 function withStableBodyId(mesh: RenderMesh, bodyId: string): RenderMesh {
   return { ...mesh, id: bodyId, bodyId };
+}
+
+function sanitizeTriangleMesh(mesh: RenderMesh): RenderMesh {
+  const remainder = mesh.indices.length % 3;
+  if (remainder === 0) return mesh;
+  const end = mesh.indices.length - remainder;
+  const indices = mesh.indices.slice(0, end);
+  return { ...mesh, indices };
 }
 
 function transformMeshToSketchPlane(mesh: RenderMesh, sketch: CadDocument["sketches"][string]): RenderMesh {

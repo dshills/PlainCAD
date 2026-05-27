@@ -5,6 +5,7 @@ import { CadParameter } from "../cad/document/schema";
 import { createId } from "../cad/document/ids";
 import { rebuildDocument } from "../cad/features/rebuildGraph";
 import { RebuildResult, WorkerRequest, WorkerResponse } from "../cad/worker/workerProtocol";
+import { createWorkerRequest, isWorkerRequestExpired, shouldAcceptWorkerResponse, WORKER_TIMEOUTS_MS } from "../cad/worker/workerLifecycle";
 import GeometryWorker from "../cad/worker/geometryWorker?worker";
 
 export interface HistoryState {
@@ -45,6 +46,7 @@ const initialRebuild = rebuildDocument(initialDocument);
 let rebuildRequestId = 0;
 let latestKernelInitRequestId = 0;
 let nextWorkerRequestId = 0;
+let workerEpoch = 0;
 let geometryWorker: Worker | undefined;
 let kernelInitialized = false;
 let kernelInitializing = false;
@@ -54,29 +56,43 @@ const pendingWorkerRequests = new Map<
   number,
   {
     kind: WorkerRequest["type"];
+    requestId: number;
+    epoch: number;
     onResult?: (result: RebuildResult) => void;
     onError?: (message: string) => void;
     onInitialized?: () => void;
+    timeout?: ReturnType<typeof setTimeout>;
+    startedAt: number;
+    lastProgressAt: number;
+    timeoutMs: number;
+    maxElapsedMs: number;
   }
 >();
 
 function getGeometryWorker(): Worker | undefined {
   if (typeof Worker === "undefined") return undefined;
   if (!geometryWorker) {
+    workerEpoch += 1;
     geometryWorker = new GeometryWorker();
     geometryWorker.onmessage = (event: MessageEvent<WorkerResponse>) => {
       try {
         const pending = pendingWorkerRequests.get(event.data.requestId);
+        if (!shouldAcceptWorkerResponse(event.data, workerEpoch, pending)) return;
         if (!pending) return;
+        pending.lastProgressAt = performance.now();
+        if (event.data.type === "heartbeat") return;
         if (event.data.type === "initialized") {
+          clearTimeout(pending.timeout);
           pendingWorkerRequests.delete(event.data.requestId);
           pending.onInitialized?.();
         }
         if (event.data.type === "rebuildResult") {
+          clearTimeout(pending.timeout);
           pendingWorkerRequests.delete(event.data.requestId);
           pending.onResult?.(event.data.result);
         }
         if (event.data.type === "error") {
+          clearTimeout(pending.timeout);
           pendingWorkerRequests.delete(event.data.requestId);
           pending.onError?.(event.data.message);
         }
@@ -96,9 +112,11 @@ function getGeometryWorker(): Worker | undefined {
 
 function failPendingWorkerRequests(message: string) {
   const pendingRequests = [...pendingWorkerRequests.values()];
+  for (const pending of pendingRequests) clearTimeout(pending.timeout);
   pendingWorkerRequests.clear();
   geometryWorker?.terminate();
   geometryWorker = undefined;
+  workerEpoch += 1;
   kernelInitialized = false;
   kernelInitializing = false;
   for (const pending of pendingRequests) {
@@ -193,6 +211,12 @@ export const useCadStore = create<CadStore>((set, get) => ({
     if (worker) {
       pendingWorkerRequests.set(requestId, {
         kind: "initialize",
+        requestId,
+        epoch: workerEpoch,
+        startedAt: performance.now(),
+        lastProgressAt: performance.now(),
+        timeoutMs: WORKER_TIMEOUTS_MS.initialize,
+        maxElapsedMs: WORKER_TIMEOUTS_MS.initialize * 2,
         onError: (message) => {
           if (requestId !== latestKernelInitRequestId) return;
           kernelInitializing = false;
@@ -221,7 +245,8 @@ export const useCadStore = create<CadStore>((set, get) => ({
           flushQueuedRebuild(set, get);
         },
       });
-      const request: WorkerRequest = { type: "initialize", requestId };
+      armWorkerTimeout(requestId);
+      const request: WorkerRequest = createWorkerRequest({ type: "initialize" }, requestId, workerEpoch);
       worker.postMessage(request);
       return;
     }
@@ -259,13 +284,22 @@ function flushQueuedRebuild(
   const requestId = nextRequestId();
   rebuildRequestId = requestId;
   for (const [pendingRequestId, pending] of pendingWorkerRequests) {
-    if (pending.kind === "rebuild") pendingWorkerRequests.delete(pendingRequestId);
+    if (pending.kind === "rebuild") {
+      clearTimeout(pending.timeout);
+      pendingWorkerRequests.delete(pendingRequestId);
+    }
   }
   set({ rebuild: { ...get().rebuild, status: "rebuilding", kernelReady: kernelInitialized, message: "Rebuilding geometry..." } });
   const worker = getGeometryWorker();
   if (worker) {
     pendingWorkerRequests.set(requestId, {
       kind: "rebuild",
+      requestId,
+      epoch: workerEpoch,
+      startedAt: performance.now(),
+      lastProgressAt: performance.now(),
+      timeoutMs: WORKER_TIMEOUTS_MS.rebuild,
+      maxElapsedMs: WORKER_TIMEOUTS_MS.rebuild * 4,
       onResult: (result) => {
         if (requestId !== rebuildRequestId) return;
         set({ rebuild: { status: result.success ? "succeeded" : "failed", result, kernelReady: kernelInitialized, message: result.success ? "Rebuild complete." : "Rebuild failed." } });
@@ -291,7 +325,8 @@ function flushQueuedRebuild(
         });
       },
     });
-    const request: WorkerRequest = { type: "rebuild", requestId, document };
+    armWorkerTimeout(requestId);
+    const request: WorkerRequest = createWorkerRequest({ type: "rebuild", document }, requestId, workerEpoch);
     worker.postMessage(request);
     return;
   }
@@ -302,4 +337,18 @@ function flushQueuedRebuild(
 function nextRequestId(): number {
   nextWorkerRequestId += 1;
   return nextWorkerRequestId;
+}
+
+function armWorkerTimeout(requestId: number) {
+  const pending = pendingWorkerRequests.get(requestId);
+  if (!pending) return;
+  pending.timeout = setTimeout(() => {
+    const current = pendingWorkerRequests.get(requestId);
+    if (!current) return;
+    if (!isWorkerRequestExpired(current, performance.now())) {
+      armWorkerTimeout(requestId);
+      return;
+    }
+    failPendingWorkerRequests(`${current.kind} timed out after ${current.timeoutMs}ms without worker progress.`);
+  }, pending.timeoutMs);
 }

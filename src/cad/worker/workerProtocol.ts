@@ -16,6 +16,16 @@ export interface RebuildResult {
   errors: RebuildError[];
   warnings: RebuildWarning[];
   durationMs: number;
+  metrics?: RebuildMetrics;
+}
+
+export interface RebuildMetrics {
+  parameterEvaluationMs: number;
+  sketchSolveMs: number;
+  featureRebuildMs: number;
+  operationCount: number;
+  cacheSize: number;
+  disposalFailures: number;
 }
 
 export interface RebuildError {
@@ -34,12 +44,14 @@ export interface RebuildWarning {
 }
 
 export type WorkerRequest =
-  | { type: "initialize"; requestId: number }
-  | { type: "rebuild"; requestId: number; document: unknown }
-  | { type: "exportStl"; requestId: number; document: unknown };
+  | { type: "initialize"; requestId: number; epoch: number }
+  | { type: "rebuild"; requestId: number; epoch: number; document: unknown }
+  | { type: "exportStl"; requestId: number; epoch: number; document: unknown };
 
 export type WorkerResponse =
-  | { type: "initialized"; requestId: number }
-  | { type: "rebuildResult"; requestId: number; result: RebuildResult }
-  | { type: "exportResult"; requestId: number; bytes: ArrayBuffer }
-  | { type: "error"; requestId: number; message: string };
+  | { type: "initialized"; requestId: number; epoch: number }
+  | { type: "heartbeat"; requestId: number; epoch: number; stage: string; elapsedMs: number }
+  | { type: "skipped"; requestId: number; epoch: number; reason: string }
+  | { type: "rebuildResult"; requestId: number; epoch: number; result: RebuildResult }
+  | { type: "exportResult"; requestId: number; epoch: number; bytes: ArrayBuffer }
+  | { type: "error"; requestId: number; epoch: number; message: string };

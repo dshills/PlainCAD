@@ -6,6 +6,7 @@ import { KernelAdapter, KernelShape, RenderMesh, TessellationOptions } from "./K
 import { computeNormals, createBoxMesh, createCylinderAroundYMesh, createCylinderMesh, createPlateWithCircularHolesMesh } from "./meshConversion";
 import { exportMeshesToStl } from "./stlExport";
 import { SketchProfile } from "../sketch/profileDetection";
+import { DisposableHandle, withDisposableScope } from "./disposableScope";
 
 const BOOLEAN_FALLBACK_EPSILON = 1e-7;
 
@@ -227,14 +228,11 @@ export class OpenCascadeKernel implements KernelAdapter {
   private createOcctBox(minX: number, minY: number, minZ: number, width: number, height: number, depth: number): unknown | undefined {
     const oc = OpenCascadeKernel.openCascade;
     if (!oc) return undefined;
-    const point = new oc.gp_Pnt_3(minX, minY, minZ);
-    const box = new oc.BRepPrimAPI_MakeBox_2(point, width, height, depth);
-    try {
+    return withDisposableScope((scope) => {
+      const point = scope.use(new oc.gp_Pnt_3(minX, minY, minZ));
+      const box = scope.use(new oc.BRepPrimAPI_MakeBox_2(point, width, height, depth));
       return box.Shape();
-    } finally {
-      deleteOcct(box);
-      deleteOcct(point);
-    }
+    });
   }
 
   private createOcctExtrusion(profile: SketchProfile, distance: number): unknown | undefined {
@@ -260,14 +258,14 @@ export class OpenCascadeKernel implements KernelAdapter {
       const tool = this.createOcctCylinder(hole.x, hole.y, hole.radius, distance * 1.5, -distance * 0.25);
       if (shape && tool) {
         const previousShape = shape;
-        let cut: unknown | undefined;
         try {
-          cut = new oc.BRepAlgoAPI_Cut_3(previousShape, tool);
-          shape = (cut as { Shape: () => unknown }).Shape();
+          shape = withDisposableScope((scope) => {
+            scope.use(tool as DisposableHandle);
+            const cut = scope.use(new oc.BRepAlgoAPI_Cut_3(previousShape, tool) as DisposableHandle & { Shape: () => unknown });
+            return cut.Shape();
+          });
         } finally {
-          deleteOcct(cut);
           deleteOcct(previousShape);
-          deleteOcct(tool);
         }
       }
     }
@@ -277,18 +275,13 @@ export class OpenCascadeKernel implements KernelAdapter {
   private createOcctCylinder(x: number, y: number, radius: number, height: number, z = 0): unknown | undefined {
     const oc = OpenCascadeKernel.openCascade;
     if (!oc) return undefined;
-    const point = new oc.gp_Pnt_3(x, y, z);
-    const direction = new oc.gp_Dir_4(0, 0, 1);
-    const axis = new oc.gp_Ax2_3(point, direction);
-    const cylinder = new oc.BRepPrimAPI_MakeCylinder_3(axis, radius, height);
-    try {
+    return withDisposableScope((scope) => {
+      const point = scope.use(new oc.gp_Pnt_3(x, y, z));
+      const direction = scope.use(new oc.gp_Dir_4(0, 0, 1));
+      const axis = scope.use(new oc.gp_Ax2_3(point, direction));
+      const cylinder = scope.use(new oc.BRepPrimAPI_MakeCylinder_3(axis, radius, height));
       return cylinder.Shape();
-    } finally {
-      deleteOcct(cylinder);
-      deleteOcct(axis);
-      deleteOcct(direction);
-      deleteOcct(point);
-    }
+    });
   }
 
   private tessellateOcctShape(bodyId: string, shape: unknown | undefined, options: TessellationOptions): RenderMesh | undefined {
