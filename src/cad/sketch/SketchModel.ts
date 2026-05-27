@@ -10,6 +10,7 @@ export function createXySketch(name = "Sketch"): Sketch {
     id: createId("sketch"),
     name,
     plane: "XY",
+    createdAt: new Date().toISOString(),
     entities: {},
     constraints: [],
     dimensions: [],

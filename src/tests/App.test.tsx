@@ -2,6 +2,8 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { App } from "../app/App";
+import { createEmptyDocument } from "../cad/document/CadDocument";
+import { useCadStore } from "../state/useCadStore";
 
 vi.mock("../viewer/CadViewer", () => ({
   CadViewer: () => <div data-testid="cad-viewer" />,
@@ -30,5 +32,33 @@ describe("App", () => {
     expect(screen.getByText("Orbit")).toBeInTheDocument();
     const palette = screen.getByRole("dialog", { name: /Command Palette/i });
     expect(within(palette).getByRole("button", { name: /Export STL/i })).toBeDisabled();
+  });
+
+  it("surfaces the sketch to extrude workflow in the top ribbon and bottom timeline", async () => {
+    const user = userEvent.setup();
+    const document = createEmptyDocument();
+    useCadStore.setState({
+      history: { past: [], present: document, future: [] },
+      paletteOpen: false,
+      selection: { selectedIds: [] },
+    });
+    render(<App />);
+
+    const ribbon = screen.getByRole("navigation", { name: /Main CAD commands/i });
+    expect(ribbon).toBeInTheDocument();
+    expect(within(ribbon).getByRole("region", { name: "File" })).toBeInTheDocument();
+    expect(within(ribbon).getByRole("region", { name: "Sketch" })).toBeInTheDocument();
+    expect(within(ribbon).getByRole("region", { name: "Create" })).toBeInTheDocument();
+    expect(within(ribbon).getByRole("button", { name: /Extrude selected sketch/i })).toBeDisabled();
+    expect(screen.getByRole("heading", { name: /Browser/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Parametric Timeline/i })).toBeInTheDocument();
+
+    await user.click(within(ribbon).getByRole("button", { name: /Create XY sketch/i }));
+    await user.click(within(ribbon).getByRole("button", { name: /Add center rectangle/i }));
+    await user.click(within(ribbon).getByRole("button", { name: /Extrude selected sketch/i }));
+
+    const timeline = screen.getByRole("list", { name: /Sketch and feature history/i });
+    expect(within(timeline).getByRole("button", { name: /Sketch 1/i })).toBeInTheDocument();
+    expect(within(timeline).getByRole("button", { name: /Extrude 1/i })).toBeInTheDocument();
   });
 });

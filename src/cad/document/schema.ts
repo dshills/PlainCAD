@@ -43,6 +43,7 @@ export interface Sketch {
   id: string;
   name: string;
   plane: "XY";
+  createdAt?: string;
   entities: Record<string, SketchEntity>;
   constraints: SketchConstraint[];
   dimensions: SketchDimension[];
@@ -93,14 +94,12 @@ export interface SketchDimension {
   expression: ExpressionRef;
 }
 
-export type Feature = ExtrudeFeature | HoleFeature | FilletFeature | ChamferFeature;
-
 export interface FeatureBase {
   id: string;
   name: string;
   type: string;
   suppressed?: boolean;
-  createdAt: string;
+  createdAt?: string;
 }
 
 export interface ExtrudeFeature extends FeatureBase {
@@ -132,6 +131,8 @@ export interface ChamferFeature extends FeatureBase {
   targetEdgeRefs: TopologyRef[];
   distance: ExpressionRef;
 }
+
+export type Feature = ExtrudeFeature | HoleFeature | FilletFeature | ChamferFeature;
 
 export interface TopologyRef {
   featureId: string;

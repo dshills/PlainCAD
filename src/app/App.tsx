@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { CadViewer } from "../viewer/CadViewer";
-import { isCommandEnabledForSnapshot, runCommand, selectCommandEnablement } from "../ui/commands/commandRegistry";
+import { CommandContext, isCommandEnabledForSnapshot, runCommand, selectCommandEnablement } from "../ui/commands/commandRegistry";
 import { CommandPalette } from "../ui/commands/CommandPalette";
 import { ParameterPanel } from "../ui/panels/ParameterPanel";
 import { FeatureTimeline } from "../ui/panels/FeatureTimeline";
@@ -13,21 +13,58 @@ import { useCadStore } from "../state/useCadStore";
 type ToolbarButton = {
   command: string;
   label: string;
+  icon: string;
   title: string;
   ariaLabel: string;
 };
 
-const toolbarButtons: ToolbarButton[] = [
-  { command: "file.openProject", label: "Open", title: "Open a .pcaddoc or JSON project file", ariaLabel: "Open project" },
-  { command: "file.newProject", label: "New", title: "Create a new mounting plate project", ariaLabel: "New project" },
-  { command: "file.saveProject", label: "Save", title: "Download this project as a .pcaddoc file", ariaLabel: "Save project" },
-  { command: "file.exportStl", label: "STL", title: "Export the current rebuilt model as STL", ariaLabel: "Export STL" },
-  { command: "history.undo", label: "Undo", title: "Undo the last document edit", ariaLabel: "Undo" },
-  { command: "history.redo", label: "Redo", title: "Redo the last undone edit", ariaLabel: "Redo" },
-  { command: "view.fit", label: "Fit", title: "Fit the model in the viewer", ariaLabel: "Fit view" },
-  { command: "view.resetCamera", label: "Reset", title: "Reset the viewer camera", ariaLabel: "Reset camera" },
-  { command: "template.createMountingPlate", label: "Mounting Plate", title: "Load the mounting plate template", ariaLabel: "Load mounting plate template" },
-  { command: "template.createBox", label: "Box", title: "Load the parametric box template", ariaLabel: "Load parametric box template" },
+type ToolbarGroup = {
+  label: string;
+  buttons: ToolbarButton[];
+};
+
+const toolbarGroups: ToolbarGroup[] = [
+  {
+    label: "File",
+    buttons: [
+      { command: "file.openProject", label: "Open", icon: "O", title: "Open a .pcaddoc or JSON project file", ariaLabel: "Open project" },
+      { command: "file.newProject", label: "New", icon: "N", title: "Create a new mounting plate project", ariaLabel: "New project" },
+      { command: "file.saveProject", label: "Save", icon: "S", title: "Download this project as a .pcaddoc file", ariaLabel: "Save project" },
+      { command: "file.exportStl", label: "STL", icon: "STL", title: "Export the current rebuilt model as STL", ariaLabel: "Export STL" },
+    ],
+  },
+  {
+    label: "Sketch",
+    buttons: [
+      { command: "sketch.createXY", label: "Sketch", icon: "+", title: "Create an XY sketch", ariaLabel: "Create XY sketch" },
+      { command: "sketch.addCenterRectangle", label: "Rectangle", icon: "Rect", title: "Add a center rectangle to the active sketch", ariaLabel: "Add center rectangle" },
+      { command: "sketch.addCircle", label: "Circle", icon: "Circ", title: "Add a circle to the active sketch", ariaLabel: "Add circle" },
+    ],
+  },
+  {
+    label: "Create",
+    buttons: [
+      { command: "feature.extrude", label: "Extrude", icon: "Ext", title: "Extrude the active sketch profile", ariaLabel: "Extrude selected sketch" },
+      { command: "template.createMountingPlate", label: "Mount Plate", icon: "M", title: "Load the mounting plate template", ariaLabel: "Load mounting plate template" },
+      { command: "template.createBox", label: "Box", icon: "B", title: "Load the parametric box template", ariaLabel: "Load parametric box template" },
+    ],
+  },
+  {
+    label: "Modify",
+    buttons: [
+      { command: "feature.suppress", label: "Suppress", icon: "Sup", title: "Suppress or unsuppress the selected feature", ariaLabel: "Suppress or unsuppress feature" },
+      { command: "feature.delete", label: "Delete", icon: "Del", title: "Delete the selected feature", ariaLabel: "Delete selected feature" },
+    ],
+  },
+  {
+    label: "View",
+    buttons: [
+      { command: "history.undo", label: "Undo", icon: "Undo", title: "Undo the last document edit", ariaLabel: "Undo" },
+      { command: "history.redo", label: "Redo", icon: "Redo", title: "Redo the last undone edit", ariaLabel: "Redo" },
+      { command: "view.fit", label: "Fit", icon: "Fit", title: "Fit the model in the viewer", ariaLabel: "Fit view" },
+      { command: "view.resetCamera", label: "Reset", icon: "Reset", title: "Reset the viewer camera", ariaLabel: "Reset camera" },
+    ],
+  },
 ];
 
 const helpItems = [
@@ -47,7 +84,7 @@ export function App() {
   const initializeKernel = useCadStore((state) => state.initializeKernel);
   const select = useCadStore((state) => state.select);
   const setFileError = useCadStore((state) => state.setFileError);
-  const commandContext = useMemo(() => ({ fileInputRef }), []);
+  const commandContext: CommandContext = useMemo(() => ({ fileInputRef }), []);
   const toolbarEnablement = useCadStore(useShallow(selectCommandEnablement));
 
   useEffect(() => {
@@ -81,17 +118,26 @@ export function App() {
             <span>{documentName}</span>
           </div>
         </div>
-        <nav className="toolbar-actions" aria-label="Main CAD commands">
-          {toolbarButtons.map((button) => (
-            <button
-              key={button.command}
-              title={button.title}
-              aria-label={button.ariaLabel}
-              onClick={() => runCommand(button.command, commandContext)}
-              disabled={!isCommandEnabledForSnapshot(button.command, toolbarEnablement)}
-            >
-              {button.label}
-            </button>
+        <nav className="ribbon" aria-label="Main CAD commands">
+          {toolbarGroups.map((group) => (
+            <section className="ribbon-group" aria-label={group.label} key={group.label}>
+              <div className="ribbon-buttons">
+                {group.buttons.map((button) => (
+                  <button
+                    className="ribbon-button"
+                    key={button.command}
+                    title={button.title}
+                    aria-label={button.ariaLabel}
+                    onClick={() => runCommand(button.command, commandContext)}
+                    disabled={!isCommandEnabledForSnapshot(button.command, toolbarEnablement)}
+                  >
+                    <span className="ribbon-icon" aria-hidden="true">{button.icon}</span>
+                    <span>{button.label}</span>
+                  </button>
+                ))}
+              </div>
+              <span className="ribbon-label">{group.label}</span>
+            </section>
           ))}
         </nav>
         <div className={`rebuild-pill ${rebuild.status}`}>{rebuild.status}</div>
@@ -114,11 +160,13 @@ export function App() {
       <main className="workspace">
         <aside className="left-panel">
           <SketchPanel />
-          <FeatureTimeline />
         </aside>
-        <section className="viewer-region" aria-label="3D CAD viewer">
-          <CadViewer />
-        </section>
+        <div className="model-area">
+          <section className="viewer-region" aria-label="3D CAD viewer">
+            <CadViewer />
+          </section>
+          <FeatureTimeline commandContext={commandContext} />
+        </div>
         <aside className="right-panel">
           <ParameterPanel />
           <InspectorPanel />

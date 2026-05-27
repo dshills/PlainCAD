@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { useCadStore } from "../../state/useCadStore";
-import { orderedSketches } from "../../state/selectors";
-import { runCommand } from "../commands/commandRegistry";
+import { orderedFeatures, orderedSketches } from "../../state/selectors";
 import { evaluateParameters } from "../../cad/parameters/expressionEvaluator";
 import { solveSketch } from "../../cad/sketch/SketchSolver";
 import { detectProfiles } from "../../cad/sketch/profileDetection";
@@ -10,7 +9,8 @@ export function SketchPanel() {
   const document = useCadStore((state) => state.history.present);
   const select = useCadStore((state) => state.select);
   const selection = useCadStore((state) => state.selection.selectedIds[0]);
-  const sketches = orderedSketches(document);
+  const sketches = useMemo(() => orderedSketches(document), [document]);
+  const features = useMemo(() => orderedFeatures(document), [document]);
   const activeSketch =
     selection?.kind === "sketch"
       ? document.sketches[selection.id]
@@ -31,14 +31,25 @@ export function SketchPanel() {
     [activeSketch, evaluatedParameters.values],
   );
   return (
-    <section className="panel">
-      <h2>Sketches</h2>
-      <div className="toolbar-actions panel-actions">
-        <button onClick={() => runCommand("sketch.createXY")}>New XY</button>
-        <button onClick={() => runCommand("sketch.addCenterRectangle")}>Center Rectangle</button>
-        <button onClick={() => runCommand("sketch.addCircle")}>Circle</button>
-      </div>
+    <section className="panel browser-panel">
+      <h2>Browser</h2>
       <div className="panel-list">
+        <div className="browser-root">
+          <strong>{document.name}</strong>
+          <span className="muted">{document.units} document</span>
+        </div>
+        <div className="browser-folder">
+          <span className="folder-label">Origin</span>
+          <span className="muted">XY plane</span>
+        </div>
+        <div className="browser-folder">
+          <span className="folder-label">Bodies</span>
+          <span className="muted">{features.length} feature outputs</span>
+        </div>
+        <div className="browser-folder">
+          <span className="folder-label">Sketches</span>
+          <span className="muted">{sketches.length} sketches</span>
+        </div>
         {sketches.map((sketch) => (
           <button
             className={`item-card ${activeSketch?.id === sketch.id ? "selected" : ""}`}
