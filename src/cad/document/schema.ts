@@ -1,4 +1,4 @@
-export const CURRENT_SCHEMA_VERSION = 3;
+export const CURRENT_SCHEMA_VERSION = 4;
 
 export type UnitSystem = "metric" | "imperial";
 
@@ -125,8 +125,15 @@ export interface ExtrudeFeature extends FeatureBase {
   profileId: string;
   operation: "newBody" | "join" | "cut";
   distance: ExpressionRef;
+  termination?: ExtrudeTermination;
+  targetBodyIds?: string[];
   direction: "positive" | "negative" | "symmetric";
 }
+
+export type ExtrudeTermination =
+  | { type: "distance"; distance?: ExpressionRef }
+  | { type: "throughAll" }
+  | { type: "toFace"; faceRef: TopologyRef };
 
 export interface HoleFeature extends FeatureBase {
   type: "hole";

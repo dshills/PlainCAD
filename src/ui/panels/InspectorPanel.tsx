@@ -7,10 +7,11 @@ import { sketchPlaneLabel } from "../../cad/sketch/planes";
 const EXTRUDE_OPERATIONS = ["newBody", "join", "cut"] as const;
 const EXTRUDE_OPERATION_OPTIONS = [
   { value: "newBody", label: "New body", disabled: false },
-  { value: "join", label: "Join", disabled: true },
-  { value: "cut", label: "Cut", disabled: true },
+  { value: "join", label: "Join", disabled: false },
+  { value: "cut", label: "Cut", disabled: false },
 ] as const;
 const EXTRUDE_DIRECTIONS = ["positive", "negative", "symmetric"] as const;
+const EXTRUDE_TERMINATIONS = ["distance", "throughAll", "toFace"] as const;
 const DEFAULT_SKETCH_NAME = "Untitled Sketch";
 const DEFAULT_FEATURE_NAME = "Untitled Feature";
 
@@ -108,9 +109,36 @@ export function InspectorPanel() {
                 Name
                 <CommitInput value={feature.name} onCommit={(value) => updateFeatureName(updateDocument, feature.id, value)} />
               </label>
+              {(feature.termination?.type ?? "distance") === "distance" ? (
+                <label>
+                  Distance
+                  <CommitInput value={feature.distance.expression} onCommit={(value) => updateExtrudeDistance(updateDocument, feature.id, value)} />
+                </label>
+              ) : null}
               <label>
-                Distance
-                <CommitInput value={feature.distance.expression} onCommit={(value) => updateExtrudeDistance(updateDocument, feature.id, value)} />
+                Target body
+                <select
+                  value={feature.targetBodyIds?.[0] ?? ""}
+                  onChange={(event) => updateExtrudeTarget(updateDocument, feature.id, event.target.value)}
+                >
+                  <option value="">None</option>
+                  {(rebuild?.bodies ?? []).map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Termination
+                <select
+                  value={feature.termination?.type ?? "distance"}
+                  onChange={(event) => updateExtrudeTermination(updateDocument, feature.id, event.target.value)}
+                >
+                  <option value="distance">Distance</option>
+                  <option value="throughAll">Through all</option>
+                  <option value="toFace" disabled>To face unavailable</option>
+                </select>
               </label>
               <label>
                 Operation
@@ -278,7 +306,9 @@ function updateExtrudeDistance(
     if (!document) return document;
     const feature = document.features.find((item) => item.id === featureId);
     if (!feature || feature.type !== "extrude" || feature.distance.expression === expression) return document;
-    return documentOps.upsertFeature(document, { ...feature, distance: { ...feature.distance, expression } });
+    const distance = { ...feature.distance, expression };
+    const termination = feature.termination?.type === "distance" ? { ...feature.termination, distance } : (feature.termination ?? { type: "distance", distance });
+    return documentOps.upsertFeature(document, { ...feature, distance, termination });
   });
 }
 
@@ -287,7 +317,7 @@ function updateExtrudeOperation(
   featureId: string,
   operation: string,
 ) {
-  if (!isExtrudeOperation(operation) || EXTRUDE_OPERATION_OPTIONS.find((option) => option.value === operation)?.disabled) return;
+  if (!isExtrudeOperation(operation)) return;
   updateDocument((document) => {
     if (!document) return document;
     const feature = document.features.find((item) => item.id === featureId);
@@ -316,6 +346,34 @@ function updateExtrudeDirection(
 
 function isExtrudeDirection(value: string): value is (typeof EXTRUDE_DIRECTIONS)[number] {
   return EXTRUDE_DIRECTIONS.includes(value as (typeof EXTRUDE_DIRECTIONS)[number]);
+}
+
+function updateExtrudeTarget(
+  updateDocument: ReturnType<typeof useCadStore.getState>["updateDocument"],
+  featureId: string,
+  value: string,
+) {
+  const targetBodyIds = value ? [value] : [];
+  updateDocument((document) => {
+    const feature = document.features.find((item) => item.id === featureId);
+    if (!feature || feature.type !== "extrude") return document;
+    return documentOps.upsertFeature(document, { ...feature, targetBodyIds });
+  });
+}
+
+function updateExtrudeTermination(
+  updateDocument: ReturnType<typeof useCadStore.getState>["updateDocument"],
+  featureId: string,
+  value: string,
+) {
+  if (!EXTRUDE_TERMINATIONS.includes(value as (typeof EXTRUDE_TERMINATIONS)[number])) return;
+  updateDocument((document) => {
+    const feature = document.features.find((item) => item.id === featureId);
+    if (!feature || feature.type !== "extrude") return document;
+    if (value === "throughAll") return documentOps.upsertFeature(document, { ...feature, termination: { type: "throughAll" } });
+    if (value === "toFace") return document;
+    return documentOps.upsertFeature(document, { ...feature, termination: { type: "distance", distance: feature.distance } });
+  });
 }
 
 function updateSketchEntityExpression(

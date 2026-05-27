@@ -1,12 +1,12 @@
 import { CadBody, RebuildError, RebuildResult, RebuildWarning } from "../worker/workerProtocol";
-import { CadDocument } from "../document/schema";
+import { CadDocument, ExtrudeFeature } from "../document/schema";
 import { evaluateExpression } from "../parameters/expressionEvaluator";
 import { solveSketch } from "../sketch/SketchSolver";
 import { detectProfiles } from "../sketch/profileDetection";
 import { OpenCascadeKernel } from "../kernel/OpenCascadeKernel";
 import { evaluateParameters } from "../parameters/expressionEvaluator";
 import { validateDocument } from "../document/validate";
-import { RenderMesh } from "../kernel/KernelAdapter";
+import { KernelAdapter, KernelShape, RenderMesh } from "../kernel/KernelAdapter";
 import { sketchPlaneTransform } from "../sketch/planes";
 import { planFeatureGraph, stableBodyIdForFeature } from "./featureGraph";
 
@@ -50,17 +50,14 @@ export function rebuildDocument(document: CadDocument): RebuildResult {
 
   const bodies: CadBody[] = [];
   const meshes = [];
-  const shapesToDispose = [];
+  const shapesToDispose = new Set<KernelShape>();
+  const runtimeBodies = new Map<string, { shape: KernelShape; featureId: string; name: string; mesh?: RenderMesh }>();
 
   if (errors.length === 0) {
     for (const feature of graphPlan.orderedFeatures) {
       if (feature.suppressed) continue;
       if (feature.type !== "extrude") {
         warnings.push({ id: `feature:${feature.id}`, source: "feature", sourceId: feature.id, message: `${feature.type} is not implemented in the MVP rebuild path.` });
-        continue;
-      }
-      if (feature.operation !== "newBody") {
-        errors.push({ id: `feature:${feature.id}:operation`, source: "feature", sourceId: feature.id, message: `Extrude operation "${feature.operation}" is not supported yet.` });
         continue;
       }
       if (feature.direction !== "positive") {
@@ -73,28 +70,39 @@ export function rebuildDocument(document: CadDocument): RebuildResult {
         errors.push({ id: `feature:${feature.id}:profile`, source: "feature", sourceId: feature.id, message: `Extrude failed: profile "${feature.profileId}" was not found in sketch "${feature.sketchId}".` });
         continue;
       }
-      const distance = evaluateExpression(feature.distance.expression, { parameters: evaluated.values });
-      if (distance.error || !distance.quantity || distance.quantity.value <= 0) {
-        errors.push({ id: `feature:${feature.id}:distance`, source: "feature", sourceId: feature.id, message: distance.error ?? "Extrude distance must be greater than zero." });
-        continue;
-      }
-      const distanceValue = distance.quantity.value;
       const sketch = document.sketches[feature.sketchId];
       if (!sketch) {
         errors.push({ id: `feature:${feature.id}:sketch`, source: "feature", sourceId: feature.id, message: "Extrude references a missing sketch." });
         continue;
       }
+      const errorCountBeforeTargets = errors.length;
+      const targetBodies = resolveTargetBodies(feature, runtimeBodies, errors);
+      if (errors.length > errorCountBeforeTargets) continue;
+      const distance = resolveExtrudeDistance(feature, evaluated.values, targetBodies.map((body) => body.mesh).filter((mesh): mesh is RenderMesh => Boolean(mesh)), sketch);
+      if (distance.error || distance.value <= 0) {
+        errors.push({ id: `feature:${feature.id}:distance`, source: "feature", sourceId: feature.id, message: distance.error ?? "Extrude distance must be greater than zero." });
+        continue;
+      }
+      const distanceValue = distance.value;
       try {
         const shape = kernel.extrudeProfile(profile, distanceValue);
-        shapesToDispose.push(shape);
+        shapesToDispose.add(shape);
         const bodyId = stableBodyIdForFeature(feature.id);
-        const mesh = withStableBodyId(transformMeshToSketchPlane(kernel.tessellate(shape, { linearDeflection: 0.5, angularDeflection: 0.2 }), sketch), bodyId);
-        meshes.push(mesh);
-        bodies.push({ id: bodyId, name: feature.name, featureId: feature.id, triangleCount: Math.floor(mesh.indices.length / 3), bounds: mesh.bounds });
+        const output = applyExtrudeOperation(kernel, feature, shape, targetBodies, bodyId);
+        shapesToDispose.add(output.shape);
+        const outputMesh = withStableBodyId(transformMeshToSketchPlane(kernel.tessellate(output.shape, { linearDeflection: 0.5, angularDeflection: 0.2 }), sketch), output.bodyId);
+        output.mesh = outputMesh;
+        runtimeBodies.set(output.bodyId, output);
       } catch (error) {
         errors.push({ id: `kernel:${feature.id}`, source: "kernel", sourceId: feature.id, message: error instanceof Error ? error.message : String(error) });
       }
     }
+  }
+
+  for (const body of runtimeBodies.values()) {
+    if (!body.mesh) continue;
+    meshes.push(body.mesh);
+    bodies.push({ id: body.mesh.bodyId, name: body.name, featureId: body.featureId, triangleCount: Math.floor(body.mesh.indices.length / 3), bounds: body.mesh.bounds });
   }
 
   shapesToDispose.forEach((shape) => kernel.disposeShape?.(shape));
@@ -108,6 +116,87 @@ export function rebuildDocument(document: CadDocument): RebuildResult {
     warnings,
     durationMs: performance.now() - started,
   };
+}
+
+function resolveTargetBodies(
+  feature: ExtrudeFeature,
+  runtimeBodies: Map<string, { shape: KernelShape; featureId: string; name: string; mesh?: RenderMesh }>,
+  errors: RebuildError[],
+): Array<{ bodyId: string; shape: KernelShape; featureId: string; name: string; mesh?: RenderMesh }> {
+  if (feature.operation === "newBody") return [];
+  if (!feature.targetBodyIds || feature.targetBodyIds.length === 0) {
+    errors.push({ id: `feature:${feature.id}:target:none`, source: "feature", sourceId: feature.id, message: `${feature.operation} extrude requires a selected target body.` });
+    return [];
+  }
+  if (feature.targetBodyIds.length > 1) {
+    errors.push({ id: `feature:${feature.id}:target:multiple`, source: "feature", sourceId: feature.id, message: `${feature.operation} extrude currently supports exactly one target body.` });
+    return [];
+  }
+  const targets = feature.targetBodyIds.map((bodyId) => ({ bodyId, body: runtimeBodies.get(bodyId) }));
+  const missing = targets.find((target) => !target.body);
+  if (missing) {
+    errors.push({ id: `feature:${feature.id}:target:lost`, source: "feature", sourceId: feature.id, message: `Target body "${missing.bodyId}" was not found for ${feature.operation} extrude.` });
+    return [];
+  }
+  return targets.map((target) => ({ bodyId: target.bodyId, ...target.body! }));
+}
+
+function resolveExtrudeDistance(
+  feature: ExtrudeFeature,
+  parameters: Parameters<typeof evaluateExpression>[1]["parameters"],
+  targetMeshes: RenderMesh[],
+  sketch: CadDocument["sketches"][string],
+): { value: number; error?: string } {
+  const termination = feature.termination ?? { type: "distance" as const, distance: feature.distance };
+  if (termination.type === "toFace") return { value: 0, error: "Extrude to face is not supported until stable face references are available." };
+  if (termination.type === "throughAll") {
+    if (targetMeshes.length === 0) return { value: 0, error: "Through-all termination requires a target body." };
+    const throughAllDistances = targetMeshes.map((mesh) => projectedThroughAllDistance(mesh.bounds, sketch));
+    if (throughAllDistances.some((distance) => distance === undefined)) return { value: 0, error: "Through-all termination requires the target body to be in the positive extrusion direction." };
+    const targetDepth = throughAllDistances.filter((distance): distance is number => distance !== undefined).reduce((max, distance) => Math.max(max, distance), 0);
+    if (targetDepth > 0) return { value: targetDepth };
+    return { value: 0, error: "Through-all termination could not resolve a target distance." };
+  }
+  const expression = termination.type === "distance" ? (termination.distance ?? feature.distance) : feature.distance;
+  const distance = evaluateExpression(expression.expression, { parameters });
+  if (distance.error || !distance.quantity) return { value: 0, error: distance.error ?? "Extrude distance expression is invalid." };
+  return { value: distance.quantity.value };
+}
+
+function projectedThroughAllDistance(bounds: RenderMesh["bounds"], sketch: CadDocument["sketches"][string]): number | undefined {
+  // Callers reject negative and symmetric extrudes before this positive-direction calculation runs.
+  const transform = sketchPlaneTransform(sketch.plane);
+  const normalLength = Math.hypot(transform.normal.x, transform.normal.y, transform.normal.z);
+  if (normalLength <= 1e-9) return undefined;
+  const normal = { x: transform.normal.x / normalLength, y: transform.normal.y / normalLength, z: transform.normal.z / normalLength };
+  const corners = [
+    [bounds.min[0], bounds.min[1], bounds.min[2]],
+    [bounds.min[0], bounds.min[1], bounds.max[2]],
+    [bounds.min[0], bounds.max[1], bounds.min[2]],
+    [bounds.min[0], bounds.max[1], bounds.max[2]],
+    [bounds.max[0], bounds.min[1], bounds.min[2]],
+    [bounds.max[0], bounds.min[1], bounds.max[2]],
+    [bounds.max[0], bounds.max[1], bounds.min[2]],
+    [bounds.max[0], bounds.max[1], bounds.max[2]],
+  ] as const;
+  const projected = corners.map((corner) => corner[0] * normal.x + corner[1] * normal.y + corner[2] * normal.z);
+  const planeOffset = transform.origin.x * normal.x + transform.origin.y * normal.y + transform.origin.z * normal.z;
+  const distanceFromPlane = Math.max(...projected) - planeOffset + 1e-7;
+  if (distanceFromPlane > 0) return distanceFromPlane;
+  return undefined;
+}
+
+function applyExtrudeOperation(
+  activeKernel: KernelAdapter,
+  feature: ExtrudeFeature,
+  tool: KernelShape,
+  targets: Array<{ bodyId: string; shape: KernelShape; featureId: string; name: string; mesh?: RenderMesh }>,
+  newBodyId: string,
+): { bodyId: string; shape: KernelShape; featureId: string; name: string; mesh?: RenderMesh } {
+  if (feature.operation === "newBody") return { bodyId: newBodyId, shape: tool, featureId: feature.id, name: feature.name };
+  const target = targets[0];
+  const shape = feature.operation === "join" ? activeKernel.fuse(target.shape, tool) : activeKernel.cut(target.shape, tool);
+  return { bodyId: target.bodyId, shape, featureId: target.featureId, name: target.name };
 }
 
 function withStableBodyId(mesh: RenderMesh, bodyId: string): RenderMesh {

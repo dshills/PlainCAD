@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { createExtrudeFeature, deleteFeature, suppressFeature, upsertFeature } from "../cad/document/CadDocument";
+import { createExtrudeFeature, deleteFeature, suppressFeature, upsertFeature, upsertSketch } from "../cad/document/CadDocument";
 import { ExtrudeFeature } from "../cad/document/schema";
 import { planFeatureGraph, stableBodyIdForFeature } from "../cad/features/featureGraph";
 import { rebuildDocument } from "../cad/features/rebuildGraph";
 import { createBoxTemplate } from "../templates/templates";
+import { addCircleAt, addLine, addPoint, createXySketch } from "../cad/sketch/SketchModel";
 
 describe("feature graph rebuild", () => {
   it("skips suppressed extrude features", () => {
@@ -36,11 +37,84 @@ describe("feature graph rebuild", () => {
     let document = createBoxTemplate();
     const feature = document.features[0] as ExtrudeFeature;
     document = upsertFeature(document, { ...feature, operation: "join" });
-    expect(rebuildDocument(document).errors[0].message).toContain("not supported");
+    expect(rebuildDocument(document).errors[0].message).toContain("target body");
 
     document = createBoxTemplate();
     document = upsertFeature(document, { ...(document.features[0] as ExtrudeFeature), direction: "symmetric" });
     expect(rebuildDocument(document).errors[0].message).toContain("not supported");
+  });
+
+  it("requires OpenCascade handles for join booleans in the fallback kernel path", () => {
+    let document = createBoxTemplate();
+    const base = document.features[0] as ExtrudeFeature;
+    let sketch = createXySketch("Join Pad");
+    const p1 = addPoint(sketch, "40mm", "-25mm");
+    sketch = p1.sketch;
+    const p2 = addPoint(sketch, "80mm", "-25mm");
+    sketch = p2.sketch;
+    const p3 = addPoint(sketch, "80mm", "25mm");
+    sketch = p3.sketch;
+    const p4 = addPoint(sketch, "40mm", "25mm");
+    sketch = p4.sketch;
+    sketch = addLine(sketch, p1.pointId, p2.pointId).sketch;
+    sketch = addLine(sketch, p2.pointId, p3.pointId).sketch;
+    sketch = addLine(sketch, p3.pointId, p4.pointId).sketch;
+    sketch = addLine(sketch, p4.pointId, p1.pointId).sketch;
+    document = upsertSketch(document, sketch);
+    const join = createExtrudeFeature({
+      name: "Join Pad",
+      sketchId: sketch.id,
+      profileId: `${sketch.id}:profile:rectangle`,
+      operation: "join",
+      targetBodyIds: [stableBodyIdForFeature(base.id)],
+      termination: { type: "distance", distance: { expression: "depth", unit: "mm" } },
+      distance: { expression: "depth", unit: "mm" },
+      direction: "positive",
+    });
+    document = upsertFeature(document, join);
+
+    const result = rebuildDocument(document);
+
+    expect(result.success).toBe(false);
+    expect(result.errors.some((error) => error.message.includes("Boolean join failed"))).toBe(true);
+  });
+
+  it("cuts a circular through-all tool from an explicit target body", () => {
+    let document = createBoxTemplate();
+    const base = document.features[0] as ExtrudeFeature;
+    let sketch = createXySketch("Cut Hole");
+    sketch = addCircleAt(sketch, "0mm", "0mm", "5mm");
+    const circle = Object.values(sketch.entities).find((entity) => entity.type === "circle")!;
+    document = upsertSketch(document, sketch);
+    const cut = createExtrudeFeature({
+      name: "Cut Hole",
+      sketchId: sketch.id,
+      profileId: `${sketch.id}:profile:${circle.id}`,
+      operation: "cut",
+      targetBodyIds: [stableBodyIdForFeature(base.id)],
+      termination: { type: "throughAll" },
+      distance: { expression: "1mm", unit: "mm" },
+      direction: "positive",
+    });
+    document = upsertFeature(document, cut);
+
+    const result = rebuildDocument(document);
+
+    expect(result.success).toBe(true);
+    expect(result.bodies).toHaveLength(1);
+    expect(result.meshes[0].indices.length).toBeGreaterThan(36);
+  });
+
+  it("reports lost targets and unsupported to-face termination", () => {
+    const document = createBoxTemplate();
+    const base = document.features[0] as ExtrudeFeature;
+    const lostTarget = rebuildDocument(upsertFeature(document, { ...base, operation: "cut", targetBodyIds: ["body:missing"] }));
+    expect(lostTarget.success).toBe(false);
+    expect(lostTarget.errors.some((error) => error.message.includes("was not found"))).toBe(true);
+
+    const toFace = rebuildDocument(upsertFeature(document, { ...base, termination: { type: "toFace", faceRef: { featureId: base.id, kind: "face", transientId: "face_1" } } }));
+    expect(toFace.success).toBe(false);
+    expect(toFace.errors.some((error) => error.message.includes("to face"))).toBe(true);
   });
 
   it("uses stable body ids derived from source features", () => {

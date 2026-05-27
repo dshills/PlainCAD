@@ -5,6 +5,7 @@ type Migration = (input: CadDocument) => CadDocument;
 const migrations = new Map<number, Migration>([
   [1, migrateV1ToV2],
   [2, migrateV2ToV3],
+  [3, migrateV3ToV4],
 ]);
 
 export function migrateDocument(input: CadDocument): CadDocument {
@@ -41,6 +42,24 @@ function migrateV2ToV3(input: CadDocument): CadDocument {
         { ...sketch, plane: normalizePlaneReference((sketch as { plane?: unknown }).plane) },
       ]),
     ),
+  };
+}
+
+function migrateV3ToV4(input: CadDocument): CadDocument {
+  return {
+    ...input,
+    schemaVersion: 4,
+    features: Array.isArray(input.features)
+      ? input.features.map((feature) =>
+          isRecord(feature) && feature.type === "extrude"
+            ? {
+                ...feature,
+                termination: feature.termination ?? { type: "distance", distance: feature.distance ?? { expression: "0mm", unit: "mm" } },
+                targetBodyIds: feature.targetBodyIds ?? [],
+              }
+            : feature,
+        )
+      : input.features,
   };
 }
 
@@ -138,6 +157,8 @@ function sanitizeFeature(feature: Feature): Feature | undefined {
       profileId: feature.profileId,
       operation: feature.operation,
       distance: sanitizeExpressionRef(feature.distance),
+      ...(isRecord(feature.termination) ? { termination: sanitizeExtrudeTermination(feature.termination, feature.distance) } : {}),
+      ...(Array.isArray(feature.targetBodyIds) ? { targetBodyIds: [...feature.targetBodyIds] } : {}),
       direction: feature.direction,
     };
   }
@@ -169,6 +190,30 @@ function sanitizeFeature(feature: Feature): Feature | undefined {
     };
   }
   throw new Error(`Project file contains unsupported feature type ${String((feature as { type?: unknown }).type)}.`);
+}
+
+function sanitizeExtrudeTermination(termination: Record<string, any>, fallbackDistance: unknown): NonNullable<Extract<Feature, { type: "extrude" }>["termination"]> {
+  if (termination.type === "throughAll") return { type: "throughAll" };
+  if (termination.type === "toFace") {
+    const faceRef = isRecord(termination.faceRef) ? termination.faceRef : {};
+    if (
+      typeof faceRef.featureId !== "string" ||
+      !["face", "edge", "vertex"].includes(String(faceRef.kind)) ||
+      typeof faceRef.transientId !== "string"
+    ) {
+      return { type: "distance", distance: sanitizeExpressionRef(fallbackDistance) };
+    }
+    return {
+      type: "toFace",
+      faceRef: {
+        featureId: faceRef.featureId,
+        kind: faceRef.kind as "face" | "edge" | "vertex",
+        transientId: faceRef.transientId,
+        ...(faceRef.stableHint !== undefined ? { stableHint: faceRef.stableHint } : {}),
+      },
+    };
+  }
+  return { type: "distance", distance: sanitizeExpressionRef(termination.distance ?? fallbackDistance) };
 }
 
 function withTimelineMetadata(document: CadDocument): CadDocument {

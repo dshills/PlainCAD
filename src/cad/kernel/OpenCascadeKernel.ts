@@ -6,9 +6,12 @@ import { computeNormals, createBoxMesh, createCylinderMesh, createPlateWithCircu
 import { exportMeshesToStl } from "./stlExport";
 import { SketchProfile } from "../sketch/profileDetection";
 
+const BOOLEAN_FALLBACK_EPSILON = 1e-7;
+
 type KernelHandle =
   | { kind: "box"; width: number; height: number; depth: number; occtShape?: unknown }
-  | { kind: "extrusion"; profile: SketchProfile; distance: number; occtShape?: unknown };
+  | { kind: "extrusion"; profile: SketchProfile; distance: number; occtShape?: unknown }
+  | { kind: "boolean"; operation: "cut" | "fuse"; occtShape?: unknown };
 
 export class OpenCascadeKernel implements KernelAdapter {
   private static openCascade: Record<string, any> | undefined;
@@ -55,6 +58,11 @@ export class OpenCascadeKernel implements KernelAdapter {
     const baseHandle = base.kernelHandle as KernelHandle;
     const toolHandle = tool.kernelHandle as KernelHandle;
     if (!oc || !baseHandle.occtShape || !toolHandle.occtShape) {
+      const fallback = fallbackCut(baseHandle, toolHandle);
+      if (fallback && oc && !fallback.occtShape && fallback.kind === "extrusion") {
+        fallback.occtShape = this.createOcctExtrusion(fallback.profile, fallback.distance);
+      }
+      if (fallback) return { ...base, kernelHandle: fallback };
       throw new Error("Boolean cut failed: OpenCascade shape handles are not available.");
     }
     const cut = new oc.BRepAlgoAPI_Cut_3(baseHandle.occtShape, toolHandle.occtShape);
@@ -63,14 +71,26 @@ export class OpenCascadeKernel implements KernelAdapter {
         throw new Error("Boolean cut failed.");
       }
       const nextShape = cut.Shape();
-      return { ...base, kernelHandle: { ...baseHandle, occtShape: nextShape } };
+      return { ...base, kernelHandle: { kind: "boolean", operation: "cut", occtShape: nextShape } satisfies KernelHandle };
     } finally {
       deleteOcct(cut);
     }
   }
 
-  fuse(a: KernelShape): KernelShape {
-    return a;
+  fuse(a: KernelShape, b: KernelShape): KernelShape {
+    const oc = OpenCascadeKernel.openCascade;
+    const aHandle = a.kernelHandle as KernelHandle;
+    const bHandle = b.kernelHandle as KernelHandle;
+    if (!oc || !aHandle.occtShape || !bHandle.occtShape) {
+      throw new Error("Boolean join failed: OpenCascade shape handles are not available.");
+    }
+    const fuse = new oc.BRepAlgoAPI_Fuse_3(aHandle.occtShape, bHandle.occtShape);
+    try {
+      if (!fuse.IsDone()) throw new Error("Boolean join failed.");
+      return { ...a, kernelHandle: { kind: "boolean", operation: "fuse", occtShape: fuse.Shape() } satisfies KernelHandle };
+    } finally {
+      deleteOcct(fuse);
+    }
   }
 
   tessellate(shape: KernelShape, _options: TessellationOptions): RenderMesh {
@@ -238,6 +258,30 @@ export class OpenCascadeKernel implements KernelAdapter {
     };
   }
 }
+
+function fallbackCut(base: KernelHandle, tool: KernelHandle): KernelHandle | undefined {
+  if (base.kind !== "extrusion" || tool.kind !== "extrusion") return undefined;
+  if (tool.distance + BOOLEAN_FALLBACK_EPSILON < base.distance) return undefined;
+  if (base.profile.outerLoop.type !== "polygon" || tool.profile.outerLoop.type !== "circle") return undefined;
+  const radius = (tool.profile.bounds.maxX - tool.profile.bounds.minX) / 2;
+  const x = (tool.profile.bounds.minX + tool.profile.bounds.maxX) / 2;
+  const y = (tool.profile.bounds.minY + tool.profile.bounds.maxY) / 2;
+  const holeId = tool.profile.outerLoop.entityIds[0];
+  if (!holeId) return undefined;
+  if (![radius, x, y, base.profile.bounds.minX, base.profile.bounds.maxX, base.profile.bounds.minY, base.profile.bounds.maxY].every(Number.isFinite)) return undefined;
+  if (x - radius <= base.profile.bounds.minX || x + radius >= base.profile.bounds.maxX || y - radius <= base.profile.bounds.minY || y + radius >= base.profile.bounds.maxY) return undefined;
+  const fallback: KernelHandle = {
+    ...base,
+    occtShape: undefined,
+    profile: {
+      ...base.profile,
+      innerLoops: [...(base.profile.innerLoops ?? []), tool.profile.outerLoop],
+      holes: [...(base.profile.holes ?? []), { id: holeId, x, y, radius }],
+    },
+  };
+  return fallback;
+}
+
 
 function deleteOcct(value: unknown): void {
   const disposable = value as { delete?: () => void; isDeleted?: () => boolean } | undefined;

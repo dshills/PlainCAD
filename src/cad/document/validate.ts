@@ -62,6 +62,12 @@ export function validateDocument(document: CadDocument): ValidationIssue[] {
     if (feature.type === "extrude" && !document.sketches[feature.sketchId]) {
       issues.push({ source: "feature", sourceId: feature.id, message: "Extrude references a missing sketch." });
     }
+    if (feature.type === "extrude" && feature.operation !== "newBody" && (!Array.isArray(feature.targetBodyIds) || feature.targetBodyIds.length === 0)) {
+      issues.push({ source: "feature", sourceId: feature.id, message: `${feature.operation} extrude requires at least one target body.` });
+    }
+    if (feature.type === "extrude" && feature.operation !== "newBody" && Array.isArray(feature.targetBodyIds) && feature.targetBodyIds.length > 1) {
+      issues.push({ source: "feature", sourceId: feature.id, message: `${feature.operation} extrude currently supports exactly one target body.` });
+    }
   }
 
   return issues;
