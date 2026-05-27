@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addCenterRectangle, addCircleAt, addConstraint, addCornerRectangle, addLine, addPoint, createXySketch } from "../cad/sketch/SketchModel";
+import { addCenterRectangle, addCircleAt, addConstraint, addCornerRectangle, addLine, addPoint, createXySketch, expressionRef } from "../cad/sketch/SketchModel";
 import { solveSketch } from "../cad/sketch/SketchSolver";
 import { detectProfiles } from "../cad/sketch/profileDetection";
 import { normalizeQuantity } from "../cad/parameters/units";
@@ -154,5 +154,132 @@ describe("sketch helpers and profile detection", () => {
     sketch = addConstraint(sketch, "coincident", { pointIds: [p1.pointId, p2.pointId] });
     const solved = solveSketch(sketch, {});
     expect(solved.errors[0].message).toContain("fixed point");
+  });
+
+  it("rejects degenerate zero-length lines before profile detection", () => {
+    let sketch = createXySketch();
+    const p1 = addPoint(sketch, "0mm", "0mm");
+    sketch = p1.sketch;
+    const p2 = addPoint(sketch, "0mm", "0mm");
+    sketch = p2.sketch;
+    const line = addLine(sketch, p1.pointId, p2.pointId);
+
+    const solved = solveSketch(line.sketch, {});
+
+    expect(solved.errors[0].message).toContain("degenerate");
+  });
+
+  it("validates parallel and perpendicular constraints", () => {
+    let sketch = createXySketch();
+    const a = addPoint(sketch, "0mm", "0mm");
+    sketch = a.sketch;
+    const b = addPoint(sketch, "10mm", "0mm");
+    sketch = b.sketch;
+    const c = addPoint(sketch, "0mm", "0mm");
+    sketch = c.sketch;
+    const d = addPoint(sketch, "0mm", "10mm");
+    sketch = d.sketch;
+    const horizontal = addLine(sketch, a.pointId, b.pointId);
+    sketch = horizontal.sketch;
+    const vertical = addLine(sketch, c.pointId, d.pointId);
+    sketch = vertical.sketch;
+    sketch = addConstraint(sketch, "perpendicular", { entityIds: [horizontal.lineId, vertical.lineId] });
+    expect(solveSketch(sketch, {}).errors).toEqual([]);
+
+    sketch = addConstraint(sketch, "parallel", { entityIds: [horizontal.lineId, vertical.lineId] });
+    expect(solveSketch(sketch, {}).errors.some((error) => error.message.includes("parallel"))).toBe(true);
+
+    const tooMany = addConstraint(sketch, "parallel", { entityIds: [horizontal.lineId, vertical.lineId, horizontal.lineId] });
+    expect(solveSketch(tooMany, {}).errors.some((error) => error.message.includes("exactly two"))).toBe(true);
+  });
+
+  it("validates tangent, midpoint, and symmetric constraints", () => {
+    let sketch = createXySketch();
+    const a = addPoint(sketch, "-10mm", "5mm");
+    sketch = a.sketch;
+    const b = addPoint(sketch, "10mm", "5mm");
+    sketch = b.sketch;
+    const tangentLine = addLine(sketch, a.pointId, b.pointId);
+    sketch = tangentLine.sketch;
+    sketch = addCircleAt(sketch, "0mm", "0mm", "5mm");
+    const circle = Object.values(sketch.entities).find((entity) => entity.type === "circle")!;
+    sketch = addConstraint(sketch, "tangent", { entityIds: [circle.id, tangentLine.lineId] });
+
+    const midpoint = addPoint(sketch, "0mm", "5mm");
+    sketch = midpoint.sketch;
+    sketch = addConstraint(sketch, "midpoint", { pointIds: [midpoint.pointId], entityIds: [tangentLine.lineId] });
+
+    const left = addPoint(sketch, "-2mm", "1mm");
+    sketch = left.sketch;
+    const right = addPoint(sketch, "2mm", "1mm");
+    sketch = right.sketch;
+    const axisA = addPoint(sketch, "0mm", "0mm");
+    sketch = axisA.sketch;
+    const axisB = addPoint(sketch, "0mm", "10mm");
+    sketch = axisB.sketch;
+    sketch = addConstraint(sketch, "symmetric", { pointIds: [left.pointId, right.pointId, axisA.pointId, axisB.pointId] });
+
+    expect(solveSketch(sketch, {}).errors).toEqual([]);
+  });
+
+  it("validates circle-to-circle tangent constraints", () => {
+    let sketch = addCircleAt(createXySketch(), "0mm", "0mm", "5mm");
+    sketch = addCircleAt(sketch, "8mm", "0mm", "3mm");
+    const circles = Object.values(sketch.entities).filter((entity) => entity.type === "circle");
+    sketch = addConstraint(sketch, "tangent", { entityIds: [circles[0].id, circles[1].id] });
+
+    expect(solveSketch(sketch, {}).errors).toEqual([]);
+  });
+
+  it("validates sketch dimensions against resolved geometry", () => {
+    let sketch = createXySketch();
+    const start = addPoint(sketch, "0mm", "0mm");
+    sketch = start.sketch;
+    const end = addPoint(sketch, "10mm", "0mm");
+    sketch = end.sketch;
+    const line = addLine(sketch, start.pointId, end.pointId);
+    sketch = {
+      ...line.sketch,
+      dimensions: [
+        { id: "dim_length", type: "length", entityIds: [line.lineId], expression: expressionRef("10mm") },
+        { id: "dim_angle", type: "angle", entityIds: [line.lineId, line.lineId], expression: expressionRef("0deg", "deg") },
+        { id: "dim_horizontal", type: "horizontalDistance", entityIds: [], pointIds: [start.pointId, end.pointId], expression: expressionRef("10mm") },
+        { id: "dim_vertical", type: "verticalDistance", entityIds: [], pointIds: [start.pointId, end.pointId], expression: expressionRef("0mm") },
+      ],
+    };
+
+    expect(solveSketch(sketch, {}).errors).toEqual([]);
+    const conflicting = { ...sketch, dimensions: [{ ...sketch.dimensions[0], expression: expressionRef("9mm") }] };
+    expect(solveSketch(conflicting, {}).errors[0].message).toContain("length dimension");
+  });
+
+  it("supports obtuse angle dimensions and segment-bounded tangency", () => {
+    let sketch = createXySketch();
+    const origin = addPoint(sketch, "0mm", "0mm");
+    sketch = origin.sketch;
+    const right = addPoint(sketch, "10mm", "0mm");
+    sketch = right.sketch;
+    const obtuse = addPoint(sketch, "-10mm", "10mm");
+    sketch = obtuse.sketch;
+    const first = addLine(sketch, origin.pointId, right.pointId);
+    sketch = first.sketch;
+    const second = addLine(sketch, origin.pointId, obtuse.pointId);
+    sketch = {
+      ...second.sketch,
+      dimensions: [{ id: "dim_obtuse", type: "angle", entityIds: [first.lineId, second.lineId], expression: expressionRef("135deg", "deg") }],
+    };
+    expect(solveSketch(sketch, {}).errors).toEqual([]);
+
+    let tangent = createXySketch();
+    const a = addPoint(tangent, "100mm", "5mm");
+    tangent = a.sketch;
+    const b = addPoint(tangent, "110mm", "5mm");
+    tangent = b.sketch;
+    const line = addLine(tangent, a.pointId, b.pointId);
+    tangent = line.sketch;
+    tangent = addCircleAt(tangent, "0mm", "0mm", "5mm");
+    const circle = Object.values(tangent.entities).find((entity) => entity.type === "circle")!;
+    tangent = addConstraint(tangent, "tangent", { entityIds: [line.lineId, circle.id] });
+    expect(solveSketch(tangent, {}).errors[0].message).toContain("tangent");
   });
 });

@@ -86,20 +86,27 @@ export type ConstraintType =
   | "horizontal"
   | "vertical"
   | "coincident"
+  | "parallel"
+  | "perpendicular"
+  | "tangent"
   | "equalLength"
-  | "equalRadius";
+  | "equalRadius"
+  | "midpoint"
+  | "symmetric";
 
 export interface SketchConstraint {
   id: string;
   type: ConstraintType;
   entityIds: string[];
+  /** Point references used by point-based constraints such as coincident, midpoint, and symmetric. */
   pointIds?: string[];
 }
 
 export interface SketchDimension {
   id: string;
-  type: "length" | "radius" | "diameter" | "horizontalDistance" | "verticalDistance";
+  type: "length" | "radius" | "diameter" | "horizontalDistance" | "verticalDistance" | "distance" | "angle";
   entityIds: string[];
+  pointIds?: string[];
   expression: ExpressionRef;
 }
 
