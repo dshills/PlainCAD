@@ -2,7 +2,7 @@ import { RefObject } from "react";
 import { useCadStore } from "../../state/useCadStore";
 import { createBoxTemplate, createMountingPlateTemplate } from "../../templates/templates";
 import { importProjectFile } from "../../persistence/importProject";
-import { downloadArrayBuffer, serializeProject } from "../../persistence/exportProject";
+import { downloadArrayBuffer, downloadProject, projectFilename, serializeProject } from "../../persistence/exportProject";
 import { exportMeshesToStl } from "../../cad/kernel/stlExport";
 import { createExtrudeFeature, deleteFeature, suppressFeature, upsertFeature, upsertSketch } from "../../cad/document/CadDocument";
 import { addCenterRectangle, addCircleAt, addCornerRectangle, createXySketch } from "../../cad/sketch/SketchModel";
@@ -41,16 +41,30 @@ export const commands: CadCommand[] = [
         ctx.fileInputRef?.current?.click();
         return;
       }
-      useCadStore.getState().setDocument(await importProjectFile(ctx.file));
+      try {
+        useCadStore.getState().setDocument(await importProjectFile(ctx.file));
+      } catch (error) {
+        useCadStore.getState().setFileError(error instanceof Error ? error.message : "Project file could not be opened.");
+      }
     },
   },
   {
     id: "file.saveProject",
-    label: "Save Project JSON",
+    label: "Save Project",
     enabled: () => true,
     run: () => {
       const document = useCadStore.getState().history.present;
-      downloadArrayBuffer(new TextEncoder().encode(serializeProject(document)).buffer, `${document.name}.pcaddoc`, "application/json");
+      useCadStore.getState().setFileError(undefined);
+      downloadProject(document);
+    },
+  },
+  {
+    id: "file.exportJson",
+    label: "Export Project JSON",
+    enabled: () => true,
+    run: () => {
+      const document = useCadStore.getState().history.present;
+      downloadArrayBuffer(new TextEncoder().encode(serializeProject(document)).buffer, projectFilename(document, ".json"), "application/json");
     },
   },
   {

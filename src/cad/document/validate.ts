@@ -1,15 +1,29 @@
 import { CadDocument, ValidationIssue } from "./schema";
 
 const PARAMETER_NAME_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+const REQUIRED_DOCUMENT_OBJECTS = ["parameters", "sketches"] as const;
 
 export function validateDocument(document: CadDocument): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
-  if (!document.id) issues.push({ source: "document", message: "Document is missing an id." });
-  if (!document.name) issues.push({ source: "document", message: "Document is missing a name." });
+  if (typeof document.id !== "string" || document.id.trim() === "") issues.push({ source: "document", message: "Document is missing an id." });
+  if (typeof document.name !== "string" || document.name.trim() === "") issues.push({ source: "document", message: "Document is missing a name." });
   if (!document.schemaVersion) issues.push({ source: "document", message: "Document is missing a schema version." });
+  if (!document.units) issues.push({ source: "document", message: "Document is missing units." });
+  if (!document.unitSettings || typeof document.unitSettings !== "object" || Array.isArray(document.unitSettings)) issues.push({ source: "document", message: "Document is missing unit settings." });
+  for (const field of REQUIRED_DOCUMENT_OBJECTS) {
+    if (!document[field] || typeof document[field] !== "object" || Array.isArray(document[field])) {
+      issues.push({ source: "document", message: `Document is missing ${field}.` });
+    }
+  }
+  if (!Array.isArray(document.features)) issues.push({ source: "document", message: "Document is missing features." });
+  if (issues.length > 0) return issues;
 
   const ids = new Set<string>();
   const addId = (id: string, source: ValidationIssue["source"]) => {
+    if (typeof id !== "string" || id.trim() === "") {
+      issues.push({ source, message: `${source} is missing an id.` });
+      return;
+    }
     if (ids.has(id)) issues.push({ source, sourceId: id, message: `Duplicate id ${id}.` });
     ids.add(id);
   };

@@ -1,7 +1,19 @@
 import { CadDocument } from "../cad/document/schema";
 
-export function serializeProject(document: CadDocument): string {
-  return JSON.stringify(sortObject(document), null, 2);
+export const PROJECT_FILE_EXTENSION = ".pcaddoc";
+export const PROJECT_FILE_MIME_TYPE = "application/vnd.plaincad.project+json";
+
+export function serializeProject(document: CadDocument, pretty = true): string {
+  return JSON.stringify(sortObject(document), null, pretty ? 2 : undefined);
+}
+
+export function exportProject(document: CadDocument): ArrayBuffer {
+  return new TextEncoder().encode(serializeProject(document)).buffer;
+}
+
+export function projectFilename(document: CadDocument, extension = PROJECT_FILE_EXTENSION): string {
+  const safeName = document.name.trim().replace(/[^a-z0-9._-]+/gi, "_").replace(/^_+|_+$/g, "");
+  return `${safeName || "PlainCAD"}${extension}`;
 }
 
 export function downloadArrayBuffer(bytes: ArrayBuffer, filename: string, type: string) {
@@ -12,6 +24,10 @@ export function downloadArrayBuffer(bytes: ArrayBuffer, filename: string, type: 
   anchor.download = filename;
   anchor.click();
   URL.revokeObjectURL(url);
+}
+
+export function downloadProject(document: CadDocument) {
+  downloadArrayBuffer(exportProject(document), projectFilename(document), PROJECT_FILE_MIME_TYPE);
 }
 
 function sortObject(value: unknown): unknown {

@@ -13,8 +13,10 @@ export function App() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const documentName = useCadStore((state) => state.history.present.name);
   const rebuild = useCadStore((state) => state.rebuild);
+  const fileError = useCadStore((state) => state.fileError);
   const initializeKernel = useCadStore((state) => state.initializeKernel);
   const select = useCadStore((state) => state.select);
+  const setFileError = useCadStore((state) => state.setFileError);
   const commandContext = useMemo(() => ({ fileInputRef }), []);
 
   useEffect(() => {
@@ -66,6 +68,15 @@ export function App() {
         <div className="kernel-banner" role="status">
           <strong>Loading CAD kernel...</strong>
           <span>{rebuild.message ?? "OpenCascade is starting in a worker. Geometry commands will run when it is ready."}</span>
+        </div>
+      ) : null}
+      {fileError ? (
+        <div className="kernel-banner error" role="alert">
+          <strong>File error</strong>
+          <span>{fileError}</span>
+          <button type="button" onClick={() => setFileError(undefined)}>
+            Dismiss
+          </button>
         </div>
       ) : null}
       <main className="workspace">

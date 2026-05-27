@@ -24,8 +24,10 @@ interface CadStore {
   history: HistoryState;
   selection: SelectionState;
   rebuild: RebuildState;
+  fileError?: string;
   paletteOpen: boolean;
   setPaletteOpen(open: boolean): void;
+  setFileError(message: string | undefined): void;
   setDocument(document: CadDocument): void;
   updateDocument(mutator: (document: CadDocument) => CadDocument): void;
   addParameter(): void;
@@ -108,10 +110,12 @@ export const useCadStore = create<CadStore>((set, get) => ({
   history: { past: [], present: initialDocument, future: [] },
   selection: { selectedIds: [] },
   rebuild: { status: initialRebuild.success ? "succeeded" : "failed", result: initialRebuild, kernelReady: false },
+  fileError: undefined,
   paletteOpen: false,
   setPaletteOpen: (open) => set({ paletteOpen: open }),
+  setFileError: (message) => set({ fileError: message }),
   setDocument: (document) => {
-    set({ history: { past: [], present: document, future: [] } });
+    set({ history: { past: [], present: document, future: [] }, fileError: undefined });
     get().rebuildNow();
   },
   updateDocument: (mutator) => {

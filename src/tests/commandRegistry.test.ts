@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { runCommand } from "../ui/commands/commandRegistry";
+import { runCommand, commands } from "../ui/commands/commandRegistry";
+import { useCadStore } from "../state/useCadStore";
 
 describe("view commands", () => {
   it("dispatches fit and reset camera events", () => {
@@ -18,5 +19,19 @@ describe("view commands", () => {
       window.removeEventListener("plaincad:fit-view", fit);
       window.removeEventListener("plaincad:reset-camera", reset);
     }
+  });
+});
+
+describe("file commands", () => {
+  it("exposes project save/open/export commands", () => {
+    expect(commands.map((command) => command.id)).toEqual(expect.arrayContaining(["file.openProject", "file.saveProject", "file.exportJson"]));
+  });
+
+  it("reports open project import errors in the store", async () => {
+    const file = { text: async () => "{bad json" } as File;
+
+    await runCommand("file.openProject", { file });
+
+    expect(useCadStore.getState().fileError).toBe("Project file is not valid JSON.");
   });
 });
