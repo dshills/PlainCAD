@@ -23,7 +23,7 @@ export function downloadArrayBuffer(bytes: ArrayBuffer, filename: string, type: 
   anchor.href = url;
   anchor.download = filename;
   anchor.click();
-  URL.revokeObjectURL(url);
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 export function downloadProject(document: CadDocument) {

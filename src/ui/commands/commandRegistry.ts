@@ -20,8 +20,36 @@ export interface CadCommand {
   label: string;
   description?: string;
   shortcut?: string;
-  enabled: () => boolean;
+  alwaysEnabled?: boolean;
+  enablementKey?: keyof CommandEnablement;
   run: (ctx: CommandContext) => Promise<void> | void;
+}
+
+export interface CommandEnablement {
+  document: boolean;
+  undo: boolean;
+  redo: boolean;
+  exportStl: boolean;
+  createExtrude: boolean;
+  selectedFeature: boolean;
+}
+
+export function selectCommandEnablement(state: CadStore): CommandEnablement {
+  return {
+    document: Boolean(state.history.present),
+    undo: state.history.past.length > 0,
+    redo: state.history.future.length > 0,
+    exportStl: canExportStl(state),
+    createExtrude: canCreateExtrude(state),
+    selectedFeature: Boolean(getSelectedFeature(state)),
+  };
+}
+
+export function isCommandEnabledForSnapshot(commandId: string, enablement: CommandEnablement): boolean {
+  const command = commandById.get(commandId);
+  if (!command) return false;
+  if (command.enablementKey) return enablement[command.enablementKey];
+  return command.alwaysEnabled === true;
 }
 
 export const commands: CadCommand[] = [
@@ -29,21 +57,23 @@ export const commands: CadCommand[] = [
     id: "file.newProject",
     label: "New Project",
     shortcut: "Cmd/Ctrl+N",
-    enabled: () => true,
+    alwaysEnabled: true,
     run: () => useCadStore.getState().setDocument(createMountingPlateTemplate()),
   },
   {
     id: "file.openProject",
     label: "Open Project",
-    enabled: () => true,
+    alwaysEnabled: true,
     run: async (ctx) => {
       if (!ctx.file) {
         ctx.fileInputRef?.current?.click();
         return;
       }
       try {
-        useCadStore.getState().setDocument(await importProjectFile(ctx.file));
+        const document = await importProjectFile(ctx.file);
+        useCadStore.getState().setDocument(document);
       } catch (error) {
+        console.error(error);
         useCadStore.getState().setFileError(error instanceof Error ? error.message : "Project file could not be opened.");
       }
     },
@@ -51,11 +81,16 @@ export const commands: CadCommand[] = [
   {
     id: "file.saveProject",
     label: "Save Project",
-    enabled: () => true,
+    enablementKey: "document",
     run: async () => {
       const state = useCadStore.getState();
       try {
-        await downloadProject(state.history.present);
+        const document = state.history.present;
+        if (!document) {
+          state.setFileError("Project save is unavailable until a project is loaded.");
+          return;
+        }
+        await downloadProject(document);
         state.setFileError(undefined);
       } catch (error) {
         console.error(error);
@@ -66,11 +101,15 @@ export const commands: CadCommand[] = [
   {
     id: "file.exportJson",
     label: "Export Project JSON",
-    enabled: () => true,
+    enablementKey: "document",
     run: async () => {
       const state = useCadStore.getState();
       try {
         const document = state.history.present;
+        if (!document) {
+          state.setFileError("JSON export is unavailable until a project is loaded.");
+          return;
+        }
         await downloadArrayBuffer(new TextEncoder().encode(serializeProject(document)).buffer, makeProjectFilename(document, ".json"), "application/json");
         state.setFileError(undefined);
       } catch (error) {
@@ -82,7 +121,7 @@ export const commands: CadCommand[] = [
   {
     id: "file.exportStl",
     label: "Export STL",
-    enabled: () => canExportStl(useCadStore.getState()),
+    enablementKey: "exportStl",
     run: async () => {
       const state = useCadStore.getState();
       try {
@@ -95,42 +134,44 @@ export const commands: CadCommand[] = [
       }
     },
   },
-  { id: "history.undo", label: "Undo", enabled: () => useCadStore.getState().history.past.length > 0, run: () => useCadStore.getState().undo() },
-  { id: "history.redo", label: "Redo", enabled: () => useCadStore.getState().history.future.length > 0, run: () => useCadStore.getState().redo() },
-  { id: "parameter.add", label: "Add Parameter", enabled: () => true, run: () => useCadStore.getState().addParameter() },
+  { id: "history.undo", label: "Undo", enablementKey: "undo", run: () => useCadStore.getState().undo() },
+  { id: "history.redo", label: "Redo", enablementKey: "redo", run: () => useCadStore.getState().redo() },
+  { id: "parameter.add", label: "Add Parameter", alwaysEnabled: true, run: () => useCadStore.getState().addParameter() },
   {
     id: "sketch.createXY",
     label: "Create XY Sketch",
-    enabled: () => true,
+    enablementKey: "document",
     run: () => {
       const state = useCadStore.getState();
-      const sketch = createXySketch(`Sketch ${Object.keys(state.history.present.sketches).length + 1}`);
+      const document = state.history.present;
+      if (!document) return;
+      const sketch = createXySketch(`Sketch ${Object.keys(document.sketches).length + 1}`);
       state.updateDocument((document) => upsertSketch(document, sketch));
-      state.select({ kind: "sketch", id: sketch.id, documentId: state.history.present.id });
+      state.select({ kind: "sketch", id: sketch.id, documentId: document.id });
     },
   },
   {
     id: "sketch.addCenterRectangle",
     label: "Add Center Rectangle",
-    enabled: () => true,
+    alwaysEnabled: true,
     run: () => updateSelectedSketch((sketch) => addCenterRectangle(sketch, "80mm", "50mm")),
   },
   {
     id: "sketch.addCornerRectangle",
     label: "Add Corner Rectangle",
-    enabled: () => true,
+    alwaysEnabled: true,
     run: () => updateSelectedSketch((sketch) => addCornerRectangle(sketch, "80mm", "50mm")),
   },
   {
     id: "sketch.addCircle",
     label: "Add Circle",
-    enabled: () => true,
+    alwaysEnabled: true,
     run: () => updateSelectedSketch((sketch) => addCircleAt(sketch, "0mm", "0mm", "10mm")),
   },
   {
     id: "feature.extrude",
     label: "Extrude Selected Sketch",
-    enabled: () => canCreateExtrude(),
+    enablementKey: "createExtrude",
     run: () => {
       const state = useCadStore.getState();
       const match = findActiveSketchWithProfile();
@@ -150,7 +191,7 @@ export const commands: CadCommand[] = [
   {
     id: "feature.suppress",
     label: "Suppress/Unsuppress Feature",
-    enabled: () => Boolean(getSelectedFeature()),
+    enablementKey: "selectedFeature",
     run: () => {
       const state = useCadStore.getState();
       const feature = getSelectedFeature();
@@ -161,7 +202,7 @@ export const commands: CadCommand[] = [
   {
     id: "feature.delete",
     label: "Delete Feature",
-    enabled: () => Boolean(getSelectedFeature()),
+    enablementKey: "selectedFeature",
     run: () => {
       const state = useCadStore.getState();
       const feature = getSelectedFeature();
@@ -170,15 +211,18 @@ export const commands: CadCommand[] = [
       state.select(undefined);
     },
   },
-  { id: "template.createBox", label: "Create Parametric Box", enabled: () => true, run: () => useCadStore.getState().setDocument(createBoxTemplate()) },
-  { id: "template.createMountingPlate", label: "Create Mounting Plate", enabled: () => true, run: () => useCadStore.getState().setDocument(createMountingPlateTemplate()) },
-  { id: "view.fit", label: "Fit View", shortcut: "F", enabled: () => true, run: () => globalThis.dispatchEvent(new Event("plaincad:fit-view")) },
-  { id: "view.resetCamera", label: "Reset Camera", enabled: () => true, run: () => globalThis.dispatchEvent(new Event("plaincad:reset-camera")) },
+  { id: "template.createBox", label: "Create Parametric Box", alwaysEnabled: true, run: () => useCadStore.getState().setDocument(createBoxTemplate()) },
+  { id: "template.createMountingPlate", label: "Create Mounting Plate", alwaysEnabled: true, run: () => useCadStore.getState().setDocument(createMountingPlateTemplate()) },
+  { id: "view.fit", label: "Fit View", shortcut: "F", alwaysEnabled: true, run: () => globalThis.dispatchEvent(new Event("plaincad:fit-view")) },
+  { id: "view.resetCamera", label: "Reset Camera", alwaysEnabled: true, run: () => globalThis.dispatchEvent(new Event("plaincad:reset-camera")) },
 ];
 
+export const commandById = new Map(commands.map((command) => [command.id, command]));
+
 export function runCommand(id: string, context: CommandContext = {}) {
-  const command = commands.find((item) => item.id === id);
-  if (!command || !command.enabled()) return;
+  const command = commandById.get(id);
+  const state = useCadStore.getState();
+  if (!command || !isCommandEnabledForSnapshot(id, selectCommandEnablement(state))) return;
   return command.run(context);
 }
 
@@ -186,6 +230,7 @@ function updateSelectedSketch(mutator: (sketch: ReturnType<typeof createXySketch
   const state = useCadStore.getState();
   const selection = state.selection.selectedIds[0];
   const document = state.history.present;
+  if (!document) return;
   const selectedSketch =
     selection?.kind === "sketch"
       ? document.sketches[selection.id]
@@ -198,30 +243,33 @@ function updateSelectedSketch(mutator: (sketch: ReturnType<typeof createXySketch
   state.select({ kind: "sketch", id: updated.id, documentId: document.id });
 }
 
-function getSelectedFeature() {
-  const state = useCadStore.getState();
+function getSelectedFeature(state = useCadStore.getState()) {
   const selection = state.selection.selectedIds[0];
-  return selection?.kind === "feature" ? state.history.present.features.find((feature) => feature.id === selection.id) : undefined;
+  const document = state.history.present;
+  return selection?.kind === "feature" ? document?.features.find((feature) => feature.id === selection.id) : undefined;
 }
 
-function canCreateExtrude() {
-  const state = useCadStore.getState();
+function canCreateExtrude(state = useCadStore.getState()) {
   const selection = state.selection.selectedIds[0];
-  if (selection?.kind === "sketch") return Boolean(state.history.present.sketches[selection.id]);
+  const document = state.history.present;
+  if (!document) return false;
+  if (selection?.kind === "sketch") return Boolean(document.sketches[selection.id]);
   if (selection?.kind === "sketchEntity") {
-    return Object.values(state.history.present.sketches).some((sketch) => Boolean(sketch.entities[selection.id]));
+    return Object.values(document.sketches).some((sketch) => Boolean(sketch.entities[selection.id]));
   }
-  return Object.keys(state.history.present.sketches).length > 0;
+  return Object.keys(document.sketches).length > 0;
 }
 
 export function canExportStl(state: CadStore) {
   const { rebuild } = state;
-  return rebuild.kernelReady && rebuild.status === "succeeded" && rebuild.result?.success === true && rebuild.result.documentId === state.history.present.id && rebuild.result.meshes.length > 0;
+  const document = state.history.present;
+  return Boolean(document) && rebuild.kernelReady && rebuild.status === "succeeded" && rebuild.result?.success === true && rebuild.result.documentId === document.id && rebuild.result.meshes.length > 0;
 }
 
 function findActiveSketchWithProfile() {
   const state = useCadStore.getState();
   const document = state.history.present;
+  if (!document) return undefined;
   const selection = state.selection.selectedIds[0];
   const sketches = Object.values(document.sketches);
   const selectedSketch =

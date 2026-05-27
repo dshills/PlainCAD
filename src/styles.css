@@ -36,7 +36,8 @@ button:hover {
 }
 
 button:focus-visible,
-input:focus-visible {
+input:focus-visible,
+select:focus-visible {
   outline: 2px solid #2e7d79;
   outline-offset: 2px;
 }
@@ -249,7 +250,9 @@ input:focus-visible {
   align-items: center;
 }
 
-.row input {
+.row input,
+.inspector-form input,
+.inspector-form select {
   width: 100%;
   min-width: 0;
   border: 1px solid #bcc7c1;
@@ -277,6 +280,8 @@ input:focus-visible {
   font-size: 0.83rem;
   margin-top: 0.45rem;
   padding: 0.4rem;
+  text-align: left;
+  width: 100%;
 }
 
 .viewer-canvas {
@@ -308,6 +313,12 @@ input:focus-visible {
   overflow: hidden;
 }
 
+.palette h2 {
+  margin: 0;
+  padding: 0.75rem 0.85rem 0;
+  font-size: 0.95rem;
+}
+
 .palette input {
   width: 100%;
   border: 0;
@@ -323,6 +334,12 @@ input:focus-visible {
   padding: 0.75rem 0.9rem;
 }
 
+.palette-empty {
+  margin: 0;
+  padding: 0.85rem;
+  color: #64716b;
+}
+
 .item-card {
   border: 1px solid #d6ded9;
   border-radius: 7px;
@@ -330,16 +347,56 @@ input:focus-visible {
   padding: 0.55rem;
 }
 
+.help-list {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+}
+
+.help-list div {
+  display: grid;
+  grid-template-columns: min-content 1fr;
+  gap: 0.5rem;
+}
+
+.help-list dt {
+  font-weight: 700;
+  font-size: 0.82rem;
+}
+
+.help-list dd {
+  margin: 0;
+  color: #64716b;
+  font-size: 0.82rem;
+}
+
 @media (max-width: 1050px) {
   .workspace {
     grid-template-columns: 230px 1fr;
+    grid-template-areas:
+      "left viewer"
+      "right right";
+  }
+
+  .left-panel {
+    grid-area: left;
+  }
+
+  .viewer-region {
+    grid-area: viewer;
   }
 
   .right-panel {
-    grid-column: 1 / -1;
+    grid-area: right;
     border-left: 0;
     border-top: 1px solid #cfd7d2;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .right-panel {
+    grid-template-columns: 1fr;
   }
 }

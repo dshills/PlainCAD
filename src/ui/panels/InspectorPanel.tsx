@@ -1,7 +1,17 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useCadStore } from "../../state/useCadStore";
 import { SketchCircle, SketchPoint } from "../../cad/document/schema";
-import { upsertFeature, upsertSketch } from "../../cad/document/CadDocument";
+import * as documentOps from "../../cad/document/CadDocument";
+
+const EXTRUDE_OPERATIONS = ["newBody", "join", "cut"] as const;
+const EXTRUDE_OPERATION_OPTIONS = [
+  { value: "newBody", label: "New body", disabled: false },
+  { value: "join", label: "Join", disabled: true },
+  { value: "cut", label: "Cut", disabled: true },
+] as const;
+const EXTRUDE_DIRECTIONS = ["positive", "negative", "symmetric"] as const;
+const DEFAULT_SKETCH_NAME = "Untitled Sketch";
+const DEFAULT_FEATURE_NAME = "Untitled Feature";
 
 export function InspectorPanel() {
   const selection = useCadStore((state) => state.selection.selectedIds[0]);
@@ -9,25 +19,30 @@ export function InspectorPanel() {
   const rebuild = useCadStore((state) => state.rebuild.result);
   const select = useCadStore((state) => state.select);
   const updateDocument = useCadStore((state) => state.updateDocument);
-  const body = useMemo(() => rebuild?.bodies.find((item) => item.id === selection?.id), [rebuild?.bodies, selection?.id]);
+  const updateParameter = useCadStore((state) => state.updateParameter);
+  const body = useMemo(
+    () => (selection?.kind === "body" ? rebuild?.bodies.find((item) => item.id === selection.id) : undefined),
+    [rebuild?.bodies, selection?.id, selection?.kind],
+  );
   const bodyMesh = useMemo(() => rebuild?.meshes.find((item) => item.bodyId === body?.id), [body?.id, rebuild?.meshes]);
-  const parameter = selection?.kind === "parameter" ? document.parameters[selection.id] : undefined;
-  const sketch = selection?.kind === "sketch" ? document.sketches[selection.id] : undefined;
+  const parameter = selection?.kind === "parameter" ? document?.parameters[selection.id] : undefined;
+  const sketch = selection?.kind === "sketch" ? document?.sketches[selection.id] : undefined;
   const sketchEntity = useMemo(() => {
     if (selection?.kind !== "sketchEntity") return undefined;
+    if (!document) return undefined;
     for (const item of Object.values(document.sketches)) {
       const entity = item.entities[selection.id];
       if (entity) return { sketch: item, entity };
     }
     return undefined;
-  }, [document.sketches, selection?.id, selection?.kind]);
+  }, [document, selection?.id, selection?.kind]);
   const feature = useMemo(
-    () => (selection?.kind === "feature" ? document.features.find((item) => item.id === selection.id) : undefined),
-    [document.features, selection?.id, selection?.kind],
+    () => (selection?.kind === "feature" ? document?.features.find((item) => item.id === selection.id) : undefined),
+    [document, selection?.id, selection?.kind],
   );
   const bodyFeature = useMemo(
-    () => (body?.featureId ? document.features.find((item) => item.id === body.featureId) : undefined),
-    [body?.featureId, document.features],
+    () => (body?.featureId ? document?.features.find((item) => item.id === body.featureId) : undefined),
+    [body?.featureId, document],
   );
 
   return (
@@ -35,25 +50,41 @@ export function InspectorPanel() {
       <h2>Inspector</h2>
       {!selection ? <p className="muted">Select a parameter, sketch, feature, or body.</p> : null}
       {parameter ? (
-        <div className="item-card">
+        <div key={`parameter:${parameter.id || parameter.name}`} className="item-card">
           <strong>{parameter.name}</strong>
           <p className="muted">
             {parameter.expression} = {parameter.value.toFixed(3)}
             {parameter.unit}
           </p>
+          <div className="inspector-form">
+            <label>
+              {parameter.name} expression
+              <CommitInput value={parameter.expression} onCommit={(value) => updateParameter(parameter.name, { expression: value })} />
+            </label>
+            <label>
+              {parameter.name} description
+              <CommitInput value={parameter.description ?? ""} onCommit={(value) => updateParameter(parameter.name, { description: value })} />
+            </label>
+          </div>
         </div>
       ) : null}
       {sketch ? (
-        <div className="item-card">
+        <div key={`sketch:${sketch.id}`} className="item-card">
           <strong>{sketch.name}</strong>
           <p className="muted">Plane {sketch.plane}</p>
           <p className="muted">
             {Object.keys(sketch.entities).length} entities, {sketch.constraints.length} constraints, {sketch.dimensions.length} dimensions
           </p>
+          <div className="inspector-form">
+            <label>
+              Name
+              <CommitInput value={sketch.name} onCommit={(value) => updateSketchName(updateDocument, sketch.id, value)} />
+            </label>
+          </div>
         </div>
       ) : null}
       {feature ? (
-        <div className="item-card">
+        <div key={`feature:${feature.id}`} className="item-card">
           <strong>{feature.name}</strong>
           <p className="muted">
             {feature.type}
@@ -64,45 +95,55 @@ export function InspectorPanel() {
             <div className="inspector-form">
               <label>
                 Name
-                <input
-                  key={`${feature.id}:name:${feature.name}`}
-                  defaultValue={feature.name}
-                  onBlur={(event) => updateFeatureName(updateDocument, feature.id, event.target.value)}
-                />
+                <CommitInput value={feature.name} onCommit={(value) => updateFeatureName(updateDocument, feature.id, value)} />
               </label>
               <label>
                 Distance
-                <input
-                  key={`${feature.id}:distance:${feature.distance.expression}`}
-                  defaultValue={feature.distance.expression}
-                  onBlur={(event) => updateExtrudeDistance(updateDocument, feature.id, event.target.value)}
-                />
+                <CommitInput value={feature.distance.expression} onCommit={(value) => updateExtrudeDistance(updateDocument, feature.id, value)} />
+              </label>
+              <label>
+                Operation
+                <select
+                  value={feature.operation}
+                  onChange={(event) => updateExtrudeOperation(updateDocument, feature.id, event.target.value)}
+                >
+                  {EXTRUDE_OPERATION_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value} disabled={option.disabled}>
+                      {option.label}{option.disabled ? " unavailable" : ""}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Direction
+                <select
+                  value={feature.direction}
+                  onChange={(event) => updateExtrudeDirection(updateDocument, feature.id, event.target.value)}
+                >
+                  {EXTRUDE_DIRECTIONS.map((direction) => (
+                    <option key={direction} value={direction}>
+                      {direction[0].toUpperCase() + direction.slice(1)}
+                    </option>
+                  ))}
+                </select>
               </label>
             </div>
           ) : null}
         </div>
       ) : null}
       {sketchEntity ? (
-        <div className="item-card">
+        <div key={`entity:${sketchEntity.entity.id}`} className="item-card">
           <strong>{sketchEntity.entity.type}</strong>
           <p className="muted">{sketchEntity.entity.id}</p>
           {sketchEntity.entity.type === "point" ? (
             <div className="inspector-form">
               <label>
                 X
-                <input
-                  key={`${sketchEntity.entity.id}:x:${(sketchEntity.entity as SketchPoint).x.expression}`}
-                  defaultValue={(sketchEntity.entity as SketchPoint).x.expression}
-                  onBlur={(event) => updateSketchEntityExpression(updateDocument, sketchEntity.sketch.id, sketchEntity.entity.id, "x", event.target.value)}
-                />
+                <CommitInput value={(sketchEntity.entity as SketchPoint).x.expression} onCommit={(value) => updateSketchEntityExpression(updateDocument, sketchEntity.sketch.id, sketchEntity.entity.id, "x", value)} />
               </label>
               <label>
                 Y
-                <input
-                  key={`${sketchEntity.entity.id}:y:${(sketchEntity.entity as SketchPoint).y.expression}`}
-                  defaultValue={(sketchEntity.entity as SketchPoint).y.expression}
-                  onBlur={(event) => updateSketchEntityExpression(updateDocument, sketchEntity.sketch.id, sketchEntity.entity.id, "y", event.target.value)}
-                />
+                <CommitInput value={(sketchEntity.entity as SketchPoint).y.expression} onCommit={(value) => updateSketchEntityExpression(updateDocument, sketchEntity.sketch.id, sketchEntity.entity.id, "y", value)} />
               </label>
             </div>
           ) : null}
@@ -110,11 +151,7 @@ export function InspectorPanel() {
             <div className="inspector-form">
               <label>
                 Radius
-                <input
-                  key={`${sketchEntity.entity.id}:radius:${(sketchEntity.entity as SketchCircle).radius.expression}`}
-                  defaultValue={(sketchEntity.entity as SketchCircle).radius.expression}
-                  onBlur={(event) => updateSketchEntityExpression(updateDocument, sketchEntity.sketch.id, sketchEntity.entity.id, "radius", event.target.value)}
-                />
+                <CommitInput value={(sketchEntity.entity as SketchCircle).radius.expression} onCommit={(value) => updateSketchEntityExpression(updateDocument, sketchEntity.sketch.id, sketchEntity.entity.id, "radius", value)} />
               </label>
             </div>
           ) : null}
@@ -122,7 +159,7 @@ export function InspectorPanel() {
         </div>
       ) : null}
       {body ? (
-        <div className="item-card">
+        <div key={`body:${body.id}`} className="item-card">
           <strong>{body.name}</strong>
           <p className="muted">Generated from {body.featureId ?? "unknown feature"}</p>
           {bodyFeature ? (
@@ -146,18 +183,66 @@ export function InspectorPanel() {
   );
 }
 
+function CommitInput({ value, onCommit }: { value: string; onCommit: (value: string) => void }) {
+  const [draft, setDraft] = useState(value);
+  const [focused, setFocused] = useState(false);
+  const cancelCommit = useRef(false);
+  useEffect(() => {
+    if (!focused) setDraft(value);
+  }, [focused, value]);
+  return (
+    <input
+      value={draft}
+      onFocus={() => setFocused(true)}
+      onChange={(event) => setDraft(event.target.value)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
+          event.currentTarget.blur();
+        }
+        if (event.key === "Escape") {
+          cancelCommit.current = true;
+          setDraft(value);
+          event.currentTarget.blur();
+        }
+      }}
+      onBlur={() => {
+        setFocused(false);
+        if (cancelCommit.current) {
+          cancelCommit.current = false;
+          return;
+        }
+        if (draft !== value) onCommit(draft);
+      }}
+    />
+  );
+}
+
+function updateSketchName(
+  updateDocument: ReturnType<typeof useCadStore.getState>["updateDocument"],
+  sketchId: string,
+  name: string,
+) {
+  const nextName = name.trim() || DEFAULT_SKETCH_NAME;
+  updateDocument((document) => {
+    if (!document) return document;
+    const sketch = document.sketches[sketchId];
+    if (!sketch || sketch.name === nextName) return document;
+    return documentOps.upsertSketch(document, { ...sketch, name: nextName });
+  });
+}
+
 function updateFeatureName(
   updateDocument: ReturnType<typeof useCadStore.getState>["updateDocument"],
   featureId: string,
   name: string,
 ) {
-  const nextName = name.trim();
-  if (!nextName) return;
+  const nextName = name.trim() || DEFAULT_FEATURE_NAME;
   updateDocument((document) => {
+    if (!document) return document;
     const feature = document.features.find((item) => item.id === featureId);
-    if (!feature || feature.type !== "extrude") return document;
+    if (!feature) return document;
     if (nextName === feature.name) return document;
-    return upsertFeature(document, { ...feature, name: nextName });
+    return documentOps.upsertFeature(document, { ...feature, name: nextName });
   });
 }
 
@@ -167,10 +252,47 @@ function updateExtrudeDistance(
   expression: string,
 ) {
   updateDocument((document) => {
+    if (!document) return document;
     const feature = document.features.find((item) => item.id === featureId);
     if (!feature || feature.type !== "extrude" || feature.distance.expression === expression) return document;
-    return upsertFeature(document, { ...feature, distance: { ...feature.distance, expression } });
+    return documentOps.upsertFeature(document, { ...feature, distance: { ...feature.distance, expression } });
   });
+}
+
+function updateExtrudeOperation(
+  updateDocument: ReturnType<typeof useCadStore.getState>["updateDocument"],
+  featureId: string,
+  operation: string,
+) {
+  if (!isExtrudeOperation(operation) || EXTRUDE_OPERATION_OPTIONS.find((option) => option.value === operation)?.disabled) return;
+  updateDocument((document) => {
+    if (!document) return document;
+    const feature = document.features.find((item) => item.id === featureId);
+    if (!feature || feature.type !== "extrude" || feature.operation === operation) return document;
+    return documentOps.upsertFeature(document, { ...feature, operation });
+  });
+}
+
+function isExtrudeOperation(value: string): value is (typeof EXTRUDE_OPERATIONS)[number] {
+  return EXTRUDE_OPERATIONS.includes(value as (typeof EXTRUDE_OPERATIONS)[number]);
+}
+
+function updateExtrudeDirection(
+  updateDocument: ReturnType<typeof useCadStore.getState>["updateDocument"],
+  featureId: string,
+  direction: string,
+) {
+  if (!isExtrudeDirection(direction)) return;
+  updateDocument((document) => {
+    if (!document) return document;
+    const feature = document.features.find((item) => item.id === featureId);
+    if (!feature || feature.type !== "extrude" || feature.direction === direction) return document;
+    return documentOps.upsertFeature(document, { ...feature, direction });
+  });
+}
+
+function isExtrudeDirection(value: string): value is (typeof EXTRUDE_DIRECTIONS)[number] {
+  return EXTRUDE_DIRECTIONS.includes(value as (typeof EXTRUDE_DIRECTIONS)[number]);
 }
 
 function updateSketchEntityExpression(
@@ -180,16 +302,18 @@ function updateSketchEntityExpression(
   field: "x" | "y" | "radius",
   expression: string,
 ) {
-  const current = useCadStore.getState().history.present.sketches[sketchId]?.entities[entityId];
+  const current = useCadStore.getState().history.present?.sketches[sketchId]?.entities[entityId];
   const currentExpression =
     current?.type === "point" && (field === "x" || field === "y")
       ? current[field].expression
       : current?.type === "circle" && field === "radius"
         ? current.radius.expression
         : undefined;
+  if (currentExpression === undefined) return;
   if (currentExpression === expression) return;
 
   updateDocument((document) => {
+    if (!document) return document;
     const sketch = document.sketches[sketchId];
     if (!sketch) return document;
     const entity = sketch.entities[entityId];
@@ -200,7 +324,7 @@ function updateSketchEntityExpression(
         : entity.type === "circle" && field === "radius"
           ? { ...entity, radius: { ...entity.radius, expression } }
           : entity;
-    return upsertSketch(document, {
+    return documentOps.upsertSketch(document, {
       ...sketch,
       entities: { ...sketch.entities, [entityId]: updatedEntity },
     });

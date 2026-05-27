@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { canExportStl, runCommand, commands } from "../ui/commands/commandRegistry";
+import { canExportStl, commands, isCommandEnabledForSnapshot, runCommand, selectCommandEnablement } from "../ui/commands/commandRegistry";
 import { useCadStore } from "../state/useCadStore";
 
 describe("view commands", () => {
@@ -25,6 +25,14 @@ describe("view commands", () => {
 describe("file commands", () => {
   it("exposes project save/open/export commands", () => {
     expect(commands.map((command) => command.id)).toEqual(expect.arrayContaining(["file.openProject", "file.saveProject", "file.exportJson"]));
+  });
+
+  it("opens the file picker when open project runs without a file", async () => {
+    const click = vi.fn();
+
+    await runCommand("file.openProject", { fileInputRef: { current: { click } as unknown as HTMLInputElement } });
+
+    expect(click).toHaveBeenCalledTimes(1);
   });
 
   it("reports open project import errors in the store", async () => {
@@ -54,11 +62,11 @@ describe("file commands", () => {
       fileError: undefined,
     });
 
-    try {
-      expect(canExportStl(useCadStore.getState())).toBe(false);
-      expect(commands.find((command) => command.id === "file.exportStl")?.enabled()).toBe(false);
-      runCommand("file.exportStl");
-      expect(useCadStore.getState().fileError).toBeUndefined();
+      try {
+        expect(canExportStl(useCadStore.getState())).toBe(false);
+      expect(isCommandEnabledForSnapshot("file.exportStl", selectCommandEnablement(useCadStore.getState()))).toBe(false);
+        runCommand("file.exportStl");
+        expect(useCadStore.getState().fileError).toBeUndefined();
     } finally {
       useCadStore.setState(previous, true);
     }
