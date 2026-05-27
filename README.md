@@ -293,3 +293,4 @@ Deferred until after MVP:
 - `specs/initial/PLAN.md`: phased implementation plan.
 - `specs/initial/RELEASE_HARDENING.md`: release hardening checklist.
 - `specs/initial/MVP_COMPLETION.md`: MVP completion review.
+- `specs/working-cad/SPEC.md`: next-stage specification for a working parametric CAD system.
