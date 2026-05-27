@@ -5,11 +5,24 @@ import { useCadStore } from "../state/useCadStore";
 import { SelectionRef } from "../cad/document/schema";
 import { RenderMesh } from "../cad/kernel/KernelAdapter";
 import { boundsFromMeshes } from "../cad/kernel/meshConversion";
+import { CadDocument } from "../cad/document/schema";
+import { evaluateParameters } from "../cad/parameters/expressionEvaluator";
+import { solveSketch } from "../cad/sketch/SketchSolver";
 
 interface ViewerRuntime {
   camera: THREE.PerspectiveCamera;
   controls: OrbitControls;
   modelGroup: THREE.Group;
+  sketchGroup: THREE.Group;
+  sketchResources: SketchOverlayResources;
+}
+
+interface SketchOverlayResources {
+  lineMaterial: THREE.LineBasicMaterial;
+  pointMaterial: THREE.MeshBasicMaterial;
+  circleMaterial: THREE.LineBasicMaterial;
+  pointGeometry: THREE.SphereGeometry;
+  unitCircleGeometry: THREE.BufferGeometry;
 }
 
 export function CadViewer() {
@@ -21,6 +34,7 @@ export function CadViewer() {
   const selectRef = useRef<(selection: SelectionRef | undefined) => void>(selectNoop);
   const documentIdRef = useRef("");
   const meshes = useCadStore((state) => state.rebuild.result?.meshes ?? []);
+  const document = useCadStore((state) => state.history.present);
   const select = useCadStore((state) => state.select);
   const documentId = useCadStore((state) => state.history.present.id);
   const selectedBodyId = useCadStore((state) => {
@@ -57,7 +71,10 @@ export function CadViewer() {
 
     const modelGroup = new THREE.Group();
     scene.add(modelGroup);
-    runtimeRef.current = { camera, controls, modelGroup };
+    const sketchGroup = new THREE.Group();
+    sketchGroup.position.z = 0.35;
+    scene.add(sketchGroup);
+    runtimeRef.current = { camera, controls, modelGroup, sketchGroup, sketchResources: createSketchOverlayResources() };
 
     const resize = () => {
       const width = host.clientWidth || 1;
@@ -102,6 +119,7 @@ export function CadViewer() {
       renderer.domElement.removeEventListener("click", click);
       disposeObject3D(scene);
       disposeObject3D(modelGroup);
+      disposeSketchOverlayResources(runtimeRef.current?.sketchResources);
       controls.dispose();
       renderer.dispose();
       host.removeChild(renderer.domElement);
@@ -122,6 +140,11 @@ export function CadViewer() {
   }, [meshes]);
 
   useEffect(() => {
+    const runtime = runtimeRef.current;
+    if (runtime) updateSketchOverlay(runtime.sketchGroup, document, runtime.sketchResources);
+  }, [document]);
+
+  useEffect(() => {
     selectedBodyIdRef.current = selectedBodyId;
     const runtime = runtimeRef.current;
     if (runtime) applySelection(runtime.modelGroup, selectedBodyId);
@@ -140,14 +163,25 @@ function findBodyId(object: THREE.Object3D): string | undefined {
 }
 
 function disposeObject3D(object: THREE.Object3D) {
+  const disposedGeometries = new WeakSet<THREE.BufferGeometry>();
+  const disposedMaterials = new WeakSet<THREE.Material>();
   object.traverse((child) => {
     const disposable = child as THREE.Object3D & { geometry?: THREE.BufferGeometry; material?: THREE.Material | THREE.Material[] };
-    disposable.geometry?.dispose();
+    if (disposable.geometry && !disposedGeometries.has(disposable.geometry)) {
+      disposable.geometry.dispose();
+      disposedGeometries.add(disposable.geometry);
+    }
     const material = disposable.material;
     if (Array.isArray(material)) {
-      for (const item of material) item.dispose();
-    } else if (material) {
+      for (const item of material) {
+        if (!disposedMaterials.has(item)) {
+          item.dispose();
+          disposedMaterials.add(item);
+        }
+      }
+    } else if (material && !disposedMaterials.has(material)) {
       material.dispose();
+      disposedMaterials.add(material);
     }
   });
 }
@@ -173,6 +207,68 @@ function updateMeshes(modelGroup: THREE.Group, renderMeshes: RenderMesh[]) {
     object.add(edges);
     modelGroup.add(object);
   }
+}
+
+function createSketchOverlayResources(): SketchOverlayResources {
+  const circlePoints = Array.from({ length: 96 }, (_, index) => {
+    const angle = (index / 96) * Math.PI * 2;
+    return new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0);
+  });
+  return {
+    lineMaterial: new THREE.LineBasicMaterial({ color: "#245c87" }),
+    pointMaterial: new THREE.MeshBasicMaterial({ color: "#245c87" }),
+    circleMaterial: new THREE.LineBasicMaterial({ color: "#7b3f98" }),
+    pointGeometry: new THREE.SphereGeometry(1.4, 12, 8),
+    unitCircleGeometry: new THREE.BufferGeometry().setFromPoints(circlePoints),
+  };
+}
+
+function disposeSketchOverlayResources(resources: SketchOverlayResources | undefined) {
+  resources?.lineMaterial.dispose();
+  resources?.pointMaterial.dispose();
+  resources?.circleMaterial.dispose();
+  resources?.pointGeometry.dispose();
+  resources?.unitCircleGeometry.dispose();
+}
+
+function updateSketchOverlay(sketchGroup: THREE.Group, document: CadDocument, resources: SketchOverlayResources) {
+  disposeSketchOverlayObjects(sketchGroup, resources);
+  sketchGroup.clear();
+  const evaluated = evaluateParameters(document.parameters);
+  const linePositions: number[] = [];
+  for (const sketch of Object.values(document.sketches)) {
+    const solved = solveSketch(sketch, evaluated.values);
+    for (const line of solved.lines) {
+      linePositions.push(line.start.x, line.start.y, 0, line.end.x, line.end.y, 0);
+    }
+    for (const point of Object.values(solved.points)) {
+      const object = new THREE.Mesh(resources.pointGeometry, resources.pointMaterial);
+      object.position.set(point.x, point.y, 0);
+      object.userData.sketchEntityId = point.id;
+      sketchGroup.add(object);
+    }
+    for (const circle of solved.circles) {
+      const object = new THREE.LineLoop(resources.unitCircleGeometry, resources.circleMaterial);
+      object.position.set(circle.center.x, circle.center.y, 0);
+      object.scale.set(circle.radius, circle.radius, 1);
+      object.userData.sketchEntityId = circle.id;
+      sketchGroup.add(object);
+    }
+  }
+  if (linePositions.length > 0) {
+    const lineGeometry = new THREE.BufferGeometry();
+    lineGeometry.setAttribute("position", new THREE.Float32BufferAttribute(linePositions, 3));
+    sketchGroup.add(new THREE.LineSegments(lineGeometry, resources.lineMaterial));
+  }
+}
+
+function disposeSketchOverlayObjects(sketchGroup: THREE.Group, resources: SketchOverlayResources) {
+  sketchGroup.traverse((child) => {
+    const object = child as THREE.Object3D & { geometry?: THREE.BufferGeometry };
+    if (object.geometry && object.geometry !== resources.pointGeometry && object.geometry !== resources.unitCircleGeometry) {
+      object.geometry.dispose();
+    }
+  });
 }
 
 function applySelection(modelGroup: THREE.Group, selectedBodyId: string | undefined) {

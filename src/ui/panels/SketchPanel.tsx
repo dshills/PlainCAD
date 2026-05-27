@@ -1,17 +1,31 @@
 import { useCadStore } from "../../state/useCadStore";
 import { orderedSketches } from "../../state/selectors";
+import { runCommand } from "../commands/commandRegistry";
 
 export function SketchPanel() {
   const document = useCadStore((state) => state.history.present);
   const select = useCadStore((state) => state.select);
+  const selection = useCadStore((state) => state.selection.selectedIds[0]);
   const sketches = orderedSketches(document);
+  const activeSketch =
+    selection?.kind === "sketch"
+      ? document.sketches[selection.id]
+      : selection?.kind === "sketchEntity"
+        ? sketches.find((sketch) => Boolean(sketch.entities[selection.id]))
+        : sketches[0];
+  const entities = activeSketch ? Object.values(activeSketch.entities) : [];
   return (
     <section className="panel">
       <h2>Sketches</h2>
+      <div className="toolbar-actions panel-actions">
+        <button onClick={() => runCommand("sketch.createXY")}>New XY</button>
+        <button onClick={() => runCommand("sketch.addCenterRectangle")}>Center Rectangle</button>
+        <button onClick={() => runCommand("sketch.addCircle")}>Circle</button>
+      </div>
       <div className="panel-list">
         {sketches.map((sketch) => (
           <button
-            className="item-card"
+            className={`item-card ${activeSketch?.id === sketch.id ? "selected" : ""}`}
             key={sketch.id}
             onClick={() => select({ kind: "sketch", id: sketch.id, documentId: document.id })}
           >
@@ -19,8 +33,28 @@ export function SketchPanel() {
             <span className="muted"> {Object.keys(sketch.entities).length} entities</span>
           </button>
         ))}
-        {sketches.length === 0 ? <p className="muted">Create a template to add sketches.</p> : null}
+        {sketches.length === 0 ? <p className="muted">Create an XY sketch or use a template.</p> : null}
       </div>
+      {activeSketch ? (
+        <div className="sketch-detail">
+          <h3>{activeSketch.name} Entities</h3>
+          <div className="panel-list">
+            {entities.map((entity) => (
+              <button
+                className={`item-card ${selection?.kind === "sketchEntity" && selection.id === entity.id ? "selected" : ""}`}
+                key={entity.id}
+                onClick={() => select({ kind: "sketchEntity", id: entity.id, documentId: document.id })}
+              >
+                <strong>{entity.type}</strong>
+                <span className="muted"> {entity.id}</span>
+              </button>
+            ))}
+          </div>
+          <p className="muted">
+            {activeSketch.constraints.length} constraints, {activeSketch.dimensions.length} dimensions
+          </p>
+        </div>
+      ) : null}
     </section>
   );
 }

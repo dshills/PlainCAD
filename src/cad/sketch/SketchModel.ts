@@ -1,4 +1,4 @@
-import { ExpressionRef, Sketch } from "../document/schema";
+import { ConstraintType, ExpressionRef, Sketch } from "../document/schema";
 import { createId } from "../document/ids";
 
 export function expressionRef(expression: string, unit = "mm"): ExpressionRef {
@@ -92,4 +92,23 @@ export function addCornerRectangle(sketch: Sketch, width: string, height: string
 export function addCircleAt(sketch: Sketch, x: string, y: string, radius: string): Sketch {
   const center = addPoint(sketch, x, y);
   return addCircle(center.sketch, center.pointId, radius).sketch;
+}
+
+export function addConstraint(
+  sketch: Sketch,
+  type: ConstraintType,
+  input: { entityIds?: string[]; pointIds?: string[] },
+): Sketch {
+  return {
+    ...sketch,
+    constraints: [
+      ...sketch.constraints,
+      {
+        id: createId("constraint"),
+        type,
+        entityIds: input.entityIds ?? [],
+        pointIds: input.pointIds ?? [],
+      },
+    ],
+  };
 }

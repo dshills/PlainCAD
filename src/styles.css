@@ -87,6 +87,10 @@ input:focus-visible {
   flex: 1;
 }
 
+.panel-actions {
+  margin-bottom: 0.7rem;
+}
+
 .rebuild-pill {
   border: 1px solid #cbd5d0;
   border-radius: 999px;
@@ -169,6 +173,20 @@ input:focus-visible {
   gap: 0.45rem;
 }
 
+.item-card.selected {
+  border-color: #2e7d79;
+  background: #edf7f5;
+}
+
+.sketch-detail {
+  margin-top: 0.8rem;
+}
+
+.sketch-detail h3 {
+  margin: 0 0 0.55rem;
+  font-size: 0.82rem;
+}
+
 .inspector-facts {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -191,6 +209,27 @@ input:focus-visible {
 .inspector-facts dd {
   margin: 0.2rem 0 0;
   font-weight: 700;
+}
+
+.inspector-form {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.6rem;
+}
+
+.inspector-form label {
+  display: grid;
+  gap: 0.25rem;
+  color: #46544e;
+  font-size: 0.78rem;
+}
+
+.inspector-form input {
+  width: 100%;
+  border: 1px solid #bcc7c1;
+  border-radius: 6px;
+  padding: 0.4rem;
+  background: #fff;
 }
 
 .row {
