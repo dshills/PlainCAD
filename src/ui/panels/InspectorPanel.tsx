@@ -20,12 +20,22 @@ export function InspectorPanel() {
   const select = useCadStore((state) => state.select);
   const updateDocument = useCadStore((state) => state.updateDocument);
   const updateParameter = useCadStore((state) => state.updateParameter);
+  const parameterById = useMemo(
+    () => new Map(Object.values(document?.parameters ?? {}).map((item) => [item.id, item])),
+    [document?.parameters],
+  );
   const body = useMemo(
     () => (selection?.kind === "body" ? rebuild?.bodies.find((item) => item.id === selection.id) : undefined),
     [rebuild?.bodies, selection?.id, selection?.kind],
   );
   const bodyMesh = useMemo(() => rebuild?.meshes.find((item) => item.bodyId === body?.id), [body?.id, rebuild?.meshes]);
-  const parameter = selection?.kind === "parameter" ? document?.parameters[selection.id] : undefined;
+  const parameter = useMemo(
+    () =>
+      selection?.kind === "parameter"
+        ? document?.parameters[selection.id] ?? parameterById.get(selection.id)
+        : undefined,
+    [document?.parameters, parameterById, selection?.id, selection?.kind],
+  );
   const sketch = selection?.kind === "sketch" ? document?.sketches[selection.id] : undefined;
   const sketchEntity = useMemo(() => {
     if (selection?.kind !== "sketchEntity") return undefined;

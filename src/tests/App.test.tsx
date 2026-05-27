@@ -13,7 +13,7 @@ describe("App", () => {
     render(<App />);
     expect(screen.getByText("PlainCAD")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /Load mounting plate template/i }));
-    const input = screen.getByLabelText("plate_width expression");
+    const input = screen.getByLabelText("Parameter plate_width expression");
     await user.clear(input);
     await user.type(input, "100mm");
     expect(input).toHaveValue("100mm");

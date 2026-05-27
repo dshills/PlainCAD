@@ -143,12 +143,14 @@ export const useCadStore = create<CadStore>((set, get) => ({
       upsertParameter(document, { id: createId("param"), name, expression: "10mm", value: 10, unit: "mm" }),
     );
   },
-  updateParameter: (name, patch) => {
+  updateParameter: (idOrName, patch) => {
     get().updateDocument((document) => {
-      const current = document.parameters[name];
+      const current = Object.values(document.parameters).find((parameter) => parameter.id === idOrName) ?? document.parameters[idOrName];
       if (!current) return document;
-      const nextName = patch.name ?? current.name;
-      let next = removeParameter(document, name);
+      const nextName = patch.name?.trim() ? patch.name : current.name;
+      const nameOwner = document.parameters[nextName];
+      if (nameOwner && nameOwner.id !== current.id) return document;
+      let next = removeParameter(document, current.name);
       next = upsertParameter(next, { ...current, ...patch, name: nextName });
       return next;
     });
