@@ -1,5 +1,5 @@
 import { CadBody, RebuildError, RebuildResult, RebuildWarning } from "../worker/workerProtocol";
-import { CadDocument, ExtrudeFeature } from "../document/schema";
+import { CadDocument, ExtrudeFeature, HoleFeature, RevolveFeature } from "../document/schema";
 import { evaluateExpression } from "../parameters/expressionEvaluator";
 import { solveSketch } from "../sketch/SketchSolver";
 import { detectProfiles } from "../sketch/profileDetection";
@@ -51,11 +51,19 @@ export function rebuildDocument(document: CadDocument): RebuildResult {
   const bodies: CadBody[] = [];
   const meshes = [];
   const shapesToDispose = new Set<KernelShape>();
-  const runtimeBodies = new Map<string, { shape: KernelShape; featureId: string; name: string; mesh?: RenderMesh }>();
+  const runtimeBodies = new Map<string, RuntimeBody>();
 
   if (errors.length === 0) {
     for (const feature of graphPlan.orderedFeatures) {
       if (feature.suppressed) continue;
+      if (feature.type === "revolve") {
+        rebuildRevolveFeature(feature, document, profilesBySketch, evaluated.values, runtimeBodies, shapesToDispose, errors);
+        continue;
+      }
+      if (feature.type === "hole") {
+        rebuildHoleFeature(feature, document, solvedSketches, evaluated.values, runtimeBodies, shapesToDispose, errors);
+        continue;
+      }
       if (feature.type !== "extrude") {
         warnings.push({ id: `feature:${feature.id}`, source: "feature", sourceId: feature.id, message: `${feature.type} is not implemented in the MVP rebuild path.` });
         continue;
@@ -92,6 +100,7 @@ export function rebuildDocument(document: CadDocument): RebuildResult {
         shapesToDispose.add(output.shape);
         const outputMesh = withStableBodyId(transformMeshToSketchPlane(kernel.tessellate(output.shape, { linearDeflection: 0.5, angularDeflection: 0.2 }), sketch), output.bodyId);
         output.mesh = outputMesh;
+        output.planeKey = feature.operation === "newBody" ? sketchPlaneKey(sketch) : output.planeKey;
         runtimeBodies.set(output.bodyId, output);
       } catch (error) {
         errors.push({ id: `kernel:${feature.id}`, source: "kernel", sourceId: feature.id, message: error instanceof Error ? error.message : String(error) });
@@ -118,11 +127,172 @@ export function rebuildDocument(document: CadDocument): RebuildResult {
   };
 }
 
+function rebuildRevolveFeature(
+  feature: RevolveFeature,
+  document: CadDocument,
+  profilesBySketch: Map<string, ReturnType<typeof detectProfiles>>,
+  parameters: Parameters<typeof evaluateExpression>[1]["parameters"],
+  runtimeBodies: Map<string, RuntimeBody>,
+  shapesToDispose: Set<KernelShape>,
+  errors: RebuildError[],
+) {
+  if (feature.operation !== "newBody") {
+    errors.push({ id: `feature:${feature.id}:operation`, source: "feature", sourceId: feature.id, message: `${feature.operation} revolve requires boolean support and is not enabled yet.` });
+    return;
+  }
+  const sketch = document.sketches[feature.sketchId];
+  const profile = profilesBySketch.get(feature.sketchId)?.profiles.find((item) => item.id === feature.profileId || item.alternateIds?.includes(feature.profileId));
+  if (!sketch || !profile) {
+    errors.push({ id: `feature:${feature.id}:profile`, source: "feature", sourceId: feature.id, message: "Revolve references a missing sketch profile." });
+    return;
+  }
+  const angle = evaluateExpression(feature.angle.expression, { parameters });
+  if (angle.error || !angle.quantity || angle.quantity.dimension !== "angle" || angle.quantity.value <= 0) {
+    errors.push({ id: `feature:${feature.id}:angle`, source: "feature", sourceId: feature.id, message: angle.error ?? "Revolve angle must be a positive angle." });
+    return;
+  }
+  const validation = validateRevolveProfile(feature, profile, angle.quantity.value);
+  if (validation) {
+    errors.push({ id: `feature:${feature.id}:validation`, source: "feature", sourceId: feature.id, message: validation });
+    return;
+  }
+  try {
+    const shape = kernel.revolveProfile(profile, feature.axis, angle.quantity.value);
+    shapesToDispose.add(shape);
+    const bodyId = stableBodyIdForFeature(feature.id);
+    const mesh = withStableBodyId(transformMeshToSketchPlane(kernel.tessellate(shape, { linearDeflection: 0.5, angularDeflection: 0.2 }), sketch), bodyId);
+    runtimeBodies.set(bodyId, { shape, featureId: feature.id, name: feature.name, mesh, planeKey: sketchPlaneKey(sketch) });
+  } catch (error) {
+    errors.push({ id: `kernel:${feature.id}`, source: "kernel", sourceId: feature.id, message: error instanceof Error ? error.message : String(error) });
+  }
+}
+
+function validateRevolveProfile(feature: RevolveFeature, profile: ReturnType<typeof detectProfiles>["profiles"][number], angleRadians: number): string | undefined {
+  if (profile.outerLoop.type !== "polygon") return "Revolve requires a closed polygon profile.";
+  if (!profile.alternateIds?.some((id) => id.endsWith(":profile:rectangle"))) return "Revolve fallback currently supports rectangular profiles only.";
+  if (feature.axis.type !== "origin" || feature.axis.axis !== "Y") return "Only origin Y-axis revolve is supported in this phase.";
+  if (Math.abs(angleRadians - Math.PI * 2) > 1e-6) return "Revolve fallback currently supports full 360 degree revolves only.";
+  if (profile.bounds.maxX <= 0) return "Revolve profile must have non-zero radius from the axis.";
+  if (profile.bounds.minX < -1e-7) return "Revolve profile must not cross the selected axis.";
+  if (profile.bounds.maxY - profile.bounds.minY <= 1e-7) return "Revolve profile must have non-zero height.";
+  return undefined;
+}
+
+function projectedThroughAllDistance(bounds: RenderMesh["bounds"], sketch: CadDocument["sketches"][string]): number | undefined {
+  // Callers reject negative and symmetric extrudes before this positive-direction calculation runs.
+  const transform = sketchPlaneTransform(sketch.plane);
+  const normalLength = Math.hypot(transform.normal.x, transform.normal.y, transform.normal.z);
+  if (normalLength <= 1e-9) return undefined;
+  const normal = { x: transform.normal.x / normalLength, y: transform.normal.y / normalLength, z: transform.normal.z / normalLength };
+  const corners = [
+    [bounds.min[0], bounds.min[1], bounds.min[2]],
+    [bounds.min[0], bounds.min[1], bounds.max[2]],
+    [bounds.min[0], bounds.max[1], bounds.min[2]],
+    [bounds.min[0], bounds.max[1], bounds.max[2]],
+    [bounds.max[0], bounds.min[1], bounds.min[2]],
+    [bounds.max[0], bounds.min[1], bounds.max[2]],
+    [bounds.max[0], bounds.max[1], bounds.min[2]],
+    [bounds.max[0], bounds.max[1], bounds.max[2]],
+  ] as const;
+  const projected = corners.map((corner) => corner[0] * normal.x + corner[1] * normal.y + corner[2] * normal.z);
+  const planeOffset = transform.origin.x * normal.x + transform.origin.y * normal.y + transform.origin.z * normal.z;
+  const distanceFromPlane = Math.max(...projected) - planeOffset + 1e-7;
+  if (distanceFromPlane > 0) return distanceFromPlane;
+  return undefined;
+}
+
+function rebuildHoleFeature(
+  feature: HoleFeature,
+  document: CadDocument,
+  solvedSketches: Map<string, ReturnType<typeof solveSketch>>,
+  parameters: Parameters<typeof evaluateExpression>[1]["parameters"],
+  runtimeBodies: Map<string, RuntimeBody>,
+  shapesToDispose: Set<KernelShape>,
+  errors: RebuildError[],
+) {
+  const targetBodyId = feature.targetBodyId ?? (feature.targetFeatureId ? stableBodyIdForFeature(feature.targetFeatureId) : undefined);
+  const target = targetBodyId ? runtimeBodies.get(targetBodyId) : undefined;
+  const sketch = document.sketches[feature.sketchId];
+  const solved = solvedSketches.get(feature.sketchId);
+  if (!targetBodyId || !target || !target.mesh) {
+    errors.push({ id: `feature:${feature.id}:target`, source: "feature", sourceId: feature.id, message: "Hole target body was not found." });
+    return;
+  }
+  if (!sketch || !solved) {
+    errors.push({ id: `feature:${feature.id}:sketch`, source: "feature", sourceId: feature.id, message: "Hole references a missing sketch." });
+    return;
+  }
+  if (target.planeKey !== sketchPlaneKey(sketch)) {
+    errors.push({ id: `feature:${feature.id}:plane`, source: "feature", sourceId: feature.id, message: "Hole sketch plane must match the target body plane until transformed hole tools are supported." });
+    return;
+  }
+  const diameter = evaluateExpression(feature.diameter.expression, { parameters });
+  if (diameter.error || !diameter.quantity || diameter.quantity.dimension !== "length" || diameter.quantity.value <= 0) {
+    errors.push({ id: `feature:${feature.id}:diameter`, source: "feature", sourceId: feature.id, message: diameter.error ?? "Hole diameter must be a positive length." });
+    return;
+  }
+  const depth = feature.depth === "throughAll" ? projectedThroughAllDistance(target.mesh.bounds, sketch) : evaluateHoleDepth(feature.depth, parameters);
+  if (!depth || depth <= 0) {
+    errors.push({ id: `feature:${feature.id}:depth`, source: "feature", sourceId: feature.id, message: "Hole depth must resolve in the positive sketch normal direction." });
+    return;
+  }
+  const tools: KernelShape[] = [];
+  for (const pointId of feature.centerPointIds) {
+    const point = solved.points[pointId];
+    if (!point) {
+      errors.push({ id: `feature:${feature.id}:center`, source: "feature", sourceId: feature.id, message: `Hole center point "${pointId}" was not found.` });
+      return;
+    }
+    const profile = circleToolProfile(feature.id, pointId, point.x, point.y, diameter.quantity.value / 2);
+    const tool = kernel.extrudeProfile(profile, depth);
+    shapesToDispose.add(tool);
+    tools.push(tool);
+  }
+  let current = target;
+  try {
+    const cut = kernel.cutAll(target.shape, tools);
+    shapesToDispose.add(cut);
+    current = { ...target, shape: cut };
+  } catch (error) {
+    errors.push({ id: `kernel:${feature.id}`, source: "kernel", sourceId: feature.id, message: error instanceof Error ? error.message : String(error) });
+    return;
+  }
+  const mesh = withStableBodyId(transformMeshToSketchPlane(kernel.tessellate(current.shape, { linearDeflection: 0.5, angularDeflection: 0.2 }), sketch), targetBodyId);
+  runtimeBodies.set(targetBodyId, { ...current, mesh });
+}
+
+function evaluateHoleDepth(depth: HoleFeature["depth"], parameters: Parameters<typeof evaluateExpression>[1]["parameters"]): number | undefined {
+  if (depth === "throughAll") return undefined;
+  const value = evaluateExpression(depth.expression, { parameters });
+  return value.error || !value.quantity || value.quantity.dimension !== "length" ? undefined : value.quantity.value;
+}
+
+function circleToolProfile(featureId: string, pointId: string, x: number, y: number, radius: number): ReturnType<typeof detectProfiles>["profiles"][number] {
+  const entityId = `${featureId}:circle:${pointId}`;
+  return {
+    id: `${featureId}:hole-tool:${pointId}`,
+    sketchId: `${featureId}:hole-sketch`,
+    outerLoop: { entityIds: [entityId], type: "circle", role: "outer", lineageIds: [entityId] },
+    innerLoops: [],
+    holes: [],
+    bounds: { minX: x - radius, maxX: x + radius, minY: y - radius, maxY: y + radius },
+    signature: `${featureId}:hole-tool`,
+  };
+}
+
+interface RuntimeBody {
+  shape: KernelShape;
+  featureId: string;
+  name: string;
+  mesh?: RenderMesh;
+  planeKey: string;
+}
+
 function resolveTargetBodies(
   feature: ExtrudeFeature,
-  runtimeBodies: Map<string, { shape: KernelShape; featureId: string; name: string; mesh?: RenderMesh }>,
+  runtimeBodies: Map<string, RuntimeBody>,
   errors: RebuildError[],
-): Array<{ bodyId: string; shape: KernelShape; featureId: string; name: string; mesh?: RenderMesh }> {
+): Array<{ bodyId: string } & RuntimeBody> {
   if (feature.operation === "newBody") return [];
   if (!feature.targetBodyIds || feature.targetBodyIds.length === 0) {
     errors.push({ id: `feature:${feature.id}:target:none`, source: "feature", sourceId: feature.id, message: `${feature.operation} extrude requires a selected target body.` });
@@ -163,40 +333,17 @@ function resolveExtrudeDistance(
   return { value: distance.quantity.value };
 }
 
-function projectedThroughAllDistance(bounds: RenderMesh["bounds"], sketch: CadDocument["sketches"][string]): number | undefined {
-  // Callers reject negative and symmetric extrudes before this positive-direction calculation runs.
-  const transform = sketchPlaneTransform(sketch.plane);
-  const normalLength = Math.hypot(transform.normal.x, transform.normal.y, transform.normal.z);
-  if (normalLength <= 1e-9) return undefined;
-  const normal = { x: transform.normal.x / normalLength, y: transform.normal.y / normalLength, z: transform.normal.z / normalLength };
-  const corners = [
-    [bounds.min[0], bounds.min[1], bounds.min[2]],
-    [bounds.min[0], bounds.min[1], bounds.max[2]],
-    [bounds.min[0], bounds.max[1], bounds.min[2]],
-    [bounds.min[0], bounds.max[1], bounds.max[2]],
-    [bounds.max[0], bounds.min[1], bounds.min[2]],
-    [bounds.max[0], bounds.min[1], bounds.max[2]],
-    [bounds.max[0], bounds.max[1], bounds.min[2]],
-    [bounds.max[0], bounds.max[1], bounds.max[2]],
-  ] as const;
-  const projected = corners.map((corner) => corner[0] * normal.x + corner[1] * normal.y + corner[2] * normal.z);
-  const planeOffset = transform.origin.x * normal.x + transform.origin.y * normal.y + transform.origin.z * normal.z;
-  const distanceFromPlane = Math.max(...projected) - planeOffset + 1e-7;
-  if (distanceFromPlane > 0) return distanceFromPlane;
-  return undefined;
-}
-
 function applyExtrudeOperation(
   activeKernel: KernelAdapter,
   feature: ExtrudeFeature,
   tool: KernelShape,
-  targets: Array<{ bodyId: string; shape: KernelShape; featureId: string; name: string; mesh?: RenderMesh }>,
+  targets: Array<{ bodyId: string } & RuntimeBody>,
   newBodyId: string,
-): { bodyId: string; shape: KernelShape; featureId: string; name: string; mesh?: RenderMesh } {
-  if (feature.operation === "newBody") return { bodyId: newBodyId, shape: tool, featureId: feature.id, name: feature.name };
+): { bodyId: string } & RuntimeBody {
+  if (feature.operation === "newBody") return { bodyId: newBodyId, shape: tool, featureId: feature.id, name: feature.name, planeKey: "" };
   const target = targets[0];
   const shape = feature.operation === "join" ? activeKernel.fuse(target.shape, tool) : activeKernel.cut(target.shape, tool);
-  return { bodyId: target.bodyId, shape, featureId: target.featureId, name: target.name };
+  return { bodyId: target.bodyId, shape, featureId: target.featureId, name: target.name, planeKey: target.planeKey };
 }
 
 function withStableBodyId(mesh: RenderMesh, bodyId: string): RenderMesh {
@@ -239,6 +386,13 @@ function transformMeshToSketchPlane(mesh: RenderMesh, sketch: CadDocument["sketc
     normals[index + 2] = transform.u.z * x + transform.v.z * y + transform.normal.z * z;
   }
   return { ...mesh, positions, normals, bounds: { min, max } };
+}
+
+function sketchPlaneKey(sketch: CadDocument["sketches"][string]): string {
+  const plane = sketch.plane;
+  if (plane.type === "origin") return `origin:${plane.plane}`;
+  if (plane.type === "offset") return `offset:${plane.base}:${plane.offset.expression}`;
+  return `face:${plane.featureId}:${plane.stableFaceId}`;
 }
 
 function isIdentityTransform(transform: ReturnType<typeof sketchPlaneTransform>): boolean {

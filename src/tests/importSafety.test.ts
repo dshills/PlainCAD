@@ -77,13 +77,13 @@ describe("project import safety and migrations", () => {
 
   it("sanitizes malformed feature arrays without crashing before validation", () => {
     const document = createMountingPlateTemplate();
-    const imported = importProjectText(
-      JSON.stringify({
-        ...document,
-        features: [{ type: "hole", id: "feature_bad", name: "Bad Hole", sketchId: "missing" }],
-      }),
-    );
-
-    expect(imported.features[0].type).toBe("hole");
+    expect(() =>
+      importProjectText(
+        JSON.stringify({
+          ...document,
+          features: [{ type: "hole", id: "feature_bad", name: "Bad Hole", sketchId: "missing" }],
+        }),
+      ),
+    ).toThrow("Hole references a missing sketch.");
   });
 });

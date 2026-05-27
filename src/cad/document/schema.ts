@@ -1,4 +1,4 @@
-export const CURRENT_SCHEMA_VERSION = 4;
+export const CURRENT_SCHEMA_VERSION = 5;
 
 export type UnitSystem = "metric" | "imperial";
 
@@ -135,9 +135,24 @@ export type ExtrudeTermination =
   | { type: "throughAll" }
   | { type: "toFace"; faceRef: TopologyRef };
 
+export type RevolveAxisReference =
+  | { type: "origin"; axis: "X" | "Y" | "Z" }
+  | { type: "sketchLine"; sketchId: string; lineId: string };
+
+export interface RevolveFeature extends FeatureBase {
+  type: "revolve";
+  sketchId: string;
+  profileId: string;
+  axis: RevolveAxisReference;
+  operation: "newBody" | "join" | "cut";
+  angle: ExpressionRef;
+  targetBodyIds?: string[];
+}
+
 export interface HoleFeature extends FeatureBase {
   type: "hole";
-  targetFeatureId: string;
+  targetFeatureId?: string;
+  targetBodyId?: string;
   sketchId: string;
   centerPointIds: string[];
   diameter: ExpressionRef;
@@ -156,7 +171,7 @@ export interface ChamferFeature extends FeatureBase {
   distance: ExpressionRef;
 }
 
-export type Feature = ExtrudeFeature | HoleFeature | FilletFeature | ChamferFeature;
+export type Feature = ExtrudeFeature | RevolveFeature | HoleFeature | FilletFeature | ChamferFeature;
 
 export interface TopologyRef {
   featureId: string;

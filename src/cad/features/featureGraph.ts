@@ -52,7 +52,7 @@ export function planFeatureGraph(document: CadDocument): FeatureGraphPlan {
       stepOwner.set(feature.timelineStep, `feature:${feature.id}`);
     }
 
-    if (feature.type === "extrude") {
+    if (feature.type === "extrude" || feature.type === "revolve" || feature.type === "hole") {
       const sketch = document.sketches[feature.sketchId];
       if (!sketch) {
         errors.push({
@@ -60,7 +60,7 @@ export function planFeatureGraph(document: CadDocument): FeatureGraphPlan {
           source: "feature",
           featureId: feature.id,
           sourceId: feature.id,
-          message: `Extrude "${feature.name}" references missing sketch "${feature.sketchId}".`,
+          message: `${feature.type} "${feature.name}" references missing sketch "${feature.sketchId}".`,
         });
         continue;
       }
@@ -70,7 +70,7 @@ export function planFeatureGraph(document: CadDocument): FeatureGraphPlan {
           source: "feature",
           featureId: feature.id,
           sourceId: feature.id,
-          message: `Extrude "${feature.name}" must appear after its required sketch "${sketch.name}" in the timeline.`,
+          message: `${feature.type} "${feature.name}" must appear after its required sketch "${sketch.name}" in the timeline.`,
         });
       }
       if (feature.suppressed) {

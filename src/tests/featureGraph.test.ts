@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { createExtrudeFeature, deleteFeature, suppressFeature, upsertFeature, upsertSketch } from "../cad/document/CadDocument";
-import { ExtrudeFeature } from "../cad/document/schema";
+import { ExtrudeFeature, HoleFeature, RevolveFeature } from "../cad/document/schema";
 import { planFeatureGraph, stableBodyIdForFeature } from "../cad/features/featureGraph";
 import { rebuildDocument } from "../cad/features/rebuildGraph";
+import { OpenCascadeKernel } from "../cad/kernel/OpenCascadeKernel";
 import { createBoxTemplate } from "../templates/templates";
 import { addCircleAt, addLine, addPoint, createXySketch } from "../cad/sketch/SketchModel";
 
@@ -103,6 +104,182 @@ describe("feature graph rebuild", () => {
     expect(result.success).toBe(true);
     expect(result.bodies).toHaveLength(1);
     expect(result.meshes[0].indices.length).toBeGreaterThan(36);
+  });
+
+  it("revolves a rectangular profile around the origin Y axis", () => {
+    let document = createBoxTemplate();
+    let sketch = createXySketch("Revolve Section");
+    const p1 = addPoint(sketch, "0mm", "0mm");
+    sketch = p1.sketch;
+    const p2 = addPoint(sketch, "10mm", "0mm");
+    sketch = p2.sketch;
+    const p3 = addPoint(sketch, "10mm", "30mm");
+    sketch = p3.sketch;
+    const p4 = addPoint(sketch, "0mm", "30mm");
+    sketch = p4.sketch;
+    sketch = addLine(sketch, p1.pointId, p2.pointId).sketch;
+    sketch = addLine(sketch, p2.pointId, p3.pointId).sketch;
+    sketch = addLine(sketch, p3.pointId, p4.pointId).sketch;
+    sketch = addLine(sketch, p4.pointId, p1.pointId).sketch;
+    document = upsertSketch(document, sketch);
+    const revolve: RevolveFeature = {
+      id: "feature_revolve",
+      name: "Turned Boss",
+      type: "revolve",
+      sketchId: sketch.id,
+      profileId: `${sketch.id}:profile:rectangle`,
+      axis: { type: "origin", axis: "Y" },
+      operation: "newBody",
+      angle: { expression: "360deg", unit: "deg" },
+      timelineStep: (Object.values(document.sketches).find((item) => item.id === sketch.id)?.timelineStep ?? 0) + 1,
+    };
+    document = upsertFeature(document, revolve);
+
+    const result = rebuildDocument(document);
+
+    expect(result.success).toBe(true);
+    expect(result.bodies.some((body) => body.id === stableBodyIdForFeature(revolve.id))).toBe(true);
+  });
+
+  it("revolves an offset rectangular profile as a hollow tube", () => {
+    let document = createBoxTemplate();
+    let sketch = createXySketch("Tube Section");
+    const p1 = addPoint(sketch, "5mm", "0mm");
+    sketch = p1.sketch;
+    const p2 = addPoint(sketch, "10mm", "0mm");
+    sketch = p2.sketch;
+    const p3 = addPoint(sketch, "10mm", "30mm");
+    sketch = p3.sketch;
+    const p4 = addPoint(sketch, "5mm", "30mm");
+    sketch = p4.sketch;
+    sketch = addLine(sketch, p1.pointId, p2.pointId).sketch;
+    sketch = addLine(sketch, p2.pointId, p3.pointId).sketch;
+    sketch = addLine(sketch, p3.pointId, p4.pointId).sketch;
+    sketch = addLine(sketch, p4.pointId, p1.pointId).sketch;
+    document = upsertSketch(document, sketch);
+    document = upsertFeature(document, {
+      id: "feature_tube_revolve",
+      name: "Tube",
+      type: "revolve",
+      sketchId: sketch.id,
+      profileId: `${sketch.id}:profile:rectangle`,
+      axis: { type: "origin", axis: "Y" },
+      operation: "newBody",
+      angle: { expression: "360deg", unit: "deg" },
+    } satisfies RevolveFeature);
+
+    const result = rebuildDocument(document);
+
+    expect(result.success).toBe(true);
+    expect(result.meshes.at(-1)?.positions.length).toBeGreaterThan(48 * 2 * 3);
+    expect(result.meshes.at(-1)?.indices.length).toBeGreaterThan(48 * 4 * 3);
+  });
+
+  it("rejects revolve profiles that cross the selected axis", () => {
+    let document = createBoxTemplate();
+    let sketch = createXySketch("Bad Revolve");
+    const p1 = addPoint(sketch, "-5mm", "0mm");
+    sketch = p1.sketch;
+    const p2 = addPoint(sketch, "10mm", "0mm");
+    sketch = p2.sketch;
+    const p3 = addPoint(sketch, "10mm", "20mm");
+    sketch = p3.sketch;
+    const p4 = addPoint(sketch, "-5mm", "20mm");
+    sketch = p4.sketch;
+    sketch = addLine(sketch, p1.pointId, p2.pointId).sketch;
+    sketch = addLine(sketch, p2.pointId, p3.pointId).sketch;
+    sketch = addLine(sketch, p3.pointId, p4.pointId).sketch;
+    sketch = addLine(sketch, p4.pointId, p1.pointId).sketch;
+    document = upsertSketch(document, sketch);
+    document = upsertFeature(document, {
+      id: "feature_bad_revolve",
+      name: "Bad Revolve",
+      type: "revolve",
+      sketchId: sketch.id,
+      profileId: `${sketch.id}:profile:rectangle`,
+      axis: { type: "origin", axis: "Y" },
+      operation: "newBody",
+      angle: { expression: "360deg", unit: "deg" },
+    } satisfies RevolveFeature);
+
+    const result = rebuildDocument(document);
+
+    expect(result.success).toBe(false);
+    expect(result.errors.some((error) => error.message.includes("must not cross"))).toBe(true);
+  });
+
+  it("cuts a simple hole feature through its target body", () => {
+    let document = createBoxTemplate();
+    const base = document.features[0] as ExtrudeFeature;
+    let sketch = createXySketch("Hole Centers");
+    const center = addPoint(sketch, "0mm", "0mm");
+    sketch = center.sketch;
+    document = upsertSketch(document, sketch);
+    const hole: HoleFeature = {
+      id: "feature_hole",
+      name: "Center Hole",
+      type: "hole",
+      targetBodyId: stableBodyIdForFeature(base.id),
+      sketchId: sketch.id,
+      centerPointIds: [center.pointId],
+      diameter: { expression: "10mm", unit: "mm" },
+      depth: "throughAll",
+    };
+    document = upsertFeature(document, hole);
+
+    const result = rebuildDocument(document);
+
+    expect(result.success).toBe(true);
+    expect(result.meshes[0].indices.length).toBeGreaterThan(36);
+  });
+
+  it("cuts multiple hole centers through one target body", () => {
+    let document = createBoxTemplate();
+    const base = document.features[0] as ExtrudeFeature;
+    let sketch = createXySketch("Hole Pattern");
+    const first = addPoint(sketch, "-15mm", "0mm");
+    sketch = first.sketch;
+    const second = addPoint(sketch, "15mm", "0mm");
+    sketch = second.sketch;
+    document = upsertSketch(document, sketch);
+    document = upsertFeature(document, {
+      id: "feature_hole_pattern",
+      name: "Hole Pattern",
+      type: "hole",
+      targetBodyId: stableBodyIdForFeature(base.id),
+      sketchId: sketch.id,
+      centerPointIds: [first.pointId, second.pointId],
+      diameter: { expression: "8mm", unit: "mm" },
+      depth: "throughAll",
+    } satisfies HoleFeature);
+
+    const result = rebuildDocument(document);
+
+    expect(result.success).toBe(true);
+    expect(result.meshes[0].indices.length).toBeGreaterThan(72);
+  });
+
+  it("tessellates offset circular extrusions at their profile center", () => {
+    const kernel = new OpenCascadeKernel();
+    const shape = kernel.extrudeProfile(
+      {
+        id: "profile_offset_circle",
+        sketchId: "sketch_offset_circle",
+        outerLoop: { entityIds: ["circle_offset"], type: "circle", role: "outer", lineageIds: ["circle_offset"] },
+        innerLoops: [],
+        holes: [],
+        bounds: { minX: 15, maxX: 25, minY: 5, maxY: 15 },
+        signature: "profile_offset_circle",
+      },
+      10,
+    );
+
+    const mesh = kernel.tessellate(shape, { linearDeflection: 0.5, angularDeflection: 0.2 });
+
+    expect(mesh.bounds.min[0]).toBeCloseTo(15);
+    expect(mesh.bounds.max[0]).toBeCloseTo(25);
+    expect(mesh.bounds.min[1]).toBeCloseTo(5);
+    expect(mesh.bounds.max[1]).toBeCloseTo(15);
   });
 
   it("reports lost targets and unsupported to-face termination", () => {

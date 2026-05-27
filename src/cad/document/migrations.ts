@@ -1,4 +1,5 @@
 import { CURRENT_SCHEMA_VERSION, CadDocument, Feature, Sketch } from "./schema";
+import { stableBodyIdForFeature } from "../features/featureGraph";
 
 type Migration = (input: CadDocument) => CadDocument;
 
@@ -6,6 +7,7 @@ const migrations = new Map<number, Migration>([
   [1, migrateV1ToV2],
   [2, migrateV2ToV3],
   [3, migrateV3ToV4],
+  [4, migrateV4ToV5],
 ]);
 
 export function migrateDocument(input: CadDocument): CadDocument {
@@ -57,6 +59,20 @@ function migrateV3ToV4(input: CadDocument): CadDocument {
                 termination: feature.termination ?? { type: "distance", distance: feature.distance ?? { expression: "0mm", unit: "mm" } },
                 targetBodyIds: feature.targetBodyIds ?? [],
               }
+            : feature,
+        )
+      : input.features,
+  };
+}
+
+function migrateV4ToV5(input: CadDocument): CadDocument {
+  return {
+    ...input,
+    schemaVersion: 5,
+    features: Array.isArray(input.features)
+      ? input.features.map((feature) =>
+          isRecord(feature) && feature.type === "hole" && feature.targetFeatureId && !feature.targetBodyId
+            ? { ...feature, targetBodyId: stableBodyIdForFeature(String(feature.targetFeatureId)) }
             : feature,
         )
       : input.features,
@@ -166,11 +182,24 @@ function sanitizeFeature(feature: Feature): Feature | undefined {
     return {
       ...base,
       type: "hole",
-      targetFeatureId: feature.targetFeatureId,
+      ...(feature.targetFeatureId !== undefined ? { targetFeatureId: feature.targetFeatureId } : {}),
+      ...(feature.targetBodyId !== undefined ? { targetBodyId: feature.targetBodyId } : {}),
       sketchId: feature.sketchId,
       centerPointIds: Array.isArray(feature.centerPointIds) ? [...feature.centerPointIds] : [],
       diameter: sanitizeExpressionRef(feature.diameter),
       depth: feature.depth === "throughAll" ? "throughAll" : sanitizeExpressionRef(feature.depth),
+    };
+  }
+  if (feature.type === "revolve") {
+    return {
+      ...base,
+      type: "revolve",
+      sketchId: feature.sketchId,
+      profileId: feature.profileId,
+      axis: isRecord(feature.axis) ? { ...feature.axis } : feature.axis,
+      operation: feature.operation,
+      angle: sanitizeExpressionRef(feature.angle),
+      ...(Array.isArray(feature.targetBodyIds) ? { targetBodyIds: [...feature.targetBodyIds] } : {}),
     };
   }
   if (feature.type === "fillet") {

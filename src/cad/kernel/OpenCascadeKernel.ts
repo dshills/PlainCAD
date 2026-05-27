@@ -1,8 +1,9 @@
 import initOpenCascadeModule from "opencascade.js/dist/opencascade.wasm.js";
 import openCascadeWasmUrl from "opencascade.js/dist/opencascade.wasm.wasm?url";
 import { createId } from "../document/ids";
+import { RevolveAxisReference } from "../document/schema";
 import { KernelAdapter, KernelShape, RenderMesh, TessellationOptions } from "./KernelAdapter";
-import { computeNormals, createBoxMesh, createCylinderMesh, createPlateWithCircularHolesMesh } from "./meshConversion";
+import { computeNormals, createBoxMesh, createCylinderAroundYMesh, createCylinderMesh, createPlateWithCircularHolesMesh } from "./meshConversion";
 import { exportMeshesToStl } from "./stlExport";
 import { SketchProfile } from "../sketch/profileDetection";
 
@@ -11,7 +12,39 @@ const BOOLEAN_FALLBACK_EPSILON = 1e-7;
 type KernelHandle =
   | { kind: "box"; width: number; height: number; depth: number; occtShape?: unknown }
   | { kind: "extrusion"; profile: SketchProfile; distance: number; occtShape?: unknown }
-  | { kind: "boolean"; operation: "cut" | "fuse"; occtShape?: unknown };
+  | { kind: "revolve"; profile: SketchProfile; axis: RevolveAxisReference; angle: number; occtShape?: unknown }
+  | { kind: "boolean"; operation: "cut" | "fuse"; base: KernelHandle; tool: KernelHandle; occtShape?: unknown };
+
+function fallbackCut(base: KernelHandle, tool: KernelHandle): KernelHandle | undefined {
+  const resolvedBase = resolveFallbackHandle(base);
+  if (!resolvedBase || resolvedBase.kind !== "extrusion" || tool.kind !== "extrusion") return undefined;
+  if (tool.distance + BOOLEAN_FALLBACK_EPSILON < resolvedBase.distance) return undefined;
+  if (resolvedBase.profile.outerLoop.type !== "polygon" || tool.profile.outerLoop.type !== "circle") return undefined;
+  const radius = (tool.profile.bounds.maxX - tool.profile.bounds.minX) / 2;
+  const x = (tool.profile.bounds.minX + tool.profile.bounds.maxX) / 2;
+  const y = (tool.profile.bounds.minY + tool.profile.bounds.maxY) / 2;
+  const holeId = tool.profile.outerLoop.entityIds[0];
+  if (!holeId) return undefined;
+  if (![radius, x, y, resolvedBase.profile.bounds.minX, resolvedBase.profile.bounds.maxX, resolvedBase.profile.bounds.minY, resolvedBase.profile.bounds.maxY].every(Number.isFinite)) return undefined;
+  if (x - radius <= resolvedBase.profile.bounds.minX || x + radius >= resolvedBase.profile.bounds.maxX || y - radius <= resolvedBase.profile.bounds.minY || y + radius >= resolvedBase.profile.bounds.maxY) return undefined;
+  const fallback: KernelHandle = {
+    ...resolvedBase,
+    occtShape: undefined,
+    profile: {
+      ...resolvedBase.profile,
+      innerLoops: [...(resolvedBase.profile.innerLoops ?? []), tool.profile.outerLoop],
+      holes: [...(resolvedBase.profile.holes ?? []), { id: holeId, x, y, radius }],
+    },
+  };
+  return fallback;
+}
+
+function resolveFallbackHandle(handle: KernelHandle): KernelHandle | undefined {
+  if (handle.kind !== "boolean") return handle;
+  if (handle.occtShape) return handle;
+  if (handle.operation !== "cut") return undefined;
+  return fallbackCut(handle.base, handle.tool);
+}
 
 export class OpenCascadeKernel implements KernelAdapter {
   private static openCascade: Record<string, any> | undefined;
@@ -53,6 +86,18 @@ export class OpenCascadeKernel implements KernelAdapter {
     };
   }
 
+  revolveProfile(profile: SketchProfile, axis: RevolveAxisReference, angle: number): KernelShape {
+    return {
+      id: createId("shape"),
+      kernelHandle: {
+        kind: "revolve",
+        profile,
+        axis,
+        angle,
+      } satisfies KernelHandle,
+    };
+  }
+
   cut(base: KernelShape, tool: KernelShape): KernelShape {
     const oc = OpenCascadeKernel.openCascade;
     const baseHandle = base.kernelHandle as KernelHandle;
@@ -71,10 +116,20 @@ export class OpenCascadeKernel implements KernelAdapter {
         throw new Error("Boolean cut failed.");
       }
       const nextShape = cut.Shape();
-      return { ...base, kernelHandle: { kind: "boolean", operation: "cut", occtShape: nextShape } satisfies KernelHandle };
+      return { ...base, kernelHandle: { kind: "boolean", operation: "cut", base: baseHandle, tool: toolHandle, occtShape: nextShape } satisfies KernelHandle };
     } finally {
       deleteOcct(cut);
     }
+  }
+
+  cutAll(base: KernelShape, tools: KernelShape[]): KernelShape {
+    let current = base;
+    for (const tool of tools) {
+      const next = this.cut(current, tool);
+      if (current !== base) this.disposeShape(current);
+      current = next;
+    }
+    return current;
   }
 
   fuse(a: KernelShape, b: KernelShape): KernelShape {
@@ -87,7 +142,7 @@ export class OpenCascadeKernel implements KernelAdapter {
     const fuse = new oc.BRepAlgoAPI_Fuse_3(aHandle.occtShape, bHandle.occtShape);
     try {
       if (!fuse.IsDone()) throw new Error("Boolean join failed.");
-      return { ...a, kernelHandle: { kind: "boolean", operation: "fuse", occtShape: fuse.Shape() } satisfies KernelHandle };
+      return { ...a, kernelHandle: { kind: "boolean", operation: "fuse", base: aHandle, tool: bHandle, occtShape: fuse.Shape() } satisfies KernelHandle };
     } finally {
       deleteOcct(fuse);
     }
@@ -103,14 +158,32 @@ export class OpenCascadeKernel implements KernelAdapter {
     if (handle.kind === "extrusion") {
       if (handle.profile.outerLoop.type === "circle") {
         const radius = (handle.profile.bounds.maxX - handle.profile.bounds.minX) / 2;
-        return createCylinderMesh(shape.id, radius, handle.distance);
+        const centerX = (handle.profile.bounds.minX + handle.profile.bounds.maxX) / 2;
+        const centerY = (handle.profile.bounds.minY + handle.profile.bounds.maxY) / 2;
+        return translateMesh(createCylinderMesh(shape.id, radius, handle.distance), centerX, centerY, 0);
       }
       const bounds = handle.profile.bounds;
       const mesh =
         handle.profile.holes.length > 0
           ? createPlateWithCircularHolesMesh(shape.id, bounds, handle.profile.holes, handle.distance)
-          : createBoxMesh(shape.id, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY, handle.distance);
+          : translateMesh(createBoxMesh(shape.id, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY, handle.distance), (bounds.minX + bounds.maxX) / 2, (bounds.minY + bounds.maxY) / 2, 0);
       return { ...mesh, id: shape.id, bodyId: shape.id };
+    }
+    if (handle.kind === "revolve") {
+      if (handle.axis.type !== "origin" || handle.axis.axis !== "Y" || handle.profile.outerLoop.type !== "polygon") {
+        throw new Error("Revolve fallback supports closed polygon profiles around the origin Y axis.");
+      }
+      if (Math.abs(handle.angle - Math.PI * 2) > 1e-6) {
+        throw new Error("Revolve fallback currently supports full 360 degree revolves.");
+      }
+      if (handle.profile.bounds.minX < -BOOLEAN_FALLBACK_EPSILON) {
+        throw new Error("Revolve profile crosses the selected axis.");
+      }
+      return createCylinderAroundYMesh(shape.id, handle.profile.bounds.maxX, handle.profile.bounds.minY, handle.profile.bounds.maxY, 48, Math.max(0, handle.profile.bounds.minX));
+    }
+    if (handle.kind === "boolean" && handle.operation === "cut") {
+      const fallback = fallbackCut(handle.base, handle.tool);
+      if (fallback) return this.tessellate({ ...shape, kernelHandle: fallback }, _options);
     }
     throw new Error("Unsupported kernel shape.");
   }
@@ -259,35 +332,29 @@ export class OpenCascadeKernel implements KernelAdapter {
   }
 }
 
-function fallbackCut(base: KernelHandle, tool: KernelHandle): KernelHandle | undefined {
-  if (base.kind !== "extrusion" || tool.kind !== "extrusion") return undefined;
-  if (tool.distance + BOOLEAN_FALLBACK_EPSILON < base.distance) return undefined;
-  if (base.profile.outerLoop.type !== "polygon" || tool.profile.outerLoop.type !== "circle") return undefined;
-  const radius = (tool.profile.bounds.maxX - tool.profile.bounds.minX) / 2;
-  const x = (tool.profile.bounds.minX + tool.profile.bounds.maxX) / 2;
-  const y = (tool.profile.bounds.minY + tool.profile.bounds.maxY) / 2;
-  const holeId = tool.profile.outerLoop.entityIds[0];
-  if (!holeId) return undefined;
-  if (![radius, x, y, base.profile.bounds.minX, base.profile.bounds.maxX, base.profile.bounds.minY, base.profile.bounds.maxY].every(Number.isFinite)) return undefined;
-  if (x - radius <= base.profile.bounds.minX || x + radius >= base.profile.bounds.maxX || y - radius <= base.profile.bounds.minY || y + radius >= base.profile.bounds.maxY) return undefined;
-  const fallback: KernelHandle = {
-    ...base,
-    occtShape: undefined,
-    profile: {
-      ...base.profile,
-      innerLoops: [...(base.profile.innerLoops ?? []), tool.profile.outerLoop],
-      holes: [...(base.profile.holes ?? []), { id: holeId, x, y, radius }],
-    },
-  };
-  return fallback;
-}
-
-
 function deleteOcct(value: unknown): void {
   const disposable = value as { delete?: () => void; isDeleted?: () => boolean } | undefined;
   if (!disposable?.delete) return;
   if (disposable.isDeleted?.()) return;
   disposable.delete();
+}
+
+function translateMesh(mesh: RenderMesh, x: number, y: number, z: number): RenderMesh {
+  if (Math.abs(x) <= BOOLEAN_FALLBACK_EPSILON && Math.abs(y) <= BOOLEAN_FALLBACK_EPSILON && Math.abs(z) <= BOOLEAN_FALLBACK_EPSILON) return mesh;
+  const positions = ArrayBuffer.isView(mesh.positions) ? new Float32Array(mesh.positions) : Array.from(mesh.positions);
+  for (let index = 0; index < positions.length; index += 3) {
+    positions[index] += x;
+    positions[index + 1] += y;
+    positions[index + 2] += z;
+  }
+  return {
+    ...mesh,
+    positions,
+    bounds: {
+      min: [mesh.bounds.min[0] + x, mesh.bounds.min[1] + y, mesh.bounds.min[2] + z],
+      max: [mesh.bounds.max[0] + x, mesh.bounds.max[1] + y, mesh.bounds.max[2] + z],
+    },
+  };
 }
 
 function boundsFromPositions(positions: number[]): { min: [number, number, number]; max: [number, number, number] } {

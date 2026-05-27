@@ -68,6 +68,18 @@ export function validateDocument(document: CadDocument): ValidationIssue[] {
     if (feature.type === "extrude" && feature.operation !== "newBody" && Array.isArray(feature.targetBodyIds) && feature.targetBodyIds.length > 1) {
       issues.push({ source: "feature", sourceId: feature.id, message: `${feature.operation} extrude currently supports exactly one target body.` });
     }
+    if (feature.type === "revolve" && !document.sketches[feature.sketchId]) {
+      issues.push({ source: "feature", sourceId: feature.id, message: "Revolve references a missing sketch." });
+    }
+    if (feature.type === "revolve" && feature.operation !== "newBody" && (!Array.isArray(feature.targetBodyIds) || feature.targetBodyIds.length !== 1)) {
+      issues.push({ source: "feature", sourceId: feature.id, message: `${feature.operation} revolve currently supports exactly one target body.` });
+    }
+    if (feature.type === "hole" && !document.sketches[feature.sketchId]) {
+      issues.push({ source: "feature", sourceId: feature.id, message: "Hole references a missing sketch." });
+    }
+    if (feature.type === "hole" && !feature.targetBodyId && !feature.targetFeatureId) {
+      issues.push({ source: "feature", sourceId: feature.id, message: "Hole requires a target body." });
+    }
   }
 
   return issues;

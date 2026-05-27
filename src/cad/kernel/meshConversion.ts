@@ -56,6 +56,56 @@ export function createCylinderMesh(bodyId: string, radius: number, height: numbe
   };
 }
 
+export function createCylinderAroundYMesh(bodyId: string, outerRadius: number, minY: number, maxY: number, segments = 48, innerRadius = 0): RenderMesh {
+  const positions: number[] = [];
+  const hasInnerWall = innerRadius > 1e-9;
+  for (let i = 0; i < segments; i += 1) {
+    const angle = (i / segments) * Math.PI * 2;
+    positions.push(Math.cos(angle) * outerRadius, minY, Math.sin(angle) * outerRadius);
+  }
+  for (let i = 0; i < segments; i += 1) {
+    const angle = (i / segments) * Math.PI * 2;
+    positions.push(Math.cos(angle) * outerRadius, maxY, Math.sin(angle) * outerRadius);
+  }
+  if (hasInnerWall) {
+    for (let i = 0; i < segments; i += 1) {
+      const angle = (i / segments) * Math.PI * 2;
+      positions.push(Math.cos(angle) * innerRadius, minY, Math.sin(angle) * innerRadius);
+    }
+    for (let i = 0; i < segments; i += 1) {
+      const angle = (i / segments) * Math.PI * 2;
+      positions.push(Math.cos(angle) * innerRadius, maxY, Math.sin(angle) * innerRadius);
+    }
+  }
+  const indices: number[] = [];
+  if (!hasInnerWall) {
+    for (let i = 1; i < segments - 1; i += 1) indices.push(0, i + 1, i);
+    for (let i = 1; i < segments - 1; i += 1) indices.push(segments, segments + i, segments + i + 1);
+  }
+  for (let i = 0; i < segments; i += 1) {
+    const next = (i + 1) % segments;
+    indices.push(i, segments + i, segments + next, i, segments + next, next);
+    if (hasInnerWall) {
+      const innerBottom = segments * 2 + i;
+      const nextInnerBottom = segments * 2 + next;
+      const innerTop = segments * 3 + i;
+      const nextInnerTop = segments * 3 + next;
+      indices.push(innerBottom, nextInnerBottom, nextInnerTop, innerBottom, nextInnerTop, innerTop);
+      indices.push(i, next, nextInnerBottom, i, nextInnerBottom, innerBottom);
+      indices.push(segments + i, innerTop, nextInnerTop, segments + i, nextInnerTop, segments + next);
+    }
+  }
+  return {
+    id: bodyId,
+    bodyId,
+    positions,
+    normals: computeNormals(positions, indices),
+    indices,
+    color: "#8fb7b4",
+    bounds: { min: [-outerRadius, minY, -outerRadius], max: [outerRadius, maxY, outerRadius] },
+  };
+}
+
 export function createPlateWithCircularHolesMesh(
   bodyId: string,
   bounds: { minX: number; maxX: number; minY: number; maxY: number },
