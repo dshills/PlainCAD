@@ -1,5 +1,5 @@
 import { CadBody, RebuildError, RebuildResult, RebuildWarning } from "../worker/workerProtocol";
-import { CadDocument, ExtrudeFeature, HoleFeature, RevolveFeature } from "../document/schema";
+import { CadDocument, ChamferFeature, ExtrudeFeature, FilletFeature, HoleFeature, RevolveFeature } from "../document/schema";
 import { evaluateExpression } from "../parameters/expressionEvaluator";
 import { solveSketch } from "../sketch/SketchSolver";
 import { detectProfiles } from "../sketch/profileDetection";
@@ -9,6 +9,7 @@ import { validateDocument } from "../document/validate";
 import { KernelAdapter, KernelShape, RenderMesh } from "../kernel/KernelAdapter";
 import { sketchPlaneTransform } from "../sketch/planes";
 import { planFeatureGraph, stableBodyIdForFeature } from "./featureGraph";
+import { resolveSupportedEdgeRefs } from "./topologyRefs";
 
 const kernel = new OpenCascadeKernel();
 
@@ -64,8 +65,12 @@ export function rebuildDocument(document: CadDocument): RebuildResult {
         rebuildHoleFeature(feature, document, solvedSketches, evaluated.values, runtimeBodies, shapesToDispose, errors);
         continue;
       }
-      if (feature.type !== "extrude") {
-        warnings.push({ id: `feature:${feature.id}`, source: "feature", sourceId: feature.id, message: `${feature.type} is not implemented in the MVP rebuild path.` });
+      if (feature.type === "fillet") {
+        rebuildEdgeTreatmentFeature(feature, document, evaluated.values, runtimeBodies, shapesToDispose, errors);
+        continue;
+      }
+      if (feature.type === "chamfer") {
+        rebuildEdgeTreatmentFeature(feature, document, evaluated.values, runtimeBodies, shapesToDispose, errors);
         continue;
       }
       if (feature.direction !== "positive") {
@@ -259,6 +264,46 @@ function rebuildHoleFeature(
   }
   const mesh = withStableBodyId(transformMeshToSketchPlane(kernel.tessellate(current.shape, { linearDeflection: 0.5, angularDeflection: 0.2 }), sketch), targetBodyId);
   runtimeBodies.set(targetBodyId, { ...current, mesh });
+}
+
+function rebuildEdgeTreatmentFeature(
+  feature: FilletFeature | ChamferFeature,
+  document: CadDocument,
+  parameters: Parameters<typeof evaluateExpression>[1]["parameters"],
+  runtimeBodies: Map<string, RuntimeBody>,
+  shapesToDispose: Set<KernelShape>,
+  errors: RebuildError[],
+) {
+  const resolved = resolveSupportedEdgeRefs(document, feature.targetEdgeRefs);
+  if ("error" in resolved) {
+    errors.push({ id: `feature:${feature.id}:edge-ref`, source: "feature", sourceId: feature.id, message: resolved.error });
+    return;
+  }
+  const targetBodyId = stableBodyIdForFeature(resolved[0].feature.id);
+  const target = runtimeBodies.get(targetBodyId);
+  if (!target?.mesh) {
+    errors.push({ id: `feature:${feature.id}:target`, source: "feature", sourceId: feature.id, message: "Edge treatment target body was not found." });
+    return;
+  }
+  const expression = feature.type === "fillet" ? feature.radius : feature.distance;
+  const evaluated = evaluateExpression(expression.expression, { parameters });
+  if (evaluated.error || !evaluated.quantity || evaluated.quantity.dimension !== "length" || evaluated.quantity.value <= 0) {
+    errors.push({ id: `feature:${feature.id}:size`, source: "feature", sourceId: feature.id, message: evaluated.error ?? `${feature.type} size must be a positive length.` });
+    return;
+  }
+  const operation = feature.type === "fillet" ? kernel.fillet?.bind(kernel) : kernel.chamfer?.bind(kernel);
+  if (!operation) {
+    errors.push({ id: `kernel:${feature.id}`, source: "kernel", sourceId: feature.id, message: `${feature.type} is not supported by the active kernel.` });
+    return;
+  }
+  try {
+    const shape = operation(target.shape, feature.targetEdgeRefs, evaluated.quantity.value);
+    shapesToDispose.add(shape);
+    const mesh = withStableBodyId(kernel.tessellate(shape, { linearDeflection: 0.5, angularDeflection: 0.2 }), targetBodyId);
+    runtimeBodies.set(targetBodyId, { ...target, shape, mesh, featureId: feature.id, name: feature.name });
+  } catch (error) {
+    errors.push({ id: `kernel:${feature.id}`, source: "kernel", sourceId: feature.id, message: error instanceof Error ? error.message : String(error) });
+  }
 }
 
 function evaluateHoleDepth(depth: HoleFeature["depth"], parameters: Parameters<typeof evaluateExpression>[1]["parameters"]): number | undefined {

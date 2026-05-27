@@ -80,6 +80,9 @@ export function validateDocument(document: CadDocument): ValidationIssue[] {
     if (feature.type === "hole" && !feature.targetBodyId && !feature.targetFeatureId) {
       issues.push({ source: "feature", sourceId: feature.id, message: "Hole requires a target body." });
     }
+    if ((feature.type === "fillet" || feature.type === "chamfer") && feature.targetEdgeRefs.some((ref) => ref.kind !== "edge" || !ref.role || ref.repairRequired)) {
+      issues.push({ source: "feature", sourceId: feature.id, message: `${feature.type} requires supported stable edge references.` });
+    }
   }
 
   return issues;

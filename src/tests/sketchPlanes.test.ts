@@ -26,7 +26,7 @@ describe("sketch planes", () => {
     };
     const imported = importProjectText(JSON.stringify(legacyDocument));
 
-    expect(imported.schemaVersion).toBe(5);
+    expect(imported.schemaVersion).toBe(6);
     expect(imported.sketches[sketch.id].plane).toEqual({ type: "origin", plane: "XZ" });
   });
 

@@ -1,4 +1,4 @@
-export const CURRENT_SCHEMA_VERSION = 5;
+export const CURRENT_SCHEMA_VERSION = 6;
 
 export type UnitSystem = "metric" | "imperial";
 
@@ -178,6 +178,10 @@ export interface TopologyRef {
   kind: "face" | "edge" | "vertex";
   transientId: string;
   stableHint?: string;
+  role?: "profileEdge" | "startCapPerimeter" | "endCapPerimeter" | "planarFace";
+  sourceEntityId?: string;
+  adjacentRole?: "sideFace" | "startCap" | "endCap";
+  repairRequired?: boolean;
 }
 
 export interface ViewState {

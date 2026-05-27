@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { createExtrudeFeature, deleteFeature, suppressFeature, upsertFeature, upsertSketch } from "../cad/document/CadDocument";
-import { ExtrudeFeature, HoleFeature, RevolveFeature } from "../cad/document/schema";
+import { ChamferFeature, ExtrudeFeature, FilletFeature, HoleFeature, RevolveFeature } from "../cad/document/schema";
 import { planFeatureGraph, stableBodyIdForFeature } from "../cad/features/featureGraph";
 import { rebuildDocument } from "../cad/features/rebuildGraph";
+import { createExtrudeEdgeRef, resolveSupportedEdgeRef } from "../cad/features/topologyRefs";
 import { OpenCascadeKernel } from "../cad/kernel/OpenCascadeKernel";
 import { createBoxTemplate } from "../templates/templates";
 import { addCircleAt, addLine, addPoint, createXySketch } from "../cad/sketch/SketchModel";
@@ -257,6 +258,61 @@ describe("feature graph rebuild", () => {
 
     expect(result.success).toBe(true);
     expect(result.meshes[0].indices.length).toBeGreaterThan(72);
+  });
+
+  it("resolves localized extrude edge references", () => {
+    const document = createBoxTemplate();
+    const feature = document.features[0] as ExtrudeFeature;
+    const sketch = document.sketches[feature.sketchId];
+    const line = Object.values(sketch.entities).find((entity) => entity.type === "line");
+
+    const resolved = resolveSupportedEdgeRef(document, createExtrudeEdgeRef(feature.id, "profileEdge", line?.id));
+
+    expect("error" in resolved).toBe(false);
+    if (!("error" in resolved)) expect(resolved.stableId).toContain(line?.id);
+  });
+
+  it("rebuilds fillet and chamfer features on stable edge refs", () => {
+    let document = createBoxTemplate();
+    const feature = document.features[0] as ExtrudeFeature;
+    const sketch = document.sketches[feature.sketchId];
+    const line = Object.values(sketch.entities).find((entity) => entity.type === "line")!;
+    document = upsertFeature(document, {
+      id: "feature_fillet",
+      name: "Round Edge",
+      type: "fillet",
+      targetEdgeRefs: [createExtrudeEdgeRef(feature.id, "profileEdge", line.id)],
+      radius: { expression: "2mm", unit: "mm" },
+    } satisfies FilletFeature);
+    document = upsertFeature(document, {
+      id: "feature_chamfer",
+      name: "Break Edge",
+      type: "chamfer",
+      targetEdgeRefs: [createExtrudeEdgeRef(feature.id, "endCapPerimeter")],
+      distance: { expression: "1mm", unit: "mm" },
+    } satisfies ChamferFeature);
+
+    const result = rebuildDocument(document);
+
+    expect(result.success).toBe(true);
+    expect(result.bodies[0].featureId).toBe("feature_chamfer");
+  });
+
+  it("rejects ambiguous edge treatment refs that require repair", () => {
+    let document = createBoxTemplate();
+    const feature = document.features[0] as ExtrudeFeature;
+    document = upsertFeature(document, {
+      id: "feature_bad_fillet",
+      name: "Bad Fillet",
+      type: "fillet",
+      targetEdgeRefs: [{ ...createExtrudeEdgeRef(feature.id, "endCapPerimeter"), repairRequired: true }],
+      radius: { expression: "2mm", unit: "mm" },
+    } satisfies FilletFeature);
+
+    const result = rebuildDocument(document);
+
+    expect(result.success).toBe(false);
+    expect(result.errors.some((error) => error.message.includes("stable edge"))).toBe(true);
   });
 
   it("tessellates offset circular extrusions at their profile center", () => {

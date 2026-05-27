@@ -8,6 +8,7 @@ const migrations = new Map<number, Migration>([
   [2, migrateV2ToV3],
   [3, migrateV3ToV4],
   [4, migrateV4ToV5],
+  [5, migrateV5ToV6],
 ]);
 
 export function migrateDocument(input: CadDocument): CadDocument {
@@ -77,6 +78,10 @@ function migrateV4ToV5(input: CadDocument): CadDocument {
         )
       : input.features,
   };
+}
+
+function migrateV5ToV6(input: CadDocument): CadDocument {
+  return { ...input, schemaVersion: 6 };
 }
 
 function sanitizeCurrentDocument(input: CadDocument): CadDocument {
@@ -239,6 +244,10 @@ function sanitizeExtrudeTermination(termination: Record<string, any>, fallbackDi
         kind: faceRef.kind as "face" | "edge" | "vertex",
         transientId: faceRef.transientId,
         ...(faceRef.stableHint !== undefined ? { stableHint: faceRef.stableHint } : {}),
+        ...(faceRef.role !== undefined ? { role: faceRef.role } : {}),
+        ...(faceRef.sourceEntityId !== undefined ? { sourceEntityId: faceRef.sourceEntityId } : {}),
+        ...(faceRef.adjacentRole !== undefined ? { adjacentRole: faceRef.adjacentRole } : {}),
+        ...(faceRef.repairRequired !== undefined ? { repairRequired: faceRef.repairRequired } : {}),
       },
     };
   }

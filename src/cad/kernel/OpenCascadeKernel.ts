@@ -1,7 +1,7 @@
 import initOpenCascadeModule from "opencascade.js/dist/opencascade.wasm.js";
 import openCascadeWasmUrl from "opencascade.js/dist/opencascade.wasm.wasm?url";
 import { createId } from "../document/ids";
-import { RevolveAxisReference } from "../document/schema";
+import { RevolveAxisReference, TopologyRef } from "../document/schema";
 import { KernelAdapter, KernelShape, RenderMesh, TessellationOptions } from "./KernelAdapter";
 import { computeNormals, createBoxMesh, createCylinderAroundYMesh, createCylinderMesh, createPlateWithCircularHolesMesh } from "./meshConversion";
 import { exportMeshesToStl } from "./stlExport";
@@ -13,7 +13,8 @@ type KernelHandle =
   | { kind: "box"; width: number; height: number; depth: number; occtShape?: unknown }
   | { kind: "extrusion"; profile: SketchProfile; distance: number; occtShape?: unknown }
   | { kind: "revolve"; profile: SketchProfile; axis: RevolveAxisReference; angle: number; occtShape?: unknown }
-  | { kind: "boolean"; operation: "cut" | "fuse"; base: KernelHandle; tool: KernelHandle; occtShape?: unknown };
+  | { kind: "boolean"; operation: "cut" | "fuse"; base: KernelHandle; tool: KernelHandle; occtShape?: unknown }
+  | { kind: "edgeTreatment"; operation: "fillet" | "chamfer"; base: KernelHandle; edgeRefs: TopologyRef[]; size: number; occtShape?: unknown };
 
 function fallbackCut(base: KernelHandle, tool: KernelHandle): KernelHandle | undefined {
   const resolvedBase = resolveFallbackHandle(base);
@@ -148,6 +149,22 @@ export class OpenCascadeKernel implements KernelAdapter {
     }
   }
 
+  fillet(shape: KernelShape, edgeRefs: TopologyRef[], radius: number): KernelShape {
+    return {
+      id: createId("shape"),
+      kernelHandle: { kind: "edgeTreatment", operation: "fillet", base: shape.kernelHandle as KernelHandle, edgeRefs, size: radius } satisfies KernelHandle,
+      metadata: { edgeTreatment: { type: "fillet", edgeRefs, radius } },
+    };
+  }
+
+  chamfer(shape: KernelShape, edgeRefs: TopologyRef[], distance: number): KernelShape {
+    return {
+      id: createId("shape"),
+      kernelHandle: { kind: "edgeTreatment", operation: "chamfer", base: shape.kernelHandle as KernelHandle, edgeRefs, size: distance } satisfies KernelHandle,
+      metadata: { edgeTreatment: { type: "chamfer", edgeRefs, distance } },
+    };
+  }
+
   tessellate(shape: KernelShape, _options: TessellationOptions): RenderMesh {
     const handle = shape.kernelHandle as KernelHandle;
     const occtMesh = this.tessellateOcctShape(shape.id, handle.occtShape, _options);
@@ -184,6 +201,10 @@ export class OpenCascadeKernel implements KernelAdapter {
     if (handle.kind === "boolean" && handle.operation === "cut") {
       const fallback = fallbackCut(handle.base, handle.tool);
       if (fallback) return this.tessellate({ ...shape, kernelHandle: fallback }, _options);
+    }
+    if (handle.kind === "edgeTreatment") {
+      const baseMesh = this.tessellate({ ...shape, kernelHandle: handle.base }, _options);
+      return { ...baseMesh, id: shape.id, bodyId: shape.id };
     }
     throw new Error("Unsupported kernel shape.");
   }
