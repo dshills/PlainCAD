@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useCadStore } from "../../state/useCadStore";
 import { SketchCircle, SketchPoint } from "../../cad/document/schema";
 import * as documentOps from "../../cad/document/CadDocument";
+import { sketchPlaneLabel } from "../../cad/sketch/planes";
 
 const EXTRUDE_OPERATIONS = ["newBody", "join", "cut"] as const;
 const EXTRUDE_OPERATION_OPTIONS = [
@@ -81,7 +82,7 @@ export function InspectorPanel() {
       {sketch ? (
         <div key={`sketch:${sketch.id}`} className="item-card">
           <strong>{sketch.name}</strong>
-          <p className="muted">Plane {sketch.plane}</p>
+          <p className="muted">Plane {sketchPlaneLabel(sketch.plane)}</p>
           <p className="muted">
             {Object.keys(sketch.entities).length} entities, {sketch.constraints.length} constraints, {sketch.dimensions.length} dimensions
           </p>

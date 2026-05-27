@@ -31,7 +31,7 @@ function writeHeader(bytes: ArrayBuffer, name: string) {
   header.set(encoded.subarray(0, 80));
 }
 
-function writeFaceNormal(view: DataView, offset: number, positions: number[], a: number, b: number, c: number): number {
+function writeFaceNormal(view: DataView, offset: number, positions: ArrayLike<number>, a: number, b: number, c: number): number {
   const abX = positions[b] - positions[a];
   const abY = positions[b + 1] - positions[a + 1];
   const abZ = positions[b + 2] - positions[a + 2];
@@ -54,7 +54,7 @@ function writeFaceNormal(view: DataView, offset: number, positions: number[], a:
   return offset + 12;
 }
 
-function writeVertex(view: DataView, offset: number, positions: number[], vertexIndex: number): number {
+function writeVertex(view: DataView, offset: number, positions: ArrayLike<number>, vertexIndex: number): number {
   view.setFloat32(offset, positions[vertexIndex], true);
   view.setFloat32(offset + 4, positions[vertexIndex + 1], true);
   view.setFloat32(offset + 8, positions[vertexIndex + 2], true);

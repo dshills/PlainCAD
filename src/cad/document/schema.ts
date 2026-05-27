@@ -1,4 +1,4 @@
-export const CURRENT_SCHEMA_VERSION = 2;
+export const CURRENT_SCHEMA_VERSION = 3;
 
 export type UnitSystem = "metric" | "imperial";
 
@@ -40,10 +40,17 @@ export interface ExpressionRef {
   unit: string;
 }
 
+export type OriginPlane = "XY" | "XZ" | "YZ";
+
+export type SketchPlaneReference =
+  | { type: "origin"; plane: OriginPlane }
+  | { type: "offset"; base: OriginPlane; offset: ExpressionRef }
+  | { type: "face"; featureId: string; stableFaceId: string; lost?: boolean };
+
 export interface Sketch {
   id: string;
   name: string;
-  plane: "XY";
+  plane: SketchPlaneReference;
   timelineStep?: number;
   createdAt?: string;
   entities: Record<string, SketchEntity>;

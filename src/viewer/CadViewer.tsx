@@ -8,6 +8,7 @@ import { boundsFromMeshes } from "../cad/kernel/meshConversion";
 import { CadDocument } from "../cad/document/schema";
 import { evaluateParameters } from "../cad/parameters/expressionEvaluator";
 import { solveSketch } from "../cad/sketch/SketchSolver";
+import { sketchPlaneTransform, transformPoint } from "../cad/sketch/planes";
 
 interface ViewerRuntime {
   camera: THREE.PerspectiveCamera;
@@ -237,19 +238,27 @@ function updateSketchOverlay(sketchGroup: THREE.Group, document: CadDocument, re
   const evaluated = evaluateParameters(document.parameters);
   const linePositions: number[] = [];
   for (const sketch of Object.values(document.sketches)) {
+    const transform = sketchPlaneTransform(sketch.plane);
     const solved = solveSketch(sketch, evaluated.values);
     for (const line of solved.lines) {
-      linePositions.push(line.start.x, line.start.y, 0, line.end.x, line.end.y, 0);
+      const start = transformPoint(transform, line.start.x, line.start.y);
+      const end = transformPoint(transform, line.end.x, line.end.y);
+      linePositions.push(start.x, start.y, start.z, end.x, end.y, end.z);
     }
     for (const point of Object.values(solved.points)) {
+      const world = transformPoint(transform, point.x, point.y);
       const object = new THREE.Mesh(resources.pointGeometry, resources.pointMaterial);
-      object.position.set(point.x, point.y, 0);
+      object.position.set(world.x, world.y, world.z);
       object.userData.sketchEntityId = point.id;
       sketchGroup.add(object);
     }
     for (const circle of solved.circles) {
+      const center = transformPoint(transform, circle.center.x, circle.center.y);
       const object = new THREE.LineLoop(resources.unitCircleGeometry, resources.circleMaterial);
-      object.position.set(circle.center.x, circle.center.y, 0);
+      object.position.set(center.x, center.y, center.z);
+      const normalTarget = transformPoint(transform, circle.center.x, circle.center.y, 1);
+      object.up.set(transform.v.x, transform.v.y, transform.v.z);
+      object.lookAt(normalTarget.x, normalTarget.y, normalTarget.z);
       object.scale.set(circle.radius, circle.radius, 1);
       object.userData.sketchEntityId = circle.id;
       sketchGroup.add(object);

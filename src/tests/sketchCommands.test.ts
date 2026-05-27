@@ -23,6 +23,23 @@ describe("sketch commands", () => {
     expect(Object.values(updated.entities).filter((entity) => entity.type === "circle")).toHaveLength(1);
   });
 
+  it("creates sketches on XZ and YZ origin planes", () => {
+    const document = createEmptyDocument();
+    useCadStore.setState({
+      history: { past: [], present: document, future: [] },
+      selection: { selectedIds: [] },
+    });
+
+    runCommand("sketch.createXZ");
+    runCommand("sketch.createYZ");
+
+    const sketches = Object.values(useCadStore.getState().history.present.sketches);
+    expect(sketches.map((sketch) => sketch.plane)).toEqual([
+      { type: "origin", plane: "XZ" },
+      { type: "origin", plane: "YZ" },
+    ]);
+  });
+
   it("adds helper geometry to the parent sketch when an entity is selected", () => {
     const document = createEmptyDocument();
     useCadStore.setState({

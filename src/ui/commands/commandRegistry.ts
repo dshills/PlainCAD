@@ -5,7 +5,8 @@ import { importProjectFile } from "../../persistence/importProject";
 import { downloadArrayBuffer, downloadProject, projectFilename as makeProjectFilename, serializeProject } from "../../persistence/exportProject";
 import { exportMeshesToStl } from "../../cad/kernel/stlExport";
 import { createExtrudeFeature, deleteFeature, suppressFeature, upsertFeature, upsertSketch } from "../../cad/document/CadDocument";
-import { addCenterRectangle, addCircleAt, addCornerRectangle, createXySketch } from "../../cad/sketch/SketchModel";
+import { addCenterRectangle, addCircleAt, addCornerRectangle, createSketchOnPlane, createXySketch } from "../../cad/sketch/SketchModel";
+import { OriginPlane } from "../../cad/document/schema";
 import { evaluateParameters } from "../../cad/parameters/expressionEvaluator";
 import { solveSketch } from "../../cad/sketch/SketchSolver";
 import { detectProfiles } from "../../cad/sketch/profileDetection";
@@ -142,14 +143,11 @@ export const commands: CadCommand[] = [
     label: "Create XY Sketch",
     enablementKey: "document",
     run: () => {
-      const state = useCadStore.getState();
-      const document = state.history.present;
-      if (!document) return;
-      const sketch = createXySketch(`Sketch ${Object.keys(document.sketches).length + 1}`);
-      state.updateDocument((document) => upsertSketch(document, sketch));
-      state.select({ kind: "sketch", id: sketch.id, documentId: document.id });
+      createSketchCommand("XY");
     },
   },
+  { id: "sketch.createXZ", label: "Create XZ Sketch", enablementKey: "document", run: () => createSketchCommand("XZ") },
+  { id: "sketch.createYZ", label: "Create YZ Sketch", enablementKey: "document", run: () => createSketchCommand("YZ") },
   {
     id: "sketch.addCenterRectangle",
     label: "Add Center Rectangle",
@@ -241,6 +239,15 @@ function updateSelectedSketch(mutator: (sketch: ReturnType<typeof createXySketch
   const updated = mutator(sketch);
   state.updateDocument((nextDocument) => upsertSketch(nextDocument, updated));
   state.select({ kind: "sketch", id: updated.id, documentId: document.id });
+}
+
+function createSketchCommand(plane: OriginPlane) {
+  const state = useCadStore.getState();
+  const document = state.history.present;
+  if (!document) return;
+  const sketch = createSketchOnPlane(`Sketch ${Object.keys(document.sketches).length + 1}`, plane);
+  state.updateDocument((document) => upsertSketch(document, sketch));
+  state.select({ kind: "sketch", id: sketch.id, documentId: document.id });
 }
 
 function getSelectedFeature(state = useCadStore.getState()) {

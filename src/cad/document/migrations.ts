@@ -2,7 +2,10 @@ import { CURRENT_SCHEMA_VERSION, CadDocument, Feature, Sketch } from "./schema";
 
 type Migration = (input: CadDocument) => CadDocument;
 
-const migrations = new Map<number, Migration>([[1, migrateV1ToV2]]);
+const migrations = new Map<number, Migration>([
+  [1, migrateV1ToV2],
+  [2, migrateV2ToV3],
+]);
 
 export function migrateDocument(input: CadDocument): CadDocument {
   if (!Number.isInteger(input.schemaVersion)) {
@@ -26,6 +29,19 @@ export function migrateDocument(input: CadDocument): CadDocument {
 
 function migrateV1ToV2(input: CadDocument): CadDocument {
   return withTimelineMetadata({ ...input, schemaVersion: 2 });
+}
+
+function migrateV2ToV3(input: CadDocument): CadDocument {
+  return {
+    ...input,
+    schemaVersion: 3,
+    sketches: Object.fromEntries(
+      Object.entries(input.sketches ?? {}).map(([id, sketch]) => [
+        id,
+        { ...sketch, plane: normalizePlaneReference((sketch as { plane?: unknown }).plane) },
+      ]),
+    ),
+  };
 }
 
 function sanitizeCurrentDocument(input: CadDocument): CadDocument {
@@ -89,7 +105,7 @@ function sanitizeSketch(sketch: Sketch): Sketch {
   return {
     id: sketchRecord.id,
     name: sketchRecord.name,
-    plane: sketchRecord.plane,
+    plane: normalizePlaneReference(sketchRecord.plane),
     ...(sketchRecord.timelineStep !== undefined ? { timelineStep: sketchRecord.timelineStep } : {}),
     ...(sketchRecord.createdAt !== undefined ? { createdAt: sketchRecord.createdAt } : {}),
     entities: Object.fromEntries(
@@ -216,4 +232,30 @@ function comparableOrder(value: unknown): string | number | undefined {
   if (typeof value === "string") return value;
   if (typeof value === "number" && Number.isFinite(value)) return value;
   return undefined;
+}
+
+function normalizePlaneReference(value: unknown): Sketch["plane"] {
+  if (value === "XZ" || value === "YZ" || value === "XY") return { type: "origin", plane: value };
+  if (isRecord(value) && value.type === "origin" && (value.plane === "XY" || value.plane === "XZ" || value.plane === "YZ")) {
+    return { type: "origin", plane: value.plane };
+  }
+  if (isRecord(value) && value.type === "offset" && (value.base === "XY" || value.base === "XZ" || value.base === "YZ")) {
+    const offset = isRecord(value.offset)
+      ? {
+          expression: String(value.offset.expression ?? ""),
+          ...(typeof value.offset.resolvedValue === "number" ? { resolvedValue: value.offset.resolvedValue } : {}),
+          unit: String(value.offset.unit ?? ""),
+        }
+      : { expression: value.offset == null ? "" : String(value.offset), unit: "" };
+    return { type: "offset", base: value.base, offset };
+  }
+  if (isRecord(value) && value.type === "face") {
+    return {
+      type: "face",
+      featureId: String(value.featureId ?? ""),
+      stableFaceId: String(value.stableFaceId ?? ""),
+      ...(value.lost !== undefined ? { lost: Boolean(value.lost) } : {}),
+    };
+  }
+  return { type: "origin", plane: "XY" };
 }

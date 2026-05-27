@@ -4,6 +4,7 @@ import { orderedFeatures, orderedSketches } from "../../state/selectors";
 import { evaluateParameters } from "../../cad/parameters/expressionEvaluator";
 import { solveSketch } from "../../cad/sketch/SketchSolver";
 import { detectProfiles } from "../../cad/sketch/profileDetection";
+import { sketchPlaneLabel } from "../../cad/sketch/planes";
 
 export function SketchPanel() {
   const document = useCadStore((state) => state.history.present);
@@ -40,7 +41,7 @@ export function SketchPanel() {
         </div>
         <div className="browser-folder">
           <span className="folder-label">Origin</span>
-          <span className="muted">XY plane</span>
+          <span className="muted">XY, XZ, YZ planes</span>
         </div>
         <div className="browser-folder">
           <span className="folder-label">Bodies</span>
@@ -57,10 +58,10 @@ export function SketchPanel() {
             onClick={() => select({ kind: "sketch", id: sketch.id, documentId: document.id })}
           >
             <strong>{sketch.name}</strong>
-            <span className="muted"> {Object.keys(sketch.entities).length} entities</span>
+            <span className="muted"> {sketchPlaneLabel(sketch.plane)} plane, {Object.keys(sketch.entities).length} entities</span>
           </button>
         ))}
-        {sketches.length === 0 ? <p className="muted">Create an XY sketch or use a template.</p> : null}
+        {sketches.length === 0 ? <p className="muted">Create an origin-plane sketch or use a template.</p> : null}
       </div>
       {activeSketch ? (
         <div className="sketch-detail">

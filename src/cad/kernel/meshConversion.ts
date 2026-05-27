@@ -167,7 +167,7 @@ export function boundsFromMeshes(meshes: RenderMesh[]): BoundingBox | undefined 
   return { min, max };
 }
 
-function faceNormal(positions: number[], a: number, b: number, c: number): [number, number, number] {
+function faceNormal(positions: ArrayLike<number>, a: number, b: number, c: number): [number, number, number] {
   const ab = [positions[b] - positions[a], positions[b + 1] - positions[a + 1], positions[b + 2] - positions[a + 2]];
   const ac = [positions[c] - positions[a], positions[c + 1] - positions[a + 1], positions[c + 2] - positions[a + 2]];
   return normalize([

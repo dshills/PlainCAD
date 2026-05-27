@@ -1,15 +1,20 @@
-import { ConstraintType, ExpressionRef, Sketch } from "../document/schema";
+import { ConstraintType, ExpressionRef, OriginPlane, Sketch, SketchPlaneReference } from "../document/schema";
 import { createId } from "../document/ids";
+import { originPlaneRef } from "./planes";
 
 export function expressionRef(expression: string, unit = "mm"): ExpressionRef {
   return { expression, unit };
 }
 
 export function createXySketch(name = "Sketch"): Sketch {
+  return createSketchOnPlane(name, "XY");
+}
+
+export function createSketchOnPlane(name = "Sketch", plane: OriginPlane | SketchPlaneReference = "XY"): Sketch {
   return {
     id: createId("sketch"),
     name,
-    plane: "XY",
+    plane: typeof plane === "string" ? originPlaneRef(plane) : plane,
     createdAt: new Date().toISOString(),
     entities: {},
     constraints: [],

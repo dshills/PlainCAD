@@ -36,7 +36,9 @@ const toolbarGroups: ToolbarGroup[] = [
   {
     label: "Sketch",
     buttons: [
-      { command: "sketch.createXY", label: "Sketch", icon: "+", title: "Create an XY sketch", ariaLabel: "Create XY sketch" },
+      { command: "sketch.createXY", label: "XY", icon: "XY", title: "Create an XY sketch", ariaLabel: "Create XY sketch" },
+      { command: "sketch.createXZ", label: "XZ", icon: "XZ", title: "Create an XZ sketch", ariaLabel: "Create XZ sketch" },
+      { command: "sketch.createYZ", label: "YZ", icon: "YZ", title: "Create a YZ sketch", ariaLabel: "Create YZ sketch" },
       { command: "sketch.addCenterRectangle", label: "Rectangle", icon: "Rect", title: "Add a center rectangle to the active sketch", ariaLabel: "Add center rectangle" },
       { command: "sketch.addCircle", label: "Circle", icon: "Circ", title: "Add a circle to the active sketch", ariaLabel: "Add circle" },
     ],

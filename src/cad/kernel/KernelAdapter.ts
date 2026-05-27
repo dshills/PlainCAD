@@ -15,8 +15,8 @@ export interface TessellationOptions {
 export interface RenderMesh {
   id: string;
   bodyId: string;
-  positions: number[];
-  normals: number[];
+  positions: ArrayLike<number>;
+  normals: ArrayLike<number>;
   indices: number[];
   color?: string;
   bounds: BoundingBox;
