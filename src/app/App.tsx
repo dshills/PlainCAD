@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { CadViewer } from "../viewer/CadViewer";
-import { runCommand } from "../ui/commands/commandRegistry";
+import { canExportStl, runCommand } from "../ui/commands/commandRegistry";
 import { CommandPalette } from "../ui/commands/CommandPalette";
 import { ParameterPanel } from "../ui/panels/ParameterPanel";
 import { FeatureTimeline } from "../ui/panels/FeatureTimeline";
@@ -17,6 +17,7 @@ export function App() {
   const initializeKernel = useCadStore((state) => state.initializeKernel);
   const select = useCadStore((state) => state.select);
   const setFileError = useCadStore((state) => state.setFileError);
+  const stlExportEnabled = useCadStore(canExportStl);
   const commandContext = useMemo(() => ({ fileInputRef }), []);
 
   useEffect(() => {
@@ -54,7 +55,9 @@ export function App() {
           <button onClick={() => runCommand("file.newProject", commandContext)}>New</button>
           <button onClick={() => fileInputRef.current?.click()}>Open</button>
           <button onClick={() => runCommand("file.saveProject", commandContext)}>Save</button>
-          <button onClick={() => runCommand("file.exportStl", commandContext)}>STL</button>
+          <button onClick={() => runCommand("file.exportStl", commandContext)} disabled={!stlExportEnabled}>
+            STL
+          </button>
           <button onClick={() => runCommand("history.undo", commandContext)}>Undo</button>
           <button onClick={() => runCommand("history.redo", commandContext)}>Redo</button>
           <button onClick={() => runCommand("view.fit", commandContext)}>Fit</button>

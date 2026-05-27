@@ -135,8 +135,15 @@ describe("rebuild, persistence, and export", () => {
 
   it("exports STL smoke output", () => {
     const result = rebuildDocument(createMountingPlateTemplate());
-    const stl = new TextDecoder().decode(exportMeshesToStl(result.meshes));
-    expect(stl).toContain("solid");
-    expect(stl).toContain("facet normal");
+    const stl = exportMeshesToStl(result.meshes);
+    const view = new DataView(stl);
+    const triangleCount = view.getUint32(80, true);
+    expect(new TextDecoder().decode(stl.slice(0, 19))).toBe("PlainCAD binary STL");
+    expect(triangleCount).toBeGreaterThan(0);
+    expect(stl.byteLength).toBe(84 + triangleCount * 50);
+  });
+
+  it("rejects STL export without rebuilt meshes", () => {
+    expect(() => exportMeshesToStl([])).toThrow("STL export requires a successfully rebuilt model.");
   });
 });

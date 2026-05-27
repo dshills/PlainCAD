@@ -20,7 +20,7 @@ interface RebuildState {
   message?: string;
 }
 
-interface CadStore {
+export interface CadStore {
   history: HistoryState;
   selection: SelectionState;
   rebuild: RebuildState;

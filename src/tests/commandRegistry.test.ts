@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { runCommand, commands } from "../ui/commands/commandRegistry";
+import { canExportStl, runCommand, commands } from "../ui/commands/commandRegistry";
 import { useCadStore } from "../state/useCadStore";
 
 describe("view commands", () => {
@@ -33,5 +33,34 @@ describe("file commands", () => {
     await runCommand("file.openProject", { file });
 
     expect(useCadStore.getState().fileError).toBe("Project file is not valid JSON.");
+  });
+
+  it("disables STL export until the kernel is ready and rebuild succeeded", () => {
+    const previous = useCadStore.getState();
+    useCadStore.setState({
+      rebuild: {
+        status: "failed",
+        kernelReady: false,
+        result: {
+          documentId: previous.history.present.id,
+          success: false,
+          bodies: [],
+          meshes: [],
+          errors: [],
+          warnings: [],
+          durationMs: 0,
+        },
+      },
+      fileError: undefined,
+    });
+
+    try {
+      expect(canExportStl(useCadStore.getState())).toBe(false);
+      expect(commands.find((command) => command.id === "file.exportStl")?.enabled()).toBe(false);
+      runCommand("file.exportStl");
+      expect(useCadStore.getState().fileError).toBeUndefined();
+    } finally {
+      useCadStore.setState(previous, true);
+    }
   });
 });

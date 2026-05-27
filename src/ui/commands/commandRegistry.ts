@@ -1,8 +1,8 @@
 import { RefObject } from "react";
-import { useCadStore } from "../../state/useCadStore";
+import { CadStore, useCadStore } from "../../state/useCadStore";
 import { createBoxTemplate, createMountingPlateTemplate } from "../../templates/templates";
 import { importProjectFile } from "../../persistence/importProject";
-import { downloadArrayBuffer, downloadProject, projectFilename, serializeProject } from "../../persistence/exportProject";
+import { downloadArrayBuffer, downloadProject, projectFilename as makeProjectFilename, serializeProject } from "../../persistence/exportProject";
 import { exportMeshesToStl } from "../../cad/kernel/stlExport";
 import { createExtrudeFeature, deleteFeature, suppressFeature, upsertFeature, upsertSketch } from "../../cad/document/CadDocument";
 import { addCenterRectangle, addCircleAt, addCornerRectangle, createXySketch } from "../../cad/sketch/SketchModel";
@@ -52,28 +52,47 @@ export const commands: CadCommand[] = [
     id: "file.saveProject",
     label: "Save Project",
     enabled: () => true,
-    run: () => {
-      const document = useCadStore.getState().history.present;
-      useCadStore.getState().setFileError(undefined);
-      downloadProject(document);
+    run: async () => {
+      const state = useCadStore.getState();
+      try {
+        await downloadProject(state.history.present);
+        state.setFileError(undefined);
+      } catch (error) {
+        console.error(error);
+        state.setFileError(error instanceof Error ? error.message : "Project save failed.");
+      }
     },
   },
   {
     id: "file.exportJson",
     label: "Export Project JSON",
     enabled: () => true,
-    run: () => {
-      const document = useCadStore.getState().history.present;
-      downloadArrayBuffer(new TextEncoder().encode(serializeProject(document)).buffer, projectFilename(document, ".json"), "application/json");
+    run: async () => {
+      const state = useCadStore.getState();
+      try {
+        const document = state.history.present;
+        await downloadArrayBuffer(new TextEncoder().encode(serializeProject(document)).buffer, makeProjectFilename(document, ".json"), "application/json");
+        state.setFileError(undefined);
+      } catch (error) {
+        console.error(error);
+        state.setFileError(error instanceof Error ? error.message : "JSON export failed.");
+      }
     },
   },
   {
     id: "file.exportStl",
     label: "Export STL",
-    enabled: () => (useCadStore.getState().rebuild.result?.meshes.length ?? 0) > 0,
-    run: () => {
+    enabled: () => canExportStl(useCadStore.getState()),
+    run: async () => {
       const state = useCadStore.getState();
-      downloadArrayBuffer(exportMeshesToStl(state.rebuild.result?.meshes ?? [], state.history.present.name), `${state.history.present.name}.stl`, "model/stl");
+      try {
+        if (!canExportStl(state)) throw new Error("STL export is unavailable until the current model rebuild succeeds.");
+        await downloadArrayBuffer(exportMeshesToStl(state.rebuild.result?.meshes ?? [], state.history.present.name), makeProjectFilename(state.history.present, ".stl"), "model/stl");
+        state.setFileError(undefined);
+      } catch (error) {
+        console.error(error);
+        state.setFileError(error instanceof Error ? error.message : "STL export failed.");
+      }
     },
   },
   { id: "history.undo", label: "Undo", enabled: () => useCadStore.getState().history.past.length > 0, run: () => useCadStore.getState().undo() },
@@ -193,6 +212,11 @@ function canCreateExtrude() {
     return Object.values(state.history.present.sketches).some((sketch) => Boolean(sketch.entities[selection.id]));
   }
   return Object.keys(state.history.present.sketches).length > 0;
+}
+
+export function canExportStl(state: CadStore) {
+  const { rebuild } = state;
+  return rebuild.kernelReady && rebuild.status === "succeeded" && rebuild.result?.success === true && rebuild.result.documentId === state.history.present.id && rebuild.result.meshes.length > 0;
 }
 
 function findActiveSketchWithProfile() {

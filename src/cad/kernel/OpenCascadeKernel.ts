@@ -2,7 +2,8 @@ import initOpenCascadeModule from "opencascade.js/dist/opencascade.wasm.js";
 import openCascadeWasmUrl from "opencascade.js/dist/opencascade.wasm.wasm?url";
 import { createId } from "../document/ids";
 import { KernelAdapter, KernelShape, RenderMesh, TessellationOptions } from "./KernelAdapter";
-import { computeNormals, createBoxMesh, createCylinderMesh, createPlateWithCircularHolesMesh, meshToAsciiStl } from "./meshConversion";
+import { computeNormals, createBoxMesh, createCylinderMesh, createPlateWithCircularHolesMesh } from "./meshConversion";
+import { exportMeshesToStl } from "./stlExport";
 import { SketchProfile } from "../sketch/profileDetection";
 
 type KernelHandle =
@@ -96,7 +97,7 @@ export class OpenCascadeKernel implements KernelAdapter {
 
   exportStl(shape: KernelShape): ArrayBuffer {
     const mesh = this.tessellate(shape, { linearDeflection: 0.5, angularDeflection: 0.2 });
-    return new TextEncoder().encode(meshToAsciiStl(mesh, "PlainCAD")).buffer;
+    return exportMeshesToStl([mesh]);
   }
 
   createCylinder(radius: number, height: number): RenderMesh {
