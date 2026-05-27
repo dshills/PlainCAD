@@ -149,6 +149,10 @@ input:focus-visible {
   background: #e7ebe8;
 }
 
+.viewer-canvas {
+  cursor: crosshair;
+}
+
 .panel {
   padding: 0.85rem;
   border-bottom: 1px solid #d9e0dc;
@@ -163,6 +167,30 @@ input:focus-visible {
 .panel-list {
   display: grid;
   gap: 0.45rem;
+}
+
+.inspector-facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin: 0.65rem 0 0;
+}
+
+.inspector-facts div {
+  padding: 0.45rem;
+  border: 1px solid #d9e0dc;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.inspector-facts dt {
+  color: #5e6b65;
+  font-size: 0.76rem;
+}
+
+.inspector-facts dd {
+  margin: 0.2rem 0 0;
+  font-weight: 700;
 }
 
 .row {

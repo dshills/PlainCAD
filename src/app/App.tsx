@@ -14,11 +14,29 @@ export function App() {
   const documentName = useCadStore((state) => state.history.present.name);
   const rebuild = useCadStore((state) => state.rebuild);
   const initializeKernel = useCadStore((state) => state.initializeKernel);
+  const select = useCadStore((state) => state.select);
   const commandContext = useMemo(() => ({ fileInputRef }), []);
 
   useEffect(() => {
     initializeKernel();
   }, [initializeKernel]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const tagName = target?.tagName.toUpperCase();
+      const isTyping = tagName === "INPUT" || tagName === "TEXTAREA" || tagName === "SELECT" || target?.isContentEditable === true;
+      if (!isTyping && event.key.toLowerCase() === "f" && !event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey) {
+        event.preventDefault();
+        void runCommand("view.fit", commandContext);
+      }
+      if (!isTyping && event.key === "Escape") {
+        select(undefined);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [commandContext, select]);
 
   return (
     <div className="app-shell">
@@ -37,6 +55,8 @@ export function App() {
           <button onClick={() => runCommand("file.exportStl", commandContext)}>STL</button>
           <button onClick={() => runCommand("history.undo", commandContext)}>Undo</button>
           <button onClick={() => runCommand("history.redo", commandContext)}>Redo</button>
+          <button onClick={() => runCommand("view.fit", commandContext)}>Fit</button>
+          <button onClick={() => runCommand("view.resetCamera", commandContext)}>Reset</button>
           <button onClick={() => runCommand("template.createMountingPlate", commandContext)}>Mounting Plate</button>
           <button onClick={() => runCommand("template.createBox", commandContext)}>Box</button>
         </nav>
