@@ -26,6 +26,75 @@ describe("sketch helpers and profile detection", () => {
     expect(profiles.profiles[0].innerLoops).toHaveLength(1);
   });
 
+  it("detects a standalone circle profile", () => {
+    const sketch = addCircleAt(createXySketch(), "5mm", "6mm", "4mm");
+    const solved = solveSketch(sketch, {});
+    const profiles = detectProfiles(solved);
+    expect(profiles.errors).toEqual([]);
+    expect(profiles.profiles).toHaveLength(1);
+    expect(profiles.profiles[0].outerLoop.type).toBe("circle");
+    expect(profiles.profiles[0].bounds).toMatchObject({ minX: 1, maxX: 9, minY: 2, maxY: 10 });
+  });
+
+  it("rejects open rectangle profiles with a useful error", () => {
+    let sketch = createXySketch();
+    const p1 = addPoint(sketch, "0mm", "0mm");
+    sketch = p1.sketch;
+    const p2 = addPoint(sketch, "10mm", "0mm");
+    sketch = p2.sketch;
+    const p3 = addPoint(sketch, "10mm", "5mm");
+    sketch = p3.sketch;
+    sketch = addLine(sketch, p1.pointId, p2.pointId).sketch;
+    sketch = addLine(sketch, p2.pointId, p3.pointId).sketch;
+    const profiles = detectProfiles(solveSketch(sketch, {}));
+    expect(profiles.profiles).toHaveLength(0);
+    expect(profiles.errors[0]).toContain("open profile");
+  });
+
+  it("reports unsupported triangles without calling them open", () => {
+    let sketch = createXySketch();
+    const p1 = addPoint(sketch, "0mm", "0mm");
+    sketch = p1.sketch;
+    const p2 = addPoint(sketch, "10mm", "0mm");
+    sketch = p2.sketch;
+    const p3 = addPoint(sketch, "5mm", "10mm");
+    sketch = p3.sketch;
+    sketch = addLine(sketch, p1.pointId, p2.pointId).sketch;
+    sketch = addLine(sketch, p2.pointId, p3.pointId).sketch;
+    sketch = addLine(sketch, p3.pointId, p1.pointId).sketch;
+    const profiles = detectProfiles(solveSketch(sketch, {}));
+    expect(profiles.profiles).toHaveLength(0);
+    expect(profiles.errors[0]).toContain("Triangular profiles");
+  });
+
+  it("reports circles outside a rectangular profile", () => {
+    let sketch = addCenterRectangle(createXySketch(), "20mm", "10mm");
+    sketch = addCircleAt(sketch, "20mm", "0mm", "2mm");
+    const profiles = detectProfiles(solveSketch(sketch, {}));
+    expect(profiles.profiles).toHaveLength(1);
+    expect(profiles.errors[0]).toContain("outside");
+  });
+
+  it("rejects ambiguous standalone circles", () => {
+    let sketch = addCircleAt(createXySketch(), "0mm", "0mm", "2mm");
+    sketch = addCircleAt(sketch, "6mm", "0mm", "2mm");
+    const profiles = detectProfiles(solveSketch(sketch, {}));
+    expect(profiles.profiles).toHaveLength(0);
+    expect(profiles.errors[0]).toContain("ambiguous");
+  });
+
+  it("reports mixed partial line and circle geometry as missing an outer profile", () => {
+    let sketch = createXySketch();
+    const p1 = addPoint(sketch, "0mm", "0mm");
+    sketch = p1.sketch;
+    const p2 = addPoint(sketch, "10mm", "0mm");
+    sketch = p2.sketch;
+    sketch = addLine(sketch, p1.pointId, p2.pointId).sketch;
+    sketch = addCircleAt(sketch, "5mm", "5mm", "1mm");
+    const profiles = detectProfiles(solveSketch(sketch, {}));
+    expect(profiles.errors[0]).toContain("no supported rectangular outer profile");
+  });
+
   it("rejects invalid circle radius", () => {
     const sketch = addCircleAt(createXySketch(), "0mm", "0mm", "-1mm");
     const solved = solveSketch(sketch, {});

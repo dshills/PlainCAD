@@ -1,6 +1,10 @@
+import { useMemo } from "react";
 import { useCadStore } from "../../state/useCadStore";
 import { orderedSketches } from "../../state/selectors";
 import { runCommand } from "../commands/commandRegistry";
+import { evaluateParameters } from "../../cad/parameters/expressionEvaluator";
+import { solveSketch } from "../../cad/sketch/SketchSolver";
+import { detectProfiles } from "../../cad/sketch/profileDetection";
 
 export function SketchPanel() {
   const document = useCadStore((state) => state.history.present);
@@ -14,6 +18,18 @@ export function SketchPanel() {
         ? sketches.find((sketch) => Boolean(sketch.entities[selection.id]))
         : sketches[0];
   const entities = activeSketch ? Object.values(activeSketch.entities) : [];
+  const evaluatedParameters = useMemo(() => evaluateParameters(document.parameters), [document.parameters]);
+  const activeProfileResult = useMemo(
+    () => {
+      if (!activeSketch) return undefined;
+      try {
+        return detectProfiles(solveSketch(activeSketch, evaluatedParameters.values));
+      } catch (error) {
+        return { profiles: [], errors: [error instanceof Error ? error.message : String(error)] };
+      }
+    },
+    [activeSketch, evaluatedParameters.values],
+  );
   return (
     <section className="panel">
       <h2>Sketches</h2>
@@ -51,8 +67,11 @@ export function SketchPanel() {
             ))}
           </div>
           <p className="muted">
-            {activeSketch.constraints.length} constraints, {activeSketch.dimensions.length} dimensions
+            {activeSketch.constraints.length} constraints, {activeSketch.dimensions.length} dimensions, {activeProfileResult?.profiles.length ?? 0} profiles
           </p>
+          {activeProfileResult?.errors.map((error, index) => (
+            <div className="warning-text" key={`${index}:${error}`}>{error}</div>
+          ))}
         </div>
       ) : null}
     </section>

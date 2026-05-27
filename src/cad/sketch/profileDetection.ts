@@ -63,7 +63,9 @@ export function detectProfiles(sketch: ResolvedSketch): ProfileDetectionResult {
       },
     });
   } else if (sketch.lines.length > 0) {
-    errors.push("Sketch does not contain a supported closed rectangle profile.");
+    errors.push(describeUnsupportedLines(sketch.lines, sketch.circles));
+  } else if (sketch.circles.length > 1) {
+    errors.push("Multiple standalone circles are ambiguous. Add a rectangular outer profile or keep one circle per sketch.");
   }
 
   return { profiles, errors };
@@ -91,6 +93,14 @@ function circleInsideBounds(circle: ResolvedCircle, bounds: { minX: number; maxX
     circle.center.y - circle.radius > bounds.minY &&
     circle.center.y + circle.radius < bounds.maxY
   );
+}
+
+function describeUnsupportedLines(lines: ResolvedLine[], circles: ResolvedCircle[]): string {
+  if (circles.length > 0) return "Sketch has circles but no supported rectangular outer profile.";
+  if (lines.length === 3) return "Triangular profiles are not yet supported. Use a four-edge rectangle or a circle profile.";
+  if (lines.length < 4) return "Sketch contains an open profile. Add the missing rectangle edges before extruding.";
+  if (lines.length > 4) return "Sketch contains unsupported line geometry. The MVP supports one four-edge rectangle profile.";
+  return "Sketch does not contain a supported closed rectangle profile.";
 }
 
 function round(value: number): number {
