@@ -2,6 +2,7 @@ import { createEmptyDocument, createExtrudeFeature, upsertFeature, upsertParamet
 import { CadDocument, CadParameter } from "../cad/document/schema";
 import { createId } from "../cad/document/ids";
 import { addCenterRectangle, addCircleAt, createXySketch } from "../cad/sketch/SketchModel";
+import { MOUNTING_PLATE_SKETCH_NAME } from "./mountingPlateConstants";
 
 function parameter(name: string, expression: string): CadParameter {
   return { id: createId("param"), name, expression, value: 0, unit: "mm" };
@@ -41,7 +42,7 @@ export function createMountingPlateTemplate(): CadDocument {
   ] as const) {
     document = upsertParameter(document, parameter(item[0], item[1]));
   }
-  let sketch = createXySketch("Plate Sketch");
+  let sketch = createXySketch(MOUNTING_PLATE_SKETCH_NAME);
   sketch = addCenterRectangle(sketch, "plate_width", "plate_height");
   const radius = "hole_diameter / 2";
   sketch = addCircleAt(sketch, "-plate_width / 2 + hole_offset_x", "-plate_height / 2 + hole_offset_y", radius);
