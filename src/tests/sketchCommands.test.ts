@@ -42,4 +42,27 @@ describe("sketch commands", () => {
     expect(sketches).toHaveLength(1);
     expect(Object.values(sketches[0].entities).filter((entity) => entity.type === "circle")).toHaveLength(2);
   });
+
+  it("creates, suppresses, and deletes an extrude feature from commands", () => {
+    const document = createEmptyDocument();
+    useCadStore.setState({
+      history: { past: [], present: document, future: [] },
+      selection: { selectedIds: [] },
+    });
+
+    runCommand("sketch.createXY");
+    runCommand("sketch.addCenterRectangle");
+    runCommand("feature.extrude");
+
+    const feature = useCadStore.getState().history.present.features[0];
+    expect(feature).toMatchObject({ type: "extrude", operation: "newBody", direction: "positive" });
+    expect(useCadStore.getState().selection.selectedIds[0]).toMatchObject({ kind: "feature", id: feature.id });
+
+    runCommand("feature.suppress");
+    expect(useCadStore.getState().history.present.features[0].suppressed).toBe(true);
+
+    runCommand("feature.delete");
+    expect(useCadStore.getState().history.present.features).toHaveLength(0);
+    expect(useCadStore.getState().selection.selectedIds).toHaveLength(0);
+  });
 });

@@ -1,19 +1,26 @@
 import { useCadStore } from "../../state/useCadStore";
 import { orderedFeatures } from "../../state/selectors";
+import { commands, runCommand } from "../commands/commandRegistry";
 
 export function FeatureTimeline() {
   const document = useCadStore((state) => state.history.present);
-  const updateDocument = useCadStore((state) => state.updateDocument);
   const select = useCadStore((state) => state.select);
+  const selection = useCadStore((state) => state.selection.selectedIds[0]);
   const features = orderedFeatures(document);
+  const selectedFeatureId = selection?.kind === "feature" ? selection.id : undefined;
 
   return (
     <section className="panel">
       <h2>Feature Timeline</h2>
+      <div className="toolbar-actions panel-actions">
+        <button onClick={() => runCommand("feature.extrude")} disabled={!commandsEnabled("feature.extrude")}>Extrude</button>
+        <button onClick={() => runCommand("feature.suppress")} disabled={!commandsEnabled("feature.suppress")}>Suppress</button>
+        <button onClick={() => runCommand("feature.delete")} disabled={!commandsEnabled("feature.delete")}>Delete</button>
+      </div>
       <div className="panel-list">
         {features.map((feature) => (
           <button
-            className="item-card"
+            className={`item-card ${selectedFeatureId === feature.id ? "selected" : ""}`}
             key={feature.id}
             onClick={() => select({ kind: "feature", id: feature.id, documentId: document.id })}
           >
@@ -23,21 +30,10 @@ export function FeatureTimeline() {
         ))}
         {features.length === 0 ? <p className="muted">No features yet.</p> : null}
       </div>
-      {features.length > 0 ? (
-        <p>
-          <button
-            onClick={() => {
-              const feature = features[0];
-              updateDocument((doc) => ({
-                ...doc,
-                features: doc.features.map((item) => (item.id === feature.id ? { ...item, suppressed: !item.suppressed } : item)),
-              }));
-            }}
-          >
-            Toggle First Feature
-          </button>
-        </p>
-      ) : null}
     </section>
   );
+}
+
+function commandsEnabled(id: string) {
+  return commands.find((command) => command.id === id)?.enabled() ?? false;
 }

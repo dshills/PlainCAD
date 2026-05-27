@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useCadStore } from "../../state/useCadStore";
 import { SketchCircle, SketchPoint } from "../../cad/document/schema";
-import { upsertSketch } from "../../cad/document/CadDocument";
+import { upsertFeature, upsertSketch } from "../../cad/document/CadDocument";
 
 export function InspectorPanel() {
   const selection = useCadStore((state) => state.selection.selectedIds[0]);
@@ -60,6 +60,26 @@ export function InspectorPanel() {
             {feature.suppressed ? " suppressed" : ""}
           </p>
           {"sketchId" in feature ? <p className="muted">Sketch {feature.sketchId}</p> : null}
+          {feature.type === "extrude" ? (
+            <div className="inspector-form">
+              <label>
+                Name
+                <input
+                  key={`${feature.id}:name:${feature.name}`}
+                  defaultValue={feature.name}
+                  onBlur={(event) => updateFeatureName(updateDocument, feature.id, event.target.value)}
+                />
+              </label>
+              <label>
+                Distance
+                <input
+                  key={`${feature.id}:distance:${feature.distance.expression}`}
+                  defaultValue={feature.distance.expression}
+                  onBlur={(event) => updateExtrudeDistance(updateDocument, feature.id, event.target.value)}
+                />
+              </label>
+            </div>
+          ) : null}
         </div>
       ) : null}
       {sketchEntity ? (
@@ -124,6 +144,33 @@ export function InspectorPanel() {
       ) : null}
     </section>
   );
+}
+
+function updateFeatureName(
+  updateDocument: ReturnType<typeof useCadStore.getState>["updateDocument"],
+  featureId: string,
+  name: string,
+) {
+  const nextName = name.trim();
+  if (!nextName) return;
+  updateDocument((document) => {
+    const feature = document.features.find((item) => item.id === featureId);
+    if (!feature || feature.type !== "extrude") return document;
+    if (nextName === feature.name) return document;
+    return upsertFeature(document, { ...feature, name: nextName });
+  });
+}
+
+function updateExtrudeDistance(
+  updateDocument: ReturnType<typeof useCadStore.getState>["updateDocument"],
+  featureId: string,
+  expression: string,
+) {
+  updateDocument((document) => {
+    const feature = document.features.find((item) => item.id === featureId);
+    if (!feature || feature.type !== "extrude" || feature.distance.expression === expression) return document;
+    return upsertFeature(document, { ...feature, distance: { ...feature.distance, expression } });
+  });
 }
 
 function updateSketchEntityExpression(

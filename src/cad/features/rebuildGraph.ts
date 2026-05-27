@@ -49,10 +49,18 @@ export function rebuildDocument(document: CadDocument): RebuildResult {
         warnings.push({ id: `feature:${feature.id}`, source: "feature", sourceId: feature.id, message: `${feature.type} is not implemented in the MVP rebuild path.` });
         continue;
       }
+      if (feature.operation !== "newBody") {
+        errors.push({ id: `feature:${feature.id}:operation`, source: "feature", sourceId: feature.id, message: `Extrude operation "${feature.operation}" is not supported yet.` });
+        continue;
+      }
+      if (feature.direction !== "positive") {
+        errors.push({ id: `feature:${feature.id}:direction`, source: "feature", sourceId: feature.id, message: `Extrude direction "${feature.direction}" is not supported yet.` });
+        continue;
+      }
       const profileResult = profilesBySketch.get(feature.sketchId);
-      const profile = profileResult?.profiles.find((item) => item.id === feature.profileId) ?? profileResult?.profiles[0];
+      const profile = profileResult?.profiles.find((item) => item.id === feature.profileId);
       if (!profile) {
-        errors.push({ id: `feature:${feature.id}:profile`, source: "feature", sourceId: feature.id, message: `Extrude failed: sketch "${feature.sketchId}" does not contain a closed supported profile.` });
+        errors.push({ id: `feature:${feature.id}:profile`, source: "feature", sourceId: feature.id, message: `Extrude failed: profile "${feature.profileId}" was not found in sketch "${feature.sketchId}".` });
         continue;
       }
       const distance = evaluateExpression(feature.distance.expression, { parameters: evaluated.values });

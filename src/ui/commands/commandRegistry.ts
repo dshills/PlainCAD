@@ -4,8 +4,11 @@ import { createBoxTemplate, createMountingPlateTemplate } from "../../templates/
 import { importProjectFile } from "../../persistence/importProject";
 import { downloadArrayBuffer, serializeProject } from "../../persistence/exportProject";
 import { exportMeshesToStl } from "../../cad/kernel/stlExport";
-import { upsertSketch } from "../../cad/document/CadDocument";
+import { createExtrudeFeature, deleteFeature, suppressFeature, upsertFeature, upsertSketch } from "../../cad/document/CadDocument";
 import { addCenterRectangle, addCircleAt, addCornerRectangle, createXySketch } from "../../cad/sketch/SketchModel";
+import { evaluateParameters } from "../../cad/parameters/expressionEvaluator";
+import { solveSketch } from "../../cad/sketch/SketchSolver";
+import { detectProfiles } from "../../cad/sketch/profileDetection";
 
 export interface CommandContext {
   fileInputRef?: RefObject<HTMLInputElement | null>;
@@ -91,6 +94,49 @@ export const commands: CadCommand[] = [
     enabled: () => true,
     run: () => updateSelectedSketch((sketch) => addCircleAt(sketch, "0mm", "0mm", "10mm")),
   },
+  {
+    id: "feature.extrude",
+    label: "Extrude Selected Sketch",
+    enabled: () => canCreateExtrude(),
+    run: () => {
+      const state = useCadStore.getState();
+      const match = findActiveSketchWithProfile();
+      if (!match) return;
+      const feature = createExtrudeFeature({
+        name: `Extrude ${state.history.present.features.length + 1}`,
+        sketchId: match.sketch.id,
+        profileId: match.profileId,
+        operation: "newBody",
+        distance: { expression: "10mm", unit: "mm" },
+        direction: "positive",
+      });
+      state.updateDocument((document) => upsertFeature(document, feature));
+      state.select({ kind: "feature", id: feature.id, documentId: state.history.present.id });
+    },
+  },
+  {
+    id: "feature.suppress",
+    label: "Suppress/Unsuppress Feature",
+    enabled: () => Boolean(getSelectedFeature()),
+    run: () => {
+      const state = useCadStore.getState();
+      const feature = getSelectedFeature();
+      if (!feature) return;
+      state.updateDocument((document) => suppressFeature(document, feature.id, !feature.suppressed));
+    },
+  },
+  {
+    id: "feature.delete",
+    label: "Delete Feature",
+    enabled: () => Boolean(getSelectedFeature()),
+    run: () => {
+      const state = useCadStore.getState();
+      const feature = getSelectedFeature();
+      if (!feature) return;
+      state.updateDocument((document) => deleteFeature(document, feature.id));
+      state.select(undefined);
+    },
+  },
   { id: "template.createBox", label: "Create Parametric Box", enabled: () => true, run: () => useCadStore.getState().setDocument(createBoxTemplate()) },
   { id: "template.createMountingPlate", label: "Create Mounting Plate", enabled: () => true, run: () => useCadStore.getState().setDocument(createMountingPlateTemplate()) },
   { id: "view.fit", label: "Fit View", shortcut: "F", enabled: () => true, run: () => globalThis.dispatchEvent(new Event("plaincad:fit-view")) },
@@ -117,4 +163,40 @@ function updateSelectedSketch(mutator: (sketch: ReturnType<typeof createXySketch
   const updated = mutator(sketch);
   state.updateDocument((nextDocument) => upsertSketch(nextDocument, updated));
   state.select({ kind: "sketch", id: updated.id, documentId: document.id });
+}
+
+function getSelectedFeature() {
+  const state = useCadStore.getState();
+  const selection = state.selection.selectedIds[0];
+  return selection?.kind === "feature" ? state.history.present.features.find((feature) => feature.id === selection.id) : undefined;
+}
+
+function canCreateExtrude() {
+  const state = useCadStore.getState();
+  const selection = state.selection.selectedIds[0];
+  if (selection?.kind === "sketch") return Boolean(state.history.present.sketches[selection.id]);
+  if (selection?.kind === "sketchEntity") {
+    return Object.values(state.history.present.sketches).some((sketch) => Boolean(sketch.entities[selection.id]));
+  }
+  return Object.keys(state.history.present.sketches).length > 0;
+}
+
+function findActiveSketchWithProfile() {
+  const state = useCadStore.getState();
+  const document = state.history.present;
+  const selection = state.selection.selectedIds[0];
+  const sketches = Object.values(document.sketches);
+  const selectedSketch =
+    selection?.kind === "sketch"
+      ? document.sketches[selection.id]
+      : selection?.kind === "sketchEntity"
+        ? sketches.find((sketch) => Boolean(sketch.entities[selection.id]))
+        : undefined;
+  const evaluated = evaluateParameters(document.parameters);
+  for (const sketch of selectedSketch ? [selectedSketch] : sketches) {
+    const detected = detectProfiles(solveSketch(sketch, evaluated.values));
+    const profile = detected.profiles[0];
+    if (profile) return { sketch, profileId: profile.id };
+  }
+  return undefined;
 }
