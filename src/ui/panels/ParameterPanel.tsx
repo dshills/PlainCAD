@@ -15,7 +15,7 @@ export function ParameterPanel() {
       <h2>Parameters</h2>
       <div className="panel-list">
         {parameters.map((parameter) => {
-          const error = errors.find((item) => item.source === "parameter" && item.sourceId === parameter.name);
+          const error = errors.find((item) => item.source === "parameter" && (item.sourceId === parameter.name || item.sourceId === parameter.id));
           return (
             <div className="item-card" key={parameter.id}>
               <div className="row">

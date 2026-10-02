@@ -104,7 +104,6 @@ function TargetFaceControl({
 export function ModelingFeatureControls({ feature }: { feature: Feature }) {
   const document = useCadStore((s) => s.history.present);
   const updateDocument = useCadStore((s) => s.updateDocument);
-  const result = useCadStore((s) => s.rebuild.result);
   const update = (next: Feature) =>
     updateDocument((d) => upsertFeature(d, next));
   if (feature.type === "revolve") {
@@ -162,6 +161,7 @@ export function ModelingFeatureControls({ feature }: { feature: Feature }) {
                 });
             }}
           >
+            {feature.axis.type === "sketchLine" && !lines.some((line) => `line:${line.id}` === axisValue) ? <option value={axisValue}>Lost axis line — reselect</option> : null}
             {["X", "Y", "Z"].map((axis) => (
               <option key={axis} value={`origin:${axis}`}>
                 Origin {axis}
@@ -191,27 +191,6 @@ export function ModelingFeatureControls({ feature }: { feature: Feature }) {
             <option value="newBody">New body</option>
             <option value="join">Join</option>
             <option value="cut">Cut</option>
-          </select>
-        </label>
-        <label>
-          Target body
-          <select
-            value={feature.targetBodyIds?.[0] ?? ""}
-            onChange={(e) =>
-              update({
-                ...feature,
-                targetBodyIds: e.target.value ? [e.target.value] : [],
-              })
-            }
-          >
-            <option value="">None</option>
-            {result?.bodies
-              .filter((b) => b.id !== `body:${feature.id}`)
-              .map((body) => (
-                <option key={body.id} value={body.id}>
-                  {body.name}
-                </option>
-              ))}
           </select>
         </label>
         <p className="muted">

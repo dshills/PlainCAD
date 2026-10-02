@@ -10,6 +10,8 @@ import {
   ToFaceControl,
 } from "./ModelingFeatureControls";
 
+import { FeatureReferenceControls } from "./FeatureReferenceControls";
+
 const EXTRUDE_OPERATIONS = ["newBody", "join", "cut"] as const;
 const EXTRUDE_OPERATION_OPTIONS = [
   { value: "newBody", label: "New body", disabled: false },
@@ -156,7 +158,7 @@ export function InspectorPanel() {
           </p>
           <ModelingFeatureControls feature={feature} />
           {"sketchId" in feature ? (
-            <p className="muted">Sketch {feature.sketchId}</p>
+            <FeatureReferenceControls feature={feature} />
           ) : null}
           {feature.type === "extrude" ? (
             <div className="inspector-form">
@@ -180,26 +182,6 @@ export function InspectorPanel() {
                   />
                 </label>
               ) : null}
-              <label>
-                Target body
-                <select
-                  value={feature.targetBodyIds?.[0] ?? ""}
-                  onChange={(event) =>
-                    updateExtrudeTarget(
-                      updateDocument,
-                      feature.id,
-                      event.target.value,
-                    )
-                  }
-                >
-                  <option value="">None</option>
-                  {(rebuild?.bodies ?? []).map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
               <label>
                 Termination
                 <select
@@ -516,19 +498,6 @@ function updateExtrudeDirection(
     )
       return document;
     return documentOps.upsertFeature(document, { ...feature, direction });
-  });
-}
-
-function updateExtrudeTarget(
-  updateDocument: ReturnType<typeof useCadStore.getState>["updateDocument"],
-  featureId: string,
-  value: string,
-) {
-  const targetBodyIds = value ? [value] : [];
-  updateDocument((document) => {
-    const feature = document.features.find((item) => item.id === featureId);
-    if (!feature || feature.type !== "extrude") return document;
-    return documentOps.upsertFeature(document, { ...feature, targetBodyIds });
   });
 }
 

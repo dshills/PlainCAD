@@ -3,12 +3,10 @@ import { useShallow } from "zustand/react/shallow";
 import { useCadStore } from "../../state/useCadStore";
 import { orderedFeatures, orderedSketches } from "../../state/selectors";
 import { CommandContext, isCommandEnabledForSnapshot, runCommand, selectCommandEnablement } from "../commands/commandRegistry";
-import { Feature, Sketch } from "../../cad/document/schema";
-import { sketchIdForFeature } from "../../cad/features/featureMetadata";
-
-type TimelineItem =
-  | { kind: "sketch"; sketch: Sketch }
-  | { kind: "feature"; feature: Feature };
+import { Feature } from "../../cad/document/schema";
+import { buildTimelineItems } from "../../cad/document/timelineOrdering";
+import { planTimelineMove } from "../../cad/document/timelineEditing";
+export { buildTimelineItems } from "../../cad/document/timelineOrdering";
 
 interface FeatureTimelineProps {
   commandContext?: CommandContext;
@@ -36,8 +34,17 @@ export function FeatureTimeline({ commandContext = emptyCommandContext }: Featur
           {["revolve", "fillet", "chamfer"].map((type) => <button key={type} onClick={() => runCommand(`feature.${type}`, commandContext)} disabled={!isCommandEnabledForSnapshot(`feature.${type}`, commandEnablement)}>{type[0].toUpperCase() + type.slice(1)}</button>)}
           <button onClick={() => runCommand("feature.suppress", commandContext)} disabled={!isCommandEnabledForSnapshot("feature.suppress", commandEnablement)}>Suppress</button>
           <button onClick={() => runCommand("feature.delete", commandContext)} disabled={!isCommandEnabledForSnapshot("feature.delete", commandEnablement)}>Delete</button>
+          {(["earlier", "later"] as const).map((direction) => {
+            const id = `timeline.move${direction === "earlier" ? "Earlier" : "Later"}`;
+            const reason = planTimelineMove(document, selection, direction).reason;
+            return <button key={id} title={reason ?? `Move selected item ${direction}`} onClick={() => runCommand(id, commandContext)} disabled={!isCommandEnabledForSnapshot(id, commandEnablement)}>Move {direction}</button>;
+          })}
         </div>
       </div>
+      {selection?.kind === "feature" || selection?.kind === "sketch" ? <p className="muted">{(["earlier", "later"] as const).flatMap((direction) => {
+        const reason = planTimelineMove(document, selection, direction).reason;
+        return reason ? [`Cannot move ${direction}: ${reason}`] : [];
+      }).join(" ")}</p> : null}
       <div className="timeline-track" role="list" aria-label="Sketch and feature history">
         {timelineItems.map((item) => {
           if (item.kind === "sketch") {
@@ -73,66 +80,6 @@ export function FeatureTimeline({ commandContext = emptyCommandContext }: Featur
       </div>
     </section>
   );
-}
-
-export function buildTimelineItems(sketches: Sketch[], features: Feature[]): TimelineItem[] {
-  const sketchById = new Map(sketches.map((sketch) => [sketch.id, sketch]));
-  const firstFeatureTimeBySketchId = new Map<string, string>();
-  features.forEach((feature) => {
-    const sketchId = sketchIdForFeature(feature);
-    if (sketchId && feature.createdAt && !firstFeatureTimeBySketchId.has(sketchId)) {
-      firstFeatureTimeBySketchId.set(sketchId, feature.createdAt);
-    }
-  });
-  const records = [
-    ...sketches.map((sketch, index) => ({
-      item: { kind: "sketch", sketch } as TimelineItem,
-      timelineStep: sketch.timelineStep,
-      order: sketch.createdAt ?? firstFeatureTimeBySketchId.get(sketch.id),
-      fallbackIndex: index,
-    })),
-    ...features.map((feature, index) => ({
-      item: { kind: "feature", feature } as TimelineItem,
-      timelineStep: feature.timelineStep,
-      order: feature.createdAt,
-      fallbackIndex: sketches.length + index,
-    })),
-  ];
-  const legacyOrder = records
-    .filter((record) => record.timelineStep === undefined)
-    .sort(compareLegacyTimelineRecords);
-  const legacyRankByIndex = new Map(legacyOrder.map((record, index) => [record.fallbackIndex, index + 1]));
-
-  return records
-    .sort((a, b) => {
-      const byStep = effectiveTimelineStep(a, legacyRankByIndex) - effectiveTimelineStep(b, legacyRankByIndex);
-      if (byStep !== 0) return byStep;
-      return compareLegacyTimelineRecords(a, b);
-    })
-    .map(({ item }) => item);
-}
-
-function effectiveTimelineStep(
-  record: { timelineStep?: number; fallbackIndex: number },
-  legacyRankByIndex: Map<number, number>,
-): number {
-  const legacyCount = legacyRankByIndex.size;
-  return record.timelineStep === undefined
-    ? legacyRankByIndex.get(record.fallbackIndex) ?? record.fallbackIndex + 1
-    : legacyCount + record.timelineStep;
-}
-
-function compareLegacyTimelineRecords(
-  a: { order?: string; fallbackIndex: number },
-  b: { order?: string; fallbackIndex: number },
-): number {
-  if (a.order !== b.order) {
-    if (a.order && b.order) return a.order.localeCompare(b.order);
-    if (a.order) return -1;
-    if (b.order) return 1;
-  }
-
-  return a.fallbackIndex - b.fallbackIndex;
 }
 
 function featureGlyph(feature: Feature): string {

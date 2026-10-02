@@ -11,7 +11,7 @@ export function importProjectText(text: string): CadDocument {
   const parsed = parseProjectJson(text);
   assertProjectJsonShape(parsed);
   const document = migrateDocument(parsed as CadDocument);
-  const issues = validateDocument(document);
+  const issues = validateDocument(document, "storage");
   if (issues.length > 0) throw new Error(issues[0].message);
   return refreshBoundNames(bindDocumentExpressions(document));
 }

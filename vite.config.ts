@@ -15,5 +15,7 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: "./src/tests/setup.ts",
+    // Keep CPU contention from exhausting the production sketch solver's 50ms budget.
+    maxWorkers: 2,
   },
 });

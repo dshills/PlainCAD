@@ -84,6 +84,6 @@ describe("project import safety and migrations", () => {
           features: [{ type: "hole", id: "feature_bad", name: "Bad Hole", sketchId: "missing" }],
         }),
       ),
-    ).toThrow("Hole references a missing sketch.");
+    ).toThrow(/Hole dimensions require expressions and units/);
   });
 });

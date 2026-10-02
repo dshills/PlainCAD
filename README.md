@@ -198,6 +198,19 @@ fail clearly; native triangle budgets are checked before tessellation buffers gr
 3. Select a feature to inspect or rename it.
 4. Use `Suppress` or `Delete` on selected features.
 
+Use `Move earlier` / `Move later` on a selected sketch or feature to reorder it
+across independent timeline items. The same checks apply in the command palette.
+Moves preserve IDs and creation timestamps and reject dependency violations for
+sketches, body owners, face planes, termination faces, and edge owners. Modifiers
+on the same body keep their existing order. Disabled moves show the reason;
+accepted edits rebuild normally and support undo/redo and save/open.
+
+The Inspector offers explicit source sketch, profile and upstream target-body
+replacement for extrusion/revolve features, and source/target repair for holes.
+Broken references remain saved and structurally valid damaged projects can open
+or recover for repair. Profiles wait for current worker analysis; target choices
+come from durable upstream body owners. Nothing is rebound automatically.
+
 The Inspector supports positive extrudes, cut/join with one explicit target,
 through-all, and termination on an upstream finite planar face. To-face termination
 supports sloped planes and verifies that the entire end cap fits inside the selected

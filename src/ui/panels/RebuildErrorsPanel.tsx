@@ -62,6 +62,6 @@ function selectionForErrorSource(
     if (parameter) return { kind: "parameter" as const, id: parameter.id, documentId: document.id };
   }
   if (source === "sketch" && document.sketches[sourceId]) return { kind: "sketch" as const, id: sourceId, documentId: document.id };
-  if (source === "feature" && document.features.some((feature) => feature.id === sourceId)) return { kind: "feature" as const, id: sourceId, documentId: document.id };
+  if ((source === "feature" || source === "kernel") && document.features.some((feature) => feature.id === sourceId)) return { kind: "feature" as const, id: sourceId, documentId: document.id };
   return undefined;
 }

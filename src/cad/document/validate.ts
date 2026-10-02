@@ -4,7 +4,7 @@ import { validateParameterBindings } from "../parameters/expressionBindings";
 const PARAMETER_NAME_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
 const REQUIRED_DOCUMENT_OBJECTS = ["parameters", "sketches"] as const;
 
-export function validateDocument(document: CadDocument): ValidationIssue[] {
+export function validateDocument(document: CadDocument, mode: "modeling" | "storage" = "modeling"): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   if (typeof document.id !== "string" || document.id.trim() === "")
     issues.push({ source: "document", message: "Document is missing an id." });
@@ -376,6 +376,9 @@ export function validateDocument(document: CadDocument): ValidationIssue[] {
       });
       continue;
     }
+    // Well-typed broken references must survive open/recovery so the inspector can repair them.
+    // Modeling still rejects them below; malformed fields and duplicate IDs always fail.
+    if (mode === "storage") continue;
     if (feature.type === "extrude" && !document.sketches[feature.sketchId]) {
       issues.push({
         source: "feature",
@@ -604,11 +607,6 @@ function validatePersistedFields(document: CadDocument): ValidationIssue[] {
       checkFeature(
         typeof feature.sketchId === "string",
         "Sketch reference must be an ID.",
-      );
-    if ("sketchId" in feature && !document.sketches[feature.sketchId])
-      checkFeature(
-        false,
-        `${feature.type[0].toUpperCase()}${feature.type.slice(1)} references a missing sketch.`,
       );
     if (feature.type === "extrude" || feature.type === "revolve") {
       checkFeature(

@@ -37,6 +37,10 @@ size/angle/axis edits, parameter edits, save/open/STL, and diagnostic/export rec
   and duplicate/self-intersection diagnostics for supported geometry.
 - Timeline steps with legacy ordering/migration fallbacks, suppression, stable
   feature-derived body IDs, reference/dependency planning and invalid-order errors.
+- Shared dependency-validated earlier/later timeline moves across independent items,
+  stable IDs/timestamps, undo/redo and save/open. Same-body modifier order is preserved.
+- Explicit source sketch/profile/upstream body repair, lost-axis indication, and
+  import/recovery of well-typed broken feature references; modeling/export stays blocked.
 - Worker request IDs and epochs, stale-response protection, watchdog timeouts,
   progress messages, disposal helpers, tessellation cache helpers, and rebuild metrics.
 - Camera navigation, fit/reset, body/feature selection, basic inspection,
@@ -106,8 +110,10 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
   canvas drawing/dragging remain missing. Arcs retain analytic kernel boundaries;
   profile classification and fallback meshes sample their sweeps. Face selection
   uses explicit feature-owned roles in Sketch tools, not arbitrary viewer picks.
-- Feature planning has ordering checks, but validated reorder UI, richer downstream
-  diagnostics, durable multi-body scopes and target/profile repair need work.
+- Timeline moves validate structural dependencies and preserve same-body modifier
+  order; arbitrary modifier reordering and kernel preview before committing a move
+  remain unavailable. Rebuild failures remain diagnostic and undoable. Durable
+  multi-body target scopes and richer dependency-chain visualization need work.
 - General post-boolean face/edge naming remains missing. Planes require an
   unmodified positive-distance new-body owner;
   curved side faces, hole/revolve faces, and ambiguous rebinding are unsupported.

@@ -53,6 +53,7 @@ import {
   SketchProfile,
   detectProfiles,
 } from "../../cad/sketch/profileDetection";
+import { moveTimelineItem, planTimelineMove } from "../../cad/document/timelineEditing";
 
 export interface CommandContext {
   fileInputRef?: RefObject<HTMLInputElement | null>;
@@ -78,6 +79,8 @@ export interface CommandEnablement {
   createRevolve: boolean;
   selectedFeature: boolean;
   createEdgeTreatment: boolean;
+  moveEarlier: boolean;
+  moveLater: boolean;
 }
 
 export function selectCommandEnablement(state: CadStore): CommandEnablement {
@@ -90,6 +93,8 @@ export function selectCommandEnablement(state: CadStore): CommandEnablement {
     createRevolve: Boolean(defaultRevolveAxis(state)),
     selectedFeature: Boolean(getSelectedFeature(state)),
     createEdgeTreatment: Boolean(edgeTreatmentOwner(state)),
+    moveEarlier: !planTimelineMove(state.history.present, state.selection.selectedIds[0], "earlier").reason,
+    moveLater: !planTimelineMove(state.history.present, state.selection.selectedIds[0], "later").reason,
   };
 }
 
@@ -104,6 +109,15 @@ export function isCommandEnabledForSnapshot(
 }
 
 export const commands: CadCommand[] = [
+  ...(["earlier", "later"] as const).map((direction): CadCommand => ({
+    id: `timeline.move${direction === "earlier" ? "Earlier" : "Later"}`,
+    label: `Move Selected Item ${direction === "earlier" ? "Earlier" : "Later"}`,
+    enablementKey: direction === "earlier" ? "moveEarlier" : "moveLater",
+    run: () => {
+      const state = useCadStore.getState();
+      state.updateDocument((d) => moveTimelineItem(d, state.selection.selectedIds[0], direction));
+    },
+  })),
   {
     id: "file.newProject",
     label: "New Project",
