@@ -47,6 +47,7 @@ const toolbarGroups: ToolbarGroup[] = [
     label: "Create",
     buttons: [
       { command: "feature.extrude", label: "Extrude", icon: "Ext", title: "Extrude the active sketch profile", ariaLabel: "Extrude selected sketch" },
+      { command: "feature.revolve", label: "Revolve", icon: "Rev", title: "Revolve around a coplanar origin axis or sketch line; add a construction line if no axis is usable", ariaLabel: "Revolve selected sketch" },
       { command: "template.createMountingPlate", label: "Mount Plate", icon: "M", title: "Load the mounting plate template", ariaLabel: "Load mounting plate template" },
       { command: "template.createBox", label: "Box", icon: "B", title: "Load the parametric box template", ariaLabel: "Load parametric box template" },
     ],
@@ -54,6 +55,8 @@ const toolbarGroups: ToolbarGroup[] = [
   {
     label: "Modify",
     buttons: [
+      { command: "feature.fillet", label: "Fillet", icon: "Fil", title: "Round feature-owned extrusion edges", ariaLabel: "Fillet extrusion edges" },
+      { command: "feature.chamfer", label: "Chamfer", icon: "Cha", title: "Bevel feature-owned extrusion edges", ariaLabel: "Chamfer extrusion edges" },
       { command: "feature.suppress", label: "Suppress", icon: "Sup", title: "Suppress or unsuppress the selected feature", ariaLabel: "Suppress or unsuppress feature" },
       { command: "feature.delete", label: "Delete", icon: "Del", title: "Delete the selected feature", ariaLabel: "Delete selected feature" },
     ],

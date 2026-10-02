@@ -6,20 +6,34 @@ Unit/component tests exercise fallback geometry and jsdom. Chromium acceptance
 coverage now verifies native OpenCascade rectangle extrusion and circular through-cut
 on XY/XZ/YZ, parameter edits, save/open, binary STL normals/volume/coordinates,
 Z-up camera/grid, rendered mesh/sketch alignment, stale worker delivery, and
-reinitialization after an old worker fails. This
-bounded workflow does not establish general OpenCascade modeling support.
+reinitialization after an old worker fails. A second native workflow covers
+hand-authored arc/line extrusion with construction geometry, driving radius edits,
+face offsets and upstream edits, conflict/export gating, save/open/STL, and explicit
+repair after suppressing a plane owner. This
+bounded workflow does not establish unrestricted OpenCascade modeling support.
+Native-WASM unit tests additionally check exact volumes, BRep validity, solid counts,
+positive tessellation winding, boolean failure paths, scoped disposal, partial
+revolves/world axes/offset line axes, fillet/chamfer volume and surface-area changes, and flat/sloped
+finite-face termination. Chromium modeling-operation workflows cover creation,
+size/angle/axis edits, parameter edits, save/open/STL, and diagnostic/export recovery.
 
 ## Implemented foundations
 
 - React/Vite/TypeScript UI, Three.js viewer, Zustand document history and undo/redo.
 - Serializable document with stable IDs, deterministic JSON, schema migrations
-  through version 6, and validation before imported state is accepted.
+  through version 7, and validation before imported state is accepted.
 - Import unsafe-key rejection, nesting/node limits, and parameter/sketch/entity/
   constraint/feature count limits; unknown and runtime fields stripped by migration.
 - Parameter expressions, dependency ordering/cycle errors, compatible unit
   conversion, dimensional arithmetic, CAD math functions, and expression limits.
-- XY/XZ/YZ origin sketches with points, lines, circles, and rectangle helpers.
-- Line-loop and circle profiles, nesting/holes, stable entity-based profile IDs,
+- XY/XZ/YZ sketches with points, lines, circles, arcs, construction geometry, and
+  rectangle helpers; geometry/dimension/constraint authoring controls.
+- Driving dimensions and 11 constraint types, seeded/canonical reset solving,
+  local Jacobian-rank DOF reporting, redundant/conflicting intent diagnostics,
+  finite tangency contact checks, and mirrored angle/distance branch diagnostics.
+- Origin offsets and feature-owned cap/straight-side planes with stable IDs,
+  offset expressions, upstream-edit tracking, and explicit lost-reference repair.
+- Mixed line/arc loops and circle profiles, nesting/holes, stable entity-based profile IDs,
   and duplicate/self-intersection diagnostics for supported geometry.
 - Timeline steps with legacy ordering/migration fallbacks, suppression, stable
   feature-derived body IDs, reference/dependency planning and invalid-order errors.
@@ -34,46 +48,55 @@ bounded workflow does not establish general OpenCascade modeling support.
 
 | Capability | Current behavior | Availability |
 | --- | --- | --- |
-| Extrude new body | Positive distance extrudes; fallback polygon output is limited and does not establish arbitrary polygon BREP support | Creation command and inspector |
-| Extrude cut | One explicit target body; requires compatible sketch plane; narrow circular-through-hole fallback; broader cuts require OpenCascade handles | Inspector; failures diagnosed |
-| Extrude join | One explicit target body; requires OpenCascade shape handles; fallback cannot join | Inspector; failures diagnosed |
-| Through all | Computes positive-direction distance from target bounds; subject to cut/join and plane limits | Inspector |
-| Extrude to face | Stable face termination not implemented | Disabled option; rebuild diagnostic |
+| Extrude new body | Positive distance native wire/face/prism extrusion of closed line/arc/circle loops and holes; fallback triangulates sampled boundaries | Creation command and inspector |
+| Extrude cut | One explicit target; native world-coordinate tools; valid nonempty solid output with reduced exact volume; disjoint/no-op and empty cuts diagnosed; narrow rectangle/circular-through-hole fallback | Inspector |
+| Extrude join | One explicit target; native connected single-solid union with increased exact volume; disconnected/no-op joins diagnosed; no fallback | Inspector |
+| Through all | Computes positive-direction distance from target bounds; subject to cut/join limits and target placement | Inspector |
+| Extrude to face | Positive termination on an upstream unmodified feature-owned planar cap/straight side, including sloped faces; native half-space trimming; end-cap area/intersection checks enforce finite face and holes | Inspector with explicit face selection and repair |
 | Negative/symmetric extrude | Not implemented | Disabled options; rebuild diagnostic |
-| Revolve | New-body rectangular profile, full 360 degrees, origin Y-axis, constrained mesh fallback; crossing-axis profiles rejected | Document/rebuild path; no creation command |
-| Revolve cut/join, other axes/angles | Not implemented | Rebuild diagnostic; no creation command |
-| Hole | Explicit target, sketch point centers and diameter; narrow cylindrical-through-hole path; unsupported cuts diagnosed | Document/rebuild path; no creation command |
-| Fillet/chamfer | Stable extrude edge-role references can be resolved, but geometry operations are not implemented | No creation commands; imported features show unavailable status and fail rebuild; suppress/delete to recover |
-| Offset/face sketch planes | Schema preserves references but transforms and repair are not implemented | No creation commands; rebuild blocks with sketch-linked diagnostic |
+| Revolve | Native analytic closed line/arc/circle profiles with holes; coplanar world X/Y/Z or same-sketch line axes; angles greater than 0 through 360 degrees; cross-axis/zero-volume/invalid output rejected | Shared creation command and inspector; narrow full-Y/XY rectangular fallback without kernel |
+| Revolve cut/join | Native operation with one explicit target and the same boolean validity/volume checks | Inspector |
+| Hole | Explicit target, sketch point centers and diameter; native transformed cylindrical tools and cut validation; positive distance/through-all | Document/rebuild path; no creation command |
+| Fillet/chamfer | Real native geometry on feature-owned cap perimeters, individual line/arc cap edges, or a source line’s two extrusion-direction corners; BRep/solid-count/volume-or-surface-change checks; lost or ambiguous edges fail | Shared creation commands and size/role/source/owner repair inspector |
+| Offset/face sketch planes | Expression-driven origin/face offsets; upstream distance-extrusion caps and straight outer sides; modified/suppressed/missing owners require repair | Sketch tools with explicit replacement selection; lost planes fail rebuild |
 | STEP | Optional adapter interface only; no implemented exporter | Hidden |
 
-Unsupported edge treatments keep their document intent and upstream preview bodies,
-but the rebuild is failed and STL export is disabled. Suppressed treatments do not
-block rebuilding. Neither metadata nor unchanged preview meshes count as successful
-fillet/chamfer modeling.
+Failed operations retain upstream preview bodies but fail rebuild and disable STL.
+Downstream modifiers on a failed body are blocked. Suppression permits recovery.
+Native modeling results include runtime-only validity, exact volume/surface area, and solid-count
+assertions; these are never saved in project JSON. Splitting a body by a cut may yield
+multiple valid solids in one stable target-body compound. Empty cuts fail explicitly.
+Edge references do not survive boolean modifications; treatment chains may select
+remaining cap perimeters or unchanged source edges, while changed/missing individual
+edges require explicit reselection. Arbitrary transient edge picks are unavailable.
 
 ## Partial or missing working-CAD requirements
 
 - Parameter names are still expression symbols: stable-ID token references, safe
   rename semantics, authored unit defaults/display units, and grouping need work.
-- Sketch constraints/dimensions largely validate evaluated geometry (with
-  coincident-point handling); no general iterative solve, seed/reset policy,
-  degrees-of-freedom reporting, or anti-flip diagnostics.
-- Arcs, construction geometry, mixed line/arc loop extraction, intersection
-  fragmentation, and general interactive sketch authoring are missing.
+- The driving solver handles small sketches: 160 scalar variables, 512 residual
+  equations, 100 iterations, and a 50ms iteration budget. DOF/rank is a local
+  numerical heuristic, not proof of a globally unique solution. Distance/angle
+  branch checks reject mirrored changes; canonical reset returns to authored
+  coordinates. Previous valid seeds live in worker memory and are not serialized.
+- Intersecting boundaries are diagnosed; intersection fragmentation and direct
+  canvas drawing/dragging remain missing. Arcs retain analytic kernel boundaries;
+  profile classification and fallback meshes sample their sweeps. Face selection
+  uses explicit feature-owned roles in Sketch tools, not arbitrary viewer picks.
 - Feature planning has ordering checks, but validated reorder UI, richer downstream
   diagnostics, durable multi-body scopes and target/profile repair need work.
-- Stable planar-face resolution, face selection/repair, offset construction planes,
-  and real kernel fillet/chamfer implementation are missing.
+- General post-boolean face/edge naming remains missing. Planes require an
+  unmodified positive-distance new-body owner;
+  curved side faces, hole/revolve faces, and ambiguous rebinding are unsupported.
 - Measurement, named views, section views,
-  body visibility controls, and full feature/dimension/constraint inspectors need work.
+  body visibility controls, and full feature inspectors and graphical dimension/constraint annotation need work.
 - STL emits one binary file from meshes; separate/merged multi-body modes, manifold/
   overlap validation, complete filename hardening, and background UI export need work.
 - Autosave and recovery, regression fixture corpus for every released schema,
   import parsing/migration in a worker, body/triangle limits, and deployment CSP
   remain incomplete.
-- Broader browser/kernel acceptance coverage (general profiles, joins, holes, other
-  browsers), accessibility audit, controlled performance reporting, and deployment
+- Broader browser/kernel acceptance coverage (complex feature chains, imported
+  fixtures, other browsers), accessibility audit, controlled performance reporting, and deployment
   documentation remain open. The bounded Chromium suite runs in the release gate
   and GitHub Actions; CI execution itself has not been verified locally.
 

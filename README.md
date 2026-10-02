@@ -8,8 +8,8 @@ The MVP is intentionally narrow: make parameters, sketches, rebuilds, inspection
 
 - Single active part document.
 - Named parameters with units and expressions.
-- XY-plane sketches with points, lines, rectangle helpers, and circles.
-- Profile detection for rectangular and circular workflows.
+- XY/XZ/YZ sketches with points, lines, arcs, circles, construction geometry, and driving dimensions.
+- Closed line/arc/circle profiles with holes and stable entity-based identities.
 - Extrude features for simple solid generation.
 - Mounting plate and parametric box templates.
 - 3D viewer with orbit, pan, zoom, fit, reset, selection, and inspection.
@@ -132,12 +132,24 @@ The app reports expression, unit, sketch, feature, import, and export errors in 
 
 ### Work With Sketches
 
-1. Use `New XY` to create an XY-plane sketch.
-2. Use `Center Rectangle`, `Circle`, or template-generated geometry for MVP workflows.
-3. Select sketches and sketch entities from the left panel.
-4. Edit selected sketch entity expressions in the Inspector panel.
+1. Create an XY, XZ, or YZ sketch and select it in the Browser.
+2. Use the rectangle/circle helpers or Sketch tools to add points, lines, circles,
+   and center/start/end arcs. Construction curves appear dashed and are excluded
+   from solid profiles.
+3. Add constraints and driving dimensions in Sketch tools; dimension expressions
+   can reference parameters. Coordinate expressions supply initial geometry;
+   fixed constraints lock coordinates when that is the intended design intent.
+4. Inspect solve status, remaining degrees of freedom, and source-linked errors.
+   Conflicts, redundant intent, degeneracy, and non-convergence block modeling.
+   Reset sketch solve restores the authored seed instead of the previous solution.
+5. Choose an origin plane, a supported upstream extrusion cap/straight side face,
+   or an expression-driven offset of either. If a reference is lost, explicitly
+   select a replacement plane and apply it; geometry and IDs are preserved.
 
-The MVP sketch solver is intentionally simple. It supports the guided rectangle/circle workflows needed for the mounting plate and box templates, not a general-purpose sketch constraint system.
+Schema 7 introduces driving solves for new sketches. Older projects retain their
+validation-only dimensions until you choose Enable driving dimensions. The solver
+uses a local Jacobian-rank DOF heuristic and bounded iteration/time budgets; it
+is intended for small sketches. See the capability matrix for precise limits.
 
 ### Work With Features
 
@@ -146,13 +158,27 @@ The MVP sketch solver is intentionally simple. It supports the guided rectangle/
 3. Select a feature to inspect or rename it.
 4. Use `Suppress` or `Delete` on selected features.
 
-The creation command adds positive-direction new-body extrudes. The Inspector also
-allows cut/join with an explicit target and through-all termination, subject to
-kernel and sketch-plane limitations. Negative/symmetric directions and to-face
-termination are unavailable. Revolve and hole document paths are constrained and
-have no creation commands. Fillet/chamfer geometry is unavailable: imported active
-features fail rebuild with a diagnostic; suppress or delete them to recover.
-Offset and face sketches also block rebuild until supported.
+The Inspector supports positive extrudes, cut/join with one explicit target,
+through-all, and termination on an upstream finite planar face. To-face termination
+supports sloped planes and verifies that the entire end cap fits inside the selected
+face, including its holes. Negative/symmetric extrusion remains unavailable.
+
+Use `Revolve` for a closed profile around a coplanar origin axis or a stable line
+in its sketch. The Inspector edits the axis, 0–360 degree angle (exclusive of 0),
+and new-body/cut/join operation. Profiles crossing the axis fail with a diagnostic.
+
+Select a supported distance extrusion and use `Fillet` or `Chamfer`. The Inspector
+edits size expressions and selects an entire cap perimeter, a cap edge derived from
+a line/arc, or the two side corners at a source line's endpoints. Native operations
+validate BRep geometry, solid count, and exact volume/surface-area changes. Invalid sizes,
+no-op cuts/joins, disconnected joins, and lost references fail rebuild and block STL
+export; suppress or repair the feature to recover. Failed modifiers block subsequent
+operations on the same body while retaining upstream previews.
+
+Feature-owned face references require an unmodified positive-distance new-body
+extrusion. Cap/side references are explicit roles, with reselection for repair;
+arbitrary post-boolean face/edge naming remains unsupported. Hole features use
+transformed cylindrical tools through the document/rebuild path.
 
 See `specs/working-cad/CAPABILITY_MATRIX.md` for current capability limits. Schema
 support alone does not imply a working modeling operation.

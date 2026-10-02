@@ -9,17 +9,31 @@ export interface DisposableScopeMetrics {
   failures: number;
 }
 
-const aggregateMetrics: DisposableScopeMetrics = { registered: 0, disposed: 0, failures: 0 };
+const aggregateMetrics: DisposableScopeMetrics = {
+  registered: 0,
+  disposed: 0,
+  failures: 0,
+};
 
 export class DisposableScope {
   private readonly handles: DisposableHandle[] = [];
-  readonly metrics: DisposableScopeMetrics = { registered: 0, disposed: 0, failures: 0 };
+  readonly metrics: DisposableScopeMetrics = {
+    registered: 0,
+    disposed: 0,
+    failures: 0,
+  };
 
   use<T extends DisposableHandle | undefined>(handle: T): T {
-    if (handle?.delete) {
+    if (handle?.delete && !this.handles.includes(handle)) {
       this.handles.push(handle);
       this.metrics.registered += 1;
     }
+    return handle;
+  }
+
+  release<T extends DisposableHandle>(handle: T): T {
+    const index = this.handles.lastIndexOf(handle);
+    if (index >= 0) this.handles.splice(index, 1);
     return handle;
   }
 
@@ -43,7 +57,9 @@ export class DisposableScope {
   }
 }
 
-export function withDisposableScope<T>(operation: (scope: DisposableScope) => T): T {
+export function withDisposableScope<T>(
+  operation: (scope: DisposableScope) => T,
+): T {
   const scope = new DisposableScope();
   try {
     return operation(scope);

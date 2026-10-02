@@ -10,7 +10,10 @@ export function createXySketch(name = "Sketch"): Sketch {
   return createSketchOnPlane(name, "XY");
 }
 
-export function createSketchOnPlane(name = "Sketch", plane: OriginPlane | SketchPlaneReference = "XY"): Sketch {
+export function createSketchOnPlane(
+  name = "Sketch",
+  plane: OriginPlane | SketchPlaneReference = "XY",
+): Sketch {
   return {
     id: createId("sketch"),
     name,
@@ -19,6 +22,7 @@ export function createSketchOnPlane(name = "Sketch", plane: OriginPlane | Sketch
     entities: {},
     constraints: [],
     dimensions: [],
+    solveMode: "driving",
   };
 }
 
@@ -117,4 +121,48 @@ export function addConstraint(
       },
     ],
   };
+}
+
+export function addArc(
+  sketch: Sketch,
+  centerPointId: string,
+  startPointId: string,
+  endPointId: string,
+  clockwise = false,
+): { sketch: Sketch; arcId: string } {
+  const arcId = createId("arc");
+  return {
+    arcId,
+    sketch: {
+      ...sketch,
+      entities: {
+        ...sketch.entities,
+        [arcId]: {
+          id: arcId,
+          type: "arc",
+          centerPointId,
+          startPointId,
+          endPointId,
+          clockwise,
+        },
+      },
+    },
+  };
+}
+
+export function setConstruction(
+  sketch: Sketch,
+  entityId: string,
+  construction: boolean,
+): Sketch {
+  const entity = sketch.entities[entityId];
+  return entity
+    ? {
+        ...sketch,
+        entities: {
+          ...sketch.entities,
+          [entityId]: { ...entity, construction },
+        },
+      }
+    : sketch;
 }

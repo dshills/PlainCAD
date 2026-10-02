@@ -4,39 +4,137 @@ import { describe, expect, it } from "vitest";
 import { InspectorPanel } from "../ui/panels/InspectorPanel";
 import { RebuildErrorsPanel } from "../ui/panels/RebuildErrorsPanel";
 import { useCadStore } from "../state/useCadStore";
+import { upsertFeature } from "../cad/document/CadDocument";
 import { createBoxTemplate } from "../templates/templates";
 import { createMountingPlateTemplate } from "../templates/templates";
 
 describe("selection and inspection", () => {
-  it("marks unsupported extrude directions and to-face termination unavailable", () => {
+  it("keeps unsupported extrude directions disabled and enables native to-face termination", () => {
     const document = createBoxTemplate();
     useCadStore.setState({
       history: { past: [], present: document, future: [] },
-      selection: { selectedIds: [{ kind: "feature", id: document.features[0].id, documentId: document.id }] },
+      selection: {
+        selectedIds: [
+          {
+            kind: "feature",
+            id: document.features[0].id,
+            documentId: document.id,
+          },
+        ],
+      },
     });
     render(<InspectorPanel />);
-    expect(screen.queryByText(/geometry is unavailable/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/geometry is unavailable/),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("option", { name: "Positive" })).toBeEnabled();
-    expect(screen.getByRole("option", { name: "Negative unavailable" })).toBeDisabled();
-    expect(screen.getByRole("option", { name: "Symmetric unavailable" })).toBeDisabled();
-    expect(screen.getByRole("option", { name: "To face unavailable" })).toBeDisabled();
+    expect(
+      screen.getByRole("option", { name: "Negative unavailable" }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("option", { name: "Symmetric unavailable" }),
+    ).toBeDisabled();
+    expect(screen.getByRole("option", { name: "To face" })).toBeEnabled();
   });
 
-  it.each(["fillet", "chamfer"] as const)("explains unavailable %s geometry for imported features", (type) => {
-    const document = createBoxTemplate();
-    const feature = type === "fillet"
-      ? { id: "edge-treatment", name: "Round", type, targetEdgeRefs: [], radius: { expression: "1mm", unit: "mm" } }
-      : { id: "edge-treatment", name: "Break", type, targetEdgeRefs: [], distance: { expression: "1mm", unit: "mm" } };
-    document.features.push(feature);
+  it.each(["fillet", "chamfer"] as const)(
+    "offers editable native %s sizes and reference repair for imported features",
+    async (type) => {
+      const document = createBoxTemplate();
+      const feature =
+        type === "fillet"
+          ? {
+              id: "edge-treatment",
+              name: "Round",
+              type,
+              targetEdgeRefs: [],
+              radius: { expression: "1mm", unit: "mm" },
+            }
+          : {
+              id: "edge-treatment",
+              name: "Break",
+              type,
+              targetEdgeRefs: [],
+              distance: { expression: "1mm", unit: "mm" },
+            };
+      document.features.push(feature);
+      useCadStore.setState({
+        history: { past: [], present: document, future: [] },
+        selection: {
+          selectedIds: [
+            { kind: "feature", id: feature.id, documentId: document.id },
+          ],
+        },
+      });
+      render(<InspectorPanel />);
+      expect(
+        screen.getByLabelText(
+          type === "fillet" ? "Fillet radius" : "Chamfer distance",
+        ),
+      ).toHaveValue("1mm");
+      expect(
+        screen.getByText(/Missing or modified edges require reselection/),
+      ).toBeInTheDocument();
+      const input = screen.getByLabelText(
+        type === "fillet" ? "Fillet radius" : "Chamfer distance",
+      );
+      await userEvent.clear(input);
+      await userEvent.type(input, "2mm");
+      await userEvent.tab();
+      expect(
+        useCadStore
+          .getState()
+          .history.present.features.find((item) => item.id === feature.id),
+      ).toMatchObject(
+        type === "fillet"
+          ? { radius: { expression: "2mm" } }
+          : { distance: { expression: "2mm" } },
+      );
+    },
+  );
+
+  it("keeps pending to-face selection out of history until an actual face is chosen", async () => {
+    const base = createBoxTemplate();
+    const feature = {
+      ...base.features[0],
+      id: "toFaceTool",
+      name: "Tool",
+      timelineStep: 10,
+    };
+    const document = upsertFeature(base, feature);
     useCadStore.setState({
       history: { past: [], present: document, future: [] },
-      selection: { selectedIds: [{ kind: "feature", id: feature.id, documentId: document.id }] },
+      selection: {
+        selectedIds: [
+          { kind: "feature", id: feature.id, documentId: document.id },
+        ],
+      },
     });
-    const { rerender } = render(<InspectorPanel />);
-    expect(screen.getByText(/geometry is unavailable/)).toHaveTextContent("Suppress or delete");
-    act(() => useCadStore.setState({ history: { past: [], present: { ...document, features: document.features.map((item) => item.id === feature.id ? { ...item, suppressed: true } : item) }, future: [] } }));
-    rerender(<InspectorPanel />);
-    expect(screen.queryByText(/geometry is unavailable/)).not.toBeInTheDocument();
+    render(<InspectorPanel />);
+    await userEvent.selectOptions(
+      screen.getByRole("combobox", { name: "Termination" }),
+      "toFace",
+    );
+    expect(useCadStore.getState().history.present).toBe(document);
+    expect(useCadStore.getState().history.past).toHaveLength(0);
+    await userEvent.selectOptions(
+      screen.getByRole("combobox", { name: "Target face" }),
+      `extrude:${base.features[0].id}:endCap`,
+    );
+    expect(
+      useCadStore
+        .getState()
+        .history.present.features.find((f) => f.id === feature.id),
+    ).toMatchObject({
+      termination: {
+        type: "toFace",
+        faceRef: {
+          featureId: base.features[0].id,
+          stableHint: `extrude:${base.features[0].id}:endCap`,
+        },
+      },
+    });
+    expect(useCadStore.getState().history.past).toHaveLength(1);
   });
 
   it("shows body mesh facts and routes to the source feature", async () => {
@@ -44,7 +142,9 @@ describe("selection and inspection", () => {
     const feature = document.features[0];
     useCadStore.setState({
       history: { past: [], present: document, future: [] },
-      selection: { selectedIds: [{ kind: "body", id: "body_1", documentId: document.id }] },
+      selection: {
+        selectedIds: [{ kind: "body", id: "body_1", documentId: document.id }],
+      },
       rebuild: {
         status: "succeeded",
         kernelReady: true,
@@ -74,36 +174,56 @@ describe("selection and inspection", () => {
     expect(screen.getByText("Vertices")).toBeInTheDocument();
     expect(screen.getByText("Triangles")).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("button", { name: /Select Source Feature/i }));
-    expect(useCadStore.getState().selection.selectedIds[0]).toMatchObject({ kind: "feature", id: feature.id });
+    await userEvent.click(
+      screen.getByRole("button", { name: /Select Source Feature/i }),
+    );
+    expect(useCadStore.getState().selection.selectedIds[0]).toMatchObject({
+      kind: "feature",
+      id: feature.id,
+    });
   });
 
   it("edits selected sketch and parameter details in the inspector", async () => {
     const document = createMountingPlateTemplate();
     const sketch = Object.values(document.sketches)[0];
-    act(() => useCadStore.setState({
-      history: { past: [], present: document, future: [] },
-      selection: { selectedIds: [{ kind: "sketch", id: sketch.id, documentId: document.id }] },
-    }));
+    act(() =>
+      useCadStore.setState({
+        history: { past: [], present: document, future: [] },
+        selection: {
+          selectedIds: [
+            { kind: "sketch", id: sketch.id, documentId: document.id },
+          ],
+        },
+      }),
+    );
 
-    const { rerender } = render(<InspectorPanel />);
+    render(<InspectorPanel />);
     const nameInput = screen.getByLabelText("Name");
     await userEvent.clear(nameInput);
     await userEvent.type(nameInput, "Base Plate");
     await userEvent.tab();
 
-    expect(useCadStore.getState().history.present.sketches[sketch.id].name).toBe("Base Plate");
+    expect(
+      useCadStore.getState().history.present.sketches[sketch.id].name,
+    ).toBe("Base Plate");
 
-    act(() => useCadStore.setState({
-      selection: { selectedIds: [{ kind: "parameter", id: "plate_width", documentId: document.id }] },
-    }));
-    rerender(<InspectorPanel />);
+    act(() =>
+      useCadStore.setState({
+        selection: {
+          selectedIds: [
+            { kind: "parameter", id: "plate_width", documentId: document.id },
+          ],
+        },
+      }),
+    );
     const expressionInput = screen.getByLabelText("plate_width expression");
     await userEvent.clear(expressionInput);
     await userEvent.type(expressionInput, "120mm");
     await userEvent.tab();
 
-    expect(useCadStore.getState().history.present.parameters.plate_width.expression).toBe("120mm");
+    expect(
+      useCadStore.getState().history.present.parameters.plate_width.expression,
+    ).toBe("120mm");
   });
 
   it("links rebuild errors back to source objects and shows file errors", async () => {
@@ -121,7 +241,14 @@ describe("selection and inspection", () => {
           success: false,
           bodies: [],
           meshes: [],
-          errors: [{ id: "feature:error", source: "feature", sourceId: feature.id, message: "Extrude failed." }],
+          errors: [
+            {
+              id: "feature:error",
+              source: "feature",
+              sourceId: feature.id,
+              message: "Extrude failed.",
+            },
+          ],
           warnings: [],
           durationMs: 2,
         },
@@ -130,10 +257,19 @@ describe("selection and inspection", () => {
 
     render(<RebuildErrorsPanel />);
 
-    await userEvent.click(screen.getByRole("button", { name: /feature: Extrude failed/i }));
-    expect(useCadStore.getState().selection.selectedIds[0]).toMatchObject({ kind: "feature", id: feature.id });
+    await userEvent.click(
+      screen.getByRole("button", { name: /feature: Extrude failed/i }),
+    );
+    expect(useCadStore.getState().selection.selectedIds[0]).toMatchObject({
+      kind: "feature",
+      id: feature.id,
+    });
 
-    await userEvent.click(screen.getByRole("button", { name: /File: Project file is not valid JSON/i }));
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: /File: Project file is not valid JSON/i,
+      }),
+    );
     expect(useCadStore.getState().fileError).toBeUndefined();
   });
 });

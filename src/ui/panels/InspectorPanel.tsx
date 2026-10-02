@@ -1,8 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useCadStore } from "../../state/useCadStore";
 import { SketchCircle, SketchPoint } from "../../cad/document/schema";
 import * as documentOps from "../../cad/document/CadDocument";
 import { sketchPlaneLabel } from "../../cad/sketch/planes";
+
+import { CommitInput } from "./CommitInput";
+import {
+  ModelingFeatureControls,
+  ToFaceControl,
+} from "./ModelingFeatureControls";
 
 const EXTRUDE_OPERATIONS = ["newBody", "join", "cut"] as const;
 const EXTRUDE_OPERATION_OPTIONS = [
@@ -17,6 +23,7 @@ const DEFAULT_SKETCH_NAME = "Untitled Sketch";
 const DEFAULT_FEATURE_NAME = "Untitled Feature";
 
 export function InspectorPanel() {
+  const [pendingToFace, setPendingToFace] = useState<string>();
   const selection = useCadStore((state) => state.selection.selectedIds[0]);
   const document = useCadStore((state) => state.history.present);
   const rebuild = useCadStore((state) => state.rebuild.result);
@@ -24,22 +31,36 @@ export function InspectorPanel() {
   const updateDocument = useCadStore((state) => state.updateDocument);
   const updateParameter = useCadStore((state) => state.updateParameter);
   const parameterById = useMemo(
-    () => new Map(Object.values(document?.parameters ?? {}).map((item) => [item.id, item])),
+    () =>
+      new Map(
+        Object.values(document?.parameters ?? {}).map((item) => [
+          item.id,
+          item,
+        ]),
+      ),
     [document?.parameters],
   );
   const body = useMemo(
-    () => (selection?.kind === "body" ? rebuild?.bodies.find((item) => item.id === selection.id) : undefined),
+    () =>
+      selection?.kind === "body"
+        ? rebuild?.bodies.find((item) => item.id === selection.id)
+        : undefined,
     [rebuild?.bodies, selection?.id, selection?.kind],
   );
-  const bodyMesh = useMemo(() => rebuild?.meshes.find((item) => item.bodyId === body?.id), [body?.id, rebuild?.meshes]);
+  const bodyMesh = useMemo(
+    () => rebuild?.meshes.find((item) => item.bodyId === body?.id),
+    [body?.id, rebuild?.meshes],
+  );
   const parameter = useMemo(
     () =>
       selection?.kind === "parameter"
-        ? document?.parameters[selection.id] ?? parameterById.get(selection.id)
+        ? (document?.parameters[selection.id] ??
+          parameterById.get(selection.id))
         : undefined,
     [document?.parameters, parameterById, selection?.id, selection?.kind],
   );
-  const sketch = selection?.kind === "sketch" ? document?.sketches[selection.id] : undefined;
+  const sketch =
+    selection?.kind === "sketch" ? document?.sketches[selection.id] : undefined;
   const sketchEntity = useMemo(() => {
     if (selection?.kind !== "sketchEntity") return undefined;
     if (!document) return undefined;
@@ -50,20 +71,33 @@ export function InspectorPanel() {
     return undefined;
   }, [document, selection?.id, selection?.kind]);
   const feature = useMemo(
-    () => (selection?.kind === "feature" ? document?.features.find((item) => item.id === selection.id) : undefined),
+    () =>
+      selection?.kind === "feature"
+        ? document?.features.find((item) => item.id === selection.id)
+        : undefined,
     [document, selection?.id, selection?.kind],
   );
   const bodyFeature = useMemo(
-    () => (body?.featureId ? document?.features.find((item) => item.id === body.featureId) : undefined),
+    () =>
+      body?.featureId
+        ? document?.features.find((item) => item.id === body.featureId)
+        : undefined,
     [body?.featureId, document],
   );
+
+  useEffect(() => setPendingToFace(undefined), [feature?.id]);
 
   return (
     <section className="panel">
       <h2>Inspector</h2>
-      {!selection ? <p className="muted">Select a parameter, sketch, feature, or body.</p> : null}
+      {!selection ? (
+        <p className="muted">Select a parameter, sketch, feature, or body.</p>
+      ) : null}
       {parameter ? (
-        <div key={`parameter:${parameter.id || parameter.name}`} className="item-card">
+        <div
+          key={`parameter:${parameter.id || parameter.name}`}
+          className="item-card"
+        >
           <strong>{parameter.name}</strong>
           <p className="muted">
             {parameter.expression} = {parameter.value.toFixed(3)}
@@ -72,11 +106,21 @@ export function InspectorPanel() {
           <div className="inspector-form">
             <label>
               {parameter.name} expression
-              <CommitInput value={parameter.expression} onCommit={(value) => updateParameter(parameter.name, { expression: value })} />
+              <CommitInput
+                value={parameter.expression}
+                onCommit={(value) =>
+                  updateParameter(parameter.name, { expression: value })
+                }
+              />
             </label>
             <label>
               {parameter.name} description
-              <CommitInput value={parameter.description ?? ""} onCommit={(value) => updateParameter(parameter.name, { description: value })} />
+              <CommitInput
+                value={parameter.description ?? ""}
+                onCommit={(value) =>
+                  updateParameter(parameter.name, { description: value })
+                }
+              />
             </label>
           </div>
         </div>
@@ -86,12 +130,19 @@ export function InspectorPanel() {
           <strong>{sketch.name}</strong>
           <p className="muted">Plane {sketchPlaneLabel(sketch.plane)}</p>
           <p className="muted">
-            {Object.keys(sketch.entities).length} entities, {sketch.constraints.length} constraints, {sketch.dimensions.length} dimensions
+            {Object.keys(sketch.entities).length} entities,{" "}
+            {sketch.constraints.length} constraints, {sketch.dimensions.length}{" "}
+            dimensions
           </p>
           <div className="inspector-form">
             <label>
               Name
-              <CommitInput value={sketch.name} onCommit={(value) => updateSketchName(updateDocument, sketch.id, value)} />
+              <CommitInput
+                value={sketch.name}
+                onCommit={(value) =>
+                  updateSketchName(updateDocument, sketch.id, value)
+                }
+              />
             </label>
           </div>
         </div>
@@ -103,27 +154,43 @@ export function InspectorPanel() {
             {feature.type}
             {feature.suppressed ? " suppressed" : ""}
           </p>
-          {(feature.type === "fillet" || feature.type === "chamfer") && !feature.suppressed ? (
-            <p role="status">{feature.type === "fillet" ? "Fillet" : "Chamfer"} geometry is unavailable. Suppress or delete this feature in the timeline to rebuild and export the model.</p>
+          <ModelingFeatureControls feature={feature} />
+          {"sketchId" in feature ? (
+            <p className="muted">Sketch {feature.sketchId}</p>
           ) : null}
-          {"sketchId" in feature ? <p className="muted">Sketch {feature.sketchId}</p> : null}
           {feature.type === "extrude" ? (
             <div className="inspector-form">
               <label>
                 Name
-                <CommitInput value={feature.name} onCommit={(value) => updateFeatureName(updateDocument, feature.id, value)} />
+                <CommitInput
+                  value={feature.name}
+                  onCommit={(value) =>
+                    updateFeatureName(updateDocument, feature.id, value)
+                  }
+                />
               </label>
               {(feature.termination?.type ?? "distance") === "distance" ? (
                 <label>
                   Distance
-                  <CommitInput value={feature.distance.expression} onCommit={(value) => updateExtrudeDistance(updateDocument, feature.id, value)} />
+                  <CommitInput
+                    value={feature.distance.expression}
+                    onCommit={(value) =>
+                      updateExtrudeDistance(updateDocument, feature.id, value)
+                    }
+                  />
                 </label>
               ) : null}
               <label>
                 Target body
                 <select
                   value={feature.targetBodyIds?.[0] ?? ""}
-                  onChange={(event) => updateExtrudeTarget(updateDocument, feature.id, event.target.value)}
+                  onChange={(event) =>
+                    updateExtrudeTarget(
+                      updateDocument,
+                      feature.id,
+                      event.target.value,
+                    )
+                  }
                 >
                   <option value="">None</option>
                   {(rebuild?.bodies ?? []).map((item) => (
@@ -136,23 +203,54 @@ export function InspectorPanel() {
               <label>
                 Termination
                 <select
-                  value={feature.termination?.type ?? "distance"}
-                  onChange={(event) => updateExtrudeTermination(updateDocument, feature.id, event.target.value)}
+                  value={
+                    pendingToFace === feature.id
+                      ? "toFace"
+                      : (feature.termination?.type ?? "distance")
+                  }
+                  onChange={(event) => {
+                    if (event.target.value === "toFace")
+                      setPendingToFace(feature.id);
+                    else {
+                      setPendingToFace(undefined);
+                      updateExtrudeTermination(
+                        updateDocument,
+                        feature.id,
+                        event.target.value,
+                      );
+                    }
+                  }}
                 >
                   <option value="distance">Distance</option>
                   <option value="throughAll">Through all</option>
-                  <option value="toFace" disabled>To face unavailable</option>
+                  <option value="toFace">To face</option>
                 </select>
               </label>
+              <ToFaceControl
+                feature={feature}
+                pending={pendingToFace === feature.id}
+                onCommit={() => setPendingToFace(undefined)}
+              />
               <label>
                 Operation
                 <select
                   value={feature.operation}
-                  onChange={(event) => updateExtrudeOperation(updateDocument, feature.id, event.target.value)}
+                  onChange={(event) =>
+                    updateExtrudeOperation(
+                      updateDocument,
+                      feature.id,
+                      event.target.value,
+                    )
+                  }
                 >
                   {EXTRUDE_OPERATION_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value} disabled={option.disabled}>
-                      {option.label}{option.disabled ? " unavailable" : ""}
+                    <option
+                      key={option.value}
+                      value={option.value}
+                      disabled={option.disabled}
+                    >
+                      {option.label}
+                      {option.disabled ? " unavailable" : ""}
                     </option>
                   ))}
                 </select>
@@ -161,11 +259,24 @@ export function InspectorPanel() {
                 Direction
                 <select
                   value={feature.direction}
-                  onChange={(event) => updateExtrudeDirection(updateDocument, feature.id, event.target.value)}
+                  onChange={(event) =>
+                    updateExtrudeDirection(
+                      updateDocument,
+                      feature.id,
+                      event.target.value,
+                    )
+                  }
                 >
                   {EXTRUDE_DIRECTIONS.map((direction) => (
-                    <option key={direction} value={direction} disabled={direction !== SUPPORTED_EXTRUDE_DIRECTION}>
-                      {direction[0].toUpperCase() + direction.slice(1)}{direction !== SUPPORTED_EXTRUDE_DIRECTION ? " unavailable" : ""}
+                    <option
+                      key={direction}
+                      value={direction}
+                      disabled={direction !== SUPPORTED_EXTRUDE_DIRECTION}
+                    >
+                      {direction[0].toUpperCase() + direction.slice(1)}
+                      {direction !== SUPPORTED_EXTRUDE_DIRECTION
+                        ? " unavailable"
+                        : ""}
                     </option>
                   ))}
                 </select>
@@ -182,11 +293,33 @@ export function InspectorPanel() {
             <div className="inspector-form">
               <label>
                 X
-                <CommitInput value={(sketchEntity.entity as SketchPoint).x.expression} onCommit={(value) => updateSketchEntityExpression(updateDocument, sketchEntity.sketch.id, sketchEntity.entity.id, "x", value)} />
+                <CommitInput
+                  value={(sketchEntity.entity as SketchPoint).x.expression}
+                  onCommit={(value) =>
+                    updateSketchEntityExpression(
+                      updateDocument,
+                      sketchEntity.sketch.id,
+                      sketchEntity.entity.id,
+                      "x",
+                      value,
+                    )
+                  }
+                />
               </label>
               <label>
                 Y
-                <CommitInput value={(sketchEntity.entity as SketchPoint).y.expression} onCommit={(value) => updateSketchEntityExpression(updateDocument, sketchEntity.sketch.id, sketchEntity.entity.id, "y", value)} />
+                <CommitInput
+                  value={(sketchEntity.entity as SketchPoint).y.expression}
+                  onCommit={(value) =>
+                    updateSketchEntityExpression(
+                      updateDocument,
+                      sketchEntity.sketch.id,
+                      sketchEntity.entity.id,
+                      "y",
+                      value,
+                    )
+                  }
+                />
               </label>
             </div>
           ) : null}
@@ -194,19 +327,48 @@ export function InspectorPanel() {
             <div className="inspector-form">
               <label>
                 Radius
-                <CommitInput value={(sketchEntity.entity as SketchCircle).radius.expression} onCommit={(value) => updateSketchEntityExpression(updateDocument, sketchEntity.sketch.id, sketchEntity.entity.id, "radius", value)} />
+                <CommitInput
+                  value={
+                    (sketchEntity.entity as SketchCircle).radius.expression
+                  }
+                  onCommit={(value) =>
+                    updateSketchEntityExpression(
+                      updateDocument,
+                      sketchEntity.sketch.id,
+                      sketchEntity.entity.id,
+                      "radius",
+                      value,
+                    )
+                  }
+                />
               </label>
             </div>
           ) : null}
-          {sketchEntity.entity.type === "line" ? <p className="muted">Line endpoints are edited through their point entities.</p> : null}
+          {sketchEntity.entity.type === "line" ? (
+            <p className="muted">
+              Line endpoints are edited through their point entities.
+            </p>
+          ) : null}
         </div>
       ) : null}
       {body ? (
         <div key={`body:${body.id}`} className="item-card">
           <strong>{body.name}</strong>
-          <p className="muted">Generated from {body.featureId ?? "unknown feature"}</p>
+          <p className="muted">
+            Generated from {body.featureId ?? "unknown feature"}
+          </p>
           {bodyFeature ? (
-            <button onClick={() => select({ kind: "feature", id: bodyFeature.id, documentId: document.id })}>Select Source Feature</button>
+            <button
+              onClick={() =>
+                select({
+                  kind: "feature",
+                  id: bodyFeature.id,
+                  documentId: document.id,
+                })
+              }
+            >
+              Select Source Feature
+            </button>
           ) : null}
           {bodyMesh ? (
             <dl className="inspector-facts">
@@ -216,13 +378,30 @@ export function InspectorPanel() {
               </div>
               <div>
                 <dt>Triangles</dt>
-                <dd>{body.triangleCount !== undefined ? body.triangleCount : Math.floor(bodyMesh.indices.length / 3)}</dd>
+                <dd>
+                  {body.triangleCount !== undefined
+                    ? body.triangleCount
+                    : Math.floor(bodyMesh.indices.length / 3)}
+                </dd>
               </div>
+              {bodyMesh.geometryAssertions ? (
+                <>
+                  <div>
+                    <dt>Volume (mm³)</dt>
+                    <dd>{bodyMesh.geometryAssertions.volume.toFixed(3)}</dd>
+                  </div>
+                  <div>
+                    <dt>Solids</dt>
+                    <dd>{bodyMesh.geometryAssertions.solidCount}</dd>
+                  </div>
+                </>
+              ) : null}
               {body.bounds ? (
                 <div>
                   <dt>Bounds</dt>
                   <dd>
-                    {formatBounds(body.bounds.min)} to {formatBounds(body.bounds.max)}
+                    {formatBounds(body.bounds.min)} to{" "}
+                    {formatBounds(body.bounds.max)}
                   </dd>
                 </div>
               ) : null}
@@ -236,40 +415,6 @@ export function InspectorPanel() {
 
 function formatBounds(value: [number, number, number]): string {
   return value.map((item) => item.toFixed(3)).join(", ");
-}
-
-function CommitInput({ value, onCommit }: { value: string; onCommit: (value: string) => void }) {
-  const [draft, setDraft] = useState(value);
-  const [focused, setFocused] = useState(false);
-  const cancelCommit = useRef(false);
-  useEffect(() => {
-    if (!focused) setDraft(value);
-  }, [focused, value]);
-  return (
-    <input
-      value={draft}
-      onFocus={() => setFocused(true)}
-      onChange={(event) => setDraft(event.target.value)}
-      onKeyDown={(event) => {
-        if (event.key === "Enter") {
-          event.currentTarget.blur();
-        }
-        if (event.key === "Escape") {
-          cancelCommit.current = true;
-          setDraft(value);
-          event.currentTarget.blur();
-        }
-      }}
-      onBlur={() => {
-        setFocused(false);
-        if (cancelCommit.current) {
-          cancelCommit.current = false;
-          return;
-        }
-        if (draft !== value) onCommit(draft);
-      }}
-    />
-  );
 }
 
 function updateSketchName(
@@ -309,10 +454,22 @@ function updateExtrudeDistance(
   updateDocument((document) => {
     if (!document) return document;
     const feature = document.features.find((item) => item.id === featureId);
-    if (!feature || feature.type !== "extrude" || feature.distance.expression === expression) return document;
+    if (
+      !feature ||
+      feature.type !== "extrude" ||
+      feature.distance.expression === expression
+    )
+      return document;
     const distance = { ...feature.distance, expression };
-    const termination = feature.termination?.type === "distance" ? { ...feature.termination, distance } : (feature.termination ?? { type: "distance", distance });
-    return documentOps.upsertFeature(document, { ...feature, distance, termination });
+    const termination =
+      feature.termination?.type === "distance"
+        ? { ...feature.termination, distance }
+        : (feature.termination ?? { type: "distance", distance });
+    return documentOps.upsertFeature(document, {
+      ...feature,
+      distance,
+      termination,
+    });
   });
 }
 
@@ -325,13 +482,22 @@ function updateExtrudeOperation(
   updateDocument((document) => {
     if (!document) return document;
     const feature = document.features.find((item) => item.id === featureId);
-    if (!feature || feature.type !== "extrude" || feature.operation === operation) return document;
+    if (
+      !feature ||
+      feature.type !== "extrude" ||
+      feature.operation === operation
+    )
+      return document;
     return documentOps.upsertFeature(document, { ...feature, operation });
   });
 }
 
-function isExtrudeOperation(value: string): value is (typeof EXTRUDE_OPERATIONS)[number] {
-  return EXTRUDE_OPERATIONS.includes(value as (typeof EXTRUDE_OPERATIONS)[number]);
+function isExtrudeOperation(
+  value: string,
+): value is (typeof EXTRUDE_OPERATIONS)[number] {
+  return EXTRUDE_OPERATIONS.includes(
+    value as (typeof EXTRUDE_OPERATIONS)[number],
+  );
 }
 
 function updateExtrudeDirection(
@@ -343,7 +509,12 @@ function updateExtrudeDirection(
   updateDocument((document) => {
     if (!document) return document;
     const feature = document.features.find((item) => item.id === featureId);
-    if (!feature || feature.type !== "extrude" || feature.direction === direction) return document;
+    if (
+      !feature ||
+      feature.type !== "extrude" ||
+      feature.direction === direction
+    )
+      return document;
     return documentOps.upsertFeature(document, { ...feature, direction });
   });
 }
@@ -366,13 +537,25 @@ function updateExtrudeTermination(
   featureId: string,
   value: string,
 ) {
-  if (!EXTRUDE_TERMINATIONS.includes(value as (typeof EXTRUDE_TERMINATIONS)[number])) return;
+  if (
+    !EXTRUDE_TERMINATIONS.includes(
+      value as (typeof EXTRUDE_TERMINATIONS)[number],
+    )
+  )
+    return;
   updateDocument((document) => {
     const feature = document.features.find((item) => item.id === featureId);
     if (!feature || feature.type !== "extrude") return document;
-    if (value === "throughAll") return documentOps.upsertFeature(document, { ...feature, termination: { type: "throughAll" } });
+    if (value === "throughAll")
+      return documentOps.upsertFeature(document, {
+        ...feature,
+        termination: { type: "throughAll" },
+      });
     if (value === "toFace") return document;
-    return documentOps.upsertFeature(document, { ...feature, termination: { type: "distance", distance: feature.distance } });
+    return documentOps.upsertFeature(document, {
+      ...feature,
+      termination: { type: "distance", distance: feature.distance },
+    });
   });
 }
 
@@ -383,7 +566,10 @@ function updateSketchEntityExpression(
   field: "x" | "y" | "radius",
   expression: string,
 ) {
-  const current = useCadStore.getState().history.present?.sketches[sketchId]?.entities[entityId];
+  const current =
+    useCadStore.getState().history.present?.sketches[sketchId]?.entities[
+      entityId
+    ];
   const currentExpression =
     current?.type === "point" && (field === "x" || field === "y")
       ? current[field].expression

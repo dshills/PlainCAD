@@ -1,3 +1,6 @@
+import type { SketchProfile } from "../sketch/profileDetection";
+import type { ResolvedSketch } from "../sketch/SketchSolver";
+import type { SketchPlaneTransform } from "../sketch/planes";
 import { RenderMesh } from "../kernel/KernelAdapter";
 
 export interface CadBody {
@@ -17,6 +20,9 @@ export interface RebuildResult {
   warnings: RebuildWarning[];
   durationMs: number;
   metrics?: RebuildMetrics;
+  solvedSketches?: Record<string, ResolvedSketch>;
+  profiles?: Record<string, SketchProfile[]>;
+  sketchPlanes?: Record<string, SketchPlaneTransform>;
 }
 
 export interface RebuildMetrics {
@@ -50,8 +56,24 @@ export type WorkerRequest =
 
 export type WorkerResponse =
   | { type: "initialized"; requestId: number; epoch: number }
-  | { type: "heartbeat"; requestId: number; epoch: number; stage: string; elapsedMs: number }
+  | {
+      type: "heartbeat";
+      requestId: number;
+      epoch: number;
+      stage: string;
+      elapsedMs: number;
+    }
   | { type: "skipped"; requestId: number; epoch: number; reason: string }
-  | { type: "rebuildResult"; requestId: number; epoch: number; result: RebuildResult }
-  | { type: "exportResult"; requestId: number; epoch: number; bytes: ArrayBuffer }
+  | {
+      type: "rebuildResult";
+      requestId: number;
+      epoch: number;
+      result: RebuildResult;
+    }
+  | {
+      type: "exportResult";
+      requestId: number;
+      epoch: number;
+      bytes: ArrayBuffer;
+    }
   | { type: "error"; requestId: number; epoch: number; message: string };

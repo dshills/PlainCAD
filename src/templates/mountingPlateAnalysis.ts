@@ -19,7 +19,9 @@ export interface MountingPlateAnalysis {
 const REQUIRED_PARAMETERS = ["plate_width", "plate_height", "plate_thickness", "hole_diameter", "hole_offset_x", "hole_offset_y"] as const;
 const MOUNTING_PLATE_TOLERANCE = 1e-7;
 
-export function analyzeMountingPlateDocument(document: CadDocument): MountingPlateAnalysis {
+export function analyzeMountingPlateDocument(
+  document: CadDocument,
+): MountingPlateAnalysis {
   const errors: string[] = [];
   const evaluated = evaluateParameters(document.parameters);
   for (const error of evaluated.errors) errors.push(error.message);
@@ -40,10 +42,11 @@ export function analyzeMountingPlateDocument(document: CadDocument): MountingPla
   errors.push(...profiles.errors);
   if (profiles.profiles.length > 1) errors.push("Mounting plate analysis expected exactly one profile.");
   const profile = profiles.profiles[0];
-  if (!profile) {
-    return { valid: false, errors: [...errors, "Mounting plate profile is missing."], holes: [] };
-  }
-  if (profile.holes.length !== 4) errors.push(`Mounting plate requires 4 holes; found ${profile.holes.length}.`);
+  if (!profile) errors.push("Mounting plate profile is missing.");
+  if (profile && profile.holes.length !== 4)
+    errors.push(
+      `Mounting plate requires 4 holes; found ${profile.holes.length}.`,
+    );
 
   const width = evaluated.values.plate_width?.value;
   const height = evaluated.values.plate_height?.value;
@@ -55,16 +58,23 @@ export function analyzeMountingPlateDocument(document: CadDocument): MountingPla
   if (!validDimensions) {
     errors.push("Mounting plate dimensions must be positive.");
   }
-  if (validDimensions && holeOffsetX !== undefined && holeOffsetY !== undefined) {
+  if (
+    validDimensions &&
+    holeOffsetX !== undefined &&
+    holeOffsetY !== undefined
+  ) {
     errors.push(...validateHoleOffsets(width, height, holeDiameter, holeOffsetX, holeOffsetY));
-    errors.push(...validateHoleLayout(profile.holes, width, height, holeDiameter, holeOffsetX, holeOffsetY));
+    if (profile)
+      errors.push(...validateHoleLayout(profile.holes, width, height, holeDiameter, holeOffsetX, holeOffsetY));
   }
 
   return {
     valid: errors.length === 0,
     errors,
-    dimensions: validDimensions ? { width, height, thickness, holeDiameter } : undefined,
-    holes: profile.holes,
+    dimensions: validDimensions
+      ? { width, height, thickness, holeDiameter }
+      : undefined,
+    holes: profile?.holes ?? [],
   };
 }
 
@@ -104,12 +114,17 @@ function validateHoleLayout(
   const errors: string[] = [];
   for (const hole of holes) {
     if (Math.abs(hole.radius - expectedRadius) > MOUNTING_PLATE_TOLERANCE) {
-      errors.push(`Mounting plate hole at ${formatCoordinate(hole.x)}, ${formatCoordinate(hole.y)} radius does not match hole_diameter / 2.`);
+      errors.push(
+        `Mounting plate hole at ${formatCoordinate(hole.x)}, ${formatCoordinate(hole.y)} radius does not match hole_diameter / 2.`,
+      );
     }
   }
   for (const point of expected) {
     const match = holes.some((hole) => Math.abs(hole.x - point.x) <= MOUNTING_PLATE_TOLERANCE && Math.abs(hole.y - point.y) <= MOUNTING_PLATE_TOLERANCE);
-    if (!match) errors.push(`Mounting plate is missing expected hole at ${formatCoordinate(point.x)}, ${formatCoordinate(point.y)}.`);
+    if (!match)
+      errors.push(
+        `Mounting plate is missing expected hole at ${formatCoordinate(point.x)}, ${formatCoordinate(point.y)}.`,
+      );
   }
   return errors;
 }

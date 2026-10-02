@@ -1,3 +1,4 @@
+import { SketchTools } from "./SketchTools";
 import { useMemo } from "react";
 import { useCadStore } from "../../state/useCadStore";
 import { orderedFeatures, orderedSketches } from "../../state/selectors";
@@ -55,23 +56,44 @@ export function SketchPanel() {
           <button
             className={`item-card ${activeSketch?.id === sketch.id ? "selected" : ""}`}
             key={sketch.id}
-            onClick={() => select({ kind: "sketch", id: sketch.id, documentId: document.id })}
+            onClick={() =>
+              select({ kind: "sketch", id: sketch.id, documentId: document.id })
+            }
           >
             <strong>{sketch.name}</strong>
-            <span className="muted"> {sketchPlaneLabel(sketch.plane)} plane, {Object.keys(sketch.entities).length} entities</span>
+            <span className="muted">
+              {" "}
+              {sketchPlaneLabel(sketch.plane)} plane,{" "}
+              {Object.keys(sketch.entities).length} entities
+            </span>
           </button>
         ))}
-        {sketches.length === 0 ? <p className="muted">Create an origin-plane sketch or use a template.</p> : null}
+        {sketches.length === 0 ? (
+          <p className="muted">
+            Create an origin-plane sketch or use a template.
+          </p>
+        ) : null}
       </div>
       {activeSketch ? (
         <div className="sketch-detail">
+          <SketchTools
+            key={activeSketch.id}
+            sketch={activeSketch}
+            document={document}
+          />
           <h3>{activeSketch.name} Entities</h3>
           <div className="panel-list">
             {entities.map((entity) => (
               <button
                 className={`item-card ${selection?.kind === "sketchEntity" && selection.id === entity.id ? "selected" : ""}`}
                 key={entity.id}
-                onClick={() => select({ kind: "sketchEntity", id: entity.id, documentId: document.id })}
+                onClick={() =>
+                  select({
+                    kind: "sketchEntity",
+                    id: entity.id,
+                    documentId: document.id,
+                  })
+                }
               >
                 <strong>{entity.type}</strong>
                 <span className="muted"> {entity.id}</span>
@@ -79,10 +101,14 @@ export function SketchPanel() {
             ))}
           </div>
           <p className="muted">
-            {activeSketch.constraints.length} constraints, {activeSketch.dimensions.length} dimensions, {activeProfileResult?.profiles.length ?? 0} profiles
+            {activeSketch.constraints.length} constraints,{" "}
+            {activeSketch.dimensions.length} dimensions,{" "}
+            {activeProfileResult?.profiles.length ?? 0} profiles
           </p>
           {activeProfileResult?.errors.map((error, index) => (
-            <div className="warning-text" key={`${index}:${error}`}>{error}</div>
+            <div className="warning-text" key={`${index}:${error}`}>
+              {error}
+            </div>
           ))}
         </div>
       ) : null}

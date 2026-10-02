@@ -9,6 +9,7 @@ const migrations = new Map<number, Migration>([
   [3, migrateV3ToV4],
   [4, migrateV4ToV5],
   [5, migrateV5ToV6],
+  [6, migrateV6ToV7],
 ]);
 
 export function migrateDocument(input: CadDocument): CadDocument {
@@ -16,7 +17,9 @@ export function migrateDocument(input: CadDocument): CadDocument {
     throw new Error("Project file is missing a schema version.");
   }
   if (input.schemaVersion > CURRENT_SCHEMA_VERSION) {
-    throw new Error(`Unsupported project schema version ${input.schemaVersion}.`);
+    throw new Error(
+      `Unsupported project schema version ${input.schemaVersion}.`,
+    );
   }
 
   let document = input;
@@ -25,7 +28,10 @@ export function migrateDocument(input: CadDocument): CadDocument {
   }
   while (document.schemaVersion < CURRENT_SCHEMA_VERSION) {
     const migration = migrations.get(document.schemaVersion);
-    if (!migration) throw new Error(`Unsupported project schema version ${document.schemaVersion}.`);
+    if (!migration)
+      throw new Error(
+        `Unsupported project schema version ${document.schemaVersion}.`,
+      );
     document = migration(document);
   }
   return sanitizeCurrentDocument(document);
@@ -82,6 +88,19 @@ function migrateV4ToV5(input: CadDocument): CadDocument {
 
 function migrateV5ToV6(input: CadDocument): CadDocument {
   return { ...input, schemaVersion: 6 };
+}
+
+function migrateV6ToV7(input: CadDocument): CadDocument {
+  return {
+    ...input,
+    schemaVersion: 7,
+    sketches: Object.fromEntries(
+      Object.entries(input.sketches ?? {}).map(([id, sketch]) => [
+        id,
+        isRecord(sketch) ? { ...sketch, solveMode: "validate" } : sketch,
+      ]),
+    ),
+  };
 }
 
 function sanitizeCurrentDocument(input: CadDocument): CadDocument {
@@ -146,19 +165,102 @@ function sanitizeSketch(sketch: Sketch): Sketch {
     id: sketchRecord.id,
     name: sketchRecord.name,
     plane: normalizePlaneReference(sketchRecord.plane),
-    ...(sketchRecord.timelineStep !== undefined ? { timelineStep: sketchRecord.timelineStep } : {}),
-    ...(sketchRecord.createdAt !== undefined ? { createdAt: sketchRecord.createdAt } : {}),
+    ...(sketchRecord.solveRevision !== undefined
+      ? { solveRevision: sketchRecord.solveRevision }
+      : {}),
+    ...(sketchRecord.solveMode !== undefined
+      ? { solveMode: sketchRecord.solveMode }
+      : {}),
+    ...(sketchRecord.timelineStep !== undefined
+      ? { timelineStep: sketchRecord.timelineStep }
+      : {}),
+    ...(sketchRecord.createdAt !== undefined
+      ? { createdAt: sketchRecord.createdAt }
+      : {}),
     entities: Object.fromEntries(
-      Object.entries(isRecord(sketchRecord.entities) ? sketchRecord.entities : {}).map(([key, entity]) => [key, isRecord(entity) ? { ...entity } : entity]),
+      Object.entries(
+        isRecord(sketchRecord.entities) ? sketchRecord.entities : {},
+      ).map(([key, entity]) => [key, sanitizeEntity(entity)]),
     ) as Sketch["entities"],
-    constraints: Array.isArray(sketchRecord.constraints) ? sketchRecord.constraints.map((constraint: unknown) => (isRecord(constraint) ? { ...constraint } : constraint)) as Sketch["constraints"] : [],
+    constraints: Array.isArray(sketchRecord.constraints)
+      ? (sketchRecord.constraints.map((constraint: unknown) =>
+          isRecord(constraint)
+            ? {
+                id: constraint.id,
+                type: constraint.type,
+                entityIds: Array.isArray(constraint.entityIds)
+                  ? [...constraint.entityIds]
+                  : constraint.entityIds,
+                ...(constraint.pointIds !== undefined
+                  ? {
+                      pointIds: Array.isArray(constraint.pointIds)
+                        ? [...constraint.pointIds]
+                        : constraint.pointIds,
+                    }
+                  : {}),
+              }
+            : constraint,
+        ) as Sketch["constraints"])
+      : [],
     dimensions: Array.isArray(sketchRecord.dimensions)
-      ? sketchRecord.dimensions.map((dimension: unknown) => {
+      ? (sketchRecord.dimensions.map((dimension: unknown) => {
           const dimensionRecord = isRecord(dimension) ? dimension : {};
-          return { ...dimensionRecord, expression: isRecord(dimensionRecord.expression) ? { ...dimensionRecord.expression } : dimensionRecord.expression };
-        }) as Sketch["dimensions"]
+          return {
+            id: dimensionRecord.id,
+            type: dimensionRecord.type,
+            entityIds: Array.isArray(dimensionRecord.entityIds)
+              ? [...dimensionRecord.entityIds]
+              : dimensionRecord.entityIds,
+            ...(dimensionRecord.pointIds !== undefined
+              ? {
+                  pointIds: Array.isArray(dimensionRecord.pointIds)
+                    ? [...dimensionRecord.pointIds]
+                    : dimensionRecord.pointIds,
+                }
+              : {}),
+            expression: sanitizeExpressionRef(dimensionRecord.expression),
+          };
+        }) as Sketch["dimensions"])
       : [],
   };
+}
+
+function sanitizeEntity(value: unknown): unknown {
+  if (!isRecord(value)) return value;
+  const base = {
+    id: value.id,
+    type: value.type,
+    ...(value.construction !== undefined
+      ? { construction: value.construction }
+      : {}),
+  };
+  if (value.type === "point")
+    return {
+      ...base,
+      x: sanitizeExpressionRef(value.x),
+      y: sanitizeExpressionRef(value.y),
+    };
+  if (value.type === "line")
+    return {
+      ...base,
+      startPointId: value.startPointId,
+      endPointId: value.endPointId,
+    };
+  if (value.type === "circle")
+    return {
+      ...base,
+      centerPointId: value.centerPointId,
+      radius: sanitizeExpressionRef(value.radius),
+    };
+  if (value.type === "arc")
+    return {
+      ...base,
+      centerPointId: value.centerPointId,
+      startPointId: value.startPointId,
+      endPointId: value.endPointId,
+      clockwise: value.clockwise,
+    };
+  return base;
 }
 
 function sanitizeFeature(feature: Feature): Feature | undefined {
@@ -223,7 +325,9 @@ function sanitizeFeature(feature: Feature): Feature | undefined {
       distance: sanitizeExpressionRef(feature.distance),
     };
   }
-  throw new Error(`Project file contains unsupported feature type ${String((feature as { type?: unknown }).type)}.`);
+  throw new Error(
+    `Project file contains unsupported feature type ${String((feature as { type?: unknown }).type)}.`,
+  );
 }
 
 function sanitizeExtrudeTermination(termination: Record<string, any>, fallbackDistance: unknown): NonNullable<Extract<Feature, { type: "extrude" }>["termination"]> {
@@ -290,14 +394,22 @@ function withTimelineMetadata(document: CadDocument): CadDocument {
   });
 
   const stepByKey = new Map<string, number>();
-  ordered.forEach((item, index) => stepByKey.set(`${item.kind}:${item.id}`, index + 1));
+  ordered.forEach((item, index) =>
+    stepByKey.set(`${item.kind}:${item.id}`, index + 1),
+  );
   return {
     ...document,
     timelineCursor: ordered.length,
     sketches: Object.fromEntries(
-      sketchEntries.map(([id, sketch]) => [id, { ...sketch, timelineStep: stepByKey.get(`sketch:${id}`) }]),
+      sketchEntries.map(([id, sketch]) => [
+        id,
+        { ...sketch, timelineStep: stepByKey.get(`sketch:${id}`) },
+      ]),
     ),
-    features: features.map((feature) => ({ ...feature, timelineStep: stepByKey.get(`feature:${feature.id}`) })),
+    features: features.map((feature) => ({
+      ...feature,
+      timelineStep: stepByKey.get(`feature:${feature.id}`),
+    })),
   };
 }
 
@@ -322,7 +434,14 @@ function normalizePlaneReference(value: unknown): Sketch["plane"] {
   if (isRecord(value) && value.type === "origin" && (value.plane === "XY" || value.plane === "XZ" || value.plane === "YZ")) {
     return { type: "origin", plane: value.plane };
   }
-  if (isRecord(value) && value.type === "offset" && (value.base === "XY" || value.base === "XZ" || value.base === "YZ")) {
+  if (
+    isRecord(value) &&
+    value.type === "offset" &&
+    (value.base === "XY" ||
+      value.base === "XZ" ||
+      value.base === "YZ" ||
+      (isRecord(value.base) && value.base.type === "face"))
+  ) {
     const offset = isRecord(value.offset)
       ? {
           expression: String(value.offset.expression ?? ""),
@@ -330,15 +449,27 @@ function normalizePlaneReference(value: unknown): Sketch["plane"] {
           unit: String(value.offset.unit ?? ""),
         }
       : { expression: value.offset == null ? "" : String(value.offset), unit: "" };
-    return { type: "offset", base: value.base, offset };
+    return {
+      type: "offset",
+      base:
+        typeof value.base === "string"
+          ? (value.base as "XY" | "XZ" | "YZ")
+          : (normalizePlaneReference(value.base) as Extract<
+              Sketch["plane"],
+              { type: "face" }
+            >),
+      offset,
+    };
   }
   if (isRecord(value) && value.type === "face") {
     return {
       type: "face",
       featureId: String(value.featureId ?? ""),
       stableFaceId: String(value.stableFaceId ?? ""),
-      ...(value.lost !== undefined ? { lost: Boolean(value.lost) } : {}),
+      ...(value.lost !== undefined ? { lost: value.lost } : {}),
     };
   }
-  return { type: "origin", plane: "XY" };
+  return value === undefined
+    ? { type: "origin", plane: "XY" }
+    : ({ type: "origin", plane: "invalid" } as unknown as Sketch["plane"]);
 }

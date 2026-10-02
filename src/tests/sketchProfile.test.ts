@@ -34,7 +34,9 @@ describe("sketch helpers and profile detection", () => {
     expect(profiles.errors).toEqual([]);
     expect(profiles.profiles).toHaveLength(1);
     expect(profiles.profiles[0].outerLoop.type).toBe("circle");
-    expect(profiles.profiles[0].alternateIds).toContain(`${sketch.id}:profile:${circle.id}`);
+    expect(profiles.profiles[0].alternateIds).toContain(
+      `${sketch.id}:profile:${circle.id}`,
+    );
     expect(profiles.profiles[0].bounds).toMatchObject({ minX: 1, maxX: 9, minY: 2, maxY: 10 });
   });
 
@@ -133,7 +135,9 @@ describe("sketch helpers and profile detection", () => {
 
     expect(narrow.profiles[0].id).toBe(wide.profiles[0].id);
     expect(narrow.profiles[0].signature).toBe(wide.profiles[0].signature);
-    expect(narrow.profiles[0].alternateIds).toContain(`${sketch.id}:profile:rectangle`);
+    expect(narrow.profiles[0].alternateIds).toContain(
+      `${sketch.id}:profile:rectangle`,
+    );
   });
 
   it("rejects duplicate and self-intersecting line geometry", () => {
@@ -205,6 +209,9 @@ describe("sketch helpers and profile detection", () => {
     sketch = end.sketch;
     const line = addLine(sketch, start.pointId, end.pointId);
     sketch = addConstraint(line.sketch, "horizontal", { entityIds: [line.lineId] });
+    sketch = addConstraint(sketch, "fixed", {
+      pointIds: [start.pointId, end.pointId],
+    });
     const solved = solveSketch(sketch, {});
     expect(solved.errors[0].message).toContain("horizontal");
   });
@@ -216,8 +223,16 @@ describe("sketch helpers and profile detection", () => {
     const p2 = addPoint(sketch, "10mm", "5mm");
     sketch = p2.sketch;
     sketch = addConstraint(sketch, "coincident", { pointIds: [p1.pointId, p2.pointId] });
+    sketch = addConstraint(sketch, "fixed", { pointIds: [p1.pointId] });
     const solved = solveSketch(sketch, {});
-    expect(solved.points[p2.pointId]).toMatchObject({ x: 0, y: 0 });
+    expect(solved.errors).toEqual([]);
+    expect(solved.points[p1.pointId]).toMatchObject({ x: 0, y: 0 });
+    expect(solved.points[p2.pointId].x).toBeCloseTo(
+      solved.points[p1.pointId].x,
+    );
+    expect(solved.points[p2.pointId].y).toBeCloseTo(
+      solved.points[p1.pointId].y,
+    );
   });
 
   it("synchronizes coincident point chains independent of constraint order", () => {
@@ -230,8 +245,16 @@ describe("sketch helpers and profile detection", () => {
     sketch = p3.sketch;
     sketch = addConstraint(sketch, "coincident", { pointIds: [p2.pointId, p3.pointId] });
     sketch = addConstraint(sketch, "coincident", { pointIds: [p1.pointId, p2.pointId] });
+    sketch = addConstraint(sketch, "fixed", { pointIds: [p1.pointId] });
     const solved = solveSketch(sketch, {});
-    expect(solved.points[p3.pointId]).toMatchObject({ x: 0, y: 0 });
+    expect(solved.errors).toEqual([]);
+    expect(solved.points[p1.pointId]).toMatchObject({ x: 0, y: 0 });
+    expect(solved.points[p3.pointId].x).toBeCloseTo(
+      solved.points[p1.pointId].x,
+    );
+    expect(solved.points[p3.pointId].y).toBeCloseTo(
+      solved.points[p1.pointId].y,
+    );
   });
 
   it("reports conflicting fixed coincident points", () => {
@@ -330,11 +353,34 @@ describe("sketch helpers and profile detection", () => {
     const line = addLine(sketch, start.pointId, end.pointId);
     sketch = {
       ...line.sketch,
+      solveMode: "validate" as const,
       dimensions: [
-        { id: "dim_length", type: "length", entityIds: [line.lineId], expression: expressionRef("10mm") },
-        { id: "dim_angle", type: "angle", entityIds: [line.lineId, line.lineId], expression: expressionRef("0deg", "deg") },
-        { id: "dim_horizontal", type: "horizontalDistance", entityIds: [], pointIds: [start.pointId, end.pointId], expression: expressionRef("10mm") },
-        { id: "dim_vertical", type: "verticalDistance", entityIds: [], pointIds: [start.pointId, end.pointId], expression: expressionRef("0mm") },
+        {
+          id: "dim_length",
+          type: "length",
+          entityIds: [line.lineId],
+          expression: expressionRef("10mm"),
+        },
+        {
+          id: "dim_angle",
+          type: "angle",
+          entityIds: [line.lineId, line.lineId],
+          expression: expressionRef("0deg", "deg"),
+        },
+        {
+          id: "dim_horizontal",
+          type: "horizontalDistance",
+          entityIds: [],
+          pointIds: [start.pointId, end.pointId],
+          expression: expressionRef("10mm"),
+        },
+        {
+          id: "dim_vertical",
+          type: "verticalDistance",
+          entityIds: [],
+          pointIds: [start.pointId, end.pointId],
+          expression: expressionRef("0mm"),
+        },
       ],
     };
 
@@ -370,6 +416,8 @@ describe("sketch helpers and profile detection", () => {
     tangent = addCircleAt(tangent, "0mm", "0mm", "5mm");
     const circle = Object.values(tangent.entities).find((entity) => entity.type === "circle")!;
     tangent = addConstraint(tangent, "tangent", { entityIds: [line.lineId, circle.id] });
-    expect(solveSketch(tangent, {}).errors[0].message).toContain("tangent");
+    expect(
+      solveSketch({ ...tangent, solveMode: "validate" }, {}).errors[0].message,
+    ).toContain("tangent");
   });
 });

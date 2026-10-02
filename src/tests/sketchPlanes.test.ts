@@ -13,13 +13,27 @@ describe("sketch planes", () => {
     expect(sketchPointToWorld({ type: "origin", plane: "XZ" }, 2, 3, 4)).toEqual({ x: 2, y: -4, z: 3 });
     expect(sketchPointToWorld({ type: "origin", plane: "YZ" }, 2, 3, 4)).toEqual({ x: 4, y: 2, z: 3 });
     expect(worldPointToSketch({ type: "origin", plane: "XZ" }, { x: 2, y: -4, z: 3 })).toEqual({ x: 2, y: 3, z: 4 });
-    expect(sketchPointToWorld({ type: "offset", base: "XY", offset: { expression: "5mm", unit: "mm" } }, 2, 3)).toEqual({ x: 2, y: 3, z: 0 });
+    expect(
+      sketchPointToWorld(
+        {
+          type: "offset",
+          base: "XY",
+          offset: { expression: "5mm", unit: "mm" },
+        },
+        2,
+        3,
+      ),
+    ).toEqual({ x: 2, y: 3, z: 5 });
   });
 
-  it("blocks unsupported planes with source-linked diagnostics instead of rebuilding on an origin plane", () => {
+  it("blocks invalid or lost planes with source-linked diagnostics instead of rebuilding on an origin plane", () => {
     const sketch = addCenterRectangle(createSketchOnPlane("Unsupported", "XY"), "20mm", "10mm");
     for (const plane of [
-      { type: "offset", base: "XY", offset: { expression: "5mm", unit: "mm" } },
+      {
+        type: "offset",
+        base: "XY",
+        offset: { expression: "5deg", unit: "deg" },
+      },
       { type: "face", featureId: "owner", stableFaceId: "face" },
     ] as const) {
       const profile = detectProfiles(solveSketch(sketch, {})).profiles[0];
@@ -31,7 +45,13 @@ describe("sketch planes", () => {
       expect(result.success).toBe(false);
       expect(result.meshes).toHaveLength(0);
       expect(result.errors).toHaveLength(1);
-      expect(result.errors).toContainEqual(expect.objectContaining({ source: "sketch", sourceId: sketch.id, message: expect.stringContaining("sketch planes are not supported") }));
+      expect(result.errors).toContainEqual(
+        expect.objectContaining({
+          source: "sketch",
+          sourceId: sketch.id,
+          message: expect.stringContaining(plane.type === "offset" ? "length" : "reference lost"),
+        }),
+      );
     }
   });
 
@@ -45,14 +65,18 @@ describe("sketch planes", () => {
     };
     const imported = importProjectText(JSON.stringify(legacyDocument));
 
-    expect(imported.schemaVersion).toBe(6);
+    expect(imported.schemaVersion).toBe(7);
     expect(imported.sketches[sketch.id].plane).toEqual({ type: "origin", plane: "XZ" });
   });
 
   it("rebuilds extrusions on XZ and YZ origin planes", () => {
     for (const plane of ["XZ", "YZ"] as const) {
       let document = createEmptyDocument();
-      const sketch = addCenterRectangle(createSketchOnPlane(`${plane} Sketch`, plane), "20mm", "10mm");
+      const sketch = addCenterRectangle(
+        createSketchOnPlane(`${plane} Sketch`, plane),
+        "20mm",
+        "10mm",
+      );
       const profile = detectProfiles(solveSketch(sketch, {})).profiles[0];
       document = upsertSketch(document, sketch);
       const feature = createExtrudeFeature({

@@ -1,6 +1,13 @@
-import { ResolvedCircle, ResolvedLine, ResolvedSketch } from "./SketchSolver";
+import {
+  ResolvedArc,
+  ResolvedCircle,
+  ResolvedLine,
+  ResolvedSketch,
+} from "./SketchSolver";
 
-const PROFILE_EPSILON = 1e-7;
+import { SKETCH_TOLERANCE } from "./tolerances";
+
+const PROFILE_EPSILON = SKETCH_TOLERANCE;
 
 export interface SketchProfile {
   id: string;
@@ -13,7 +20,26 @@ export interface SketchProfile {
   alternateIds?: string[];
 }
 
+export type ProfileSegment =
+  | {
+      type: "line";
+      id: string;
+      start: { x: number; y: number };
+      end: { x: number; y: number };
+    }
+  | {
+      type: "arc";
+      id: string;
+      start: { x: number; y: number };
+      end: { x: number; y: number };
+      center: { x: number; y: number };
+      radius: number;
+      startAngle: number;
+      sweep: number;
+    };
+
 export interface ProfileLoop {
+  segments?: ProfileSegment[];
   entityIds: string[];
   type: "polygon" | "circle";
   role?: "outer" | "inner";
@@ -33,11 +59,70 @@ export interface ProfileDetectionResult {
 }
 
 export function detectProfiles(sketch: ResolvedSketch): ProfileDetectionResult {
+  if (sketch.errors.length)
+    return { profiles: [], errors: sketch.errors.map((e) => e.message) };
+  const arcs = (sketch.arcs ?? []).filter((a) => !a.construction);
+  const arcBySegment = new Map<string, ResolvedArc>();
+  const lines = sketch.lines.filter((l) => !l.construction);
+  for (const arc of arcs) {
+    const samples = sampleArc(arc);
+    for (let i = 1; i < samples.length; i++) {
+      const id = `${arc.id}~${i}`;
+      arcBySegment.set(id, arc);
+      lines.push({
+        id,
+        start: { id: `${id}:a`, ...samples[i - 1] },
+        end: { id: `${id}:b`, ...samples[i] },
+      });
+    }
+  }
+  sketch = {
+    ...sketch,
+    lines,
+    circles: sketch.circles.filter((c) => !c.construction),
+  };
   const errors: string[] = [];
-  const dirtyGeometry = validateDirtyGeometry(sketch.lines, sketch.circles);
+  const keyForPoint = clusterPointKeys(sketch.lines);
+  const dirtyGeometry = validateDirtyGeometry(
+    sketch.lines,
+    sketch.circles,
+    keyForPoint,
+  );
   if (dirtyGeometry.length > 0) return { profiles: [], errors: dirtyGeometry };
 
-  const lineLoops = extractLineLoops(sketch.lines, errors);
+  const lineLoops = extractLineLoops(
+    sketch.lines,
+    errors,
+    keyForPoint,
+    (id) => !arcBySegment.has(id) || id === `${arcBySegment.get(id)!.id}~1`,
+  );
+  for (const loop of lineLoops) {
+    loop.entityIds = [
+      ...new Set(loop.entityIds.map((id) => arcBySegment.get(id)?.id ?? id)),
+    ];
+    loop.key = stableHash([...loop.entityIds].sort().join("|"));
+    const segments: ProfileSegment[] = [];
+    for (const segment of loop.segments) {
+      const arc = arcBySegment.get(segment.id);
+      if (!arc) {
+        segments.push(segment);
+        continue;
+      }
+      if (segments.at(-1)?.id === arc.id) continue;
+      const forward = distance(segment.start, arc.start) < PROFILE_EPSILON;
+      segments.push({
+        type: "arc",
+        id: arc.id,
+        center: arc.center,
+        radius: arc.radius,
+        start: forward ? arc.start : arc.end,
+        end: forward ? arc.end : arc.start,
+        startAngle: forward ? arc.startAngle : arc.startAngle + arc.sweep,
+        sweep: forward ? arc.sweep : -arc.sweep,
+      });
+    }
+    loop.segments = segments;
+  }
   const profiles: SketchProfile[] = [];
 
   if (lineLoops.length > 0) {
@@ -71,6 +156,7 @@ export function detectProfiles(sketch: ResolvedSketch): ProfileDetectionResult {
 
 interface LineLoop {
   key: string;
+  segments: ProfileSegment[];
   entityIds: string[];
   points: { x: number; y: number }[];
   bounds: { minX: number; maxX: number; minY: number; maxY: number };
@@ -78,34 +164,83 @@ interface LineLoop {
   signedArea: number;
 }
 
-function validateDirtyGeometry(lines: ResolvedLine[], circles: ResolvedCircle[]): string[] {
+function validateDirtyGeometry(
+  lines: ResolvedLine[],
+  circles: ResolvedCircle[],
+  keyForPoint: (point: { x: number; y: number }) => string,
+): string[] {
   const errors: string[] = [];
   const segments = new Set<string>();
   for (const line of lines) {
-    if (distance(line.start, line.end) <= PROFILE_EPSILON) errors.push(`Line "${line.id}" is zero-length and cannot form a profile.`);
-    const key = segmentKey(line);
-    if (segments.has(key)) errors.push(`Line "${line.id}" duplicates or overlaps another sketch segment.`);
+    if (distance(line.start, line.end) <= PROFILE_EPSILON)
+      errors.push(
+        `Line "${line.id}" is zero-length and cannot form a profile.`,
+      );
+    const key = segmentKey(line, keyForPoint);
+    if (segments.has(key))
+      errors.push(
+        `Line "${line.id}" duplicates or overlaps another sketch segment.`,
+      );
     segments.add(key);
   }
   for (let i = 0; i < lines.length; i += 1) {
     for (let j = i + 1; j < lines.length; j += 1) {
-      if (segmentsCross(lines[i], lines[j])) errors.push(`Lines "${lines[i].id}" and "${lines[j].id}" intersect outside shared endpoints.`);
-      if (segmentsOverlap(lines[i], lines[j])) errors.push(`Lines "${lines[i].id}" and "${lines[j].id}" overlap and cannot form a clean profile.`);
+      if (segmentsCross(lines[i], lines[j], keyForPoint))
+        errors.push(
+          `Lines "${lines[i].id}" and "${lines[j].id}" intersect outside shared endpoints.`,
+        );
+      if (segmentsOverlap(lines[i], lines[j], keyForPoint))
+        errors.push(
+          `Lines "${lines[i].id}" and "${lines[j].id}" overlap and cannot form a clean profile.`,
+        );
     }
   }
   for (const circle of circles) {
     if (circle.radius <= 0) errors.push(`Circle "${circle.id}" has a non-positive radius.`);
   }
+  for (let i = 0; i < circles.length; i++)
+    for (let j = i + 1; j < circles.length; j++) {
+      const a = circles[i],
+        b = circles[j],
+        d = distance(a.center, b.center);
+      if (
+        d <= a.radius + b.radius + PROFILE_EPSILON &&
+        d >= Math.abs(a.radius - b.radius) - PROFILE_EPSILON
+      )
+        errors.push(
+          `Circles "${a.id}" and "${b.id}" touch or intersect; fragment the boundaries before extrusion.`,
+        );
+    }
+  for (const circle of circles)
+    for (const line of lines) {
+      const nearest = pointSegmentDistance(circle.center, line.start, line.end),
+        farthest = Math.max(
+          distance(circle.center, line.start),
+          distance(circle.center, line.end),
+        );
+      if (
+        nearest <= circle.radius + PROFILE_EPSILON &&
+        farthest >= circle.radius - PROFILE_EPSILON
+      )
+        errors.push(
+          `Circle "${circle.id}" intersects or touches a line/arc boundary; fragment the boundaries before extrusion.`,
+        );
+    }
   return [...new Set(errors)];
 }
 
-function extractLineLoops(lines: ResolvedLine[], errors: string[]): LineLoop[] {
+function extractLineLoops(
+  lines: ResolvedLine[],
+  errors: string[],
+  keyForPoint: (point: { x: number; y: number }) => string,
+  isEntityBoundary: (id: string) => boolean,
+): LineLoop[] {
   if (lines.length === 0) return [];
   const byPoint = new Map<string, ResolvedLine[]>();
   const lineById = new Map(lines.map((line) => [line.id, line]));
   for (const line of lines) {
     for (const point of [line.start, line.end]) {
-      const key = pointKey(point);
+      const key = keyForPoint(point);
       const connected = byPoint.get(key);
       if (connected) {
         connected.push(line);
@@ -122,15 +257,25 @@ function extractLineLoops(lines: ResolvedLine[], errors: string[]): LineLoop[] {
   const unused = new Set(lines.map((line) => line.id));
   const loops: LineLoop[] = [];
   while (unused.size > 0) {
-    const firstId = unused.values().next().value;
+    // Begin at an analytic entity boundary so an arc never spans the seam.
+    const firstId = [...unused].find(isEntityBoundary);
+    if (!firstId) {
+      errors.push(
+        "Profile traversal could not find an unfragmented entity boundary.",
+      );
+      return [];
+    }
     const first = firstId ? lineById.get(firstId) : undefined;
     if (!first) break;
     const entityIds = [first.id];
+    const segments: ProfileSegment[] = [
+      { type: "line", id: first.id, start: first.start, end: first.end },
+    ];
     const points = [first.start, first.end];
     unused.delete(first.id);
     let previous = first;
-    let currentKey = pointKey(first.end);
-    const startKey = pointKey(first.start);
+    let currentKey = keyForPoint(first.end);
+    const startKey = keyForPoint(first.start);
     while (currentKey !== startKey) {
       const next = (byPoint.get(currentKey) ?? []).find((line) => line.id !== previous.id && unused.has(line.id));
       if (!next) {
@@ -139,10 +284,17 @@ function extractLineLoops(lines: ResolvedLine[], errors: string[]): LineLoop[] {
       }
       entityIds.push(next.id);
       unused.delete(next.id);
-      const nextPoint = pointKey(next.start) === currentKey ? next.end : next.start;
+      const nextPoint =
+        keyForPoint(next.start) === currentKey ? next.end : next.start;
+      segments.push({
+        type: "line",
+        id: next.id,
+        start: points.at(-1)!,
+        end: nextPoint,
+      });
       points.push(nextPoint);
       previous = next;
-      currentKey = pointKey(nextPoint);
+      currentKey = keyForPoint(nextPoint);
     }
     const polygon = points.slice(0, -1);
     const signedArea = polygonArea(polygon);
@@ -151,7 +303,8 @@ function extractLineLoops(lines: ResolvedLine[], errors: string[]): LineLoop[] {
       continue;
     }
     loops.push({
-      key: stableHash(entityIds.sort().join("|")),
+      key: stableHash([...entityIds].sort().join("|")),
+      segments,
       entityIds: [...entityIds],
       points: polygon,
       bounds: boundsForPoints(polygon),
@@ -162,7 +315,13 @@ function extractLineLoops(lines: ResolvedLine[], errors: string[]): LineLoop[] {
   return loops;
 }
 
-function createProfile(sketchId: string, outer: LineLoop, innerLoops: ProfileLoop[], holeCircles: ResolvedCircle[], allowLegacyRectangleAlias: boolean): SketchProfile {
+function createProfile(
+  sketchId: string,
+  outer: LineLoop,
+  innerLoops: ProfileLoop[],
+  holeCircles: ResolvedCircle[],
+  allowLegacyRectangleAlias: boolean,
+): SketchProfile {
   const signature = profileSignature(createPolygonLoop(outer, "outer"), innerLoops);
   return {
     id: `${sketchId}:profile:${signature}`,
@@ -172,7 +331,10 @@ function createProfile(sketchId: string, outer: LineLoop, innerLoops: ProfileLoo
     holes: holeCircles.map(circleToHole),
     bounds: outer.bounds,
     signature,
-    alternateIds: allowLegacyRectangleAlias && isAxisAlignedRectangle(outer) ? [`${sketchId}:profile:rectangle`] : undefined,
+    alternateIds:
+      allowLegacyRectangleAlias && isAxisAlignedRectangle(outer)
+        ? [`${sketchId}:profile:rectangle`]
+        : undefined,
   };
 }
 
@@ -204,8 +366,17 @@ function createCircleProfiles(sketchId: string, circles: ResolvedCircle[]): Sket
     });
 }
 
-function createPolygonLoop(loop: LineLoop, role: "outer" | "inner"): ProfileLoop {
-  return { entityIds: [...loop.entityIds].sort(), type: "polygon", role, lineageIds: [...loop.entityIds].sort() };
+function createPolygonLoop(
+  loop: LineLoop,
+  role: "outer" | "inner",
+): ProfileLoop {
+  return {
+    entityIds: [...loop.entityIds].sort(),
+    type: "polygon",
+    role,
+    lineageIds: [...loop.entityIds].sort(),
+    segments: loop.segments,
+  };
 }
 
 function createCircleLoop(circle: ResolvedCircle, role: "outer" | "inner"): ProfileLoop {
@@ -228,7 +399,10 @@ function circleInsideLoop(circle: ResolvedCircle, loop: LineLoop): boolean {
   }
   return loop.points.every((point, index) => {
     const next = loop.points[(index + 1) % loop.points.length];
-    return pointSegmentDistance(circle.center, point, next) >= circle.radius - PROFILE_EPSILON;
+    return (
+      pointSegmentDistance(circle.center, point, next) >=
+      circle.radius - PROFILE_EPSILON
+    );
   });
 }
 
@@ -242,12 +416,52 @@ function round(value: number): number {
   return Math.round(value / PROFILE_EPSILON) * PROFILE_EPSILON;
 }
 
-function pointKey(point: { x: number; y: number }): string {
-  return `${round(point.x)},${round(point.y)}`;
+// Neighbouring spatial cells are checked by distance, so near-coincident
+// vertices on opposite rounding boundaries still have one graph identity.
+function clusterPointKeys(
+  lines: ResolvedLine[],
+): (point: { x: number; y: number }) => string {
+  const keys = new Map<object, string>(),
+    cells = new Map<
+      string,
+      Array<{ point: { x: number; y: number }; key: string }>
+    >();
+  const points = lines
+    .flatMap((l) => [l.start, l.end])
+    .sort((a, b) => a.x - b.x || a.y - b.y || a.id.localeCompare(b.id));
+  let next = 0;
+  for (const point of points) {
+    if (keys.has(point)) continue;
+    const cx = Math.floor(point.x / PROFILE_EPSILON),
+      cy = Math.floor(point.y / PROFILE_EPSILON);
+    let match: string | undefined;
+    for (let dx = -1; dx <= 1; dx++)
+      for (let dy = -1; dy <= 1; dy++)
+        for (const entry of cells.get(`${cx + dx}:${cy + dy}`) ?? [])
+          if (distance(point, entry.point) <= PROFILE_EPSILON)
+            match ??= entry.key;
+    if (!match) {
+      match = `vertex:${next++}`;
+      const cell = `${cx}:${cy}`,
+        entries = cells.get(cell) ?? [];
+      entries.push({ point, key: match });
+      cells.set(cell, entries);
+    }
+    keys.set(point, match);
+  }
+  return (point) => {
+    const key = keys.get(point);
+    if (key === undefined)
+      throw new Error("Profile traversal references an unregistered vertex.");
+    return key;
+  };
 }
 
-function segmentKey(line: ResolvedLine): string {
-  return [pointKey(line.start), pointKey(line.end)].sort().join("|");
+function segmentKey(
+  line: ResolvedLine,
+  keyForPoint: (point: { x: number; y: number }) => string,
+): string {
+  return [keyForPoint(line.start), keyForPoint(line.end)].sort().join("|");
 }
 
 function distance(a: { x: number; y: number }, b: { x: number; y: number }): number {
@@ -258,8 +472,14 @@ function orientation(a: { x: number; y: number }, b: { x: number; y: number }, c
   return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
 }
 
-function segmentsCross(a: ResolvedLine, b: ResolvedLine): boolean {
-  const shared = [pointKey(a.start), pointKey(a.end)].some((key) => key === pointKey(b.start) || key === pointKey(b.end));
+function segmentsCross(
+  a: ResolvedLine,
+  b: ResolvedLine,
+  keyForPoint: (point: { x: number; y: number }) => string,
+): boolean {
+  const shared = [keyForPoint(a.start), keyForPoint(a.end)].some(
+    (key) => key === keyForPoint(b.start) || key === keyForPoint(b.end),
+  );
   if (shared) return false;
   const o1 = orientation(a.start, a.end, b.start);
   const o2 = orientation(a.start, a.end, b.end);
@@ -268,9 +488,15 @@ function segmentsCross(a: ResolvedLine, b: ResolvedLine): boolean {
   return o1 * o2 < 0 && o3 * o4 < 0;
 }
 
-function segmentsOverlap(a: ResolvedLine, b: ResolvedLine): boolean {
+function segmentsOverlap(
+  a: ResolvedLine,
+  b: ResolvedLine,
+  keyForPoint: (point: { x: number; y: number }) => string,
+): boolean {
   if (Math.abs(orientation(a.start, a.end, b.start)) > PROFILE_EPSILON || Math.abs(orientation(a.start, a.end, b.end)) > PROFILE_EPSILON) return false;
-  const shared = [pointKey(a.start), pointKey(a.end)].filter((key) => key === pointKey(b.start) || key === pointKey(b.end));
+  const shared = [keyForPoint(a.start), keyForPoint(a.end)].filter(
+    (key) => key === keyForPoint(b.start) || key === keyForPoint(b.end),
+  );
   if (shared.length === 2) return false;
   const xOverlap = Math.max(Math.min(a.start.x, a.end.x), Math.min(b.start.x, b.end.x)) < Math.min(Math.max(a.start.x, a.end.x), Math.max(b.start.x, b.end.x)) - PROFILE_EPSILON;
   const yOverlap = Math.max(Math.min(a.start.y, a.end.y), Math.min(b.start.y, b.end.y)) < Math.min(Math.max(a.start.y, a.end.y), Math.max(b.start.y, b.end.y)) - PROFILE_EPSILON;
@@ -287,10 +513,12 @@ function pointSegmentDistance(point: { x: number; y: number }, start: { x: numbe
 }
 
 function polygonArea(points: { x: number; y: number }[]): number {
-  return points.reduce((sum, point, index) => {
-    const next = points[(index + 1) % points.length];
-    return sum + point.x * next.y - next.x * point.y;
-  }, 0) / 2;
+  return (
+    points.reduce((sum, point, index) => {
+      const next = points[(index + 1) % points.length];
+      return sum + point.x * next.y - next.x * point.y;
+    }, 0) / 2
+  );
 }
 
 function loopAreaAbs(loop: LineLoop): number {
@@ -320,26 +548,49 @@ function polygonCentroid(points: { x: number; y: number }[], signedArea: number)
   return { x: x / divisor, y: y / divisor };
 }
 
-function pointInPolygon(point: { x: number; y: number }, polygon: { x: number; y: number }[]): boolean {
+function pointInPolygon(
+  point: { x: number; y: number },
+  polygon: { x: number; y: number }[],
+): boolean {
   let inside = false;
   for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i, i += 1) {
     const a = polygon[i];
     const b = polygon[j];
-    if ((a.y > point.y) !== (b.y > point.y) && point.x < ((b.x - a.x) * (point.y - a.y)) / (b.y - a.y) + a.x) inside = !inside;
+    if (
+      a.y > point.y !== b.y > point.y &&
+      point.x < ((b.x - a.x) * (point.y - a.y)) / (b.y - a.y) + a.x
+    )
+      inside = !inside;
   }
   return inside;
 }
 
-function loopContainsPoint(loop: LineLoop, point: { x: number; y: number }): boolean {
-  return pointInBounds(point, loop.bounds) && pointInPolygon(point, loop.points);
+function loopContainsPoint(
+  loop: LineLoop,
+  point: { x: number; y: number },
+): boolean {
+  return (
+    pointInBounds(point, loop.bounds) && pointInPolygon(point, loop.points)
+  );
 }
 
 function loopContainsLoop(parent: LineLoop, child: LineLoop): boolean {
-  return loopAreaAbs(parent) > loopAreaAbs(child) && child.points.every((point) => loopContainsPoint(parent, point));
+  return (
+    loopAreaAbs(parent) > loopAreaAbs(child) &&
+    child.points.every((point) => loopContainsPoint(parent, point))
+  );
 }
 
-function pointInBounds(point: { x: number; y: number }, bounds: LineLoop["bounds"]): boolean {
-  return point.x > bounds.minX && point.x < bounds.maxX && point.y > bounds.minY && point.y < bounds.maxY;
+function pointInBounds(
+  point: { x: number; y: number },
+  bounds: LineLoop["bounds"],
+): boolean {
+  return (
+    point.x > bounds.minX &&
+    point.x < bounds.maxX &&
+    point.y > bounds.minY &&
+    point.y < bounds.maxY
+  );
 }
 
 function loopDepth(loop: LineLoop, loops: LineLoop[]): number {
@@ -363,11 +614,16 @@ function circleDepth(circle: ResolvedCircle, circles: ResolvedCircle[]): number 
   return circles.filter((candidate) => candidate.id !== circle.id && candidate.radius > circle.radius && circleContainsCircle(candidate, circle)).length;
 }
 
-function profileSignature(outerLoop: ProfileLoop, innerLoops: ProfileLoop[]): string {
+function profileSignature(
+  outerLoop: ProfileLoop,
+  innerLoops: ProfileLoop[],
+): string {
   const parts = [
     outerLoop.type,
     [...outerLoop.entityIds].sort().join(","),
-    ...innerLoops.map((loop) => `${loop.type}:${[...loop.entityIds].sort().join(",")}`).sort(),
+    ...innerLoops
+      .map((loop) => `${loop.type}:${[...loop.entityIds].sort().join(",")}`)
+      .sort(),
   ];
   return stableHash(parts.join("|"));
 }
@@ -386,4 +642,29 @@ function stableHash(input: string): string {
     hash = Math.imul(hash, 16777619);
   }
   return `p${(hash >>> 0).toString(36)}`;
+}
+
+export function sampleArc(arc: {
+  start: { x: number; y: number };
+  end: { x: number; y: number };
+  center: { x: number; y: number };
+  radius: number;
+  startAngle: number;
+  sweep: number;
+}): { x: number; y: number }[] {
+  const count = Math.max(2, Math.ceil(Math.abs(arc.sweep) / (Math.PI / 64)));
+  return Array.from({ length: count + 1 }, (_, i) =>
+    i === 0
+      ? arc.start
+      : i === count
+        ? arc.end
+        : {
+            x:
+              arc.center.x +
+              arc.radius * Math.cos(arc.startAngle + (arc.sweep * i) / count),
+            y:
+              arc.center.y +
+              arc.radius * Math.sin(arc.startAngle + (arc.sweep * i) / count),
+          },
+  );
 }

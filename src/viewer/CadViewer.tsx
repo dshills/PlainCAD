@@ -1,3 +1,4 @@
+import type { RebuildResult } from "../cad/worker/workerProtocol";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
@@ -8,8 +9,9 @@ import { RenderMesh } from "../cad/kernel/KernelAdapter";
 import { boundsFromMeshes } from "../cad/kernel/meshConversion";
 import { CadDocument } from "../cad/document/schema";
 import { evaluateParameters } from "../cad/parameters/expressionEvaluator";
+import { sampleArc } from "../cad/sketch/profileDetection";
 import { solveSketch } from "../cad/sketch/SketchSolver";
-import { sketchPlaneTransform, transformPoint } from "../cad/sketch/planes";
+import { resolveDocumentPlanes, transformPoint } from "../cad/sketch/planes";
 
 interface ViewerRuntime {
   camera: THREE.PerspectiveCamera;
@@ -21,6 +23,9 @@ interface ViewerRuntime {
 
 interface SketchOverlayResources {
   lineMaterial: THREE.LineBasicMaterial;
+  constructionMaterial: THREE.LineDashedMaterial;
+  errorLineMaterial: THREE.LineBasicMaterial;
+  errorPointMaterial: THREE.MeshBasicMaterial;
   pointMaterial: THREE.MeshBasicMaterial;
   circleMaterial: THREE.LineBasicMaterial;
   pointGeometry: THREE.SphereGeometry;
@@ -36,6 +41,7 @@ export function CadViewer() {
   const selectRef = useRef<(selection: SelectionRef | undefined) => void>(selectNoop);
   const documentIdRef = useRef("");
   const meshes = useCadStore((state) => state.rebuild.result?.meshes ?? []);
+  const rebuild = useCadStore((state) => state.rebuild);
   const document = useCadStore((state) => state.history.present);
   const select = useCadStore((state) => state.select);
   const documentId = useCadStore((state) => state.history.present.id);
@@ -170,8 +176,17 @@ export function CadViewer() {
 
   useEffect(() => {
     const runtime = runtimeRef.current;
-    if (runtime) updateSketchOverlay(runtime.sketchGroup, document, runtime.sketchResources);
-  }, [document]);
+    if (runtime)
+      updateSketchOverlay(
+        runtime.sketchGroup,
+        document,
+        runtime.sketchResources,
+        rebuild.status === "succeeded" &&
+          rebuild.result?.documentId === document.id
+          ? rebuild.result
+          : undefined,
+      );
+  }, [document, rebuild]);
 
   useEffect(() => {
     selectedBodyIdRef.current = selectedBodyId;
@@ -244,45 +259,154 @@ function createSketchOverlayResources(): SketchOverlayResources {
     return new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0);
   });
   return {
-    lineMaterial: new THREE.LineBasicMaterial({ color: "#245c87", depthWrite: false }),
-    pointMaterial: new THREE.MeshBasicMaterial({ color: "#245c87", depthWrite: false }),
-    circleMaterial: new THREE.LineBasicMaterial({ color: "#7b3f98", depthWrite: false }),
+    lineMaterial: new THREE.LineBasicMaterial({
+      color: "#245c87",
+      depthWrite: false,
+    }),
+    constructionMaterial: new THREE.LineDashedMaterial({
+      color: "#a66b23",
+      dashSize: 2,
+      gapSize: 1,
+      depthWrite: false,
+    }),
+    errorLineMaterial: new THREE.LineBasicMaterial({
+      color: "#c53a35",
+      depthWrite: false,
+    }),
+    errorPointMaterial: new THREE.MeshBasicMaterial({
+      color: "#c53a35",
+      depthWrite: false,
+    }),
+    pointMaterial: new THREE.MeshBasicMaterial({
+      color: "#245c87",
+      depthWrite: false,
+    }),
+    circleMaterial: new THREE.LineBasicMaterial({
+      color: "#7b3f98",
+      depthWrite: false,
+    }),
     pointGeometry: new THREE.SphereGeometry(1.4, 12, 8),
     unitCircleGeometry: new THREE.BufferGeometry().setFromPoints(circlePoints),
   };
 }
 
-function disposeSketchOverlayResources(resources: SketchOverlayResources | undefined) {
+function disposeSketchOverlayResources(
+  resources: SketchOverlayResources | undefined,
+) {
   resources?.lineMaterial.dispose();
+  resources?.constructionMaterial.dispose();
+  resources?.errorLineMaterial.dispose();
+  resources?.errorPointMaterial.dispose();
   resources?.pointMaterial.dispose();
   resources?.circleMaterial.dispose();
   resources?.pointGeometry.dispose();
   resources?.unitCircleGeometry.dispose();
 }
 
-function updateSketchOverlay(sketchGroup: THREE.Group, document: CadDocument, resources: SketchOverlayResources) {
+function updateSketchOverlay(
+  sketchGroup: THREE.Group,
+  document: CadDocument,
+  resources: SketchOverlayResources,
+  result?: RebuildResult,
+) {
   disposeSketchOverlayObjects(sketchGroup, resources);
   sketchGroup.clear();
   const evaluated = evaluateParameters(document.parameters);
+  const finite = (...values: number[]) => values.every(Number.isFinite);
   const linePositions: number[] = [];
+  const constructionPositions: number[] = [];
+  const errorPositions: number[] = [];
+  const planes = result?.sketchPlanes
+    ? { transforms: new Map(Object.entries(result.sketchPlanes)) }
+    : resolveDocumentPlanes(document, evaluated.values);
   for (const sketch of Object.values(document.sketches)) {
-    const transform = sketchPlaneTransform(sketch.plane);
-    const solved = solveSketch(sketch, evaluated.values);
+    const transform = planes.transforms.get(sketch.id);
+    if (!transform) continue;
+    const solved =
+      result?.solvedSketches?.[sketch.id] ??
+      solveSketch(sketch, evaluated.values);
+    const failed = solved.errors.length > 0;
+    for (const arc of solved.arcs) {
+      if (
+        !finite(
+          arc.center.x,
+          arc.center.y,
+          arc.start.x,
+          arc.start.y,
+          arc.end.x,
+          arc.end.y,
+          arc.radius,
+          arc.startAngle,
+          arc.sweep,
+        )
+      )
+        continue;
+      const geometry = new THREE.BufferGeometry().setFromPoints(
+        sampleArc(arc).map((p) => {
+          const w = transformPoint(transform, p.x, p.y);
+          return new THREE.Vector3(w.x, w.y, w.z);
+        }),
+      );
+      const object = new THREE.Line(
+        geometry,
+        failed
+          ? resources.errorLineMaterial
+          : arc.construction
+            ? resources.constructionMaterial
+            : resources.lineMaterial,
+      );
+      if (arc.construction) object.computeLineDistances();
+      object.userData.sketchEntityId = arc.id;
+      sketchGroup.add(object);
+    }
     for (const line of solved.lines) {
+      if (!finite(line.start.x, line.start.y, line.end.x, line.end.y)) continue;
       const start = transformPoint(transform, line.start.x, line.start.y);
       const end = transformPoint(transform, line.end.x, line.end.y);
-      linePositions.push(start.x, start.y, start.z, end.x, end.y, end.z);
+      (failed
+        ? errorPositions
+        : line.construction
+          ? constructionPositions
+          : linePositions
+      ).push(start.x, start.y, start.z, end.x, end.y, end.z);
     }
     for (const point of Object.values(solved.points)) {
+      if (!Number.isFinite(point.x) || !Number.isFinite(point.y)) continue;
       const world = transformPoint(transform, point.x, point.y);
-      const object = new THREE.Mesh(resources.pointGeometry, resources.pointMaterial);
+      const object = new THREE.Mesh(
+        resources.pointGeometry,
+        failed ? resources.errorPointMaterial : resources.pointMaterial,
+      );
       object.position.set(world.x, world.y, world.z);
       object.userData.sketchEntityId = point.id;
       sketchGroup.add(object);
     }
     for (const circle of solved.circles) {
+      if (!finite(circle.center.x, circle.center.y, circle.radius)) continue;
       const center = transformPoint(transform, circle.center.x, circle.center.y);
-      const object = new THREE.LineLoop(resources.unitCircleGeometry, resources.circleMaterial);
+      if (circle.construction) {
+        const points = Array.from({ length: 97 }, (_, i) => {
+          const angle = (i / 96) * Math.PI * 2,
+            w = transformPoint(
+              transform,
+              circle.center.x + circle.radius * Math.cos(angle),
+              circle.center.y + circle.radius * Math.sin(angle),
+            );
+          return new THREE.Vector3(w.x, w.y, w.z);
+        });
+        const object = new THREE.Line(
+          new THREE.BufferGeometry().setFromPoints(points),
+          failed ? resources.errorLineMaterial : resources.constructionMaterial,
+        );
+        object.computeLineDistances();
+        object.userData.sketchEntityId = circle.id;
+        sketchGroup.add(object);
+        continue;
+      }
+      const object = new THREE.LineLoop(
+        resources.unitCircleGeometry,
+        failed ? resources.errorLineMaterial : resources.circleMaterial,
+      );
       object.position.set(center.x, center.y, center.z);
       const normalTarget = transformPoint(transform, circle.center.x, circle.center.y, 1);
       object.up.set(transform.v.x, transform.v.y, transform.v.z);
@@ -291,6 +415,29 @@ function updateSketchOverlay(sketchGroup: THREE.Group, document: CadDocument, re
       object.userData.sketchEntityId = circle.id;
       sketchGroup.add(object);
     }
+  }
+  if (errorPositions.length) {
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(errorPositions, 3),
+    );
+    sketchGroup.add(
+      new THREE.LineSegments(geometry, resources.errorLineMaterial),
+    );
+  }
+  if (constructionPositions.length) {
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(constructionPositions, 3),
+    );
+    const object = new THREE.LineSegments(
+      geometry,
+      resources.constructionMaterial,
+    );
+    object.computeLineDistances();
+    sketchGroup.add(object);
   }
   if (linePositions.length > 0) {
     const lineGeometry = new THREE.BufferGeometry();
@@ -308,17 +455,32 @@ function disposeSketchOverlayObjects(sketchGroup: THREE.Group, resources: Sketch
   });
 }
 
-function applySelection(modelGroup: THREE.Group, selectedBodyId: string | undefined) {
+function applySelection(
+  modelGroup: THREE.Group,
+  selectedBodyId: string | undefined,
+) {
   modelGroup.traverse((child) => {
-    if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshStandardMaterial) {
+    if (
+      child instanceof THREE.Mesh &&
+      child.material instanceof THREE.MeshStandardMaterial
+    ) {
       const selected = child.userData.bodyId === selectedBodyId;
-      child.material.color.set(selected ? "#f2c14e" : child.userData.baseColor ?? "#8fb7b4");
+      child.material.color.set(
+        selected ? "#f2c14e" : (child.userData.baseColor ?? "#8fb7b4"),
+      );
       child.material.emissive.set(selected ? "#3a2500" : "#000000");
       child.material.emissiveIntensity = selected ? 0.18 : 0;
     }
-    if (child instanceof THREE.LineSegments && child.material instanceof THREE.LineBasicMaterial) {
+    if (
+      child instanceof THREE.LineSegments &&
+      child.material instanceof THREE.LineBasicMaterial
+    ) {
       const bodyId = findBodyId(child);
-      child.material.color.set(bodyId === selectedBodyId ? "#7a5200" : child.userData.edgeColor ?? "#31413c");
+      child.material.color.set(
+        bodyId === selectedBodyId
+          ? "#7a5200"
+          : (child.userData.edgeColor ?? "#31413c"),
+      );
     }
   });
 }

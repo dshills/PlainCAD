@@ -1,4 +1,4 @@
-export const CURRENT_SCHEMA_VERSION = 6;
+export const CURRENT_SCHEMA_VERSION = 7;
 
 export type UnitSystem = "metric" | "imperial";
 
@@ -44,8 +44,19 @@ export type OriginPlane = "XY" | "XZ" | "YZ";
 
 export type SketchPlaneReference =
   | { type: "origin"; plane: OriginPlane }
-  | { type: "offset"; base: OriginPlane; offset: ExpressionRef }
-  | { type: "face"; featureId: string; stableFaceId: string; lost?: boolean };
+  | {
+      type: "offset";
+      base: OriginPlane | FacePlaneReference;
+      offset: ExpressionRef;
+    }
+  | FacePlaneReference;
+
+export interface FacePlaneReference {
+  type: "face";
+  featureId: string;
+  stableFaceId: string;
+  lost?: boolean;
+}
 
 export interface Sketch {
   id: string;
@@ -56,15 +67,19 @@ export interface Sketch {
   entities: Record<string, SketchEntity>;
   constraints: SketchConstraint[];
   dimensions: SketchDimension[];
+  /** Version 6 and earlier dimensions were checks; migration preserves that intent. */
+  solveMode?: "driving" | "validate";
+  solveRevision?: number;
 }
 
-export type SketchEntity = SketchPoint | SketchLine | SketchCircle;
+export type SketchEntity = SketchPoint | SketchLine | SketchCircle | SketchArc;
 
 export interface SketchPoint {
   id: string;
   type: "point";
   x: ExpressionRef;
   y: ExpressionRef;
+  construction?: boolean;
 }
 
 export interface SketchLine {
@@ -72,6 +87,7 @@ export interface SketchLine {
   type: "line";
   startPointId: string;
   endPointId: string;
+  construction?: boolean;
 }
 
 export interface SketchCircle {
@@ -79,6 +95,17 @@ export interface SketchCircle {
   type: "circle";
   centerPointId: string;
   radius: ExpressionRef;
+  construction?: boolean;
+}
+
+export interface SketchArc {
+  id: string;
+  type: "arc";
+  centerPointId: string;
+  startPointId: string;
+  endPointId: string;
+  clockwise: boolean;
+  construction?: boolean;
 }
 
 export type ConstraintType =
@@ -104,7 +131,14 @@ export interface SketchConstraint {
 
 export interface SketchDimension {
   id: string;
-  type: "length" | "radius" | "diameter" | "horizontalDistance" | "verticalDistance" | "distance" | "angle";
+  type:
+    | "length"
+    | "radius"
+    | "diameter"
+    | "horizontalDistance"
+    | "verticalDistance"
+    | "distance"
+    | "angle";
   entityIds: string[];
   pointIds?: string[];
   expression: ExpressionRef;
@@ -171,7 +205,12 @@ export interface ChamferFeature extends FeatureBase {
   distance: ExpressionRef;
 }
 
-export type Feature = ExtrudeFeature | RevolveFeature | HoleFeature | FilletFeature | ChamferFeature;
+export type Feature =
+  | ExtrudeFeature
+  | RevolveFeature
+  | HoleFeature
+  | FilletFeature
+  | ChamferFeature;
 
 export interface TopologyRef {
   featureId: string;
@@ -201,7 +240,15 @@ export interface SelectionState {
 }
 
 export interface SelectionRef {
-  kind: "sketchEntity" | "feature" | "body" | "face" | "edge" | "vertex" | "parameter" | "sketch";
+  kind:
+    | "sketchEntity"
+    | "feature"
+    | "body"
+    | "face"
+    | "edge"
+    | "vertex"
+    | "parameter"
+    | "sketch";
   id: string;
   documentId: string;
 }

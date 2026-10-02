@@ -85,10 +85,11 @@ configuration files. Keep `package-lock.json` consistent with dependency changes
 9. Return actionable, source-linked diagnostics for invalid parameters, sketches,
    features, and kernel operations. Preserve user-visible import/export errors.
 10. Distinguish real kernel geometry from fallback meshes and metadata-only
-    operations. Fillet/chamfer currently fail with an explicit unsupported-geometry diagnostic,
-    and revolve has a constrained fallback. Do not advertise
-    these paths as general CAD support without implementing and verifying the
-    resulting geometry. Keep unsupported operations explicitly unavailable or
+    operations. Native modeling must validate BRep validity, solid count, and exact
+    volume; no-op booleans and unchanged edge treatments fail explicitly. Revolve
+    retains a narrow full-Y/XY rectangular fallback without the kernel. Keep
+    face/edge references limited to supported feature-owned roles and diagnose lost or modified geometry.
+    Keep unsupported operations explicitly unavailable or
     diagnostic rather than silently reporting success.
 
 ## Implementation and validation

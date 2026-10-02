@@ -1,12 +1,35 @@
 import { describe, expect, it } from "vitest";
-import { createExtrudeFeature, deleteFeature, suppressFeature, upsertFeature, upsertSketch } from "../cad/document/CadDocument";
-import { ChamferFeature, ExtrudeFeature, FilletFeature, HoleFeature, RevolveFeature } from "../cad/document/schema";
-import { planFeatureGraph, stableBodyIdForFeature } from "../cad/features/featureGraph";
+import {
+  createExtrudeFeature,
+  deleteFeature,
+  suppressFeature,
+  upsertFeature,
+  upsertSketch,
+} from "../cad/document/CadDocument";
+import {
+  ChamferFeature,
+  ExtrudeFeature,
+  FilletFeature,
+  HoleFeature,
+  RevolveFeature,
+} from "../cad/document/schema";
+import {
+  planFeatureGraph,
+  stableBodyIdForFeature,
+} from "../cad/features/featureGraph";
 import { rebuildDocument } from "../cad/features/rebuildGraph";
-import { createExtrudeEdgeRef, resolveSupportedEdgeRef } from "../cad/features/topologyRefs";
+import {
+  createExtrudeEdgeRef,
+  resolveSupportedEdgeRef,
+} from "../cad/features/topologyRefs";
 import { OpenCascadeKernel } from "../cad/kernel/OpenCascadeKernel";
 import { createBoxTemplate } from "../templates/templates";
-import { addCircleAt, addLine, addPoint, createXySketch } from "../cad/sketch/SketchModel";
+import {
+  addCircleAt,
+  addLine,
+  addPoint,
+  createXySketch,
+} from "../cad/sketch/SketchModel";
 
 describe("feature graph rebuild", () => {
   it("skips suppressed extrude features", () => {
@@ -16,22 +39,30 @@ describe("feature graph rebuild", () => {
     expect(result.success).toBe(true);
     expect(result.bodies).toHaveLength(0);
     expect(result.meshes).toHaveLength(0);
-    expect(result.warnings.some((warning) => warning.message.includes("suppressed"))).toBe(true);
+    expect(
+      result.warnings.some((warning) => warning.message.includes("suppressed")),
+    ).toBe(true);
   });
 
   it("reports missing sketch references", () => {
     const document = createBoxTemplate();
     const result = rebuildDocument({ ...document, sketches: {} });
     expect(result.success).toBe(false);
-    expect(result.errors.some((error) => error.message.includes("missing sketch"))).toBe(true);
+    expect(
+      result.errors.some((error) => error.message.includes("missing sketch")),
+    ).toBe(true);
   });
 
   it("reports missing profile references without falling back to another profile", () => {
     const document = createBoxTemplate();
     const feature = document.features[0] as ExtrudeFeature;
-    const result = rebuildDocument(upsertFeature(document, { ...feature, profileId: "missing_profile" }));
+    const result = rebuildDocument(
+      upsertFeature(document, { ...feature, profileId: "missing_profile" }),
+    );
     expect(result.success).toBe(false);
-    expect(result.errors.some((error) => error.message.includes("missing_profile"))).toBe(true);
+    expect(
+      result.errors.some((error) => error.message.includes("missing_profile")),
+    ).toBe(true);
     expect(result.bodies).toHaveLength(0);
   });
 
@@ -39,11 +70,18 @@ describe("feature graph rebuild", () => {
     let document = createBoxTemplate();
     const feature = document.features[0] as ExtrudeFeature;
     document = upsertFeature(document, { ...feature, operation: "join" });
-    expect(rebuildDocument(document).errors[0].message).toContain("target body");
+    expect(rebuildDocument(document).errors[0].message).toContain(
+      "target body",
+    );
 
     document = createBoxTemplate();
-    document = upsertFeature(document, { ...(document.features[0] as ExtrudeFeature), direction: "symmetric" });
-    expect(rebuildDocument(document).errors[0].message).toContain("not supported");
+    document = upsertFeature(document, {
+      ...(document.features[0] as ExtrudeFeature),
+      direction: "symmetric",
+    });
+    expect(rebuildDocument(document).errors[0].message).toContain(
+      "not supported",
+    );
   });
 
   it("requires OpenCascade handles for join booleans in the fallback kernel path", () => {
@@ -69,7 +107,10 @@ describe("feature graph rebuild", () => {
       profileId: `${sketch.id}:profile:rectangle`,
       operation: "join",
       targetBodyIds: [stableBodyIdForFeature(base.id)],
-      termination: { type: "distance", distance: { expression: "depth", unit: "mm" } },
+      termination: {
+        type: "distance",
+        distance: { expression: "depth", unit: "mm" },
+      },
       distance: { expression: "depth", unit: "mm" },
       direction: "positive",
     });
@@ -78,7 +119,11 @@ describe("feature graph rebuild", () => {
     const result = rebuildDocument(document);
 
     expect(result.success).toBe(false);
-    expect(result.errors.some((error) => error.message.includes("Boolean join failed"))).toBe(true);
+    expect(
+      result.errors.some((error) =>
+        error.message.includes("Boolean join failed"),
+      ),
+    ).toBe(true);
   });
 
   it("cuts a circular through-all tool from an explicit target body", () => {
@@ -86,7 +131,9 @@ describe("feature graph rebuild", () => {
     const base = document.features[0] as ExtrudeFeature;
     let sketch = createXySketch("Cut Hole");
     sketch = addCircleAt(sketch, "0mm", "0mm", "5mm");
-    const circle = Object.values(sketch.entities).find((entity) => entity.type === "circle")!;
+    const circle = Object.values(sketch.entities).find(
+      (entity) => entity.type === "circle",
+    )!;
     document = upsertSketch(document, sketch);
     const cut = createExtrudeFeature({
       name: "Cut Hole",
@@ -132,14 +179,20 @@ describe("feature graph rebuild", () => {
       axis: { type: "origin", axis: "Y" },
       operation: "newBody",
       angle: { expression: "360deg", unit: "deg" },
-      timelineStep: (Object.values(document.sketches).find((item) => item.id === sketch.id)?.timelineStep ?? 0) + 1,
+      timelineStep:
+        (Object.values(document.sketches).find((item) => item.id === sketch.id)
+          ?.timelineStep ?? 0) + 1,
     };
     document = upsertFeature(document, revolve);
 
     const result = rebuildDocument(document);
 
     expect(result.success).toBe(true);
-    expect(result.bodies.some((body) => body.id === stableBodyIdForFeature(revolve.id))).toBe(true);
+    expect(
+      result.bodies.some(
+        (body) => body.id === stableBodyIdForFeature(revolve.id),
+      ),
+    ).toBe(true);
   });
 
   it("revolves an offset rectangular profile as a hollow tube", () => {
@@ -206,7 +259,9 @@ describe("feature graph rebuild", () => {
     const result = rebuildDocument(document);
 
     expect(result.success).toBe(false);
-    expect(result.errors.some((error) => error.message.includes("must not cross"))).toBe(true);
+    expect(
+      result.errors.some((error) => error.message.includes("must not cross")),
+    ).toBe(true);
   });
 
   it("cuts a simple hole feature through its target body", () => {
@@ -264,24 +319,33 @@ describe("feature graph rebuild", () => {
     const document = createBoxTemplate();
     const feature = document.features[0] as ExtrudeFeature;
     const sketch = document.sketches[feature.sketchId];
-    const line = Object.values(sketch.entities).find((entity) => entity.type === "line");
+    const line = Object.values(sketch.entities).find(
+      (entity) => entity.type === "line",
+    );
 
-    const resolved = resolveSupportedEdgeRef(document, createExtrudeEdgeRef(feature.id, "profileEdge", line?.id));
+    const resolved = resolveSupportedEdgeRef(
+      document,
+      createExtrudeEdgeRef(feature.id, "profileEdge", line?.id),
+    );
 
     expect("error" in resolved).toBe(false);
     if (!("error" in resolved)) expect(resolved.stableId).toContain(line?.id);
   });
 
-  it("rejects fillet and chamfer geometry on stable edge refs without claiming a modified body", () => {
+  it("rejects edge treatments without native geometry and blocks dependent treatments", () => {
     let document = createBoxTemplate();
     const feature = document.features[0] as ExtrudeFeature;
     const sketch = document.sketches[feature.sketchId];
-    const line = Object.values(sketch.entities).find((entity) => entity.type === "line")!;
+    const line = Object.values(sketch.entities).find(
+      (entity) => entity.type === "line",
+    )!;
     document = upsertFeature(document, {
       id: "feature_fillet",
       name: "Round Edge",
       type: "fillet",
-      targetEdgeRefs: [createExtrudeEdgeRef(feature.id, "profileEdge", line.id)],
+      targetEdgeRefs: [
+        createExtrudeEdgeRef(feature.id, "profileEdge", line.id),
+      ],
       radius: { expression: "2mm", unit: "mm" },
     } satisfies FilletFeature);
     document = upsertFeature(document, {
@@ -295,13 +359,41 @@ describe("feature graph rebuild", () => {
     const result = rebuildDocument(document);
 
     expect(result.success).toBe(false);
-    expect(result.errors).toEqual(expect.arrayContaining([
-      expect.objectContaining({ sourceId: "feature_fillet", message: expect.stringContaining("Fillet geometry is not implemented") }),
-      expect.objectContaining({ sourceId: "feature_chamfer", message: expect.stringContaining("Chamfer geometry is not implemented") }),
-    ]));
+    expect(result.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceId: "feature_fillet",
+          message: expect.stringContaining(
+            "fillet requires initialized OpenCascade geometry",
+          ),
+        }),
+        expect.objectContaining({
+          sourceId: "feature_chamfer",
+          message: expect.stringContaining(
+            "upstream operation on this body failed",
+          ),
+        }),
+      ]),
+    );
     expect(result.bodies[0].featureId).toBe(feature.id);
-    expect(result.meshes[0].positions).toEqual(rebuildDocument(createBoxTemplate()).meshes[0].positions);
-    expect(rebuildDocument({ ...document, features: document.features.map((item) => item.type === "fillet" || item.type === "chamfer" ? { ...item, suppressed: true } : item) }).success).toBe(true);
+    const upstream = rebuildDocument({
+      ...document,
+      features: document.features.filter(
+        (item) => item.type !== "fillet" && item.type !== "chamfer",
+      ),
+    });
+    expect(result.meshes[0].positions).toEqual(upstream.meshes[0].positions);
+    expect(result.meshes[0].indices).toEqual(upstream.meshes[0].indices);
+    expect(
+      rebuildDocument({
+        ...document,
+        features: document.features.map((item) =>
+          item.type === "fillet" || item.type === "chamfer"
+            ? { ...item, suppressed: true }
+            : item,
+        ),
+      }).success,
+    ).toBe(true);
   });
 
   it("rejects ambiguous edge treatment refs that require repair", () => {
@@ -311,14 +403,21 @@ describe("feature graph rebuild", () => {
       id: "feature_bad_fillet",
       name: "Bad Fillet",
       type: "fillet",
-      targetEdgeRefs: [{ ...createExtrudeEdgeRef(feature.id, "endCapPerimeter"), repairRequired: true }],
+      targetEdgeRefs: [
+        {
+          ...createExtrudeEdgeRef(feature.id, "endCapPerimeter"),
+          repairRequired: true,
+        },
+      ],
       radius: { expression: "2mm", unit: "mm" },
     } satisfies FilletFeature);
 
     const result = rebuildDocument(document);
 
     expect(result.success).toBe(false);
-    expect(result.errors.some((error) => error.message.includes("stable edge"))).toBe(true);
+    expect(
+      result.errors.some((error) => error.message.includes("stable edge")),
+    ).toBe(true);
   });
 
   it("tessellates offset circular extrusions at their profile center", () => {
@@ -327,7 +426,12 @@ describe("feature graph rebuild", () => {
       {
         id: "profile_offset_circle",
         sketchId: "sketch_offset_circle",
-        outerLoop: { entityIds: ["circle_offset"], type: "circle", role: "outer", lineageIds: ["circle_offset"] },
+        outerLoop: {
+          entityIds: ["circle_offset"],
+          type: "circle",
+          role: "outer",
+          lineageIds: ["circle_offset"],
+        },
         innerLoops: [],
         holes: [],
         bounds: { minX: 15, maxX: 25, minY: 5, maxY: 15 },
@@ -336,7 +440,10 @@ describe("feature graph rebuild", () => {
       10,
     );
 
-    const mesh = kernel.tessellate(shape, { linearDeflection: 0.5, angularDeflection: 0.2 });
+    const mesh = kernel.tessellate(shape, {
+      linearDeflection: 0.5,
+      angularDeflection: 0.2,
+    });
 
     expect(mesh.bounds.min[0]).toBeCloseTo(15);
     expect(mesh.bounds.max[0]).toBeCloseTo(25);
@@ -347,13 +454,33 @@ describe("feature graph rebuild", () => {
   it("reports lost targets and unsupported to-face termination", () => {
     const document = createBoxTemplate();
     const base = document.features[0] as ExtrudeFeature;
-    const lostTarget = rebuildDocument(upsertFeature(document, { ...base, operation: "cut", targetBodyIds: ["body:missing"] }));
+    const lostTarget = rebuildDocument(
+      upsertFeature(document, {
+        ...base,
+        operation: "cut",
+        targetBodyIds: ["body:missing"],
+      }),
+    );
     expect(lostTarget.success).toBe(false);
-    expect(lostTarget.errors.some((error) => error.message.includes("was not found"))).toBe(true);
+    expect(
+      lostTarget.errors.some((error) =>
+        error.message.includes("was not found"),
+      ),
+    ).toBe(true);
 
-    const toFace = rebuildDocument(upsertFeature(document, { ...base, termination: { type: "toFace", faceRef: { featureId: base.id, kind: "face", transientId: "face_1" } } }));
+    const toFace = rebuildDocument(
+      upsertFeature(document, {
+        ...base,
+        termination: {
+          type: "toFace",
+          faceRef: { featureId: base.id, kind: "face", transientId: "face_1" },
+        },
+      }),
+    );
     expect(toFace.success).toBe(false);
-    expect(toFace.errors.some((error) => error.message.includes("to face"))).toBe(true);
+    expect(
+      toFace.errors.some((error) => error.message.includes("to face")),
+    ).toBe(true);
   });
 
   it("uses stable body ids derived from source features", () => {
@@ -370,7 +497,10 @@ describe("feature graph rebuild", () => {
 
     expect(first.success).toBe(true);
     expect(second.success).toBe(true);
-    expect(first.bodies[0]).toMatchObject({ id: stableBodyIdForFeature(feature.id), featureId: feature.id });
+    expect(first.bodies[0]).toMatchObject({
+      id: stableBodyIdForFeature(feature.id),
+      featureId: feature.id,
+    });
     expect(second.bodies[0].id).toBe(first.bodies[0].id);
     expect(first.meshes[0].bodyId).toBe(first.bodies[0].id);
     expect(first.bodies[0].triangleCount).toBeGreaterThan(0);
@@ -384,7 +514,10 @@ describe("feature graph rebuild", () => {
     const reordered = upsertFeature(
       {
         ...document,
-        sketches: { ...document.sketches, [sketch.id]: { ...sketch, timelineStep: 10 } },
+        sketches: {
+          ...document.sketches,
+          [sketch.id]: { ...sketch, timelineStep: 10 },
+        },
       },
       { ...feature, timelineStep: 1 },
     );
@@ -392,7 +525,11 @@ describe("feature graph rebuild", () => {
     const result = rebuildDocument(reordered);
 
     expect(result.success).toBe(false);
-    expect(result.errors.some((error) => error.message.includes("must appear after"))).toBe(true);
+    expect(
+      result.errors.some((error) =>
+        error.message.includes("must appear after"),
+      ),
+    ).toBe(true);
   });
 
   it("rejects duplicate timeline steps across sketches and features", () => {
@@ -401,13 +538,18 @@ describe("feature graph rebuild", () => {
     const feature = document.features[0] as ExtrudeFeature;
     const invalid = {
       ...document,
-      sketches: { ...document.sketches, [sketch.id]: { ...sketch, timelineStep: 1 } },
+      sketches: {
+        ...document.sketches,
+        [sketch.id]: { ...sketch, timelineStep: 1 },
+      },
       features: [{ ...feature, timelineStep: 1 }],
     };
 
     const plan = planFeatureGraph(invalid);
 
-    expect(plan.errors.some((error) => error.message.includes("already used"))).toBe(true);
+    expect(
+      plan.errors.some((error) => error.message.includes("already used")),
+    ).toBe(true);
   });
 
   it("allows legacy documents without timeline steps to rebuild", () => {
@@ -417,7 +559,10 @@ describe("feature graph rebuild", () => {
     const legacy = {
       ...document,
       timelineCursor: undefined,
-      sketches: { ...document.sketches, [sketch.id]: { ...sketch, timelineStep: undefined } },
+      sketches: {
+        ...document.sketches,
+        [sketch.id]: { ...sketch, timelineStep: undefined },
+      },
       features: [{ ...feature, timelineStep: undefined }],
     };
 
@@ -438,9 +583,19 @@ describe("feature graph rebuild", () => {
       distance: { expression: "5mm", unit: "mm" },
       direction: "positive",
     });
-    const outOfArrayOrder = { ...document, features: [{ ...later, timelineStep: 20 }, { ...base, timelineStep: 10 }] };
+    const outOfArrayOrder = {
+      ...document,
+      features: [
+        { ...later, timelineStep: 20 },
+        { ...base, timelineStep: 10 },
+      ],
+    };
 
-    expect(planFeatureGraph(outOfArrayOrder).orderedFeatures.map((feature) => feature.name)).toEqual([base.name, "Later"]);
+    expect(
+      planFeatureGraph(outOfArrayOrder).orderedFeatures.map(
+        (feature) => feature.name,
+      ),
+    ).toEqual([base.name, "Later"]);
   });
 
   it("deletes features from the timeline", () => {
@@ -460,5 +615,31 @@ describe("feature graph rebuild", () => {
     });
     expect(feature.type).toBe("extrude");
     expect(feature.createdAt).toBeTruthy();
+  });
+
+  it.each([
+    {
+      label: "unknown boolean intent",
+      patch: { operation: "unknown" },
+      message: /Unsupported modeling operation/,
+    },
+    {
+      label: "missing required extrusion direction",
+      patch: { direction: undefined },
+      message: /direction must be explicitly/,
+    },
+  ])("rejects $label", ({ patch, message }) => {
+    const document = createBoxTemplate();
+    const feature = document.features[0] as ExtrudeFeature;
+    const invalid = { ...feature, ...patch } as ExtrudeFeature;
+    const result = rebuildDocument({ ...document, features: [invalid] });
+    expect(result.success).toBe(false);
+    expect(result.meshes).toHaveLength(0);
+    expect(result.errors).toEqual([
+      expect.objectContaining({
+        sourceId: feature.id,
+        message: expect.stringMatching(message),
+      }),
+    ]);
   });
 });
