@@ -8,6 +8,7 @@ export interface FabricationRequest {
   document: CadDocument;
   mode: StlMode;
   fullChecks: boolean;
+  bodyIds?: string[];
 }
 self.onmessage = async (event: MessageEvent<FabricationRequest>) => {
   try {
@@ -20,7 +21,7 @@ self.onmessage = async (event: MessageEvent<FabricationRequest>) => {
         await import("../cad/kernel/OpenCascadeKernel");
       const { rebuildDocument } = await import("../cad/features/rebuildGraph");
       await OpenCascadeKernel.initialize();
-      const result = rebuildDocument(request.document, { exportUnion: true });
+      const result = rebuildDocument(request.document, { exportUnion: true, exportBodyIds: request.bodyIds });
       if (!result.success)
         throw new Error(result.errors.map((error) => error.message).join(" "));
       meshes = result.meshes;

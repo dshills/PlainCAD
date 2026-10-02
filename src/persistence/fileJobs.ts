@@ -5,12 +5,19 @@ import { useCadStore } from "../state/useCadStore";
 import { exportFabrication } from "../fabrication/exportClient";
 import type { FabricationResult, StlMode } from "../fabrication/exportPlan";
 import { downloadArrayBuffer } from "./exportProject";
+import { selectFabricationBodies } from "../fabrication/bodySelection";
 export interface FileJobState {
   busy: boolean;
   message?: string;
   exportOpen: boolean;
+  exportSession?: number;
+  exportBodyIds?: string[];
   prepared?: FabricationResult;
-  preparedFor?: { document: CadDocument; result: RebuildResult };
+  preparedFor?: {
+    document: CadDocument;
+    result: RebuildResult;
+    session: number;
+  };
   cancel: () => void;
 }
 let active: AbortController | undefined;
@@ -58,6 +65,7 @@ export function downloadPrepared(result: FabricationResult) {
     jobs.prepared === result &&
     (current.history.present !== jobs.preparedFor?.document ||
       current.rebuild.result !== jobs.preparedFor?.result ||
+      current.documentSession !== jobs.preparedFor?.session ||
       current.rebuild.status !== "succeeded")
   ) {
     current.setFileError(
@@ -77,14 +85,33 @@ export function downloadPrepared(result: FabricationResult) {
     exportOpen: false,
   });
 }
+export function openFabrication() {
+  const state = useCadStore.getState();
+  useFileJobs.setState({
+    exportOpen: true,
+    exportSession: state.documentSession,
+    exportBodyIds:
+      state.rebuild.result?.meshes.map((mesh) => mesh.bodyId) ?? [],
+    prepared: undefined,
+    preparedFor: undefined,
+  });
+}
 export async function runFabrication(
   mode: StlMode = "separate",
   fullChecks = true,
+  bodyIds?: readonly string[],
+  expectedSession = useCadStore.getState().documentSession,
 ) {
   const state = useCadStore.getState(),
     document = state.history.present,
     result = state.rebuild.result;
   if (state.fileBusy) return;
+  if (state.documentSession !== expectedSession) {
+    state.setFileError(
+      "Project replaced. Reopen STL export to select its bodies.",
+    );
+    return;
+  }
   if (
     state.rebuild.status !== "succeeded" ||
     !state.rebuild.kernelReady ||
@@ -95,11 +122,17 @@ export async function runFabrication(
   const controller = beginFileJob("Preparing STL export…");
   state.setFileError(undefined);
   try {
+    const selected = selectFabricationBodies(
+      result.meshes,
+      result.bodies,
+      bodyIds,
+    );
     const output = await exportFabrication(
       {
         document,
-        meshes: result.meshes,
-        bodies: result.bodies,
+        meshes: selected.meshes,
+        bodies: selected.bodies,
+        bodyIds: bodyIds ? [...bodyIds] : undefined,
         mode,
         fullChecks,
       },
@@ -111,6 +144,7 @@ export async function runFabrication(
     if (!fileJobCurrent(controller)) return;
     if (
       useCadStore.getState().history.present !== document ||
+      useCadStore.getState().documentSession !== expectedSession ||
       useCadStore.getState().rebuild.result !== result
     )
       throw new Error(
@@ -118,8 +152,10 @@ export async function runFabrication(
       );
     if (output.warnings.length && mode !== "separate")
       useFileJobs.setState({
+        exportSession: expectedSession,
+        exportBodyIds: selected.meshes.map((mesh) => mesh.bodyId),
         prepared: output,
-        preparedFor: { document, result },
+        preparedFor: { document, result, session: expectedSession },
         exportOpen: true,
       });
     else {

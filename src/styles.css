@@ -677,3 +677,11 @@ select:focus-visible {
 .model-dialog { margin: 0; bottom: auto; }
 .model-dialog::backdrop { background: #0006; }
 .model-dialog input[type="checkbox"] { width: auto; }
+
+.body-row { display: flex; gap: 8px; align-items: center; }
+.body-row .item-card { flex: 1; min-width: 0; }
+.body-row label { display: flex; align-items: center; gap: 4px; }
+.export-bodies { max-height: 180px; overflow: auto; display: grid; gap: 6px; }
+
+dialog.file-dialog { margin: 0; }
+dialog.file-dialog::backdrop { background: #0006; }

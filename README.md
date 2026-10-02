@@ -173,6 +173,10 @@ separate shells or a best-effort native union in the export dialog. All modes ke
 global coordinates in millimeters. Connected unions remove overlap; disjoint unions
 remain separate solids and report that fact. Warnings require an explicit download
 choice for combined modes. Changes after validation invalidate a pending download.
+Choose explicit bodies in the export dialog, or select a body in Browser and use
+`Export selected body`. Native union uses only those selected bodies. Visibility
+is independent: `Select visible bodies` explicitly copies visible bodies into
+the export selection. Empty or lost selections block export.
 
 Export runs in a cancellable worker with a 60-second limit. It checks finite float32
 coordinates, indices, degeneracy, welded edge/vertex manifoldness, winding, shell
@@ -249,9 +253,13 @@ support alone does not imply a working modeling operation.
 - Orbit: drag in the viewer.
 - Pan: right-drag or middle-drag.
 - Zoom: scroll over the viewer.
-- Fit: press `F` or click `Fit`.
+- Fit: press `F` or click `Fit` to frame visible bodies.
 - Reset camera: click `Reset`.
 - Clear selection: press `Escape`.
+- Browser lists actual rebuilt bodies with visibility checkboxes and `Show all bodies`.
+  Hidden bodies cannot be picked. Visibility persists during edits and undo/redo
+  in the current project session, and resets on new/open/recovery. These runtime
+  preferences are not saved in project JSON.
 
 ### Command Palette
 

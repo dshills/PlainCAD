@@ -4,6 +4,7 @@ import {
   fileJobCurrent,
   runFabrication,
   useFileJobs,
+  openFabrication,
 } from "../../persistence/fileJobs";
 import { saveRecovery } from "../../persistence/autosave";
 import { RefObject } from "react";
@@ -76,6 +77,7 @@ export interface CommandEnablement {
   undo: boolean;
   redo: boolean;
   exportStl: boolean;
+  exportSelectedBody: boolean;
   createExtrude: boolean;
   createRevolve: boolean;
   selectedFeature: boolean;
@@ -91,6 +93,7 @@ export function selectCommandEnablement(state: CadStore): CommandEnablement {
     undo: state.history.past.length > 0,
     redo: state.history.future.length > 0,
     exportStl: canExportStl(state) && !state.fileBusy,
+    exportSelectedBody: canExportStl(state) && !state.fileBusy && Boolean(selectedExportBody(state)),
     createExtrude: canCreateExtrude(state),
     createRevolve: Boolean(defaultRevolveAxis(state)),
     selectedFeature: Boolean(getSelectedFeature(state)),
@@ -112,6 +115,8 @@ export function isCommandEnabledForSnapshot(
 }
 
 export const commands: CadCommand[] = [
+  { id: "file.exportSelectedBody", label: "Export Selected Body STL", enablementKey: "exportSelectedBody",
+    run: async () => { const id = selectedExportBody(useCadStore.getState()); if (id) await runFabrication("separate", true, [id]); } },
   { id: "feature.hole", label: "Hole from Selected Sketch", description: "Choose explicit sketch point centers and one target body for a native cylindrical cut.", enablementKey: "createHole", run: beginHoleCreation },
   ...(["earlier", "later"] as const).map((direction): CadCommand => ({
     id: `timeline.move${direction === "earlier" ? "Earlier" : "Later"}`,
@@ -240,7 +245,7 @@ export const commands: CadCommand[] = [
         return;
       }
       if (state.rebuild.result!.meshes.length > 1)
-        useFileJobs.setState({ exportOpen: true, prepared: undefined });
+        openFabrication();
       else await runFabrication();
     },
   },
@@ -504,6 +509,10 @@ export function canExportStl(state: CadStore) {
     rebuild.result.documentId === document.id &&
     rebuild.result.meshes.length > 0
   );
+}
+function selectedExportBody(state: CadStore): string | undefined {
+  const selected = state.selection.selectedIds[0];
+  return selected?.kind === "body" && selected.documentId === state.history.present.id && state.rebuild.result?.meshes.some((mesh) => mesh.bodyId === selected.id) ? selected.id : undefined;
 }
 
 interface ActiveProfile {

@@ -43,7 +43,7 @@ const sketchSeeds = new Map<
 
 export function rebuildDocument(
   document: CadDocument,
-  options: { exportUnion?: boolean } = {},
+  options: { exportUnion?: boolean; exportBodyIds?: readonly string[] } = {},
 ): RebuildResult {
   const started = performance.now();
   const disposableMetricsStarted = getDisposableScopeMetrics();
@@ -432,6 +432,15 @@ export function rebuildDocument(
         if (errors.length > errorsBefore)
           for (const id of affectedIds) if (id) failedBodies.add(id);
       }
+    }
+  }
+  if (options.exportUnion && options.exportBodyIds && !errors.length) {
+    const ids = options.exportBodyIds;
+    if (!ids.length || ids.length > MODEL_RESOURCE_LIMITS.maxBodies || new Set(ids).size !== ids.length || ids.some((id) => !runtimeBodies.has(id))) {
+      errors.push({ id: "export:selection", source: "export", message: "STL body selection is empty, duplicated, or no longer available. Select export bodies again." });
+    } else {
+      const selected = new Set(ids);
+      for (const id of runtimeBodies.keys()) if (!selected.has(id)) runtimeBodies.delete(id);
     }
   }
   if (options.exportUnion && !errors.length && runtimeBodies.size > 1) {

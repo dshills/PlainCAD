@@ -1,12 +1,61 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   useFileJobs,
   runFabrication,
   downloadPrepared,
 } from "../../persistence/fileJobs";
+import { useCadStore } from "../../state/useCadStore";
+import { useViewerState } from "../../state/viewerState";
+import { canExportStl } from "../commands/commandRegistry";
 import type { StlMode } from "../../fabrication/exportPlan";
 export function FabricationPanel() {
   const state = useFileJobs();
+  const session = useCadStore((s) => s.documentSession);
+  const result = useCadStore((s) => s.rebuild.result);
+  const available = useCadStore((s) => canExportStl(s));
+  const view = useViewerState();
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const sameProject = state.exportSession === session;
+  const bodies = sameProject ? (result?.bodies ?? []) : [];
+  const selected = state.exportBodyIds ?? [];
+  const lost = sameProject
+    ? selected.filter((id) => !bodies.some((body) => body.id === id))
+    : [];
+  const clearPrepared = () =>
+    useFileJobs.setState({ prepared: undefined, preparedFor: undefined });
+  const setBodies = (ids: string[]) => {
+    clearPrepared();
+    useFileJobs.setState({ exportBodyIds: ids });
+  };
+  const close = () => {
+    state.cancel();
+    useFileJobs.setState({ exportOpen: false });
+  };
+  useEffect(() => {
+    if (!state.exportOpen) return;
+    const dialog = dialogRef.current;
+    const previous = document.activeElement;
+    dialog?.showModal();
+    return () => {
+      dialog?.close();
+      if (previous instanceof HTMLElement && previous.isConnected)
+        previous.focus();
+    };
+  }, [state.exportOpen]);
+  useEffect(() => {
+    const prepared = useFileJobs.getState().preparedFor;
+    if (
+      prepared &&
+      (prepared.session !== session || prepared.result !== result || !available)
+    ) {
+      useCadStore
+        .getState()
+        .setFileError(
+          "Model changed after validation. Generate STL again before downloading.",
+        );
+      useFileJobs.setState({ prepared: undefined, preparedFor: undefined });
+    }
+  }, [session, result, available]);
   const [mode, setMode] = useState<StlMode>("separate"),
     [full, setFull] = useState(true);
   useEffect(() => {
@@ -24,14 +73,69 @@ export function FabricationPanel() {
         </div>
       ) : null}
       {state.exportOpen ? (
-        <section
+        <dialog
+          ref={dialogRef}
+          onCancel={(event) => {
+            event.preventDefault();
+            close();
+          }}
           className="file-dialog"
-          role="dialog"
           aria-modal="true"
           aria-label="STL export options"
         >
           <h2>Export STL</h2>
           <p>Coordinates remain in millimeters in the global model frame.</p>
+          <fieldset disabled={state.busy || !sameProject}>
+            <legend>Export bodies ({selected.length} selected)</legend>
+            <p>Visibility does not change export selection.</p>
+            <div className="export-bodies">
+              {bodies.map((body) => (
+                <label key={body.id}>
+                  <input
+                    type="checkbox"
+                    aria-label={`Export body ${body.name}`}
+                    checked={selected.includes(body.id)}
+                    onChange={(event) =>
+                      setBodies(
+                        event.target.checked
+                          ? [...selected, body.id]
+                          : selected.filter((id) => id !== body.id),
+                      )
+                    }
+                  />
+                  {body.name}
+                </label>
+              ))}
+            </div>
+            <button onClick={() => setBodies(bodies.map((body) => body.id))}>
+              Select all bodies
+            </button>
+            <button
+              onClick={() =>
+                setBodies(
+                  bodies
+                    .filter(
+                      (body) =>
+                        view.session !== session ||
+                        !view.hiddenBodyIds.includes(body.id),
+                    )
+                    .map((body) => body.id),
+                )
+              }
+            >
+              Select visible bodies
+            </button>
+            <button onClick={() => setBodies([])}>Clear body selection</button>
+          </fieldset>
+          {!sameProject ? (
+            <p role="alert">Project replaced. Close and reopen STL export.</p>
+          ) : null}
+          {lost.length ? (
+            <p role="alert">
+              {lost.length} selected bodies are no longer available. Select
+              export bodies again.
+            </p>
+          ) : null}
           <label>
             STL mode
             <select
@@ -83,23 +187,27 @@ export function FabricationPanel() {
             </>
           ) : (
             <button
-              disabled={state.busy}
+              disabled={
+                state.busy ||
+                !available ||
+                !sameProject ||
+                !selected.length ||
+                lost.length > 0
+              }
               onClick={() =>
-                void runFabrication(mode, full || mode === "merged")
+                void runFabrication(
+                  mode,
+                  full || mode === "merged",
+                  selected,
+                  state.exportSession,
+                )
               }
             >
               Generate STL
             </button>
           )}
-          <button
-            onClick={() => {
-              state.cancel();
-              useFileJobs.setState({ exportOpen: false });
-            }}
-          >
-            Close export
-          </button>
-        </section>
+          <button onClick={close}>Close export</button>
+        </dialog>
       ) : null}
     </>
   );

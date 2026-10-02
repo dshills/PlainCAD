@@ -280,6 +280,15 @@ test("separate ZIP alignment, overlapping shells warning, stale validation and r
   await panel.getByLabel("STL mode").selectOption("shells");
   await panel.getByRole("button", { name: "Generate STL" }).click();
   await expect(panel.getByText(/intersect, touch, or contain/)).toBeVisible();
+  download = page.waitForEvent("download");
+  await panel.getByRole("button", { name: "Download with warnings" }).click();
+  file = info.outputPath("warned-shells.stl");
+  await (await download).saveAs(file);
+  expect(stl(await readFile(file)).volume).toBeCloseTo(4000);
+  await page.getByRole("button", { name: "Export STL", exact: true }).click();
+  await panel.getByLabel("STL mode").selectOption("shells");
+  await panel.getByRole("button", { name: "Generate STL" }).click();
+  await expect(panel.getByText(/intersect, touch, or contain/)).toBeVisible();
   await page.evaluate(async () => {
     const path = "/src/state/useCadStore.ts";
     const s = (await import(path)).useCadStore.getState();
@@ -289,7 +298,7 @@ test("separate ZIP alignment, overlapping shells warning, stale validation and r
     }));
   });
   await ready(page);
-  await panel.getByRole("button", { name: "Download with warnings" }).click();
+  await expect(panel.getByRole("button", { name: "Download with warnings" })).toHaveCount(0);
   await expect(
     page
       .getByRole("alert")

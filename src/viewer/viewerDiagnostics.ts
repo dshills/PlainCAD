@@ -2,8 +2,9 @@
 // geometry, camera, or store mutation is exposed to the browser tests here.
 export interface ViewerSnapshot {
   cameraUp: number[];
+  cameraTarget: number[];
   gridNormal: number[];
-  meshes: Array<{ bodyId: string; positions: number[]; indices: number[] }>;
+  meshes: Array<{ bodyId: string; visible: boolean; positions: number[]; indices: number[] }>;
   sketchPoints: Array<{ id: string; position: number[] }>;
   sketchCircles: Array<{ id: string; normal: number[] }>;
 }

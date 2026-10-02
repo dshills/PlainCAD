@@ -23,6 +23,7 @@ interface RebuildState {
 }
 
 export interface CadStore {
+  documentSession: number;
   history: HistoryState;
   selection: SelectionState;
   rebuild: RebuildState;
@@ -127,6 +128,7 @@ function failPendingWorkerRequests(message: string) {
 }
 
 export const useCadStore = create<CadStore>((set, get) => ({
+  documentSession: 0,
   history: { past: [], present: initialDocument, future: [] },
   selection: { selectedIds: [] },
   rebuild: { status: initialRebuild.success ? "succeeded" : "failed", result: initialRebuild, kernelReady: false },
@@ -142,7 +144,7 @@ export const useCadStore = create<CadStore>((set, get) => ({
       set({ fileError: error instanceof Error ? error.message : String(error) });
       return;
     }
-    set({ history: { past: [], present: bound, future: [] }, fileError: undefined });
+    set({ history: { past: [], present: bound, future: [] }, rebuild: { ...get().rebuild, result: undefined }, documentSession: get().documentSession + 1, selection: { selectedIds: [] }, fileError: undefined });
     get().rebuildNow();
   },
   updateDocument: (mutator) => {

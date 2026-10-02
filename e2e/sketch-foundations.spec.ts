@@ -202,6 +202,7 @@ test("arc authoring, construction, driving dimensions, face offsets, save/open a
     .click();
   await ready(page, (state) => arcBody(state, 20, 13));
   await page
+    .getByRole("list", { name: "Sketch and feature history" })
     .getByRole("button", { name: /Extrude 1/ })
     .first()
     .click();
@@ -247,6 +248,7 @@ test("arc authoring, construction, driving dimensions, face offsets, save/open a
     1,
   );
   await page
+    .getByRole("list", { name: "Sketch and feature history" })
     .getByRole("button", { name: /Extrude 1/ })
     .first()
     .click();

@@ -84,6 +84,10 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
 - IndexedDB autosave: 500ms debounce, latest/previous/manual snapshots, five-project
   retention, explicit startup recovery and previous-snapshot fallback. Quota and
   unavailable-storage errors preserve memory and offer manual save/purge.
+- Actual rebuilt body list, transient per-project visibility, hidden-body picking
+  exclusion and visible-body Fit View. Explicit STL body selection (including
+  selected-body quick export and selected-body native union) is independent of
+  visibility; lost/empty selections and replaced projects require reselection.
 - Separate body STL files in a ZIP (multi-body default), one STL with separate
   shells, and native best-effort union. Global millimeter coordinates are retained.
   ASCII filenames are NFC-normalized, traversal/device-safe, length-bounded and
@@ -121,7 +125,7 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
   unmodified positive-distance new-body owner;
   curved side faces, hole/revolve faces, and ambiguous rebinding are unsupported.
 - Measurement, named views, section views,
-  body visibility controls, and full feature inspectors and graphical dimension/constraint annotation need work.
+  remaining feature inspectors and graphical dimension/constraint annotation need work.
 - STL validation is numerical and bounded: it does not prove absence of every
   adjacent-face or near-degenerate self-intersection. Skipping expensive checks
   is explicit. Native union remains best-effort and does not connect disjoint solids.

@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { registerViewerDiagnostics } from "./viewerDiagnostics";
+import { useViewerState } from "../state/viewerState";
 import { useCadStore } from "../state/useCadStore";
 import { SelectionRef } from "../cad/document/schema";
 import { RenderMesh } from "../cad/kernel/KernelAdapter";
@@ -32,18 +33,23 @@ interface SketchOverlayResources {
   unitCircleGeometry: THREE.BufferGeometry;
 }
 
+const EMPTY_MESHES: RenderMesh[] = [];
+
 export function CadViewer() {
   const hostRef = useRef<HTMLDivElement>(null);
   const runtimeRef = useRef<ViewerRuntime | undefined>(undefined);
   const meshesRef = useRef<RenderMesh[]>([]);
   const selectedBodyIdRef = useRef<string | undefined>(undefined);
-  const lastAutoFitDocumentIdRef = useRef<string | undefined>(undefined);
+  const lastAutoFitSessionRef = useRef<number | undefined>(undefined);
   const selectRef = useRef<(selection: SelectionRef | undefined) => void>(selectNoop);
   const documentIdRef = useRef("");
-  const meshes = useCadStore((state) => state.rebuild.result?.meshes ?? []);
+  const meshes = useCadStore((state) => state.rebuild.result?.meshes ?? EMPTY_MESHES);
   const rebuild = useCadStore((state) => state.rebuild);
   const document = useCadStore((state) => state.history.present);
   const select = useCadStore((state) => state.select);
+  const session = useCadStore((state) => state.documentSession);
+  const view = useViewerState();
+  const hidden = view.session === session ? view.hiddenBodyIds : [];
   const documentId = useCadStore((state) => state.history.present.id);
   const selectedBodyId = useCadStore((state) => {
     const selection = state.selection.selectedIds[0];
@@ -90,6 +96,7 @@ export function CadViewer() {
 
     const unregisterDiagnostics = import.meta.env.DEV ? registerViewerDiagnostics(() => ({
       cameraUp: camera.up.toArray(),
+      cameraTarget: controls.target.toArray(),
       gridNormal: new THREE.Vector3(0, 1, 0).applyQuaternion(grid.getWorldQuaternion(new THREE.Quaternion())).toArray(),
       meshes: modelGroup.children.filter((object): object is THREE.Mesh => object instanceof THREE.Mesh).map((object) => {
         const attribute = object.geometry.getAttribute("position");
@@ -99,7 +106,7 @@ export function CadViewer() {
           object.localToWorld(point.fromBufferAttribute(attribute, index));
           point.toArray(positions, index * 3);
         }
-        return { bodyId: object.userData.bodyId as string, positions, indices: Array.from(object.geometry.index?.array ?? []) };
+        return { bodyId: object.userData.bodyId as string, visible: object.visible, positions, indices: Array.from(object.geometry.index?.array ?? []) };
       }),
       sketchPoints: sketchGroup.children.filter((object) => object instanceof THREE.Mesh && typeof object.userData.sketchEntityId === "string").map((object) => ({
         id: object.userData.sketchEntityId as string, position: object.getWorldPosition(new THREE.Vector3()).toArray(),
@@ -139,7 +146,7 @@ export function CadViewer() {
       pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
       raycaster.setFromCamera(pointer, camera);
-      const hit = raycaster.intersectObjects(modelGroup.children, true).find((item) => item.object instanceof THREE.Mesh);
+      const hit = raycaster.intersectObjects(modelGroup.children.filter((object) => object.visible), true).find((item) => item.object instanceof THREE.Mesh);
       const bodyId = hit ? findBodyId(hit.object) : undefined;
       selectRef.current(bodyId ? { kind: "body", id: bodyId, documentId: documentIdRef.current } : undefined);
     };
@@ -163,15 +170,10 @@ export function CadViewer() {
   }, []);
 
   useEffect(() => {
-    meshesRef.current = meshes;
     const runtime = runtimeRef.current;
     if (!runtime) return;
     updateMeshes(runtime.modelGroup, meshes);
     applySelection(runtime.modelGroup, selectedBodyIdRef.current);
-    if (meshes.length > 0 && lastAutoFitDocumentIdRef.current !== documentIdRef.current) {
-      fitMeshes(runtime.camera, runtime.controls, meshes);
-      lastAutoFitDocumentIdRef.current = documentIdRef.current;
-    }
   }, [meshes]);
 
   useEffect(() => {
@@ -189,12 +191,27 @@ export function CadViewer() {
   }, [document, rebuild]);
 
   useEffect(() => {
+    meshesRef.current = meshes.filter((mesh) => !hidden.includes(mesh.bodyId));
+    const runtime = runtimeRef.current;
+    if (!runtime) return;
+    applyVisibility(runtime.modelGroup, hidden);
+    if (meshesRef.current.length && lastAutoFitSessionRef.current !== session) {
+      fitMeshes(runtime.camera, runtime.controls, meshesRef.current);
+      lastAutoFitSessionRef.current = session;
+    }
+  }, [meshes, view.hiddenBodyIds, view.session, session]);
+
+  useEffect(() => {
     selectedBodyIdRef.current = selectedBodyId;
     const runtime = runtimeRef.current;
     if (runtime) applySelection(runtime.modelGroup, selectedBodyId);
   }, [selectedBodyId]);
 
   return <div ref={hostRef} className="viewer-canvas" />;
+}
+
+function applyVisibility(group: THREE.Group, hidden: readonly string[]) {
+  for (const object of group.children) object.visible = !hidden.includes(object.userData.bodyId as string);
 }
 
 function findBodyId(object: THREE.Object3D): string | undefined {

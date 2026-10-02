@@ -1,7 +1,8 @@
 import { SketchTools } from "./SketchTools";
+import { BodyPanel } from "./BodyPanel";
 import { useMemo } from "react";
 import { useCadStore } from "../../state/useCadStore";
-import { orderedFeatures, orderedSketches } from "../../state/selectors";
+import { orderedSketches } from "../../state/selectors";
 import { evaluateParameters } from "../../cad/parameters/expressionEvaluator";
 import { solveSketch } from "../../cad/sketch/SketchSolver";
 import { detectProfiles } from "../../cad/sketch/profileDetection";
@@ -12,7 +13,6 @@ export function SketchPanel() {
   const select = useCadStore((state) => state.select);
   const selection = useCadStore((state) => state.selection.selectedIds[0]);
   const sketches = useMemo(() => orderedSketches(document), [document]);
-  const features = useMemo(() => orderedFeatures(document), [document]);
   const activeSketch =
     selection?.kind === "sketch"
       ? document.sketches[selection.id]
@@ -44,10 +44,7 @@ export function SketchPanel() {
           <span className="folder-label">Origin</span>
           <span className="muted">XY, XZ, YZ planes</span>
         </div>
-        <div className="browser-folder">
-          <span className="folder-label">Bodies</span>
-          <span className="muted">{features.length} feature outputs</span>
-        </div>
+        <BodyPanel />
         <div className="browser-folder">
           <span className="folder-label">Sketches</span>
           <span className="muted">{sketches.length} sketches</span>

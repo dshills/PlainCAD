@@ -3,11 +3,13 @@ import { runCommand } from "../commands/commandRegistry";
 import { useCadStore } from "../../state/useCadStore";
 import { orderedParameters } from "../../state/selectors";
 
+const EMPTY_ERRORS: import("../../cad/worker/workerProtocol").RebuildError[] = [];
+
 export function ParameterPanel() {
   const document = useCadStore((state) => state.history.present);
   const updateParameter = useCadStore((state) => state.updateParameter);
   const select = useCadStore((state) => state.select);
-  const errors = useCadStore((state) => state.rebuild.result?.errors ?? []);
+  const errors = useCadStore((state) => state.rebuild.result?.errors ?? EMPTY_ERRORS);
   const parameters = orderedParameters(document);
 
   return (
