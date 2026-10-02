@@ -1,8 +1,9 @@
-import { render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "../app/App";
 import { createEmptyDocument } from "../cad/document/CadDocument";
+import { REBUILD_DEBOUNCE_MS } from "../cad/worker/workerLifecycle";
 import { useCadStore } from "../state/useCadStore";
 
 vi.mock("../viewer/CadViewer", () => ({
@@ -10,6 +11,19 @@ vi.mock("../viewer/CadViewer", () => ({
 }));
 
 describe("App", () => {
+  beforeEach(async () => {
+    useCadStore.setState(useCadStore.getInitialState(), true);
+    // Replace the queued document as well as the store snapshot from the previous test.
+    useCadStore.getState().setDocument(createEmptyDocument());
+    await waitFor(() => expect(useCadStore.getState().rebuild.status).toBe("succeeded"));
+  });
+
+  afterEach(() => {
+    cleanup();
+    if (vi.isFakeTimers()) vi.clearAllTimers();
+    vi.useRealTimers();
+  });
+
   it("loads and edits a parameter", async () => {
     const user = userEvent.setup();
     render(<App />);
@@ -19,6 +33,9 @@ describe("App", () => {
     await user.clear(input);
     await user.type(input, "100mm");
     expect(input).toHaveValue("100mm");
+    await user.tab();
+    await waitFor(() => expect(screen.getByRole("button", { name: "Export STL" })).toBeEnabled());
+    expect(useCadStore.getState().history.present.parameters.plate_width.expression).toBe("100mm");
   });
 
   it("opens the command palette and shows interaction help", async () => {
@@ -34,14 +51,28 @@ describe("App", () => {
     expect(within(palette).getByRole("button", { name: /Export STL/i })).toBeDisabled();
   });
 
+  it("enables STL export in the ribbon and palette after the queued model rebuilds", async () => {
+    vi.useFakeTimers();
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: /Load mounting plate template/i }));
+    fireEvent.keyDown(document.body, { key: "k", metaKey: true });
+
+    const ribbon = screen.getByRole("navigation", { name: /Main CAD commands/i });
+    const palette = screen.getByRole("dialog", { name: /Command Palette/i });
+    expect(within(ribbon).getByRole("button", { name: "Export STL" })).toBeDisabled();
+    expect(within(palette).getByRole("button", { name: /Export STL/i })).toBeDisabled();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(REBUILD_DEBOUNCE_MS);
+    });
+
+    expect(useCadStore.getState().rebuild.status).toBe("succeeded");
+    expect(within(ribbon).getByRole("button", { name: "Export STL" })).toBeEnabled();
+    expect(within(palette).getByRole("button", { name: /Export STL/i })).toBeEnabled();
+  });
+
   it("surfaces the sketch to extrude workflow in the top ribbon and bottom timeline", async () => {
     const user = userEvent.setup();
-    const document = createEmptyDocument();
-    useCadStore.setState({
-      history: { past: [], present: document, future: [] },
-      paletteOpen: false,
-      selection: { selectedIds: [] },
-    });
     render(<App />);
 
     const ribbon = screen.getByRole("navigation", { name: /Main CAD commands/i });
