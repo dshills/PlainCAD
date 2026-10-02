@@ -57,7 +57,10 @@ function selectionForErrorSource(
   document: ReturnType<typeof useCadStore.getState>["history"]["present"] | undefined,
 ) {
   if (!sourceId || !document) return undefined;
-  if (source === "parameter" && document.parameters[sourceId]) return { kind: "parameter" as const, id: sourceId, documentId: document.id };
+  if (source === "parameter") {
+    const parameter = Object.values(document.parameters).find((item) => item.id === sourceId) ?? document.parameters[sourceId];
+    if (parameter) return { kind: "parameter" as const, id: parameter.id, documentId: document.id };
+  }
   if (source === "sketch" && document.sketches[sourceId]) return { kind: "sketch" as const, id: sourceId, documentId: document.id };
   if (source === "feature" && document.features.some((feature) => feature.id === sourceId)) return { kind: "feature" as const, id: sourceId, documentId: document.id };
   return undefined;

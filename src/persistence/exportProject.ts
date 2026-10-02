@@ -2,6 +2,10 @@ import { safeFilename } from "./filenames";
 import { migrateDocument } from "../cad/document/migrations";
 import { assertProjectJsonShape } from "./importSafety";
 import { CadDocument } from "../cad/document/schema";
+import {
+  bindDocumentExpressions,
+  refreshBoundNames,
+} from "../cad/parameters/expressionBindings";
 
 export const PROJECT_FILE_EXTENSION = ".pcaddoc";
 export const PROJECT_FILE_MIME_TYPE = "application/vnd.plaincad.project+json";
@@ -9,7 +13,9 @@ export const PROJECT_FILE_MIME_TYPE = "application/vnd.plaincad.project+json";
 export function serializeProject(document: CadDocument, pretty = true): string {
   assertProjectJsonShape(document);
   return JSON.stringify(
-    sortObject(migrateDocument(document)),
+    sortObject(
+      refreshBoundNames(bindDocumentExpressions(migrateDocument(document))),
+    ),
     null,
     pretty ? 2 : undefined,
   );

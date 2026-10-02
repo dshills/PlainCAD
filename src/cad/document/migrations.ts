@@ -10,6 +10,7 @@ const migrations = new Map<number, Migration>([
   [4, migrateV4ToV5],
   [5, migrateV5ToV6],
   [6, migrateV6ToV7],
+  [7, (document) => ({ ...document, schemaVersion: 8 })],
 ]);
 
 export function migrateDocument(input: CadDocument): CadDocument {
@@ -116,6 +117,7 @@ function sanitizeCurrentDocument(input: CadDocument): CadDocument {
           id: record.id,
           name: record.name,
           expression: record.expression,
+          ...(record.parameterRefs !== undefined ? { parameterRefs: record.parameterRefs } : {}),
           value: record.value,
           unit: record.unit,
           ...(record.description !== undefined ? { description: record.description } : {}),
@@ -432,7 +434,7 @@ function isRecord(value: unknown): value is Record<string, any> {
 
 function sanitizeExpressionRef(value: unknown): any {
   return isRecord(value)
-    ? { expression: value.expression, resolvedValue: value.resolvedValue, unit: value.unit }
+    ? { expression: value.expression, resolvedValue: value.resolvedValue, unit: value.unit, ...(value.parameterRefs !== undefined ? { parameterRefs: value.parameterRefs } : {}) }
     : { expression: value == null ? undefined : String(value), unit: undefined };
 }
 

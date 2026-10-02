@@ -21,7 +21,7 @@ size/angle/axis edits, parameter edits, save/open/STL, and diagnostic/export rec
 
 - React/Vite/TypeScript UI, Three.js viewer, Zustand document history and undo/redo.
 - Serializable document with stable IDs, deterministic JSON, schema migrations
-  through version 7, and validation before imported state is accepted.
+  through version 8, and validation before imported state is accepted.
 - Import unsafe-key rejection, nesting/node limits, and parameter/sketch/entity/
   constraint/feature count limits; unknown and runtime fields stripped by migration.
 - Parameter expressions, dependency ordering/cycle errors, compatible unit
@@ -72,7 +72,7 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
 
 ## Durability and fabrication
 
-- Schema 1–7 checked-in fixtures migrate, rebuild, retain IDs, edit dimensions,
+- Schema 1–8 checked-in fixtures migrate, rebuild, retain IDs, edit dimensions,
   round-trip project files, and recover through the same import codec.
 - IndexedDB autosave: 500ms debounce, latest/previous/manual snapshots, five-project
   retention, explicit startup recovery and previous-snapshot fallback. Quota and
@@ -93,8 +93,10 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
 
 ## Partial or missing working-CAD requirements
 
-- Parameter names are still expression symbols: stable-ID token references, safe
-  rename semantics, authored unit defaults/display units, and grouping need work.
+- Parameter expressions persist stable-ID token bindings with safe display-name
+  updates across renames, edits, save/open, and old-name reuse. Missing bindings
+  block rebuild without retargeting and remain saveable for explicit repair.
+  Authored unit defaults/display units and parameter grouping still need work.
 - The driving solver handles small sketches: 160 scalar variables, 512 residual
   equations, 100 iterations, and a 50ms iteration budget. DOF/rank is a local
   numerical heuristic, not proof of a globally unique solution. Distance/angle

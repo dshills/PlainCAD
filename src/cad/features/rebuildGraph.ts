@@ -1,5 +1,6 @@
 import { MODEL_RESOURCE_LIMITS } from "../resourceLimits";
 import { assertProjectJsonShape } from "../../persistence/importSafety";
+import { refreshBoundNames, validateParameterBindings } from "../parameters/expressionBindings";
 import {
   CadBody,
   RebuildError,
@@ -68,6 +69,7 @@ export function rebuildDocument(
     };
   }
   const validation = validateDocument(document);
+  if (!validation.length) validation.push(...validateParameterBindings(document, true));
   for (const issue of validation) {
     errors.push({
       id: `validation:${issue.sourceId ?? issue.message}`,
@@ -86,6 +88,7 @@ export function rebuildDocument(
       warnings,
       durationMs: performance.now() - started,
     };
+  document = refreshBoundNames(document);
   const graphPlan = planFeatureGraph(document);
   for (const issue of graphPlan.errors) {
     errors.push({

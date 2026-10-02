@@ -370,7 +370,7 @@ test("bounded recovery retention and migration of a stored released schema", asy
     .toBe(fixture.id);
   await ready(page);
   const result = await state(page);
-  expect(result.document.schemaVersion).toBe(7);
+  expect(result.document.schemaVersion).toBe(8);
   expect(result.result!.meshes[0].geometrySource).toBe("opencascade");
   expect(result.result!.meshes[0].geometryAssertions!.volume).toBeCloseTo(
     1000 - Math.PI * 5,

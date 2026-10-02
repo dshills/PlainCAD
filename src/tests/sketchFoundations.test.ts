@@ -315,7 +315,7 @@ describe("driving sketch foundations", () => {
     const imported = importProjectText(
       JSON.stringify({ ...doc, schemaVersion: 6 }),
     );
-    expect(imported.schemaVersion).toBe(7);
+    expect(imported.schemaVersion).toBe(8);
     expect(imported.sketches[sketch.id].solveMode).toBe("validate");
     expect(
       solveSketch(imported.sketches[sketch.id], {}).errors[0].message,

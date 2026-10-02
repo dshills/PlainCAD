@@ -130,6 +130,13 @@ hole_diameter / 2
 
 The app reports expression, unit, sketch, feature, import, and export errors in user-facing language.
 
+Schema 8 persists parameter token bindings by stable ID. Renaming a parameter
+updates dependent display expressions while preserving design intent, including
+sketch coordinates, dimensions, plane offsets, and feature sizes. Unit literals
+and function names are unchanged. Older files bind their existing symbols during
+migration/import. Missing ID bindings remain editable and saveable but block
+rebuild until their expressions are repaired; reused names cannot retarget them.
+
 ### Work With Sketches
 
 1. Create an XY, XZ, or YZ sketch and select it in the Browser.
@@ -176,7 +183,7 @@ a diagnostic; union requires full checks. These numerical checks are not a proof
 of absence of every near-degenerate or adjacent-face intersection.
 
 Imports check raw UTF-8 bytes before parsing, preflight nesting before the reviver,
-then migrate and validate in a cancellable worker. Checked-in schema 1–7 fixtures
+then migrate and validate in a cancellable worker. Checked-in schema 1–8 fixtures
 verify IDs, rebuilds, edits, save/open, and recovery. Default limits: 5 MiB JSON,
 depth 64, 500 parameters, 100 sketches, 750 entities/512 constraints and dimensions
 per sketch, 10,000 total entities, 20,000 total constraints/dimensions, 1,000 features,

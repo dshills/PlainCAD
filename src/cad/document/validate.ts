@@ -1,4 +1,5 @@
 import { CadDocument, ValidationIssue } from "./schema";
+import { validateParameterBindings } from "../parameters/expressionBindings";
 
 const PARAMETER_NAME_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
 const REQUIRED_DOCUMENT_OBJECTS = ["parameters", "sketches"] as const;
@@ -67,7 +68,7 @@ export function validateDocument(document: CadDocument): ValidationIssue[] {
         message: `Parameter key ${name} does not match its name.`,
       });
     }
-    if (!PARAMETER_NAME_PATTERN.test(parameter.name)) {
+    if (!PARAMETER_NAME_PATTERN.test(parameter.name) || parameter.name === "prototype" || Object.hasOwn(Object.prototype, parameter.name)) {
       issues.push({
         source: "parameter",
         sourceId: parameter.id,
@@ -457,6 +458,7 @@ export function validateDocument(document: CadDocument): ValidationIssue[] {
     }
   }
 
+  if (!issues.length) issues.push(...validateParameterBindings(document));
   return issues;
 }
 

@@ -1,4 +1,4 @@
-export const CURRENT_SCHEMA_VERSION = 7;
+export const CURRENT_SCHEMA_VERSION = 8;
 
 export type UnitSystem = "metric" | "imperial";
 
@@ -28,6 +28,7 @@ export interface CadParameter {
   id: string;
   name: string;
   expression: string;
+  parameterRefs?: Record<string, string>;
   value: number;
   unit: string;
   description?: string;
@@ -36,6 +37,7 @@ export interface CadParameter {
 
 export interface ExpressionRef {
   expression: string;
+  parameterRefs?: Record<string, string>;
   resolvedValue?: number;
   unit: string;
 }

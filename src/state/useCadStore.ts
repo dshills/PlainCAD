@@ -7,6 +7,7 @@ import { rebuildDocument } from "../cad/features/rebuildGraph";
 import { RebuildResult, WorkerRequest, WorkerResponse } from "../cad/worker/workerProtocol";
 import { createWorkerRequest, isWorkerRequestExpired, shouldAcceptWorkerResponse, REBUILD_DEBOUNCE_MS, WORKER_TIMEOUTS_MS } from "../cad/worker/workerLifecycle";
 import GeometryWorker from "../cad/worker/geometryWorker?worker";
+import { bindDocumentExpressions, renameParameter } from "../cad/parameters/expressionBindings";
 
 export interface HistoryState {
   past: CadDocument[];
@@ -134,19 +135,28 @@ export const useCadStore = create<CadStore>((set, get) => ({
   setPaletteOpen: (open) => set({ paletteOpen: open }),
   setFileError: (message) => set({ fileError: message }),
   setDocument: (document) => {
-    set({ history: { past: [], present: document, future: [] }, fileError: undefined });
+    let bound: CadDocument;
+    try {
+      bound = bindDocumentExpressions(document);
+    } catch (error) {
+      set({ fileError: error instanceof Error ? error.message : String(error) });
+      return;
+    }
+    set({ history: { past: [], present: bound, future: [] }, fileError: undefined });
     get().rebuildNow();
   },
   updateDocument: (mutator) => {
     const { history } = get();
-    const next = mutator(history.present);
-    set({
-      history: {
-        past: [...history.past, history.present].slice(-50),
-        present: next,
-        future: [],
-      },
-    });
+    let next: CadDocument;
+    try {
+      const changed = mutator(history.present);
+      if (changed === history.present) return;
+      next = bindDocumentExpressions(changed, history.present);
+    } catch (error) {
+      set({ fileError: error instanceof Error ? error.message : String(error) });
+      return;
+    }
+    set({ history: { past: [...history.past, history.present].slice(-50), present: next, future: [] } });
     get().rebuildNow();
   },
   addParameter: () => {
@@ -163,16 +173,15 @@ export const useCadStore = create<CadStore>((set, get) => ({
     );
   },
   updateParameter: (idOrName, patch) => {
+    const before = get().history.present;
     get().updateDocument((document) => {
       const current = Object.values(document.parameters).find((parameter) => parameter.id === idOrName) ?? document.parameters[idOrName];
       if (!current) return document;
-      const nextName = patch.name?.trim() ? patch.name : current.name;
-      const nameOwner = document.parameters[nextName];
-      if (nameOwner && nameOwner.id !== current.id) return document;
-      let next = removeParameter(document, current.name);
-      next = upsertParameter(next, { ...current, ...patch, name: nextName });
-      return next;
+      const nextName = patch.name !== undefined ? patch.name.trim() : current.name;
+      const next = nextName === current.name ? document : renameParameter(document, current.id, nextName);
+      return upsertParameter(next, { ...next.parameters[nextName], ...patch, id: current.id, name: nextName });
     });
+    if (get().history.present !== before) get().setFileError(undefined);
   },
   deleteParameter: (name) => get().updateDocument((document) => deleteParameterSafe(document, name)),
   undo: () => {

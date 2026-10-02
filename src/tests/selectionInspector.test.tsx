@@ -243,6 +243,12 @@ describe("selection and inspection", () => {
           meshes: [],
           errors: [
             {
+              id: "binding:error",
+              source: "parameter",
+              sourceId: document.parameters.width.id,
+              message: "Missing parameter binding.",
+            },
+            {
               id: "feature:error",
               source: "feature",
               sourceId: feature.id,
@@ -256,6 +262,9 @@ describe("selection and inspection", () => {
     });
 
     render(<RebuildErrorsPanel />);
+
+    await userEvent.click(screen.getByRole("button", { name: /parameter: Missing parameter binding/i }));
+    expect(useCadStore.getState().selection.selectedIds[0]).toMatchObject({ kind: "parameter", id: document.parameters.width.id });
 
     await userEvent.click(
       screen.getByRole("button", { name: /feature: Extrude failed/i }),
