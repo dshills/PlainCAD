@@ -43,6 +43,8 @@ export function validateDocument(document: CadDocument): ValidationIssue[] {
       message: "Document is missing features.",
     });
   if (issues.length > 0) return issues;
+  issues.push(...validatePersistedFields(document));
+  if (issues.length > 0) return issues;
 
   const ids = new Set<string>();
   const addId = (id: string, source: ValidationIssue["source"]) => {
@@ -455,5 +457,229 @@ export function validateDocument(document: CadDocument): ValidationIssue[] {
     }
   }
 
+  return issues;
+}
+
+// Imports must reject malformed known fields before components or geometry read them.
+function validatePersistedFields(document: CadDocument): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
+  const check = (
+    valid: boolean,
+    source: ValidationIssue["source"],
+    message: string,
+    sourceId?: string,
+  ) => {
+    if (!valid) issues.push({ source, sourceId, message });
+  };
+  const expression = (value: unknown): boolean => {
+    if (!value || typeof value !== "object" || Array.isArray(value))
+      return false;
+    const ref = value as Record<string, unknown>;
+    return (
+      typeof ref.expression === "string" &&
+      typeof ref.unit === "string" &&
+      (ref.resolvedValue === undefined ||
+        (typeof ref.resolvedValue === "number" &&
+          Number.isFinite(ref.resolvedValue)))
+    );
+  };
+  const strings = (value: unknown): boolean =>
+    Array.isArray(value) && value.every((id) => typeof id === "string");
+  const topology = (value: unknown): boolean => {
+    if (!value || typeof value !== "object" || Array.isArray(value))
+      return false;
+    const ref = value as Record<string, unknown>;
+    return (
+      typeof ref.featureId === "string" &&
+      typeof ref.transientId === "string" &&
+      ["face", "edge", "vertex"].includes(String(ref.kind)) &&
+      ["stableHint", "sourceEntityId"].every(
+        (key) => ref[key] === undefined || typeof ref[key] === "string",
+      ) &&
+      (ref.role === undefined ||
+        [
+          "profileEdge",
+          "startCapPerimeter",
+          "endCapPerimeter",
+          "planarFace",
+        ].includes(String(ref.role))) &&
+      (ref.adjacentRole === undefined ||
+        ["sideFace", "startCap", "endCap"].includes(
+          String(ref.adjacentRole),
+        )) &&
+      (ref.repairRequired === undefined ||
+        typeof ref.repairRequired === "boolean")
+    );
+  };
+  check(
+    ["metric", "imperial"].includes(document.units),
+    "document",
+    "Invalid document units.",
+  );
+  check(
+    ["mm", "cm", "m", "in", "ft"].includes(document.unitSettings.length) &&
+      ["deg", "rad"].includes(document.unitSettings.angle) &&
+      (document.unitSettings.mass === undefined ||
+        ["g", "kg", "lb"].includes(document.unitSettings.mass)),
+    "document",
+    "Invalid document unit settings.",
+  );
+  check(
+    typeof document.createdAt === "string" &&
+      typeof document.updatedAt === "string",
+    "document",
+    "Document timestamps must be strings.",
+  );
+  check(
+    document.timelineCursor === undefined ||
+      (Number.isSafeInteger(document.timelineCursor) &&
+        document.timelineCursor >= 0),
+    "document",
+    "Invalid timeline cursor.",
+  );
+  for (const value of [
+    document.viewState?.cameraPosition,
+    document.viewState?.cameraTarget,
+  ])
+    check(
+      value === undefined ||
+        (Array.isArray(value) &&
+          value.length === 3 &&
+          value.every((v) => typeof v === "number" && Number.isFinite(v))),
+      "document",
+      "Camera coordinates must be three finite numbers.",
+    );
+  for (const parameter of Object.values(document.parameters)) {
+    check(
+      typeof parameter.name === "string" &&
+        typeof parameter.expression === "string" &&
+        typeof parameter.unit === "string" &&
+        typeof parameter.value === "number" &&
+        Number.isFinite(parameter.value) &&
+        (parameter.description === undefined ||
+          typeof parameter.description === "string") &&
+        (parameter.locked === undefined ||
+          typeof parameter.locked === "boolean"),
+      "parameter",
+      "Malformed parameter fields.",
+      parameter.id,
+    );
+  }
+  for (const item of [
+    ...Object.values(document.sketches),
+    ...document.features,
+  ]) {
+    const source = "entities" in item ? "sketch" : "feature";
+    check(
+      typeof item.name === "string",
+      source,
+      `${source} name must be a string.`,
+      item.id,
+    );
+    check(
+      item.timelineStep === undefined ||
+        (Number.isSafeInteger(item.timelineStep) && item.timelineStep >= 0),
+      source,
+      "Invalid timeline step.",
+      item.id,
+    );
+    check(
+      item.createdAt === undefined || typeof item.createdAt === "string",
+      source,
+      "Timestamp must be a string.",
+      item.id,
+    );
+  }
+  for (const feature of document.features) {
+    const checkFeature = (valid: boolean, message: string) =>
+      check(valid, "feature", message, feature.id);
+    checkFeature(
+      feature.suppressed === undefined ||
+        typeof feature.suppressed === "boolean",
+      "Suppressed flag must be boolean.",
+    );
+    if ("sketchId" in feature)
+      checkFeature(
+        typeof feature.sketchId === "string",
+        "Sketch reference must be an ID.",
+      );
+    if ("sketchId" in feature && !document.sketches[feature.sketchId])
+      checkFeature(
+        false,
+        `${feature.type[0].toUpperCase()}${feature.type.slice(1)} references a missing sketch.`,
+      );
+    if (feature.type === "extrude" || feature.type === "revolve") {
+      checkFeature(
+        typeof feature.profileId === "string" &&
+          (feature.targetBodyIds === undefined ||
+            strings(feature.targetBodyIds)),
+        "Malformed profile or target body references.",
+      );
+    }
+    if (feature.type === "extrude") {
+      checkFeature(
+        expression(feature.distance),
+        "Extrude distance requires an expression and unit.",
+      );
+      if (
+        feature.termination?.type === "distance" &&
+        feature.termination.distance !== undefined
+      )
+        checkFeature(
+          expression(feature.termination.distance),
+          "Termination distance requires an expression and unit.",
+        );
+      if (feature.termination?.type === "toFace")
+        checkFeature(
+          topology(feature.termination.faceRef) &&
+            feature.termination.faceRef.kind === "face",
+          "Malformed to-face reference.",
+        );
+    }
+    if (feature.type === "revolve") {
+      const axis = feature.axis;
+      checkFeature(
+        !!axis &&
+          (axis.type === "origin"
+            ? ["X", "Y", "Z"].includes(axis.axis)
+            : axis.type === "sketchLine" &&
+              typeof axis.sketchId === "string" &&
+              typeof axis.lineId === "string"),
+        "Malformed revolve axis.",
+      );
+      checkFeature(
+        expression(feature.angle),
+        "Revolve angle requires an expression and unit.",
+      );
+    }
+    if (feature.type === "hole") {
+      checkFeature(
+        strings(feature.centerPointIds) &&
+          (feature.targetBodyId === undefined ||
+            typeof feature.targetBodyId === "string") &&
+          (feature.targetFeatureId === undefined ||
+            typeof feature.targetFeatureId === "string"),
+        "Malformed hole references.",
+      );
+      checkFeature(
+        expression(feature.diameter) &&
+          (feature.depth === "throughAll" || expression(feature.depth)),
+        "Hole dimensions require expressions and units.",
+      );
+    }
+    if (feature.type === "fillet" || feature.type === "chamfer") {
+      checkFeature(
+        Array.isArray(feature.targetEdgeRefs) &&
+          feature.targetEdgeRefs.every(topology),
+        "Malformed edge references.",
+      );
+      checkFeature(
+        expression(
+          feature.type === "fillet" ? feature.radius : feature.distance,
+        ),
+        "Edge treatment requires an expression and unit.",
+      );
+    }
+  }
   return issues;
 }

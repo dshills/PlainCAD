@@ -1,3 +1,11 @@
+import {
+  beginFileJob,
+  finishFileJob,
+  fileJobCurrent,
+  runFabrication,
+  useFileJobs,
+} from "../../persistence/fileJobs";
+import { saveRecovery } from "../../persistence/autosave";
 import { RefObject } from "react";
 import { CadStore, useCadStore } from "../../state/useCadStore";
 import {
@@ -11,7 +19,6 @@ import {
   projectFilename as makeProjectFilename,
   serializeProject,
 } from "../../persistence/exportProject";
-import { exportMeshesToStl } from "../../cad/kernel/stlExport";
 import {
   createExtrudeFeature,
   deleteFeature,
@@ -78,7 +85,7 @@ export function selectCommandEnablement(state: CadStore): CommandEnablement {
     document: Boolean(state.history.present),
     undo: state.history.past.length > 0,
     redo: state.history.future.length > 0,
-    exportStl: canExportStl(state),
+    exportStl: canExportStl(state) && !state.fileBusy,
     createExtrude: canCreateExtrude(state),
     createRevolve: Boolean(defaultRevolveAxis(state)),
     selectedFeature: Boolean(getSelectedFeature(state)),
@@ -114,18 +121,33 @@ export const commands: CadCommand[] = [
         ctx.fileInputRef?.current?.click();
         return;
       }
+      const controller = beginFileJob("Opening project…");
+      const previous = useCadStore.getState().history.present;
       try {
-        const document = await importProjectFile(ctx.file);
+        const document = await importProjectFile(
+          ctx.file,
+          controller.signal,
+          (message) => {
+            if (fileJobCurrent(controller)) useFileJobs.setState({ message });
+          },
+        );
+        if (!fileJobCurrent(controller)) return;
+        if (useCadStore.getState().history.present !== previous)
+          throw new Error(
+            "Project changed while opening the file. Open it again to replace the current document.",
+          );
         useCadStore.getState().setDocument(document);
       } catch (error) {
-        console.error(error);
-        useCadStore
-          .getState()
-          .setFileError(
-            error instanceof Error
-              ? error.message
-              : "Project file could not be opened.",
-          );
+        if (fileJobCurrent(controller))
+          useCadStore
+            .getState()
+            .setFileError(
+              error instanceof Error
+                ? error.message
+                : "Project file could not be opened.",
+            );
+      } finally {
+        finishFileJob(controller);
       }
     },
   },
@@ -145,6 +167,13 @@ export const commands: CadCommand[] = [
         }
         await downloadProject(document);
         state.setFileError(undefined);
+        try {
+          await saveRecovery(document, true);
+        } catch (error) {
+          state.setFileError(
+            `Project download started, but its recovery save marker could not be stored: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
       } catch (error) {
         console.error(error);
         state.setFileError(
@@ -187,26 +216,14 @@ export const commands: CadCommand[] = [
     enablementKey: "exportStl",
     run: async () => {
       const state = useCadStore.getState();
-      try {
-        if (!canExportStl(state))
-          throw new Error(
-            "STL export is unavailable until the current model rebuild succeeds.",
-          );
-        await downloadArrayBuffer(
-          exportMeshesToStl(
-            state.rebuild.result?.meshes ?? [],
-            state.history.present.name,
-          ),
-          makeProjectFilename(state.history.present, ".stl"),
-          "model/stl",
-        );
-        state.setFileError(undefined);
-      } catch (error) {
-        console.error(error);
-        state.setFileError(
-          error instanceof Error ? error.message : "STL export failed.",
-        );
+      if (state.fileBusy) return;
+      if (!canExportStl(state)) {
+        state.setFileError("STL export is unavailable until the current model rebuild succeeds.");
+        return;
       }
+      if (state.rebuild.result!.meshes.length > 1)
+        useFileJobs.setState({ exportOpen: true, prepared: undefined });
+      else await runFabrication();
     },
   },
   {

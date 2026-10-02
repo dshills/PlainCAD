@@ -1,3 +1,4 @@
+import { MODEL_RESOURCE_LIMITS } from "../resourceLimits";
 import { CadDocument, Feature, ValidationIssue } from "../document/schema";
 
 export interface FeatureGraphIssue {
@@ -23,7 +24,9 @@ export function planFeatureGraph(document: CadDocument): FeatureGraphPlan {
   const warnings: FeatureGraphIssue[] = [];
   const orderedFeatures = [...document.features].sort(compareFeatures);
   const stepOwner = new Map<number, string>();
-  for (const sketch of Object.values(document.sketches).sort((a, b) => compareStrings(a.id, b.id))) {
+  for (const sketch of Object.values(document.sketches).sort((a, b) =>
+    compareStrings(a.id, b.id),
+  )) {
     if (sketch.timelineStep === undefined) continue;
     const owner = stepOwner.get(sketch.timelineStep);
     if (owner) {
@@ -52,7 +55,11 @@ export function planFeatureGraph(document: CadDocument): FeatureGraphPlan {
       stepOwner.set(feature.timelineStep, `feature:${feature.id}`);
     }
 
-    if (feature.type === "extrude" || feature.type === "revolve" || feature.type === "hole") {
+    if (
+      feature.type === "extrude" ||
+      feature.type === "revolve" ||
+      feature.type === "hole"
+    ) {
       const sketch = document.sketches[feature.sketchId];
       if (!sketch) {
         errors.push({
@@ -64,7 +71,11 @@ export function planFeatureGraph(document: CadDocument): FeatureGraphPlan {
         });
         continue;
       }
-      if (sketch.timelineStep !== undefined && feature.timelineStep !== undefined && feature.timelineStep <= sketch.timelineStep) {
+      if (
+        sketch.timelineStep !== undefined &&
+        feature.timelineStep !== undefined &&
+        feature.timelineStep <= sketch.timelineStep
+      ) {
         errors.push({
           id: `feature:${feature.id}:order`,
           source: "feature",
@@ -85,6 +96,58 @@ export function planFeatureGraph(document: CadDocument): FeatureGraphPlan {
     }
   }
 
+  const featureDepths = new Map<string, number>(),
+    bodyDepths = new Map<string, number>();
+  for (const feature of orderedFeatures) {
+    if (feature.suppressed) continue;
+    const targets =
+      feature.type === "hole"
+        ? [
+            feature.targetBodyId ??
+              stableBodyIdForFeature(feature.targetFeatureId ?? ""),
+          ]
+        : feature.type === "fillet" || feature.type === "chamfer"
+          ? feature.targetEdgeRefs.map((ref) =>
+              stableBodyIdForFeature(ref.featureId),
+            )
+          : feature.operation === "newBody"
+            ? []
+            : (feature.targetBodyIds ?? []);
+    let depth = 1;
+    for (const id of targets)
+      depth = Math.max(depth, 1 + (bodyDepths.get(id) ?? 0));
+    if ("sketchId" in feature) {
+      const plane = document.sketches[feature.sketchId]?.plane;
+      const ref =
+        plane?.type === "face"
+          ? plane
+          : plane?.type === "offset" && typeof plane.base !== "string"
+            ? plane.base
+            : undefined;
+      if (ref)
+        depth = Math.max(depth, 1 + (featureDepths.get(ref.featureId) ?? 0));
+    }
+    if (feature.type === "extrude" && feature.termination?.type === "toFace")
+      depth = Math.max(
+        depth,
+        1 + (featureDepths.get(feature.termination.faceRef.featureId) ?? 0),
+      );
+    featureDepths.set(feature.id, depth);
+    if (
+      (feature.type === "extrude" || feature.type === "revolve") &&
+      feature.operation === "newBody"
+    )
+      bodyDepths.set(stableBodyIdForFeature(feature.id), depth);
+    else for (const id of targets) bodyDepths.set(id, depth);
+    if (depth > MODEL_RESOURCE_LIMITS.maxFeatureDependencyDepth)
+      errors.push({
+        id: `feature:${feature.id}:depth`,
+        source: "feature",
+        sourceId: feature.id,
+        message:
+          "Feature dependency chain exceeds the resource limit. Split the project into smaller models.",
+      });
+  }
   return { orderedFeatures, errors, warnings };
 }
 

@@ -70,6 +70,27 @@ Edge references do not survive boolean modifications; treatment chains may selec
 remaining cap perimeters or unchanged source edges, while changed/missing individual
 edges require explicit reselection. Arbitrary transient edge picks are unavailable.
 
+## Durability and fabrication
+
+- Schema 1–7 checked-in fixtures migrate, rebuild, retain IDs, edit dimensions,
+  round-trip project files, and recover through the same import codec.
+- IndexedDB autosave: 500ms debounce, latest/previous/manual snapshots, five-project
+  retention, explicit startup recovery and previous-snapshot fallback. Quota and
+  unavailable-storage errors preserve memory and offer manual save/purge.
+- Separate body STL files in a ZIP (multi-body default), one STL with separate
+  shells, and native best-effort union. Global millimeter coordinates are retained.
+  ASCII filenames are NFC-normalized, traversal/device-safe, length-bounded and
+  deduplicated case-insensitively. Separate shells report overlap/containment/contact;
+  warned combined downloads require explicit acknowledgement and current-model checks.
+- Cancellable worker export checks finite float32 geometry, malformed indices,
+  degeneracy, duplicate faces, edge/vertex manifoldness, winding, cavity orientation,
+  native-volume agreement, and bounded non-adjacent triangle intersections.
+  Native face seams weld within 1e-7mm. Expensive checks may be skipped outside union.
+- Imports reject files over 5 MiB before reading, check UTF-8 byte size and nesting
+  before JSON reviver recursion, then sanitize/migrate/validate in a cancellable worker.
+  Rebuilds enforce document count, dependency depth, body and triangle limits;
+  tessellation rejects oversized buffers before allocation growth. See README for values.
+
 ## Partial or missing working-CAD requirements
 
 - Parameter names are still expression symbols: stable-ID token references, safe
@@ -90,11 +111,10 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
   curved side faces, hole/revolve faces, and ambiguous rebinding are unsupported.
 - Measurement, named views, section views,
   body visibility controls, and full feature inspectors and graphical dimension/constraint annotation need work.
-- STL emits one binary file from meshes; separate/merged multi-body modes, manifold/
-  overlap validation, complete filename hardening, and background UI export need work.
-- Autosave and recovery, regression fixture corpus for every released schema,
-  import parsing/migration in a worker, body/triangle limits, and deployment CSP
-  remain incomplete.
+- STL validation is numerical and bounded: it does not prove absence of every
+  adjacent-face or near-degenerate self-intersection. Skipping expensive checks
+  is explicit. Native union remains best-effort and does not connect disjoint solids.
+- Deployment CSP remains incomplete.
 - Broader browser/kernel acceptance coverage (complex feature chains, imported
   fixtures, other browsers), accessibility audit, controlled performance reporting, and deployment
   documentation remain open. The bounded Chromium suite runs in the release gate

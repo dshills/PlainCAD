@@ -1,3 +1,5 @@
+import { MODEL_RESOURCE_LIMITS } from "../resourceLimits";
+import { assertProjectJsonShape } from "../../persistence/importSafety";
 import {
   CadBody,
   RebuildError,
@@ -37,12 +39,34 @@ const sketchSeeds = new Map<
   { signature: string; solved: ReturnType<typeof solveSketch> }
 >();
 
-export function rebuildDocument(document: CadDocument): RebuildResult {
+export function rebuildDocument(
+  document: CadDocument,
+  options: { exportUnion?: boolean } = {},
+): RebuildResult {
   const started = performance.now();
   const disposableMetricsStarted = getDisposableScopeMetrics();
   const errors: RebuildError[] = [];
   const warnings: RebuildWarning[] = [];
   let operationCount = 0;
+  try {
+    assertProjectJsonShape(document);
+  } catch (error) {
+    return {
+      documentId: document.id,
+      success: false,
+      bodies: [],
+      meshes: [],
+      errors: [
+        {
+          id: "document:limits",
+          source: "feature",
+          message: error instanceof Error ? error.message : String(error),
+        },
+      ],
+      warnings: [],
+      durationMs: performance.now() - started,
+    };
+  }
   const validation = validateDocument(document);
   for (const issue of validation) {
     errors.push({
@@ -218,6 +242,22 @@ export function rebuildDocument(document: CadDocument): RebuildResult {
             continue;
           }
         }
+        if (
+          feature.type !== "hole" &&
+          feature.type !== "fillet" &&
+          feature.type !== "chamfer" &&
+          feature.operation === "newBody" &&
+          runtimeBodies.size >= MODEL_RESOURCE_LIMITS.maxBodies
+        ) {
+          errors.push({
+            id: `feature:${feature.id}:body-limit`,
+            source: "kernel",
+            sourceId: feature.id,
+            message:
+              "Model exceeds the body resource limit. Suppress bodies before rebuilding.",
+          });
+          continue;
+        }
         operationCount += 1;
         if (feature.type === "revolve") {
           rebuildRevolveFeature(
@@ -375,7 +415,7 @@ export function rebuildDocument(document: CadDocument): RebuildResult {
             feature.operation === "newBody"
               ? sketchPlaneKey(sketch)
               : output.planeKey;
-          runtimeBodies.set(output.bodyId, output);
+          setRuntimeBody(runtimeBodies, output.bodyId, output);
         } catch (error) {
           errors.push({
             id: `kernel:${feature.id}`,
@@ -388,6 +428,36 @@ export function rebuildDocument(document: CadDocument): RebuildResult {
         if (errors.length > errorsBefore)
           for (const id of affectedIds) if (id) failedBodies.add(id);
       }
+    }
+  }
+  if (options.exportUnion && !errors.length && runtimeBodies.size > 1) {
+    try {
+      const current = [...runtimeBodies.values()];
+      let merged = current[0].shape;
+      for (const body of current.slice(1)) {
+        merged = kernel.unionForExport(merged, body.shape);
+        shapesToDispose.add(merged);
+      }
+      const mesh = withStableBodyId(
+        kernel.tessellate(merged, TESSELLATION_LOD.default),
+        "body:export-union",
+      );
+      const replacement = new Map<string, RuntimeBody>();
+      setRuntimeBody(replacement, mesh.bodyId, {
+        shape: merged,
+        mesh,
+        name: document.name,
+        featureId: current[0].featureId,
+        planeKey: current[0].planeKey,
+      });
+      runtimeBodies.clear();
+      for (const [id, body] of replacement) runtimeBodies.set(id, body);
+    } catch (error) {
+      errors.push({
+        id: "export:union",
+        source: "export",
+        message: `Native export union failed: ${error instanceof Error ? error.message : String(error)}. Use separate STL files instead.`,
+      });
     }
   }
   const featureRebuildMs = performance.now() - featureStarted;
@@ -413,6 +483,16 @@ export function rebuildDocument(document: CadDocument): RebuildResult {
     });
   }
 
+  if (
+    meshes.reduce((total, mesh) => total + mesh.indices.length / 3, 0) >
+    MODEL_RESOURCE_LIMITS.maxTriangles
+  )
+    errors.push({
+      id: "model:triangles",
+      source: "kernel",
+      message:
+        "Model exceeds the total triangle resource limit. Simplify or suppress bodies.",
+    });
   let disposalFailures = 0;
   shapesToDispose.forEach((shape) => {
     try {
@@ -531,7 +611,7 @@ function rebuildRevolveFeature(
       kernel.tessellate(output.shape, TESSELLATION_LOD.default),
       output.bodyId,
     );
-    runtimeBodies.set(output.bodyId, {
+    setRuntimeBody(runtimeBodies, output.bodyId, {
       ...output,
       mesh,
       planeKey:
@@ -698,7 +778,7 @@ function rebuildHoleFeature(
       kernel.tessellate(current.shape, TESSELLATION_LOD.default),
       targetBodyId,
     );
-    runtimeBodies.set(targetBodyId, { ...current, mesh });
+    setRuntimeBody(runtimeBodies, targetBodyId, { ...current, mesh });
   } catch (error) {
     errors.push({
       id: `kernel:${feature.id}`,
@@ -781,7 +861,7 @@ function rebuildEdgeTreatmentFeature(
       kernel.tessellate(shape, TESSELLATION_LOD.default),
       targetBodyId,
     );
-    runtimeBodies.set(targetBodyId, {
+    setRuntimeBody(runtimeBodies, targetBodyId, {
       ...target,
       shape,
       mesh,
@@ -844,6 +924,21 @@ interface RuntimeBody {
   name: string;
   mesh?: RenderMesh;
   planeKey: string;
+}
+
+function setRuntimeBody(
+  bodies: Map<string, RuntimeBody>,
+  id: string,
+  body: RuntimeBody,
+) {
+  let triangles = body.mesh ? body.mesh.indices.length / 3 : 0;
+  for (const [otherId, other] of bodies)
+    if (otherId !== id) triangles += (other.mesh?.indices.length ?? 0) / 3;
+  if (triangles > MODEL_RESOURCE_LIMITS.maxTriangles)
+    throw new Error(
+      "Model exceeds the total triangle resource limit. Simplify or suppress bodies.",
+    );
+  bodies.set(id, body);
 }
 
 function resolveTargetBodies(

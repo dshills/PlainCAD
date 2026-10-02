@@ -1,8 +1,41 @@
+import { MODEL_RESOURCE_LIMITS, assertMeshBudget } from "../resourceLimits";
 import { RenderMesh } from "./KernelAdapter";
 
-export function exportMeshesToStl(meshes: RenderMesh[], name = "PlainCAD"): ArrayBuffer {
-  if (meshes.length === 0) throw new Error("STL export requires a successfully rebuilt model.");
-  const triangleCount = meshes.reduce((sum, mesh) => sum + Math.floor(mesh.indices.length / 3), 0);
+export function exportMeshesToStl(
+  meshes: RenderMesh[],
+  name = "PlainCAD",
+): ArrayBuffer {
+  if (meshes.length === 0)
+    throw new Error("STL export requires a successfully rebuilt model.");
+  for (const mesh of meshes) {
+    assertMeshBudget(mesh.positions.length / 3, mesh.indices.length / 3);
+    if (
+      !mesh.indices.length ||
+      mesh.indices.length % 3 ||
+      mesh.positions.length % 3
+    )
+      throw new Error("STL mesh has empty or malformed triangles.");
+    for (let i = 0; i < mesh.positions.length; i++)
+      if (!Number.isFinite(Math.fround(mesh.positions[i])))
+        throw new Error(
+          "STL coordinates exceed finite float32 representation.",
+        );
+    if (
+      mesh.indices.some(
+        (i) => !Number.isInteger(i) || i < 0 || i * 3 >= mesh.positions.length,
+      )
+    )
+      throw new Error("STL mesh has an invalid vertex index.");
+  }
+  const triangleCount = meshes.reduce(
+    (sum, mesh) => sum + mesh.indices.length / 3,
+    0,
+  );
+  if (
+    triangleCount > MODEL_RESOURCE_LIMITS.maxTriangles ||
+    meshes.length > MODEL_RESOURCE_LIMITS.maxBodies
+  )
+    throw new Error("STL exceeds the export resource limit.");
   const bytes = new ArrayBuffer(84 + triangleCount * 50);
   const view = new DataView(bytes);
   writeHeader(bytes, name);
@@ -31,7 +64,14 @@ function writeHeader(bytes: ArrayBuffer, name: string) {
   header.set(encoded.subarray(0, 80));
 }
 
-function writeFaceNormal(view: DataView, offset: number, positions: ArrayLike<number>, a: number, b: number, c: number): number {
+function writeFaceNormal(
+  view: DataView,
+  offset: number,
+  positions: ArrayLike<number>,
+  a: number,
+  b: number,
+  c: number,
+): number {
   const abX = positions[b] - positions[a];
   const abY = positions[b + 1] - positions[a + 1];
   const abZ = positions[b + 2] - positions[a + 2];
@@ -43,10 +83,7 @@ function writeFaceNormal(view: DataView, offset: number, positions: ArrayLike<nu
   const normalZ = abX * acY - abY * acX;
   const length = Math.hypot(normalX, normalY, normalZ);
   if (length < 1e-12) {
-    view.setFloat32(offset, 0, true);
-    view.setFloat32(offset + 4, 0, true);
-    view.setFloat32(offset + 8, 0, true);
-    return offset + 12;
+    throw new Error("STL contains a degenerate triangle.");
   }
   view.setFloat32(offset, normalX / length, true);
   view.setFloat32(offset + 4, normalY / length, true);
@@ -54,7 +91,12 @@ function writeFaceNormal(view: DataView, offset: number, positions: ArrayLike<nu
   return offset + 12;
 }
 
-function writeVertex(view: DataView, offset: number, positions: ArrayLike<number>, vertexIndex: number): number {
+function writeVertex(
+  view: DataView,
+  offset: number,
+  positions: ArrayLike<number>,
+  vertexIndex: number,
+): number {
   view.setFloat32(offset, positions[vertexIndex], true);
   view.setFloat32(offset + 4, positions[vertexIndex + 1], true);
   view.setFloat32(offset + 8, positions[vertexIndex + 2], true);

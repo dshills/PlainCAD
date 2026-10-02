@@ -26,6 +26,7 @@ export interface CadStore {
   selection: SelectionState;
   rebuild: RebuildState;
   fileError?: string;
+  fileBusy?: boolean;
   paletteOpen: boolean;
   setPaletteOpen(open: boolean): void;
   setFileError(message: string | undefined): void;

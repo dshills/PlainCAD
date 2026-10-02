@@ -1,3 +1,4 @@
+import { assertMeshBudget } from "../resourceLimits";
 import initOpenCascadeModule from "opencascade.js/dist/opencascade.wasm.js";
 import openCascadeWasmUrl from "opencascade.js/dist/opencascade.wasm.wasm?url";
 import { createId } from "../document/ids";
@@ -294,6 +295,33 @@ export class OpenCascadeKernel implements KernelAdapter {
 
   fuse(a: KernelShape, b: KernelShape): KernelShape {
     return this.booleanResult(a, b, "fuse");
+  }
+
+  unionForExport(base: KernelShape, tool: KernelShape): KernelShape {
+    const oc = OpenCascadeKernel.openCascade;
+    const a = base.kernelHandle as KernelHandle,
+      b = tool.kernelHandle as KernelHandle;
+    if (!oc || !a.occtShape || !b.occtShape)
+      throw new Error("Export union requires native OpenCascade solids.");
+    return withDisposableScope((scope) => {
+      const builder = scope.use(
+        new oc.BRepAlgoAPI_Fuse_3(a.occtShape, b.occtShape),
+      );
+      if (!builder.IsDone())
+        throw new Error("OpenCascade rejected the export union.");
+      const shape = scope.use(builder.Shape());
+      this.measureNative(shape);
+      return {
+        ...base,
+        kernelHandle: {
+          kind: "boolean",
+          operation: "fuse",
+          base: a,
+          tool: b,
+          occtShape: scope.release(shape),
+        } satisfies KernelHandle,
+      };
+    });
   }
 
   private booleanResult(
@@ -1054,6 +1082,10 @@ export class OpenCascadeKernel implements KernelAdapter {
           try {
             const placement = location.Transformation();
             try {
+              assertMeshBudget(
+                positions.length / 3 + triangulation.NbNodes(),
+                indices.length / 3 + triangulation.NbTriangles(),
+              );
               const offset = positions.length / 3;
               for (
                 let index = 1;

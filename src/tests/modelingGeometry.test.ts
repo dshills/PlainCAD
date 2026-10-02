@@ -1,3 +1,4 @@
+import { validateMesh } from "../fabrication/meshValidation";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { OpenCascadeKernel } from "../cad/kernel/OpenCascadeKernel";
 import {
@@ -527,4 +528,28 @@ describe("native modeling geometry", () => {
         /positive finite/,
       );
   });
+  it("validates native curved treatment meshes and export unions including contained solids", () => {
+    const circle = addCircleAt(createXySketch(), "0mm", "0mm", "5mm");
+    const profile = detectProfiles(solveSketch(circle, {})).profiles[0];
+    const cylinder = kernel.extrudeProfile(profile, 10);
+    const shapes = [cylinder];
+    try {
+      expect(validateMesh(kernel.tessellate(cylinder, options)).volume).toBeCloseTo(Math.PI * 250, 0);
+      const round = kernel.fillet(cylinder, [createExtrudeEdgeRef("base", "endCapPerimeter")], 1);
+      shapes.push(round);
+      expect(validateMesh(kernel.tessellate(round, options)).volume).toBeGreaterThan(750);
+      const base = kernel.extrudeProfile(rectangle().profile, 10);
+      const inner = kernel.extrudeProfile(rectangle(10, 5).profile, 10);
+      shapes.push(base, inner);
+      const contained = kernel.unionForExport(base, inner);
+      shapes.push(contained);
+      expect(validateMesh(kernel.tessellate(contained, options)).volume).toBeCloseTo(2000, 4);
+      const shift = { ...sketchPlaneTransform("XY"), origin: { x: 15, y: 0, z: 0 } };
+      const tool = kernel.extrudeProfile(rectangle(10, 10).profile, 10, shift);
+      const union = kernel.unionForExport(base, tool);
+      shapes.push(tool, union);
+      expect(validateMesh(kernel.tessellate(union, options)).volume).toBeCloseTo(2500, 4);
+    } finally { shapes.forEach((shape) => kernel.disposeShape(shape)); }
+  });
+
 });

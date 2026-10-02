@@ -3,6 +3,9 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   plugins: [react()],
+  worker: {
+    format: "es",
+  },
   server: {
     port: 5278,
     strictPort: true,

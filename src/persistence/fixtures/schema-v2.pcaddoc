@@ -1,0 +1,164 @@
+{
+  "schemaVersion": 2,
+  "id": "fixture-v2",
+  "name": "Schema 2 fabrication fixture",
+  "units": "metric",
+  "unitSettings": {
+    "length": "mm",
+    "angle": "deg"
+  },
+  "createdAt": "2025-01-01T00:00:00.000Z",
+  "updatedAt": "2025-01-01T00:00:03.000Z",
+  "parameters": {
+    "thickness": {
+      "id": "thickness-parameter",
+      "name": "thickness",
+      "expression": "5mm",
+      "value": 5,
+      "unit": "mm"
+    }
+  },
+  "sketches": {
+    "section": {
+      "id": "section",
+      "name": "Rectangle",
+      "plane": "XY",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "entities": {
+        "corner0": {
+          "id": "corner0",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "corner1": {
+          "id": "corner1",
+          "type": "point",
+          "x": {
+            "expression": "20mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "corner2": {
+          "id": "corner2",
+          "type": "point",
+          "x": {
+            "expression": "20mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "10mm",
+            "unit": "mm"
+          }
+        },
+        "corner3": {
+          "id": "corner3",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "10mm",
+            "unit": "mm"
+          }
+        },
+        "side0": {
+          "id": "side0",
+          "type": "line",
+          "startPointId": "corner0",
+          "endPointId": "corner1"
+        },
+        "side1": {
+          "id": "side1",
+          "type": "line",
+          "startPointId": "corner1",
+          "endPointId": "corner2"
+        },
+        "side2": {
+          "id": "side2",
+          "type": "line",
+          "startPointId": "corner2",
+          "endPointId": "corner3"
+        },
+        "side3": {
+          "id": "side3",
+          "type": "line",
+          "startPointId": "corner3",
+          "endPointId": "corner0"
+        }
+      },
+      "constraints": [],
+      "dimensions": [],
+      "timelineStep": 1
+    },
+    "hole-section": {
+      "id": "hole-section",
+      "name": "Hole centers",
+      "plane": "XY",
+      "createdAt": "2025-01-01T00:00:02.000Z",
+      "entities": {
+        "center": {
+          "id": "center",
+          "type": "point",
+          "x": {
+            "expression": "10mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "5mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "constraints": [],
+      "dimensions": [],
+      "timelineStep": 3
+    }
+  },
+  "features": [
+    {
+      "id": "base",
+      "name": "Base",
+      "type": "extrude",
+      "sketchId": "section",
+      "profileId": "section:profile:rectangle",
+      "operation": "newBody",
+      "distance": {
+        "expression": "thickness",
+        "unit": "mm"
+      },
+      "direction": "positive",
+      "createdAt": "2025-01-01T00:00:01.000Z",
+      "timelineStep": 2
+    },
+    {
+      "id": "hole",
+      "name": "Through hole",
+      "type": "hole",
+      "targetFeatureId": "base",
+      "sketchId": "hole-section",
+      "centerPointIds": [
+        "center"
+      ],
+      "diameter": {
+        "expression": "2mm",
+        "unit": "mm"
+      },
+      "depth": "throughAll",
+      "createdAt": "2025-01-01T00:00:03.000Z",
+      "timelineStep": 4
+    }
+  ],
+  "timelineCursor": 4
+}

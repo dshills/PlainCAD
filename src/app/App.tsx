@@ -1,3 +1,5 @@
+import { RecoveryPanel } from "../ui/panels/RecoveryPanel";
+import { FabricationPanel } from "../ui/panels/FabricationPanel";
 import { useEffect, useMemo, useRef } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { CadViewer } from "../viewer/CadViewer";
@@ -162,6 +164,8 @@ export function App() {
           </button>
         </div>
       ) : null}
+      <RecoveryPanel />
+      <FabricationPanel />
       <main className="workspace">
         <aside className="left-panel">
           <SketchPanel />

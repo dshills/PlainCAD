@@ -32,12 +32,13 @@ for (const outcome of ["result", "worker failure"] as const) {
       } as Window["cadDelivery"];
       const NativeWorker = window.Worker;
       window.Worker = class extends NativeWorker {
-        constructor(url: string | URL, options?: WorkerOptions) {
-          super(url, options);
-          delivery.failWorker = () => this.dispatchEvent(new ErrorEvent("error", { message: "Controlled worker failure" }));
-        }
         override postMessage(message: unknown, options?: StructuredSerializeOptions | Transferable[]) {
-          delivery.requests.push(structuredClone(message) as WorkerRequest);
+          // Recovery/import workers use a separate protocol and must not alter
+          // the geometry worker selected for controlled failure or request counts.
+          if (message && typeof message === "object" && "epoch" in message && "requestId" in message) {
+            delivery.requests.push(structuredClone(message) as WorkerRequest);
+            delivery.failWorker = () => this.dispatchEvent(new ErrorEvent("error", { message: "Controlled worker failure" }));
+          }
           super.postMessage(message, Array.isArray(options) ? { transfer: options } : options);
         }
         override set onmessage(listener: ((this: Worker, ev: MessageEvent) => unknown) | null) {

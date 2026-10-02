@@ -303,7 +303,7 @@ function sanitizeFeature(feature: Feature): Feature | undefined {
       type: "revolve",
       sketchId: feature.sketchId,
       profileId: feature.profileId,
-      axis: isRecord(feature.axis) ? { ...feature.axis } : feature.axis,
+      axis: sanitizeRevolveAxis(feature.axis),
       operation: feature.operation,
       angle: sanitizeExpressionRef(feature.angle),
       ...(Array.isArray(feature.targetBodyIds) ? { targetBodyIds: [...feature.targetBodyIds] } : {}),
@@ -313,7 +313,7 @@ function sanitizeFeature(feature: Feature): Feature | undefined {
     return {
       ...base,
       type: "fillet",
-      targetEdgeRefs: Array.isArray(feature.targetEdgeRefs) ? feature.targetEdgeRefs.map((ref) => ({ ...ref })) : [],
+      targetEdgeRefs: Array.isArray(feature.targetEdgeRefs) ? feature.targetEdgeRefs.map(sanitizeTopologyRef) : [],
       radius: sanitizeExpressionRef(feature.radius),
     };
   }
@@ -321,13 +321,25 @@ function sanitizeFeature(feature: Feature): Feature | undefined {
     return {
       ...base,
       type: "chamfer",
-      targetEdgeRefs: Array.isArray(feature.targetEdgeRefs) ? feature.targetEdgeRefs.map((ref) => ({ ...ref })) : [],
+      targetEdgeRefs: Array.isArray(feature.targetEdgeRefs) ? feature.targetEdgeRefs.map(sanitizeTopologyRef) : [],
       distance: sanitizeExpressionRef(feature.distance),
     };
   }
   throw new Error(
     `Project file contains unsupported feature type ${String((feature as { type?: unknown }).type)}.`,
   );
+}
+
+function sanitizeRevolveAxis(value: unknown): Extract<Feature, { type: "revolve" }>["axis"] {
+  if (!isRecord(value)) throw new Error("Project file contains a malformed revolve axis.");
+  if (value.type === "origin" && ["X", "Y", "Z"].includes(value.axis)) return { type: "origin", axis: value.axis };
+  if (value.type === "sketchLine" && typeof value.sketchId === "string" && typeof value.lineId === "string") return { type: "sketchLine", sketchId: value.sketchId, lineId: value.lineId };
+  throw new Error("Project file contains a malformed revolve axis.");
+}
+
+function sanitizeTopologyRef(value: unknown): any {
+  if(!isRecord(value))return value;
+  return Object.fromEntries(["featureId","kind","transientId","stableHint","role","sourceEntityId","adjacentRole","repairRequired"].filter((key)=>value[key]!==undefined).map((key)=>[key,value[key]]));
 }
 
 function sanitizeExtrudeTermination(termination: Record<string, any>, fallbackDistance: unknown): NonNullable<Extract<Feature, { type: "extrude" }>["termination"]> {
@@ -339,7 +351,7 @@ function sanitizeExtrudeTermination(termination: Record<string, any>, fallbackDi
       !["face", "edge", "vertex"].includes(String(faceRef.kind)) ||
       typeof faceRef.transientId !== "string"
     ) {
-      return { type: "distance", distance: sanitizeExpressionRef(fallbackDistance) };
+      throw new Error("Project file contains a malformed to-face reference.");
     }
     return {
       type: "toFace",
@@ -355,6 +367,7 @@ function sanitizeExtrudeTermination(termination: Record<string, any>, fallbackDi
       },
     };
   }
+  if (termination.type !== "distance") throw new Error("Project file contains an unsupported extrude termination.");
   return { type: "distance", distance: sanitizeExpressionRef(termination.distance ?? fallbackDistance) };
 }
 

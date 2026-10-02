@@ -151,6 +151,39 @@ validation-only dimensions until you choose Enable driving dimensions. The solve
 uses a local Jacobian-rank DOF heuristic and bounded iteration/time budgets; it
 is intended for small sketches. See the capability matrix for precise limits.
 
+### Autosave and Fabrication
+
+Edited projects autosave to IndexedDB after a 500ms idle period. Recovery keeps up
+to five projects, with the latest snapshot, previous snapshot, and last downloaded
+save for each. On startup, explicitly recover unsaved work or start without it.
+Corrupt latest snapshots can be replaced by the previous snapshot. Storage/quota
+failures preserve the in-memory project and offer manual download or clearing old
+recovery data. Browser termination can still lose edits made before the last completed
+IndexedDB transaction; autosave does not replace manual project files.
+
+STL defaults to separate files in a ZIP for multiple bodies. Choose one STL with
+separate shells or a best-effort native union in the export dialog. All modes keep
+global coordinates in millimeters. Connected unions remove overlap; disjoint unions
+remain separate solids and report that fact. Warnings require an explicit download
+choice for combined modes. Changes after validation invalidate a pending download.
+
+Export runs in a cancellable worker with a 60-second limit. It checks finite float32
+coordinates, indices, degeneracy, welded edge/vertex manifoldness, winding, shell
+volume and native-volume agreement. A 1e-7mm seam weld closes duplicated native face
+vertices. Bounded non-adjacent triangle checks detect intersections and body
+containment/contact. Expensive checks can be skipped for separate/shell modes, with
+a diagnostic; union requires full checks. These numerical checks are not a proof
+of absence of every near-degenerate or adjacent-face intersection.
+
+Imports check raw UTF-8 bytes before parsing, preflight nesting before the reviver,
+then migrate and validate in a cancellable worker. Checked-in schema 1–7 fixtures
+verify IDs, rebuilds, edits, save/open, and recovery. Default limits: 5 MiB JSON,
+depth 64, 500 parameters, 100 sketches, 750 entities/512 constraints and dimensions
+per sketch, 10,000 total entities, 20,000 total constraints/dimensions, 1,000 features,
+100 feature dependency steps, 64 bodies, 100,000 triangles/300,000 vertices per body,
+250,000 total triangles, and 2,000,000 intersection tests per export. Resource errors
+fail clearly; native triangle budgets are checked before tessellation buffers grow.
+
 ### Work With Features
 
 1. Select a sketch with a detected profile.
