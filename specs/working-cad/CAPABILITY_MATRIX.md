@@ -77,6 +77,17 @@ Edge references do not survive boolean modifications; treatment chains may selec
 remaining cap perimeters or unchanged source edges, while changed/missing individual
 edges require explicit reselection. Arbitrary transient edge picks are unavailable.
 
+## Measurement and inspection
+
+- Current solved sketch points measure world-space distance and X/Y/Z delta across
+  origin, offset and supported face planes. Lines use solved endpoints; circle and
+  arc lengths, radii, diameters and arc sweep are analytic rather than sampled.
+- Unit-aware mm/cm/m/in/ft readouts and a transient world-space distance overlay
+  follow parameter edits. Pending/failed rebuilds hide stale results; lost references
+  require explicit reselection. New/open projects clear measurement selection.
+- Body Inspector reports native volume/solid count and tessellated global bounds.
+  Arbitrary BRep edge/face measurements and surface picks remain unavailable.
+
 ## Durability and fabrication
 
 - Schema 1–8 checked-in fixtures migrate, rebuild, retain IDs, edit dimensions,
@@ -124,7 +135,7 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
 - General post-boolean face/edge naming remains missing. Planes require an
   unmodified positive-distance new-body owner;
   curved side faces, hole/revolve faces, and ambiguous rebinding are unsupported.
-- Measurement, named views, section views,
+- Named views, section views,
   remaining feature inspectors and graphical dimension/constraint annotation need work.
 - STL validation is numerical and bounded: it does not prove absence of every
   adjacent-face or near-degenerate self-intersection. Skipping expensive checks

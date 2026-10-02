@@ -3,6 +3,7 @@
 export interface ViewerSnapshot {
   cameraUp: number[];
   cameraTarget: number[];
+  measurementLine: number[];
   gridNormal: number[];
   meshes: Array<{ bodyId: string; visible: boolean; positions: number[]; indices: number[] }>;
   sketchPoints: Array<{ id: string; position: number[] }>;

@@ -1,3 +1,4 @@
+import { MeasurementPanel } from "../ui/panels/MeasurementPanel";
 import { RecoveryPanel } from "../ui/panels/RecoveryPanel";
 import { FabricationPanel } from "../ui/panels/FabricationPanel";
 import { HoleCreationPanel } from "../ui/panels/HoleCreationPanel";
@@ -182,6 +183,7 @@ export function App() {
         <aside className="right-panel">
           <ParameterPanel />
           <InspectorPanel />
+          <MeasurementPanel />
           <RebuildErrorsPanel />
           <section className="panel help-panel" aria-labelledby="help-heading">
             <h2 id="help-heading">Help</h2>

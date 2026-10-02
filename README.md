@@ -261,6 +261,15 @@ support alone does not imply a working modeling operation.
   in the current project session, and resets on new/open/recovery. These runtime
   preferences are not saved in project JSON.
 
+The Measure panel reads the current worker's solved sketch geometry. Choose two
+sketch points (including points on different planes) for world-space distance and
+X/Y/Z delta, or a line, circle, or arc for analytic length, radius and diameter.
+Choose mm/cm/m/in/ft without changing the model. A magenta world-space line shows
+the point pair. Pending or failed rebuilds hide measurements and overlays;
+removed references remain explicit until reselected. Measurements are transient
+and refer to authored sketch entities; arbitrary BRep edge/face measurements are
+not available.
+
 ### Command Palette
 
 Open the command palette with:

@@ -3,6 +3,8 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { registerViewerDiagnostics } from "./viewerDiagnostics";
+import { useInspectionState } from "../state/inspectionState";
+import { MeasurementError, measureWorldPoint } from "../cad/inspection/measurements";
 import { useViewerState } from "../state/viewerState";
 import { useCadStore } from "../state/useCadStore";
 import { SelectionRef } from "../cad/document/schema";
@@ -19,6 +21,7 @@ interface ViewerRuntime {
   controls: OrbitControls;
   modelGroup: THREE.Group;
   sketchGroup: THREE.Group;
+  measurementGroup: THREE.Group;
   sketchResources: SketchOverlayResources;
 }
 
@@ -49,6 +52,7 @@ export function CadViewer() {
   const select = useCadStore((state) => state.select);
   const session = useCadStore((state) => state.documentSession);
   const view = useViewerState();
+  const inspection = useInspectionState();
   const hidden = view.session === session ? view.hiddenBodyIds : [];
   const documentId = useCadStore((state) => state.history.present.id);
   const selectedBodyId = useCadStore((state) => {
@@ -92,7 +96,9 @@ export function CadViewer() {
     const sketchGroup = new THREE.Group();
     sketchGroup.renderOrder = 1;
     scene.add(sketchGroup);
-    runtimeRef.current = { camera, controls, modelGroup, sketchGroup, sketchResources: createSketchOverlayResources() };
+    const measurementGroup = new THREE.Group();
+    scene.add(measurementGroup);
+    runtimeRef.current = { camera, controls, modelGroup, sketchGroup, measurementGroup, sketchResources: createSketchOverlayResources() };
 
     const unregisterDiagnostics = import.meta.env.DEV ? registerViewerDiagnostics(() => ({
       cameraUp: camera.up.toArray(),
@@ -108,6 +114,7 @@ export function CadViewer() {
         }
         return { bodyId: object.userData.bodyId as string, visible: object.visible, positions, indices: Array.from(object.geometry.index?.array ?? []) };
       }),
+      measurementLine: measurementGroup.children[0] instanceof THREE.Line ? Array.from(measurementGroup.children[0].geometry.getAttribute("position").array) : [],
       sketchPoints: sketchGroup.children.filter((object) => object instanceof THREE.Mesh && typeof object.userData.sketchEntityId === "string").map((object) => ({
         id: object.userData.sketchEntityId as string, position: object.getWorldPosition(new THREE.Vector3()).toArray(),
       })),
@@ -200,6 +207,24 @@ export function CadViewer() {
       lastAutoFitSessionRef.current = session;
     }
   }, [meshes, view.hiddenBodyIds, view.session, session]);
+
+  useEffect(() => {
+    const group = runtimeRef.current?.measurementGroup;
+    if (!group) return;
+    disposeObject3D(group);
+    group.clear();
+    if (inspection.session !== session || !inspection.first || !inspection.second || rebuild.status !== "succeeded" || !rebuild.result?.success || rebuild.result.documentId !== document.id) return;
+    try {
+      const points = [inspection.first,inspection.second].map((ref) => measureWorldPoint(document,rebuild.result!,ref));
+      const geometry = new THREE.BufferGeometry().setFromPoints(points.map((p) => new THREE.Vector3(p.x,p.y,p.z)));
+      const line = new THREE.Line(geometry,new THREE.LineBasicMaterial({ color: "#b52977", depthTest:false }));
+      line.renderOrder = 2;
+      group.add(line);
+    } catch (error) {
+      // Expected lost references have a diagnostic in the measurement panel.
+      if (!(error instanceof MeasurementError)) console.error("Measurement overlay failed", error);
+    }
+  }, [inspection.session, inspection.first, inspection.second, session, document, rebuild.result, rebuild.status]);
 
   useEffect(() => {
     selectedBodyIdRef.current = selectedBodyId;
