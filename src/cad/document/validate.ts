@@ -1,5 +1,6 @@
 import { CadDocument, ValidationIssue } from "./schema";
 import { validateParameterBindings } from "../parameters/expressionBindings";
+import { MODEL_RESOURCE_LIMITS } from "../resourceLimits";
 
 const PARAMETER_NAME_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
 const REQUIRED_DOCUMENT_OBJECTS = ["parameters", "sketches"] as const;
@@ -653,6 +654,7 @@ function validatePersistedFields(document: CadDocument): ValidationIssue[] {
       );
     }
     if (feature.type === "hole") {
+      checkFeature(Array.isArray(feature.centerPointIds) && feature.centerPointIds.length <= MODEL_RESOURCE_LIMITS.maxHoleCenters, `Hole exceeds the ${MODEL_RESOURCE_LIMITS.maxHoleCenters}-center resource limit.`);
       checkFeature(
         strings(feature.centerPointIds) &&
           (feature.targetBodyId === undefined ||

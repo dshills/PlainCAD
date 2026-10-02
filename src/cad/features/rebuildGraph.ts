@@ -1,3 +1,4 @@
+import { extrusionSweep, throughAllDistance } from "./extrusionSweep";
 import { MODEL_RESOURCE_LIMITS } from "../resourceLimits";
 import { assertProjectJsonShape } from "../../persistence/importSafety";
 import { refreshBoundNames, validateParameterBindings } from "../parameters/expressionBindings";
@@ -300,12 +301,12 @@ export function rebuildDocument(
           );
           continue;
         }
-        if (feature.direction !== "positive") {
+        if (feature.direction !== "positive" && feature.termination?.type === "toFace") {
           errors.push({
             id: `feature:${feature.id}:direction`,
             source: "feature",
             sourceId: feature.id,
-            message: `Extrude direction "${feature.direction}" is not supported yet.`,
+            message: "To-face termination currently requires positive extrusion. Use distance/through-all or change direction to positive.",
           });
           continue;
         }
@@ -396,7 +397,7 @@ export function rebuildDocument(
             shape = kernel.extrudeProfile(
               profile,
               distance.value,
-              planes.transforms.get(sketch.id),
+              extrusionSweep(planes.transforms.get(sketch.id)!, distance.value, feature.direction),
             );
           }
           shapesToDispose.add(shape);
@@ -632,45 +633,6 @@ function rebuildRevolveFeature(
   }
 }
 
-function projectedThroughAllDistance(
-  bounds: RenderMesh["bounds"],
-  transform: SketchPlaneTransform,
-): number | undefined {
-  // Callers reject negative and symmetric extrudes before this positive-direction calculation runs.
-  const normalLength = Math.hypot(
-    transform.normal.x,
-    transform.normal.y,
-    transform.normal.z,
-  );
-  if (normalLength <= 1e-9) return undefined;
-  const normal = {
-    x: transform.normal.x / normalLength,
-    y: transform.normal.y / normalLength,
-    z: transform.normal.z / normalLength,
-  };
-  const corners = [
-    [bounds.min[0], bounds.min[1], bounds.min[2]],
-    [bounds.min[0], bounds.min[1], bounds.max[2]],
-    [bounds.min[0], bounds.max[1], bounds.min[2]],
-    [bounds.min[0], bounds.max[1], bounds.max[2]],
-    [bounds.max[0], bounds.min[1], bounds.min[2]],
-    [bounds.max[0], bounds.min[1], bounds.max[2]],
-    [bounds.max[0], bounds.max[1], bounds.min[2]],
-    [bounds.max[0], bounds.max[1], bounds.max[2]],
-  ] as const;
-  const projected = corners.map(
-    (corner) =>
-      corner[0] * normal.x + corner[1] * normal.y + corner[2] * normal.z,
-  );
-  const planeOffset =
-    transform.origin.x * normal.x +
-    transform.origin.y * normal.y +
-    transform.origin.z * normal.z;
-  const distanceFromPlane = Math.max(...projected) - planeOffset + 1e-7;
-  if (distanceFromPlane > 0) return distanceFromPlane;
-  return undefined;
-}
-
 function rebuildHoleFeature(
   feature: HoleFeature,
   document: CadDocument,
@@ -707,6 +669,10 @@ function rebuildHoleFeature(
     });
     return;
   }
+  if (!feature.centerPointIds.length) {
+    errors.push({ id: `feature:${feature.id}:centers`, source: "feature", sourceId: feature.id, message: "Hole requires at least one explicit center point. Select centers in the Inspector." });
+    return;
+  }
   const diameter = evaluateExpression(feature.diameter.expression, {
     parameters,
   });
@@ -737,7 +703,7 @@ function rebuildHoleFeature(
   }
   const depth =
     feature.depth === "throughAll"
-      ? projectedThroughAllDistance(target.mesh.bounds, planeTransform)
+      ? throughAllDistance(target.mesh.bounds, planeTransform)
       : evaluateHoleDepth(feature.depth, parameters);
   if (!depth || depth <= 0) {
     errors.push({
@@ -1006,13 +972,13 @@ function resolveExtrudeDistance(
         error: "Through-all termination requires a target body.",
       };
     const throughAllDistances = targetMeshes.map((mesh) =>
-      projectedThroughAllDistance(mesh.bounds, transform),
+      throughAllDistance(mesh.bounds, transform, feature.direction),
     );
     if (throughAllDistances.some((distance) => distance === undefined))
       return {
         value: 0,
         error:
-          "Through-all termination requires the target body to be in the positive extrusion direction.",
+          `Through-all termination requires the target body to extend in the ${feature.direction} extrusion direction.`,
       };
     const targetDepth = throughAllDistances
       .filter((distance): distance is number => distance !== undefined)

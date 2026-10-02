@@ -674,3 +674,6 @@ select:focus-visible {
 .file-dialog label { display: block; margin: 14px 0; }
 .file-dialog select { display: block; width: 100%; margin-top: 6px; }
 .file-dialog button { margin: 6px; }
+.model-dialog { margin: 0; bottom: auto; }
+.model-dialog::backdrop { background: #0006; }
+.model-dialog input[type="checkbox"] { width: auto; }

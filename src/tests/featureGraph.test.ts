@@ -66,7 +66,7 @@ describe("feature graph rebuild", () => {
     expect(result.bodies).toHaveLength(0);
   });
 
-  it("reports unsupported extrude operations and directions", () => {
+  it("reports missing boolean targets and supports symmetric distance extrusion", () => {
     let document = createBoxTemplate();
     const feature = document.features[0] as ExtrudeFeature;
     document = upsertFeature(document, { ...feature, operation: "join" });
@@ -79,9 +79,10 @@ describe("feature graph rebuild", () => {
       ...(document.features[0] as ExtrudeFeature),
       direction: "symmetric",
     });
-    expect(rebuildDocument(document).errors[0].message).toContain(
-      "not supported",
-    );
+    const symmetric = rebuildDocument(document);
+    expect(symmetric.success).toBe(true);
+    expect(symmetric.meshes[0].bounds.min[2]).toBeCloseTo(-10);
+    expect(symmetric.meshes[0].bounds.max[2]).toBeCloseTo(10);
   });
 
   it("requires OpenCascade handles for join booleans in the fallback kernel path", () => {

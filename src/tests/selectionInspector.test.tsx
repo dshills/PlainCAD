@@ -9,7 +9,7 @@ import { createBoxTemplate } from "../templates/templates";
 import { createMountingPlateTemplate } from "../templates/templates";
 
 describe("selection and inspection", () => {
-  it("keeps unsupported extrude directions disabled and enables native to-face termination", () => {
+  it("offers negative/symmetric extrusion and native positive to-face termination", () => {
     const document = createBoxTemplate();
     useCadStore.setState({
       history: { past: [], present: document, future: [] },
@@ -29,11 +29,11 @@ describe("selection and inspection", () => {
     ).not.toBeInTheDocument();
     expect(screen.getByRole("option", { name: "Positive" })).toBeEnabled();
     expect(
-      screen.getByRole("option", { name: "Negative unavailable" }),
-    ).toBeDisabled();
+      screen.getByRole("option", { name: "Negative" }),
+    ).toBeEnabled();
     expect(
-      screen.getByRole("option", { name: "Symmetric unavailable" }),
-    ).toBeDisabled();
+      screen.getByRole("option", { name: "Symmetric" }),
+    ).toBeEnabled();
     expect(screen.getByRole("option", { name: "To face" })).toBeEnabled();
   });
 

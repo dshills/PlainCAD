@@ -190,6 +190,7 @@ per sketch, 10,000 total entities, 20,000 total constraints/dimensions, 1,000 fe
 100 feature dependency steps, 64 bodies, 100,000 triangles/300,000 vertices per body,
 250,000 total triangles, and 2,000,000 intersection tests per export. Resource errors
 fail clearly; native triangle budgets are checked before tessellation buffers grow.
+Each hole feature is limited to 64 explicit centers.
 
 ### Work With Features
 
@@ -211,10 +212,13 @@ Broken references remain saved and structurally valid damaged projects can open
 or recover for repair. Profiles wait for current worker analysis; target choices
 come from durable upstream body owners. Nothing is rebound automatically.
 
-The Inspector supports positive extrudes, cut/join with one explicit target,
+The Inspector supports positive, negative and symmetric distance extrudes, cut/join
+with one explicit target,
 through-all, and termination on an upstream finite planar face. To-face termination
 supports sloped planes and verifies that the entire end cap fits inside the selected
-face, including its holes. Negative/symmetric extrusion remains unavailable.
+face, including its holes. To-face remains positive-only. Through-all supports
+all three directions; symmetric distance is the total span split equally across
+the sketch plane.
 
 Use `Revolve` for a closed profile around a coplanar origin axis or a stable line
 in its sketch. The Inspector edits the axis, 0–360 degree angle (exclusive of 0),
@@ -231,7 +235,11 @@ operations on the same body while retaining upstream previews.
 Feature-owned face references require an unmodified positive-distance new-body
 extrusion. Cap/side references are explicit roles, with reselection for repair;
 arbitrary post-boolean face/edge naming remains unsupported. Hole features use
-transformed cylindrical tools through the document/rebuild path.
+transformed cylindrical tools. Select a sketch or point and use `Hole` to choose
+explicit centers and one native target body. The modal validates positive length
+expressions before creating a feature. Its Inspector edits diameter, blind-depth/
+through-all termination, centers, source sketch and target body. Holes cut along
+the sketch's positive normal. Empty/lost centers and unchanged cuts fail rebuild.
 
 See `specs/working-cad/CAPABILITY_MATRIX.md` for current capability limits. Schema
 support alone does not imply a working modeling operation.

@@ -1,5 +1,6 @@
 export const MODEL_RESOURCE_LIMITS = {
   maxBodies: 64,
+  maxHoleCenters: 64,
   maxTrianglesPerBody: 100000,
   maxTriangles: 250000,
   maxVerticesPerBody: 300000,

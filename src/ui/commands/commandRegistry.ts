@@ -54,6 +54,7 @@ import {
   detectProfiles,
 } from "../../cad/sketch/profileDetection";
 import { moveTimelineItem, planTimelineMove } from "../../cad/document/timelineEditing";
+import { beginHoleCreation, holeCreationContext } from "./holeCommand";
 
 export interface CommandContext {
   fileInputRef?: RefObject<HTMLInputElement | null>;
@@ -81,6 +82,7 @@ export interface CommandEnablement {
   createEdgeTreatment: boolean;
   moveEarlier: boolean;
   moveLater: boolean;
+  createHole: boolean;
 }
 
 export function selectCommandEnablement(state: CadStore): CommandEnablement {
@@ -95,6 +97,7 @@ export function selectCommandEnablement(state: CadStore): CommandEnablement {
     createEdgeTreatment: Boolean(edgeTreatmentOwner(state)),
     moveEarlier: !planTimelineMove(state.history.present, state.selection.selectedIds[0], "earlier").reason,
     moveLater: !planTimelineMove(state.history.present, state.selection.selectedIds[0], "later").reason,
+    createHole: Boolean(holeCreationContext(state)),
   };
 }
 
@@ -109,6 +112,7 @@ export function isCommandEnabledForSnapshot(
 }
 
 export const commands: CadCommand[] = [
+  { id: "feature.hole", label: "Hole from Selected Sketch", description: "Choose explicit sketch point centers and one target body for a native cylindrical cut.", enablementKey: "createHole", run: beginHoleCreation },
   ...(["earlier", "later"] as const).map((direction): CadCommand => ({
     id: `timeline.move${direction === "earlier" ? "Earlier" : "Later"}`,
     label: `Move Selected Item ${direction === "earlier" ? "Earlier" : "Later"}`,

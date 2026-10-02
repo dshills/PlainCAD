@@ -11,6 +11,7 @@ import {
 } from "./ModelingFeatureControls";
 
 import { FeatureReferenceControls } from "./FeatureReferenceControls";
+import { HoleFeatureControls } from "./HoleFeatureControls";
 
 const EXTRUDE_OPERATIONS = ["newBody", "join", "cut"] as const;
 const EXTRUDE_OPERATION_OPTIONS = [
@@ -18,7 +19,6 @@ const EXTRUDE_OPERATION_OPTIONS = [
   { value: "join", label: "Join", disabled: false },
   { value: "cut", label: "Cut", disabled: false },
 ] as const;
-const SUPPORTED_EXTRUDE_DIRECTION = "positive";
 const EXTRUDE_DIRECTIONS = ["positive", "negative", "symmetric"] as const;
 const EXTRUDE_TERMINATIONS = ["distance", "throughAll", "toFace"] as const;
 const DEFAULT_SKETCH_NAME = "Untitled Sketch";
@@ -87,7 +87,7 @@ export function InspectorPanel() {
     [body?.featureId, document],
   );
 
-  useEffect(() => setPendingToFace(undefined), [feature?.id]);
+  useEffect(() => setPendingToFace(undefined), [feature?.id, feature?.type === "extrude" ? feature.direction : undefined]);
 
   return (
     <section className="panel">
@@ -157,6 +157,7 @@ export function InspectorPanel() {
             {feature.suppressed ? " suppressed" : ""}
           </p>
           <ModelingFeatureControls feature={feature} />
+          {feature.type === "hole" ? <HoleFeatureControls feature={feature} /> : null}
           {"sketchId" in feature ? (
             <FeatureReferenceControls feature={feature} />
           ) : null}
@@ -205,7 +206,7 @@ export function InspectorPanel() {
                 >
                   <option value="distance">Distance</option>
                   <option value="throughAll">Through all</option>
-                  <option value="toFace">To face</option>
+                  <option value="toFace" disabled={feature.direction !== "positive"}>To face{feature.direction !== "positive" ? " (positive only)" : ""}</option>
                 </select>
               </label>
               <ToFaceControl
@@ -253,16 +254,14 @@ export function InspectorPanel() {
                     <option
                       key={direction}
                       value={direction}
-                      disabled={direction !== SUPPORTED_EXTRUDE_DIRECTION}
+                      disabled={direction !== "positive" && feature.termination?.type === "toFace"}
                     >
                       {direction[0].toUpperCase() + direction.slice(1)}
-                      {direction !== SUPPORTED_EXTRUDE_DIRECTION
-                        ? " unavailable"
-                        : ""}
                     </option>
                   ))}
                 </select>
               </label>
+              {feature.direction === "symmetric" ? <p className="muted">Distance is the total span, split equally across the sketch plane.</p> : null}
             </div>
           ) : null}
         </div>
@@ -487,7 +486,7 @@ function updateExtrudeDirection(
   featureId: string,
   direction: string,
 ) {
-  if (direction !== SUPPORTED_EXTRUDE_DIRECTION) return;
+  if (!EXTRUDE_DIRECTIONS.includes(direction as (typeof EXTRUDE_DIRECTIONS)[number])) return;
   updateDocument((document) => {
     if (!document) return document;
     const feature = document.features.find((item) => item.id === featureId);
@@ -497,7 +496,7 @@ function updateExtrudeDirection(
       feature.direction === direction
     )
       return document;
-    return documentOps.upsertFeature(document, { ...feature, direction });
+    return documentOps.upsertFeature(document, { ...feature, direction: direction as (typeof EXTRUDE_DIRECTIONS)[number] });
   });
 }
 

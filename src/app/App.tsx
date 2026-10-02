@@ -1,5 +1,6 @@
 import { RecoveryPanel } from "../ui/panels/RecoveryPanel";
 import { FabricationPanel } from "../ui/panels/FabricationPanel";
+import { HoleCreationPanel } from "../ui/panels/HoleCreationPanel";
 import { useEffect, useMemo, useRef } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { CadViewer } from "../viewer/CadViewer";
@@ -50,6 +51,7 @@ const toolbarGroups: ToolbarGroup[] = [
     buttons: [
       { command: "feature.extrude", label: "Extrude", icon: "Ext", title: "Extrude the active sketch profile", ariaLabel: "Extrude selected sketch" },
       { command: "feature.revolve", label: "Revolve", icon: "Rev", title: "Revolve around a coplanar origin axis or sketch line; add a construction line if no axis is usable", ariaLabel: "Revolve selected sketch" },
+      { command: "feature.hole", label: "Hole", icon: "Hole", title: "Choose sketch point centers and an explicit target body", ariaLabel: "Hole from selected sketch" },
       { command: "template.createMountingPlate", label: "Mount Plate", icon: "M", title: "Load the mounting plate template", ariaLabel: "Load mounting plate template" },
       { command: "template.createBox", label: "Box", icon: "B", title: "Load the parametric box template", ariaLabel: "Load parametric box template" },
     ],
@@ -166,6 +168,7 @@ export function App() {
       ) : null}
       <RecoveryPanel />
       <FabricationPanel />
+      <HoleCreationPanel />
       <main className="workspace">
         <aside className="left-panel">
           <SketchPanel />
