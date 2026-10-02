@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { registerViewerDiagnostics } from "./viewerDiagnostics";
 import { useCadStore } from "../state/useCadStore";
 import { SelectionRef } from "../cad/document/schema";
 import { RenderMesh } from "../cad/kernel/KernelAdapter";
@@ -54,6 +55,7 @@ export function CadViewer() {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color("#e7ebe8");
     const camera = new THREE.PerspectiveCamera(45, host.clientWidth / host.clientHeight, 0.1, 10000);
+    camera.up.set(0, 0, 1);
     camera.position.set(120, -140, 110);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -63,7 +65,10 @@ export function CadViewer() {
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    scene.add(new THREE.GridHelper(240, 24, "#7f918b", "#c1cbc7"));
+    const grid = new THREE.GridHelper(240, 24, "#7f918b", "#c1cbc7");
+    grid.rotation.x = Math.PI / 2;
+    for (const material of Array.isArray(grid.material) ? grid.material : [grid.material]) material.depthWrite = false;
+    scene.add(grid);
     scene.add(new THREE.AxesHelper(60));
     scene.add(new THREE.HemisphereLight("#ffffff", "#a8b0ad", 2.6));
     const light = new THREE.DirectionalLight("#ffffff", 2);
@@ -73,9 +78,31 @@ export function CadViewer() {
     const modelGroup = new THREE.Group();
     scene.add(modelGroup);
     const sketchGroup = new THREE.Group();
-    sketchGroup.position.z = 0.35;
+    sketchGroup.renderOrder = 1;
     scene.add(sketchGroup);
     runtimeRef.current = { camera, controls, modelGroup, sketchGroup, sketchResources: createSketchOverlayResources() };
+
+    const unregisterDiagnostics = import.meta.env.DEV ? registerViewerDiagnostics(() => ({
+      cameraUp: camera.up.toArray(),
+      gridNormal: new THREE.Vector3(0, 1, 0).applyQuaternion(grid.getWorldQuaternion(new THREE.Quaternion())).toArray(),
+      meshes: modelGroup.children.filter((object): object is THREE.Mesh => object instanceof THREE.Mesh).map((object) => {
+        const attribute = object.geometry.getAttribute("position");
+        const positions = new Array<number>(attribute.count * 3);
+        const point = new THREE.Vector3();
+        for (let index = 0; index < attribute.count; index++) {
+          object.localToWorld(point.fromBufferAttribute(attribute, index));
+          point.toArray(positions, index * 3);
+        }
+        return { bodyId: object.userData.bodyId as string, positions, indices: Array.from(object.geometry.index?.array ?? []) };
+      }),
+      sketchPoints: sketchGroup.children.filter((object) => object instanceof THREE.Mesh && typeof object.userData.sketchEntityId === "string").map((object) => ({
+        id: object.userData.sketchEntityId as string, position: object.getWorldPosition(new THREE.Vector3()).toArray(),
+      })),
+      sketchCircles: sketchGroup.children.filter((object) => object instanceof THREE.LineLoop).map((object) => ({
+        id: object.userData.sketchEntityId as string,
+        normal: new THREE.Vector3(0, 0, 1).applyQuaternion(object.getWorldQuaternion(new THREE.Quaternion())).toArray(),
+      })),
+    })) : undefined;
 
     const resize = () => {
       const width = host.clientWidth || 1;
@@ -113,6 +140,7 @@ export function CadViewer() {
     renderer.domElement.addEventListener("click", click);
 
     return () => {
+      unregisterDiagnostics?.();
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
       window.removeEventListener("plaincad:fit-view", fit);
@@ -196,7 +224,7 @@ function updateMeshes(modelGroup: THREE.Group, renderMeshes: RenderMesh[]) {
     geometry.setAttribute("normal", new THREE.Float32BufferAttribute(mesh.normals, 3));
     geometry.setIndex(mesh.indices);
     const baseColor = mesh.color ?? "#8fb7b4";
-    const material = new THREE.MeshStandardMaterial({ color: baseColor, roughness: 0.55, metalness: 0.05 });
+    const material = new THREE.MeshStandardMaterial({ color: baseColor, roughness: 0.55, metalness: 0.05, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 });
     const object = new THREE.Mesh(geometry, material);
     object.userData.bodyId = mesh.bodyId;
     object.userData.baseColor = baseColor;
@@ -216,9 +244,9 @@ function createSketchOverlayResources(): SketchOverlayResources {
     return new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0);
   });
   return {
-    lineMaterial: new THREE.LineBasicMaterial({ color: "#245c87" }),
-    pointMaterial: new THREE.MeshBasicMaterial({ color: "#245c87" }),
-    circleMaterial: new THREE.LineBasicMaterial({ color: "#7b3f98" }),
+    lineMaterial: new THREE.LineBasicMaterial({ color: "#245c87", depthWrite: false }),
+    pointMaterial: new THREE.MeshBasicMaterial({ color: "#245c87", depthWrite: false }),
+    circleMaterial: new THREE.LineBasicMaterial({ color: "#7b3f98", depthWrite: false }),
     pointGeometry: new THREE.SphereGeometry(1.4, 12, 8),
     unitCircleGeometry: new THREE.BufferGeometry().setFromPoints(circlePoints),
   };

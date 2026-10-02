@@ -1,5 +1,7 @@
 import { WorkerRequest, WorkerResponse } from "./workerProtocol";
 
+export const REBUILD_DEBOUNCE_MS = 180;
+
 export const WORKER_TIMEOUTS_MS = {
   initialize: 8_000,
   rebuild: 8_000,

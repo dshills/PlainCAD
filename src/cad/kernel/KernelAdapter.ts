@@ -19,6 +19,8 @@ export interface RenderMesh {
   normals: ArrayLike<number>;
   indices: number[];
   color?: string;
+  geometrySource?: "opencascade" | "fallback";
+  kernelOperation?: "box" | "extrusion" | "revolve" | "cut" | "fuse";
   bounds: BoundingBox;
 }
 

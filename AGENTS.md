@@ -25,7 +25,10 @@ that a capability works end to end.
   the relevant file).
 - `npm run build` checks TypeScript and creates `dist/`.
 - Run `npm run release:check` before a code-change handoff or commit. It runs
-  type checking, all tests, and the production build.
+  type checking, unit/component tests, the production build, and browser tests.
+- Install Chromium once with `npx playwright install chromium`. `npm run test:browser`
+  runs real-kernel acceptance tests using a dedicated server on port 5279.
+  Screenshots/downloads/traces are in ignored `test-results/`.
 
 The production build may warn about large chunks from the CAD kernel and viewer.
 Report relevant warnings, but do not treat that warning alone as a failed build.
@@ -50,6 +53,7 @@ configuration files. Keep `package-lock.json` consistent with dependency changes
   parameter, sketch, feature, inspector, and diagnostic controls.
 - `src/viewer/CadViewer.tsx`: Three.js rendering and viewer resource lifecycle.
 - `src/templates/`: built-in models and mounting-plate checks.
+- `e2e/` and `playwright.config.ts`: Chromium modeling and worker-race acceptance tests.
 - `src/tests/`: Vitest and React Testing Library tests; setup is configured in
   `vite.config.ts` with jsdom and `src/tests/setup.ts`.
 
@@ -107,7 +111,8 @@ exists. Documentation-only changes generally need a diff review.
 
 jsdom tests and fallback rebuilds do not establish that WebAssembly, WebGL, or
 OpenCascade geometry works in a browser. For changes to the worker/kernel/viewer
-or modeling UI, also smoke-test the affected browser workflow when possible:
+or modeling UI, run the browser acceptance suite and smoke-test additional
+affected behavior when possible:
 create or load a model, edit a parameter, rebuild, inspect the geometry, save/open,
 and export STL. Report any browser validation that was not performed.
 

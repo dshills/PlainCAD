@@ -5,7 +5,7 @@ import { CadParameter } from "../cad/document/schema";
 import { createId } from "../cad/document/ids";
 import { rebuildDocument } from "../cad/features/rebuildGraph";
 import { RebuildResult, WorkerRequest, WorkerResponse } from "../cad/worker/workerProtocol";
-import { createWorkerRequest, isWorkerRequestExpired, shouldAcceptWorkerResponse, WORKER_TIMEOUTS_MS } from "../cad/worker/workerLifecycle";
+import { createWorkerRequest, isWorkerRequestExpired, shouldAcceptWorkerResponse, REBUILD_DEBOUNCE_MS, WORKER_TIMEOUTS_MS } from "../cad/worker/workerLifecycle";
 import GeometryWorker from "../cad/worker/geometryWorker?worker";
 
 export interface HistoryState {
@@ -263,7 +263,7 @@ export const useCadStore = create<CadStore>((set, get) => ({
       get().initializeKernel();
       return;
     }
-    rebuildDebounce = setTimeout(() => flushQueuedRebuild(set, get), 180);
+    rebuildDebounce = setTimeout(() => flushQueuedRebuild(set, get), REBUILD_DEBOUNCE_MS);
   },
 }));
 
@@ -278,6 +278,12 @@ function flushQueuedRebuild(
   if (rebuildDebounce) {
     clearTimeout(rebuildDebounce);
     rebuildDebounce = undefined;
+  }
+  // A worker failure resets kernel readiness before pending callbacks run.
+  // Restart initialization before draining an edit queued behind that failure.
+  if (!kernelInitialized) {
+    get().initializeKernel();
+    return;
   }
   const document = queuedRebuildDocument ?? get().history.present;
   queuedRebuildDocument = undefined;
@@ -302,11 +308,21 @@ function flushQueuedRebuild(
       maxElapsedMs: WORKER_TIMEOUTS_MS.rebuild * 4,
       onResult: (result) => {
         if (requestId !== rebuildRequestId) return;
+        if (get().history.present !== document) {
+          queuedRebuildDocument ??= get().history.present;
+          flushQueuedRebuild(set, get);
+          return;
+        }
         set({ rebuild: { status: result.success ? "succeeded" : "failed", result, kernelReady: kernelInitialized, message: result.success ? "Rebuild complete." : "Rebuild failed." } });
         if (queuedRebuildDocument) flushQueuedRebuild(set, get);
       },
       onError: (message) => {
         if (requestId !== rebuildRequestId) return;
+        if (get().history.present !== document) {
+          queuedRebuildDocument ??= get().history.present;
+          flushQueuedRebuild(set, get);
+          return;
+        }
         set({
           rebuild: {
             status: "failed",

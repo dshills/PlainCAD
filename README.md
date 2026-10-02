@@ -77,7 +77,30 @@ Runs TypeScript checks and creates a production build in `dist/`.
 npm run release:check
 ```
 
-Runs `lint`, `test`, and `build`. Use this before commits or release handoff.
+Runs TypeScript checks, unit/component tests, the production build, and Chromium
+browser acceptance tests. Install the test browser once with
+`npx playwright install chromium`. Use this before commits or release handoff.
+
+```sh
+npx playwright install chromium
+npm run test:browser
+```
+
+Runs Playwright against a dedicated Vite server on `127.0.0.1:5279`; leave that
+port free. Your normal development server remains on port 5278. Tests start from
+an empty document and use the UI to create a rectangle, extrude it, cut a circular
+through-hole, edit thickness, save/reopen the project, and download STL on XY,
+XZ, and YZ planes. They require real OpenCascade extrusion/boolean meshes and
+check signed volume, outward STL normals, world coordinates, Z-up camera/grid,
+and rendered mesh/sketch alignment. A controlled-delivery test holds a real
+worker response to verify newer edits, request IDs, and epochs reject stale results;
+it also verifies a failed old worker reinitializes before rebuilding the latest edit.
+
+Browser screenshots and downloaded project/STL files are written to ignored
+`test-results/`; failures also retain Playwright traces. Run
+`npx playwright show-trace <trace.zip>` to inspect a failure. CI installs Chromium
+with OS dependencies and runs the same release gate. These tests cover the stated
+rectangle/through-hole workflow, not general CAD completeness or other browsers.
 
 The production build currently emits a Vite chunk-size warning because OpenCascade WebAssembly and related viewer code are large. The warning is expected for the current MVP and does not fail the build.
 

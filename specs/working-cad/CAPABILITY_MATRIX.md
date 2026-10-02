@@ -2,8 +2,12 @@
 
 Reviewed against source and automated tests on 2026-10-02. This is the current
 implementation status, not a declaration that the working-CAD spec is complete.
-Unit/component tests exercise fallback geometry and jsdom; they do not establish
-browser WebAssembly/WebGL correctness or general OpenCascade modeling support.
+Unit/component tests exercise fallback geometry and jsdom. Chromium acceptance
+coverage now verifies native OpenCascade rectangle extrusion and circular through-cut
+on XY/XZ/YZ, parameter edits, save/open, binary STL normals/volume/coordinates,
+Z-up camera/grid, rendered mesh/sketch alignment, stale worker delivery, and
+reinitialization after an old worker fails. This
+bounded workflow does not establish general OpenCascade modeling support.
 
 ## Implemented foundations
 
@@ -61,15 +65,17 @@ fillet/chamfer modeling.
   diagnostics, durable multi-body scopes and target/profile repair need work.
 - Stable planar-face resolution, face selection/repair, offset construction planes,
   and real kernel fillet/chamfer implementation are missing.
-- Viewer coordinate-policy verification, measurement, named views, section views,
+- Measurement, named views, section views,
   body visibility controls, and full feature/dimension/constraint inspectors need work.
 - STL emits one binary file from meshes; separate/merged multi-body modes, manifold/
   overlap validation, complete filename hardening, and background UI export need work.
 - Autosave and recovery, regression fixture corpus for every released schema,
   import parsing/migration in a worker, body/triangle limits, and deployment CSP
   remain incomplete.
-- Automated browser smoke tests, browser kernel acceptance tests, accessibility
-  audit, controlled performance reporting, and deployment documentation remain open.
+- Broader browser/kernel acceptance coverage (general profiles, joins, holes, other
+  browsers), accessibility audit, controlled performance reporting, and deployment
+  documentation remain open. The bounded Chromium suite runs in the release gate
+  and GitHub Actions; CI execution itself has not been verified locally.
 
 ## Intentionally deferred
 

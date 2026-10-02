@@ -157,10 +157,15 @@ export class OpenCascadeKernel implements KernelAdapter {
     throw new Error("Chamfer geometry is not implemented. Suppress or delete this feature to rebuild and export the model.");
   }
 
-  tessellate(shape: KernelShape, _options: TessellationOptions): RenderMesh {
+  tessellate(shape: KernelShape, options: TessellationOptions): RenderMesh {
     const handle = shape.kernelHandle as KernelHandle;
-    const occtMesh = this.tessellateOcctShape(shape.id, handle.occtShape, _options);
-    if (occtMesh) return occtMesh;
+    const occtMesh = this.tessellateOcctShape(shape.id, handle.occtShape, options);
+    if (occtMesh) return { ...occtMesh, geometrySource: "opencascade", kernelOperation: handle.kind === "boolean" ? handle.operation : handle.kind };
+    return { ...this.tessellateFallback(shape, options), geometrySource: "fallback" };
+  }
+
+  private tessellateFallback(shape: KernelShape, _options: TessellationOptions): RenderMesh {
+    const handle = shape.kernelHandle as KernelHandle;
     if (handle.kind === "box") {
       return createBoxMesh(shape.id, handle.width, handle.height, handle.depth);
     }
@@ -192,7 +197,7 @@ export class OpenCascadeKernel implements KernelAdapter {
     }
     if (handle.kind === "boolean" && handle.operation === "cut") {
       const fallback = fallbackCut(handle.base, handle.tool);
-      if (fallback) return this.tessellate({ ...shape, kernelHandle: fallback }, _options);
+      if (fallback) return this.tessellateFallback({ ...shape, kernelHandle: fallback }, _options);
     }
     throw new Error("Unsupported kernel shape.");
   }
@@ -296,7 +301,7 @@ export class OpenCascadeKernel implements KernelAdapter {
               deleteOcct(point);
             }
             const orientation = face.Orientation_1();
-            const reversed = orientation.isAliasOf?.(oc.TopAbs_Orientation.TopAbs_REVERSED) ?? false;
+            const reversed = orientation.value === oc.TopAbs_Orientation.TopAbs_REVERSED.value;
             deleteOcct(orientation);
             for (let index = 1; index <= triangulation.NbTriangles(); index += 1) {
               const triangle = triangulation.Triangle(index);
