@@ -33,12 +33,12 @@ npm install
 npm run dev
 ```
 
-Vite prints the local URL, usually `http://localhost:5173/`. Open that URL in a browser.
+Vite uses `http://localhost:5278/`. Open that URL in a browser.
 
-If port `5173` is already in use, start on another port:
+If port `5278` is already in use, Vite reports an error. Start on another port:
 
 ```sh
-npm run dev -- --host 127.0.0.1 --port 5174
+npm run dev -- --host 127.0.0.1 --port 5279
 ```
 
 ## Available Scripts
@@ -123,7 +123,16 @@ The MVP sketch solver is intentionally simple. It supports the guided rectangle/
 3. Select a feature to inspect or rename it.
 4. Use `Suppress` or `Delete` on selected features.
 
-Only `newBody` extrudes are implemented in the MVP. Join and cut operations are visible as unavailable where relevant and are not exported as working controls.
+The creation command adds positive-direction new-body extrudes. The Inspector also
+allows cut/join with an explicit target and through-all termination, subject to
+kernel and sketch-plane limitations. Negative/symmetric directions and to-face
+termination are unavailable. Revolve and hole document paths are constrained and
+have no creation commands. Fillet/chamfer geometry is unavailable: imported active
+features fail rebuild with a diagnostic; suppress or delete them to recover.
+Offset and face sketches also block rebuild until supported.
+
+See `specs/working-cad/CAPABILITY_MATRIX.md` for current capability limits. Schema
+support alone does not imply a working modeling operation.
 
 ### Navigate the Viewer
 
@@ -239,7 +248,7 @@ npm run release:check
 Start Vite on a different port:
 
 ```sh
-npm run dev -- --host 127.0.0.1 --port 5174
+npm run dev -- --host 127.0.0.1 --port 5279
 ```
 
 ### OpenCascade or WebAssembly Load Issues

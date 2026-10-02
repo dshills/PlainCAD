@@ -44,6 +44,10 @@ export function rebuildDocument(document: CadDocument): RebuildResult {
   const solvedSketches = new Map<string, ReturnType<typeof solveSketch>>();
   const profilesBySketch = new Map<string, ReturnType<typeof detectProfiles>>();
   for (const sketch of Object.values(document.sketches)) {
+    if (sketch.plane.type !== "origin") {
+      errors.push({ id: `sketch:${sketch.id}:plane`, source: "sketch", sourceId: sketch.id, message: `${sketch.plane.type === "offset" ? "Offset" : "Face"} sketch planes are not supported yet. Use an XY, XZ, or YZ origin plane.` });
+      continue;
+    }
     const solved = solveSketch(sketch, evaluated.values);
     solvedSketches.set(sketch.id, solved);
     for (const error of solved.errors) {
@@ -63,6 +67,7 @@ export function rebuildDocument(document: CadDocument): RebuildResult {
   const runtimeBodies = new Map<string, RuntimeBody>();
   const featureStarted = performance.now();
 
+  // Any sketch/parameter/validation error blocks feature execution, including unsupported planes.
   if (errors.length === 0) {
     for (const feature of graphPlan.orderedFeatures) {
       if (feature.suppressed) continue;

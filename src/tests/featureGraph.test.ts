@@ -272,7 +272,7 @@ describe("feature graph rebuild", () => {
     if (!("error" in resolved)) expect(resolved.stableId).toContain(line?.id);
   });
 
-  it("rebuilds fillet and chamfer features on stable edge refs", () => {
+  it("rejects fillet and chamfer geometry on stable edge refs without claiming a modified body", () => {
     let document = createBoxTemplate();
     const feature = document.features[0] as ExtrudeFeature;
     const sketch = document.sketches[feature.sketchId];
@@ -294,8 +294,14 @@ describe("feature graph rebuild", () => {
 
     const result = rebuildDocument(document);
 
-    expect(result.success).toBe(true);
-    expect(result.bodies[0].featureId).toBe("feature_chamfer");
+    expect(result.success).toBe(false);
+    expect(result.errors).toEqual(expect.arrayContaining([
+      expect.objectContaining({ sourceId: "feature_fillet", message: expect.stringContaining("Fillet geometry is not implemented") }),
+      expect.objectContaining({ sourceId: "feature_chamfer", message: expect.stringContaining("Chamfer geometry is not implemented") }),
+    ]));
+    expect(result.bodies[0].featureId).toBe(feature.id);
+    expect(result.meshes[0].positions).toEqual(rebuildDocument(createBoxTemplate()).meshes[0].positions);
+    expect(rebuildDocument({ ...document, features: document.features.map((item) => item.type === "fillet" || item.type === "chamfer" ? { ...item, suppressed: true } : item) }).success).toBe(true);
   });
 
   it("rejects ambiguous edge treatment refs that require repair", () => {

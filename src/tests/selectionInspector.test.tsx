@@ -8,6 +8,37 @@ import { createBoxTemplate } from "../templates/templates";
 import { createMountingPlateTemplate } from "../templates/templates";
 
 describe("selection and inspection", () => {
+  it("marks unsupported extrude directions and to-face termination unavailable", () => {
+    const document = createBoxTemplate();
+    useCadStore.setState({
+      history: { past: [], present: document, future: [] },
+      selection: { selectedIds: [{ kind: "feature", id: document.features[0].id, documentId: document.id }] },
+    });
+    render(<InspectorPanel />);
+    expect(screen.queryByText(/geometry is unavailable/)).not.toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Positive" })).toBeEnabled();
+    expect(screen.getByRole("option", { name: "Negative unavailable" })).toBeDisabled();
+    expect(screen.getByRole("option", { name: "Symmetric unavailable" })).toBeDisabled();
+    expect(screen.getByRole("option", { name: "To face unavailable" })).toBeDisabled();
+  });
+
+  it.each(["fillet", "chamfer"] as const)("explains unavailable %s geometry for imported features", (type) => {
+    const document = createBoxTemplate();
+    const feature = type === "fillet"
+      ? { id: "edge-treatment", name: "Round", type, targetEdgeRefs: [], radius: { expression: "1mm", unit: "mm" } }
+      : { id: "edge-treatment", name: "Break", type, targetEdgeRefs: [], distance: { expression: "1mm", unit: "mm" } };
+    document.features.push(feature);
+    useCadStore.setState({
+      history: { past: [], present: document, future: [] },
+      selection: { selectedIds: [{ kind: "feature", id: feature.id, documentId: document.id }] },
+    });
+    const { rerender } = render(<InspectorPanel />);
+    expect(screen.getByText(/geometry is unavailable/)).toHaveTextContent("Suppress or delete");
+    act(() => useCadStore.setState({ history: { past: [], present: { ...document, features: document.features.map((item) => item.id === feature.id ? { ...item, suppressed: true } : item) }, future: [] } }));
+    rerender(<InspectorPanel />);
+    expect(screen.queryByText(/geometry is unavailable/)).not.toBeInTheDocument();
+  });
+
   it("shows body mesh facts and routes to the source feature", async () => {
     const document = createBoxTemplate();
     const feature = document.features[0];

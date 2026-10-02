@@ -14,8 +14,7 @@ type KernelHandle =
   | { kind: "box"; width: number; height: number; depth: number; occtShape?: unknown }
   | { kind: "extrusion"; profile: SketchProfile; distance: number; occtShape?: unknown }
   | { kind: "revolve"; profile: SketchProfile; axis: RevolveAxisReference; angle: number; occtShape?: unknown }
-  | { kind: "boolean"; operation: "cut" | "fuse"; base: KernelHandle; tool: KernelHandle; occtShape?: unknown }
-  | { kind: "edgeTreatment"; operation: "fillet" | "chamfer"; base: KernelHandle; edgeRefs: TopologyRef[]; size: number; occtShape?: unknown };
+  | { kind: "boolean"; operation: "cut" | "fuse"; base: KernelHandle; tool: KernelHandle; occtShape?: unknown };
 
 function fallbackCut(base: KernelHandle, tool: KernelHandle): KernelHandle | undefined {
   const resolvedBase = resolveFallbackHandle(base);
@@ -150,20 +149,12 @@ export class OpenCascadeKernel implements KernelAdapter {
     }
   }
 
-  fillet(shape: KernelShape, edgeRefs: TopologyRef[], radius: number): KernelShape {
-    return {
-      id: createId("shape"),
-      kernelHandle: { kind: "edgeTreatment", operation: "fillet", base: shape.kernelHandle as KernelHandle, edgeRefs, size: radius } satisfies KernelHandle,
-      metadata: { edgeTreatment: { type: "fillet", edgeRefs, radius } },
-    };
+  fillet(_shape: KernelShape, _edgeRefs: TopologyRef[], _radius: number): KernelShape {
+    throw new Error("Fillet geometry is not implemented. Suppress or delete this feature to rebuild and export the model.");
   }
 
-  chamfer(shape: KernelShape, edgeRefs: TopologyRef[], distance: number): KernelShape {
-    return {
-      id: createId("shape"),
-      kernelHandle: { kind: "edgeTreatment", operation: "chamfer", base: shape.kernelHandle as KernelHandle, edgeRefs, size: distance } satisfies KernelHandle,
-      metadata: { edgeTreatment: { type: "chamfer", edgeRefs, distance } },
-    };
+  chamfer(_shape: KernelShape, _edgeRefs: TopologyRef[], _distance: number): KernelShape {
+    throw new Error("Chamfer geometry is not implemented. Suppress or delete this feature to rebuild and export the model.");
   }
 
   tessellate(shape: KernelShape, _options: TessellationOptions): RenderMesh {
@@ -202,10 +193,6 @@ export class OpenCascadeKernel implements KernelAdapter {
     if (handle.kind === "boolean" && handle.operation === "cut") {
       const fallback = fallbackCut(handle.base, handle.tool);
       if (fallback) return this.tessellate({ ...shape, kernelHandle: fallback }, _options);
-    }
-    if (handle.kind === "edgeTreatment") {
-      const baseMesh = this.tessellate({ ...shape, kernelHandle: handle.base }, _options);
-      return { ...baseMesh, id: shape.id, bodyId: shape.id };
     }
     throw new Error("Unsupported kernel shape.");
   }

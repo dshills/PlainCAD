@@ -10,6 +10,7 @@ const EXTRUDE_OPERATION_OPTIONS = [
   { value: "join", label: "Join", disabled: false },
   { value: "cut", label: "Cut", disabled: false },
 ] as const;
+const SUPPORTED_EXTRUDE_DIRECTION = "positive";
 const EXTRUDE_DIRECTIONS = ["positive", "negative", "symmetric"] as const;
 const EXTRUDE_TERMINATIONS = ["distance", "throughAll", "toFace"] as const;
 const DEFAULT_SKETCH_NAME = "Untitled Sketch";
@@ -102,6 +103,9 @@ export function InspectorPanel() {
             {feature.type}
             {feature.suppressed ? " suppressed" : ""}
           </p>
+          {(feature.type === "fillet" || feature.type === "chamfer") && !feature.suppressed ? (
+            <p role="status">{feature.type === "fillet" ? "Fillet" : "Chamfer"} geometry is unavailable. Suppress or delete this feature in the timeline to rebuild and export the model.</p>
+          ) : null}
           {"sketchId" in feature ? <p className="muted">Sketch {feature.sketchId}</p> : null}
           {feature.type === "extrude" ? (
             <div className="inspector-form">
@@ -160,8 +164,8 @@ export function InspectorPanel() {
                   onChange={(event) => updateExtrudeDirection(updateDocument, feature.id, event.target.value)}
                 >
                   {EXTRUDE_DIRECTIONS.map((direction) => (
-                    <option key={direction} value={direction}>
-                      {direction[0].toUpperCase() + direction.slice(1)}
+                    <option key={direction} value={direction} disabled={direction !== SUPPORTED_EXTRUDE_DIRECTION}>
+                      {direction[0].toUpperCase() + direction.slice(1)}{direction !== SUPPORTED_EXTRUDE_DIRECTION ? " unavailable" : ""}
                     </option>
                   ))}
                 </select>
@@ -335,17 +339,13 @@ function updateExtrudeDirection(
   featureId: string,
   direction: string,
 ) {
-  if (!isExtrudeDirection(direction)) return;
+  if (direction !== SUPPORTED_EXTRUDE_DIRECTION) return;
   updateDocument((document) => {
     if (!document) return document;
     const feature = document.features.find((item) => item.id === featureId);
     if (!feature || feature.type !== "extrude" || feature.direction === direction) return document;
     return documentOps.upsertFeature(document, { ...feature, direction });
   });
-}
-
-function isExtrudeDirection(value: string): value is (typeof EXTRUDE_DIRECTIONS)[number] {
-  return EXTRUDE_DIRECTIONS.includes(value as (typeof EXTRUDE_DIRECTIONS)[number]);
 }
 
 function updateExtrudeTarget(

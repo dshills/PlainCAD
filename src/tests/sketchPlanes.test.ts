@@ -16,6 +16,25 @@ describe("sketch planes", () => {
     expect(sketchPointToWorld({ type: "offset", base: "XY", offset: { expression: "5mm", unit: "mm" } }, 2, 3)).toEqual({ x: 2, y: 3, z: 0 });
   });
 
+  it("blocks unsupported planes with source-linked diagnostics instead of rebuilding on an origin plane", () => {
+    const sketch = addCenterRectangle(createSketchOnPlane("Unsupported", "XY"), "20mm", "10mm");
+    for (const plane of [
+      { type: "offset", base: "XY", offset: { expression: "5mm", unit: "mm" } },
+      { type: "face", featureId: "owner", stableFaceId: "face" },
+    ] as const) {
+      const profile = detectProfiles(solveSketch(sketch, {})).profiles[0];
+      const document = upsertFeature(upsertSketch(createEmptyDocument(), { ...sketch, plane }), createExtrudeFeature({
+        name: "Blocked Extrude", sketchId: sketch.id, profileId: profile.id,
+        operation: "newBody", distance: { expression: "5mm", unit: "mm" }, direction: "positive",
+      }));
+      const result = rebuildDocument(document);
+      expect(result.success).toBe(false);
+      expect(result.meshes).toHaveLength(0);
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors).toContainEqual(expect.objectContaining({ source: "sketch", sourceId: sketch.id, message: expect.stringContaining("sketch planes are not supported") }));
+    }
+  });
+
   it("migrates legacy string planes to stable origin plane references", () => {
     const document = createEmptyDocument();
     const sketch = createSketchOnPlane("Legacy", "XZ");
