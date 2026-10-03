@@ -109,7 +109,7 @@ describe("multi-body cut transactions", () => {
       }
     },
   );
-  it("persists explicit cut IDs, bounds scopes, diagnoses duplicates and keeps joins single-target", () => {
+  it("persists explicit cut IDs, bounds scopes, diagnoses duplicates and accepts explicit join scopes", () => {
     const { document, cut, ids } = fixture();
     expect(validateDocument(document)).toEqual([]);
     expect(
@@ -143,8 +143,8 @@ describe("multi-body cut transactions", () => {
       expect(
         validateDocument(
           upsertFeature(document, { ...feature, operation: "join" }),
-        ).some((e) => /exactly one target/.test(e.message)),
-      ).toBe(true);
+        ),
+      ).toEqual([]);
       expect(
         validateDocument(
           upsertFeature(document, {

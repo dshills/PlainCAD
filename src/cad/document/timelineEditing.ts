@@ -104,6 +104,17 @@ export function targetBodyIds(feature: Feature): string[] {
   return feature.operation === "newBody" ? [] : (feature.targetBodyIds ?? []);
 }
 
+// Saved scope order chooses the surviving body; suppression restores all targets.
+export function absorbedBodyIds(feature: Feature): string[] {
+  return !feature.suppressed &&
+    (feature.type === "extrude" || feature.type === "revolve") &&
+    feature.operation === "join"
+    ? [...new Set((feature.targetBodyIds ?? []).slice(1))].filter(
+        (id) => id !== feature.targetBodyIds?.[0],
+      )
+    : [];
+}
+
 export function timelineDependencyErrors(document: CadDocument): string[] {
   const errors = planFeatureGraph(document).errors.map(
     (error) => error.message,
@@ -175,15 +186,24 @@ export function timelineDependencyErrors(document: CadDocument): string[] {
           : undefined;
     if (ref) requireOwner(ref.featureId, sketch, "sketch plane", true);
   }
-  for (const feature of document.features) {
+  const absorbed = new Map<string, Feature>();
+  for (const item of documentTimeline(document)) {
+    if (item.kind !== "feature") continue;
+    const feature = item.feature;
     for (const target of targetBodyIds(feature)) {
       const owner = bodyOwners.get(target);
+      const join = absorbed.get(target);
+      if (join && !feature.suppressed)
+        errors.push(
+          `${feature.name}: target ${target} was absorbed by ${join.name}. Reselect its surviving body.`,
+        );
       if (!owner)
         errors.push(
           `${feature.name}: target reference lost (${target}). Reselect an upstream body.`,
         );
       else requireOwner(owner.id, feature, "target body");
     }
+    for (const id of absorbedBodyIds(feature)) absorbed.set(id, feature);
     if (feature.type === "extrude" && feature.termination?.type === "toFace")
       requireOwner(
         feature.termination.faceRef.featureId,
@@ -235,16 +255,21 @@ export function upstreamBodyOwners(
   const index = items.findIndex(
     (item) => item.kind === "feature" && item.feature.id === consumer.id,
   );
-  return items
-    .slice(0, Math.max(index, 0))
-    .flatMap((item) =>
-      item.kind === "feature" &&
-      (includeSuppressed || !item.feature.suppressed) &&
-      (item.feature.type === "extrude" || item.feature.type === "revolve") &&
-      item.feature.operation === "newBody"
-        ? [item.feature]
-        : [],
-    );
+  const prefix = items.slice(0, Math.max(index, 0));
+  const absorbed = new Set(
+    prefix.flatMap((item) =>
+      item.kind === "feature" ? absorbedBodyIds(item.feature) : [],
+    ),
+  );
+  return prefix.flatMap((item) =>
+    item.kind === "feature" &&
+    !absorbed.has(stableBodyIdForFeature(item.feature.id)) &&
+    (includeSuppressed || !item.feature.suppressed) &&
+    (item.feature.type === "extrude" || item.feature.type === "revolve") &&
+    item.feature.operation === "newBody"
+      ? [item.feature]
+      : [],
+  );
 }
 
 export function upstreamSketches(document: CadDocument, consumer: Feature) {

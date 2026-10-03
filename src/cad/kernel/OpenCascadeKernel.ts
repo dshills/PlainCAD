@@ -303,19 +303,77 @@ export class OpenCascadeKernel implements KernelAdapter {
   }
 
   unionForExport(base: KernelShape, tool: KernelShape): KernelShape {
+    return this.unionSolids(base, tool);
+  }
+
+  joinAll(targets: KernelShape[], tool: KernelShape): KernelShape {
+    if (!targets.length) throw new Error("Boolean join requires target bodies.");
+    if (targets.length === 1) return this.fuse(targets[0], tool);
+    let current = targets[0];
+    let result: KernelShape | undefined;
+    try {
+      // Intermediate target unions may be disconnected. Only the completed bridge
+      // must be one solid, so the saved target order cannot affect connectivity.
+      for (const target of targets.slice(1)) {
+        const next = this.unionSolids(current, target);
+        if (current !== targets[0]) this.disposeShape(current);
+        current = next;
+      }
+      const before = this.measureNative(
+        (current.kernelHandle as KernelHandle).occtShape,
+      );
+      const toolStats = this.measureNative(
+        (tool.kernelHandle as KernelHandle).occtShape,
+      );
+      result = this.unionSolids(current, tool);
+      const after = this.measureNative(
+        (result.kernelHandle as KernelHandle).occtShape,
+      );
+      const tolerance = volumeTolerance(before.volume);
+      if (after.solidCount !== 1)
+        throw new Error(
+          "Boolean join requires connected solids. Connect every selected target with the tool.",
+        );
+      if (after.volume - before.volume <= tolerance)
+        throw new Error(
+          "Boolean join added no volume beyond the selected target bodies.",
+        );
+      if (
+        after.volume > before.volume + toolStats.volume + tolerance ||
+        after.volume < before.volume - tolerance
+      )
+        throw new Error("Boolean join produced an inconsistent solid volume.");
+      return result;
+    } catch (error) {
+      if (result) this.disposeShape(result);
+      throw error;
+    } finally {
+      if (current !== targets[0]) this.disposeShape(current);
+    }
+  }
+
+  private unionSolids(base: KernelShape, tool: KernelShape): KernelShape {
     const oc = OpenCascadeKernel.openCascade;
     const a = base.kernelHandle as KernelHandle,
       b = tool.kernelHandle as KernelHandle;
     if (!oc || !a.occtShape || !b.occtShape)
-      throw new Error("Export union requires native OpenCascade solids.");
+      throw new Error("Union requires native OpenCascade solids.");
     return withDisposableScope((scope) => {
+      const before = this.measureNative(a.occtShape);
+      const toolStats = this.measureNative(b.occtShape);
       const builder = scope.use(
         new oc.BRepAlgoAPI_Fuse_3(a.occtShape, b.occtShape),
       );
       if (!builder.IsDone())
-        throw new Error("OpenCascade rejected the export union.");
+        throw new Error("OpenCascade rejected the union.");
       const shape = scope.use(builder.Shape());
-      this.measureNative(shape);
+      const after = this.measureNative(shape);
+      const tolerance = volumeTolerance(before.volume + toolStats.volume);
+      if (
+        after.volume < Math.max(before.volume, toolStats.volume) - tolerance ||
+        after.volume > before.volume + toolStats.volume + tolerance
+      )
+        throw new Error("Union produced an inconsistent solid volume.");
       return {
         ...base,
         kernelHandle: {

@@ -1,6 +1,6 @@
 import type { CadDocument, SelectionRef } from "./schema";
 import { documentTimeline } from "./timelineOrdering";
-import { targetBodyIds } from "./timelineEditing";
+import { absorbedBodyIds, targetBodyIds } from "./timelineEditing";
 import { stableBodyIdForFeature } from "../features/featureGraph";
 import {
   mapDocumentExpressions,
@@ -121,6 +121,7 @@ export function buildDependencyGraph(document: CadDocument): DependencyGraph {
       .map((f) => [stableBodyIdForFeature(f.id), f]),
   );
   const bodyWriters = new Map<string, string>();
+  const absorbed = new Map<string, string>();
   for (const item of documentTimeline(document)) {
     if (item.kind === "sketch") {
       const p = item.sketch.plane,
@@ -153,14 +154,16 @@ export function buildDependencyGraph(document: CadDocument): DependencyGraph {
     for (const bodyId of new Set(targetBodyIds(f))) {
       const owner = owners.get(bodyId);
       const activeWriter = bodyWriters.get(bodyId);
-      const writer = activeWriter ?? owner?.id;
-      const reason = activeWriter
-        ? "Target body / preceding modifier"
-        : owner?.suppressed
-          ? "Target body / suppressed owner"
-          : owner
-            ? "Target body / downstream owner"
-            : "Target body reference";
+      const writer = absorbed.get(bodyId) ?? activeWriter ?? owner?.id;
+      const reason = absorbed.has(bodyId)
+        ? "Target body / absorbed by preceding join — reselect surviving body"
+        : activeWriter
+          ? "Target body / preceding modifier"
+          : owner?.suppressed
+            ? "Target body / suppressed owner"
+            : owner
+              ? "Target body / downstream owner"
+              : "Target body reference";
       connect(
         writer
           ? reference("feature", writer)
@@ -180,7 +183,13 @@ export function buildDependencyGraph(document: CadDocument): DependencyGraph {
         f.operation === "newBody"
       )
         bodyWriters.set(stableBodyIdForFeature(f.id), f.id);
-      else for (const bodyId of targetBodyIds(f)) bodyWriters.set(bodyId, f.id);
+      else
+        for (const bodyId of targetBodyIds(f))
+          if (!absorbed.has(bodyId)) bodyWriters.set(bodyId, f.id);
+      for (const id of absorbedBodyIds(f)) {
+        absorbed.set(id, f.id);
+        bodyWriters.delete(id);
+      }
     }
   }
   const inputs = new Map<string, DependencyEdge[]>(),

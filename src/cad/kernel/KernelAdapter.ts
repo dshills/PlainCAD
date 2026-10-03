@@ -75,6 +75,8 @@ export interface KernelAdapter {
   cut(base: KernelShape, tool: KernelShape): KernelShape;
   cutAll(base: KernelShape, tools: KernelShape[]): KernelShape;
   fuse(a: KernelShape, b: KernelShape): KernelShape;
+  /** Atomic connected union; the tool must add volume beyond the union of targets. */
+  joinAll?(targets: KernelShape[], tool: KernelShape): KernelShape;
   fillet?(
     shape: KernelShape,
     edgeRefs: TopologyRef[],

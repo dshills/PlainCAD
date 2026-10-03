@@ -111,17 +111,8 @@ export function FeatureReferenceControls({
         </label>
       ) : null}
       <TargetBodyControl feature={feature} />
-      {feature.type !== "hole" && feature.operation === "cut" ? (
-        <CutTargetScope feature={feature} />
-      ) : null}
-      {feature.type !== "hole" &&
-      feature.operation !== "cut" &&
-      (feature.targetBodyIds?.length ?? 0) > 1 ? (
-        <p className="warning-text">
-          This feature references {feature.targetBodyIds!.length} bodies.
-          Current modeling supports one target; choosing a body replaces the
-          entire scope.
-        </p>
+      {feature.type !== "hole" && feature.operation !== "newBody" ? (
+        <BooleanTargetScope feature={feature} />
       ) : null}
       <p className="muted">
         Repairs replace only the chosen reference. Missing references stay saved
@@ -195,7 +186,7 @@ export function TargetBodyControl({ feature }: { feature: SketchFeature }) {
   );
 }
 
-function CutTargetScope({
+function BooleanTargetScope({
   feature,
 }: {
   feature: ExtrudeFeature | RevolveFeature;
@@ -214,7 +205,7 @@ function CutTargetScope({
     if (!choices.has(id)) choices.set(id, `Lost or downstream body ${id}`);
   return (
     <fieldset>
-      <legend>Cut target scope</legend>
+      <legend>{feature.operation === "join" ? "Join" : "Cut"} target scope</legend>
       {[...choices].map(([id, name]) => (
         <label key={id} className="checkbox-label">
           <input
@@ -229,7 +220,7 @@ function CutTargetScope({
                   d.id !== document.id ||
                   !stored ||
                   (stored.type !== "extrude" && stored.type !== "revolve") ||
-                  stored.operation !== "cut"
+                  stored.operation === "newBody"
                 )
                   return d;
                 // Lost references may be removed, but may only be added from upstream owners.
@@ -251,9 +242,11 @@ function CutTargetScope({
         </label>
       ))}
       <p className="muted">
-        Select each body to cut. The Target body selector replaces the scope
-        with one body. New bodies are added only when selected. Every selected
-        body must lose volume; failures retain all upstream bodies.
+        {feature.operation === "join"
+          ? "Select bodies to merge into one connected solid. The first selected target keeps its ID and name; other targets are absorbed. The tool must add volume."
+          : "Select each body to cut. Every selected body must lose volume."}
+        {" "}The Target body selector replaces the scope with one body. New bodies
+        are added only when selected. Failures retain all upstream bodies.
       </p>
       {!targets.length ? (
         <p className="warning-text">Select at least one target body.</p>

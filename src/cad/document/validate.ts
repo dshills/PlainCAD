@@ -401,18 +401,6 @@ export function validateDocument(document: CadDocument, mode: "modeling" | "stor
         message: `${feature.operation} extrude requires at least one target body.`,
       });
     }
-    if (
-      feature.type === "extrude" &&
-      feature.operation === "join" &&
-      Array.isArray(feature.targetBodyIds) &&
-      feature.targetBodyIds.length > 1
-    ) {
-      issues.push({
-        source: "feature",
-        sourceId: feature.id,
-        message: `${feature.operation} extrude currently supports exactly one target body.`,
-      });
-    }
     if ((feature.type === "extrude" || feature.type === "revolve") && feature.operation !== "newBody" &&
       Array.isArray(feature.targetBodyIds) && new Set(feature.targetBodyIds).size !== feature.targetBodyIds.length) {
       issues.push({ source: "feature", sourceId: feature.id, message: "Target scope contains duplicate body IDs. Reselect unique target bodies." });
@@ -428,14 +416,12 @@ export function validateDocument(document: CadDocument, mode: "modeling" | "stor
       feature.type === "revolve" &&
       feature.operation !== "newBody" &&
       (!Array.isArray(feature.targetBodyIds) ||
-        (feature.targetBodyIds.length === 0 || (feature.operation === "join" && feature.targetBodyIds.length > 1)))
+        feature.targetBodyIds.length === 0)
     ) {
       issues.push({
         source: "feature",
         sourceId: feature.id,
-        message: feature.operation === "join"
-          ? "join revolve currently supports exactly one target body."
-          : "cut revolve requires at least one target body.",
+        message: `${feature.operation} revolve requires at least one target body.`,
       });
     }
     if (feature.type === "hole" && !document.sketches[feature.sketchId]) {

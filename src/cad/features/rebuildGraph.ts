@@ -1,3 +1,4 @@
+import { absorbedBodyIds } from "../document/timelineEditing";
 import { extrusionSweep, throughAllDistance } from "./extrusionSweep";
 import { MODEL_RESOURCE_LIMITS } from "../resourceLimits";
 import { assertProjectJsonShape } from "../../persistence/importSafety";
@@ -408,8 +409,11 @@ export function rebuildDocument(
           const outputs = applyExtrudeOperation(
             kernel, feature, shape, targetBodies, bodyId, shapesToDispose,
           );
-          publishOperationOutputs(kernel, runtimeBodies, outputs,
-            feature.operation === "newBody" ? sketchPlaneKey(sketch) : undefined);
+          publishOperationOutputs(
+            kernel, runtimeBodies, outputs,
+            feature.operation === "newBody" ? sketchPlaneKey(sketch) : undefined,
+            absorbedBodyIds(feature),
+          );
         } catch (error) {
           errors.push({
             id: `kernel:${feature.id}`,
@@ -617,8 +621,11 @@ function rebuildRevolveFeature(
     const outputs = applyExtrudeOperation(
       kernel, feature, shape, targets, stableBodyIdForFeature(feature.id), shapesToDispose,
     );
-    publishOperationOutputs(kernel, runtimeBodies, outputs,
-      feature.operation === "newBody" ? sketchPlaneKey(sketch) : undefined);
+    publishOperationOutputs(
+      kernel, runtimeBodies, outputs,
+      feature.operation === "newBody" ? sketchPlaneKey(sketch) : undefined,
+      absorbedBodyIds(feature),
+    );
   } catch (error) {
     errors.push({
       id: `kernel:${feature.id}`,
@@ -922,15 +929,6 @@ function resolveTargetBodies(
     });
     return [];
   }
-  if (feature.operation === "join" && feature.targetBodyIds.length > 1) {
-    errors.push({
-      id: `feature:${feature.id}:target:multiple`,
-      source: "feature",
-      sourceId: feature.id,
-      message: `${feature.operation} ${feature.type} currently supports exactly one target body.`,
-    });
-    return [];
-  }
   const targets = feature.targetBodyIds.map((bodyId) => ({
     bodyId,
     body: runtimeBodies.get(bodyId),
@@ -941,7 +939,7 @@ function resolveTargetBodies(
       id: `feature:${feature.id}:target:lost`,
       source: "feature",
       sourceId: feature.id,
-      message: `Target body "${missing.bodyId}" was not found for ${feature.operation} ${feature.type}.`,
+      message: `Target body "${missing.bodyId}" was not found for ${feature.operation} ${feature.type}. Reselect a surviving upstream body.`,
     });
     return [];
   }
@@ -1013,11 +1011,18 @@ function applyExtrudeOperation(
 ): OperationOutput[] {
   if (feature.operation === "newBody")
     return [{ bodyId: newBodyId, shape: tool, featureId: feature.id, name: feature.name, planeKey: "" }];
+  if (feature.operation === "join") {
+    if (targets.length > 1 && !activeKernel.joinAll)
+      throw new Error("Multi-body join is not supported by the active kernel.");
+    const shape = targets.length > 1
+      ? activeKernel.joinAll!(targets.map((target) => target.shape), tool)
+      : activeKernel.fuse(targets[0].shape, tool);
+    shapesToDispose.add(shape);
+    return [{ ...targets[0], shape }];
+  }
   return targets.map((target) => {
     try {
-      const shape = feature.operation === "join"
-        ? activeKernel.fuse(target.shape, tool)
-        : activeKernel.cut(target.shape, tool);
+      const shape = activeKernel.cut(target.shape, tool);
       // Register immediately: a later target or tessellation may fail.
       shapesToDispose.add(shape);
       return { ...target, shape };
@@ -1033,6 +1038,7 @@ function publishOperationOutputs(
   bodies: Map<string, RuntimeBody>,
   outputs: OperationOutput[],
   newPlaneKey?: string,
+  removedBodyIds: string[] = [],
 ) {
   const prepared = outputs.map((output) => ({
     ...output,
@@ -1040,9 +1046,11 @@ function publishOperationOutputs(
     planeKey: newPlaneKey ?? output.planeKey,
   }));
   const prospective = new Map(bodies);
+  for (const id of removedBodyIds) prospective.delete(id);
   for (const output of prepared) prospective.set(output.bodyId, output);
   // Check the final aggregate, not an intermediate subset of body replacements.
   assertRuntimeTriangleCount([...prospective.values()].reduce((sum, body) => sum + (body.mesh?.indices.length ?? 0) / 3, 0));
+  for (const id of removedBodyIds) bodies.delete(id);
   for (const output of prepared) bodies.set(output.bodyId, output);
 }
 
