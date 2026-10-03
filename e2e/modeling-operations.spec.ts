@@ -330,3 +330,48 @@ test("native revolve axes and angle edits, plus real boolean cut and join", asyn
   await commit(page, "Distance", "20mm");
   await ready(page, (s) => geometry(s, base.id, 3500, "fuse"));
 });
+
+test("Inspector drafts stay visible without changing native geometry until commit", async ({
+  page,
+}, testInfo) => {
+  await page.goto("/");
+  await ready(page);
+  const { base } = await fixture(page, "edges");
+  await ready(page, (state) => geometry(state, base.id, 2000, "extrusion"));
+  const before = await snapshot(page);
+  const input = page.getByRole("textbox", { name: "Distance", exact: true });
+  await input.fill("20mm");
+  await expect(input).toHaveAttribute("data-dirty", "true");
+  await expect(input).toHaveAccessibleDescription(
+    "Uncommitted changes — Enter or leave field to apply; Escape cancels.",
+  );
+  await expect(page.locator(".commit-input-draft")).toBeVisible();
+  await expect(page.getByLabel("Distance", { exact: true })).toHaveValue(
+    "20mm",
+  );
+  await page.screenshot({ path: testInfo.outputPath("inspector-draft.png") });
+  const unchanged = await snapshot(page);
+  expect(unchanged.document).toEqual(before.document);
+  expect(unchanged.result).toEqual(before.result);
+  await input.press("Escape");
+  await expect(input).toHaveValue("10mm");
+  await expect(input).not.toHaveAttribute("data-dirty");
+  await expect(page.locator(".commit-input-draft")).toHaveCount(0);
+  await ready(page, (state) => geometry(state, base.id, 2000, "extrusion"));
+  await input.fill("20mm");
+  await input.press("Enter");
+  await ready(page, (state) => geometry(state, base.id, 4000, "extrusion"));
+  await expect(input).not.toHaveAttribute("data-dirty");
+  await input.fill("25mm");
+  await expect(input).toHaveAttribute("data-dirty", "true");
+  await page.evaluate(async () => {
+    const path = "/src/state/useCadStore.ts";
+    (await import(path)).useCadStore.getState().undo();
+  });
+  await ready(page, (state) => geometry(state, base.id, 2000, "extrusion"));
+  await expect(input).toBeFocused();
+  await expect(input).toHaveValue("10mm");
+  await expect(input).not.toHaveAttribute("data-dirty");
+  await input.press("Tab");
+  await ready(page, (state) => geometry(state, base.id, 2000, "extrusion"));
+});

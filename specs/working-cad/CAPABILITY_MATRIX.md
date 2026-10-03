@@ -323,3 +323,11 @@ Modeling validation still diagnoses unresolved references. Chromium covers impor
 arc/line/circle reference repair, direction-dependent native bounds, inconsistent
 arc geometry, undo/redo, save/open and STL volume/winding. These controls do not
 guess replacement points or provide general constraint-driven deformation.
+
+
+Inspector committed inputs identify dirty drafts with visible text/border styling
+and an accessible description while preserving field names. Enter or blur applies;
+Escape cancels; external changes replace the draft. Chromium verifies unchanged
+native geometry during typing/cancel, exact volume after commit, and focused undo
+without a stale blur overwrite. Other form controls retain their existing commit
+behavior; this is not a completed screen-reader audit.

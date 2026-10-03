@@ -731,3 +731,24 @@ dialog.file-dialog::backdrop { background: #0006; }
 .canvas-constraint-marker:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .canvas-constraint-marker[data-constraint-state="redundant"] { fill: #ffc45c; stroke: #ffc45c; }
 .canvas-constraint-marker[data-constraint-state="conflicting"], .canvas-constraint-marker[data-constraint-state="unavailable"] { fill: #ff9292; stroke: #ff9292; }
+
+
+.commit-input {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+.commit-input input[data-dirty="true"] {
+  border-color: #946000;
+}
+.commit-input-draft {
+  display: block;
+  color: #715000;
+  font-size: 0.73rem;
+  line-height: 1.35;
+}
+
+/* Decorative copy preserves label text; aria-describedby links to a real description outside the label. */
+.commit-input-draft::after {
+  content: attr(data-hint);
+}

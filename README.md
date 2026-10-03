@@ -122,6 +122,10 @@ The production build currently emits a Vite chunk-size warning because OpenCasca
 3. Press `Enter` or blur the input to commit the edit.
 4. Press `Escape` while editing to cancel the draft value.
 
+Inspector fields show an uncommitted-change indicator and accessible commit/cancel
+guidance while their value differs from the document. Drafts do not rebuild or
+autosave; undo and other external value changes replace them without a blur overwrite.
+
 Examples of parameter expressions:
 
 ```text
