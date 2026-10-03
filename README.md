@@ -130,6 +130,19 @@ hole_diameter / 2
 
 The app reports expression, unit, sketch, feature, import, and export errors in user-facing language.
 
+Schema 10 saves authoring defaults, display units and parameter groups. Open **Unit
+defaults** in Parameters to choose length/angle defaults for new or edited bare-number
+expressions. Each expression captures its units: changing defaults does not resize
+existing geometry, and parameter renames preserve them. Explicit units override the
+default; scalar multipliers remain scalar and dimensional ratios remain dimensionless.
+Choose **Scalar (no units)** in a parameter's inspector for counts/ratios. Mixed sums
+such as `width + 10` still need `width + 10mm`. Older expressions retain their strict
+explicit-unit behavior until edited. Computed readouts use the current evaluated
+quantities; unavailable or pending results never display the persisted value cache.
+Display units affect readouts and measurements, and are saved undoable preferences.
+The parameter inspector also edits descriptions and groups (up to 80 characters).
+
+
 Schema 8 persists parameter token bindings by stable ID. Renaming a parameter
 updates dependent display expressions while preserving design intent, including
 sketch coordinates, dimensions, plane offsets, and feature sizes. Unit literals
@@ -187,7 +200,7 @@ a diagnostic; union requires full checks. These numerical checks are not a proof
 of absence of every near-degenerate or adjacent-face intersection.
 
 Imports check raw UTF-8 bytes before parsing, preflight nesting before the reviver,
-then migrate and validate in a cancellable worker. Checked-in schema 1–9 fixtures
+then migrate and validate in a cancellable worker. Checked-in schema 1–10 fixtures
 verify IDs, rebuilds, edits, save/open, and recovery. Default limits: 5 MiB JSON,
 depth 64, 500 parameters, 100 sketches, 750 entities/512 constraints and dimensions
 per sketch, 10,000 total entities, 20,000 total constraints/dimensions, 1,000 features,

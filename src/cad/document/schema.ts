@@ -1,4 +1,4 @@
-export const CURRENT_SCHEMA_VERSION = 9;
+export const CURRENT_SCHEMA_VERSION = 10;
 
 export type UnitSystem = "metric" | "imperial";
 
@@ -14,6 +14,8 @@ export interface CadDocument {
   name: string;
   units: UnitSystem;
   unitSettings: UnitSettings;
+  /** Presentation only; never reinterpret already-authored expressions. */
+  displayUnits?: UnitSettings;
   createdAt: string;
   updatedAt: string;
   timelineCursor?: number;
@@ -28,15 +30,19 @@ export interface CadParameter {
   id: string;
   name: string;
   expression: string;
+  /** Unit applied to a final scalar result. Absence preserves legacy strict behavior. */
+  authoredUnit?: string;
   parameterRefs?: Record<string, string>;
   value: number;
   unit: string;
   description?: string;
+  group?: string;
   locked?: boolean;
 }
 
 export interface ExpressionRef {
   expression: string;
+  authoredUnit?: string;
   parameterRefs?: Record<string, string>;
   resolvedValue?: number;
   unit: string;

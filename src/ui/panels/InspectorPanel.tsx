@@ -12,6 +12,8 @@ import {
 
 import { FeatureReferenceControls } from "./FeatureReferenceControls";
 import { HoleFeatureControls } from "./HoleFeatureControls";
+import { AUTHORED_UNITS, validAuthoredUnit, displayUnits, formatParameterQuantity } from "../../cad/parameters/parameterUnits";
+import { AuthoredUnitsNote } from "./AuthoredUnitsNote";
 
 const EXTRUDE_OPERATIONS = ["newBody", "join", "cut"] as const;
 const EXTRUDE_OPERATION_OPTIONS = [
@@ -26,9 +28,12 @@ const DEFAULT_FEATURE_NAME = "Untitled Feature";
 
 export function InspectorPanel() {
   const [pendingToFace, setPendingToFace] = useState<string>();
+  const [groupError, setGroupError] = useState<{ id: string; message: string }>();
   const selection = useCadStore((state) => state.selection.selectedIds[0]);
   const document = useCadStore((state) => state.history.present);
   const rebuild = useCadStore((state) => state.rebuild.result);
+  const rebuildStatus = useCadStore((state) => state.rebuild.status);
+  const parameterValues = (rebuildStatus === "succeeded" || rebuildStatus === "failed") && rebuild?.documentId === document.id ? rebuild.parameterValues : undefined;
   const select = useCadStore((state) => state.select);
   const updateDocument = useCadStore((state) => state.updateDocument);
   const updateParameter = useCadStore((state) => state.updateParameter);
@@ -89,6 +94,8 @@ export function InspectorPanel() {
 
   useEffect(() => setPendingToFace(undefined), [feature?.id, feature?.type === "extrude" ? feature.direction : undefined]);
 
+  useEffect(() => setGroupError(undefined), [selection?.id, selection?.kind]);
+
   return (
     <section className="panel">
       <h2>Inspector</h2>
@@ -102,10 +109,16 @@ export function InspectorPanel() {
         >
           <strong>{parameter.name}</strong>
           <p className="muted">
-            {parameter.expression} = {parameter.value.toFixed(3)}
-            {parameter.unit}
+            {parameter.expression} = <output aria-label="Inspected parameter value">{formatParameterQuantity(parameterValues?.[parameter.name], displayUnits(document))}</output>
           </p>
           <div className="inspector-form">
+            <label>
+              Bare-number unit for {parameter.name}
+              <select value={parameter.authoredUnit ?? "legacy"} onChange={(event) => { const unit = event.target.value; if (validAuthoredUnit(unit)) updateParameter(parameter.id, { authoredUnit: unit }); }}>
+                <option value="legacy" disabled>Legacy — explicit units required for dimensions</option>
+                {AUTHORED_UNITS.map((unit) => <option value={unit} key={unit}>{unit || "Scalar (no units)"}</option>)}
+              </select>
+            </label>
             <label>
               {parameter.name} expression
               <CommitInput
@@ -124,6 +137,16 @@ export function InspectorPanel() {
                 }
               />
             </label>
+            <label>
+              {parameter.name} group
+              <CommitInput value={parameter.group ?? ""} onCommit={(value) => {
+                const group = value.trim().normalize("NFC");
+                if (group.length > 80) { setGroupError({ id: parameter.id, message: "Parameter group must be at most 80 characters." }); return; }
+                setGroupError(undefined);
+                updateParameter(parameter.id, { group: group || undefined });
+              }} />
+            </label>
+            {groupError?.id === parameter.id ? <p className="error-text" role="alert">{groupError.message}</p> : null}
           </div>
         </div>
       ) : null}
@@ -157,6 +180,12 @@ export function InspectorPanel() {
             {feature.suppressed ? " suppressed" : ""}
           </p>
           <ModelingFeatureControls feature={feature} />
+          <AuthoredUnitsNote expressions={
+            feature.type === "extrude" ? [["Distance", feature.termination?.type === "distance" ? feature.termination.distance ?? feature.distance : feature.distance]] :
+            feature.type === "revolve" ? [["Angle", feature.angle]] :
+            feature.type === "hole" ? [["Diameter", feature.diameter], ...(feature.depth === "throughAll" ? [] : [["Depth", feature.depth] as [string, typeof feature.diameter]])] :
+            feature.type === "fillet" ? [["Radius", feature.radius]] : feature.type === "chamfer" ? [["Distance", feature.distance]] : []
+          } />
           {feature.type === "hole" ? <HoleFeatureControls feature={feature} /> : null}
           {"sketchId" in feature ? (
             <FeatureReferenceControls feature={feature} />
@@ -270,6 +299,7 @@ export function InspectorPanel() {
         <div key={`entity:${sketchEntity.entity.id}`} className="item-card">
           <strong>{sketchEntity.entity.type}</strong>
           <p className="muted">{sketchEntity.entity.id}</p>
+          <AuthoredUnitsNote expressions={sketchEntity.entity.type === "point" ? [["X", sketchEntity.entity.x], ["Y", sketchEntity.entity.y]] : sketchEntity.entity.type === "circle" ? [["Radius", sketchEntity.entity.radius]] : []} />
           {sketchEntity.entity.type === "point" ? (
             <div className="inspector-form">
               <label>

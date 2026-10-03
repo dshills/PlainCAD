@@ -2,6 +2,7 @@ import type { SketchProfile } from "../sketch/profileDetection";
 import type { ResolvedSketch } from "../sketch/SketchSolver";
 import type { SketchPlaneTransform } from "../sketch/planes";
 import { RenderMesh } from "../kernel/KernelAdapter";
+import type { Quantity } from "../parameters/units";
 
 export interface CadBody {
   id: string;
@@ -20,6 +21,7 @@ export interface RebuildResult {
   warnings: RebuildWarning[];
   durationMs: number;
   metrics?: RebuildMetrics;
+  parameterValues?: Record<string, Quantity>;
   solvedSketches?: Record<string, ResolvedSketch>;
   profiles?: Record<string, SketchProfile[]>;
   sketchPlanes?: Record<string, SketchPlaneTransform>;

@@ -1,5 +1,5 @@
 import { KERNEL_LINEAR_TOLERANCE } from "./tolerances";
-import { evaluateExpression } from "../parameters/expressionEvaluator";
+import { evaluateExpressionRef } from "../parameters/expressionEvaluator";
 import { Quantity } from "../parameters/units";
 import { solveSketch } from "./SketchSolver";
 import { detectProfiles } from "./profileDetection";
@@ -65,7 +65,7 @@ export function sketchPlaneTransform(
     typeof ref.base === "string"
       ? transformForOriginPlane(ref.base)
       : sketchPlaneTransform(ref.base, parameters, faces);
-  const offset = evaluateExpression(ref.offset.expression, { parameters });
+  const offset = evaluateExpressionRef(ref.offset, { parameters });
   if (
     offset.error ||
     !offset.quantity ||
@@ -209,11 +209,11 @@ export function resolveDocumentPlanes(
       throw new Error(
         "Sketch plane reference lost: the owner profile failed to rebuild.",
       );
-    const size = evaluateExpression(
+    const size = evaluateExpressionRef(
       (owner.termination?.type === "distance"
         ? (owner.termination.distance ?? owner.distance)
         : owner.distance
-      ).expression,
+      ),
       { parameters },
     );
     if (

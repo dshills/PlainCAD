@@ -1,7 +1,7 @@
-import { Sketch, SketchEntity } from "../document/schema";
+import { Sketch, SketchEntity, ExpressionRef } from "../document/schema";
 import {
   collectExpressionDependencies,
-  evaluateExpression,
+  evaluateExpressionRef,
 } from "../parameters/expressionEvaluator";
 import { Quantity } from "../parameters/units";
 import { solveSketch as solveLegacySketch } from "./legacySketchSolver";
@@ -111,10 +111,10 @@ export function solveSketch(
     });
   const read = (
     id: string,
-    expression: string,
+    expression: ExpressionRef,
     dimension: "length" | "angle",
   ): number => {
-    const result = evaluateExpression(expression, { parameters });
+    const result = evaluateExpressionRef(expression, { parameters });
     if (
       result.error ||
       !result.quantity ||
@@ -137,12 +137,12 @@ export function solveSketch(
     if (e.type === "point") {
       pointVars.set(e.id, [x.length, x.length + 1]);
       x.push(
-        read(e.id, e.x.expression, "length"),
-        read(e.id, e.y.expression, "length"),
+        read(e.id, e.x, "length"),
+        read(e.id, e.y, "length"),
       );
     } else if (e.type === "circle") {
       radiusVars.set(e.id, x.length);
-      x.push(read(e.id, e.radius.expression, "length"));
+      x.push(read(e.id, e.radius, "length"));
     }
   }
   if (errors.length) {
@@ -508,7 +508,7 @@ export function solveSketch(
     }
   }
   for (const d of sketch.dimensions) {
-    const result = evaluateExpression(d.expression.expression, { parameters });
+    const result = evaluateExpressionRef(d.expression, { parameters });
     const angle = d.type === "angle";
     if (
       result.error ||

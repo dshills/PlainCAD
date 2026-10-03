@@ -685,3 +685,8 @@ dialog.file-dialog { margin: 0; }
 dialog.file-dialog::backdrop { background: #0006; }
 
 .palette-help { font-size: 0.85rem; margin: 0; padding: 0.6rem 0.85rem; color: #46544e; }
+.unit-defaults { margin-bottom: 0.8rem; font-size: 0.85rem; }
+.unit-defaults label { display: block; margin: 0.5rem 0; }
+.unit-defaults select { display: block; width: 100%; margin-top: 0.25rem; }
+.parameter-group { margin: 0; padding: 0; border: 0; min-width: 0; }
+.parameter-group legend { font-weight: 600; padding: 0.3rem 0; }

@@ -4,7 +4,7 @@ import {
   SketchLine,
   SketchPoint,
 } from "../document/schema";
-import { evaluateExpression } from "../parameters/expressionEvaluator";
+import { evaluateExpressionRef } from "../parameters/expressionEvaluator";
 import { Quantity } from "../parameters/units";
 
 const EPSILON = 1e-7;
@@ -54,8 +54,8 @@ export function solveSketch(
   for (const entity of Object.values(sketch.entities)) {
     if (entity.type !== "point") continue;
     const point = entity as SketchPoint;
-    const x = evaluateExpression(point.x.expression, { parameters });
-    const y = evaluateExpression(point.y.expression, { parameters });
+    const x = evaluateExpressionRef(point.x, { parameters });
+    const y = evaluateExpressionRef(point.y, { parameters });
     if (x.error || !x.quantity) {
       errors.push({
         sketchId: sketch.id,
@@ -123,7 +123,7 @@ export function solveSketch(
     if (entity.type === "circle") {
       const circle = entity as SketchCircle;
       const center = points[circle.centerPointId];
-      const radius = evaluateExpression(circle.radius.expression, {
+      const radius = evaluateExpressionRef(circle.radius, {
         parameters,
       });
       if (!center) {
@@ -410,7 +410,7 @@ function validateDimensions(
   parameters: Record<string, Quantity>,
 ) {
   for (const dimension of sketch.dimensions) {
-    const expected = evaluateExpression(dimension.expression.expression, {
+    const expected = evaluateExpressionRef(dimension.expression, {
       parameters,
     });
     if (expected.error || !expected.quantity) {

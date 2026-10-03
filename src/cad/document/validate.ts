@@ -2,6 +2,7 @@ import { MAX_NAMED_VIEWS, validCameraPose } from "../inspection/cameraViews";
 import { CadDocument, ValidationIssue } from "./schema";
 import { validateParameterBindings } from "../parameters/expressionBindings";
 import { MODEL_RESOURCE_LIMITS } from "../resourceLimits";
+import { validAuthoredUnit, validUnitSettings } from "../parameters/parameterUnits";
 
 const PARAMETER_NAME_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
 const REQUIRED_DOCUMENT_OBJECTS = ["parameters", "sketches"] as const;
@@ -485,6 +486,7 @@ function validatePersistedFields(document: CadDocument): ValidationIssue[] {
     return (
       typeof ref.expression === "string" &&
       typeof ref.unit === "string" &&
+      (ref.authoredUnit === undefined || validAuthoredUnit(ref.authoredUnit)) &&
       (ref.resolvedValue === undefined ||
         (typeof ref.resolvedValue === "number" &&
           Number.isFinite(ref.resolvedValue)))
@@ -531,6 +533,7 @@ function validatePersistedFields(document: CadDocument): ValidationIssue[] {
     "document",
     "Invalid document unit settings.",
   );
+  check(document.displayUnits === undefined || validUnitSettings(document.displayUnits), "document", "Invalid display units.");
   check(
     typeof document.createdAt === "string" &&
       typeof document.updatedAt === "string",
@@ -574,6 +577,8 @@ function validatePersistedFields(document: CadDocument): ValidationIssue[] {
     check(
       typeof parameter.name === "string" &&
         typeof parameter.expression === "string" &&
+        (parameter.authoredUnit === undefined || validAuthoredUnit(parameter.authoredUnit)) &&
+        (parameter.group === undefined || (typeof parameter.group === "string" && parameter.group.length <= 80)) &&
         typeof parameter.unit === "string" &&
         typeof parameter.value === "number" &&
         Number.isFinite(parameter.value) &&

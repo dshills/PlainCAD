@@ -1,6 +1,6 @@
 # Working CAD Capability Matrix
 
-Reviewed against source and automated tests on 2026-10-02. This is the current
+Reviewed against source and automated tests on 2026-10-03. This is the current
 implementation status, not a declaration that the working-CAD spec is complete.
 Unit/component tests exercise fallback geometry and jsdom. Chromium acceptance
 coverage now verifies native OpenCascade rectangle extrusion and circular through-cut
@@ -24,11 +24,19 @@ edits, parameter-driven diameter, empty-center failure and save/open/STL recover
 
 - React/Vite/TypeScript UI, Three.js viewer, Zustand document history and undo/redo.
 - Serializable document with stable IDs, deterministic JSON, schema migrations
-  through version 9, and validation before imported state is accepted.
+  through version 10, and validation before imported state is accepted.
 - Import unsafe-key rejection, nesting/node limits, and parameter/sketch/entity/
   constraint/feature count limits; unknown and runtime fields stripped by migration.
 - Parameter expressions, dependency ordering/cycle errors, compatible unit
   conversion, dimensional arithmetic, CAD math functions, and expression limits.
+- Schema 10 captures per-expression bare-number length/angle defaults, saved display
+  units, parameter groups and descriptions. Readouts use current evaluated quantities;
+  pending/invalid values report unavailable. Defaults affect newly authored or edited
+  expressions; explicit units, scalar multipliers and dimensional ratios keep their
+  semantics. Legacy expressions remain strict until edited. Display settings are
+  undoable document preferences; mixed scalar/dimensional sums require explicit units.
+  Chromium verifies native dimensions/offsets, scalar parameters, groups, undo,
+  save/open and STL volume under inch/mm defaults.
 - XY/XZ/YZ sketches with points, lines, circles, arcs, construction geometry, and
   rectangle helpers; geometry/dimension/constraint authoring controls.
 - Driving dimensions and 11 constraint types, seeded/canonical reset solving,
@@ -125,7 +133,7 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
 - Parameter expressions persist stable-ID token bindings with safe display-name
   updates across renames, edits, save/open, and old-name reuse. Missing bindings
   block rebuild without retargeting and remain saveable for explicit repair.
-  Authored unit defaults/display units and parameter grouping still need work.
+  These bindings are covered by rename/edit/save/open/browser geometry checks.
 - The driving solver handles small sketches: 160 scalar variables, 512 residual
   equations, 100 iterations, and a 50ms iteration budget. DOF/rank is a local
   numerical heuristic, not proof of a globally unique solution. Distance/angle

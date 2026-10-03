@@ -97,6 +97,7 @@ export function tokenize(expression: string): Token[] {
 class Parser {
   private cursor = 0;
   readonly dependencies = new Set<string>();
+  hasDimensionalInput = false;
 
   constructor(
     private readonly tokens: Token[],
@@ -163,6 +164,7 @@ class Parser {
           throw new Error(`Expected operator before ${possibleUnit.value}.`);
         }
       }
+      if (unit) this.hasDimensionalInput = true;
       return normalizeQuantity(parsed, unit);
     }
     if (currentToken.type === "identifier") {
@@ -170,11 +172,14 @@ class Parser {
       const isFunctionCall = this.peek()?.type === "paren" && this.peek()?.value === "(";
       if (isFunctionCall) {
         this.advance();
-        return this.evaluateFunction(name, this.parseArguments(depth + 1));
+        const result = this.evaluateFunction(name, this.parseArguments(depth + 1));
+        if (result.dimension !== "scalar") this.hasDimensionalInput = true;
+        return result;
       }
       const parameter = this.context.parameters[name];
       if (!parameter) throw new Error(`Unknown parameter ${name}.`);
       this.dependencies.add(name);
+      if (parameter.dimension !== "scalar") this.hasDimensionalInput = true;
       return parameter;
     }
     throw new Error("Expected value.");
@@ -287,9 +292,17 @@ class Parser {
 }
 
 export function evaluateExpression(expression: string, context: EvaluationContext): EvaluationResult {
+  return evaluateExpressionRef({ expression }, context);
+}
+
+/** Default scalar arithmetic, retaining dimensionless ratios/trigonometric results. */
+export function evaluateExpressionRef(ref: { expression: string; authoredUnit?: string }, context: EvaluationContext): EvaluationResult {
   try {
-    const parser = new Parser(tokenize(expression), context);
-    const quantity = parser.parse();
+    const parser = new Parser(tokenize(ref.expression), context);
+    let quantity = parser.parse();
+    if (quantity.dimension === "scalar" && !parser.hasDimensionalInput && ref.authoredUnit !== undefined) {
+      quantity = normalizeQuantity(quantity.value, ref.authoredUnit);
+    }
     return { quantity, dependencies: [...parser.dependencies] };
   } catch (error) {
     return { dependencies: [], error: error instanceof Error ? error.message : String(error) };
@@ -349,7 +362,7 @@ export function evaluateParameters(parameters: Record<string, CadParameter>): Pa
       return undefined;
     }
     for (const dependency of dependencies) visit(dependency, depth + 1);
-    const result = evaluateExpression(parameter.expression, { parameters: values });
+    const result = evaluateExpressionRef(parameter, { parameters: values });
     visiting.delete(name);
     visited.add(name);
     if (result.error || !result.quantity) {

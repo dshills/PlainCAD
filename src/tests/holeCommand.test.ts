@@ -3,6 +3,9 @@ import { createBoxTemplate } from "../templates/templates";
 import { createEmptyDocument, upsertSketch } from "../cad/document/CadDocument";
 import { addPoint, createXySketch } from "../cad/sketch/SketchModel";
 import { useCadStore } from "../state/useCadStore";
+import { evaluateExpressionRef, evaluateParameters } from "../cad/parameters/expressionEvaluator";
+import { importProjectText } from "../persistence/importProject";
+import { serializeProject } from "../persistence/exportProject";
 import { rebuildDocument } from "../cad/features/rebuildGraph";
 import {
   beginHoleCreation,
@@ -72,6 +75,33 @@ describe("explicit hole creation guards", () => {
       createHole({ ...input, throughAll: false, depth: "3deg" }),
     ).toMatchObject({ ok: false, reason: expect.stringContaining("depth") });
     expect(useCadStore.getState().history.past).toHaveLength(0);
+    expect(
+      createHole({ ...input, diameter: "4", depth: "5", throughAll: false }).ok,
+    ).toBe(true);
+    const authored = useCadStore.getState().history.present;
+    const hole = authored.features.find((f) => f.type === "hole")!;
+    expect(hole.diameter).toMatchObject({
+      expression: "4",
+      authoredUnit: "mm",
+    });
+    expect(hole.depth).toMatchObject({ expression: "5", authoredUnit: "mm" });
+    const changed = importProjectText(
+      serializeProject({
+        ...authored,
+        unitSettings: { length: "in", angle: "rad" },
+      }),
+    );
+    expect(evaluateParameters(changed.parameters).errors).toEqual([]);
+    expect(evaluateExpressionRef(hole.diameter, { parameters: {} }).quantity?.value).toBe(4);
+    expect(hole.depth !== "throughAll" && evaluateExpressionRef(hole.depth, { parameters: {} }).quantity?.value).toBe(5);
+    // The new feature keeps its captured mm sizing after defaults change and save/open.
+    expect(changed.features.find((f) => f.type === "hole")).toMatchObject({
+      diameter: { authoredUnit: "mm" },
+      depth: { authoredUnit: "mm" },
+    });
+    useCadStore.getState().undo();
+    beginHoleCreation();
+
     useCadStore.setState({
       rebuild: { ...useCadStore.getState().rebuild, status: "queued" },
     });

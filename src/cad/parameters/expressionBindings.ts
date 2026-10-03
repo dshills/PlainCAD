@@ -5,7 +5,9 @@ import type {
   Feature,
   ValidationIssue,
 } from "../document/schema";
-import { tokenize } from "./expressionEvaluator";
+import { evaluateParameters, tokenize } from "./expressionEvaluator";
+import { validAuthoredUnit } from "./parameterUnits";
+import { unitDimension } from "./units";
 
 type Expression = ExpressionRef | CadParameter;
 export function parameterTokens(expression: string) {
@@ -101,6 +103,8 @@ export function bindDocumentExpressions(
   previous?: CadDocument,
 ): CadDocument {
   const old = new Map<string, Expression>();
+  let previousValues:
+    ReturnType<typeof evaluateParameters>["values"] | undefined;
   if (previous)
     mapDocumentExpressions(previous, (e, s, id, field) => {
       old.set(key(s, id, field), e);
@@ -131,8 +135,81 @@ export function bindDocumentExpressions(
         return id ? [[token.value, id]] : [];
       }),
     );
-    return { ...e, parameterRefs: Object.keys(refs).length ? refs : undefined };
+    const bound = {
+      ...e,
+      parameterRefs: Object.keys(refs).length ? refs : undefined,
+    };
+    // Loading/importing has no previous snapshot and must retain legacy semantics.
+    // Renaming a bound symbol is not authoring a new expression.
+    if (
+      previous &&
+      (!before ||
+        (before.expression !== e.expression &&
+          !sameBoundExpression(before, bound)))
+    ) {
+      const explicitUnitEdit = before
+        ? e.authoredUnit !== before.authoredUnit
+        : e.authoredUnit !== undefined;
+      if (!explicitUnitEdit) {
+        if (s === "parameter") {
+          previousValues ??= evaluateParameters(previous.parameters).values;
+          const dimension =
+            before?.authoredUnit !== undefined
+              ? unitDimension(before.authoredUnit)
+              : before
+                ? previousValues[(before as CadParameter).name]?.dimension
+                : "length";
+          bound.authoredUnit =
+            dimension === "scalar"
+              ? ""
+              : dimension === "angle"
+                ? document.unitSettings.angle
+                : dimension === "length"
+                  ? document.unitSettings.length
+                  : "";
+        } else {
+          const angle =
+            field === "angle" ||
+            (s === "sketch" &&
+              field.startsWith("dimension:") &&
+              document.sketches[id]?.dimensions.find(
+                (d) => d.id === field.slice("dimension:".length),
+              )?.type === "angle");
+          bound.authoredUnit = angle
+            ? document.unitSettings.angle
+            : document.unitSettings.length;
+        }
+      }
+    }
+    return bound;
   });
+}
+function sameBoundExpression(a: Expression, b: Expression): boolean {
+  const renamed =
+    a.parameterRefs &&
+    b.parameterRefs &&
+    Object.entries(a.parameterRefs).some(
+      ([name, id]) =>
+        b.parameterRefs?.[name] !== id &&
+        Object.values(b.parameterRefs!).includes(id),
+    );
+  if (!renamed) return false;
+  const canonical = (e: Expression) =>
+    JSON.stringify(
+      tokenize(e.expression).map((t) => [
+        t.type,
+        t.type === "identifier" &&
+        e.parameterRefs &&
+        Object.hasOwn(e.parameterRefs, t.value)
+          ? `id:${e.parameterRefs[t.value]}`
+          : t.value,
+      ]),
+    );
+  try {
+    return canonical(a) === canonical(b);
+  } catch {
+    return false;
+  }
 }
 export function refreshBoundNames(document: CadDocument): CadDocument {
   const names = new Map(
@@ -169,9 +246,11 @@ export function validateParameterBindings(
   const ids = new Set(Object.values(document.parameters).map((p) => p.id));
   const issues: ValidationIssue[] = [];
   mapDocumentExpressions(document, (e, source, sourceId, field) => {
-    if (e.parameterRefs === undefined) return e;
     const fail = (message: string) =>
       issues.push({ source, sourceId, message: `${field}: ${message}` });
+    if (e.authoredUnit !== undefined && !validAuthoredUnit(e.authoredUnit))
+      fail("Invalid authored unit default.");
+    if (e.parameterRefs === undefined) return e;
     if (
       !e.parameterRefs ||
       typeof e.parameterRefs !== "object" ||

@@ -21,6 +21,7 @@ export function createEmptyDocument(name = "Untitled"): CadDocument {
     name,
     units: "metric",
     unitSettings: { length: "mm", angle: "deg" },
+    displayUnits: { length: "mm", angle: "deg" },
     createdAt: timestamp,
     updatedAt: timestamp,
     timelineCursor: 0,

@@ -9,6 +9,7 @@ import {
   type SketchMeasurementRef,
 } from "../../cad/inspection/measurements";
 import type { UnitSettings } from "../../cad/document/schema";
+import { displayUnits } from "../../cad/parameters/parameterUnits";
 
 function refKey(ref?: SketchMeasurementRef) {
   return ref ? JSON.stringify([ref.sketchId, ref.entityId]) : "";
@@ -21,9 +22,8 @@ function MeasurementSession({ session }: { session: number }) {
   const document = useCadStore((s) => s.history.present);
   const rebuild = useCadStore((s) => s.rebuild);
   const inspection = useInspectionState();
-  const [unit, setUnit] = useState<UnitSettings["length"]>(
-    document.unitSettings.length,
-  );
+  const [unitOverride, setUnit] = useState<UnitSettings["length"]>();
+  const unit = unitOverride ?? displayUnits(document).length;
   const refs = inspection.session === session ? inspection : undefined;
   const options = useMemo(
     () =>

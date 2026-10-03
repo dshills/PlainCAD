@@ -25,6 +25,7 @@ import {
 } from "../../cad/sketch/planes";
 import { solveSketch } from "../../cad/sketch/SketchSolver";
 import { useCadStore } from "../../state/useCadStore";
+import { AuthoredUnitsNote } from "./AuthoredUnitsNote";
 
 const constraintTypes: ConstraintType[] = [
   "fixed",
@@ -453,6 +454,7 @@ export function SketchTools({
       </button>
       {sketch.dimensions.map((d, i) => (
         <div key={d.id}>
+          <AuthoredUnitsNote expressions={[[d.type, d.expression]]} />
           <label>
             {d.type}
             <input
@@ -574,6 +576,7 @@ export function SketchTools({
         </div>
       ))}
       <h3>Sketch plane</h3>
+      {sketch.plane.type === "offset" ? <AuthoredUnitsNote expressions={[["Offset", sketch.plane.offset]]} /> : null}
       {planes.errors.has(sketch.id) ? (
         <p className="error-text">
           {planes.errors.get(sketch.id)} Geometry is preserved; select a

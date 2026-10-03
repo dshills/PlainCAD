@@ -12,6 +12,7 @@ const migrations = new Map<number, Migration>([
   [6, migrateV6ToV7],
   [7, (document) => ({ ...document, schemaVersion: 8 })],
   [8, (document) => ({ ...document, schemaVersion: 9 })],
+  [9, (document) => ({ ...document, schemaVersion: 10, displayUnits: document.displayUnits ?? { ...document.unitSettings } })],
 ]);
 
 export function migrateDocument(input: CadDocument): CadDocument {
@@ -118,6 +119,8 @@ function sanitizeCurrentDocument(input: CadDocument): CadDocument {
           id: record.id,
           name: record.name,
           expression: record.expression,
+          ...(record.authoredUnit !== undefined ? { authoredUnit: record.authoredUnit } : {}),
+          ...(record.group !== undefined ? { group: record.group } : {}),
           ...(record.parameterRefs !== undefined ? { parameterRefs: record.parameterRefs } : {}),
           value: record.value,
           unit: record.unit,
@@ -145,6 +148,10 @@ function sanitizeCurrentDocument(input: CadDocument): CadDocument {
         }
       : (undefined as any),
     createdAt: input.createdAt,
+    ...(input.displayUnits !== undefined ? { displayUnits: isRecord(input.displayUnits) ? {
+      length: input.displayUnits.length, angle: input.displayUnits.angle,
+      ...(input.displayUnits.mass !== undefined ? { mass: input.displayUnits.mass } : {}),
+    } : input.displayUnits } : {}),
     updatedAt: input.updatedAt,
     ...(input.timelineCursor !== undefined ? { timelineCursor: input.timelineCursor } : {}),
     parameters,
@@ -439,7 +446,7 @@ function isRecord(value: unknown): value is Record<string, any> {
 
 function sanitizeExpressionRef(value: unknown): any {
   return isRecord(value)
-    ? { expression: value.expression, resolvedValue: value.resolvedValue, unit: value.unit, ...(value.parameterRefs !== undefined ? { parameterRefs: value.parameterRefs } : {}) }
+    ? { expression: value.expression, resolvedValue: value.resolvedValue, unit: value.unit, ...(value.authoredUnit !== undefined ? { authoredUnit: value.authoredUnit } : {}), ...(value.parameterRefs !== undefined ? { parameterRefs: value.parameterRefs } : {}) }
     : { expression: value == null ? undefined : String(value), unit: undefined };
 }
 

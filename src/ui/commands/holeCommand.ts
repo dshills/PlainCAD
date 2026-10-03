@@ -6,7 +6,7 @@ import { upsertFeature } from "../../cad/document/CadDocument";
 import { stableBodyIdForFeature } from "../../cad/features/featureGraph";
 import { MODEL_RESOURCE_LIMITS } from "../../cad/resourceLimits";
 import {
-  evaluateExpression,
+  evaluateExpressionRef,
   evaluateParameters,
 } from "../../cad/parameters/expressionEvaluator";
 
@@ -125,13 +125,17 @@ export function createHole(input: {
       "Center references were lost or repeated. Reselect unique sketch points.",
     );
   const parameters = evaluateParameters(context.document.parameters).values;
+  const authoredUnit = context.document.unitSettings.length;
   for (const [label, expression] of input.throughAll
     ? [["diameter", input.diameter]]
     : [
         ["diameter", input.diameter],
         ["depth", input.depth],
       ]) {
-    const evaluated = evaluateExpression(expression, { parameters });
+    const evaluated = evaluateExpressionRef(
+      { expression, authoredUnit },
+      { parameters },
+    );
     if (
       evaluated.error ||
       !evaluated.quantity ||
@@ -150,10 +154,10 @@ export function createHole(input: {
     sketchId: context.sketch.id,
     targetBodyId: input.targetBodyId,
     centerPointIds: input.centerPointIds,
-    diameter: { expression: input.diameter, unit: "mm" },
+    diameter: { expression: input.diameter, authoredUnit, unit: "mm" },
     depth: input.throughAll
       ? ("throughAll" as const)
-      : { expression: input.depth, unit: "mm" },
+      : { expression: input.depth, authoredUnit, unit: "mm" },
   };
   state.updateDocument((d) => upsertFeature(d, feature));
   if (

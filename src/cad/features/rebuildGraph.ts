@@ -16,7 +16,7 @@ import {
   HoleFeature,
   RevolveFeature,
 } from "../document/schema";
-import { evaluateExpression } from "../parameters/expressionEvaluator";
+import { evaluateExpressionRef } from "../parameters/expressionEvaluator";
 import { solveSketch } from "../sketch/SketchSolver";
 import { detectProfiles } from "../sketch/profileDetection";
 import { OpenCascadeKernel } from "../kernel/OpenCascadeKernel";
@@ -533,6 +533,7 @@ export function rebuildDocument(
       [...profilesBySketch].map(([id, detected]) => [id, detected.profiles]),
     ),
     sketchPlanes: Object.fromEntries(planes.transforms),
+    parameterValues: evaluated.values,
     metrics: {
       parameterEvaluationMs,
       sketchSolveMs,
@@ -564,7 +565,7 @@ function rebuildRevolveFeature(
   profilesBySketch: Map<string, ReturnType<typeof detectProfiles>>,
   solvedSketches: Map<string, ReturnType<typeof solveSketch>>,
   transforms: Map<string, SketchPlaneTransform>,
-  parameters: Parameters<typeof evaluateExpression>[1]["parameters"],
+  parameters: Parameters<typeof evaluateExpressionRef>[1]["parameters"],
   runtimeBodies: Map<string, RuntimeBody>,
   shapesToDispose: Set<KernelShape>,
   errors: RebuildError[],
@@ -586,7 +587,7 @@ function rebuildRevolveFeature(
     });
     return;
   }
-  const angle = evaluateExpression(feature.angle.expression, { parameters });
+  const angle = evaluateExpressionRef(feature.angle, { parameters });
   if (
     angle.error ||
     !angle.quantity ||
@@ -661,7 +662,7 @@ function rebuildHoleFeature(
   document: CadDocument,
   solvedSketches: Map<string, ReturnType<typeof solveSketch>>,
   planeTransforms: Map<string, SketchPlaneTransform>,
-  parameters: Parameters<typeof evaluateExpression>[1]["parameters"],
+  parameters: Parameters<typeof evaluateExpressionRef>[1]["parameters"],
   runtimeBodies: Map<string, RuntimeBody>,
   shapesToDispose: Set<KernelShape>,
   errors: RebuildError[],
@@ -696,7 +697,7 @@ function rebuildHoleFeature(
     errors.push({ id: `feature:${feature.id}:centers`, source: "feature", sourceId: feature.id, message: "Hole requires at least one explicit center point. Select centers in the Inspector." });
     return;
   }
-  const diameter = evaluateExpression(feature.diameter.expression, {
+  const diameter = evaluateExpressionRef(feature.diameter, {
     parameters,
   });
   if (
@@ -785,7 +786,7 @@ function rebuildHoleFeature(
 function rebuildEdgeTreatmentFeature(
   feature: FilletFeature | ChamferFeature,
   document: CadDocument,
-  parameters: Parameters<typeof evaluateExpression>[1]["parameters"],
+  parameters: Parameters<typeof evaluateExpressionRef>[1]["parameters"],
   runtimeBodies: Map<string, RuntimeBody>,
   shapesToDispose: Set<KernelShape>,
   errors: RebuildError[],
@@ -813,7 +814,7 @@ function rebuildEdgeTreatmentFeature(
   }
   const expression =
     feature.type === "fillet" ? feature.radius : feature.distance;
-  const evaluated = evaluateExpression(expression.expression, { parameters });
+  const evaluated = evaluateExpressionRef(expression, { parameters });
   if (
     evaluated.error ||
     !evaluated.quantity ||
@@ -872,10 +873,10 @@ function rebuildEdgeTreatmentFeature(
 
 function evaluateHoleDepth(
   depth: HoleFeature["depth"],
-  parameters: Parameters<typeof evaluateExpression>[1]["parameters"],
+  parameters: Parameters<typeof evaluateExpressionRef>[1]["parameters"],
 ): number | undefined {
   if (depth === "throughAll") return undefined;
-  const value = evaluateExpression(depth.expression, { parameters });
+  const value = evaluateExpressionRef(depth, { parameters });
   return value.error || !value.quantity || value.quantity.dimension !== "length"
     ? undefined
     : value.quantity.value;
@@ -976,7 +977,7 @@ function resolveTargetBodies(
 
 function resolveExtrudeDistance(
   feature: ExtrudeFeature,
-  parameters: Parameters<typeof evaluateExpression>[1]["parameters"],
+  parameters: Parameters<typeof evaluateExpressionRef>[1]["parameters"],
   targetMeshes: RenderMesh[],
   transform: SketchPlaneTransform,
 ): { value: number; error?: string } {
@@ -1016,7 +1017,7 @@ function resolveExtrudeDistance(
     termination.type === "distance"
       ? (termination.distance ?? feature.distance)
       : feature.distance;
-  const distance = evaluateExpression(expression.expression, { parameters });
+  const distance = evaluateExpressionRef(expression, { parameters });
   if (distance.error || !distance.quantity)
     return {
       value: 0,

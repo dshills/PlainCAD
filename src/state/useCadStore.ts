@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { normalizeQuantity } from "../cad/parameters/units";
 import { CadDocument, SelectionState } from "../cad/document/schema";
 import { createEmptyDocument, removeParameter, upsertParameter } from "../cad/document/CadDocument";
 import { CadParameter } from "../cad/document/schema";
@@ -171,7 +172,7 @@ export const useCadStore = create<CadStore>((set, get) => ({
       name = `${base}_${index}`;
     }
     get().updateDocument((document) =>
-      upsertParameter(document, { id: createId("param"), name, expression: "10mm", value: 10, unit: "mm" }),
+      upsertParameter(document, { id: createId("param"), name, expression: "10", authoredUnit: document.unitSettings.length, value: normalizeQuantity(10, document.unitSettings.length).value, unit: "mm" }),
     );
   },
   updateParameter: (idOrName, patch) => {
