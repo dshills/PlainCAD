@@ -414,3 +414,129 @@ test("drawing dimensions drive native geometry, diagnose conflicts, persist and 
   );
   expect(errors).toEqual([]);
 });
+
+for (const plane of ["XY", "XZ", "YZ"] as const) {
+  test(`${plane}: guarded point drag previews, cancels, preserves IDs and changes native geometry`, async ({
+    page,
+  }, info) => {
+    const errors: string[] = [];
+    page.on("pageerror", (e) => errors.push(e.message));
+    await page.goto("/");
+    await ready(page);
+    await page
+      .getByRole("button", { name: `Create ${plane} sketch`, exact: true })
+      .click();
+    await openCanvas(page);
+    await clickLocal(page, 0, 0);
+    await clickLocal(page, 40, 0);
+    await clickLocal(page, 0, 30);
+    await clickLocal(page, 0, 0);
+    await done(page);
+    await ready(page);
+    await page
+      .getByRole("button", { name: "Extrude selected sketch", exact: true })
+      .click();
+    await ready(page, 6000);
+    const original = await snapshot(page),
+      sketch = Object.values(original.document.sketches)[0],
+      entityIds = Object.keys(sketch.entities).sort();
+    await page.locator(".sketch-chip").first().click();
+    await openCanvas(page);
+    await page.getByLabel("Canvas tool", { exact: true }).selectOption("move");
+    await page.getByRole("button", { name: "Zoom out", exact: true }).click();
+    const svg = page.getByLabel("Sketch drawing canvas", { exact: true });
+    async function clientPoint(x: number, y: number) {
+      await svg.scrollIntoViewIfNeeded();
+      const bounds = await svg.boundingBox(),
+        view = (await svg.getAttribute("viewBox"))!.split(" ").map(Number);
+      if (!bounds) throw new Error("Canvas unavailable");
+      return {
+        x: bounds.x + ((x - view[0]) / view[2]) * bounds.width,
+        y: bounds.y + ((-y - view[1]) / view[3]) * bounds.height,
+      };
+    }
+    async function startDrag(a: [number, number], b: [number, number]) {
+      const start = await clientPoint(...a),
+        end = await clientPoint(...b);
+      await page.mouse.move(start.x, start.y);
+      await page.mouse.down();
+      await page.mouse.move(end.x, end.y, { steps: 5 });
+    }
+    await clickLocal(page, 0, 30);
+    expect((await snapshot(page)).document).toEqual(original.document);
+    await startDrag([0, 30], [0, 40]);
+    expect((await snapshot(page)).document.sketches).toEqual(
+      original.document.sketches,
+    );
+    await expect(svg.locator('[aria-label="Point move preview"]')).toHaveCount(
+      1,
+    );
+    await page.mouse.up();
+    await ready(page, 8000);
+    await page
+      .getByRole("button", { name: "Undo canvas edit", exact: true })
+      .click();
+    await ready(page, 6000);
+    await page
+      .getByRole("button", { name: "Redo canvas edit", exact: true })
+      .click();
+    await ready(page, 8000);
+    const afterMove = (await snapshot(page)).document;
+    await startDrag([0, 40], [10, 40]);
+    await page.keyboard.press("Escape");
+    await page.mouse.up();
+    expect((await snapshot(page)).document).toEqual(afterMove);
+    await expect(
+      page.getByRole("dialog", { name: "Sketch canvas", exact: true }),
+    ).toBeVisible();
+    await page.getByLabel("Canvas coordinate X", { exact: true }).fill("0");
+    await page.getByLabel("Canvas coordinate Y", { exact: true }).fill("45");
+    await page
+      .getByRole("button", { name: "Move point to coordinate", exact: true })
+      .click();
+    await ready(page, 9000);
+    if (plane === "XY") {
+      const current = (await snapshot(page)).document;
+      await startDrag([0, 45], [0, 50]);
+      await page.evaluate(async () => {
+        const path = "/src/state/useCadStore.ts",
+          { useCadStore } = await import(path);
+        useCadStore.getState().updateDocument((d: CadDocument) => ({
+          ...d,
+          name: "Edited during drag",
+        }));
+      });
+      await page.mouse.up();
+      await ready(page, 9000);
+      expect((await snapshot(page)).document.sketches).toEqual(
+        current.sketches,
+      );
+    }
+    await done(page);
+    const moved = await snapshot(page);
+    expect(
+      Object.keys(moved.document.sketches[sketch.id].entities).sort(),
+    ).toEqual(entityIds);
+    const mesh = moved.result!.meshes[0];
+    expect(mesh.bounds.max[plane === "XY" ? 1 : 2]).toBeCloseTo(45, 5);
+    const saving = page.waitForEvent("download");
+    await page
+      .getByRole("button", { name: "Save project", exact: true })
+      .click();
+    const path = info.outputPath("moved.pcaddoc");
+    await (await saving).saveAs(path);
+    await page.reload();
+    await ready(page);
+    await page.locator('input[type="file"]').setInputFiles(path);
+    await ready(page, 9000);
+    expect((await snapshot(page)).document.sketches).toEqual(
+      moved.document.sketches,
+    );
+    const exporting = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Export STL", exact: true }).click();
+    const stl = info.outputPath("moved.stl");
+    await (await exporting).saveAs(stl);
+    expect(stlVolume(await readFile(stl))).toBeCloseTo(9000, 3);
+    expect(errors).toEqual([]);
+  });
+}

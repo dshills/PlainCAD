@@ -163,6 +163,12 @@ rebuild until their expressions are repaired; reused names cannot retarget them.
    controls; click a D label to edit its expression. Pending or failed solves show
    unavailable values. Adding a canvas dimension explicitly enables driving mode
    for legacy sketches. Undo/redo and save/open preserve dimension IDs and intent.
+   Choose the move tool to drag free numeric points, or move a selected point with
+   exact coordinate entry. The preview stays transient until release; Escape,
+   pointer cancellation and project edits discard it. Moves preserve shared IDs.
+   Parameter-bound, constrained, driving distance/angle and arc points require
+   expression or constraint edits; a clear diagnostic explains the restriction.
+   Moves onto another point are rejected; movement never merges point IDs.
    Use the rectangle/circle helpers or Sketch tools to add points, lines, circles,
    and center/start/end arcs. Construction curves appear dashed and are excluded
    from solid profiles.

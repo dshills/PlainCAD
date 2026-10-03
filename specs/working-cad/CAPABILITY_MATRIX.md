@@ -155,7 +155,14 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
   drawing and native export but keep dimension expressions repairable. Native
   Chromium covers parameter-driven diameter edits, conflict recovery, save/open
   and STL; production CSP covers keyboard drawing, diameter edits and native XZ
-  volume/orientation. Point dragging remains open.
+  volume/orientation. Free numeric points support direct dragging with transient
+  connected-curve previews and exact keyboard moves, one edit on release,
+  cancellation/stale-document protection, shared-ID retention and undo/redo.
+  Parameter-bound, constrained, distance/angle-driven and arc points reject moves
+  explicitly; lost point selections remain visible, and moves onto another point
+  are rejected instead of merging IDs. Coordinated constrained dragging remains
+  unavailable. Native XY/XZ/YZ
+  checks verify changed BRep volume/bounds, cancellation, save/open and STL.
   Intersecting boundaries are diagnosed; intersection fragmentation remains missing.
   Arcs retain analytic kernel boundaries;
   profile classification and fallback meshes sample their sweeps. Face selection

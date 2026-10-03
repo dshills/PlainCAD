@@ -1,3 +1,5 @@
+import { movedCanvasPoint } from "../../cad/sketch/canvasPointMove";
+import { SKETCH_TOLERANCE } from "../../cad/sketch/tolerances";
 import {
   withCanvasDimension,
   type CanvasDimensionInput,
@@ -160,4 +162,65 @@ export function commitCanvasDimension(
       );
   }
   return input ? (input.id ?? updated.dimensions.at(-1)?.id) : undefined;
+}
+
+export function commitCanvasPointMove(
+  active: CanvasSession,
+  expected: CadStore["history"]["present"],
+  pointId: string,
+  target: CanvasPoint,
+) {
+  const state = useCadStore.getState();
+  if (state.history.present !== expected)
+    throw new Error(
+      "Project changed during the point move. Cancel and try again.",
+    );
+  const context = canvasContext(active, state),
+    updated = movedCanvasPoint(context.sketch, pointId, target);
+  const before = context.solved.points[pointId];
+  if (
+    before &&
+    Math.hypot(before.x - target.x, before.y - target.y) <= SKETCH_TOLERANCE
+  )
+    return;
+  if (
+    Object.values(context.solved.points).some(
+      (p) =>
+        p.id !== pointId &&
+        Math.hypot(p.x - target.x, p.y - target.y) <= SKETCH_TOLERANCE,
+    )
+  )
+    throw new Error(
+      "Another point occupies these coordinates. Point moves preserve IDs; use geometry or constraint editing to connect points.",
+    );
+  const parameters = evaluateParameters(context.document.parameters).values;
+  const solved = solveSketch(updated, parameters);
+  const error = solved.errors.find((e) => e.severity === "error");
+  if (error)
+    throw new Error(`Point move would invalidate the sketch: ${error.message}`);
+  const point = solved.points[pointId];
+  if (
+    !point ||
+    Math.hypot(point.x - target.x, point.y - target.y) > SKETCH_TOLERANCE
+  )
+    throw new Error(
+      "The solver cannot honor this point move. Edit dimensions or constraints instead.",
+    );
+  if (
+    Object.values(solved.points).some(
+      (p) =>
+        p.id !== pointId &&
+        Math.hypot(p.x - point.x, p.y - point.y) <= SKETCH_TOLERANCE,
+    )
+  )
+    throw new Error(
+      "Another point occupies these coordinates after solving. Point moves preserve IDs; use geometry or constraint editing to connect points.",
+    );
+  const next = upsertSketch(context.document, updated);
+  assertProjectJsonShape(next);
+  state.updateDocument((d) => (d === expected ? next : d));
+  if (useCadStore.getState().history.present === expected)
+    throw new Error(
+      "Point move could not be saved. Check the project diagnostics.",
+    );
 }

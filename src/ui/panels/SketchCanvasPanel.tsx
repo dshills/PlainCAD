@@ -1,3 +1,4 @@
+import { useCanvasPointDrag } from "./useCanvasPointDrag";
 import { useCanvasDimensions } from "./useCanvasDimensions";
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import { ModalDialog } from "../ModalDialog";
@@ -64,7 +65,9 @@ function arcPath(
     : (b - a + Math.PI * 2) % (Math.PI * 2);
   return `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${sweep > Math.PI ? 1 : 0} ${clockwise ? 0 : 1} ${end.x} ${end.y}`;
 }
-const instructions: Record<CanvasTool, string> = {
+type CanvasMode = CanvasTool | "move";
+const instructions: Record<CanvasMode, string> = {
+  move: "Drag a free numeric point; release to save one edit. Escape cancels. Parameter-bound, constrained and arc points use geometry/dimension controls.",
   point: "Click to place a point.",
   line: "Click endpoints. Lines continue from the last point; snap to the first point to close a loop.",
   rectangle: "Click two opposite corners.",
@@ -110,7 +113,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
   }, [document, fileBusy, active, rebuild]);
   const context = analysis.context,
     sketch = document.sketches[active.sketchId];
-  const [tool, setTool] = useState<CanvasTool>("line"),
+  const [tool, setTool] = useState<CanvasMode>("line"),
     [draft, setDraft] = useState<CanvasPoint[]>([]),
     [cursor, setCursor] = useState<CanvasPoint>();
   const draftDocument = useRef(document);
@@ -122,20 +125,26 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     [construction, setConstruction] = useState(false),
     [clockwise, setClockwise] = useState(false),
     [error, setError] = useState<string>();
+  const [keyboardX, setKeyboardX] = useState("0"),
+    [keyboardY, setKeyboardY] = useState("0");
+  const drag = useCanvasPointDrag(active, context, view.width, (p) => {
+    setKeyboardX(String(p.x));
+    setKeyboardY(String(p.y));
+  });
   useEffect(() => {
     if (draftDocument.current !== document) {
       setDraft([]);
       setCursor(undefined);
+      drag.cancel();
       draftDocument.current = document;
     }
-  }, [document]);
-  const [keyboardX, setKeyboardX] = useState("0"),
-    [keyboardY, setKeyboardY] = useState("0");
+  }, [document, drag.cancel]);
   const close = () => useSketchCanvas.setState({ active: undefined });
   const cancel = () => {
     setDraft([]);
     setCursor(undefined);
     setError(undefined);
+    drag.cancel();
   };
   const gridStep = Number(grid),
     validGrid =
@@ -157,7 +166,16 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     };
     let result = snapCanvasPoint(
       point,
-      context.solved,
+      tool === "move" && drag.inProgress
+        ? {
+            ...context.solved,
+            points: Object.fromEntries(
+              Object.entries(context.solved.points).filter(
+                ([id]) => id !== drag.pointId,
+              ),
+            ),
+          }
+        : context.solved,
       (view.width / rect.width) * 8,
       snap ? gridStep : 0,
     );
@@ -168,6 +186,10 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
   const draw = (event: PointerEvent<SVGSVGElement>) => {
     if (event.button !== 0) return;
     const point = pointAt(event);
+    if (tool === "move") {
+      if (!disabled) drag.begin(event, point);
+      return;
+    }
     if (!point) return;
     event.preventDefault();
     event.currentTarget.focus();
@@ -175,6 +197,10 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
   };
   const place = (point: CanvasPoint) => {
     if (disabled) return;
+    if (tool === "move") {
+      drag.keyboardMove(point);
+      return;
+    }
     const points = [...draft, point];
     if (points.length < CANVAS_POINT_COUNT[tool]) {
       draftDocument.current = document;
@@ -200,6 +226,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     }
   };
   const zoom = (factor: number) => {
+    drag.cancel();
     setCursor(undefined);
     setError(undefined);
     const width = Math.min(1e8, Math.max(0.002, view.width * factor));
@@ -211,6 +238,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     });
   };
   const pan = (x: number, y: number) => {
+    drag.cancel();
     setCursor(undefined);
     setError(undefined);
     setView({
@@ -239,7 +267,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     <ModalDialog
       label="Sketch canvas"
       className="file-dialog sketch-canvas-dialog"
-      onDismiss={() => (draft.length ? cancel() : close())}
+      onDismiss={() => (draft.length || drag.inProgress ? cancel() : close())}
     >
       <h2>
         {sketch.name} — {sketchPlaneLabel(sketch.plane)} canvas
@@ -256,7 +284,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
             value={tool}
             onChange={(e) => {
               cancel();
-              setTool(e.target.value as CanvasTool);
+              setTool(e.target.value as CanvasMode);
             }}
           >
             {Object.keys(instructions).map((kind) => (
@@ -356,11 +384,12 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
         >
           Redo canvas edit
         </button>
-        <button disabled={!draft.length} onClick={cancel}>
+        <button disabled={!draft.length && !drag.inProgress} onClick={cancel}>
           Cancel drawing
         </button>
       </div>
       <div className="canvas-toolbar">
+        {tool === "move" ? drag.controls : null}
         <label>
           Local X (mm)
           <input
@@ -382,6 +411,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
         <button
           disabled={
             disabled ||
+            (tool === "move" && (!drag.pointId || !!drag.reason)) ||
             keyboardX.trim() === "" ||
             keyboardY.trim() === "" ||
             !Number.isFinite(Number(keyboardX)) ||
@@ -400,7 +430,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
             place(point);
           }}
         >
-          Place coordinate
+          {tool === "move" ? "Move point to coordinate" : "Place coordinate"}
         </button>
       </div>
       {dimensions.controls}
@@ -409,10 +439,14 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
         Keyboard users can place exact coordinates using the fields above.
         Escape cancels a draft, then closes.
       </p>
-      {analysis.error || error || (snap && !validGrid) ? (
+      {analysis.error ||
+      error ||
+      (tool === "move" && (drag.error || drag.reason)) ||
+      (snap && !validGrid) ? (
         <p role="alert">
           {analysis.error ??
             error ??
+            (tool === "move" ? (drag.error ?? drag.reason) : undefined) ??
             "Grid step must be between 0.000001 and 1,000,000 mm."}
         </p>
       ) : null}
@@ -426,7 +460,16 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
         viewBox={`${view.x} ${-view.y - view.height} ${view.width} ${view.height}`}
         preserveAspectRatio="none"
         onPointerDown={draw}
-        onPointerMove={(event) => setCursor(pointAt(event))}
+        onPointerMove={(event) => {
+          const point = pointAt(event);
+          setCursor(point);
+          if (tool === "move") drag.move(event, point);
+        }}
+        onPointerUp={(event) => {
+          if (tool === "move") drag.finish(event, pointAt(event));
+        }}
+        onPointerCancel={() => drag.cancel()}
+        onLostPointerCapture={drag.lostCapture}
         onPointerLeave={() => setCursor(undefined)}
       >
         <g transform="scale(1,-1)" fill="none" strokeWidth={view.width / 700}>
@@ -496,6 +539,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
               r={radius}
             />
           ))}
+          {drag.preview}
           <g className="canvas-preview">
             {preview.length > 1 && tool === "line" ? (
               <line
@@ -538,6 +582,9 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
       <p role="status">
         {cursor
           ? `X ${cursor.x.toFixed(3)} mm, Y ${cursor.y.toFixed(3)} mm${cursor.pointId ? " — existing point" : ""}. `
+          : ""}
+        {drag.inProgress
+          ? "Point move preview; release to save, Escape to cancel. "
           : ""}
         {draft.length
           ? `${draft.length} draft point${draft.length === 1 ? "" : "s"}; nothing incomplete is saved.`
