@@ -88,9 +88,16 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
 - Body Inspector reports native volume/solid count and tessellated global bounds.
   Arbitrary BRep edge/face measurements and surface picks remain unavailable.
 
+- Standard Top/Front/Right/Isometric cameras share the CAD world frame; Fit
+  preserves direction. Schema 9 stores up to 20 named camera poses with stable IDs,
+  bounded/validated coordinates, save/open retention, deletion and undo.
+- Transient global X/Y/Z section clipping with millimeter offsets, reversible side,
+  clipped model/sketch/measurement previews and clipped-side picking exclusion.
+  Sections are uncapped visual previews; geometry and exports remain complete.
+
 ## Durability and fabrication
 
-- Schema 1–8 checked-in fixtures migrate, rebuild, retain IDs, edit dimensions,
+- Schema 1–9 checked-in fixtures migrate, rebuild, retain IDs, edit dimensions,
   round-trip project files, and recover through the same import codec.
 - IndexedDB autosave: 500ms debounce, latest/previous/manual snapshots, five-project
   retention, explicit startup recovery and previous-snapshot fallback. Quota and
@@ -135,8 +142,7 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
 - General post-boolean face/edge naming remains missing. Planes require an
   unmodified positive-distance new-body owner;
   curved side faces, hole/revolve faces, and ambiguous rebinding are unsupported.
-- Named views, section views,
-  remaining feature inspectors and graphical dimension/constraint annotation need work.
+- Remaining feature inspectors and graphical dimension/constraint annotation need work.
 - STL validation is numerical and bounded: it does not prove absence of every
   adjacent-face or near-degenerate self-intersection. Skipping expensive checks
   is explicit. Native union remains best-effort and does not connect disjoint solids.

@@ -1,3 +1,4 @@
+import { CURRENT_SCHEMA_VERSION } from "../cad/document/schema";
 import { describe, expect, it } from "vitest";
 import { createEmptyDocument, createExtrudeFeature, upsertFeature, upsertSketch } from "../cad/document/CadDocument";
 import { rebuildDocument } from "../cad/features/rebuildGraph";
@@ -65,7 +66,7 @@ describe("sketch planes", () => {
     };
     const imported = importProjectText(JSON.stringify(legacyDocument));
 
-    expect(imported.schemaVersion).toBe(8);
+    expect(imported.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
     expect(imported.sketches[sketch.id].plane).toEqual({ type: "origin", plane: "XZ" });
   });
 

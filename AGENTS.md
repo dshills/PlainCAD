@@ -60,7 +60,8 @@ configuration files. Keep `package-lock.json` consistent with dependency changes
 ## Architectural rules
 
 1. `CadDocument` is the durable source of truth. Keep kernel handles, Three.js
-   objects, meshes, camera state, workers, and rebuild results out of project JSON.
+   objects, meshes, current camera state, workers, and rebuild results out of project
+   JSON. Explicit saved named camera poses are durable document data.
 2. Make document edits immutable through existing document helpers and store
    actions. Preserve undo/redo and rebuild scheduling rather than mutating store
    snapshots or bypassing history from UI code.

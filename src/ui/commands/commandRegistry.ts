@@ -1,3 +1,6 @@
+import { captureCamera, restoreCamera, showStandardView } from "../../viewer/cameraController";
+import { MAX_NAMED_VIEWS, STANDARD_VIEWS, saveNamedCamera, unusedViewName } from "../../cad/inspection/cameraViews";
+import { useSectionState } from "../../state/sectionState";
 import {
   beginFileJob,
   finishFileJob,
@@ -58,6 +61,9 @@ import { moveTimelineItem, planTimelineMove } from "../../cad/document/timelineE
 import { beginHoleCreation, holeCreationContext } from "./holeCommand";
 
 export interface CommandContext {
+  viewName?: string;
+  viewId?: string;
+  documentSession?: number;
   fileInputRef?: RefObject<HTMLInputElement | null>;
   file?: File;
 }
@@ -78,6 +84,8 @@ export interface CommandEnablement {
   redo: boolean;
   exportStl: boolean;
   exportSelectedBody: boolean;
+  saveNamedView: boolean;
+  restoreNamedView: boolean;
   createExtrude: boolean;
   createRevolve: boolean;
   selectedFeature: boolean;
@@ -90,6 +98,8 @@ export interface CommandEnablement {
 export function selectCommandEnablement(state: CadStore): CommandEnablement {
   return {
     document: Boolean(state.history.present),
+    saveNamedView: (state.history.present.viewState?.namedViews?.length ?? 0) < MAX_NAMED_VIEWS,
+    restoreNamedView: Boolean(state.history.present.viewState?.namedViews?.length),
     undo: state.history.past.length > 0,
     redo: state.history.future.length > 0,
     exportStl: canExportStl(state) && !state.fileBusy,
@@ -115,6 +125,22 @@ export function isCommandEnabledForSnapshot(
 }
 
 export const commands: CadCommand[] = [
+  ...STANDARD_VIEWS.map((view): CadCommand => ({ id: `view.${view}`, label: `${view[0].toUpperCase()}${view.slice(1)} View`, alwaysEnabled: true, run: () => { showStandardView(view); } })),
+  { id: "view.saveNamed", label: "Save Named View", enablementKey: "saveNamedView", run: (ctx) => {
+    const state = useCadStore.getState(), pose = captureCamera();
+    if (ctx.documentSession !== undefined && ctx.documentSession !== state.documentSession) return;
+    if (!pose) { state.setFileError("Camera is unavailable. Try saving the view again."); return; }
+    const before = state.history.present;
+    state.updateDocument((doc) => saveNamedCamera(doc, ctx.viewName ?? unusedViewName(doc), pose));
+    if (useCadStore.getState().history.present !== before) state.setFileError(undefined);
+  } },
+  { id: "view.restoreNamed", label: "Restore Named View", enablementKey: "restoreNamedView", run: (ctx) => {
+    const state=useCadStore.getState();
+    if (ctx.documentSession !== undefined && ctx.documentSession !== state.documentSession) return;
+    const view=ctx.viewId ? state.history.present.viewState?.namedViews?.find((v)=>v.id===ctx.viewId) : state.history.present.viewState?.namedViews?.[0];
+    if (view && !restoreCamera(view)) state.setFileError("Saved camera cannot be restored. Reopen the project or save a replacement view.");
+  } },
+  { id: "view.clearSection", label: "Clear Section View", alwaysEnabled:true, run:()=>useSectionState.getState().clear(useCadStore.getState().documentSession) },
   { id: "file.exportSelectedBody", label: "Export Selected Body STL", enablementKey: "exportSelectedBody",
     run: async () => { const id = selectedExportBody(useCadStore.getState()); if (id) await runFabrication("separate", true, [id]); } },
   { id: "feature.hole", label: "Hole from Selected Sketch", description: "Choose explicit sketch point centers and one target body for a native cylindrical cut.", enablementKey: "createHole", run: beginHoleCreation },

@@ -187,7 +187,7 @@ a diagnostic; union requires full checks. These numerical checks are not a proof
 of absence of every near-degenerate or adjacent-face intersection.
 
 Imports check raw UTF-8 bytes before parsing, preflight nesting before the reviver,
-then migrate and validate in a cancellable worker. Checked-in schema 1–8 fixtures
+then migrate and validate in a cancellable worker. Checked-in schema 1–9 fixtures
 verify IDs, rebuilds, edits, save/open, and recovery. Default limits: 5 MiB JSON,
 depth 64, 500 parameters, 100 sketches, 750 entities/512 constraints and dimensions
 per sketch, 10,000 total entities, 20,000 total constraints/dimensions, 1,000 features,
@@ -255,6 +255,14 @@ support alone does not imply a working modeling operation.
 - Zoom: scroll over the viewer.
 - Fit: press `F` or click `Fit` to frame visible bodies.
 - Reset camera: click `Reset`.
+- Views panel: Top (+Y screen-up), Front (looking +Y), Right (looking -X),
+  and Isometric. Fit preserves the current view direction.
+- Save named camera views with a name; restore or delete them after save/open.
+  Named camera poses are durable and undoable, with at most 20 per project.
+- Section preview: choose global X/Y/Z, an offset in millimeters, and the retained
+  side. Clipping affects bodies, sketch overlays, measurement lines, and picking;
+  it has no caps and does not change geometry, measurements, or STL export.
+  New/open projects clear clipping.
 - Clear selection: press `Escape`.
 - Browser lists actual rebuilt bodies with visibility checkboxes and `Show all bodies`.
   Hidden bodies cannot be picked. Visibility persists during edits and undo/redo

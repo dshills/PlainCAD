@@ -11,6 +11,7 @@ const migrations = new Map<number, Migration>([
   [5, migrateV5ToV6],
   [6, migrateV6ToV7],
   [7, (document) => ({ ...document, schemaVersion: 8 })],
+  [8, (document) => ({ ...document, schemaVersion: 9 })],
 ]);
 
 export function migrateDocument(input: CadDocument): CadDocument {
@@ -152,6 +153,10 @@ function sanitizeCurrentDocument(input: CadDocument): CadDocument {
     ...(input.viewState
       ? {
           viewState: {
+            ...(input.viewState.namedViews !== undefined ? { namedViews: Array.isArray(input.viewState.namedViews) ? input.viewState.namedViews.map((view) => ({
+              id: view?.id, name: view?.name, cameraPosition: view?.cameraPosition,
+              cameraTarget: view?.cameraTarget, cameraUp: view?.cameraUp,
+            })) : input.viewState.namedViews } : {}),
             ...(input.viewState.cameraPosition ? { cameraPosition: input.viewState.cameraPosition } : {}),
             ...(input.viewState.cameraTarget ? { cameraTarget: input.viewState.cameraTarget } : {}),
           },

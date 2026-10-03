@@ -1,3 +1,4 @@
+import { CURRENT_SCHEMA_VERSION } from "../src/cad/document/schema";
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import type { CadDocument } from "../src/cad/document/schema";
@@ -79,7 +80,7 @@ test("parameter IDs survive rename, undo/redo, old-name reuse, save/open and nat
   const project = info.outputPath("renamed.pcaddoc");
   await (await saving).saveAs(project);
   const saved = JSON.parse(await readFile(project, "utf8"));
-  expect(saved.schemaVersion).toBe(8);
+  expect(saved.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
   expect(JSON.stringify(saved.sketches)).toContain(id);
   await page.reload();
   await ready(page);

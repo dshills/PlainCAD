@@ -1,3 +1,4 @@
+import { MAX_NAMED_VIEWS, validCameraPose } from "../inspection/cameraViews";
 import { CadDocument, ValidationIssue } from "./schema";
 import { validateParameterBindings } from "../parameters/expressionBindings";
 import { MODEL_RESOURCE_LIMITS } from "../resourceLimits";
@@ -555,6 +556,20 @@ function validatePersistedFields(document: CadDocument): ValidationIssue[] {
       "document",
       "Camera coordinates must be three finite numbers.",
     );
+  const namedViews = document.viewState?.namedViews;
+  if (namedViews !== undefined) {
+    check(Array.isArray(namedViews) && namedViews.length <= MAX_NAMED_VIEWS, "document", "Named views must be an array with at most 20 entries.");
+    if (Array.isArray(namedViews)) {
+      const ids = new Set<string>();
+      const names = new Set<string>();
+      for (const view of namedViews) {
+        check(Boolean(view) && typeof view.id === "string" && view.id.trim().length > 0 && !ids.has(view.id) &&
+          typeof view.name === "string" && view.name.trim().length > 0 && view.name.length <= 80 && !names.has(view.name.trim().toLowerCase()) && validCameraPose(view), "document", "Named view requires a unique id and name, and a valid camera pose.");
+        if (view && typeof view.id === "string") ids.add(view.id);
+        if (view && typeof view.name === "string") names.add(view.name.trim().toLowerCase());
+      }
+    }
+  }
   for (const parameter of Object.values(document.parameters)) {
     check(
       typeof parameter.name === "string" &&

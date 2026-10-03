@@ -1,4 +1,4 @@
-export const CURRENT_SCHEMA_VERSION = 8;
+export const CURRENT_SCHEMA_VERSION = 9;
 
 export type UnitSystem = "metric" | "imperial";
 
@@ -225,7 +225,14 @@ export interface TopologyRef {
   repairRequired?: boolean;
 }
 
+export interface CameraPose {
+  cameraPosition: [number, number, number];
+  cameraTarget: [number, number, number];
+  cameraUp: [number, number, number];
+}
+export interface NamedView extends CameraPose { id: string; name: string }
 export interface ViewState {
+  namedViews?: NamedView[];
   cameraPosition?: [number, number, number];
   cameraTarget?: [number, number, number];
 }

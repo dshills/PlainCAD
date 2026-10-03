@@ -1,3 +1,4 @@
+import { CURRENT_SCHEMA_VERSION } from "../cad/document/schema";
 import { describe, expect, it } from "vitest";
 import { validateDocument } from "../cad/document/validate";
 import { Sketch } from "../cad/document/schema";
@@ -315,7 +316,7 @@ describe("driving sketch foundations", () => {
     const imported = importProjectText(
       JSON.stringify({ ...doc, schemaVersion: 6 }),
     );
-    expect(imported.schemaVersion).toBe(8);
+    expect(imported.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
     expect(imported.sketches[sketch.id].solveMode).toBe("validate");
     expect(
       solveSketch(imported.sketches[sketch.id], {}).errors[0].message,

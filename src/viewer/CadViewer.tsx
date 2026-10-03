@@ -3,6 +3,10 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { registerViewerDiagnostics } from "./viewerDiagnostics";
+import { registerCameraController } from "./cameraController";
+import { DEFAULT_CAMERA_POSE, cameraClipRange, VIEW_DIRECTIONS, validCameraPose, sectionPlane } from "../cad/inspection/cameraViews";
+import { useSectionState } from "../state/sectionState";
+import type { CameraPose } from "../cad/document/schema";
 import { useInspectionState } from "../state/inspectionState";
 import { MeasurementError, measureWorldPoint } from "../cad/inspection/measurements";
 import { useViewerState } from "../state/viewerState";
@@ -18,6 +22,7 @@ import { resolveDocumentPlanes, transformPoint } from "../cad/sketch/planes";
 
 interface ViewerRuntime {
   camera: THREE.PerspectiveCamera;
+  applyPose(pose: CameraPose, remember?: boolean): boolean;
   controls: OrbitControls;
   modelGroup: THREE.Group;
   sketchGroup: THREE.Group;
@@ -43,6 +48,7 @@ export function CadViewer() {
   const runtimeRef = useRef<ViewerRuntime | undefined>(undefined);
   const meshesRef = useRef<RenderMesh[]>([]);
   const selectedBodyIdRef = useRef<string | undefined>(undefined);
+  const cameraIntentRef = useRef<{ session: number; preservePose: boolean } | undefined>(undefined);
   const lastAutoFitSessionRef = useRef<number | undefined>(undefined);
   const selectRef = useRef<(selection: SelectionRef | undefined) => void>(selectNoop);
   const documentIdRef = useRef("");
@@ -53,6 +59,8 @@ export function CadViewer() {
   const session = useCadStore((state) => state.documentSession);
   const view = useViewerState();
   const inspection = useInspectionState();
+  const section = useSectionState();
+  const clippingRef = useRef<THREE.Plane | undefined>(undefined);
   const hidden = view.session === session ? view.hiddenBodyIds : [];
   const documentId = useCadStore((state) => state.history.present.id);
   const selectedBodyId = useCadStore((state) => {
@@ -79,7 +87,8 @@ export function CadViewer() {
     renderer.domElement.className = "viewer-canvas";
     host.appendChild(renderer.domElement);
 
-    const controls = new OrbitControls(camera, renderer.domElement);
+    renderer.localClippingEnabled = true;
+    let controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     const grid = new THREE.GridHelper(240, 24, "#7f918b", "#c1cbc7");
     grid.rotation.x = Math.PI / 2;
@@ -98,10 +107,46 @@ export function CadViewer() {
     scene.add(sketchGroup);
     const measurementGroup = new THREE.Group();
     scene.add(measurementGroup);
-    runtimeRef.current = { camera, controls, modelGroup, sketchGroup, measurementGroup, sketchResources: createSketchOverlayResources() };
+    const applyPose = (pose: CameraPose, remember = true): boolean => {
+      if (!validCameraPose(pose)) return false;
+      if (remember) cameraIntentRef.current = { session: useCadStore.getState().documentSession, preservePose: true };
+      // OrbitControls caches its up-axis quaternion at construction. Recreate it
+      // after up changes and discard residual damping from the previous view.
+      controls.dispose();
+      camera.up.fromArray(pose.cameraUp);
+      camera.position.fromArray(pose.cameraPosition);
+      controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.target.fromArray(pose.cameraTarget);
+      camera.position.fromArray(pose.cameraPosition);
+      const distance = camera.position.distanceTo(controls.target);
+      const bounds = boundsFromMeshes(meshesRef.current);
+      const span = bounds ? new THREE.Vector3(...bounds.max).distanceTo(new THREE.Vector3(...bounds.min)) : 100;
+      Object.assign(camera, cameraClipRange(distance, span));
+      camera.updateProjectionMatrix();
+      controls.update();
+      if (runtimeRef.current) runtimeRef.current.controls = controls;
+      return true;
+    };
+    runtimeRef.current = { camera, controls, applyPose, modelGroup, sketchGroup, measurementGroup, sketchResources: createSketchOverlayResources() };
+    const unregisterCamera = registerCameraController({
+      read: () => ({ cameraPosition: camera.position.toArray(), cameraTarget: controls.target.toArray(), cameraUp: camera.up.toArray() }),
+      apply: applyPose,
+      preset: (view) => {
+        const { direction, up } = VIEW_DIRECTIONS[view];
+        const target = controls.target.clone();
+        const distance = camera.position.distanceTo(target) || 100;
+        const position = target.clone().addScaledVector(new THREE.Vector3(...direction).normalize(), distance);
+        applyPose({ cameraPosition: position.toArray(), cameraTarget: target.toArray(), cameraUp: up });
+        cameraIntentRef.current = { session: useCadStore.getState().documentSession, preservePose: false };
+        fitMeshes(camera, controls, meshesRef.current);
+      },
+    });
 
     const unregisterDiagnostics = import.meta.env.DEV ? registerViewerDiagnostics(() => ({
       cameraUp: camera.up.toArray(),
+      cameraPosition: camera.position.toArray(),
+      sectionPlane: clippingRef.current ? { normal: clippingRef.current.normal.toArray(), constant: clippingRef.current.constant } : undefined,
       cameraTarget: controls.target.toArray(),
       gridNormal: new THREE.Vector3(0, 1, 0).applyQuaternion(grid.getWorldQuaternion(new THREE.Quaternion())).toArray(),
       meshes: modelGroup.children.filter((object): object is THREE.Mesh => object instanceof THREE.Mesh).map((object) => {
@@ -112,7 +157,7 @@ export function CadViewer() {
           object.localToWorld(point.fromBufferAttribute(attribute, index));
           point.toArray(positions, index * 3);
         }
-        return { bodyId: object.userData.bodyId as string, visible: object.visible, positions, indices: Array.from(object.geometry.index?.array ?? []) };
+        return { bodyId: object.userData.bodyId as string, visible: object.visible, clippingEnabled: object.material instanceof THREE.MeshStandardMaterial && Boolean(object.material.clippingPlanes?.length), positions, indices: Array.from(object.geometry.index?.array ?? []) };
       }),
       measurementLine: measurementGroup.children[0] instanceof THREE.Line ? Array.from(measurementGroup.children[0].geometry.getAttribute("position").array) : [],
       sketchPoints: sketchGroup.children.filter((object) => object instanceof THREE.Mesh && typeof object.userData.sketchEntityId === "string").map((object) => ({
@@ -122,7 +167,12 @@ export function CadViewer() {
         id: object.userData.sketchEntityId as string,
         normal: new THREE.Vector3(0, 0, 1).applyQuaternion(object.getWorldQuaternion(new THREE.Quaternion())).toArray(),
       })),
-    })) : undefined;
+    }), (point) => {
+      camera.updateMatrixWorld();
+      const projected = new THREE.Vector3(...point).project(camera);
+      const rect = renderer.domElement.getBoundingClientRect();
+      return { x: (projected.x + 1) * rect.width / 2, y: (1 - projected.y) * rect.height / 2, depth: projected.z };
+    }) : undefined;
 
     const resize = () => {
       const width = host.clientWidth || 1;
@@ -132,7 +182,7 @@ export function CadViewer() {
       renderer.setSize(width, height);
     };
     const fit = () => fitMeshes(camera, controls, meshesRef.current);
-    const reset = () => resetCamera(camera, controls);
+    const reset = () => applyPose(DEFAULT_CAMERA_POSE);
     window.addEventListener("resize", resize);
     window.addEventListener("plaincad:fit-view", fit);
     window.addEventListener("plaincad:reset-camera", reset);
@@ -153,7 +203,7 @@ export function CadViewer() {
       pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
       raycaster.setFromCamera(pointer, camera);
-      const hit = raycaster.intersectObjects(modelGroup.children.filter((object) => object.visible), true).find((item) => item.object instanceof THREE.Mesh);
+      const hit = raycaster.intersectObjects(modelGroup.children.filter((object) => object.visible), true).find((item) => item.object instanceof THREE.Mesh && (!clippingRef.current || clippingRef.current.distanceToPoint(item.point) >= 0));
       const bodyId = hit ? findBodyId(hit.object) : undefined;
       selectRef.current(bodyId ? { kind: "body", id: bodyId, documentId: documentIdRef.current } : undefined);
     };
@@ -161,6 +211,7 @@ export function CadViewer() {
 
     return () => {
       unregisterDiagnostics?.();
+      unregisterCamera();
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
       window.removeEventListener("plaincad:fit-view", fit);
@@ -180,6 +231,7 @@ export function CadViewer() {
     const runtime = runtimeRef.current;
     if (!runtime) return;
     updateMeshes(runtime.modelGroup, meshes);
+    applyClipping(runtime.modelGroup, clippingRef.current);
     applySelection(runtime.modelGroup, selectedBodyIdRef.current);
   }, [meshes]);
 
@@ -195,6 +247,7 @@ export function CadViewer() {
           ? rebuild.result
           : undefined,
       );
+    if (runtime) applyClipping(runtime.sketchGroup, clippingRef.current);
   }, [document, rebuild]);
 
   useEffect(() => {
@@ -203,7 +256,9 @@ export function CadViewer() {
     if (!runtime) return;
     applyVisibility(runtime.modelGroup, hidden);
     if (meshesRef.current.length && lastAutoFitSessionRef.current !== session) {
-      fitMeshes(runtime.camera, runtime.controls, meshesRef.current);
+      const intent = cameraIntentRef.current?.session === session ? cameraIntentRef.current : undefined;
+      if (!intent) runtime.applyPose(DEFAULT_CAMERA_POSE, false);
+      if (!intent?.preservePose) fitMeshes(runtime.camera, runtime.controls, meshesRef.current);
       lastAutoFitSessionRef.current = session;
     }
   }, [meshes, view.hiddenBodyIds, view.session, session]);
@@ -220,11 +275,21 @@ export function CadViewer() {
       const line = new THREE.Line(geometry,new THREE.LineBasicMaterial({ color: "#b52977", depthTest:false }));
       line.renderOrder = 2;
       group.add(line);
+      applyClipping(group, clippingRef.current);
     } catch (error) {
       // Expected lost references have a diagnostic in the measurement panel.
       if (!(error instanceof MeasurementError)) console.error("Measurement overlay failed", error);
     }
   }, [inspection.session, inspection.first, inspection.second, session, document, rebuild.result, rebuild.status]);
+
+  useEffect(() => {
+    const runtime = runtimeRef.current;
+    if (!runtime) return;
+    const axis = section.session === session ? section.axis : undefined;
+    const spec = axis ? sectionPlane(axis, section.offset, section.positive) : undefined;
+    clippingRef.current = spec ? new THREE.Plane(new THREE.Vector3(...spec.normal), spec.constant) : undefined;
+    for (const group of [runtime.modelGroup, runtime.sketchGroup, runtime.measurementGroup]) applyClipping(group, clippingRef.current);
+  }, [session, section.session, section.axis, section.offset, section.positive]);
 
   useEffect(() => {
     selectedBodyIdRef.current = selectedBodyId;
@@ -233,6 +298,17 @@ export function CadViewer() {
   }, [selectedBodyId]);
 
   return <div ref={hostRef} className="viewer-canvas" />;
+}
+
+function applyClipping(group: THREE.Group, plane: THREE.Plane | undefined) {
+  group.traverse((object) => {
+    const material = (object as THREE.Object3D & { material?: THREE.Material | THREE.Material[] }).material;
+    for (const item of Array.isArray(material) ? material : material ? [material] : []) {
+      const enabled = Boolean(item.clippingPlanes?.length);
+      item.clippingPlanes = plane ? [plane] : null;
+      if (enabled !== Boolean(plane)) item.needsUpdate = true;
+    }
+  });
 }
 
 function applyVisibility(group: THREE.Group, hidden: readonly string[]) {
@@ -529,30 +605,18 @@ function applySelection(
 
 function fitMeshes(camera: THREE.PerspectiveCamera, controls: OrbitControls, meshes: RenderMesh[]) {
   const bounds = boundsFromMeshes(meshes);
-  if (!bounds) {
-    camera.position.set(120, -140, 110);
-    controls.target.set(0, 0, 0);
-    return;
-  }
+  if (!bounds) return;
   const center = new THREE.Vector3(
     (bounds.min[0] + bounds.max[0]) / 2,
     (bounds.min[1] + bounds.max[1]) / 2,
     (bounds.min[2] + bounds.max[2]) / 2,
   );
   const size = Math.max(bounds.max[0] - bounds.min[0], bounds.max[1] - bounds.min[1], bounds.max[2] - bounds.min[2], 40);
+  const direction = camera.position.clone().sub(controls.target).normalize();
+  if (direction.lengthSq() === 0) direction.set(1, -1, 1).normalize();
   controls.target.copy(center);
-  camera.position.set(center.x + size * 1.3, center.y - size * 1.5, center.z + size * 1.1);
-  camera.near = Math.max(0.1, size / 100);
-  camera.far = size * 100;
-  camera.updateProjectionMatrix();
-  controls.update();
-}
-
-function resetCamera(camera: THREE.PerspectiveCamera, controls: OrbitControls) {
-  camera.position.set(120, -140, 110);
-  camera.near = 0.1;
-  camera.far = 10000;
-  controls.target.set(0, 0, 0);
+  camera.position.copy(center).addScaledVector(direction, size * 2.4);
+  Object.assign(camera, cameraClipRange(size * 2.4, size));
   camera.updateProjectionMatrix();
   controls.update();
 }
