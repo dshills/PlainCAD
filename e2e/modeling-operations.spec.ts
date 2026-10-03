@@ -375,3 +375,320 @@ test("Inspector drafts stay visible without changing native geometry until commi
   await input.press("Tab");
   await ready(page, (state) => geometry(state, base.id, 2000, "extrusion"));
 });
+
+async function chainFeature(
+  page: Page,
+  ownerId: string,
+  mode: "hole" | "cut" | "join",
+) {
+  return page.evaluate(
+    async ({ ownerId, mode }) => {
+      const paths = [
+        "/src/state/useCadStore.ts",
+        "/src/cad/document/CadDocument.ts",
+        "/src/cad/sketch/SketchModel.ts",
+        "/src/cad/sketch/SketchSolver.ts",
+        "/src/cad/sketch/profileDetection.ts",
+      ];
+      const [
+        { useCadStore },
+        ops,
+        sketchOps,
+        { solveSketch },
+        { detectProfiles },
+      ] = await Promise.all(paths.map((path) => import(path)));
+      let featureId = "";
+      useCadStore.getState().updateDocument((document: CadDocument) => {
+        let sketch = sketchOps.createXySketch(
+          mode === "hole"
+            ? "Bore centers"
+            : mode === "cut"
+              ? "Pocket section"
+              : "Boss section",
+        );
+        let feature;
+        if (mode === "hole") {
+          const center = sketchOps.addPoint(sketch, "5mm", "5mm");
+          sketch = center.sketch;
+          feature = {
+            id: "chain-bore",
+            name: "Through bore",
+            type: "hole",
+            sketchId: sketch.id,
+            centerPointIds: [center.pointId],
+            diameter: { expression: "2mm", unit: "mm" },
+            depth: "throughAll",
+            targetBodyIds: [`body:${ownerId}`],
+          };
+        } else {
+          const x = mode === "cut" ? 10 : 15;
+          const width = mode === "cut" ? 3 : 2;
+          const corners: string[] = [];
+          for (const [px, py] of [
+            [x, 5],
+            [x + width, 5],
+            [x + width, 5 + width],
+            [x, 5 + width],
+          ]) {
+            const point = sketchOps.addPoint(sketch, `${px}mm`, `${py}mm`);
+            sketch = point.sketch;
+            corners.push(point.pointId);
+          }
+          for (let i = 0; i < corners.length; i++) {
+            sketch = sketchOps.addLine(
+              sketch,
+              corners[i],
+              corners[(i + 1) % corners.length],
+            ).sketch;
+          }
+          // XY placement is fixed; this fixture edits only sweep depth and edge radius.
+          sketch = sketchOps.addConstraint(sketch, "fixed", {
+            pointIds: corners,
+          });
+          if (mode === "join")
+            sketch = {
+              ...sketch,
+              plane: {
+                type: "offset",
+                base: "XY",
+                offset: { expression: "depth", unit: "mm" },
+              },
+            };
+          feature = ops.createExtrudeFeature({
+            name: mode === "cut" ? "Through pocket" : "Raised boss",
+            sketchId: sketch.id,
+            profileId: detectProfiles(solveSketch(sketch, {})).profiles[0].id,
+            distance: {
+              expression: mode === "cut" ? "depth" : "3mm",
+              unit: "mm",
+            },
+            direction: "positive",
+            operation: mode,
+            targetBodyIds: [`body:${ownerId}`],
+          });
+        }
+        featureId = feature.id;
+        return ops.upsertFeature(ops.upsertSketch(document, sketch), feature);
+      });
+      return featureId;
+    },
+    { ownerId, mode },
+  );
+}
+async function selectChainItem(
+  page: Page,
+  kind: "parameter" | "feature",
+  id: string,
+) {
+  await page.evaluate(
+    async ({ kind, id }) => {
+      const path = "/src/state/useCadStore.ts";
+      const state = (await import(path)).useCadStore.getState();
+      state.select({ kind, id, documentId: state.history.present.id });
+    },
+    { kind, id },
+  );
+}
+
+test("long native feature chain preserves exact geometry through edits, blocked downstream recovery, save/open and STL", async ({
+  page,
+}, testInfo) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto("/");
+  await ready(page);
+  const { base } = await fixture(page, "edges");
+  await ready(page);
+  await page.evaluate(async (ownerId) => {
+    const paths = [
+      "/src/state/useCadStore.ts",
+      "/src/cad/document/CadDocument.ts",
+    ];
+    const [{ useCadStore }, ops] = await Promise.all(
+      paths.map((path) => import(path)),
+    );
+    useCadStore.getState().updateDocument((document: CadDocument) => {
+      let next = ops.upsertParameter(document, {
+        id: "chain-depth",
+        name: "depth",
+        expression: "10mm",
+        value: 10,
+        unit: "mm",
+        authoredUnit: "mm",
+      });
+      next = ops.upsertParameter(next, {
+        id: "chain-radius",
+        name: "edgeRadius",
+        expression: "1mm",
+        value: 1,
+        unit: "mm",
+        authoredUnit: "mm",
+      });
+      const owner = next.features.find(
+        (feature: CadDocument["features"][number]) => feature.id === ownerId,
+      );
+      if (owner?.type !== "extrude") throw new Error("Expected chain owner");
+      return ops.upsertFeature(next, {
+        ...owner,
+        distance: { expression: "depth", unit: "mm" },
+      });
+    });
+  }, base.id);
+  await ready(page, (state) => geometry(state, base.id, 2000, "extrusion"));
+  const rounded = 1 - Math.PI / 4;
+  await page
+    .getByRole("button", { name: "Fillet extrusion edges", exact: true })
+    .click();
+  await page
+    .getByRole("combobox", { name: "Source edge", exact: true })
+    .selectOption(base.lineId);
+  await commit(page, "Fillet radius", "edgeRadius");
+  await ready(page, (state) =>
+    geometry(state, base.id, 2000 - 20 * rounded, "fillet"),
+  );
+  await page
+    .getByRole("button", { name: "Chamfer extrusion edges", exact: true })
+    .click();
+  await page
+    .getByRole("combobox", { name: "Source edge", exact: true })
+    .selectOption(base.lineId);
+  const treated = 2000 - 20 * rounded - 10;
+  await ready(page, (state) => geometry(state, base.id, treated, "chamfer"));
+  await chainFeature(page, base.id, "hole");
+  await ready(page, (state) =>
+    geometry(state, base.id, treated - 10 * Math.PI, "cut"),
+  );
+  const cut = await chainFeature(page, base.id, "cut");
+  await ready(page, (state) =>
+    geometry(state, base.id, treated - 10 * Math.PI - 90, "cut"),
+  );
+  const join = await chainFeature(page, base.id, "join");
+  const expected = (depth: number, radius: number) =>
+    200 * depth -
+    20 * radius * radius * rounded -
+    10 -
+    depth * Math.PI -
+    9 * depth +
+    12;
+  const verify = (state: State, depth: number, radius: number) => {
+    expect(state.result?.bodies).toHaveLength(1);
+    const mesh = geometry(state, base.id, expected(depth, radius), "fuse");
+    // Tessellation has floating-point round-off; exact volume is asserted on the BRep above.
+    mesh.bounds.min.forEach((value) => expect(value).toBeCloseTo(0, 8));
+    mesh.bounds.max.forEach((value, axis) =>
+      expect(value).toBeCloseTo([20, 10, depth + 3][axis], 5),
+    );
+  };
+  await ready(page, (state) => verify(state, 10, 1));
+  const featureIds = (await snapshot(page)).document.features.map(
+    (feature) => feature.id,
+  );
+  expect(featureIds).toHaveLength(6);
+  await selectChainItem(page, "parameter", "chain-depth");
+  await commit(page, "depth expression", "15mm");
+  await ready(page, (state) => verify(state, 15, 1));
+  await page.getByRole("button", { name: "Undo", exact: true }).click();
+  await ready(page, (state) => verify(state, 10, 1));
+  await page.getByRole("button", { name: "Redo", exact: true }).click();
+  await ready(page, (state) => verify(state, 15, 1));
+  await selectChainItem(page, "parameter", "chain-radius");
+  await commit(page, "edgeRadius expression", "2mm");
+  await ready(page, (state) => verify(state, 15, 2));
+  await selectChainItem(page, "feature", cut);
+  await commit(page, "Distance", "0mm");
+  await expect(async () => {
+    const state = await snapshot(page);
+    expect(state.status).toBe("failed");
+    expect(state.result?.documentId).toBe(state.document.id);
+    expect(state.result?.errors).toContainEqual(
+      expect.objectContaining({ sourceId: cut }),
+    );
+    expect(state.result?.errors).toContainEqual(
+      expect.objectContaining({
+        sourceId: join,
+        message: expect.stringContaining("upstream operation"),
+      }),
+    );
+    geometry(state, base.id, 3000 - 80 * rounded - 10 - 15 * Math.PI, "cut");
+    expect(state.result?.metrics?.disposalFailures).toBe(0);
+  }).toPass({ timeout: 20000 });
+  await expect(
+    page.getByRole("button", { name: "Export STL", exact: true }),
+  ).toBeDisabled();
+  await page
+    .getByRole("button", {
+      name: "Suppress or unsuppress feature",
+      exact: true,
+    })
+    .click();
+  await ready(page, (state) =>
+    geometry(
+      state,
+      base.id,
+      3000 - 80 * rounded - 10 - 15 * Math.PI + 12,
+      "fuse",
+    ),
+  );
+  await page
+    .getByRole("button", {
+      name: "Suppress or unsuppress feature",
+      exact: true,
+    })
+    .click();
+  await expect.poll(async () => (await snapshot(page)).status).toBe("failed");
+  await commit(page, "Distance", "depth");
+  await ready(page, (state) => verify(state, 15, 2));
+  await page.screenshot({
+    path: testInfo.outputPath("native-feature-chain.png"),
+  });
+  const saved = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const projectPath = testInfo.outputPath("native-feature-chain.pcaddoc");
+  await (await saved).saveAs(projectPath);
+  const project: CadDocument = JSON.parse(await readFile(projectPath, "utf8"));
+  expect(project.features.map((feature) => feature.id)).toEqual(featureIds);
+  expect(project.features[0]).toMatchObject({
+    distance: { expression: "depth", parameterRefs: { depth: "chain-depth" } },
+  });
+  expect(project.features[1]).toMatchObject({
+    radius: {
+      expression: "edgeRadius",
+      parameterRefs: { edgeRadius: "chain-radius" },
+    },
+  });
+  expect(JSON.stringify(project)).not.toContain("occtShape");
+  await page
+    .getByRole("button", { name: "Load parametric box template", exact: true })
+    .click();
+  await ready(page, (state) =>
+    expect(state.document.name).toBe("Parametric Box"),
+  );
+  await page.locator('input[type="file"]').setInputFiles(projectPath);
+  await ready(page, (state) => {
+    verify(state, 15, 2);
+    expect(state.document.features.map((feature) => feature.id)).toEqual(
+      featureIds,
+    );
+  });
+  const exported = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export STL", exact: true }).click();
+  const stlPath = testInfo.outputPath("native-feature-chain.stl");
+  await (await exported).saveAs(stlPath);
+  const stl = await readFile(stlPath),
+    triangles = stl.readUInt32LE(80);
+  expect(stl.length).toBe(84 + triangles * 50);
+  let signed = 0;
+  for (let i = 0; i < triangles; i++) {
+    const p = Array.from({ length: 9 }, (_, j) =>
+      stl.readFloatLE(84 + i * 50 + 12 + j * 4),
+    );
+    signed +=
+      (p[0] * (p[4] * p[8] - p[5] * p[7]) -
+        p[1] * (p[3] * p[8] - p[5] * p[6]) +
+        p[2] * (p[3] * p[7] - p[4] * p[6])) /
+      6;
+  }
+  expect(signed).toBeGreaterThan(0);
+  expect(Math.abs(signed / expected(15, 2) - 1)).toBeLessThan(0.001);
+  expect(errors).toEqual([]);
+});

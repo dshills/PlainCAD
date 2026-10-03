@@ -272,8 +272,8 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
   Chromium test verifies native modeling, save/open, recovery, native union and STL
   under the policy, plus blocked inline scripts, JS eval and remote fetch. Final-host
   header/MIME verification remains a deployment step.
-- Broader browser/kernel acceptance coverage (complex feature chains, imported
-  additional imported workloads, other browsers), broader accessibility audit,
+- Broader browser/kernel acceptance coverage (additional complex feature chains,
+  imported workloads, other browsers), broader accessibility audit,
   and final-host deployment
   verification remain open. The bounded Chromium suite runs in the release gate
   and GitHub Actions; CI execution itself has not been verified locally.
@@ -331,3 +331,13 @@ Escape cancels; external changes replace the draft. Chromium verifies unchanged
 native geometry during typing/cancel, exact volume after commit, and focused undo
 without a stale blur overwrite. Other form controls retain their existing commit
 behavior; this is not a completed screen-reader audit.
+
+
+A six-operation native XY acceptance fixture chains extrusion → cap fillet → cap
+chamfer → through-hole → through-pocket → connected boss join. Every intermediate
+has exact-volume/BRep/solid-count assertions; depth and fillet-radius edits check
+final bounds and stable identity. A failed middle cut retains the upstream preview
+and blocks its downstream join/export; suppression and explicit repair recover.
+Undo/redo, save/open over a replacement template, bound parameter IDs and STL
+winding/volume are verified. Other complex parts and general modified-face naming
+remain open; this fixture does not expand supported topology roles.

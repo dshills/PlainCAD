@@ -570,3 +570,11 @@ point to edit its coordinates, or choose another point in the same sketch to rep
 the reference. Arc direction is editable with undo/redo. Well-typed lost point
 references survive project open for explicit repair; malformed IDs remain rejected.
 Invalid references or inconsistent arc geometry block rebuilding and STL export.
+
+
+The Chromium suite includes a six-operation native chain: extrusion, cap fillet,
+cap chamfer, through-hole, through-pocket, and connected boss join. It checks exact
+BRep volume after every operation and depth/radius edits, stable body identity and
+bounds, undo/redo, blocked downstream operations after a middle-feature failure,
+suppression/repair, save/open, and STL volume/winding. This is one bounded XY part;
+it does not establish arbitrary topology naming or every complex model workload.
