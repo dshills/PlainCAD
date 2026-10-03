@@ -160,9 +160,14 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
   cancellation/stale-document protection, shared-ID retention and undo/redo.
   Parameter-bound, constrained, distance/angle-driven and arc points reject moves
   explicitly; lost point selections remain visible, and moves onto another point
-  are rejected instead of merging IDs. Coordinated constrained dragging remains
-  unavailable. Native XY/XZ/YZ
-  checks verify changed BRep volume/bounds, cancellation, save/open and STL.
+  are rejected instead of merging IDs. The translate tool moves connected groups
+  rigidly, including arcs, circles, construction geometry, constraints, dimensions
+  and straight-line T-junction contacts. It preserves authored IDs and intent and
+  rejects solver deformation, new coincidences and changes to valid profile topology.
+  Fixed geometry and parameter-bound coordinates block translation; dimension/radius
+  expressions may remain parameter-driven. Groups are bounded to 80 points.
+  General constraint-driven deformation remains unavailable. Native XY/XZ/YZ
+  checks verify BRep volume/bounds, cancellation, parameter edits, save/open and STL.
   Straight-line T-junctions and crossing dividers are fragmented before bounded
   planar face extraction. Runtime segments retain source lineage; stable split
   anchors preserve profile IDs through ordinary size, ordering and winding edits.

@@ -1,4 +1,8 @@
 import { movedCanvasPoint } from "../../cad/sketch/canvasPointMove";
+import {
+  translatedCanvasGroup,
+  validateCanvasTranslation,
+} from "../../cad/sketch/canvasTranslation";
 import { withCanvasConstraintReferences } from "../../cad/sketch/canvasConstraints";
 import { SKETCH_TOLERANCE } from "../../cad/sketch/tolerances";
 import {
@@ -223,6 +227,39 @@ export function commitCanvasPointMove(
   if (useCadStore.getState().history.present === expected)
     throw new Error(
       "Point move could not be saved. Check the project diagnostics.",
+    );
+}
+
+export function commitCanvasTranslation(
+  active: CanvasSession,
+  expected: CadStore["history"]["present"],
+  pointId: string,
+  target: CanvasPoint,
+) {
+  const state = useCadStore.getState();
+  if (state.history.present !== expected)
+    throw new Error(
+      "Project changed during translation. Cancel and try again.",
+    );
+  const context = canvasContext(active, state),
+    result = translatedCanvasGroup(
+      context.sketch,
+      context.solved,
+      pointId,
+      target,
+    );
+  if (result.unchanged) return;
+  const solved = solveSketch(
+    result.sketch,
+    evaluateParameters(context.document.parameters).values,
+  );
+  validateCanvasTranslation(context.solved, solved, result.targets);
+  const next = upsertSketch(context.document, result.sketch);
+  assertProjectJsonShape(next);
+  state.updateDocument((d) => (d === expected ? next : d));
+  if (useCadStore.getState().history.present === expected)
+    throw new Error(
+      "Translation could not be saved. Check project diagnostics.",
     );
 }
 

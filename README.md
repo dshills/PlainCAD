@@ -171,6 +171,13 @@ rebuild until their expressions are repaired; reused names cannot retarget them.
    Parameter-bound, constrained, driving distance/angle and arc points require
    expression or constraint edits; a clear diagnostic explains the restriction.
    Moves onto another point are rejected; movement never merges point IDs.
+   Choose translate to move a connected group of lines, circles, arcs and related
+   construction geometry rigidly, retaining dimensions, constraints and profile IDs.
+   Pointer and exact-coordinate moves preview the whole group and commit once.
+   Groups are limited to 80 points; fixed geometry or parameter-bound coordinates
+   block translation. Parameter-driven lengths and radii remain supported. Solver
+   deformation, new point collisions and changes to valid profile topology reject
+   the move with a diagnostic. General constraint-driven deformation is unavailable.
    C markers show the current constraint status and locate referenced geometry.
    Select a marker or constraint list entry to inspect, repair ordered references,
    or remove intent through undoable edits. Lost references stay in the list;

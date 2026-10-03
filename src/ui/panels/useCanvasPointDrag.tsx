@@ -1,9 +1,20 @@
-import { useCallback, useRef, useState, type PointerEvent } from "react";
+import {
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent,
+} from "react";
 import { canvasPointMoveReason } from "../../cad/sketch/canvasPointMove";
+import {
+  canvasTranslationGroup,
+  type CanvasTranslationGroup,
+} from "../../cad/sketch/canvasTranslation";
 import type { CanvasPoint } from "../../cad/sketch/canvasGeometry";
 import {
   canvasContext,
   commitCanvasPointMove,
+  commitCanvasTranslation,
   type CanvasSession,
 } from "../commands/sketchCanvasCommand";
 
@@ -13,6 +24,7 @@ export function useCanvasPointDrag(
   context: Context | undefined,
   span: number,
   showCoordinates: (point: CanvasPoint) => void,
+  translate = false,
 ) {
   const [pointId, setPointId] = useState(""),
     [target, setTarget] = useState<CanvasPoint>(),
@@ -25,6 +37,7 @@ export function useCanvasPointDrag(
         startX: number;
         startY: number;
         element: SVGSVGElement;
+        translate: boolean;
       }
     | undefined
   >(undefined);
@@ -52,7 +65,10 @@ export function useCanvasPointDrag(
       return;
     }
     select(point.pointId);
-    const reason = canvasPointMoveReason(context.sketch, point.pointId);
+    const reason = translate
+      ? canvasTranslationGroup(context.sketch, context.solved, point.pointId)
+          .reason
+      : canvasPointMoveReason(context.sketch, point.pointId);
     if (reason) {
       setError(reason);
       return;
@@ -66,6 +82,7 @@ export function useCanvasPointDrag(
       startX: event.clientX,
       startY: event.clientY,
       element: event.currentTarget,
+      translate,
     };
     setTarget(point);
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -97,7 +114,12 @@ export function useCanvasPointDrag(
         throw new Error(
           "Point move was cancelled because the sketch is unavailable.",
         );
-      commitCanvasPointMove(active, captured.document, captured.pointId, point);
+      (captured.translate ? commitCanvasTranslation : commitCanvasPointMove)(
+        active,
+        captured.document,
+        captured.pointId,
+        point,
+      );
       setError(undefined);
       showCoordinates(point);
     } catch (e) {
@@ -113,58 +135,120 @@ export function useCanvasPointDrag(
   const keyboardMove = (point: CanvasPoint) => {
     if (!context) return;
     try {
-      commitCanvasPointMove(active, context.document, pointId, point);
+      (translate ? commitCanvasTranslation : commitCanvasPointMove)(
+        active,
+        context.document,
+        pointId,
+        point,
+      );
       setError(undefined);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
   };
+  const group = useMemo<CanvasTranslationGroup>(
+    () =>
+      translate && context && pointId
+        ? canvasTranslationGroup(context.sketch, context.solved, pointId)
+        : { pointIds: [pointId] },
+    [translate, context?.sketch, context?.solved, pointId],
+  );
+  const movingPointIds = useMemo(() => new Set(group.pointIds), [group]);
   const reason =
     context && pointId
-      ? canvasPointMoveReason(context.sketch, pointId)
+      ? translate
+        ? group.reason
+        : canvasPointMoveReason(context.sketch, pointId)
       : undefined;
   const controls = (
-    <label>
-      Point to move
-      <select
-        aria-label="Canvas point to move"
-        value={pointId}
-        onChange={(e) => select(e.target.value)}
-      >
-        <option value="">Select point</option>
-        {pointId && !context?.solved.points[pointId] ? (
-          <option value={pointId}>Lost point — reselect</option>
-        ) : null}
-        {Object.values(context?.solved.points ?? {}).map((p, i) => (
-          <option value={p.id} key={p.id}>
-            point {i + 1} ({p.id})
-          </option>
-        ))}
-      </select>
-    </label>
+    <>
+      <label>
+        Point to move
+        <select
+          aria-label="Canvas point to move"
+          value={pointId}
+          onChange={(e) => select(e.target.value)}
+        >
+          <option value="">Select point</option>
+          {pointId && !context?.solved.points[pointId] ? (
+            <option value={pointId}>Lost point — reselect</option>
+          ) : null}
+          {Object.values(context?.solved.points ?? {}).map((p, i) => (
+            <option value={p.id} key={p.id}>
+              point {i + 1} ({p.id})
+            </option>
+          ))}
+        </select>
+      </label>
+      {translate && pointId && !reason ? (
+        <span>
+          Connected group: {group.pointIds.length} points. Dimensions and
+          constraints stay intact; the whole group translates.
+        </span>
+      ) : null}
+    </>
   );
+  const shifted = (p: CanvasPoint & { id: string }) => {
+    const anchor = context?.solved.points[pointId];
+    if (!target || !anchor || !movingPointIds.has(p.id)) return p;
+    return translate
+      ? { x: p.x + target.x - anchor.x, y: p.y + target.y - anchor.y }
+      : target;
+  };
   const preview =
     target && context ? (
-      <g className="canvas-preview" aria-label="Point move preview">
+      <g
+        className="canvas-preview"
+        aria-label={
+          translate ? "Group translation preview" : "Point move preview"
+        }
+      >
         {context.solved.lines
-          .filter((l) => l.start.id === pointId || l.end.id === pointId)
+          .filter(
+            (l) =>
+              movingPointIds.has(l.start.id) || movingPointIds.has(l.end.id),
+          )
           .map((l) => {
-            const a = l.start.id === pointId ? target : l.start,
-              b = l.end.id === pointId ? target : l.end;
+            const a = shifted(l.start),
+              b = shifted(l.end);
             return <line key={l.id} x1={a.x} y1={a.y} x2={b.x} y2={b.y} />;
           })}
         {context.solved.circles
-          .filter((c) => c.center.id === pointId)
-          .map((c) => (
-            <circle key={c.id} cx={target.x} cy={target.y} r={c.radius} />
-          ))}
-        <circle cx={target.x} cy={target.y} r={span / 150} />
+          .filter((c) => movingPointIds.has(c.center.id))
+          .map((c) => {
+            const p = shifted(c.center);
+            return <circle key={c.id} cx={p.x} cy={p.y} r={c.radius} />;
+          })}
+        {translate
+          ? context.solved.arcs
+              .filter((a) => movingPointIds.has(a.center.id))
+              .map((a) => {
+                const start = shifted(a.start),
+                  end = shifted(a.end);
+                return (
+                  <path
+                    key={a.id}
+                    d={`M ${start.x} ${start.y} A ${a.radius} ${a.radius} 0 ${Math.abs(a.sweep) > Math.PI ? 1 : 0} ${a.sweep < 0 ? 0 : 1} ${end.x} ${end.y}`}
+                  />
+                );
+              })
+          : null}
+        {group.pointIds
+          .map((id) => context.solved.points[id])
+          .filter(Boolean)
+          .map((p) => {
+            const point = shifted(p);
+            return (
+              <circle key={p.id} cx={point.x} cy={point.y} r={span / 150} />
+            );
+          })}
       </g>
     ) : null;
   return {
     controls,
     preview,
     pointId,
+    movingPointIds,
     reason,
     error,
     inProgress: !!target,

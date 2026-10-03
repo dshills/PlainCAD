@@ -884,3 +884,294 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     expect(errors).toEqual([]);
   });
 }
+
+for (const plane of ["XY", "XZ", "YZ"] as const) {
+  test(`${plane}: connected group translation preserves constrained native geometry and durability`, async ({
+    page,
+  }, info) => {
+    const errors: string[] = [];
+    page.on("pageerror", (e) => errors.push(e.message));
+    await page.goto("/");
+    await ready(page);
+    await page
+      .getByRole("button", { name: "Add Parameter", exact: true })
+      .click();
+    await page
+      .getByLabel("Parameter param_1 name", { exact: true })
+      .fill("span");
+    await page
+      .getByLabel("Parameter param_1 name", { exact: true })
+      .press("Enter");
+    await page
+      .getByLabel("Parameter span expression", { exact: true })
+      .fill("20mm");
+    await page
+      .getByLabel("Parameter span expression", { exact: true })
+      .press("Enter");
+    await page
+      .getByRole("button", { name: `Create ${plane} sketch`, exact: true })
+      .click();
+    await openCanvas(page);
+    await page
+      .getByLabel("Canvas tool", { exact: true })
+      .selectOption("rectangle");
+    await clickLocal(page, 0, 0);
+    await clickLocal(page, 20, 10);
+    await ready(page);
+    const drawn = Object.values((await snapshot(page)).document.sketches)[0];
+    const bottom = Object.values(drawn.entities).find(
+      (e) => e.type === "line",
+    )!;
+    await page
+      .getByLabel("Canvas dimension type", { exact: true })
+      .selectOption("length");
+    await page
+      .getByLabel("Canvas dimension reference 1", { exact: true })
+      .selectOption(bottom.id);
+    await page
+      .getByLabel("Canvas dimension expression", { exact: true })
+      .fill("span");
+    await page
+      .getByRole("button", { name: "Apply driving dimension", exact: true })
+      .click();
+    await done(page);
+    await ready(page);
+    await page
+      .getByLabel("Constraint type", { exact: true })
+      .selectOption("horizontal");
+    await page
+      .getByLabel("Constraint entities", { exact: true })
+      .selectOption(bottom.id);
+    await page
+      .getByRole("button", { name: "Add constraint", exact: true })
+      .click();
+    await ready(page);
+    await page
+      .getByRole("button", { name: "Extrude selected sketch", exact: true })
+      .click();
+    await ready(page, 2000);
+    const original = await snapshot(page);
+    await page.locator(".sketch-chip").first().click();
+    await openCanvas(page);
+    await page
+      .getByLabel("Canvas tool", { exact: true })
+      .selectOption("translate");
+    await page.getByLabel("Show drawing dimensions", { exact: true }).uncheck();
+    await page.getByLabel("Show constraint markers", { exact: true }).uncheck();
+    await page.getByRole("button", { name: "Zoom out", exact: true }).click();
+    const svg = page.getByLabel("Sketch drawing canvas", { exact: true });
+    async function startDrag(a: [number, number], b: [number, number]) {
+      await svg.scrollIntoViewIfNeeded();
+      const bounds = (await svg.boundingBox())!;
+      const view = (await svg.getAttribute("viewBox"))!.split(" ").map(Number);
+      const client = ([x, y]: [number, number]) => ({
+        x: bounds.x + ((x - view[0]) / view[2]) * bounds.width,
+        y: bounds.y + ((-y - view[1]) / view[3]) * bounds.height,
+      });
+      const start = client(a),
+        end = client(b);
+      await page.mouse.move(start.x, start.y);
+      await page.mouse.down();
+      await page.mouse.move(end.x, end.y, { steps: 5 });
+    }
+    await startDrag([0, 0], [5, 8]);
+    await expect(
+      svg.getByLabel("Group translation preview", { exact: true }),
+    ).toBeVisible();
+    expect((await snapshot(page)).document).toEqual(original.document);
+    await page.mouse.up();
+    await ready(page, 2000);
+    const moved = await snapshot(page);
+    const sketch = moved.document.sketches[drawn.id];
+    expect(sketch.constraints).toEqual(
+      original.document.sketches[drawn.id].constraints,
+    );
+    expect(sketch.dimensions).toEqual(
+      original.document.sketches[drawn.id].dimensions,
+    );
+    expect(Object.keys(sketch.entities).sort()).toEqual(
+      Object.keys(drawn.entities).sort(),
+    );
+    const expectedBounds =
+      plane === "XY"
+        ? [
+            [5, 8, 0],
+            [25, 18, 10],
+          ]
+        : plane === "XZ"
+          ? [
+              [5, -10, 8],
+              [25, 0, 18],
+            ]
+          : [
+              [0, 5, 8],
+              [10, 25, 18],
+            ];
+    for (const [index, side] of ["min", "max"].entries())
+      moved.result!.meshes[0].bounds[side as "min" | "max"].forEach(
+        (value, axis) =>
+          expect(value).toBeCloseTo(expectedBounds[index][axis], 5),
+      );
+    await page
+      .getByRole("button", { name: "Undo canvas edit", exact: true })
+      .click();
+    await ready(page, 2000);
+    expect((await snapshot(page)).document.sketches).toEqual(
+      original.document.sketches,
+    );
+    await page
+      .getByRole("button", { name: "Redo canvas edit", exact: true })
+      .click();
+    await ready(page, 2000);
+    await startDrag([5, 8], [10, 12]);
+    await expect(
+      svg.getByLabel("Group translation preview", { exact: true }),
+    ).toBeVisible();
+    await page.keyboard.press("Escape");
+    await page.mouse.up();
+    expect((await snapshot(page)).document).toEqual(moved.document);
+    if (plane === "XY") {
+      await startDrag([5, 8], [10, 12]);
+      await page.evaluate(async () => {
+        const path = "/src/state/useCadStore.ts",
+          { useCadStore } = await import(path);
+        useCadStore.getState().updateDocument((d: CadDocument) => ({
+          ...d,
+          name: "Edited during group drag",
+        }));
+      });
+      await page.mouse.up();
+      await ready(page, 2000);
+      expect((await snapshot(page)).document.sketches).toEqual(
+        moved.document.sketches,
+      );
+    }
+    await page.getByLabel("Canvas coordinate X", { exact: true }).fill("10");
+    await page.getByLabel("Canvas coordinate Y", { exact: true }).fill("12");
+    await page
+      .getByRole("button", {
+        name: "Translate group to coordinate",
+        exact: true,
+      })
+      .click();
+    await ready(page, 2000);
+    await done(page);
+    await page
+      .getByLabel("Parameter span expression", { exact: true })
+      .fill("25mm");
+    await page
+      .getByLabel("Parameter span expression", { exact: true })
+      .press("Enter");
+    // Only the bottom edge is dimensioned: the resulting trapezoid is 225 mm².
+    await ready(page);
+    const final = await snapshot(page);
+    const segments = final.result!.profiles![drawn.id][0].outerLoop.segments!;
+    const area =
+      Math.abs(
+        segments.reduce(
+          (sum, segment) =>
+            sum +
+            segment.start.x * segment.end.y -
+            segment.end.x * segment.start.y,
+          0,
+        ),
+      ) / 2;
+    const editedVolume = area * 10;
+    expect(editedVolume).toBeCloseTo(2250, 1);
+    await ready(page, editedVolume);
+    const saving = page.waitForEvent("download");
+    await page
+      .getByRole("button", { name: "Save project", exact: true })
+      .click();
+    const path = info.outputPath("translated.pcaddoc");
+    await (await saving).saveAs(path);
+    await page.reload();
+    await ready(page);
+    await page.locator('input[type="file"]').setInputFiles(path);
+    await ready(page, editedVolume);
+    expect((await snapshot(page)).document.sketches).toEqual(
+      final.document.sketches,
+    );
+    expect((await snapshot(page)).result!.meshes[0].bounds).toEqual(
+      final.result!.meshes[0].bounds,
+    );
+    const exporting = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Export STL", exact: true }).click();
+    const stl = info.outputPath("translated.stl");
+    await (await exporting).saveAs(stl);
+    expect(stlVolume(await readFile(stl))).toBeCloseTo(editedVolume, 2);
+    expect(errors).toEqual([]);
+  });
+}
+
+test("analytic arc group translates without changing native radius or volume", async ({
+  page,
+}, info) => {
+  await page.goto("/");
+  await ready(page);
+  await page
+    .getByRole("button", { name: "Create XY sketch", exact: true })
+    .click();
+  await openCanvas(page);
+  await page.getByLabel("Canvas tool", { exact: true }).selectOption("arc");
+  await clickLocal(page, 0, 0);
+  await clickLocal(page, 10, 0);
+  await clickLocal(page, -10, 0);
+  await page.getByLabel("Canvas tool", { exact: true }).selectOption("line");
+  await clickLocal(page, -10, 0);
+  await clickLocal(page, 10, 0);
+  await page
+    .getByRole("button", { name: "Cancel drawing", exact: true })
+    .click();
+  await ready(page);
+  await page
+    .getByLabel("Canvas dimension type", { exact: true })
+    .selectOption("radius");
+  await page
+    .getByLabel("Canvas dimension reference 1", { exact: true })
+    .selectOption({ index: 1 });
+  await page
+    .getByLabel("Canvas dimension expression", { exact: true })
+    .fill("10mm");
+  await page
+    .getByRole("button", { name: "Apply driving dimension", exact: true })
+    .click();
+  await done(page);
+  await ready(page);
+  await page
+    .getByRole("button", { name: "Extrude selected sketch", exact: true })
+    .click();
+  await ready(page, 500 * Math.PI);
+  const original = await snapshot(page),
+    sketch = Object.values(original.document.sketches)[0];
+  const arc = Object.values(sketch.entities).find((e) => e.type === "arc")!;
+  if (arc.type !== "arc") throw new Error("Expected an arc");
+  await page.locator(".sketch-chip").first().click();
+  await openCanvas(page);
+  await page
+    .getByLabel("Canvas tool", { exact: true })
+    .selectOption("translate");
+  await page
+    .getByLabel("Canvas point to move", { exact: true })
+    .selectOption(arc.centerPointId);
+  await page.getByLabel("Canvas coordinate X", { exact: true }).fill("5");
+  await page.getByLabel("Canvas coordinate Y", { exact: true }).fill("8");
+  await page
+    .getByRole("button", { name: "Translate group to coordinate", exact: true })
+    .click();
+  await ready(page, 500 * Math.PI);
+  const translated = await snapshot(page);
+  expect(translated.document.sketches[sketch.id].dimensions).toEqual(
+    sketch.dimensions,
+  );
+  expect(translated.result!.meshes[0].bounds.min[0]).toBeCloseTo(-5, 5);
+  expect(translated.result!.meshes[0].bounds.max[0]).toBeCloseTo(15, 5);
+  expect(translated.result!.meshes[0].bounds.min[1]).toBeCloseTo(8, 5);
+  expect(translated.result!.meshes[0].bounds.max[1]).toBeCloseTo(18, 5);
+  await done(page);
+  const exporting = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export STL", exact: true }).click();
+  const stl = info.outputPath("translated-arc.stl");
+  await (await exporting).saveAs(stl);
+  expect(stlVolume(await readFile(stl)) / (500 * Math.PI)).toBeCloseTo(1, 2);
+});

@@ -2,7 +2,7 @@ import type { Sketch } from "../document/schema";
 import { collectExpressionDependencies } from "../parameters/expressionEvaluator";
 import type { CanvasPoint } from "./canvasGeometry";
 
-function entityPoints(sketch: Sketch, id: string): string[] {
+export function entityPoints(sketch: Sketch, id: string): string[] {
   const entity = sketch.entities[id];
   if (!entity) return [];
   return entity.type === "point"
