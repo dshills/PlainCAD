@@ -299,6 +299,44 @@ export class OpenCascadeKernel implements KernelAdapter {
     }
   }
 
+  hasCommonVolume(base: KernelShape, tool: KernelShape): boolean {
+    const oc = OpenCascadeKernel.openCascade;
+    const a = base.kernelHandle as KernelHandle,
+      b = tool.kernelHandle as KernelHandle;
+    if (!oc || !a.occtShape || !b.occtShape)
+      throw new Error("Scope capture requires native OpenCascade solids.");
+    return withDisposableScope((scope) => {
+      const baseStats = this.measureNative(a.occtShape),
+        toolStats = this.measureNative(b.occtShape);
+      const builder = scope.use(
+        new oc.BRepAlgoAPI_Common_3(a.occtShape, b.occtShape),
+      );
+      if (!builder.IsDone())
+        throw new Error(
+          "Native scope intersection failed. Choose targets explicitly or adjust the tool.",
+        );
+      const common = scope.use(builder.Shape());
+      if (common.IsNull()) return false;
+      const analyzer = scope.use(new oc.BRepCheck_Analyzer(common, true));
+      if (!analyzer.IsValid_2())
+        throw new Error("Native scope intersection produced invalid geometry.");
+      const props = scope.use(new oc.GProp_GProps_1());
+      oc.BRepGProp.VolumeProperties_1(common, props, true, false, false);
+      const volume = props.Mass(),
+        upper = Math.min(baseStats.volume, toolStats.volume),
+        tolerance = volumeTolerance(upper);
+      if (
+        !Number.isFinite(volume) ||
+        volume < -tolerance ||
+        volume > upper + tolerance
+      )
+        throw new Error(
+          "Native scope intersection produced inconsistent volume.",
+        );
+      return volume > tolerance;
+    });
+  }
+
   cutScope(targets: KernelShape[], tools: KernelShape[]): KernelShape[] {
     if (!targets.length || !tools.length)
       throw new Error("Hole scope requires target bodies and center tools.");

@@ -1,3 +1,8 @@
+import { runCommand } from "../commands/commandRegistry";
+import {
+  canCaptureTargetScope,
+  useTargetScopeCapture,
+} from "../commands/targetScopeCaptureCommand";
 import { targetBodyIds } from "../../cad/document/bodyScopes";
 import {
   ExtrudeFeature,
@@ -183,6 +188,13 @@ export function TargetBodyControl({ feature }: { feature: SketchFeature }) {
 }
 
 function BooleanTargetScope({ feature }: { feature: SketchFeature }) {
+  const capture = useTargetScopeCapture();
+  const enabled = useCadStore(
+    (s) =>
+      canCaptureTargetScope(s, capture.busy) &&
+      s.selection.selectedIds[0]?.id === feature.id,
+  );
+  const session = useCadStore((s) => s.documentSession);
   const document = useCadStore((s) => s.history.present);
   const updateDocument = useCadStore((s) => s.updateDocument);
   const owners = upstreamBodyOwners(document, feature, true);
@@ -205,6 +217,25 @@ function BooleanTargetScope({ feature }: { feature: SketchFeature }) {
             : "Cut"}{" "}
         target scope
       </legend>
+      <button
+        type="button"
+        disabled={!enabled}
+        onClick={() => void runCommand("feature.captureTargetScope")}
+      >
+        Capture intersected targets
+      </button>
+      {capture.featureId === feature.id &&
+      capture.session === session &&
+      capture.document?.deref() === document &&
+      capture.progress ? (
+        <p role="status">{capture.progress}</p>
+      ) : null}
+      {capture.featureId === feature.id &&
+      capture.session === session &&
+      capture.document?.deref() === document &&
+      capture.error ? (
+        <p role="alert">{capture.error}</p>
+      ) : null}
       {[...choices].map(([id, name]) => (
         <label key={id} className="checkbox-label">
           <input
@@ -255,7 +286,10 @@ function BooleanTargetScope({ feature }: { feature: SketchFeature }) {
             ? "Select bodies to merge into one connected solid. The first selected target keeps its ID and name; other targets are absorbed. The tool must add volume."
             : "Select each body to cut. Every selected body must lose volume."}{" "}
         The Target body selector replaces the scope with one body. New bodies
-        are added only when selected. Failures retain all upstream bodies.
+        are added only when selected. Capture saves bodies with positive native
+        tool intersection volume at this moment; face-only joins require
+        explicit selection. Future rebuilds keep the saved IDs. Failures retain
+        all upstream bodies.
       </p>
       {!targets.length ? (
         <p className="warning-text">Select at least one target body.</p>

@@ -1,12 +1,12 @@
+import { useCommandEnablement } from "../ui/commands/useCommandEnablement";
 import { ViewPanel } from "../ui/panels/ViewPanel";
 import { MeasurementPanel } from "../ui/panels/MeasurementPanel";
 import { RecoveryPanel } from "../ui/panels/RecoveryPanel";
 import { FabricationPanel } from "../ui/panels/FabricationPanel";
 import { HoleCreationPanel } from "../ui/panels/HoleCreationPanel";
 import { useEffect, useMemo, useRef } from "react";
-import { useShallow } from "zustand/react/shallow";
 import { CadViewer } from "../viewer/CadViewer";
-import { CommandContext, isCommandEnabledForSnapshot, runCommand, selectCommandEnablement } from "../ui/commands/commandRegistry";
+import { CommandContext, isCommandEnabledForSnapshot, runCommand, } from "../ui/commands/commandRegistry";
 import { CommandPalette } from "../ui/commands/CommandPalette";
 import { ParameterPanel } from "../ui/panels/ParameterPanel";
 import { DependencyPanel } from "../ui/panels/DependencyPanel";
@@ -97,7 +97,7 @@ export function App() {
   const select = useCadStore((state) => state.select);
   const setFileError = useCadStore((state) => state.setFileError);
   const commandContext: CommandContext = useMemo(() => ({ fileInputRef }), []);
-  const toolbarEnablement = useCadStore(useShallow(selectCommandEnablement));
+  const toolbarEnablement = useCommandEnablement();
 
   useEffect(() => {
     initializeKernel();

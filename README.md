@@ -264,6 +264,17 @@ Through-all reaches the furthest selected body along the positive sketch normal;
 blind depth is measured from the sketch plane. Schema 11 stores the target array
 and migrates older single-target holes without changing their target IDs.
 
+Use **Capture intersected targets** on a cut, join, or hole to save the current
+native body/tool intersections as explicit target IDs. Capture probes only the
+feature's upstream history and never changes the scope during later rebuilds.
+Use it when first choosing the operation or explicitly retargeting a feature.
+It preserves a join's current primary ID if that body still intersects. Bodies
+added upstream later remain excluded until selected or explicitly recaptured.
+Capture uses positive common solid volume; face-only joins require manual target
+selection. Document edits or replacement cancel in-flight probes, and an empty,
+failed or stale probe retains the previous scope. The operation's usual modeling
+validation still applies after capture.
+
 Use `Revolve` for a closed profile around a coplanar origin axis or a stable line
 in its sketch. The Inspector edits the axis, 0–360 degree angle (exclusive of 0),
 and new-body/cut/join operation. Profiles crossing the axis fail with a diagnostic.

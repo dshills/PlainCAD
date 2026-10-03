@@ -77,6 +77,7 @@ export interface KernelAdapter {
   /** Each tool must hit some target, and every target must lose volume; outputs publish atomically. */
   cutScope?(targets: KernelShape[], tools: KernelShape[]): KernelShape[];
   fuse(a: KernelShape, b: KernelShape): KernelShape;
+  hasCommonVolume?(base: KernelShape, tool: KernelShape): boolean;
   /** Atomic connected union; the tool must add volume beyond the union of targets. */
   joinAll?(targets: KernelShape[], tool: KernelShape): KernelShape;
   fillet?(

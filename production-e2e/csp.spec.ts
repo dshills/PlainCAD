@@ -5,6 +5,7 @@ import {
 import { createBoxTemplate } from "../src/templates/templates";
 import {
   addCenterRectangle,
+  addCircleAt,
   createXySketch,
 } from "../src/cad/sketch/SketchModel";
 import {
@@ -48,12 +49,10 @@ async function observeCsp(page: Page) {
   page.on("response", (response) => {
     if (response.url().includes("/assets/"))
       assetHeaderJobs.push(
-        response
-          .allHeaders()
-          .then((headers) => ({
-            url: response.url(),
-            csp: headers["content-security-policy"],
-          })),
+        response.allHeaders().then((headers) => ({
+          url: response.url(),
+          csp: headers["content-security-policy"],
+        })),
       );
   });
   await page.exposeFunction(
@@ -283,4 +282,58 @@ test("production CSP blocks inline scripts, JS eval and remote fetch", async ({
   await expect
     .poll(() => violations.some((v) => v.directive === "connect-src"))
     .toBe(true);
+});
+
+test("production CSP permits explicit native scope capture and subsequent STL export", async ({
+  page,
+}, info) => {
+  const { errors, violations, workerUrls } = await observeCsp(page);
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: "Load parametric box template", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Export STL", exact: true }),
+  ).toBeEnabled();
+  let document = createBoxTemplate();
+  const sketch = addCircleAt(createXySketch("Scope tool"), "5mm", "5mm", "2mm");
+  const feature = createExtrudeFeature({
+    name: "Scoped cut",
+    sketchId: sketch.id,
+    profileId: detectProfiles(solveSketch(sketch, {})).profiles[0].id,
+    operation: "cut",
+    targetBodyIds: [],
+    direction: "positive",
+    termination: { type: "throughAll" },
+    distance: { expression: "10mm", unit: "mm" },
+  });
+  document = upsertFeature(upsertSketch(document, sketch), feature);
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "scope.pcaddoc",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(document)),
+  });
+  await page
+    .getByRole("list", { name: "Sketch and feature history" })
+    .getByRole("button", { name: /Scoped cut/ })
+    .click();
+  await page
+    .getByRole("button", { name: "Capture intersected targets", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Export STL", exact: true }),
+  ).toBeEnabled();
+  expect(workerUrls.some((url) => /scopeCaptureWorker/.test(url))).toBe(true);
+  await expect(
+    page.getByRole("combobox", { name: "Target body", exact: true }),
+  ).toHaveValue(`body:${document.features[0].id}`);
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export STL", exact: true }).click();
+  const path = info.outputPath("scoped.stl");
+  await (await download).saveAs(path);
+  expect(
+    stlVolume(await readFile(path)) / (80000 - Math.PI * 4 * 20),
+  ).toBeCloseTo(1, 3);
+  expect(violations).toEqual([]);
+  expect(errors).toEqual([]);
 });

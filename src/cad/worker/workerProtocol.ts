@@ -21,6 +21,8 @@ export interface RebuildResult {
   warnings: RebuildWarning[];
   durationMs: number;
   metrics?: RebuildMetrics;
+  /** Runtime-only result of an explicit scope probe, never used by ordinary rebuilds. */
+  capturedTargetBodyIds?: string[];
   parameterValues?: Record<string, Quantity>;
   solvedSketches?: Record<string, ResolvedSketch>;
   profiles?: Record<string, SketchProfile[]>;

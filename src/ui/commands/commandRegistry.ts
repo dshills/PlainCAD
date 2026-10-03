@@ -1,3 +1,4 @@
+import { canCaptureTargetScope, captureSelectedTargetScope, useTargetScopeCapture } from "./targetScopeCaptureCommand";
 import { captureCamera, restoreCamera, showStandardView } from "../../viewer/cameraController";
 import { MAX_NAMED_VIEWS, STANDARD_VIEWS, saveNamedCamera, unusedViewName } from "../../cad/inspection/cameraViews";
 import { useSectionState } from "../../state/sectionState";
@@ -93,9 +94,10 @@ export interface CommandEnablement {
   moveEarlier: boolean;
   moveLater: boolean;
   createHole: boolean;
+  captureTargetScope: boolean;
 }
 
-export function selectCommandEnablement(state: CadStore): CommandEnablement {
+export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useTargetScopeCapture.getState().busy): CommandEnablement {
   return {
     document: Boolean(state.history.present),
     saveNamedView: (state.history.present.viewState?.namedViews?.length ?? 0) < MAX_NAMED_VIEWS,
@@ -111,6 +113,7 @@ export function selectCommandEnablement(state: CadStore): CommandEnablement {
     moveEarlier: !planTimelineMove(state.history.present, state.selection.selectedIds[0], "earlier").reason,
     moveLater: !planTimelineMove(state.history.present, state.selection.selectedIds[0], "later").reason,
     createHole: Boolean(holeCreationContext(state)),
+    captureTargetScope: canCaptureTargetScope(state,scopeCaptureBusy),
   };
 }
 
@@ -125,6 +128,7 @@ export function isCommandEnabledForSnapshot(
 }
 
 export const commands: CadCommand[] = [
+  {id:"feature.captureTargetScope",label:"Capture Intersected Targets",description:"Save the current native body/tool intersections as explicit target IDs.",enablementKey:"captureTargetScope",run:captureSelectedTargetScope},
   ...STANDARD_VIEWS.map((view): CadCommand => ({ id: `view.${view}`, label: `${view[0].toUpperCase()}${view.slice(1)} View`, alwaysEnabled: true, run: () => { showStandardView(view); } })),
   { id: "view.saveNamed", label: "Save Named View", enablementKey: "saveNamedView", run: (ctx) => {
     const state = useCadStore.getState(), pose = captureCamera();

@@ -1,11 +1,10 @@
+import { useCommandEnablement } from "./useCommandEnablement";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useShallow } from "zustand/react/shallow";
 import {
   commands,
   CommandContext,
   isCommandEnabledForSnapshot,
   runCommand,
-  selectCommandEnablement,
 } from "./commandRegistry";
 import { ModalDialog } from "../ModalDialog";
 import { useCadStore } from "../../state/useCadStore";
@@ -13,7 +12,7 @@ import { useCadStore } from "../../state/useCadStore";
 export function CommandPalette({ context }: { context: CommandContext }) {
   const open = useCadStore((state) => state.paletteOpen);
   const setOpen = useCadStore((state) => state.setPaletteOpen);
-  const enablement = useCadStore(useShallow(selectCommandEnablement));
+  const enablement = useCommandEnablement();
   const filterRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
   const filtered = useMemo(() => {

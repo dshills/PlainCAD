@@ -1,8 +1,8 @@
+import { useCommandEnablement } from "../commands/useCommandEnablement";
 import { useMemo } from "react";
-import { useShallow } from "zustand/react/shallow";
 import { useCadStore } from "../../state/useCadStore";
 import { orderedFeatures, orderedSketches } from "../../state/selectors";
-import { CommandContext, isCommandEnabledForSnapshot, runCommand, selectCommandEnablement } from "../commands/commandRegistry";
+import { CommandContext, isCommandEnabledForSnapshot, runCommand, } from "../commands/commandRegistry";
 import { Feature } from "../../cad/document/schema";
 import { buildTimelineItems } from "../../cad/document/timelineOrdering";
 import { planTimelineMove } from "../../cad/document/timelineEditing";
@@ -18,7 +18,7 @@ export function FeatureTimeline({ commandContext = emptyCommandContext }: Featur
   const document = useCadStore((state) => state.history.present);
   const select = useCadStore((state) => state.select);
   const selection = useCadStore((state) => state.selection.selectedIds[0]);
-  const commandEnablement = useCadStore(useShallow(selectCommandEnablement));
+  const commandEnablement = useCommandEnablement();
   const features = useMemo(() => orderedFeatures(document), [document]);
   const sketches = useMemo(() => orderedSketches(document), [document]);
   const timelineItems = useMemo(() => buildTimelineItems(sketches, features), [sketches, features]);

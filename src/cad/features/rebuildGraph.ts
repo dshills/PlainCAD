@@ -45,7 +45,11 @@ const sketchSeeds = new Map<
 
 export function rebuildDocument(
   document: CadDocument,
-  options: { exportUnion?: boolean; exportBodyIds?: readonly string[] } = {},
+  options: {
+    exportUnion?: boolean;
+    exportBodyIds?: readonly string[];
+    captureTargetScopeFeatureId?: string;
+  } = {},
 ): RebuildResult {
   const started = performance.now();
   const disposableMetricsStarted = getDisposableScopeMetrics();
@@ -193,6 +197,14 @@ export function rebuildDocument(
   const meshes = [];
   const shapesToDispose = new Set<KernelShape>();
   const runtimeBodies = new Map<string, RuntimeBody>();
+  let capturedTargetBodyIds: string[] | undefined;
+  const captureTargets: ScopeCapture = (tools, targets) => {
+    const hasCommon = kernel.hasCommonVolume?.bind(kernel);
+    if (!hasCommon) throw new Error("Scope capture requires a native kernel.");
+    capturedTargetBodyIds = targets
+      .filter(target => tools.some(tool => hasCommon(target.shape, tool)))
+      .map(target => target.bodyId);
+  };
   const featureStarted = performance.now();
   const failedBodies = new Set<string>();
 
@@ -204,6 +216,7 @@ export function rebuildDocument(
       // same stable target ID used by rebuildEdgeTreatmentFeature below.
       const affectedIds = (feature.type === "extrude" || feature.type === "revolve") && feature.operation === "newBody"
         ? [stableBodyIdForFeature(feature.id)] : targetBodyIds(feature);
+      const capture = options.captureTargetScopeFeatureId === feature.id ? captureTargets : undefined;
       const errorsBefore = errors.length;
       try {
         if (affectedIds.some((id) => id && failedBodies.has(id))) {
@@ -267,6 +280,7 @@ export function rebuildDocument(
             runtimeBodies,
             shapesToDispose,
             errors,
+            capture,
           );
           continue;
         }
@@ -280,6 +294,7 @@ export function rebuildDocument(
             runtimeBodies,
             shapesToDispose,
             errors,
+            capture,
           );
           continue;
         }
@@ -335,17 +350,19 @@ export function rebuildDocument(
           errors,
         );
         if (errors.length > errorCountBeforeTargets) continue;
-        const distance =
-          feature.termination?.type === "toFace"
-            ? undefined
-            : resolveExtrudeDistance(
-                feature,
-                evaluated.values,
-                targetBodies
-                  .map((body) => body.mesh)
-                  .filter((mesh): mesh is RenderMesh => Boolean(mesh)),
-                planes.transforms.get(sketch.id)!,
-              );
+        const targetMeshes = targetBodies
+          .map(body => body.mesh)
+          .filter((mesh): mesh is RenderMesh => Boolean(mesh));
+        const sweepMeshes = capture && feature.termination?.type === "throughAll"
+          ? targetMeshes.filter(mesh => throughAllDistance(mesh.bounds, planes.transforms.get(sketch.id)!, feature.direction) !== undefined)
+          : targetMeshes;
+        if (capture && feature.termination?.type === "throughAll" && !sweepMeshes.length) {
+          capturedTargetBodyIds = [];
+          continue;
+        }
+        const distance = feature.termination?.type === "toFace"
+          ? undefined
+          : resolveExtrudeDistance(feature, evaluated.values, sweepMeshes, planes.transforms.get(sketch.id)!);
         if (distance && (distance.error || distance.value <= 0)) {
           errors.push({
             id: `feature:${feature.id}:distance`,
@@ -395,6 +412,10 @@ export function rebuildDocument(
           }
           shapesToDispose.add(shape);
           const bodyId = stableBodyIdForFeature(feature.id);
+          if (capture) {
+            capture([shape], targetBodies);
+            continue;
+          }
           const outputs = applyExtrudeOperation(
             kernel, feature, shape, targetBodies, bodyId, shapesToDispose,
           );
@@ -514,6 +535,7 @@ export function rebuildDocument(
     ),
     sketchPlanes: Object.fromEntries(planes.transforms),
     parameterValues: evaluated.values,
+    ...(capturedTargetBodyIds !== undefined ? { capturedTargetBodyIds } : {}),
     metrics: {
       parameterEvaluationMs,
       sketchSolveMs,
@@ -549,6 +571,7 @@ function rebuildRevolveFeature(
   runtimeBodies: Map<string, RuntimeBody>,
   shapesToDispose: Set<KernelShape>,
   errors: RebuildError[],
+  capture?: ScopeCapture,
 ) {
   const sketch = document.sketches[feature.sketchId];
   const profile = profilesBySketch
@@ -607,11 +630,22 @@ function rebuildRevolveFeature(
       resolvedAxis,
     );
     shapesToDispose.add(shape);
+    if (capture) {
+      capture([shape], targets);
+      return;
+    }
     const outputs = applyExtrudeOperation(
-      kernel, feature, shape, targets, stableBodyIdForFeature(feature.id), shapesToDispose,
+      kernel,
+      feature,
+      shape,
+      targets,
+      stableBodyIdForFeature(feature.id),
+      shapesToDispose,
     );
     publishOperationOutputs(
-      kernel, runtimeBodies, outputs,
+      kernel,
+      runtimeBodies,
+      outputs,
       feature.operation === "newBody" ? sketchPlaneKey(sketch) : undefined,
       absorbedBodyIds(feature),
     );
@@ -634,6 +668,7 @@ function rebuildHoleFeature(
   runtimeBodies: Map<string, RuntimeBody>,
   shapesToDispose: Set<KernelShape>,
   errors: RebuildError[],
+  capture?: ScopeCapture,
 ) {
   const ids = targetBodyIds(feature);
   const targets = ids.map((bodyId) => ({
@@ -705,9 +740,20 @@ function rebuildHoleFeature(
           throughAllDistance(target.body!.mesh!.bounds, planeTransform),
         )
       : [evaluateHoleDepth(feature.depth, parameters)];
-  const depth = depths.every((value) => value !== undefined && value > 0)
-    ? Math.max(...(depths as number[]))
-    : undefined;
+  const usableDepths = capture
+    ? depths.filter(
+        (value): value is number => value !== undefined && value > 0,
+      )
+    : depths;
+  if (capture && feature.depth === "throughAll" && !usableDepths.length) {
+    capture([], targets.map(target => ({...target.body!,bodyId:target.bodyId})));
+    return;
+  }
+  const depth =
+    usableDepths.length &&
+    usableDepths.every((value) => value !== undefined && value > 0)
+      ? Math.max(...(usableDepths as number[]))
+      : undefined;
   if (!depth || depth <= 0) {
     errors.push({
       id: `feature:${feature.id}:depth`,
@@ -742,6 +788,13 @@ function rebuildHoleFeature(
       shapesToDispose.add(tool);
       tools.push(tool);
     }
+    if (capture) {
+      capture(
+        tools,
+        targets.map((target) => ({ ...target.body!, bodyId: target.bodyId })),
+      );
+      return;
+    }
     // The fallback remains single-target. Native scope validation allows each
     // center to hit a different body, while rejecting unused centers and targets.
     const native = targets.every(
@@ -771,11 +824,14 @@ function rebuildHoleFeature(
       id: `kernel:${feature.id}`,
       source: "kernel",
       sourceId: feature.id,
-      message: error instanceof HoleScopeError
-        ? `${error.message} ${error.scope === "target"
-          ? `Target body "${targets[error.index].body!.name}" (${targets[error.index].bodyId}).`
-          : `Center point "${feature.centerPointIds[error.index]}".`}`
-        : kernelErrorMessage(feature.type, error),
+      message:
+        error instanceof HoleScopeError
+          ? `${error.message} ${
+              error.scope === "target"
+                ? `Target body "${targets[error.index].body!.name}" (${targets[error.index].bodyId}).`
+                : `Center point "${feature.centerPointIds[error.index]}".`
+            }`
+          : kernelErrorMessage(feature.type, error),
     });
     return;
   }
@@ -1019,6 +1075,7 @@ function resolveExtrudeDistance(
 }
 
 type OperationOutput = { bodyId: string } & RuntimeBody;
+type ScopeCapture = (tools: KernelShape[], targets: OperationOutput[]) => void;
 
 function applyExtrudeOperation(
   activeKernel: KernelAdapter,
