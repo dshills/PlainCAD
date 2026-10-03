@@ -1,4 +1,5 @@
 import { movedCanvasPoint } from "../../cad/sketch/canvasPointMove";
+import { withCanvasConstraintReferences } from "../../cad/sketch/canvasConstraints";
 import { SKETCH_TOLERANCE } from "../../cad/sketch/tolerances";
 import {
   withCanvasDimension,
@@ -222,5 +223,40 @@ export function commitCanvasPointMove(
   if (useCadStore.getState().history.present === expected)
     throw new Error(
       "Point move could not be saved. Check the project diagnostics.",
+    );
+}
+
+export function commitCanvasConstraintReferences(
+  active: CanvasSession,
+  expected: CadStore["history"]["present"],
+  id: string,
+  references?: { entityIds: string[]; pointIds: string[] },
+) {
+  const state = useCadStore.getState();
+  if (state.history.present !== expected)
+    throw new Error(
+      "Project changed. Apply the constraint repair again for the current sketch.",
+    );
+  const context = canvasContext(active, state, true);
+  if (!context.sketch.constraints.some((c) => c.id === id))
+    throw new Error("Constraint reference lost. Select a current constraint.");
+  const updated = references
+    ? withCanvasConstraintReferences(
+        context.sketch,
+        id,
+        references.entityIds,
+        references.pointIds,
+      )
+    : {
+        ...context.sketch,
+        constraints: context.sketch.constraints.filter((c) => c.id !== id),
+      };
+  if (updated === context.sketch) return;
+  const next = upsertSketch(context.document, updated);
+  assertProjectJsonShape(next);
+  state.updateDocument((d) => (d === expected ? next : d));
+  if (useCadStore.getState().history.present === expected)
+    throw new Error(
+      "Constraint repair could not be saved. Check project diagnostics.",
     );
 }

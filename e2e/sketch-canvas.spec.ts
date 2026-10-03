@@ -76,6 +76,191 @@ function stlVolume(bytes: Buffer) {
   }
   return sum;
 }
+test("constraint markers inspect, repair and remove intent while native geometry persists", async ({
+  page,
+}, info) => {
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.goto("/");
+  await ready(page);
+  await page
+    .getByRole("button", { name: "Create XY sketch", exact: true })
+    .click();
+  await openCanvas(page);
+  await page
+    .getByLabel("Canvas tool", { exact: true })
+    .selectOption("rectangle");
+  await clickLocal(page, 0, 0);
+  await clickLocal(page, 20, 10);
+  await done(page);
+  await ready(page);
+  const drawn = await snapshot(page),
+    sketch = Object.values(drawn.document.sketches)[0],
+    lines = Object.values(sketch.entities).filter((e) => e.type === "line");
+  await page
+    .getByLabel("Constraint type", { exact: true })
+    .selectOption("horizontal");
+  await page
+    .getByLabel("Constraint entities", { exact: true })
+    .selectOption(lines[0].id);
+  await page
+    .getByRole("button", { name: "Add constraint", exact: true })
+    .click();
+  await ready(page);
+  const id = (await snapshot(page)).document.sketches[sketch.id].constraints[0]
+    .id;
+  await page
+    .getByRole("button", { name: "Extrude selected sketch", exact: true })
+    .click();
+  await ready(page, 2000);
+  await page.getByRole("button", { name: /^Sketch 1 XY plane/ }).click();
+  await openCanvas(page);
+  const marker = page.locator(`[data-constraint-id="${id}"]`);
+  await expect(marker).toHaveAttribute("data-constraint-state", "satisfied");
+  const beforeInspect = (await snapshot(page)).document;
+  await marker.focus();
+  await marker.press("Enter");
+  await expect(
+    page.getByRole("button", {
+      name: "Apply constraint references",
+      exact: true,
+    }),
+  ).toBeVisible();
+  expect((await snapshot(page)).document).toEqual(beforeInspect);
+  await page
+    .getByLabel("Canvas constraint entity 1", { exact: true })
+    .selectOption(lines[2].id);
+  await page
+    .getByRole("button", { name: "Apply constraint references", exact: true })
+    .click();
+  await ready(page, 2000);
+  expect(
+    (await snapshot(page)).document.sketches[sketch.id].constraints[0],
+  ).toMatchObject({ id, type: "horizontal", entityIds: [lines[2].id] });
+  await page
+    .getByRole("button", { name: "Undo canvas edit", exact: true })
+    .click();
+  await ready(page, 2000);
+  expect(
+    (await snapshot(page)).document.sketches[sketch.id].constraints[0]
+      .entityIds,
+  ).toEqual([lines[0].id]);
+  await page
+    .getByRole("button", { name: "Redo canvas edit", exact: true })
+    .click();
+  await ready(page, 2000);
+  await page.evaluate(
+    async ({ sketchId, id }) => {
+      const path = "/src/state/useCadStore.ts",
+        { useCadStore } = await import(path);
+      useCadStore.getState().updateDocument((d: CadDocument) => {
+        const sketch = d.sketches[sketchId];
+        return {
+          ...d,
+          sketches: {
+            ...d.sketches,
+            [sketch.id]: {
+              ...sketch,
+              constraints: sketch.constraints.map((c) =>
+                c.id === id ? { ...c, entityIds: ["missing-line"] } : c,
+              ),
+            },
+          },
+        };
+      });
+    },
+    { sketchId: sketch.id, id },
+  );
+  await expect.poll(async () => (await snapshot(page)).status).toBe("failed");
+  await expect(marker).toHaveCount(0);
+  await page
+    .getByRole("button", {
+      name: "Inspect canvas constraint C1 H — lost",
+      exact: true,
+    })
+    .click();
+  await expect(
+    page.getByRole("option", {
+      name: "Lost reference — reselect",
+      exact: true,
+    }),
+  ).toHaveCount(1);
+  await page
+    .getByLabel("Canvas constraint entity 1", { exact: true })
+    .selectOption(lines[2].id);
+  await page
+    .getByRole("button", { name: "Apply constraint references", exact: true })
+    .click();
+  await ready(page, 2000);
+  const added = await page.evaluate(
+    async ({ sketchId, points, lineId }) => {
+      const path = "/src/state/useCadStore.ts",
+        modelPath = "/src/cad/sketch/SketchModel.ts",
+        { useCadStore } = await import(path),
+        { addConstraint } = await import(modelPath);
+      let ids: string[] = [];
+      useCadStore.getState().updateDocument((d: CadDocument) => {
+        let sketch = d.sketches[sketchId];
+        sketch = addConstraint(sketch, "fixed", { pointIds: points });
+        sketch = addConstraint(sketch, "vertical", { entityIds: [lineId] });
+        ids = sketch.constraints.slice(-2).map((c: { id: string }) => c.id);
+        return { ...d, sketches: { ...d.sketches, [sketch.id]: sketch } };
+      });
+      return ids;
+    },
+    {
+      sketchId: sketch.id,
+      points: [lines[0].startPointId, lines[0].endPointId],
+      lineId: lines[0].id,
+    },
+  );
+  await expect.poll(async () => (await snapshot(page)).status).toBe("failed");
+  await expect(
+    page.locator(`[data-constraint-id="${added[1]}"]`),
+  ).toHaveAttribute("data-constraint-state", "conflicting");
+  await page
+    .getByRole("button", {
+      name: "Inspect canvas constraint C3 V — conflicting",
+      exact: true,
+    })
+    .click();
+  await page
+    .getByRole("button", { name: "Delete canvas constraint", exact: true })
+    .click();
+  await ready(page, 2000);
+  await page
+    .getByRole("button", { name: "Undo canvas edit", exact: true })
+    .click();
+  await expect.poll(async () => (await snapshot(page)).status).toBe("failed");
+  await page
+    .getByRole("button", { name: "Redo canvas edit", exact: true })
+    .click();
+  await ready(page, 2000);
+  await page.getByRole("button", { name: "Fit sketch", exact: true }).click();
+  await page
+    .getByLabel("Sketch drawing canvas", { exact: true })
+    .scrollIntoViewIfNeeded();
+  await page.screenshot({ path: info.outputPath("constraint-canvas.png") });
+  await done(page);
+  const edited = await snapshot(page),
+    saving = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const project = info.outputPath("constraints.pcaddoc");
+  await (await saving).saveAs(project);
+  await page.reload();
+  await ready(page);
+  await page.locator('input[type="file"]').setInputFiles(project);
+  await ready(page, 2000);
+  expect((await snapshot(page)).document.sketches).toEqual(
+    edited.document.sketches,
+  );
+  const exporting = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export STL", exact: true }).click();
+  const stl = info.outputPath("constraints.stl");
+  await (await exporting).saveAs(stl);
+  expect(stlVolume(await readFile(stl))).toBeCloseTo(2000, 3);
+  expect(errors).toEqual([]);
+});
 for (const plane of ["XY", "XZ", "YZ"] as const) {
   test(`${plane}: fragmented line regions retain references through edits, native save/open and STL`, async ({
     page,

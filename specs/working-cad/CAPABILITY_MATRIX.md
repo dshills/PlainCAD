@@ -206,7 +206,17 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
 - General post-boolean face/edge naming remains missing. Planes require an
   unmodified positive-distance new-body owner;
   curved side faces, hole/revolve faces, and ambiguous rebinding are unsupported.
-- Remaining feature inspectors and graphical constraint annotation need work.
+- Canvas constraint markers cover all 11 supported types and identify current
+  satisfied/redundant/conflicting/pending/lost/unavailable states. Leaders locate
+  referenced geometry rather than tangency contacts. Marker/list selection supports
+  keyboard inspection, ordered reference repair and undoable removal with stable
+  constraint IDs; lost references remain list-only and pending markers are hidden.
+  Native Chromium checks conflict recovery, missing-reference repair, unchanged
+  volume through annotation/repair/removal, undo/redo, save/open and STL.
+  Lists paginate at 20 entries and at most 128 anchored markers/16 leaders per
+  marker render. Creation remains in Sketch tools; constraint glyph dragging and
+  automatic label placement remain unavailable.
+- Remaining feature inspectors need work.
   Canvas dimension labels use bounded simple placement; automatic collision-free
   label layout and direct label dragging are unavailable.
 - STL validation is numerical and bounded: it does not prove absence of every

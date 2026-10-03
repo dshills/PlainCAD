@@ -721,3 +721,13 @@ dialog.file-dialog::backdrop { background: #0006; }
 .canvas-dimension-controls { border-block: 1px solid #637080; margin: 0.5rem 0; }
 .canvas-dimension-list { max-height: 120px; overflow: auto; padding-left: 1.2rem; }
 .canvas-dimension-list span { font-size: 0.85rem; overflow-wrap: anywhere; }
+.canvas-constraint-controls { border-block: 1px solid #637080; margin: 0.5rem 0; }
+.canvas-constraint-list { max-height: 120px; overflow: auto; padding-left: 1.2rem; }
+.canvas-constraints { fill: #8de0cd; stroke: #8de0cd; }
+.canvas-constraints line { fill: none; pointer-events: none; }
+.canvas-constraints text { stroke: #111923; stroke-width: 0.07em; paint-order: stroke; }
+.canvas-constraint-marker { cursor: pointer; }
+.canvas-constraint-selected, .canvas-constraint-marker:focus { fill: #fff; stroke: #fff; }
+.canvas-constraint-marker:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.canvas-constraint-marker[data-constraint-state="redundant"] { fill: #ffc45c; stroke: #ffc45c; }
+.canvas-constraint-marker[data-constraint-state="conflicting"], .canvas-constraint-marker[data-constraint-state="unavailable"] { fill: #ff9292; stroke: #ff9292; }

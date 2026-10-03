@@ -1,5 +1,6 @@
 import { useCanvasPointDrag } from "./useCanvasPointDrag";
 import { useCanvasDimensions } from "./useCanvasDimensions";
+import { useCanvasConstraints } from "./useCanvasConstraints";
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import { ModalDialog } from "../ModalDialog";
 import { useCadStore } from "../../state/useCadStore";
@@ -262,6 +263,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
   const preview = draft.length && cursor ? [...draft, cursor] : draft;
   const radius = view.width * 0.005;
   const dimensions = useCanvasDimensions(active, context, view.width, cancel);
+  const constraints = useCanvasConstraints(active, context, view.width, cancel);
   if (!sketch) return null;
   return (
     <ModalDialog
@@ -434,6 +436,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
         </button>
       </div>
       {dimensions.controls}
+      {constraints.controls}
       <p id="canvas-instructions">
         {instructions[tool]} Existing points snap within 8 screen pixels.
         Keyboard users can place exact coordinates using the fields above.
@@ -578,6 +581,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
           </g>
         </g>
         {dimensions.overlay}
+        {constraints.overlay}
       </svg>
       <p role="status">
         {cursor

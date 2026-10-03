@@ -171,6 +171,10 @@ rebuild until their expressions are repaired; reused names cannot retarget them.
    Parameter-bound, constrained, driving distance/angle and arc points require
    expression or constraint edits; a clear diagnostic explains the restriction.
    Moves onto another point are rejected; movement never merges point IDs.
+   C markers show the current constraint status and locate referenced geometry.
+   Select a marker or constraint list entry to inspect, repair ordered references,
+   or remove intent through undoable edits. Lost references stay in the list;
+   pending solves hide markers. Create new constraints in Sketch tools.
    Use the rectangle/circle helpers or Sketch tools to add points, lines, circles,
    and center/start/end arcs. Construction curves appear dashed and are excluded
    from solid profiles.
