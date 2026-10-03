@@ -400,7 +400,7 @@ describe("analytic straight dividers in mixed arc profiles", () => {
       "self-intersect",
     );
   });
-  it("diagnoses curved intersections, overlaps, tangencies and dangling tails", () => {
+  it("diagnoses curved overlaps, tangencies and dangling tails", () => {
     const base = [
       line("diameter", -10, 0, 10, 0),
       line("divider", 0, 0, 0, 10),
@@ -420,13 +420,6 @@ describe("analytic straight dividers in mixed arc profiles", () => {
         { ...semicircle(), id: "duplicate" },
       ]).errors.join(" "),
     ).toContain("overlap");
-    expect(
-      detectArcs(
-        base,
-        [semicircle()],
-        [circle("intersecting", 5, 0, 10)],
-      ).errors.join(" "),
-    ).toContain("unsupported");
   });
 });
 
@@ -562,6 +555,169 @@ describe("analytic circle/circle regions", () => {
     );
     expect(detect([], circles).errors.join(" ")).toContain(
       "750 source-curve limit",
+    );
+  });
+});
+
+function unequalLensArea(r: number, s: number, d: number) {
+  return (
+    r * r * Math.acos((d * d + r * r - s * s) / (2 * d * r)) +
+    s * s * Math.acos((d * d + s * s - r * r) / (2 * d * s)) -
+    Math.sqrt((-d + r + s) * (d + r - s) * (d - r + s) * (d + r + s)) / 2
+  );
+}
+describe("analytic circle/arc contacts", () => {
+  it("partitions a closed semicircle and crossing circle into exact regions", () => {
+    const arc = semicircle(),
+      circles = [circle("cap", 5, 0, 10)],
+      lines = [line("diameter", -10, 0, 10, 0)];
+    const before = structuredClone({ arc, circles, lines }),
+      result = detectArcs(lines, [arc], circles);
+    expect(result.errors).toEqual([]);
+    expect(result.profiles).toHaveLength(3);
+    const lens = unequalLensArea(10, 5, 10);
+    const intersection = result.profiles.find(
+      (p) =>
+        Math.abs(p.bounds.minY - 5) < 1e-8 &&
+        Math.abs(p.bounds.maxY - 10) < 1e-8,
+    )!;
+    expect(area(intersection)).toBeCloseTo(lens, 8);
+    expect(intersection.outerLoop.segments).toHaveLength(2);
+    expect(
+      intersection.outerLoop.segments!.every((s) => s.type === "arc"),
+    ).toBe(true);
+    expect(result.profiles.reduce((sum, p) => sum + area(p), 0)).toBeCloseTo(
+      75 * Math.PI - lens,
+      8,
+    );
+    expect({ arc, circles, lines }).toEqual(before);
+  });
+  it("preserves profile IDs through scaling and reversed arc/line winding", () => {
+    const result = detectArcs(
+      [line("diameter", -10, 0, 10, 0)],
+      [semicircle()],
+      [circle("cap", 5, 0, 10)],
+    );
+    const arc = semicircle(20);
+    const edited = detectArcs(
+      [line("diameter", -20, 0, 20, 0)].map((l) => ({
+        ...l,
+        start: l.end,
+        end: l.start,
+      })),
+      [
+        {
+          ...arc,
+          start: arc.end,
+          end: arc.start,
+          startAngle: Math.PI,
+          sweep: -Math.PI,
+        },
+      ],
+      [circle("cap", 10, 0, 20)],
+    );
+    expect(edited.errors).toEqual([]);
+    expect(edited.profiles.map((p) => p.id)).toEqual(
+      result.profiles.map((p) => p.id),
+    );
+    for (const p of edited.profiles)
+      expect(area(p)).toBeCloseTo(
+        4 * area(result.profiles.find((x) => x.id === p.id)!),
+        8,
+      );
+  });
+  it("does not split arcs at roots outside their authored sweep", () => {
+    const arc = semicircle();
+    const result = detectArcs(
+      [line("diameter", -10, 0, 10, 0)],
+      [arc],
+      [circle("below", 5, 0, -10)],
+    );
+    expect(result.errors).toEqual([]);
+    expect(result.profiles).toHaveLength(2);
+    expect(
+      result.profiles.some((p) => p.outerLoop.entityIds.includes("arc")),
+    ).toBe(true);
+    // A full-circle tangency below the authored semicircle is also irrelevant.
+    expect(
+      detectArcs(
+        [line("diameter", -10, 0, 10, 0)],
+        [arc],
+        [circle("below", 5, 0, -15)],
+      ).errors,
+    ).toEqual([]);
+  });
+  it("supports a partial arc divider whose endpoints meet a full circle", () => {
+    const x = Math.sqrt(75),
+      arc = {
+        ...semicircle(),
+        start: { id: "start", x: 5, y: -x },
+        end: { id: "end", x: 5, y: x },
+        startAngle: -Math.PI / 3,
+        sweep: (2 * Math.PI) / 3,
+      };
+    const result = detectArcs([], [arc], [circle("boundary", 10, 10, 0)]);
+    expect(result.errors).toEqual([]);
+    expect(result.profiles).toHaveLength(2);
+    expect(result.profiles.reduce((sum, p) => sum + area(p), 0)).toBeCloseTo(
+      100 * Math.PI,
+      8,
+    );
+    expect(
+      result.profiles.every((p) =>
+        p.outerLoop.segments!.every((s) => s.type === "arc"),
+      ),
+    ).toBe(true);
+  });
+  it("rejects sweep-local tangencies, coincident boundaries and dangling arcs", () => {
+    expect(
+      detectArcs(
+        [line("diameter", -10, 0, 10, 0)],
+        [semicircle()],
+        [circle("tangent", 5, 0, 15)],
+      ).errors.join(" "),
+    ).toContain("tangential");
+    expect(
+      detectArcs(
+        [line("diameter", -10, 0, 10, 0)],
+        [semicircle()],
+        [circle("same")],
+      ).errors.join(" "),
+    ).toContain("overlap");
+    expect(
+      detectArcs([], [semicircle()], [circle("cap", 5, 0, 10)]).errors.join(
+        " ",
+      ),
+    ).toContain("open profile endpoint");
+    const construction = { ...circle("cap", 5, 0, 10), construction: true };
+    expect(
+      detectArcs(
+        [line("diameter", -10, 0, 10, 0)],
+        [semicircle()],
+        [construction],
+      ).profiles,
+    ).toHaveLength(1);
+  });
+
+  it("diagnoses near-concentric ambiguous circle/arc boundaries", () => {
+    expect(
+      detectArcs(
+        [line("diameter", -10, 0, 10, 0)],
+        [semicircle()],
+        [circle("near", 10 + 1.5e-8, 0.75e-8, 0)],
+      ).errors.join(" "),
+    ).toContain("near-concentric");
+  });
+  it("keeps proper arc/arc crossings explicitly unsupported", () => {
+    const b = {
+      ...semicircle(),
+      id: "b",
+      center: { id: "b:center", x: 10, y: 0 },
+      start: { id: "b:start", x: 20, y: 0 },
+      end: { id: "b:end", x: 0, y: 0 },
+    };
+    expect(detectArcs([], [semicircle(), b]).errors.join(" ")).toContain(
+      "Arc/arc intersection fragmentation is unsupported",
     );
   });
 });

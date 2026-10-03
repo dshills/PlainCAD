@@ -191,7 +191,11 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
   pair/root anchors. Native XY/XZ/YZ tests verify exact BRep volume and world-coordinate bounds,
   parameter edits, save/open, STL and explicit repair when intersections disappear.
   Nested/disjoint circles keep their identities; tangencies and coincident circles
-  stay diagnostic. Arc/arc and circle/arc intersection fragmentation remains unsupported.
+  stay diagnostic. Circle/arc crossings are now fragmented analytically within the
+  authored sweep, including partial arc dividers ending on circular boundaries.
+  Native XY/XZ/YZ checks verify exact lens BRep volumes, coordinate orientation,
+  parameter edits, reversed source winding, save/open/STL and lost-profile repair.
+  Arc/arc intersection fragmentation remains unsupported.
   Curved traversal is bounded to 750 source curves, 2048 fragments/contacts and
   8192 sampled graph segments; sampling classifies faces, while native modeling
   uses analytic fragments. Individual

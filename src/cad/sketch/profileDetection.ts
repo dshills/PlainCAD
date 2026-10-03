@@ -73,7 +73,7 @@ export function detectProfiles(sketch: ResolvedSketch): ProfileDetectionResult {
   let sourceKey: ReturnType<typeof clusterPointKeys> | undefined;
   if (
     (authoredLines.length && (authoredCircles.length || arcs.length)) ||
-    authoredCircles.length > 1
+    authoredCircles.length + arcs.length > 1
   ) {
     const initialKey = clusterPointKeys([
       ...authoredLines,

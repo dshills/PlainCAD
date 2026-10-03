@@ -36,8 +36,8 @@ function addCut(cuts: Cut[], cut: Cut) {
   if (existing) existing.anchors.push(...cut.anchors);
   else cuts.push({ ...cut, anchors: [...cut.anchors] });
 }
-/** Analytic line/curve and circle/circle contacts. No durable entity is
- * split or rewritten. Arc/curve intersections and ambiguities stay diagnostic. */
+/** Analytic line/curve, circle/circle and circle/arc contacts. No durable entity
+ * is rewritten. Arc/arc intersections and ambiguous boundaries stay diagnostic. */
 export function fragmentCurvedProfiles(
   sourceLines: ResolvedLine[],
   sourceCircles: ResolvedCircle[],
@@ -60,7 +60,8 @@ export function fragmentCurvedProfiles(
     errors: [message],
   });
   if (!(sourceCircles.length + sourceArcs.length)) return result;
-  if (!sourceLines.length && sourceCircles.length < 2) return result;
+  if (!sourceLines.length && sourceCircles.length + sourceArcs.length < 2)
+    return result;
   if (
     sourceLines.length + sourceCircles.length + sourceArcs.length >
     MAX_PROFILE_SOURCE_CURVES
@@ -101,55 +102,76 @@ export function fragmentCurvedProfiles(
   let contacts = 0,
     changed = false;
   // Order by durable IDs, so the signed roots and their anchors survive array edits.
-  const circles = [...sourceCircles].sort((a, b) =>
+  const orderedCurves = [...curves].sort((a, b) =>
     a.id < b.id ? -1 : a.id > b.id ? 1 : 0,
   );
-  for (let i = 0; i < circles.length; i++)
-    for (let j = i + 1; j < circles.length; j++) {
-      const a = circles[i],
-        b = circles[j],
+  for (let i = 0; i < orderedCurves.length; i++)
+    for (let j = i + 1; j < orderedCurves.length; j++) {
+      const a = orderedCurves[i],
+        b = orderedCurves[j],
         d = distance(a.center, b.center);
+      if (isArc(a) && isArc(b)) continue;
       const sum = a.radius + b.radius,
         difference = Math.abs(a.radius - b.radius);
       if (d <= EPS && difference <= EPS)
         return fail(
-          `Circles "${a.id}" and "${b.id}" overlap within sketch tolerance. Remove the duplicate boundary before modeling.`,
+          `Curves "${a.id}" and "${b.id}" overlap within sketch tolerance. Remove the duplicate boundary before modeling.`,
         );
       if (d > sum + EPS || d < difference - EPS) continue;
-      if (Math.abs(d - sum) <= EPS || Math.abs(d - difference) <= EPS)
+      if (d <= EPS)
         return fail(
-          `Circles "${a.id}" and "${b.id}" touch tangentially or ambiguously. Separate the boundaries before modeling.`,
+          `Curves "${a.id}" and "${b.id}" have ambiguous near-concentric boundaries within sketch tolerance.`,
         );
       const along = ((a.radius - b.radius) * sum + d * d) / (2 * d);
+      if (Math.abs(d - sum) <= EPS || Math.abs(d - difference) <= EPS) {
+        const tangent = {
+          x: a.center.x + (along * (b.center.x - a.center.x)) / d,
+          y: a.center.y + (along * (b.center.y - a.center.y)) / d,
+        };
+        if (
+          (isArc(a) && !onArc(tangent, a)) ||
+          (isArc(b) && !onArc(tangent, b))
+        )
+          continue;
+        return fail(
+          `Curves "${a.id}" and "${b.id}" touch tangentially or ambiguously. Separate the boundaries before modeling.`,
+        );
+      }
       // Factored intersection height avoids subtracting almost equal squared radii.
       const h =
         Math.sqrt((sum + d) * (sum - d) * (d + difference) * (d - difference)) /
         (2 * d);
       if (!Number.isFinite(h) || h <= EPS)
         return fail(
-          `Circles "${a.id}" and "${b.id}" have an ambiguous intersection within sketch tolerance.`,
+          `Curves "${a.id}" and "${b.id}" have an ambiguous intersection within sketch tolerance.`,
         );
       const ux = (b.center.x - a.center.x) / d,
         uy = (b.center.y - a.center.y) / d;
       for (const branch of [-1, 1]) {
-        const anchor = `circle-circle-contact:${JSON.stringify([a.id, b.id, branch])}`;
-        const point = {
+        const anchor = `${isArc(a) || isArc(b) ? "circle-arc-contact" : "circle-circle-contact"}:${JSON.stringify([a.id, b.id, branch])}`;
+        let point: ResolvedPoint = {
           id: anchor,
           x: a.center.x + along * ux - branch * h * uy,
           y: a.center.y + along * uy + branch * h * ux,
         };
+        if ((isArc(a) && !onArc(point, a)) || (isArc(b) && !onArc(point, b)))
+          continue;
+        point =
+          (isArc(a) && arcEndpoint(point, a)) ||
+          (isArc(b) && arcEndpoint(point, b)) ||
+          point;
         for (const c of [a, b])
           addCut(circleCuts.get(c.id)!, {
-            t: angle(point, c),
+            t: isArc(c) ? arcParameter(point, c) : angle(point, c),
             point,
             anchors: [anchor],
           });
+        changed = true;
         if (++contacts > MAX_PROFILE_FRAGMENTS)
           return fail(
             `Curved fragmentation exceeds the ${MAX_PROFILE_FRAGMENTS} contact limit.`,
           );
       }
-      changed = true;
     }
   for (const circle of curves)
     for (const line of sourceLines) {
@@ -491,19 +513,18 @@ function closedCurveOwners(
   }
   return owners;
 }
-/** Curved-boundary intersections remain unsupported; shared authored arc
- * endpoints are allowed so ordinary rounded closed profiles retain their meaning. */
+/** Arc/arc fragmentation remains unsupported; shared authored arc endpoints
+ * are allowed so ordinary rounded closed profiles retain their meaning. */
 function unsupportedCurveContact(curves: ResolvedCircle[]): string | undefined {
   const fail = (a: ResolvedCircle, b: ResolvedCircle) =>
-    `Curved boundaries "${a.id}" and "${b.id}" intersect or overlap. Arc/arc and circle/arc intersection fragmentation is unsupported; separate the boundaries.`;
+    `Curved boundaries "${a.id}" and "${b.id}" intersect or overlap. Arc/arc intersection fragmentation is unsupported; separate the boundaries.`;
   for (let i = 0; i < curves.length; i++)
     for (let j = i + 1; j < curves.length; j++) {
       const a = curves[i],
         b = curves[j];
-      if (!isArc(a) && !isArc(b)) continue;
+      if (!isArc(a) || !isArc(b)) continue;
       const d = distance(a.center, b.center);
       if (d <= EPS && Math.abs(a.radius - b.radius) <= EPS) {
-        if (!isArc(a) || !isArc(b)) return fail(a, b);
         const angles = [
           0,
           turn,

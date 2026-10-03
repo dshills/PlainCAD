@@ -200,7 +200,9 @@ rebuild until their expressions are repaired; reused names cannot retarget them.
    edits retain region IDs while topology is unchanged; removing a divider requires
    explicit feature-profile repair. Crossing circles produce crescent and lens
    regions with analytic boundaries; tangencies and duplicate circles remain
-   diagnostic. Arc/arc and circle/arc intersection fragmentation remains unsupported.
+   diagnostic. Circle/arc crossings also form selectable analytic regions; contacts
+   outside the authored arc sweep are ignored. Partial arc dividers may end on a
+   circle boundary. Arc/arc intersection fragmentation remains unsupported.
 3. Add constraints and driving dimensions in Sketch tools; dimension expressions
    can reference parameters. Coordinate expressions supply initial geometry;
    fixed constraints lock coordinates when that is the intended design intent.
