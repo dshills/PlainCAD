@@ -117,8 +117,12 @@ test("repair lost sketch/profile/body references, validated timeline moves, undo
   await expect(
     page.getByRole("combobox", { name: "Profile", exact: true }),
   ).toHaveValue("lost-profile");
-  await expect(page.getByLabel("Target body")).toHaveValue("body:missing");
-  await page.getByLabel("Target body").selectOption(`body:${fixture.ownerId}`);
+  await expect(
+    page.getByRole("combobox", { name: "Target body", exact: true }),
+  ).toHaveValue("body:missing");
+  await page
+    .getByRole("combobox", { name: "Target body", exact: true })
+    .selectOption(`body:${fixture.ownerId}`);
   await expect.poll(async () => (await snapshot(page)).status).toBe("failed");
   await expect(
     page.getByRole("combobox", { name: "Profile", exact: true }),

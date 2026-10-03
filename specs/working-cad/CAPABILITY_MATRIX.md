@@ -146,12 +146,20 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
 - Timeline moves validate structural dependencies and preserve same-body modifier
   order; arbitrary modifier reordering and kernel preview before committing a move
   remain unavailable. Rebuild failures remain diagnostic and undoable. Durable
-  multi-body join/hole scopes, initial intersection-based scope capture and richer
-  dependency-chain visualization need work. Extrude/revolve cuts persist explicit
+  multi-body join/hole scopes and initial intersection-based scope capture need work.
+  Extrude/revolve cuts persist explicit
   selected target sets, never add new bodies silently, retain all upstream previews
   on boolean/tessellation/resource failures, and expose lost-ID removal for repair.
   Native Chromium checks cover per-body BRep volumes, a late disjoint-target failure,
   reference repair, parameter edits, undo/redo, save/open and STL output.
+- Dependency inspection now exposes direct/transitive input and affected-output
+  paths for parameters, sketches/entities, features and bodies. Stable-ID navigation
+  is read-only; missing entries remain visible, suppressed/downstream owners are
+  labelled, and body modifier chains follow the displayed timeline. Traversals are
+  iterative with visited sets and diagnose cycles returning to the selection; lists
+  paginate at 50 entries. Unit and Chromium checks cover rename propagation,
+  lost bindings, cyclic intent and unchanged native geometry during navigation.
+  This is authored structural inspection; geometry validity remains a rebuild check.
 - General post-boolean face/edge naming remains missing. Planes require an
   unmodified positive-distance new-body owner;
   curved side faces, hole/revolve faces, and ambiguous rebinding are unsupported.

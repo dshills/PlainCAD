@@ -267,6 +267,17 @@ expressions before creating a feature. Its Inspector edits diameter, blind-depth
 through-all termination, centers, source sketch and target body. Holes cut along
 the sketch's positive normal. Empty/lost centers and unchanged cuts fail rebuild.
 
+The **Dependencies** panel traces the selected parameter, sketch/entity, feature or
+body. **Inputs** and **Affected outputs** show direct and transitive authored
+references with shortest-path distances. Each entry describes one link along that
+path; click an existing item to inspect it.
+Body selection traces its latest unsuppressed writer. Target chains include
+preceding modifiers, and suppressed/downstream owners have explicit labels.
+Missing references remain visible with disabled navigation. Cycles returning to
+the selection are diagnosed without recursive traversal. Lists show 50 items at a
+time; **Show more** expands them. This is structural inspection; the Rebuild panel
+reports whether the geometry and references are valid.
+
 See `specs/working-cad/CAPABILITY_MATRIX.md` for current capability limits. Schema
 support alone does not imply a working modeling operation.
 

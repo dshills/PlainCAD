@@ -9,6 +9,7 @@ import { CadViewer } from "../viewer/CadViewer";
 import { CommandContext, isCommandEnabledForSnapshot, runCommand, selectCommandEnablement } from "../ui/commands/commandRegistry";
 import { CommandPalette } from "../ui/commands/CommandPalette";
 import { ParameterPanel } from "../ui/panels/ParameterPanel";
+import { DependencyPanel } from "../ui/panels/DependencyPanel";
 import { FeatureTimeline } from "../ui/panels/FeatureTimeline";
 import { SketchPanel } from "../ui/panels/SketchPanel";
 import { InspectorPanel } from "../ui/panels/InspectorPanel";
@@ -185,6 +186,7 @@ export function App() {
         <aside className="right-panel">
           <ParameterPanel />
           <InspectorPanel />
+          <DependencyPanel />
           <MeasurementPanel />
           <ViewPanel />
           <RebuildErrorsPanel />

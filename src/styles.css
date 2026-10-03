@@ -690,3 +690,7 @@ dialog.file-dialog::backdrop { background: #0006; }
 .unit-defaults select { display: block; width: 100%; margin-top: 0.25rem; }
 .parameter-group { margin: 0; padding: 0; border: 0; min-width: 0; }
 .parameter-group legend { font-weight: 600; padding: 0.3rem 0; }
+
+.dependency-list { padding-left: 18px; }
+.dependency-list li { margin: 8px 0; }
+.dependency-list li span { display: block; font-size: 0.8rem; overflow-wrap: anywhere; }
