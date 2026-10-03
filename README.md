@@ -10,6 +10,8 @@ The MVP is intentionally narrow: make parameters, sketches, rebuilds, inspection
 - Named parameters with units and expressions.
 - XY/XZ/YZ sketches with points, lines, arcs, circles, construction geometry, and driving dimensions.
 - Closed line/arc/circle profiles with holes and stable entity-based identities.
+- Bounded straight-line region partitioning at T-junctions and divider crossings;
+  source entities remain intact and topology changes require explicit profile repair.
 - Extrude features for simple solid generation.
 - Mounting plate and parametric box templates.
 - 3D viewer with orbit, pan, zoom, fit, reset, selection, and inspection.

@@ -163,7 +163,14 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
   are rejected instead of merging IDs. Coordinated constrained dragging remains
   unavailable. Native XY/XZ/YZ
   checks verify changed BRep volume/bounds, cancellation, save/open and STL.
-  Intersecting boundaries are diagnosed; intersection fragmentation remains missing.
+  Straight-line T-junctions and crossing dividers are fragmented before bounded
+  planar face extraction. Runtime segments retain source lineage; stable split
+  anchors preserve profile IDs through ordinary size, ordering and winding edits.
+  Topology changes require explicit profile repair. Source entities/constraints are
+  never rewritten. Open/dangling, overlapping, touching-ambiguous and authored
+  self-crossing loops fail diagnostically; 750 source lines and 2048 fragments bound
+  the work. Arc/circle intersection fragmentation remains unavailable. Individual
+  authored edge treatments on split lines remain diagnostic rather than rebinding.
   Arcs retain analytic kernel boundaries;
   profile classification and fallback meshes sample their sweeps. Face selection
   uses explicit feature-owned roles in Sketch tools, not arbitrary viewer picks.

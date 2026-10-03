@@ -77,6 +77,165 @@ function stlVolume(bytes: Buffer) {
   return sum;
 }
 for (const plane of ["XY", "XZ", "YZ"] as const) {
+  test(`${plane}: fragmented line regions retain references through edits, native save/open and STL`, async ({
+    page,
+  }, info) => {
+    const errors: string[] = [];
+    page.on("pageerror", (e) => errors.push(e.message));
+    await page.goto("/");
+    await ready(page);
+    await page
+      .getByRole("button", { name: "Add Parameter", exact: true })
+      .click();
+    await page
+      .getByLabel("Parameter param_1 name", { exact: true })
+      .fill("partitionX");
+    await page
+      .getByLabel("Parameter param_1 name", { exact: true })
+      .press("Enter");
+    await page
+      .getByLabel("Parameter partitionX expression", { exact: true })
+      .fill("10mm");
+    await page
+      .getByLabel("Parameter partitionX expression", { exact: true })
+      .press("Enter");
+    await page
+      .getByRole("button", { name: `Create ${plane} sketch`, exact: true })
+      .click();
+    await openCanvas(page);
+    await page
+      .getByLabel("Canvas tool", { exact: true })
+      .selectOption("rectangle");
+    await clickLocal(page, 0, 0);
+    await clickLocal(page, 40, 30);
+    await page.getByLabel("Canvas tool", { exact: true }).selectOption("line");
+    await clickLocal(page, 10, 0);
+    await clickLocal(page, 10, 30);
+    await page
+      .getByRole("button", { name: "Cancel drawing", exact: true })
+      .click();
+    await clickLocal(page, 0, 12);
+    await clickLocal(page, 40, 12);
+    await done(page);
+    // Bind the authored divider endpoint expressions, keeping all IDs intact.
+    await page.evaluate(async () => {
+      const path = "/src/state/useCadStore.ts",
+        { useCadStore } = await import(path);
+      useCadStore.getState().updateDocument((d: CadDocument) => {
+        const sketch = Object.values(d.sketches)[0];
+        const entities = Object.fromEntries(
+          Object.entries(sketch.entities).map(([id, e]) => [
+            id,
+            e.type === "point" && Number.parseFloat(e.x.expression) === 10
+              ? { ...e, x: { expression: "partitionX", unit: "mm" } }
+              : e,
+          ]),
+        );
+        return {
+          ...d,
+          sketches: { ...d.sketches, [sketch.id]: { ...sketch, entities } },
+        };
+      });
+    });
+    await ready(page);
+    const drawn = await snapshot(page),
+      sketch = Object.values(drawn.document.sketches)[0],
+      profiles = drawn.result!.profiles![sketch.id];
+    expect(profiles).toHaveLength(4);
+    const selected = profiles.find(
+      (p) =>
+        p.bounds.minX === 0 && p.bounds.maxX === 10 && p.bounds.maxY === 12,
+    )!;
+    await page
+      .getByRole("button", { name: "Extrude selected sketch", exact: true })
+      .click();
+    await ready(page);
+    await page
+      .locator(".feature-chip")
+      .filter({ hasText: "Extrude 1" })
+      .click();
+    await page
+      .getByRole("combobox", { name: "Profile", exact: true })
+      .selectOption(selected.id);
+    await ready(page, 1200);
+    await page
+      .getByLabel("Parameter partitionX expression", { exact: true })
+      .fill("20mm");
+    await page
+      .getByLabel("Parameter partitionX expression", { exact: true })
+      .press("Enter");
+    await ready(page, 2400);
+    const edited = await snapshot(page);
+    expect(edited.document.features[0]).toMatchObject({
+      profileId: selected.id,
+    });
+    expect(edited.result!.profiles![sketch.id].map((p) => p.id)).toEqual(
+      profiles.map((p) => p.id),
+    );
+    const mesh = edited.result!.meshes[0];
+    expect(mesh.bounds.max[plane === "YZ" ? 1 : 0]).toBeCloseTo(20, 5);
+    expect(mesh.bounds.max[plane === "XY" ? 1 : 2]).toBeCloseTo(12, 5);
+    const saving = page.waitForEvent("download");
+    await page
+      .getByRole("button", { name: "Save project", exact: true })
+      .click();
+    const project = info.outputPath("fragmented.pcaddoc");
+    await (await saving).saveAs(project);
+    await page.reload();
+    await ready(page);
+    await page.locator('input[type="file"]').setInputFiles(project);
+    await ready(page, 2400);
+    expect((await snapshot(page)).document.sketches).toEqual(
+      edited.document.sketches,
+    );
+    const exporting = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Export STL", exact: true }).click();
+    const stl = info.outputPath("fragmented.stl");
+    await (await exporting).saveAs(stl);
+    expect(stlVolume(await readFile(stl))).toBeCloseTo(2400, 3);
+    // Removing a divider alters topology and must require explicit profile repair.
+    await page.evaluate(async () => {
+      const path = "/src/state/useCadStore.ts",
+        { useCadStore } = await import(path);
+      useCadStore.getState().updateDocument((d: CadDocument) => {
+        const sketch = Object.values(d.sketches)[0];
+        const entities = Object.fromEntries(
+          Object.entries(sketch.entities).filter(([, e]) => {
+            if (e.type !== "line") return true;
+            const p = sketch.entities[e.startPointId];
+            return (
+              p.type !== "point" || Number.parseFloat(p.y.expression) !== 12
+            );
+          }),
+        );
+        return {
+          ...d,
+          sketches: { ...d.sketches, [sketch.id]: { ...sketch, entities } },
+        };
+      });
+    });
+    await expect.poll(async () => (await snapshot(page)).status).toBe("failed");
+    expect(
+      (await snapshot(page)).result!.errors.map((e) => e.message).join(" "),
+    ).toMatch(/profile.*(lost|not found)/i);
+    await expect(
+      page.getByRole("button", { name: "Export STL", exact: true }),
+    ).toBeDisabled();
+    await page
+      .locator(".feature-chip")
+      .filter({ hasText: "Extrude 1" })
+      .click();
+    const repair = (await snapshot(page)).result!.profiles![sketch.id].find(
+      (p) => p.bounds.minX === 0,
+    )!;
+    await page
+      .getByRole("combobox", { name: "Profile", exact: true })
+      .selectOption(repair.id);
+    await ready(page, 6000);
+    expect(errors).toEqual([]);
+  });
+}
+for (const plane of ["XY", "XZ", "YZ"] as const) {
   test(`${plane}: pointer-drawn non-template profile, native extrusion/cut, edit, save/open and STL`, async ({
     page,
   }, info) => {
