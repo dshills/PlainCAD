@@ -195,11 +195,18 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
   authored sweep, including partial arc dividers ending on circular boundaries.
   Native XY/XZ/YZ checks verify exact lens BRep volumes, coordinate orientation,
   parameter edits, reversed source winding, save/open/STL and lost-profile repair.
-  Arc/arc intersection fragmentation remains unsupported.
+  Arc/arc contacts now use the same bounded analytic path. Arc-only disk and
+  partial-divider regions preserve source lineage and IDs through scale, rotation,
+  order and winding edits. Native XY/XZ/YZ tests verify exact lens volumes,
+  coordinate orientation, parameter edits, save/open/STL and topology-change repair.
+  Shared endpoint joins retain legacy IDs; coincident sweeps, interior tangencies,
+  dangling networks and proper self-crossings of authored closed components fail
+  diagnostically.
   Curved traversal is bounded to 750 source curves, 2048 fragments/contacts and
   8192 sampled graph segments; sampling classifies faces, while native modeling
   uses analytic fragments. Individual
-  authored edge treatments on split lines remain diagnostic rather than rebinding.
+  authored edge treatments on split lines or arcs remain diagnostic rather than
+  rebinding; full cap-perimeter selections remain available.
   Arcs retain analytic kernel boundaries;
   profile classification and fallback meshes sample their sweeps. Face selection
   uses explicit feature-owned roles in Sketch tools, not arbitrary viewer picks.

@@ -202,7 +202,10 @@ rebuild until their expressions are repaired; reused names cannot retarget them.
    regions with analytic boundaries; tangencies and duplicate circles remain
    diagnostic. Circle/arc crossings also form selectable analytic regions; contacts
    outside the authored arc sweep are ignored. Partial arc dividers may end on a
-   circle boundary. Arc/arc intersection fragmentation remains unsupported.
+   circle boundary. Arc/arc crossings also create selectable regions in closed
+   networks, including arc-only loops. Coincident sweeps, interior tangencies and
+   authored self-crossings require sketch repair; ordinary shared endpoints retain
+   their legacy profile IDs.
 3. Add constraints and driving dimensions in Sketch tools; dimension expressions
    can reference parameters. Coordinate expressions supply initial geometry;
    fixed constraints lock coordinates when that is the intended design intent.

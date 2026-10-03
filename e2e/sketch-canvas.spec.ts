@@ -2107,3 +2107,212 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     expect(errors).toEqual([]);
   });
 }
+
+for (const plane of ["XY", "XZ", "YZ"] as const) {
+  test(`${plane}: arc-only disk crossings retain exact native regions through edits and persistence`, async ({
+    page,
+  }, info) => {
+    const errors: string[] = [];
+    page.on("pageerror", (e) => errors.push(e.message));
+    await page.goto("/");
+    await ready(page);
+    await page
+      .getByRole("button", { name: "Add Parameter", exact: true })
+      .click();
+    await page
+      .getByLabel("Parameter param_1 name", { exact: true })
+      .fill("radius");
+    await page
+      .getByLabel("Parameter param_1 name", { exact: true })
+      .press("Enter");
+    await page
+      .getByLabel("Parameter radius expression", { exact: true })
+      .fill("10mm");
+    await page
+      .getByLabel("Parameter radius expression", { exact: true })
+      .press("Enter");
+    await page
+      .getByRole("button", { name: `Create ${plane} sketch`, exact: true })
+      .click();
+    await openCanvas(page);
+    await page.getByLabel("Canvas tool", { exact: true }).selectOption("arc");
+    for (const [center, start, end] of [
+      [0, 10, -10],
+      [0, -10, 10],
+      [10, 20, 0],
+      [10, 0, 20],
+    ]) {
+      await clickLocal(page, center, 0);
+      await clickLocal(page, start, 0);
+      await clickLocal(page, end, 0);
+    }
+    await done(page);
+    // Author stable parameter bindings without replacing the pointer-drawn entities.
+    await page.evaluate(async (plane) => {
+      const path = "/src/state/useCadStore.ts",
+        { useCadStore } = await import(path);
+      useCadStore.getState().updateDocument((d: CadDocument) => {
+        const s = Object.values(d.sketches)[0];
+        const entities = Object.fromEntries(
+          Object.entries(s.entities).map(([id, e]) => [
+            id,
+            e.type === "arc" && plane === "XZ"
+              ? {
+                  ...e,
+                  startPointId: e.endPointId,
+                  endPointId: e.startPointId,
+                  clockwise: !e.clockwise,
+                }
+              : e.type === "point" && Number.parseFloat(e.x.expression) !== 0
+                ? {
+                    ...e,
+                    x: {
+                      ...e.x,
+                      expression: `${Number.parseFloat(e.x.expression) / 10}*radius`,
+                    },
+                  }
+                : e,
+          ]),
+        );
+        return {
+          ...d,
+          sketches: { ...d.sketches, [s.id]: { ...s, entities } },
+        };
+      });
+    }, plane);
+    await ready(page);
+    const drawn = await snapshot(page),
+      sketch = Object.values(drawn.document.sketches)[0];
+    const profiles = drawn.result!.profiles![sketch.id];
+    expect(profiles).toHaveLength(3);
+    const lens = profiles.find(
+      (p) =>
+        Math.abs(p.bounds.minX) < 1e-8 && Math.abs(p.bounds.maxX - 10) < 1e-8,
+    )!;
+    // Four authored semicircles remain four analytic boundary fragments.
+    expect(lens.outerLoop.segments).toHaveLength(4);
+    expect(lens.outerLoop.segments!.every((s) => s.type === "arc")).toBe(true);
+    await page
+      .getByRole("button", { name: "Extrude selected sketch", exact: true })
+      .click();
+    await ready(page);
+    await page
+      .locator(".feature-chip")
+      .filter({ hasText: "Extrude 1" })
+      .click();
+    await page
+      .getByRole("combobox", { name: "Profile", exact: true })
+      .selectOption(lens.id);
+    const volume = (r: number) =>
+      10 * r * r * ((2 * Math.PI) / 3 - Math.sqrt(3) / 2);
+    await ready(page, volume(10));
+    await page
+      .getByLabel("Parameter radius expression", { exact: true })
+      .fill("12mm");
+    await page
+      .getByLabel("Parameter radius expression", { exact: true })
+      .press("Enter");
+    await ready(page, volume(12));
+    const edited = await snapshot(page);
+    expect(edited.result!.profiles![sketch.id].map((p) => p.id)).toEqual(
+      profiles.map((p) => p.id),
+    );
+    expect(Object.keys(edited.document.sketches[sketch.id].entities)).toEqual(
+      Object.keys(sketch.entities),
+    );
+    const h = 6 * Math.sqrt(3),
+      mesh = edited.result!.meshes[0];
+    const bounds =
+      plane === "XY"
+        ? [
+            [0, -h, 0],
+            [12, h, 10],
+          ]
+        : plane === "XZ"
+          ? [
+              [0, -10, -h],
+              [12, 0, h],
+            ]
+          : [
+              [0, 0, -h],
+              [10, 12, h],
+            ];
+    expect(
+      edited.result!.profiles![sketch.id].find((p) => p.id === lens.id)!.bounds,
+    ).toEqual(
+      expect.objectContaining({
+        minX: expect.closeTo(0, 8),
+        maxX: expect.closeTo(12, 8),
+        minY: expect.closeTo(-h, 8),
+        maxY: expect.closeTo(h, 8),
+      }),
+    );
+    // Mesh extrema may lie inside the true curved boundary; orientation remains exact.
+    for (const [i, side] of ["min", "max"].entries())
+      mesh.bounds[side as "min" | "max"].forEach((v, axis) => {
+        expect(Math.abs(v - bounds[i][axis])).toBeLessThan(0.1);
+        if (
+          (plane === "XY" && axis === 2) ||
+          (plane === "XZ" && axis === 1) ||
+          (plane === "YZ" && axis === 0)
+        )
+          expect(v).toBeCloseTo(bounds[i][axis], 5);
+      });
+    const saving = page.waitForEvent("download");
+    await page
+      .getByRole("button", { name: "Save project", exact: true })
+      .click();
+    const project = info.outputPath("arc-only-lens.pcaddoc");
+    await (await saving).saveAs(project);
+    await page.reload();
+    await ready(page);
+    await page.locator('input[type="file"]').setInputFiles(project);
+    await ready(page, volume(12));
+    expect((await snapshot(page)).document.sketches).toEqual(
+      edited.document.sketches,
+    );
+    const exporting = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Export STL", exact: true }).click();
+    const stl = info.outputPath("arc-only-lens.stl");
+    await (await exporting).saveAs(stl);
+    expect(stlVolume(await readFile(stl)) / volume(12)).toBeCloseTo(1, 2);
+    await page.evaluate(async () => {
+      const path = "/src/state/useCadStore.ts",
+        { useCadStore } = await import(path);
+      useCadStore.getState().updateDocument((d: CadDocument) => {
+        const s = Object.values(d.sketches)[0];
+        const entities = Object.fromEntries(
+          Object.entries(s.entities).filter(([, e]) => {
+            if (e.type !== "arc") return true;
+            const center = s.entities[e.centerPointId];
+            return (
+              center.type !== "point" ||
+              Number.parseFloat(center.x.expression) !== 1
+            );
+          }),
+        );
+        return {
+          ...d,
+          sketches: { ...d.sketches, [s.id]: { ...s, entities } },
+        };
+      });
+    });
+    await expect(async () => {
+      const state = await snapshot(page);
+      expect(state.status).toBe("failed");
+      expect(state.result!.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: `feature:${edited.document.features[0].id}:profile`,
+            source: "feature",
+            sourceId: edited.document.features[0].id,
+          }),
+        ]),
+      );
+    }).toPass({ timeout: 20_000 });
+    await expect(
+      page.getByRole("button", { name: "Export STL", exact: true }),
+    ).toBeDisabled();
+    expect(errors).toEqual([]);
+  });
+}

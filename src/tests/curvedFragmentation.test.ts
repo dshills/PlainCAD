@@ -708,7 +708,7 @@ describe("analytic circle/arc contacts", () => {
       ).errors.join(" "),
     ).toContain("near-concentric");
   });
-  it("keeps proper arc/arc crossings explicitly unsupported", () => {
+  it("rejects open arc/arc crossings until a valid closed network is completed", () => {
     const b = {
       ...semicircle(),
       id: "b",
@@ -717,7 +717,209 @@ describe("analytic circle/arc contacts", () => {
       end: { id: "b:end", x: 0, y: 0 },
     };
     expect(detectArcs([], [semicircle(), b]).errors.join(" ")).toContain(
-      "Arc/arc intersection fragmentation is unsupported",
+      "open profile endpoint",
+    );
+  });
+});
+
+function diskArcs(id: string, radius = 10, x = 0, y = 0): ResolvedArc[] {
+  const center = { id: `${id}:center`, x, y },
+    right = { id: `${id}:right`, x: x + radius, y },
+    left = { id: `${id}:left`, x: x - radius, y };
+  return [
+    {
+      id: `${id}:upper`,
+      center,
+      radius,
+      start: right,
+      end: left,
+      startAngle: 0,
+      sweep: Math.PI,
+    },
+    {
+      id: `${id}:lower`,
+      center,
+      radius,
+      start: left,
+      end: right,
+      startAngle: Math.PI,
+      sweep: Math.PI,
+    },
+  ];
+}
+describe("analytic arc/arc contacts", () => {
+  it("partitions two arc-only disks into exact lens and crescent regions", () => {
+    const arcs = [...diskArcs("a"), ...diskArcs("b", 10, 10, 0)],
+      before = structuredClone(arcs);
+    const result = detectArcs([], arcs);
+    expect(result.errors).toEqual([]);
+    expect(result.profiles).toHaveLength(3);
+    const lens = lensArea(10, 10),
+      areas = result.profiles.map(area).sort((a, b) => a - b);
+    const intersection = result.profiles.find(
+      (p) =>
+        Math.abs(p.bounds.minX) < 1e-8 && Math.abs(p.bounds.maxX - 10) < 1e-8,
+    )!;
+    expect(intersection.outerLoop.segments).toHaveLength(4);
+    expect([...intersection.outerLoop.lineageIds!].sort()).toEqual([
+      "a:lower",
+      "a:upper",
+      "b:lower",
+      "b:upper",
+    ]);
+    expect(
+      intersection.outerLoop.segments!.every(
+        (segment, i, all) =>
+          Math.hypot(
+            segment.end.x - all[(i + 1) % all.length].start.x,
+            segment.end.y - all[(i + 1) % all.length].start.y,
+          ) < 1e-8,
+      ),
+    ).toBe(true);
+
+    expect(areas[0]).toBeCloseTo(lens, 8);
+    for (const a of areas.slice(1))
+      expect(a).toBeCloseTo(100 * Math.PI - lens, 8);
+    expect(
+      result.profiles.every((p) =>
+        p.outerLoop.segments!.every((s) => s.type === "arc"),
+      ),
+    ).toBe(true);
+    expect(arcs).toEqual(before);
+  });
+  it("preserves IDs through scaling, rotation, order and authored winding changes", () => {
+    const original = detectArcs(
+      [],
+      [...diskArcs("a"), ...diskArcs("b", 10, 10, 0)],
+    );
+    const arcs = [...diskArcs("a", 20), ...diskArcs("b", 20, 20, 0)]
+      .map((arc) => ({
+        ...arc,
+        center: {
+          ...arc.center,
+          x: -arc.center.y + 100,
+          y: arc.center.x + 200,
+        },
+        start: { ...arc.end, x: -arc.end.y + 100, y: arc.end.x + 200 },
+        end: { ...arc.start, x: -arc.start.y + 100, y: arc.start.x + 200 },
+        startAngle: arc.startAngle + arc.sweep + Math.PI / 2,
+        sweep: -arc.sweep,
+      }))
+      .reverse();
+    const edited = detectArcs([], arcs);
+    expect(edited.errors).toEqual([]);
+    expect(edited.profiles.map((p) => p.id)).toEqual(
+      original.profiles.map((p) => p.id),
+    );
+    for (const p of edited.profiles)
+      expect(area(p)).toBeCloseTo(
+        4 * area(original.profiles.find((x) => x.id === p.id)!),
+        7,
+      );
+  });
+  it("retains unfragmented legacy arc-only disk IDs and allows shared tangent endpoints", () => {
+    const disk = detectArcs([], diskArcs("a"));
+    expect(disk.errors).toEqual([]);
+    expect(disk.profiles).toHaveLength(1);
+    // Pin the legacy ID: saved feature references must survive this new traversal.
+    expect(disk.profiles[0].id).toBe("curved:profile:pe2bnmo");
+    const changed = detectArcs(
+      [],
+      diskArcs("a").map((a) => ({
+        ...a,
+        start: a.end,
+        end: a.start,
+        startAngle: a.startAngle + a.sweep,
+        sweep: -a.sweep,
+      })),
+    );
+    expect(changed.profiles.map((p) => p.id)).toEqual(
+      disk.profiles.map((p) => p.id),
+    );
+    expect(area(disk.profiles[0])).toBeCloseTo(100 * Math.PI, 8);
+    // Two quarter arcs with distinct centers meet smoothly at the origin.
+    const a = {
+      ...diskArcs("a", 10, -10, 0)[0],
+      start: { id: "top", x: -10, y: 10 },
+      end: { id: "join", x: 0, y: 0 },
+      startAngle: Math.PI / 2,
+      sweep: -Math.PI / 2,
+    };
+    const b = {
+      ...diskArcs("b", 10, 10, 0)[0],
+      start: { id: "join", x: 0, y: 0 },
+      end: { id: "bottom", x: 10, y: -10 },
+      startAngle: Math.PI,
+      sweep: Math.PI / 2,
+    };
+    const result = detectArcs(
+      [
+        line("right", 10, -10, 20, -10),
+        line("up", 20, -10, 20, 10),
+        line("top", 20, 10, -10, 10),
+      ],
+      [a, b],
+    );
+    expect(result.errors).toEqual([]);
+    expect(result.profiles).toHaveLength(1);
+  });
+  it("rejects a proper arc crossing in the same authored closed component", () => {
+    const a = diskArcs("a")[0],
+      b = diskArcs("b", 10, 10, 0)[0];
+    const lines = [
+      line("a1", -10, 0, -10, -5),
+      line("a2", -10, -5, 20, -5),
+      line("a3", 20, -5, 20, 0),
+      line("b1", 0, 0, 0, -10),
+      line("b2", 0, -10, 10, -10),
+      line("b3", 10, -10, 10, 0),
+    ];
+    expect(detectArcs(lines, [a, b]).errors.join(" ")).toContain(
+      "self-intersect in an authored closed loop",
+    );
+  });
+  it("filters roots outside sweeps and diagnoses coincident overlaps and interior tangencies", () => {
+    const a = diskArcs("a")[0],
+      b = diskArcs("b", 10, 10, 0)[1];
+    const lines = [line("base", -10, 0, 20, 0)];
+    const result = detectArcs(lines, [a, b]);
+    expect(result.errors).toEqual([]);
+    expect(result.profiles).toHaveLength(2);
+    expect(result.profiles.reduce((sum, p) => sum + area(p), 0)).toBeCloseTo(
+      100 * Math.PI,
+      8,
+    );
+    expect(
+      detectArcs([], [a, { ...a, id: "duplicate" }]).errors.join(" "),
+    ).toContain("overlap");
+    expect(
+      detectArcs(
+        [],
+        [...diskArcs("a"), ...diskArcs("b", 10, 0, 20)],
+      ).errors.join(" "),
+    ).toContain("tangential");
+  });
+});
+
+describe("partial arc/arc dividers", () => {
+  it("partitions an arc-only disk with a finite divider ending on its boundaries", () => {
+    const y = Math.sqrt(75),
+      divider = {
+        ...diskArcs("divider")[0],
+        start: { id: "divider:start", x: 5, y: -y },
+        end: { id: "divider:end", x: 5, y },
+        startAngle: -Math.PI / 3,
+        sweep: (2 * Math.PI) / 3,
+      };
+    const result = detectArcs(
+      [],
+      [...diskArcs("boundary", 10, 10, 0), divider],
+    );
+    expect(result.errors).toEqual([]);
+    expect(result.profiles).toHaveLength(2);
+    expect(result.profiles.reduce((sum, p) => sum + area(p), 0)).toBeCloseTo(
+      100 * Math.PI,
+      8,
     );
   });
 });
