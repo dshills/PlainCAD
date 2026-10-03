@@ -192,12 +192,14 @@ rebuild until their expressions are repaired; reused names cannot retarget them.
    Use the rectangle/circle helpers or Sketch tools to add points, lines, circles,
    and center/start/end arcs. Construction curves appear dashed and are excluded
    from solid profiles.
-   Straight dividers through a circle create selectable curved regions. End a
-   divider on the circle boundary or connect it into a closed line network; open
-   tails and tangent contacts report diagnostics. Circle fragments keep analytic
-   kernel arcs and authored entity IDs. Radius edits retain region IDs while the
-   topology is unchanged; removing a divider requires explicit feature-profile
-   repair. Circle/circle intersections and arc dividers remain unsupported.
+   Straight dividers through circles and mixed arc/line profiles create selectable
+   curved regions. End a divider on a boundary or connect it into a closed line
+   network. Open tails, interior tangent contacts and authored self-intersections
+   report diagnostics; ordinary shared arc-endpoint joins remain supported.
+   Fragments keep analytic kernel arcs and authored entity IDs. Radius and winding
+   edits retain region IDs while topology is unchanged; removing a divider requires
+   explicit feature-profile repair. Circle/circle, arc/arc and circle/arc intersection
+   fragmentation remains unsupported.
 3. Add constraints and driving dimensions in Sketch tools; dimension expressions
    can reference parameters. Coordinate expressions supply initial geometry;
    fixed constraints lock coordinates when that is the intended design intent.

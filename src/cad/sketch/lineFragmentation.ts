@@ -24,6 +24,7 @@ const cross = (ax: number, ay: number, bx: number, by: number) =>
 export function fragmentProfileLines(
   lines: ResolvedLine[],
   key: PointKey,
+  closedOwners?: Map<string, string>,
 ): LineFragmentation {
   const lineage = new Map(lines.map((l) => [l.id, l.id]));
   const fail = (message: string): LineFragmentation => ({
@@ -53,7 +54,7 @@ export function fragmentProfileLines(
   );
   // Reject self-crossings of authored closed components rather than interpreting
   // a bow-tie as two new regions. Branches are checked by face traversal below.
-  const closedComponent = new Map<number, number>();
+  const closedComponent = new Map<number, number | string>();
   const unseen = new Set(lines.map((_, i) => i));
   while (unseen.size) {
     const pending = [unseen.values().next().value!],
@@ -71,6 +72,10 @@ export function fragmentProfileLines(
       }
     }
     if (closed) for (const i of component) closedComponent.set(i, component[0]);
+  }
+  for (const [i, line] of lines.entries()) {
+    const owner = closedOwners?.get(line.id);
+    if (owner !== undefined) closedComponent.set(i, owner);
   }
   let additions = 0;
   const addCut = (

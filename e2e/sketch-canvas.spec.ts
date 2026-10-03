@@ -1400,3 +1400,296 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     expect(errors).toEqual([]);
   });
 }
+
+for (const plane of ["XY", "XZ", "YZ"] as const) {
+  test(`${plane}: analytic arc dividers retain exact native sectors through edits and persistence`, async ({
+    page,
+  }, info) => {
+    const errors: string[] = [];
+    page.on("pageerror", (e) => errors.push(e.message));
+    await page.goto("/");
+    await ready(page);
+    await page
+      .getByRole("button", { name: "Add Parameter", exact: true })
+      .click();
+    await page
+      .getByLabel("Parameter param_1 name", { exact: true })
+      .fill("radius");
+    await page
+      .getByLabel("Parameter param_1 name", { exact: true })
+      .press("Enter");
+    await page
+      .getByLabel("Parameter radius expression", { exact: true })
+      .fill("10mm");
+    await page
+      .getByLabel("Parameter radius expression", { exact: true })
+      .press("Enter");
+    await page
+      .getByRole("button", { name: `Create ${plane} sketch`, exact: true })
+      .click();
+    await openCanvas(page);
+    await page.getByLabel("Canvas tool", { exact: true }).selectOption("arc");
+    await clickLocal(page, 0, 0);
+    await clickLocal(page, 10, 0);
+    await clickLocal(page, -10, 0);
+    await page
+      .getByLabel("Canvas dimension type", { exact: true })
+      .selectOption("radius");
+    const arcDocument = (await snapshot(page)).document;
+    const arcId = Object.values(
+      Object.values(arcDocument.sketches)[0].entities,
+    ).find((entity) => entity.type === "arc")!.id;
+    await page
+      .getByLabel("Canvas dimension reference 1", { exact: true })
+      .selectOption(arcId);
+    await page
+      .getByLabel("Canvas dimension expression", { exact: true })
+      .fill("radius");
+    await page
+      .getByRole("button", { name: "Apply driving dimension", exact: true })
+      .click();
+    await page.getByLabel("Canvas tool", { exact: true }).selectOption("line");
+    await clickLocal(page, -10, 0);
+    await clickLocal(page, 10, 0);
+    await page
+      .getByRole("button", { name: "Cancel drawing", exact: true })
+      .click();
+    await clickLocal(page, 0, 0);
+    await clickLocal(page, 0, 10);
+    await done(page);
+    await page.evaluate(async () => {
+      const path = "/src/state/useCadStore.ts",
+        { useCadStore } = await import(path);
+      useCadStore.getState().updateDocument((d: CadDocument) => {
+        const sketch = Object.values(d.sketches)[0];
+        const entities = Object.fromEntries(
+          Object.entries(sketch.entities).map(([id, e]) => [
+            id,
+            e.type !== "point"
+              ? e
+              : {
+                  ...e,
+                  ...Object.fromEntries(
+                    (["x", "y"] as const).map((axis) => [
+                      axis,
+                      Math.abs(Number.parseFloat(e[axis].expression)) === 10
+                        ? {
+                            ...e[axis],
+                            expression: `${Number.parseFloat(e[axis].expression) < 0 ? "-" : ""}radius`,
+                          }
+                        : e[axis],
+                    ]),
+                  ),
+                },
+          ]),
+        );
+        return {
+          ...d,
+          sketches: { ...d.sketches, [sketch.id]: { ...sketch, entities } },
+        };
+      });
+    });
+    await ready(page);
+    const drawn = await snapshot(page),
+      sketch = Object.values(drawn.document.sketches)[0];
+    const profiles = drawn.result!.profiles![sketch.id];
+    expect(profiles).toHaveLength(2);
+    const selected = profiles.find(
+      (p) => Math.abs(p.bounds.minX) < 1e-8 && Math.abs(p.bounds.minY) < 1e-8,
+    )!;
+    expect(
+      selected.outerLoop.segments!.filter((s) => s.type === "arc"),
+    ).toHaveLength(1);
+    await page
+      .getByRole("button", { name: "Extrude selected sketch", exact: true })
+      .click();
+    await ready(page);
+    await page
+      .locator(".feature-chip")
+      .filter({ hasText: "Extrude 1" })
+      .click();
+    await page
+      .getByRole("combobox", { name: "Profile", exact: true })
+      .selectOption(selected.id);
+    await ready(page, 250 * Math.PI);
+    await page
+      .getByLabel("Parameter radius expression", { exact: true })
+      .fill("12mm");
+    await page
+      .getByLabel("Parameter radius expression", { exact: true })
+      .press("Enter");
+    await ready(page, 360 * Math.PI);
+    if (plane === "XZ") {
+      await page.evaluate(async () => {
+        const path = "/src/state/useCadStore.ts",
+          { useCadStore } = await import(path);
+        useCadStore.getState().updateDocument((d: CadDocument) => {
+          const sketch = Object.values(d.sketches)[0];
+          const entities = Object.fromEntries(
+            Object.entries(sketch.entities).map(([id, e]) => [
+              id,
+              e.type === "arc"
+                ? {
+                    ...e,
+                    startPointId: e.endPointId,
+                    endPointId: e.startPointId,
+                    clockwise: !e.clockwise,
+                  }
+                : e,
+            ]),
+          );
+          return {
+            ...d,
+            sketches: { ...d.sketches, [sketch.id]: { ...sketch, entities } },
+          };
+        });
+      });
+      await ready(page, 360 * Math.PI);
+    }
+    const edited = await snapshot(page);
+    expect(edited.result!.profiles![sketch.id].map((p) => p.id)).toEqual(
+      profiles.map((p) => p.id),
+    );
+    expect(
+      Object.keys(edited.document.sketches[sketch.id].entities).sort(),
+    ).toEqual(Object.keys(sketch.entities).sort());
+    const mesh = edited.result!.meshes[0];
+    const expected =
+      plane === "XY"
+        ? [
+            [0, 0, 0],
+            [12, 12, 10],
+          ]
+        : plane === "XZ"
+          ? [
+              [0, -10, 0],
+              [12, 0, 12],
+            ]
+          : [
+              [0, 0, 0],
+              [10, 12, 12],
+            ];
+    for (const [index, side] of ["min", "max"].entries())
+      mesh.bounds[side as "min" | "max"].forEach((value, axis) =>
+        expect(value).toBeCloseTo(expected[index][axis], 5),
+      );
+    const saving = page.waitForEvent("download");
+    await page
+      .getByRole("button", { name: "Save project", exact: true })
+      .click();
+    const project = info.outputPath("arc-sectors.pcaddoc");
+    await (await saving).saveAs(project);
+    await page.reload();
+    await ready(page);
+    await page.locator('input[type="file"]').setInputFiles(project);
+    await ready(page, 360 * Math.PI);
+    expect((await snapshot(page)).document.sketches).toEqual(
+      edited.document.sketches,
+    );
+    const exporting = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Export STL", exact: true }).click();
+    const stl = info.outputPath("arc-sector.stl");
+    await (await exporting).saveAs(stl);
+    expect(stlVolume(await readFile(stl)) / (360 * Math.PI)).toBeCloseTo(1, 2);
+    // Removing a chord changes region identity; feature repair must be explicit.
+    await page.evaluate(async () => {
+      const path = "/src/state/useCadStore.ts",
+        { useCadStore } = await import(path);
+      useCadStore.getState().updateDocument((d: CadDocument) => {
+        const s = Object.values(d.sketches)[0];
+        const entities = Object.fromEntries(
+          Object.entries(s.entities).filter(([, e]) => {
+            if (e.type !== "line") return true;
+            const start = s.entities[e.startPointId];
+            return (
+              start.type !== "point" ||
+              Number.parseFloat(start.x.expression) !== 0
+            );
+          }),
+        );
+        return {
+          ...d,
+          sketches: { ...d.sketches, [s.id]: { ...s, entities } },
+        };
+      });
+    });
+    await expect(async () => {
+      const state = await snapshot(page);
+      expect(state.status).toBe("failed");
+      expect(state.result!.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: `feature:${edited.document.features[0].id}:profile`,
+            source: "feature",
+            sourceId: edited.document.features[0].id,
+          }),
+        ]),
+      );
+    }).toPass({ timeout: 20_000 });
+    await expect(
+      page.getByRole("button", { name: "Export STL", exact: true }),
+    ).toBeDisabled();
+    expect(errors).toEqual([]);
+  });
+}
+
+test("major arc fragmentation produces the exact larger native circular region", async ({
+  page,
+}, info) => {
+  await page.goto("/");
+  await ready(page);
+  await page
+    .getByRole("button", { name: "Create XY sketch", exact: true })
+    .click();
+  await openCanvas(page);
+  await page.getByLabel("Canvas tool", { exact: true }).selectOption("arc");
+  await clickLocal(page, 0, 0);
+  await clickLocal(page, 10, 0);
+  await clickLocal(page, 0, -10);
+  await page.getByLabel("Canvas tool", { exact: true }).selectOption("line");
+  await clickLocal(page, 0, -10);
+  await clickLocal(page, 10, 0);
+  await page
+    .getByRole("button", { name: "Cancel drawing", exact: true })
+    .click();
+  for (const [x, y] of [
+    [10, 0],
+    [Math.sqrt(50), Math.sqrt(50)],
+  ]) {
+    await page
+      .getByLabel("Canvas coordinate X", { exact: true })
+      .fill(String(x));
+    await page
+      .getByLabel("Canvas coordinate Y", { exact: true })
+      .fill(String(y));
+    await page
+      .getByRole("button", { name: "Place coordinate", exact: true })
+      .click();
+  }
+  await done(page);
+  await ready(page);
+  const state = await snapshot(page),
+    sketch = Object.values(state.document.sketches)[0];
+  const profiles = state.result!.profiles![sketch.id];
+  expect(profiles).toHaveLength(2);
+  const selected = profiles.find((p) =>
+    p.outerLoop.segments!.some(
+      (s) => s.type === "arc" && Math.abs(s.sweep) > Math.PI,
+    ),
+  )!;
+  await page
+    .getByRole("button", { name: "Extrude selected sketch", exact: true })
+    .click();
+  await ready(page);
+  await page.locator(".feature-chip").filter({ hasText: "Extrude 1" }).click();
+  await page
+    .getByRole("combobox", { name: "Profile", exact: true })
+    .selectOption(selected.id);
+  const volume = 10 * (75 * Math.PI + 50 - 50 * (Math.PI / 4 - Math.SQRT1_2));
+  await ready(page, volume);
+  const exporting = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export STL", exact: true }).click();
+  const stl = info.outputPath("major-arc-fragment.stl");
+  await (await exporting).saveAs(stl);
+  expect(stlVolume(await readFile(stl)) / volume).toBeCloseTo(1, 2);
+});

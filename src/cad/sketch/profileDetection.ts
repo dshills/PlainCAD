@@ -5,7 +5,7 @@ import {
   ResolvedSketch,
 } from "./SketchSolver";
 
-import { fragmentCircleProfiles } from "./curvedFragmentation";
+import { fragmentCurvedProfiles } from "./curvedFragmentation";
 import { SKETCH_TOLERANCE } from "./tolerances";
 import { extractLineFaces, fragmentProfileLines } from "./lineFragmentation";
 
@@ -64,16 +64,20 @@ export interface ProfileDetectionResult {
 export function detectProfiles(sketch: ResolvedSketch): ProfileDetectionResult {
   if (sketch.errors.length)
     return { profiles: [], errors: sketch.errors.map((e) => e.message) };
-  const arcs = (sketch.arcs ?? []).filter((a) => !a.construction);
+  let arcs = (sketch.arcs ?? []).filter((a) => !a.construction);
   let arcBySegment = new Map<string, ResolvedArc>();
   let curvedLineage: Map<string, string> | undefined;
   let curved = false;
   const authoredLines = sketch.lines.filter((l) => !l.construction);
   const authoredCircles = sketch.circles.filter((c) => !c.construction);
   let sourceKey: ReturnType<typeof clusterPointKeys> | undefined;
-  if (!arcs.length && authoredLines.length && authoredCircles.length) {
-    const initialKey = clusterPointKeys(authoredLines);
-    sourceKey = initialKey;
+  if (authoredLines.length && (authoredCircles.length || arcs.length)) {
+    const initialKey = clusterPointKeys([
+      ...authoredLines,
+      ...arcs.map((arc) => ({ id: arc.id, start: arc.start, end: arc.end })),
+    ]);
+    // Legacy arc traversal adds sampled points, which need a new cluster map.
+    sourceKey = arcs.length ? undefined : initialKey;
     const errors = validateDirtyGeometry(
       authoredLines,
       [],
@@ -81,9 +85,10 @@ export function detectProfiles(sketch: ResolvedSketch): ProfileDetectionResult {
       true,
     ).concat(validateDirtyGeometry([], authoredCircles, initialKey));
     if (errors.length) return { profiles: [], errors };
-    const result = fragmentCircleProfiles(
+    const result = fragmentCurvedProfiles(
       authoredLines,
       authoredCircles,
+      arcs,
       initialKey,
       sampleArc,
     );
@@ -93,6 +98,7 @@ export function detectProfiles(sketch: ResolvedSketch): ProfileDetectionResult {
       curvedLineage = result.lineage;
       arcBySegment = result.arcs;
       sketch = { ...sketch, lines: result.lines, circles: result.circles };
+      arcs = [];
     }
   }
   const lines = sketch.lines.filter((l) => !l.construction);

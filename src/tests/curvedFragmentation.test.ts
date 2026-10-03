@@ -6,6 +6,7 @@ import {
 import {
   solveSketch,
   type ResolvedCircle,
+  type ResolvedArc,
   type ResolvedLine,
 } from "../cad/sketch/SketchSolver";
 import { createXySketch } from "../cad/sketch/SketchModel";
@@ -220,5 +221,211 @@ describe("bounded analytic circle divider fragmentation", () => {
     expect(detect(lines, circles).errors.join(" ")).toContain(
       "8192 graph-segment limit",
     );
+  });
+});
+
+function semicircle(radius = 10): ResolvedArc {
+  return {
+    ...circle("arc", radius),
+    start: { id: "arc:start", x: radius, y: 0 },
+    end: { id: "arc:end", x: -radius, y: 0 },
+    startAngle: 0,
+    sweep: Math.PI,
+  };
+}
+function detectArcs(
+  lines: ResolvedLine[],
+  arcs = [semicircle()],
+  circles: ResolvedCircle[] = [],
+) {
+  return detectProfiles({
+    ...solveSketch(createXySketch(), {}),
+    id: "curved",
+    lines,
+    circles,
+    arcs,
+  });
+}
+describe("analytic straight dividers in mixed arc profiles", () => {
+  it("splits a semicircle into exact native-ready quarter boundaries with source lineage", () => {
+    const lines = [
+      line("diameter", -10, 0, 10, 0),
+      line("divider", 0, 0, 0, 10),
+    ];
+    const arc = semicircle();
+    const source = structuredClone({ lines, arc });
+    const result = detectArcs(lines, [arc]);
+    expect(result.errors).toEqual([]);
+    expect(result.profiles).toHaveLength(2);
+    for (const p of result.profiles) {
+      expect(area(p)).toBeCloseTo(25 * Math.PI, 8);
+      expect(p.outerLoop.lineageIds).toEqual(["arc", "diameter", "divider"]);
+      expect(
+        p.outerLoop.segments!.filter((s) => s.type === "arc"),
+      ).toHaveLength(1);
+    }
+    expect({ lines, arc }).toEqual(source);
+  });
+  it("preserves IDs through radius changes, source arc winding and line order", () => {
+    const original = detectArcs([
+      line("diameter", -10, 0, 10, 0),
+      line("divider", 0, 0, 0, 10),
+    ]);
+    const arc = semicircle(20);
+    const reversed = {
+      ...arc,
+      start: arc.end,
+      end: arc.start,
+      startAngle: Math.PI,
+      sweep: -Math.PI,
+    };
+    const changed = detectArcs(
+      [line("divider", 0, 0, 0, 20), line("diameter", -20, 0, 20, 0)].map(
+        (l) => ({ ...l, start: l.end, end: l.start }),
+      ),
+      [reversed],
+    );
+    expect(changed.errors).toEqual([]);
+    expect(changed.profiles.map((p) => p.id)).toEqual(
+      original.profiles.map((p) => p.id),
+    );
+    for (const p of changed.profiles)
+      expect(area(p)).toBeCloseTo(100 * Math.PI, 8);
+  });
+  it("normalizes start angles beyond one turn for both source windings", () => {
+    const lines = [
+      line("diameter", -10, 0, 10, 0),
+      line("divider", 0, 0, 0, 10),
+    ];
+    const baseline = detectArcs(lines);
+    for (const turns of [-4, 4]) {
+      for (const clockwise of [false, true]) {
+        const arc = semicircle();
+        const shifted = {
+          ...arc,
+          start: clockwise ? arc.end : arc.start,
+          end: clockwise ? arc.start : arc.end,
+          startAngle: (clockwise ? Math.PI : 0) + turns * Math.PI * 2,
+          sweep: clockwise ? -Math.PI : Math.PI,
+        };
+        const result = detectArcs(lines, [shifted]);
+        expect(result.errors).toEqual([]);
+        expect(result.profiles.map((p) => p.id)).toEqual(
+          baseline.profiles.map((p) => p.id),
+        );
+        for (const p of result.profiles)
+          expect(area(p)).toBeCloseTo(25 * Math.PI, 8);
+      }
+    }
+  });
+  it("preserves unsplit legacy arc profiles and ignores construction dividers", () => {
+    const baseline = detectArcs([line("diameter", -10, 0, 10, 0)]);
+    expect(baseline.errors).toEqual([]);
+    expect(baseline.profiles).toHaveLength(1);
+    expect(baseline.profiles[0].id).toBe("curved:profile:pas35uw");
+    const ignored = detectArcs([
+      line("diameter", -10, 0, 10, 0),
+      { ...line("divider", 0, 0, 0, 10), construction: true },
+    ]);
+    expect(ignored.profiles.map((p) => p.id)).toEqual(
+      baseline.profiles.map((p) => p.id),
+    );
+    expect(area(ignored.profiles[0])).toBeCloseTo(50 * Math.PI, 8);
+  });
+  it("handles divider junctions at authored arc endpoints and permits ordinary tangent endpoint joins", () => {
+    const arc = {
+      ...semicircle(),
+      end: { id: "arc:end", x: 0, y: 10 },
+      sweep: Math.PI / 2,
+    };
+    const lines = [
+      line("top", 0, 10, -10, 10),
+      line("left", -10, 10, -10, 0),
+      line("bottom", -10, 0, 10, 0),
+      line("divider", 0, 0, 0, 10),
+    ];
+    const result = detectArcs(lines, [arc]);
+    expect(result.errors).toEqual([]);
+    expect(result.profiles).toHaveLength(2);
+    const areas = result.profiles.map(area).sort((a, b) => a - b);
+    expect(areas[0]).toBeCloseTo(25 * Math.PI, 8);
+    expect(areas[1]).toBeCloseTo(100, 8);
+  });
+  it("restores major arcs across the angular seam without replacing them by sampled chords", () => {
+    const arc = {
+      ...semicircle(),
+      end: { id: "arc:end", x: 0, y: -10 },
+      sweep: (3 * Math.PI) / 2,
+    };
+    const x = Math.sqrt(50);
+    const result = detectArcs(
+      [line("closing", 0, -10, 10, 0), line("divider", 10, 0, x, x)],
+      [arc],
+    );
+    expect(result.errors).toEqual([]);
+    expect(result.profiles).toHaveLength(2);
+    expect(result.profiles.reduce((sum, p) => sum + area(p), 0)).toBeCloseTo(
+      75 * Math.PI + 50,
+      8,
+    );
+    expect(
+      result.profiles.some((p) =>
+        p.outerLoop.segments!.some(
+          (s) => s.type === "arc" && Math.abs(s.sweep) > Math.PI,
+        ),
+      ),
+    ).toBe(true);
+  });
+  it("recognizes closed mixed-loop ownership during straight-line self-intersection checks", () => {
+    const lines = [
+      line("a", -10, 0, 10, -10),
+      line("b", 10, -10, -10, -10),
+      line("c", -10, -10, 10, 0),
+    ];
+    expect(detectArcs(lines).errors.join(" ")).toContain("self-intersect");
+  });
+  it("diagnoses an authored mixed-loop self-intersection rather than inventing regions", () => {
+    const lines = [
+      line("a", 10, 0, -10, 0),
+      line("b", -10, 0, 0, 12),
+      line("c", 0, 12, 0, -2),
+    ];
+    const arc = {
+      ...semicircle(),
+      end: { id: "end", x: 0, y: -10 },
+      sweep: (3 * Math.PI) / 2,
+    };
+    lines.push(line("d", 0, -2, 0, -10));
+    expect(detectArcs(lines, [arc]).errors.join(" ")).toContain(
+      "self-intersect",
+    );
+  });
+  it("diagnoses curved intersections, overlaps, tangencies and dangling tails", () => {
+    const base = [
+      line("diameter", -10, 0, 10, 0),
+      line("divider", 0, 0, 0, 10),
+    ];
+    expect(
+      detectArcs([...base, line("tangent", -5, 10, 5, 10)]).errors.join(" "),
+    ).toContain("tangential");
+    expect(
+      detectArcs([
+        line("diameter", -10, 0, 10, 0),
+        line("tail", 0, 0, 0, 20),
+      ]).errors.join(" "),
+    ).toContain("open profile endpoint");
+    expect(
+      detectArcs(base, [
+        semicircle(),
+        { ...semicircle(), id: "duplicate" },
+      ]).errors.join(" "),
+    ).toContain("overlap");
+    expect(
+      detectArcs(
+        base,
+        [semicircle()],
+        [circle("intersecting", 5, 0, 10)],
+      ).errors.join(" "),
+    ).toContain("unsupported");
   });
 });
