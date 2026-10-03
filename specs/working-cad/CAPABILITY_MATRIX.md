@@ -107,7 +107,11 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
 ## Durability and fabrication
 
 - Schema 1–11 checked-in fixtures migrate, rebuild, retain IDs, edit dimensions,
-  round-trip project files, and recover through the same import codec.
+  round-trip project files, and recover through the same import codec. Production
+  Chromium imports the entire released corpus under CSP and verifies native BRep
+  volume/solid count, thickness edits, saved feature/entity/parameter IDs, save/open
+  intent and STL signed volume/global bounds. This corpus is a rectangular body
+  with a through-hole; it does not cover every historical feature combination.
 - IndexedDB autosave: 500ms debounce, latest/previous/manual snapshots, five-project
   retention, explicit startup recovery and previous-snapshot fallback. Quota and
   unavailable-storage errors preserve memory and offer manual save/purge.
@@ -257,7 +261,8 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
   under the policy, plus blocked inline scripts, JS eval and remote fetch. Final-host
   header/MIME verification remains a deployment step.
 - Broader browser/kernel acceptance coverage (complex feature chains, imported
-  fixtures, other browsers), broader accessibility audit, and final-host deployment
+  additional imported workloads, other browsers), broader accessibility audit,
+  and final-host deployment
   verification remain open. The bounded Chromium suite runs in the release gate
   and GitHub Actions; CI execution itself has not been verified locally.
 

@@ -246,7 +246,11 @@ of absence of every near-degenerate or adjacent-face intersection.
 
 Imports check raw UTF-8 bytes before parsing, preflight nesting before the reviver,
 then migrate and validate in a cancellable worker. Checked-in schema 1–11 fixtures
-verify IDs, rebuilds, edits, save/open, and recovery. Default limits: 5 MiB JSON,
+verify IDs, rebuilds, edits, save/open, and recovery. The production Chromium suite
+also imports every released fixture under CSP, verifies native BRep volume/solid count,
+edits thickness, saves/reopens with stable IDs, and checks STL volume and global bounds.
+These fixtures cover a rectangular body with a through-hole, not every historical
+modeling workload. Default limits: 5 MiB JSON,
 depth 64, 500 parameters, 100 sketches, 750 entities/512 constraints and dimensions
 per sketch, 10,000 total entities, 20,000 total constraints/dimensions, 1,000 features,
 100 feature dependency steps, 64 bodies, 100,000 triangles/300,000 vertices per body,
