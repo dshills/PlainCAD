@@ -712,7 +712,7 @@ dialog.file-dialog::backdrop { background: #0006; }
 .sketch-canvas-dialog .canvas-toolbar label { display: flex; margin: 0; }
 .sketch-canvas-dialog .canvas-toolbar select { width: auto; margin: 0; }
 
-.canvas-dimensions line { fill: none; }
+.canvas-dimensions line { fill: none; pointer-events: none; }
 .canvas-dimensions text { stroke: none; paint-order: stroke; }
 .canvas-reference-dimension { stroke: #aab7c6; fill: #cbd5e1; pointer-events: none; }
 .canvas-driving-dimension { stroke: #ffc45c; fill: #ffc45c; cursor: pointer; }

@@ -1,3 +1,9 @@
+import {
+  layoutCanvasLabels,
+  MAX_CANVAS_LABELS,
+  type CanvasLabelView,
+  type CanvasLabelBox,
+} from "../../cad/sketch/canvasLabelLayout";
 import { useEffect, useMemo, useState } from "react";
 import {
   canvasConstraintAnnotations,
@@ -11,12 +17,14 @@ import {
 } from "../commands/sketchCanvasCommand";
 
 const PAGE_SIZE = 20;
-const MARKER_LIMIT = 128;
+const MARKER_LIMIT = MAX_CANVAS_LABELS;
 export function useCanvasConstraints(
   active: CanvasSession,
   context: ReturnType<typeof canvasContext> | undefined,
   span: number,
   cancelDrawing: () => void,
+  view: CanvasLabelView,
+  reserved: CanvasLabelBox[],
 ) {
   const [show, setShow] = useState(true),
     [selectedId, setSelectedId] = useState(""),
@@ -52,6 +60,28 @@ export function useCanvasConstraints(
     ),
     annotation = annotations.find((a) => a.id === selectedId);
   const anchored = annotations.filter((a) => a.position);
+  const placements = useMemo(
+    () =>
+      layoutCanvasLabels(
+        show
+          ? annotations
+              .filter((a) => a.position)
+              .slice(0, MARKER_LIMIT)
+              .map((a) => ({
+                id: a.id,
+                label: a.label,
+                position: a.position!,
+                align: "start" as const,
+              }))
+          : [],
+        span / 48,
+        view,
+        reserved,
+        Object.values(context?.solved.points ?? {}),
+      ),
+    [annotations, show, span, view, reserved, context?.solved],
+  );
+  const crowded = [...placements.values()].filter((p) => p.crowded).length;
   const currentPage = Math.min(
     page,
     Math.max(0, Math.ceil(annotations.length / PAGE_SIZE) - 1),
@@ -191,6 +221,12 @@ export function useCanvasConstraints(
           constraints remain available in the list.
         </p>
       ) : null}
+      {show && crowded ? (
+        <p role="status">
+          {crowded} constraint labels remain crowded in this view. Zoom in or
+          hide drawing dimensions.
+        </p>
+      ) : null}
       {selected ? (
         <div aria-label="Selected canvas constraint">
           <p role="status">
@@ -225,42 +261,52 @@ export function useCanvasConstraints(
       fontSize={span / 48}
       strokeWidth={span / 1100}
     >
-      {anchored.slice(0, MARKER_LIMIT).map((a) => (
-        <g
-          key={a.id}
-          data-constraint-id={a.id}
-          data-constraint-state={a.state}
-          className={`canvas-constraint-marker${selectedId === a.id ? " canvas-constraint-selected" : ""}`}
-          role="button"
-          tabIndex={0}
-          aria-label={`Inspect drawing constraint ${a.label}`}
-          onPointerDown={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            select(a.id);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
+      {anchored.slice(0, MARKER_LIMIT).map((a) => {
+        const placed = placements.get(a.id);
+        if (!placed) return null;
+        return (
+          <g
+            key={a.id}
+            data-constraint-id={a.id}
+            data-constraint-state={a.state}
+            data-layout-crowded={placed.crowded}
+            className={`canvas-constraint-marker${selectedId === a.id ? " canvas-constraint-selected" : ""}`}
+            role="button"
+            tabIndex={0}
+            aria-label={`Inspect drawing constraint ${a.label}`}
+            onPointerDown={(e) => {
+              e.stopPropagation();
               e.preventDefault();
               select(a.id);
-            }
-          }}
-        >
-          <title>{a.title}</title>
-          {a.anchors.map((p, i) => (
-            <line
-              key={i}
-              x1={p.x}
-              y1={-p.y}
-              x2={a.position!.x}
-              y2={-a.position!.y}
-            />
-          ))}
-          <text x={a.position!.x} y={-a.position!.y}>
-            {a.label}
-          </text>
-        </g>
-      ))}
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                select(a.id);
+              }
+            }}
+          >
+            <title>
+              {a.title}
+              {placed.crowded ? " — label layout remains crowded" : ""}
+            </title>
+            {a.anchors
+              .filter((p) => [p.x, p.y].every(Number.isFinite))
+              .map((p, i) => (
+                <line
+                  key={i}
+                  x1={p.x}
+                  y1={-p.y}
+                  x2={placed.position.x}
+                  y2={-placed.position.y}
+                />
+              ))}
+            <text x={placed.position.x} y={-placed.position.y}>
+              {a.label}
+            </text>
+          </g>
+        );
+      })}
     </g>
   ) : null;
   return { controls, overlay };

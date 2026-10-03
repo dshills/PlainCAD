@@ -219,11 +219,19 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
   Native Chromium checks conflict recovery, missing-reference repair, unchanged
   volume through annotation/repair/removal, undo/redo, save/open and STL.
   Lists paginate at 20 entries and at most 128 anchored markers/16 leaders per
-  marker render. Creation remains in Sketch tools; constraint glyph dragging and
-  automatic label placement remain unavailable.
-- Remaining feature inspectors need work.
-  Canvas dimension labels use bounded simple placement; automatic collision-free
-  label layout and direct label dragging are unavailable.
+  marker render. Creation remains in Sketch tools; constraint glyph dragging
+  remains unavailable.
+- Dimension and constraint labels now share bounded automatic placement:
+  dimension labels reserve space first; constraint labels avoid those boxes and
+  point handles. Font-size estimates and 49 candidate positions bound work to
+  128 labels per family. Native Chromium checks actual rendered label separation
+  through group translation, zoom, parameter edits, save/open and STL. Dimension
+  leaders allow pointer gestures through to geometry; relocated labels retain
+  geometry leaders. Layout is transient and follows the current view. All intent
+  remains accessible in selection/list controls; dense or oversized labels stay
+  visible with an explicit crowded-view diagnostic. This is best-effort box
+  avoidance, not guaranteed placement around every curve/leader. Direct label
+  dragging remains unavailable. Remaining feature inspectors need work.
 - STL validation is numerical and bounded: it does not prove absence of every
   adjacent-face or near-degenerate self-intersection. Skipping expensive checks
   is explicit. Native union remains best-effort and does not connect disjoint solids.

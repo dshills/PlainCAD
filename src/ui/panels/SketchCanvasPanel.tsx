@@ -270,8 +270,21 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
   };
   const preview = draft.length && cursor ? [...draft, cursor] : draft;
   const radius = view.width * 0.005;
-  const dimensions = useCanvasDimensions(active, context, view.width, cancel);
-  const constraints = useCanvasConstraints(active, context, view.width, cancel);
+  const dimensions = useCanvasDimensions(
+    active,
+    context,
+    view.width,
+    cancel,
+    view,
+  );
+  const constraints = useCanvasConstraints(
+    active,
+    context,
+    view.width,
+    cancel,
+    view,
+    dimensions.labelBoxes,
+  );
   if (!sketch) return null;
   return (
     <ModalDialog

@@ -56,6 +56,32 @@ async function openCanvas(page: Page) {
     page.getByRole("dialog", { name: "Sketch canvas", exact: true }),
   ).toBeVisible();
 }
+async function separatedAnnotations(page: Page) {
+  const boxes = await page
+    .locator(".canvas-dimensions text, .canvas-constraints text")
+    .evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const b = node.getBoundingClientRect();
+        return { left: b.left, right: b.right, top: b.top, bottom: b.bottom };
+      }),
+    );
+  expect(boxes.length).toBeGreaterThan(0);
+  for (const [i, a] of boxes.entries())
+    for (const b of boxes.slice(i + 1))
+      expect(
+        a.left < b.right &&
+          b.left < a.right &&
+          a.top < b.bottom &&
+          b.top < a.bottom,
+      ).toBe(false);
+  const leaders = page.locator(".canvas-driving-dimension line");
+  for (let i = 0; i < (await leaders.count()); i++)
+    expect(
+      await leaders
+        .nth(i)
+        .evaluate((node) => getComputedStyle(node).pointerEvents),
+    ).toBe("none");
+}
 async function done(page: Page) {
   await page
     .getByRole("button", { name: "Done editing sketch", exact: true })
@@ -956,10 +982,12 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     await page
       .getByLabel("Canvas tool", { exact: true })
       .selectOption("translate");
-    await page.getByLabel("Show drawing dimensions", { exact: true }).uncheck();
-    await page.getByLabel("Show constraint markers", { exact: true }).uncheck();
     await page.getByRole("button", { name: "Zoom out", exact: true }).click();
     const svg = page.getByLabel("Sketch drawing canvas", { exact: true });
+    await svg.scrollIntoViewIfNeeded();
+    await separatedAnnotations(page);
+    if (plane === "XY")
+      await page.screenshot({ path: info.outputPath("annotation-layout.png") });
     async function startDrag(a: [number, number], b: [number, number]) {
       await svg.scrollIntoViewIfNeeded();
       const bounds = (await svg.boundingBox())!;
@@ -983,6 +1011,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     await ready(page, 2000);
     const moved = await snapshot(page);
     const sketch = moved.document.sketches[drawn.id];
+    await separatedAnnotations(page);
     expect(sketch.constraints).toEqual(
       original.document.sketches[drawn.id].constraints,
     );

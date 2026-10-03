@@ -1,8 +1,9 @@
+import * as dimensionModule from "../cad/sketch/canvasDimensions";
 import { createElement } from "react";
 import { cleanup, render, screen } from "@testing-library/react";
 import { SketchCanvasPanel } from "../ui/panels/SketchCanvasPanel";
 import { rebuildDocument } from "../cad/features/rebuildGraph";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createEmptyDocument, upsertSketch } from "../cad/document/CadDocument";
 import { addCanvasGeometry } from "../cad/sketch/canvasGeometry";
 import { solveSketch } from "../cad/sketch/SketchSolver";
@@ -34,6 +35,87 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 describe("graphical sketch dimensions", () => {
+  it("bounds dense label rendering without dropping dimension selection or editing document data", () => {
+    const base = circle(),
+      curve = Object.values(base.entities).find((e) => e.type === "circle")!;
+    const sketch = {
+      ...base,
+      solveMode: "validate" as const,
+      dimensions: Array.from({ length: 130 }, (_, i) => ({
+        id: `dense-${i}`,
+        type: "radius" as const,
+        entityIds: [curve.id],
+        expression: { expression: "5mm", unit: "mm" as const },
+      })),
+    };
+    const document = upsertSketch(createEmptyDocument(), sketch);
+    useCadStore.getState().setDocument(document);
+    useCadStore
+      .getState()
+      .select({ kind: "sketch", id: sketch.id, documentId: document.id });
+    beginSketchCanvas();
+    useCadStore.setState({
+      rebuild: {
+        ...useCadStore.getState().rebuild,
+        status: "succeeded",
+        result: rebuildDocument(document),
+      },
+    });
+    const before = useCadStore.getState().history.present;
+    const { container } = render(createElement(SketchCanvasPanel));
+    expect(container.querySelectorAll("[data-dimension-id]")).toHaveLength(128);
+    expect(
+      screen
+        .getByLabelText("Canvas dimension selection")
+        .querySelectorAll("option"),
+    ).toHaveLength(131);
+    expect(screen.getByText(/first 128 dimension labels/)).toBeVisible();
+    expect(screen.getByText(/dimension labels remain crowded/)).toBeVisible();
+    expect(useCadStore.getState().history.present).toBe(before);
+  });
+
+  it("keeps invalid-position annotations visible without emitting invalid SVG leaders", () => {
+    const sketch = circle(),
+      document = upsertSketch(createEmptyDocument(), sketch);
+    useCadStore.getState().setDocument(document);
+    useCadStore
+      .getState()
+      .select({ kind: "sketch", id: sketch.id, documentId: document.id });
+    beginSketchCanvas();
+    const mocked = vi
+      .spyOn(dimensionModule, "canvasAnnotations")
+      .mockReturnValue([
+        {
+          id: "bad",
+          dimensionId: "bad",
+          label: "D1 unavailable",
+          title: "Invalid annotation position",
+          anchored: true,
+          unavailable: true,
+          position: { x: NaN, y: 0 },
+          lines: [
+            [
+              { x: NaN, y: 0 },
+              { x: 5, y: 0 },
+            ],
+          ],
+        },
+      ]);
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      const { container } = render(createElement(SketchCanvasPanel));
+      const annotation = container.querySelector('[data-dimension-id="bad"]')!;
+      expect(annotation).toHaveAttribute("data-layout-crowded", "true");
+      expect(annotation.querySelector("text")).toHaveTextContent(
+        "D1 unavailable",
+      );
+      expect(annotation.querySelectorAll("line")).toHaveLength(0);
+      expect(errors).not.toHaveBeenCalled();
+    } finally {
+      mocked.mockRestore();
+      errors.mockRestore();
+    }
+  });
   it("shows solved reference measurements and follows the display unit without modifying geometry", () => {
     const sketch = circle(),
       solved = solveSketch(sketch, {});

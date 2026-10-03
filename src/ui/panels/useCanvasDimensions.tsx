@@ -1,3 +1,8 @@
+import {
+  layoutCanvasLabels,
+  MAX_CANVAS_LABELS,
+  type CanvasLabelView,
+} from "../../cad/sketch/canvasLabelLayout";
 import { useEffect, useMemo, useState } from "react";
 import {
   canvasAnnotations,
@@ -20,6 +25,7 @@ export function useCanvasDimensions(
   context: Context | undefined,
   span: number,
   cancelDrawing: () => void,
+  view: CanvasLabelView,
 ) {
   const [showReference, setShowReference] = useState(true),
     [showDimensions, setShowDimensions] = useState(true);
@@ -60,6 +66,29 @@ export function useCanvasDimensions(
         : [],
     [context, span, showReference],
   );
+  const visible = useMemo(
+    () =>
+      showDimensions
+        ? annotations.filter((a) => a.anchored).slice(0, MAX_CANVAS_LABELS)
+        : [],
+    [annotations, showDimensions],
+  );
+  const placements = useMemo(
+    () =>
+      layoutCanvasLabels(
+        visible.map((a) => ({ ...a, align: "middle" as const })),
+        span / 48,
+        view,
+        [],
+        Object.values(context?.solved.points ?? {}),
+      ),
+    [visible, span, view, context?.solved],
+  );
+  const labelBoxes = useMemo(
+    () => [...placements.values()].map((p) => p.box),
+    [placements],
+  );
+  const crowded = [...placements.values()].filter((p) => p.crowded).length;
   const select = (id: string) => {
     cancelDrawing();
     setError(undefined);
@@ -248,6 +277,19 @@ export function useCanvasDimensions(
         driving dimensions; click a D label or choose it above. Failed solves
         report unavailable values. Display units follow project settings.
       </p>
+      {showDimensions &&
+      annotations.filter((a) => a.anchored).length > MAX_CANVAS_LABELS ? (
+        <p>
+          Canvas shows the first {MAX_CANVAS_LABELS} dimension labels. All
+          driving dimensions remain available in the list.
+        </p>
+      ) : null}
+      {showDimensions && crowded ? (
+        <p role="status">
+          {crowded} dimension labels remain crowded in this view. Zoom in or
+          hide reference measurements.
+        </p>
+      ) : null}
       {error ? <p role="alert">{error}</p> : null}
       {context?.solved.errors
         .filter((e) => e.severity === "error")
@@ -280,13 +322,15 @@ export function useCanvasDimensions(
       fontSize={span / 48}
       strokeWidth={span / 850}
     >
-      {annotations
-        .filter((a) => a.anchored)
-        .map((a, i) => (
+      {visible.map((a, i) => {
+        const placed = placements.get(a.id);
+        if (!placed) return null;
+        return (
           <g
             key={a.id}
             data-annotation-id={a.id}
             data-dimension-id={a.dimensionId}
+            data-layout-crowded={placed.crowded}
             className={`${a.dimensionId ? "canvas-driving-dimension" : "canvas-reference-dimension"}${a.unavailable ? " canvas-dimension-unavailable" : ""}`}
             {...(a.dimensionId
               ? {
@@ -307,21 +351,37 @@ export function useCanvasDimensions(
                 }
               : {})}
           >
-            <title>{a.title}</title>
-            {a.lines.map(([p, q], j) => (
-              <line key={j} x1={p.x} y1={-p.y} x2={q.x} y2={-q.y} />
-            ))}
+            <title>
+              {a.title}
+              {placed.crowded ? " — label layout remains crowded" : ""}
+            </title>
+            {a.lines
+              .filter(([p, q]) => [p.x, p.y, q.x, q.y].every(Number.isFinite))
+              .map(([p, q], j) => (
+                <line key={j} x1={p.x} y1={-p.y} x2={q.x} y2={-q.y} />
+              ))}
+            {[a.position.x, a.position.y].every(Number.isFinite) &&
+            (placed.position.x !== a.position.x ||
+              placed.position.y !== a.position.y) ? (
+              <line
+                x1={a.position.x}
+                y1={-a.position.y}
+                x2={placed.position.x}
+                y2={-placed.position.y}
+              />
+            ) : null}
             <text
               data-testid={`canvas-annotation-${i}`}
-              x={a.position.x}
-              y={-a.position.y}
+              x={placed.position.x}
+              y={-placed.position.y}
               textAnchor="middle"
             >
               {a.label}
             </text>
           </g>
-        ))}
+        );
+      })}
     </g>
   ) : null;
-  return { controls, overlay };
+  return { controls, overlay, labelBoxes };
 }

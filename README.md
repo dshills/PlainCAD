@@ -182,6 +182,13 @@ rebuild until their expressions are repaired; reused names cannot retarget them.
    Select a marker or constraint list entry to inspect, repair ordered references,
    or remove intent through undoable edits. Lost references stay in the list;
    pending solves hide markers. Create new constraints in Sketch tools.
+   Dimension and constraint labels use automatic bounded placement to avoid one
+   another and point handles. Leaders follow their original geometry and allow
+   drawing gestures to pass through. Layout stays transient during zoom/pan and
+   does not edit the document. Each family shows at most 128 labels; all intent
+   remains in its selection/list controls. Crowded views report when placement
+   cannot separate labels. Hide references or zoom in; direct label dragging and
+   guaranteed collision-free placement remain unavailable.
    Use the rectangle/circle helpers or Sketch tools to add points, lines, circles,
    and center/start/end arcs. Construction curves appear dashed and are excluded
    from solid profiles.
