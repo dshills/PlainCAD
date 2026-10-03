@@ -405,24 +405,11 @@ export function rebuildDocument(
           }
           shapesToDispose.add(shape);
           const bodyId = stableBodyIdForFeature(feature.id);
-          const output = applyExtrudeOperation(
-            kernel,
-            feature,
-            shape,
-            targetBodies,
-            bodyId,
+          const outputs = applyExtrudeOperation(
+            kernel, feature, shape, targetBodies, bodyId, shapesToDispose,
           );
-          shapesToDispose.add(output.shape);
-          const outputMesh = withStableBodyId(
-            kernel.tessellate(output.shape, TESSELLATION_LOD.default),
-            output.bodyId,
-          );
-          output.mesh = outputMesh;
-          output.planeKey =
-            feature.operation === "newBody"
-              ? sketchPlaneKey(sketch)
-              : output.planeKey;
-          setRuntimeBody(runtimeBodies, output.bodyId, output);
+          publishOperationOutputs(kernel, runtimeBodies, outputs,
+            feature.operation === "newBody" ? sketchPlaneKey(sketch) : undefined);
         } catch (error) {
           errors.push({
             id: `kernel:${feature.id}`,
@@ -627,26 +614,11 @@ function rebuildRevolveFeature(
       resolvedAxis,
     );
     shapesToDispose.add(shape);
-    const output = applyExtrudeOperation(
-      kernel,
-      feature,
-      shape,
-      targets,
-      stableBodyIdForFeature(feature.id),
+    const outputs = applyExtrudeOperation(
+      kernel, feature, shape, targets, stableBodyIdForFeature(feature.id), shapesToDispose,
     );
-    shapesToDispose.add(output.shape);
-    const mesh = withStableBodyId(
-      kernel.tessellate(output.shape, TESSELLATION_LOD.default),
-      output.bodyId,
-    );
-    setRuntimeBody(runtimeBodies, output.bodyId, {
-      ...output,
-      mesh,
-      planeKey:
-        feature.operation === "newBody"
-          ? sketchPlaneKey(sketch)
-          : output.planeKey,
-    });
+    publishOperationOutputs(kernel, runtimeBodies, outputs,
+      feature.operation === "newBody" ? sketchPlaneKey(sketch) : undefined);
   } catch (error) {
     errors.push({
       id: `kernel:${feature.id}`,
@@ -927,11 +899,12 @@ function setRuntimeBody(
   let triangles = body.mesh ? body.mesh.indices.length / 3 : 0;
   for (const [otherId, other] of bodies)
     if (otherId !== id) triangles += (other.mesh?.indices.length ?? 0) / 3;
-  if (triangles > MODEL_RESOURCE_LIMITS.maxTriangles)
-    throw new Error(
-      "Model exceeds the total triangle resource limit. Simplify or suppress bodies.",
-    );
+  assertRuntimeTriangleCount(triangles);
   bodies.set(id, body);
+}
+
+function assertRuntimeTriangleCount(triangles: number) {
+  if (triangles > MODEL_RESOURCE_LIMITS.maxTriangles) throw new Error("Model exceeds the total triangle resource limit. Simplify or suppress bodies.");
 }
 
 function resolveTargetBodies(
@@ -945,16 +918,16 @@ function resolveTargetBodies(
       id: `feature:${feature.id}:target:none`,
       source: "feature",
       sourceId: feature.id,
-      message: `${feature.operation} extrude requires a selected target body.`,
+      message: `${feature.operation} ${feature.type} requires a selected target body.`,
     });
     return [];
   }
-  if (feature.targetBodyIds.length > 1) {
+  if (feature.operation === "join" && feature.targetBodyIds.length > 1) {
     errors.push({
       id: `feature:${feature.id}:target:multiple`,
       source: "feature",
       sourceId: feature.id,
-      message: `${feature.operation} extrude currently supports exactly one target body.`,
+      message: `${feature.operation} ${feature.type} currently supports exactly one target body.`,
     });
     return [];
   }
@@ -968,7 +941,7 @@ function resolveTargetBodies(
       id: `feature:${feature.id}:target:lost`,
       source: "feature",
       sourceId: feature.id,
-      message: `Target body "${missing.bodyId}" was not found for ${feature.operation} extrude.`,
+      message: `Target body "${missing.bodyId}" was not found for ${feature.operation} ${feature.type}.`,
     });
     return [];
   }
@@ -1028,33 +1001,49 @@ function resolveExtrudeDistance(
   return { value: distance.quantity.value };
 }
 
+type OperationOutput = { bodyId: string } & RuntimeBody;
+
 function applyExtrudeOperation(
   activeKernel: KernelAdapter,
   feature: ExtrudeFeature | RevolveFeature,
   tool: KernelShape,
-  targets: Array<{ bodyId: string } & RuntimeBody>,
+  targets: OperationOutput[],
   newBodyId: string,
-): { bodyId: string } & RuntimeBody {
+  shapesToDispose: Set<KernelShape>,
+): OperationOutput[] {
   if (feature.operation === "newBody")
-    return {
-      bodyId: newBodyId,
-      shape: tool,
-      featureId: feature.id,
-      name: feature.name,
-      planeKey: "",
-    };
-  const target = targets[0];
-  const shape =
-    feature.operation === "join"
-      ? activeKernel.fuse(target.shape, tool)
-      : activeKernel.cut(target.shape, tool);
-  return {
-    bodyId: target.bodyId,
-    shape,
-    featureId: target.featureId,
-    name: target.name,
-    planeKey: target.planeKey,
-  };
+    return [{ bodyId: newBodyId, shape: tool, featureId: feature.id, name: feature.name, planeKey: "" }];
+  return targets.map((target) => {
+    try {
+      const shape = feature.operation === "join"
+        ? activeKernel.fuse(target.shape, tool)
+        : activeKernel.cut(target.shape, tool);
+      // Register immediately: a later target or tessellation may fail.
+      shapesToDispose.add(shape);
+      return { ...target, shape };
+    } catch (error) {
+      throw new Error(`${feature.name}: target "${target.name}" (${target.bodyId}): ${kernelErrorMessage(feature.type, error)}`);
+    }
+  });
+}
+
+// Publish only when every boolean, tessellation and final resource check succeeds.
+function publishOperationOutputs(
+  activeKernel: KernelAdapter,
+  bodies: Map<string, RuntimeBody>,
+  outputs: OperationOutput[],
+  newPlaneKey?: string,
+) {
+  const prepared = outputs.map((output) => ({
+    ...output,
+    mesh: withStableBodyId(activeKernel.tessellate(output.shape, TESSELLATION_LOD.default), output.bodyId),
+    planeKey: newPlaneKey ?? output.planeKey,
+  }));
+  const prospective = new Map(bodies);
+  for (const output of prepared) prospective.set(output.bodyId, output);
+  // Check the final aggregate, not an intermediate subset of body replacements.
+  assertRuntimeTriangleCount([...prospective.values()].reduce((sum, body) => sum + (body.mesh?.indices.length ?? 0) / 3, 0));
+  for (const output of prepared) bodies.set(output.bodyId, output);
 }
 
 function withStableBodyId(mesh: RenderMesh, bodyId: string): RenderMesh {

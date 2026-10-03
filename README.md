@@ -229,13 +229,22 @@ Broken references remain saved and structurally valid damaged projects can open
 or recover for repair. Profiles wait for current worker analysis; target choices
 come from durable upstream body owners. Nothing is rebound automatically.
 
-The Inspector supports positive, negative and symmetric distance extrudes, cut/join
-with one explicit target,
+The Inspector supports positive, negative and symmetric distance extrudes, cuts
+with explicit saved body scopes and joins with one explicit target,
 through-all, and termination on an upstream finite planar face. To-face termination
 supports sloped planes and verifies that the entire end cap fits inside the selected
 face, including its holes. To-face remains positive-only. Through-all supports
 all three directions; symmetric distance is the total span split equally across
 the sketch plane.
+
+Extrude and revolve cuts can target up to 64 upstream bodies. Use **Cut target
+scope** checkboxes to include or remove bodies; the **Target body** selector replaces
+the scope with one body. The saved stable-ID set never includes new bodies silently.
+Every selected body must lose volume. If any target is lost, disjoint, empty, invalid,
+or exceeds resource limits, the entire cut fails and retains upstream previews.
+Lost scope entries can be unchecked for explicit repair. Through-all extrude tools
+cover the furthest selected target along the chosen direction. Joins and hole
+features retain their single-target limits.
 
 Use `Revolve` for a closed profile around a coplanar origin axis or a stable line
 in its sketch. The Inspector edits the axis, 0–360 degree angle (exclusive of 0),

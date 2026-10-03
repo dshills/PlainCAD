@@ -64,13 +64,13 @@ edits, parameter-driven diameter, empty-center failure and save/open/STL recover
 | Capability | Current behavior | Availability |
 | --- | --- | --- |
 | Extrude new body | Positive/negative/symmetric distance native wire/face/prism extrusion of closed line/arc/circle loops and holes; symmetric distance is total span; fallback triangulates sampled boundaries | Creation command and inspector |
-| Extrude cut | One explicit target; native world-coordinate tools; valid nonempty solid output with reduced exact volume; disjoint/no-op and empty cuts diagnosed; narrow rectangle/circular-through-hole fallback | Inspector |
+| Extrude cut | Up to 64 explicit saved target IDs; atomic updates of all targets; native world-coordinate tools; valid nonempty solid output with reduced exact volume; disjoint/no-op and empty cuts diagnosed; narrow rectangle/circular-through-hole fallback | Inspector |
 | Extrude join | One explicit target; native connected single-solid union with increased exact volume; disconnected/no-op joins diagnosed; no fallback | Inspector |
-| Through all | Projects target bounds along the sketch normal for positive/negative directions or a symmetric total span; wrong-side targets diagnosed; subject to cut/join limits | Inspector |
+| Through all | Projects all selected target bounds along the sketch normal for positive/negative directions or a symmetric total span; wrong-side targets diagnosed; subject to cut/join limits | Inspector |
 | Extrude to face | Positive termination on an upstream unmodified feature-owned planar cap/straight side, including sloped faces; native half-space trimming; end-cap area/intersection checks enforce finite face and holes | Inspector with explicit face selection and repair |
 | Negative/symmetric extrude | Distance and through-all supported with a shifted start plane and unchanged coordinate basis; to-face remains positive-only | Inspector; unsupported to-face combinations disabled and diagnosed |
 | Revolve | Native analytic closed line/arc/circle profiles with holes; coplanar world X/Y/Z or same-sketch line axes; angles greater than 0 through 360 degrees; cross-axis/zero-volume/invalid output rejected | Shared creation command and inspector; narrow full-Y/XY rectangular fallback without kernel |
-| Revolve cut/join | Native operation with one explicit target and the same boolean validity/volume checks | Inspector |
+| Revolve cut/join | Native cut on up to 64 explicit saved targets with atomic publication; join on one explicit target; boolean validity/volume checks for every selected target | Inspector with cut-scope checkboxes and lost-reference removal |
 | Hole | Explicit single target and up to 64 sketch point centers; native cylindrical tools and cut validation; positive blind-depth/through-all; empty centers/lost references/no-op cuts diagnosed | Shared creation command with modal field validation and full size/termination/center/source/target inspector |
 | Fillet/chamfer | Real native geometry on feature-owned cap perimeters, individual line/arc cap edges, or a source line’s two extrusion-direction corners; BRep/solid-count/volume-or-surface-change checks; lost or ambiguous edges fail | Shared creation commands and size/role/source/owner repair inspector |
 | Offset/face sketch planes | Expression-driven origin/face offsets; upstream distance-extrusion caps and straight outer sides; modified/suppressed/missing owners require repair | Sketch tools with explicit replacement selection; lost planes fail rebuild |
@@ -146,7 +146,12 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
 - Timeline moves validate structural dependencies and preserve same-body modifier
   order; arbitrary modifier reordering and kernel preview before committing a move
   remain unavailable. Rebuild failures remain diagnostic and undoable. Durable
-  multi-body target scopes and richer dependency-chain visualization need work.
+  multi-body join/hole scopes, initial intersection-based scope capture and richer
+  dependency-chain visualization need work. Extrude/revolve cuts persist explicit
+  selected target sets, never add new bodies silently, retain all upstream previews
+  on boolean/tessellation/resource failures, and expose lost-ID removal for repair.
+  Native Chromium checks cover per-body BRep volumes, a late disjoint-target failure,
+  reference repair, parameter edits, undo/redo, save/open and STL output.
 - General post-boolean face/edge naming remains missing. Planes require an
   unmodified positive-distance new-body owner;
   curved side faces, hole/revolve faces, and ambiguous rebinding are unsupported.

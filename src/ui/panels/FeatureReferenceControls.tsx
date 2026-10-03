@@ -111,7 +111,18 @@ export function FeatureReferenceControls({
         </label>
       ) : null}
       <TargetBodyControl feature={feature} />
-      {feature.type !== "hole" && (feature.targetBodyIds?.length ?? 0) > 1 ? <p className="warning-text">This feature references {feature.targetBodyIds!.length} bodies. Current modeling supports one target; choosing a body replaces the entire scope.</p> : null}
+      {feature.type !== "hole" && feature.operation === "cut" ? (
+        <CutTargetScope feature={feature} />
+      ) : null}
+      {feature.type !== "hole" &&
+      feature.operation !== "cut" &&
+      (feature.targetBodyIds?.length ?? 0) > 1 ? (
+        <p className="warning-text">
+          This feature references {feature.targetBodyIds!.length} bodies.
+          Current modeling supports one target; choosing a body replaces the
+          entire scope.
+        </p>
+      ) : null}
       <p className="muted">
         Repairs replace only the chosen reference. Missing references stay saved
         until you reselect them.
@@ -150,7 +161,7 @@ export function TargetBodyControl({ feature }: { feature: SketchFeature }) {
               !stored ||
               !("sketchId" in stored) ||
               (bodyId &&
-              !upstreamBodyOwners(d, stored, true).some(
+                !upstreamBodyOwners(d, stored, true).some(
                   (o) => stableBodyIdForFeature(o.id) === bodyId,
                 ))
             )
@@ -175,10 +186,78 @@ export function TargetBodyControl({ feature }: { feature: SketchFeature }) {
         ) : null}
         {owners.map((o) => (
           <option key={o.id} value={stableBodyIdForFeature(o.id)}>
-            {o.name} Body{o.suppressed ? " (suppressed — unsuppress to rebuild)" : ""}
+            {o.name} Body
+            {o.suppressed ? " (suppressed — unsuppress to rebuild)" : ""}
           </option>
         ))}
       </select>
     </label>
+  );
+}
+
+function CutTargetScope({
+  feature,
+}: {
+  feature: ExtrudeFeature | RevolveFeature;
+}) {
+  const document = useCadStore((s) => s.history.present);
+  const updateDocument = useCadStore((s) => s.updateDocument);
+  const owners = upstreamBodyOwners(document, feature, true);
+  const targets = feature.targetBodyIds ?? [];
+  const choices = new Map(
+    owners.map((owner) => [
+      stableBodyIdForFeature(owner.id),
+      `${owner.name} Body${owner.suppressed ? " (suppressed)" : ""}`,
+    ]),
+  );
+  for (const id of targets)
+    if (!choices.has(id)) choices.set(id, `Lost or downstream body ${id}`);
+  return (
+    <fieldset>
+      <legend>Cut target scope</legend>
+      {[...choices].map(([id, name]) => (
+        <label key={id} className="checkbox-label">
+          <input
+            type="checkbox"
+            aria-label={`Include target ${name}`}
+            checked={targets.includes(id)}
+            onChange={(event) => {
+              const checked = event.target.checked;
+              updateDocument((d) => {
+                const stored = d.features.find((f) => f.id === feature.id);
+                if (
+                  d.id !== document.id ||
+                  !stored ||
+                  (stored.type !== "extrude" && stored.type !== "revolve") ||
+                  stored.operation !== "cut"
+                )
+                  return d;
+                // Lost references may be removed, but may only be added from upstream owners.
+                if (
+                  checked &&
+                  !upstreamBodyOwners(d, stored, true).some(
+                    (owner) => stableBodyIdForFeature(owner.id) === id,
+                  )
+                )
+                  return d;
+                const ids = new Set(stored.targetBodyIds ?? []);
+                if (checked) ids.add(id);
+                else ids.delete(id);
+                return upsertFeature(d, { ...stored, targetBodyIds: [...ids] });
+              });
+            }}
+          />
+          {name}
+        </label>
+      ))}
+      <p className="muted">
+        Select each body to cut. The Target body selector replaces the scope
+        with one body. New bodies are added only when selected. Every selected
+        body must lose volume; failures retain all upstream bodies.
+      </p>
+      {!targets.length ? (
+        <p className="warning-text">Select at least one target body.</p>
+      ) : null}
+    </fieldset>
   );
 }
