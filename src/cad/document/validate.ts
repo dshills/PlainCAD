@@ -1,6 +1,6 @@
 import { targetBodyIds } from "./bodyScopes";
 import { MAX_NAMED_VIEWS, validCameraPose } from "../inspection/cameraViews";
-import { CadDocument, ValidationIssue } from "./schema";
+import { CadDocument, Sketch, ValidationIssue } from "./schema";
 import { validateParameterBindings } from "../parameters/expressionBindings";
 import { MODEL_RESOURCE_LIMITS } from "../resourceLimits";
 import { validAuthoredUnit, validUnitSettings } from "../parameters/parameterUnits";
@@ -204,7 +204,7 @@ export function validateDocument(document: CadDocument, mode: "modeling" | "stor
           entity.startPointId,
           entity.endPointId,
         ])
-          if (typeof id !== "string" || sketch.entities[id]?.type !== "point")
+          if (!validSketchPointReference(sketch, id, mode))
             issues.push({
               source: "sketch",
               sourceId: entity.id,
@@ -219,20 +219,14 @@ export function validateDocument(document: CadDocument, mode: "modeling" | "stor
         });
       addId(entity.id, "sketch");
       if (entity.type === "line") {
-        if (
-          typeof entity.startPointId !== "string" ||
-          sketch.entities[entity.startPointId]?.type !== "point"
-        ) {
+        if (!validSketchPointReference(sketch, entity.startPointId, mode)) {
           issues.push({
             source: "sketch",
             sourceId: entity.id,
             message: "Line references a missing start point.",
           });
         }
-        if (
-          typeof entity.endPointId !== "string" ||
-          sketch.entities[entity.endPointId]?.type !== "point"
-        ) {
+        if (!validSketchPointReference(sketch, entity.endPointId, mode)) {
           issues.push({
             source: "sketch",
             sourceId: entity.id,
@@ -242,8 +236,7 @@ export function validateDocument(document: CadDocument, mode: "modeling" | "stor
       }
       if (
         entity.type === "circle" &&
-        (typeof entity.centerPointId !== "string" ||
-          sketch.entities[entity.centerPointId]?.type !== "point")
+        !validSketchPointReference(sketch, entity.centerPointId, mode)
       ) {
         issues.push({
           source: "sketch",
@@ -464,7 +457,21 @@ export function validateDocument(document: CadDocument, mode: "modeling" | "stor
   return issues;
 }
 
-// Imports must reject malformed known fields before components or geometry read them.
+// Preserve well-typed lost point references for explicit repair after open.
+// Modeling requires a current point; malformed IDs never enter storage.
+function validSketchPointReference(
+  sketch: Sketch,
+  id: unknown,
+  mode: "modeling" | "storage",
+): boolean {
+  return (
+    typeof id === "string" &&
+    id.trim().length > 0 &&
+    (mode === "storage" || sketch.entities[id]?.type === "point")
+  );
+}
+
+/** Imports must reject malformed known fields before components or geometry read them. */
 function validatePersistedFields(document: CadDocument): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   const check = (

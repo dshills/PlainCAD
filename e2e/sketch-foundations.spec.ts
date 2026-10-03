@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import type { CadDocument } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
 
@@ -288,4 +288,208 @@ test("arc authoring, construction, driving dimensions, face offsets, save/open a
   ).toEqual(entityIds);
   await page.screenshot({ path: testInfo.outputPath("repaired-arc.png") });
   expect(errors).toEqual([]);
+});
+
+test("Inspector repairs imported sketch point references and edits native arc direction with undo and persistence", async ({
+  page,
+}, testInfo) => {
+  const pageErrors: string[] = [];
+  page.on("pageerror", error => pageErrors.push(error.message));
+  await page.goto("/");
+  await ready(page);
+  const ids = await page.evaluate(async () => {
+    const paths = [
+      "/src/state/useCadStore.ts",
+      "/src/cad/document/CadDocument.ts",
+      "/src/cad/sketch/SketchModel.ts",
+      "/src/cad/sketch/SketchSolver.ts",
+      "/src/cad/sketch/profileDetection.ts",
+    ];
+    const [
+      { useCadStore },
+      ops,
+      sketchOps,
+      { solveSketch },
+      { detectProfiles },
+    ] = await Promise.all(paths.map((path) => import(path)));
+    let sketch = sketchOps.createXySketch("Repair section");
+    const points: string[] = [];
+    for (const x of [0, 10, -10]) {
+      const added = sketchOps.addPoint(sketch, `${x}mm`, "0mm");
+      sketch = added.sketch;
+      points.push(added.pointId);
+    }
+    const arc = sketchOps.addArc(
+      sketch,
+      points[0],
+      points[1],
+      points[2],
+      false,
+    );
+    const line = sketchOps.addLine(arc.sketch, points[1], points[2]);
+    const circle = sketchOps.addCircle(line.sketch, points[0], "2mm");
+    sketch = sketchOps.setConstruction(circle.sketch, circle.circleId, true);
+    const feature = ops.createExtrudeFeature({
+      name: "Half disk",
+      sketchId: sketch.id,
+      profileId: detectProfiles(solveSketch(sketch, {})).profiles[0].id,
+      distance: { expression: "5mm", unit: "mm" },
+      direction: "positive",
+      operation: "newBody",
+    });
+    const document = ops.upsertFeature(
+      ops.upsertSketch(
+        ops.createEmptyDocument("Sketch reference repair"),
+        sketch,
+      ),
+      feature,
+    );
+    useCadStore.getState().setDocument(document);
+    useCadStore
+      .getState()
+      .select({ kind: "sketchEntity", id: arc.arcId, documentId: document.id });
+    return {
+      sketch: sketch.id,
+      arc: arc.arcId,
+      line: line.lineId,
+      circle: circle.circleId,
+      center: points[0],
+      end: points[2],
+      feature: feature.id,
+      profile: feature.profileId,
+    };
+  });
+  const native = (state: State, clockwise: boolean) => {
+    const mesh = state.result!.meshes.find(
+      (mesh) => mesh.bodyId === `body:${ids.feature}`,
+    )!;
+    expect(mesh.geometrySource).toBe("opencascade");
+    expect(mesh.geometryAssertions).toMatchObject({
+      valid: true,
+      solidCount: 1,
+    });
+    expect(mesh.geometryAssertions!.volume).toBeCloseTo(250 * Math.PI, 6);
+    expect(mesh.bounds.min[1]).toBeCloseTo(clockwise ? -10 : 0, 3);
+    expect(mesh.bounds.max[1]).toBeCloseTo(clockwise ? 0 : 10, 3);
+    expect(state.document.features[0]).toMatchObject({
+      id: ids.feature,
+      profileId: ids.profile,
+    });
+  };
+  const selectEntity = async (id: string) =>
+    page.evaluate(async (id) => {
+      const path = "/src/state/useCadStore.ts";
+      const state = (await import(path)).useCadStore.getState();
+      state.select({
+        kind: "sketchEntity",
+        id,
+        documentId: state.history.present.id,
+      });
+    }, id);
+  await ready(page, (state) => native(state, false));
+  await page.getByLabel("Clockwise arc", { exact: true }).check();
+  await ready(page, (state) => native(state, true));
+  await page
+    .getByRole("button", { name: "Inspect center point", exact: true })
+    .click();
+  await expect(page.getByLabel("X", { exact: true })).toHaveValue("0mm");
+  await commit(page, "X", "1deg");
+  await expect.poll(async () => (await snapshot(page)).status).toBe("failed");
+  await expect(
+    page.getByRole("button", { name: "Export STL", exact: true }),
+  ).toBeDisabled();
+  await page.getByRole("button", { name: "Undo", exact: true }).click();
+  await ready(page, (state) => native(state, true));
+  await selectEntity(ids.arc);
+  await page.getByLabel("Center point", { exact: true }).selectOption(ids.end);
+  await expect.poll(async () => (await snapshot(page)).status).toBe("failed");
+  await expect(
+    page.getByRole("button", { name: "Export STL", exact: true }),
+  ).toBeDisabled();
+  await page.getByRole("button", { name: "Undo", exact: true }).click();
+  await ready(page, (state) => native(state, true));
+  const saved = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const projectPath = testInfo.outputPath("repair-section.pcaddoc");
+  await (await saved).saveAs(projectPath);
+  const project: CadDocument = JSON.parse(await readFile(projectPath, "utf8"));
+  const entities = project.sketches[ids.sketch].entities;
+  const arc = entities[ids.arc],
+    line = entities[ids.line],
+    circle = entities[ids.circle];
+  if (arc.type !== "arc" || line.type !== "line" || circle.type !== "circle")
+    throw new Error("Expected source entities");
+  entities[ids.arc] = { ...arc, centerPointId: "lost-arc-center" };
+  entities[ids.line] = { ...line, endPointId: "lost-line-end" };
+  entities[ids.circle] = { ...circle, centerPointId: "lost-circle-center" };
+  const brokenPath = testInfo.outputPath("lost-sketch-points.pcaddoc");
+  await writeFile(brokenPath, JSON.stringify(project));
+  await page.locator('input[type="file"]').setInputFiles(brokenPath);
+  await expect(async () => {
+    const state = await snapshot(page);
+    expect(state.document.id).toBe(project.id);
+    expect(state.document.sketches[ids.sketch].entities[ids.arc]).toMatchObject(
+      { centerPointId: "lost-arc-center" },
+    );
+    expect(state.status).toBe("failed");
+    for (const id of [ids.arc, ids.line, ids.circle])
+      expect(state.result?.errors).toContainEqual(
+        expect.objectContaining({
+          sourceId: id,
+          message: expect.stringContaining("missing"),
+        }),
+      );
+  }).toPass({ timeout: 20000 });
+  await expect(
+    page.getByRole("button", { name: "Export STL", exact: true }),
+  ).toBeDisabled();
+  for (const [id, label, point] of [
+    [ids.arc, "Center point", ids.center],
+    [ids.line, "End point", ids.end],
+    [ids.circle, "Center point", ids.center],
+  ]) {
+    await selectEntity(id);
+    await expect(
+      page.getByRole("button", {
+        name: `Inspect ${label.toLowerCase()}`,
+        exact: true,
+      }),
+    ).toBeDisabled();
+    await expect(
+      page
+        .getByRole("alert")
+        .filter({ hasText: `${label} reference is missing` }),
+    ).toBeVisible();
+    await page.getByLabel(label, { exact: true }).selectOption(point);
+  }
+  await ready(page, (state) => native(state, true));
+  await page.getByRole("button", { name: "Undo", exact: true }).click();
+  await expect.poll(async () => (await snapshot(page)).status).toBe("failed");
+  await page.getByRole("button", { name: "Redo", exact: true }).click();
+  await ready(page, (state) => native(state, true));
+  const repairedSave = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  await (await repairedSave).saveAs(projectPath);
+  await page.reload();
+  await ready(page);
+  await page.locator('input[type="file"]').setInputFiles(projectPath);
+  await ready(page, (state) => native(state, true));
+  await selectEntity(ids.arc);
+  await expect(page.getByLabel("Clockwise arc", { exact: true })).toBeChecked();
+  const exported = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export STL", exact: true }).click();
+  const stlPath = testInfo.outputPath("repaired-half-disk.stl");
+  await (await exported).saveAs(stlPath);
+  const stl = await readFile(stlPath),
+    triangles = stl.readUInt32LE(80);
+  const positions: number[] = [],
+    indices: number[] = [];
+  for (let i = 0; i < triangles; i++)
+    for (let j = 0; j < 3; j++) {
+      indices.push(indices.length);
+      for (let axis = 0; axis < 3; axis++)
+        positions.push(stl.readFloatLE(84 + i * 50 + 12 + j * 12 + axis * 4));
+    }
+  expect(volume(positions, indices) / (250 * Math.PI)).toBeCloseTo(1, 2);
+  expect(pageErrors).toEqual([]);
 });

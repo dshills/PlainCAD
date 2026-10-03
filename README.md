@@ -559,3 +559,10 @@ Deferred until after MVP:
 
 Production build headers, CSP, cache/MIME requirements, and the built-app browser
 check are documented in [deployment/README.md](deployment/README.md).
+
+
+The Inspector exposes line/arc endpoints and circle/arc centers. Inspect a linked
+point to edit its coordinates, or choose another point in the same sketch to repair
+the reference. Arc direction is editable with undo/redo. Well-typed lost point
+references survive project open for explicit repair; malformed IDs remain rejected.
+Invalid references or inconsistent arc geometry block rebuilding and STL export.

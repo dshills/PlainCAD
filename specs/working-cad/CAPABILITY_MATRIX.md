@@ -263,7 +263,7 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
   remains accessible in selection/list controls; dense or oversized labels stay
   visible with an explicit crowded-view diagnostic. This is best-effort box
   avoidance, not guaranteed placement around every curve/leader. Direct label
-  dragging remains unavailable. Remaining feature inspectors need work.
+  dragging remains unavailable.
 - STL validation is numerical and bounded: it does not prove absence of every
   adjacent-face or near-degenerate self-intersection. Skipping expensive checks
   is explicit. Native union remains best-effort and does not connect disjoint solids.
@@ -314,3 +314,12 @@ Native Chromium coverage checks negative/symmetric fillet and chamfer geometry o
 XY/XZ/YZ, exact removed volume, coordinate bounds, size/depth edits, invalid-size
 recovery, save/open and positive STL winding. Through-all/to-face owners and
 boolean-created topology remain unavailable for edge reference ownership.
+
+
+Sketch-entity Inspector controls expose line/arc start/end and circle/arc center
+references, same-sketch point reselection, point navigation, and arc winding.
+Well-typed lost point IDs can open for repair; malformed/empty IDs are rejected.
+Modeling validation still diagnoses unresolved references. Chromium covers imported
+arc/line/circle reference repair, direction-dependent native bounds, inconsistent
+arc geometry, undo/redo, save/open and STL volume/winding. These controls do not
+guess replacement points or provide general constraint-driven deformation.

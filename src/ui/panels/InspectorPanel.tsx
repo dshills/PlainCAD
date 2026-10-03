@@ -4,6 +4,7 @@ import { SketchCircle, SketchPoint } from "../../cad/document/schema";
 import * as documentOps from "../../cad/document/CadDocument";
 import { sketchPlaneLabel } from "../../cad/sketch/planes";
 
+import { SketchEntityReferences } from "./SketchEntityReferences";
 import { CommitInput } from "./CommitInput";
 import {
   ModelingFeatureControls,
@@ -355,6 +356,7 @@ export function InspectorPanel() {
               </label>
             </div>
           ) : null}
+          <SketchEntityReferences sketch={sketchEntity.sketch} entity={sketchEntity.entity} />
           {sketchEntity.entity.type === "line" ? (
             <p className="muted">
               Line endpoints are edited through their point entities.
