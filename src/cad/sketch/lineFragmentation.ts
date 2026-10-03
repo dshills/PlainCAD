@@ -3,6 +3,7 @@ import { SKETCH_TOLERANCE as EPS } from "./tolerances";
 
 // Runtime only: authored entities and their constraints are never split or rewritten.
 export const MAX_PROFILE_FRAGMENTS = 2048;
+export const MAX_PROFILE_SOURCE_CURVES = 750;
 type PointKey = (point: { x: number; y: number }) => string;
 interface Cut {
   t: number;
@@ -31,8 +32,10 @@ export function fragmentProfileLines(
     errors: [message],
     changed: false,
   });
-  if (lines.length > 750)
-    return fail("Line fragmentation exceeds the 750 source-line limit.");
+  if (lines.length > MAX_PROFILE_SOURCE_CURVES)
+    return fail(
+      `Line fragmentation exceeds the ${MAX_PROFILE_SOURCE_CURVES} source-line limit.`,
+    );
   const cuts = lines.map(
     (l) =>
       [
@@ -164,6 +167,11 @@ export interface LineFace {
 export function extractLineFaces(
   lines: ResolvedLine[],
   key: PointKey,
+  angleForEdge?: (
+    line: ResolvedLine,
+    start: ResolvedPoint,
+    end: ResolvedPoint,
+  ) => number,
 ): { faces: LineFace[]; errors: string[] } {
   interface Edge {
     id: number;
@@ -183,7 +191,9 @@ export function extractLineFaces(
         line,
         start,
         end,
-        angle: Math.atan2(end.y - start.y, end.x - start.x),
+        angle:
+          angleForEdge?.(line, start, end) ??
+          Math.atan2(end.y - start.y, end.x - start.x),
       };
       edges.push(edge);
       const fan = fans.get(key(start)) ?? [];

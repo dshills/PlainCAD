@@ -174,7 +174,16 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
   Topology changes require explicit profile repair. Source entities/constraints are
   never rewritten. Open/dangling, overlapping, touching-ambiguous and authored
   self-crossing loops fail diagnostically; 750 source lines and 2048 fragments bound
-  the work. Arc/circle intersection fragmentation remains unavailable. Individual
+  the work. Straight dividers and closed line boundaries can now split circles
+  at analytic contacts, retaining exact circular kernel boundaries, source lineage
+  and stable fragment-based profile IDs through size/order/winding edits. Native
+  XY/XZ/YZ checks cover parameter-driven sectors, exact BRep volume/orientation,
+  save/open, STL and explicit repair after topology changes. Untouched circles keep
+  their existing profile IDs. Circle/line tangencies and dangling tails fail
+  explicitly; circle/circle intersections and arc fragmentation remain unsupported.
+  Curved traversal is bounded to 750 source curves, 2048 fragments/contacts and
+  8192 sampled graph segments; sampling classifies faces, while native modeling
+  uses analytic fragments. Individual
   authored edge treatments on split lines remain diagnostic rather than rebinding.
   Arcs retain analytic kernel boundaries;
   profile classification and fallback meshes sample their sweeps. Face selection

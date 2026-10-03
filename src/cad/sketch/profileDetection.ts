@@ -5,6 +5,7 @@ import {
   ResolvedSketch,
 } from "./SketchSolver";
 
+import { fragmentCircleProfiles } from "./curvedFragmentation";
 import { SKETCH_TOLERANCE } from "./tolerances";
 import { extractLineFaces, fragmentProfileLines } from "./lineFragmentation";
 
@@ -64,7 +65,36 @@ export function detectProfiles(sketch: ResolvedSketch): ProfileDetectionResult {
   if (sketch.errors.length)
     return { profiles: [], errors: sketch.errors.map((e) => e.message) };
   const arcs = (sketch.arcs ?? []).filter((a) => !a.construction);
-  const arcBySegment = new Map<string, ResolvedArc>();
+  let arcBySegment = new Map<string, ResolvedArc>();
+  let curvedLineage: Map<string, string> | undefined;
+  let curved = false;
+  const authoredLines = sketch.lines.filter((l) => !l.construction);
+  const authoredCircles = sketch.circles.filter((c) => !c.construction);
+  let sourceKey: ReturnType<typeof clusterPointKeys> | undefined;
+  if (!arcs.length && authoredLines.length && authoredCircles.length) {
+    const initialKey = clusterPointKeys(authoredLines);
+    sourceKey = initialKey;
+    const errors = validateDirtyGeometry(
+      authoredLines,
+      [],
+      initialKey,
+      true,
+    ).concat(validateDirtyGeometry([], authoredCircles, initialKey));
+    if (errors.length) return { profiles: [], errors };
+    const result = fragmentCircleProfiles(
+      authoredLines,
+      authoredCircles,
+      initialKey,
+      sampleArc,
+    );
+    if (result.errors.length) return { profiles: [], errors: result.errors };
+    if (result.handled) {
+      curved = true;
+      curvedLineage = result.lineage;
+      arcBySegment = result.arcs;
+      sketch = { ...sketch, lines: result.lines, circles: result.circles };
+    }
+  }
   const lines = sketch.lines.filter((l) => !l.construction);
   for (const arc of arcs) {
     const samples = sampleArc(arc);
@@ -84,18 +114,20 @@ export function detectProfiles(sketch: ResolvedSketch): ProfileDetectionResult {
     circles: sketch.circles.filter((c) => !c.construction),
   };
   const errors: string[] = [];
-  let keyForPoint = clusterPointKeys(sketch.lines);
-  const dirtyGeometry = validateDirtyGeometry(
-    sketch.lines,
-    sketch.circles,
-    keyForPoint,
-    arcs.length === 0,
-  );
+  let keyForPoint = !curved && sourceKey ? sourceKey : clusterPointKeys(sketch.lines);
+  const dirtyGeometry = curved || sourceKey
+    ? []
+    : validateDirtyGeometry(
+        sketch.lines,
+        sketch.circles,
+        keyForPoint,
+        arcs.length === 0,
+      );
   if (dirtyGeometry.length > 0) return { profiles: [], errors: dirtyGeometry };
 
-  let fragmented = false;
-  let lineage = new Map(sketch.lines.map((l) => [l.id, l.id]));
-  if (!arcs.length) {
+  let fragmented = curved;
+  let lineage = curvedLineage ?? new Map(sketch.lines.map((l) => [l.id, l.id]));
+  if (!arcs.length && !curved) {
     const result = fragmentProfileLines(sketch.lines, keyForPoint);
     if (result.errors.length) return { profiles: [], errors: result.errors };
     sketch = { ...sketch, lines: result.lines };
@@ -108,7 +140,7 @@ export function detectProfiles(sketch: ResolvedSketch): ProfileDetectionResult {
     fragmented = result.changed || [...degrees.values()].some((n) => n > 2);
   }
   const lineLoops = fragmented
-    ? fragmentedLoops(sketch.lines, keyForPoint, lineage, errors)
+    ? fragmentedLoops(sketch.lines, keyForPoint, lineage, errors, arcBySegment)
     : extractLineLoops(
         sketch.lines,
         errors,
@@ -300,28 +332,52 @@ function fragmentedLoops(
   key: (point: { x: number; y: number }) => string,
   lineage: Map<string, string>,
   errors: string[],
+  arcBySegment = new Map<string, ResolvedArc>(),
 ): LineLoop[] {
-  const result = extractLineFaces(lines, key);
+  const result = extractLineFaces(lines, key, (line, start, end) => {
+    const arc = arcBySegment.get(line.id);
+    if (!arc) return Math.atan2(end.y - start.y, end.x - start.x);
+    const forward = start.id === line.start.id;
+    return (
+      Math.atan2(start.y - arc.center.y, start.x - arc.center.x) +
+      (forward ? 1 : -1) * Math.sign(arc.sweep) * Math.PI / 2
+    );
+  });
   errors.push(...result.errors);
-  return result.faces.map((face) => {
-    const entityIds = face.lines.map((l) => l.id),
-      signedArea = polygonArea(face.points);
-    return {
+  return result.faces.flatMap((face): LineLoop[] => {
+    // A restored analytic arc cannot straddle the traversal seam.
+    const boundary = face.lines.findIndex((l) => {
+      const arc = arcBySegment.get(l.id);
+      return (
+        !arc ||
+        distance(l.start, arc.start) < PROFILE_EPSILON ||
+        distance(l.start, arc.end) < PROFILE_EPSILON
+      );
+    });
+    if (boundary < 0) {
+      errors.push("Curved profile traversal could not find a complete analytic arc boundary. Repair the sketch before modeling.");
+      return [];
+    }
+    const boundaryLines = [...face.lines.slice(boundary), ...face.lines.slice(0, boundary)];
+    const points = boundaryLines.map(l => l.start);
+    const entityIds = boundaryLines.map((l) => l.id),
+      signedArea = polygonArea(points);
+    return [{
       key: stableHash([...entityIds].sort().join("|")),
       entityIds,
       lineageIds: [...new Set(entityIds.map((id) => lineage.get(id)!))].sort(),
-      segments: face.lines.map((l) => ({
+      segments: boundaryLines.map((l) => ({
         type: "line" as const,
         id: l.id,
         sourceEntityId: lineage.get(l.id),
         start: l.start,
         end: l.end,
       })),
-      points: face.points,
-      bounds: boundsForPoints(face.points),
-      centroid: polygonCentroid(face.points, signedArea),
+      points,
+      bounds: boundsForPoints(points),
+      centroid: polygonCentroid(points, signedArea),
       signedArea,
-    };
+    }];
   });
 }
 
