@@ -144,6 +144,7 @@ export function CadViewer() {
     });
 
     const unregisterDiagnostics = import.meta.env.DEV ? registerViewerDiagnostics(() => ({
+      resources: { geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, programs: renderer.info.programs?.length ?? 0 },
       cameraUp: camera.up.toArray(),
       cameraPosition: camera.position.toArray(),
       sectionPlane: clippingRef.current ? { normal: clippingRef.current.normal.toArray(), constant: clippingRef.current.constant } : undefined,

@@ -32,6 +32,8 @@ that a capability works end to end.
   Screenshots/downloads/traces are in ignored `test-results/`. Run `npm run build`
   before standalone `npm run test:production`; its strict preview server uses port
   5280 and verifies native workers under the production security headers.
+  The development suite also writes a controlled native benchmark `performance.json`
+  with timing/resource samples; see `specs/working-cad/PERFORMANCE.md` for its scope.
 
 The production build may warn about large chunks from the CAD kernel and viewer.
 Report relevant warnings, but do not treat that warning alone as a failed build.

@@ -177,6 +177,11 @@ export class OpenCascadeKernel implements KernelAdapter {
   private static openCascade: Record<string, any> | undefined;
   private static initPromise: Promise<Record<string, any>> | undefined;
 
+  getWasmHeapCapacityBytes(): number | undefined {
+    const bytes = OpenCascadeKernel.openCascade?.HEAPU8?.buffer?.byteLength;
+    return typeof bytes === "number" && Number.isSafeInteger(bytes) && bytes > 0 ? bytes : undefined;
+  }
+
   static async initialize(): Promise<void> {
     if (!OpenCascadeKernel.initPromise) {
       OpenCascadeKernel.initPromise = initOpenCascadeModule({

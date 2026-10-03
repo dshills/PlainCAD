@@ -152,7 +152,7 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
   under the policy, plus blocked inline scripts, JS eval and remote fetch. Final-host
   header/MIME verification remains a deployment step.
 - Broader browser/kernel acceptance coverage (complex feature chains, imported
-  fixtures, other browsers), broader accessibility audit, controlled performance reporting, and final-host deployment
+  fixtures, other browsers), broader accessibility audit, and final-host deployment
   verification remain open. The bounded Chromium suite runs in the release gate
   and GitHub Actions; CI execution itself has not been verified locally.
 
@@ -167,6 +167,17 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
 - Chromium tests cover focus containment/restoration, modal-to-modal export,
   disabled commands, camera orientation, shortcut isolation and retained recovery.
   This is bounded keyboard coverage; screen-reader and contrast audits remain open.
+
+## Performance and resource reporting
+
+- A controlled native extrude/cut benchmark records five warmups and twenty current
+  geometry-verified parameter edits, measurement/section previews, and ten validated
+  STL exports. JSON artifacts include phase timings, sample p50/p95, environment,
+  scoped/outer disposal counters, WASM capacity and Three.js resource counts.
+- The release gate checks bounded resource growth and zero disposal failures;
+  shared-CI latency is reported without hard timing thresholds. Capacity/resource
+  counts do not prove absence of every leak. Broader workloads and production-build
+  benchmarking remain open. See [method and local results](PERFORMANCE.md).
 
 ## Intentionally deferred
 

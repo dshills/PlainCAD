@@ -11,6 +11,7 @@ export interface FabricationResult {
   warnings: string[];
   bodyCount: number;
   triangleCount: number;
+  metrics?: { meshValidationMs: number; encodingMs: number; totalMs: number };
 }
 export function buildStlExport(
   meshes: RenderMesh[],
@@ -19,6 +20,7 @@ export function buildStlExport(
   mode: StlMode,
   fullChecks = true,
 ): FabricationResult {
+  const started = performance.now();
   if (!["separate", "shells", "merged"].includes(mode))
     throw new Error("Unknown STL export mode.");
   if (!meshes.length || meshes.length > MODEL_RESOURCE_LIMITS.maxBodies)
@@ -38,6 +40,7 @@ export function buildStlExport(
     throw new Error(
       "Merged export requires a native union and full mesh validation.",
     );
+  const validationStarted = performance.now();
   const budget = { pairs: 0 },
     checks = meshes.map((mesh) => validateMesh(mesh, fullChecks, budget));
   const names = meshes.map(
@@ -56,6 +59,8 @@ export function buildStlExport(
     warnings.push(
       "Native union contains separate solids. It did not connect disjoint bodies.",
     );
+  const meshValidationMs = performance.now() - validationStarted;
+  const encodingStarted = performance.now();
   let file: ExportFile;
   if (mode === "separate" && meshes.length > 1) {
     const filenames = uniqueFilenames(names);
@@ -76,5 +81,15 @@ export function buildStlExport(
         name,
       ),
     };
-  return { file, warnings, bodyCount: meshes.length, triangleCount };
+  return {
+    file,
+    warnings,
+    bodyCount: meshes.length,
+    triangleCount,
+    metrics: {
+      meshValidationMs,
+      encodingMs: performance.now() - encodingStarted,
+      totalMs: performance.now() - started,
+    },
+  };
 }

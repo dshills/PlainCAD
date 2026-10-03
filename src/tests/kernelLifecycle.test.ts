@@ -152,4 +152,28 @@ describe("kernel lifecycle hardening", () => {
     promoted.delete();
     expect(result.delete).toHaveBeenCalledTimes(1);
   });
+
+  it("accounts for transferred/already-deleted handles and repeated disposal once", () => {
+    const before = getDisposableScopeMetrics();
+    const scope = new DisposableScope();
+    const retained = { delete: vi.fn() };
+    const deleted = { delete: vi.fn(), isDeleted: () => true };
+    scope.release(scope.use(retained));
+    scope.use(deleted);
+    expect(scope.dispose()).toMatchObject({
+      registered: 2,
+      disposed: 0,
+      released: 1,
+      alreadyDeleted: 1,
+      failures: 0,
+    });
+    const after = getDisposableScopeMetrics();
+    expect(after.registered - before.registered).toBe(2);
+    scope.dispose();
+    expect(getDisposableScopeMetrics()).toEqual(after);
+    expect(retained.delete).not.toHaveBeenCalled();
+    expect(deleted.delete).not.toHaveBeenCalled();
+    expect(() => scope.use(retained)).toThrow("disposed scope");
+    retained.delete();
+  });
 });

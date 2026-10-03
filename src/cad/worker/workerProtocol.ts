@@ -28,10 +28,15 @@ export interface RebuildResult {
 export interface RebuildMetrics {
   parameterEvaluationMs: number;
   sketchSolveMs: number;
+  profileDetectionMs: number;
   featureRebuildMs: number;
   operationCount: number;
   cacheSize: number;
   disposalFailures: number;
+  shapeDisposalAttempts: number;
+  shapeDisposalFailures: number;
+  scopedHandles: { registered: number; disposed: number; released: number; alreadyDeleted: number; failures: number };
+  wasmHeapCapacityBytes?: number;
 }
 
 export interface RebuildError {

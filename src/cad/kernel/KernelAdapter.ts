@@ -88,5 +88,7 @@ export interface KernelAdapter {
   tessellate(shape: KernelShape, options: TessellationOptions): RenderMesh;
   exportStl(shape: KernelShape): ArrayBuffer;
   disposeShape?(shape: KernelShape): void;
+  /** Allocated WASM memory capacity, not live allocations or process memory. */
+  getWasmHeapCapacityBytes?(): number | undefined;
   exportStep?(shape: KernelShape): ArrayBuffer;
 }

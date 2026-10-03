@@ -126,7 +126,7 @@ export function rebuildDocument(
   }
   for (const id of sketchSeeds.keys())
     if (!document.sketches[id]) sketchSeeds.delete(id);
-  const sketchStarted = performance.now();
+  let sketchSolveMs = 0, profileDetectionMs = 0;
 
   const solvedSketches = new Map<string, ReturnType<typeof solveSketch>>();
   const profilesBySketch = new Map<string, ReturnType<typeof detectProfiles>>();
@@ -136,9 +136,11 @@ export function rebuildDocument(
       sketch.entities,
     ]);
     const previous = sketchSeeds.get(sketch.id);
+    const solveStarted = performance.now();
     const solved = solveSketch(sketch, evaluated.values, {
       seed: previous?.signature === signature ? previous.solved : undefined,
     });
+    sketchSolveMs += performance.now() - solveStarted;
     if (!solved.errors.length)
       sketchSeeds.set(sketch.id, { signature, solved });
     solvedSketches.set(sketch.id, solved);
@@ -159,7 +161,9 @@ export function rebuildDocument(
         sourceId: sketch.id,
         message: `Underconstrained sketch: ${solved.degreesOfFreedom} degrees of freedom remain.`,
       });
+    const profileStarted = performance.now();
     const detected = detectProfiles(solved);
+    profileDetectionMs += performance.now() - profileStarted;
     profilesBySketch.set(sketch.id, detected);
     for (const message of detected.errors) {
       warnings.push({
@@ -182,7 +186,6 @@ export function rebuildDocument(
       sourceId: id,
       message,
     });
-  const sketchSolveMs = performance.now() - sketchStarted;
 
   const bodies: CadBody[] = [];
   const meshes = [];
@@ -533,9 +536,20 @@ export function rebuildDocument(
     metrics: {
       parameterEvaluationMs,
       sketchSolveMs,
+      profileDetectionMs,
       featureRebuildMs,
       operationCount,
       cacheSize: runtimeBodies.size,
+      wasmHeapCapacityBytes: kernel.getWasmHeapCapacityBytes?.(),
+      shapeDisposalAttempts: shapesToDispose.size,
+      shapeDisposalFailures: disposalFailures,
+      scopedHandles: {
+        registered: disposableMetricsFinished.registered - disposableMetricsStarted.registered,
+        disposed: disposableMetricsFinished.disposed - disposableMetricsStarted.disposed,
+        released: disposableMetricsFinished.released - disposableMetricsStarted.released,
+        alreadyDeleted: disposableMetricsFinished.alreadyDeleted - disposableMetricsStarted.alreadyDeleted,
+        failures: disposableMetricsFinished.failures - disposableMetricsStarted.failures,
+      },
       disposalFailures:
         disposalFailures +
         (disposableMetricsFinished.failures -
