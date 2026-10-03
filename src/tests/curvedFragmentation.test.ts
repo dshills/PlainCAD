@@ -175,7 +175,7 @@ describe("bounded analytic circle divider fragmentation", () => {
         .some((s) => s.type === "arc"),
     ).toBe(true);
   });
-  it("rejects tangencies, dangling chords, overlapping and intersecting circular boundaries explicitly", () => {
+  it("rejects tangencies, dangling chords and overlapping boundaries explicitly", () => {
     expect(
       detect([line("tangent", -10, 10, 10, 10)]).errors.join(" "),
     ).toContain("tangential");
@@ -197,9 +197,9 @@ describe("bounded analytic circle divider fragmentation", () => {
     expect(
       detect(
         [line("h", -10, 0, 10, 0)],
-        [circle(), circle("other", 10, 15, 0)],
+        [circle(), circle("other", 10, 20, 0)],
       ).errors.join(" "),
-    ).toContain("intersect");
+    ).toContain("tangential");
   });
   it("ignores construction dividers and never rewrites resolved source entities", () => {
     const source = [line("h", -10, 0, 10, 0)],
@@ -427,5 +427,141 @@ describe("analytic straight dividers in mixed arc profiles", () => {
         [circle("intersecting", 5, 0, 10)],
       ).errors.join(" "),
     ).toContain("unsupported");
+  });
+});
+
+const lensArea = (radius: number, separation: number) =>
+  2 * radius * radius * Math.acos(separation / (2 * radius)) -
+  (separation * Math.sqrt(4 * radius * radius - separation * separation)) / 2;
+describe("analytic circle/circle regions", () => {
+  it("creates two crescents and an exact two-arc lens without mutating circles", () => {
+    const circles = [circle("a"), circle("b", 10, 10, 0)];
+    const before = structuredClone(circles),
+      result = detect([], circles);
+    expect(result.errors).toEqual([]);
+    expect(result.profiles).toHaveLength(3);
+    const areas = result.profiles.map(area).sort((a, b) => a - b);
+    const lens = lensArea(10, 10);
+    expect(areas[0]).toBeCloseTo(lens, 8);
+    for (const value of areas.slice(1))
+      expect(value).toBeCloseTo(100 * Math.PI - lens, 8);
+    for (const p of result.profiles) {
+      expect(p.outerLoop.lineageIds).toEqual(["a", "b"]);
+      expect(p.outerLoop.segments).toHaveLength(2);
+      expect(p.outerLoop.segments!.every((s) => s.type === "arc")).toBe(true);
+    }
+    expect(circles).toEqual(before);
+  });
+  it("preserves IDs through scaling, rotation, translation and circle order", () => {
+    const original = detect([], [circle("a"), circle("b", 10, 10, 0)]);
+    const edited = detect(
+      [],
+      [circle("b", 20, 100, 220), circle("a", 20, 100, 200)],
+    );
+    expect(edited.errors).toEqual([]);
+    expect(edited.profiles.map((p) => p.id)).toEqual(
+      original.profiles.map((p) => p.id),
+    );
+    expect(edited.profiles.reduce((sum, p) => sum + area(p), 0)).toBeCloseTo(
+      4 * (200 * Math.PI - lensArea(10, 10)),
+      7,
+    );
+  });
+  it("combines crossing circles and a straight divider through shared intersection contacts", () => {
+    const result = detect(
+      [line("divider", 5, -Math.sqrt(75), 5, Math.sqrt(75))],
+      [circle("a"), circle("b", 10, 10, 0)],
+    );
+    expect(result.errors).toEqual([]);
+    expect(result.profiles).toHaveLength(4);
+    expect(result.profiles.reduce((sum, p) => sum + area(p), 0)).toBeCloseTo(
+      200 * Math.PI - lensArea(10, 10),
+      8,
+    );
+  });
+  it("classifies holes and retains untouched nested and disjoint circle IDs", () => {
+    const base = [circle("a"), circle("b", 10, 10, 0)];
+    const result = detect(
+      [],
+      [...base, circle("hole", 1, 5, 0), circle("island", 2, 40, 0)],
+    );
+    expect(result.errors).toEqual([]);
+    expect(result.profiles).toHaveLength(4);
+    expect(
+      result.profiles.find((p) => p.innerLoops.length)!.holes.map((h) => h.id),
+    ).toEqual(["hole"]);
+    expect(
+      result.profiles.find((p) => p.outerLoop.entityIds[0] === "island")!.id,
+    ).toBe(detect([], [circle("island", 2, 40, 0)]).profiles[0].id);
+    const nested = detect([], [circle("outer", 10), circle("inner", 5)]);
+    expect(nested.errors).toEqual([]);
+    expect(nested.profiles).toHaveLength(1);
+    expect(nested.profiles[0].holes.map((h) => h.id)).toEqual(["inner"]);
+  });
+  it("rejects duplicate, external/internal tangent and tolerance-ambiguous circles", () => {
+    for (const b of [
+      circle("b"),
+      circle("b", 10, 20, 0),
+      circle("b", 5, 5, 0),
+      circle("b", 10, 20 + 5e-9, 0),
+    ]) {
+      const result = detect([], [circle("a"), b]);
+      expect(result.profiles).toEqual([]);
+      expect(result.errors.join(" ")).toMatch(/overlap|tangential|ambiguous/);
+    }
+    expect(
+      detect(
+        [],
+        [circle("a"), { ...circle("b", 10, 10, 0), construction: true }],
+      ).profiles[0].outerLoop.type,
+    ).toBe("circle");
+  });
+  it("partitions unequal radii into exact analytic regions", () => {
+    const r = 8,
+      s = 5,
+      d = 7;
+    const lens =
+      r * r * Math.acos((d * d + r * r - s * s) / (2 * d * r)) +
+      s * s * Math.acos((d * d + s * s - r * r) / (2 * d * s)) -
+      Math.sqrt((-d + r + s) * (d + r - s) * (d - r + s) * (d + r + s)) / 2;
+    const result = detect([], [circle("a", r), circle("b", s, d, 0)]);
+    expect(result.errors).toEqual([]);
+    expect(result.profiles).toHaveLength(3);
+    const intersection = result.profiles.find(
+      (p) =>
+        Math.abs(p.bounds.minX - 2) < 1e-8 &&
+        Math.abs(p.bounds.maxX - 8) < 1e-8,
+    )!;
+    expect(area(intersection)).toBeCloseTo(lens, 8);
+    expect(result.profiles.reduce((sum, p) => sum + area(p), 0)).toBeCloseTo(
+      Math.PI * (r * r + s * s) - lens,
+      8,
+    );
+  });
+  it("partitions three mutually crossing circles and rejects excess contact work", () => {
+    const circles = [
+      circle("a"),
+      circle("b", 10, 10, 0),
+      circle("c", 10, 5, 5 * Math.sqrt(3)),
+    ];
+    const result = detect([], circles);
+    expect(result.errors).toEqual([]);
+    expect(result.profiles).toHaveLength(7);
+    expect(result.profiles.every((p) => area(p) > 0)).toBe(true);
+    expect(
+      detect([], [...circles].reverse()).profiles.map((p) => p.id),
+    ).toEqual(result.profiles.map((p) => p.id));
+    const dense = Array.from({ length: 48 }, (_, i) =>
+      circle(`c${i}`, 10, i * 0.1, 0),
+    );
+    expect(detect([], dense).errors.join(" ")).toContain("2048 contact limit");
+  });
+  it("enforces the combined curve source limit before pair traversal", () => {
+    const circles = Array.from({ length: 751 }, (_, i) =>
+      circle(`c${i}`, 1, i * 4, 0),
+    );
+    expect(detect([], circles).errors.join(" ")).toContain(
+      "750 source-curve limit",
+    );
   });
 });

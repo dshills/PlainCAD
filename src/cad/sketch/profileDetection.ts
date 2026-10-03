@@ -71,19 +71,21 @@ export function detectProfiles(sketch: ResolvedSketch): ProfileDetectionResult {
   const authoredLines = sketch.lines.filter((l) => !l.construction);
   const authoredCircles = sketch.circles.filter((c) => !c.construction);
   let sourceKey: ReturnType<typeof clusterPointKeys> | undefined;
-  if (authoredLines.length && (authoredCircles.length || arcs.length)) {
+  if (
+    (authoredLines.length && (authoredCircles.length || arcs.length)) ||
+    authoredCircles.length > 1
+  ) {
     const initialKey = clusterPointKeys([
       ...authoredLines,
       ...arcs.map((arc) => ({ id: arc.id, start: arc.start, end: arc.end })),
     ]);
     // Legacy arc traversal adds sampled points, which need a new cluster map.
     sourceKey = arcs.length ? undefined : initialKey;
-    const errors = validateDirtyGeometry(
-      authoredLines,
-      [],
-      initialKey,
-      true,
-    ).concat(validateDirtyGeometry([], authoredCircles, initialKey));
+    const errors = [
+      ...validateDirtyGeometry(authoredLines, [], initialKey, true),
+      // Pair contacts are checked by the analytic fragmenter below.
+      ...validateCircleRadii(authoredCircles),
+    ];
     if (errors.length) return { profiles: [], errors };
     const result = fragmentCurvedProfiles(
       authoredLines,
@@ -263,6 +265,12 @@ interface LineLoop {
   signedArea: number;
 }
 
+function validateCircleRadii(circles: ResolvedCircle[]): string[] {
+  return circles
+    .filter((circle) => circle.radius <= 0)
+    .map((circle) => `Circle "${circle.id}" has a non-positive radius.`);
+}
+
 function validateDirtyGeometry(
   lines: ResolvedLine[],
   circles: ResolvedCircle[],
@@ -298,10 +306,7 @@ function validateDirtyGeometry(
         );
     }
   }
-  for (const circle of circles) {
-    if (circle.radius <= 0)
-      errors.push(`Circle "${circle.id}" has a non-positive radius.`);
-  }
+  errors.push(...validateCircleRadii(circles));
   for (let i = 0; i < circles.length; i++)
     for (let j = i + 1; j < circles.length; j++) {
       const a = circles[i],

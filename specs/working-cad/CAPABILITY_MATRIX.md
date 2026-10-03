@@ -182,8 +182,12 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
   save/open, STL and explicit repair after topology changes. Untouched circles and
   unsplit legacy arc profiles retain existing IDs. Authored mixed-loop
   self-intersections, interior tangencies, overlaps and dangling tails fail
-  explicitly; ordinary shared arc endpoints remain supported. Circle/circle,
-  arc/arc and circle/arc intersection fragmentation remains unsupported.
+  explicitly; ordinary shared arc endpoints remain supported. Proper circle/circle
+  crossings now create selectable analytic lens/crescent regions with stable
+  pair/root anchors. Native XY/XZ/YZ tests verify exact BRep volume and world-coordinate bounds,
+  parameter edits, save/open, STL and explicit repair when intersections disappear.
+  Nested/disjoint circles keep their identities; tangencies and coincident circles
+  stay diagnostic. Arc/arc and circle/arc intersection fragmentation remains unsupported.
   Curved traversal is bounded to 750 source curves, 2048 fragments/contacts and
   8192 sampled graph segments; sampling classifies faces, while native modeling
   uses analytic fragments. Individual

@@ -36,8 +36,8 @@ function addCut(cuts: Cut[], cut: Cut) {
   if (existing) existing.anchors.push(...cut.anchors);
   else cuts.push({ ...cut, anchors: [...cut.anchors] });
 }
-/** Analytic straight-line contacts with circles and arcs. No durable entity is
- * split or rewritten. Curve/curve intersections and ambiguities stay diagnostic. */
+/** Analytic line/curve and circle/circle contacts. No durable entity is
+ * split or rewritten. Arc/curve intersections and ambiguities stay diagnostic. */
 export function fragmentCurvedProfiles(
   sourceLines: ResolvedLine[],
   sourceCircles: ResolvedCircle[],
@@ -59,8 +59,8 @@ export function fragmentCurvedProfiles(
     lines: [],
     errors: [message],
   });
-  if (!sourceLines.length || !(sourceCircles.length + sourceArcs.length))
-    return result;
+  if (!(sourceCircles.length + sourceArcs.length)) return result;
+  if (!sourceLines.length && sourceCircles.length < 2) return result;
   if (
     sourceLines.length + sourceCircles.length + sourceArcs.length >
     MAX_PROFILE_SOURCE_CURVES
@@ -100,6 +100,57 @@ export function fragmentCurvedProfiles(
   );
   let contacts = 0,
     changed = false;
+  // Order by durable IDs, so the signed roots and their anchors survive array edits.
+  const circles = [...sourceCircles].sort((a, b) =>
+    a.id < b.id ? -1 : a.id > b.id ? 1 : 0,
+  );
+  for (let i = 0; i < circles.length; i++)
+    for (let j = i + 1; j < circles.length; j++) {
+      const a = circles[i],
+        b = circles[j],
+        d = distance(a.center, b.center);
+      const sum = a.radius + b.radius,
+        difference = Math.abs(a.radius - b.radius);
+      if (d <= EPS && difference <= EPS)
+        return fail(
+          `Circles "${a.id}" and "${b.id}" overlap within sketch tolerance. Remove the duplicate boundary before modeling.`,
+        );
+      if (d > sum + EPS || d < difference - EPS) continue;
+      if (Math.abs(d - sum) <= EPS || Math.abs(d - difference) <= EPS)
+        return fail(
+          `Circles "${a.id}" and "${b.id}" touch tangentially or ambiguously. Separate the boundaries before modeling.`,
+        );
+      const along = ((a.radius - b.radius) * sum + d * d) / (2 * d);
+      // Factored intersection height avoids subtracting almost equal squared radii.
+      const h =
+        Math.sqrt((sum + d) * (sum - d) * (d + difference) * (d - difference)) /
+        (2 * d);
+      if (!Number.isFinite(h) || h <= EPS)
+        return fail(
+          `Circles "${a.id}" and "${b.id}" have an ambiguous intersection within sketch tolerance.`,
+        );
+      const ux = (b.center.x - a.center.x) / d,
+        uy = (b.center.y - a.center.y) / d;
+      for (const branch of [-1, 1]) {
+        const anchor = `circle-circle-contact:${JSON.stringify([a.id, b.id, branch])}`;
+        const point = {
+          id: anchor,
+          x: a.center.x + along * ux - branch * h * uy,
+          y: a.center.y + along * uy + branch * h * ux,
+        };
+        for (const c of [a, b])
+          addCut(circleCuts.get(c.id)!, {
+            t: angle(point, c),
+            point,
+            anchors: [anchor],
+          });
+        if (++contacts > MAX_PROFILE_FRAGMENTS)
+          return fail(
+            `Curved fragmentation exceeds the ${MAX_PROFILE_FRAGMENTS} contact limit.`,
+          );
+      }
+      changed = true;
+    }
   for (const circle of curves)
     for (const line of sourceLines) {
       // Canonical endpoint order gives the two roots stable identities under winding edits.

@@ -198,8 +198,9 @@ rebuild until their expressions are repaired; reused names cannot retarget them.
    report diagnostics; ordinary shared arc-endpoint joins remain supported.
    Fragments keep analytic kernel arcs and authored entity IDs. Radius and winding
    edits retain region IDs while topology is unchanged; removing a divider requires
-   explicit feature-profile repair. Circle/circle, arc/arc and circle/arc intersection
-   fragmentation remains unsupported.
+   explicit feature-profile repair. Crossing circles produce crescent and lens
+   regions with analytic boundaries; tangencies and duplicate circles remain
+   diagnostic. Arc/arc and circle/arc intersection fragmentation remains unsupported.
 3. Add constraints and driving dimensions in Sketch tools; dimension expressions
    can reference parameters. Coordinate expressions supply initial geometry;
    fixed constraints lock coordinates when that is the intended design intent.

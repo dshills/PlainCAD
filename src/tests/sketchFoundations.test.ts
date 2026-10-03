@@ -532,19 +532,19 @@ describe("constraint solving and bounded failures", () => {
       solveSketch(dimensioned, {}, { seed, reset: true }).points[b].x,
     ).toBeCloseTo(20, 6);
   });
-  it("diagnoses large sketches and intersecting circular boundaries", () => {
+  it("diagnoses large sketches and tangent circular boundaries", () => {
     let large = createXySketch();
     for (let i = 0; i < 81; i++)
       large = addPoint(large, `${i}mm`, "0mm").sketch;
     expect(solveSketch(large, {}).status).toBe("nonConverged");
-    const overlapping = addCircleAt(
+    const tangent = addCircleAt(
       addCircleAt(createXySketch(), "0mm", "0mm", "10mm"),
-      "15mm",
+      "20mm",
       "0mm",
       "10mm",
     );
-    expect(detectProfiles(solveSketch(overlapping, {})).errors[0]).toContain(
-      "intersect",
+    expect(detectProfiles(solveSketch(tangent, {})).errors[0]).toContain(
+      "tangential",
     );
   });
 });

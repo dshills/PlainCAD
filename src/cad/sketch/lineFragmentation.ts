@@ -191,14 +191,20 @@ export function extractLineFaces(
     for (const reverse of [false, true]) {
       const start = reverse ? line.end : line.start,
         end = reverse ? line.start : line.end;
+      const direction =
+        angleForEdge?.(line, start, end) ??
+        Math.atan2(end.y - start.y, end.x - start.x);
+      // Analytic tangents may cross the atan2 seam; all fans need one angular range.
+      const turn = 2 * Math.PI;
       const edge = {
         id: edges.length,
         line,
         start,
         end,
         angle:
-          angleForEdge?.(line, start, end) ??
-          Math.atan2(end.y - start.y, end.x - start.x),
+          direction >= -Math.PI && direction < Math.PI
+            ? direction
+            : ((((direction + Math.PI) % turn) + turn) % turn) - Math.PI,
       };
       edges.push(edge);
       const fan = fans.get(key(start)) ?? [];
