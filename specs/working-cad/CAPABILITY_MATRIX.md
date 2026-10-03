@@ -146,7 +146,16 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
   Pointer-driven native Chromium workflows cover XY/XZ/YZ, an offset plane,
   non-template extrusion/cut, edits, save/open and STL. The canvas edits local
   millimeter coordinates on resolved origin/offset/supported face planes; lost
-  planes block drawing. Point dragging and graphical dimensions remain open.
+  planes block drawing. Reference lengths/radii and editable driving dimensions
+  annotate current solved geometry with extension/leader lines and display units;
+  labels and keyboard controls add/edit/delete supported dimensions. Pending,
+  conflicting and lost dimensions show unavailable values; unanchored lost
+  references remain in the repairable dimension list instead of attaching to
+  unrelated geometry; failed solves block
+  drawing and native export but keep dimension expressions repairable. Native
+  Chromium covers parameter-driven diameter edits, conflict recovery, save/open
+  and STL; production CSP covers keyboard drawing, diameter edits and native XZ
+  volume/orientation. Point dragging remains open.
   Intersecting boundaries are diagnosed; intersection fragmentation remains missing.
   Arcs retain analytic kernel boundaries;
   profile classification and fallback meshes sample their sweeps. Face selection
@@ -183,7 +192,9 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
 - General post-boolean face/edge naming remains missing. Planes require an
   unmodified positive-distance new-body owner;
   curved side faces, hole/revolve faces, and ambiguous rebinding are unsupported.
-- Remaining feature inspectors and graphical dimension/constraint annotation need work.
+- Remaining feature inspectors and graphical constraint annotation need work.
+  Canvas dimension labels use bounded simple placement; automatic collision-free
+  label layout and direct label dragging are unavailable.
 - STL validation is numerical and bounded: it does not prove absence of every
   adjacent-face or near-degenerate self-intersection. Skipping expensive checks
   is explicit. Native union remains best-effort and does not connect disjoint solids.

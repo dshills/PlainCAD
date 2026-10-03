@@ -288,3 +288,129 @@ test("draft cancellation, primitive undo/redo, analytic arcs and construction ge
     page.getByRole("button", { name: "Edit sketch canvas", exact: true }),
   ).toBeDisabled();
 });
+
+test("drawing dimensions drive native geometry, diagnose conflicts, persist and export", async ({
+  page,
+}, info) => {
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.goto("/");
+  await ready(page);
+  await page
+    .getByRole("button", { name: "Add Parameter", exact: true })
+    .click();
+  await page.getByLabel("Parameter param_1 name", { exact: true }).fill("bore");
+  await page
+    .getByLabel("Parameter param_1 name", { exact: true })
+    .press("Enter");
+  await page
+    .getByLabel("Parameter bore expression", { exact: true })
+    .fill("14mm");
+  await page
+    .getByLabel("Parameter bore expression", { exact: true })
+    .press("Enter");
+  await page
+    .getByRole("button", { name: "Create XY sketch", exact: true })
+    .click();
+  await openCanvas(page);
+  await page.getByLabel("Canvas tool", { exact: true }).selectOption("circle");
+  await clickLocal(page, 0, 0);
+  await clickLocal(page, 5, 0);
+  await ready(page);
+  const svg = page.getByLabel("Sketch drawing canvas", { exact: true });
+  await expect(svg.locator("text")).toContainText(["R 5.0000 mm"]);
+  await page
+    .getByLabel("Canvas dimension type", { exact: true })
+    .selectOption("diameter");
+  await page
+    .getByLabel("Canvas dimension reference 1", { exact: true })
+    .selectOption({ index: 1 });
+  await page
+    .getByLabel("Canvas dimension expression", { exact: true })
+    .fill("bore");
+  await page
+    .getByRole("button", { name: "Apply driving dimension", exact: true })
+    .click();
+  await ready(page);
+  await expect(svg.locator("[data-dimension-id] text")).toHaveText(
+    "D1 Ø 14.0000 mm",
+  );
+  const initial = await snapshot(page),
+    sketch = Object.values(initial.document.sketches)[0],
+    dimensionId = sketch.dimensions[0].id;
+  expect(
+    initial.result!.solvedSketches![sketch.id].circles[0].radius,
+  ).toBeCloseTo(7, 6);
+  // A second incompatible diameter fails solving; labels and native export must not imply success.
+  await page
+    .getByLabel("Canvas dimension selection", { exact: true })
+    .selectOption("");
+  await page
+    .getByLabel("Canvas dimension expression", { exact: true })
+    .fill("20mm");
+  await page
+    .getByRole("button", { name: "Apply driving dimension", exact: true })
+    .click();
+  await expect.poll(async () => (await snapshot(page)).status).toBe("failed");
+  await expect(svg.locator("[data-dimension-id] text")).toContainText([
+    "unavailable",
+    "unavailable",
+  ]);
+  await expect(
+    page.getByRole("button", { name: "Place coordinate", exact: true }),
+  ).toBeDisabled();
+  await page
+    .getByRole("button", { name: "Delete canvas dimension", exact: true })
+    .click();
+  await ready(page);
+  await expect(svg.locator("[data-dimension-id] text")).toHaveText(
+    "D1 Ø 14.0000 mm",
+  );
+  await svg.locator(`[data-dimension-id="${dimensionId}"]`).click();
+  await expect(
+    page.getByLabel("Canvas dimension expression", { exact: true }),
+  ).toHaveValue("bore");
+  await page.getByRole("button", { name: "Fit sketch", exact: true }).click();
+  await page.screenshot({ path: info.outputPath("drawing-dimensions.png") });
+  await done(page);
+  await page
+    .getByRole("button", { name: "Extrude selected sketch", exact: true })
+    .click();
+  await ready(page, Math.PI * 49 * 10);
+  await page
+    .getByLabel("Parameter bore expression", { exact: true })
+    .fill("20mm");
+  await page
+    .getByLabel("Parameter bore expression", { exact: true })
+    .press("Enter");
+  await ready(page, Math.PI * 100 * 10);
+  await page.locator(".sketch-chip").first().click();
+  await openCanvas(page);
+  await expect(svg.locator("[data-dimension-id] text")).toHaveText(
+    "D1 Ø 20.0000 mm",
+  );
+  await page.getByLabel("Show drawing dimensions", { exact: true }).uncheck();
+  await expect(svg.locator("[data-dimension-id]")).toHaveCount(0);
+  await page.getByLabel("Show drawing dimensions", { exact: true }).check();
+  await done(page);
+  const saving = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const path = info.outputPath("dimensions.pcaddoc");
+  await (await saving).saveAs(path);
+  await page.reload();
+  await ready(page);
+  await page.locator('input[type="file"]').setInputFiles(path);
+  await ready(page, Math.PI * 100 * 10);
+  expect(
+    Object.values((await snapshot(page)).document.sketches)[0].dimensions[0].id,
+  ).toBe(dimensionId);
+  const exporting = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export STL", exact: true }).click();
+  const stl = info.outputPath("dimensions.stl");
+  await (await exporting).saveAs(stl);
+  expect(stlVolume(await readFile(stl)) / (Math.PI * 100 * 10)).toBeCloseTo(
+    1,
+    2,
+  );
+  expect(errors).toEqual([]);
+});

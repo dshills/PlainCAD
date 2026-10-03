@@ -711,3 +711,13 @@ dialog.file-dialog::backdrop { background: #0006; }
 
 .sketch-canvas-dialog .canvas-toolbar label { display: flex; margin: 0; }
 .sketch-canvas-dialog .canvas-toolbar select { width: auto; margin: 0; }
+
+.canvas-dimensions line { fill: none; }
+.canvas-dimensions text { stroke: none; paint-order: stroke; }
+.canvas-reference-dimension { stroke: #aab7c6; fill: #cbd5e1; pointer-events: none; }
+.canvas-driving-dimension { stroke: #ffc45c; fill: #ffc45c; cursor: pointer; }
+.canvas-driving-dimension:focus { outline: none; fill: #fff; stroke: #fff; }
+.canvas-dimension-unavailable { stroke: #ff9292; fill: #ff9292; }
+.canvas-dimension-controls { border-block: 1px solid #637080; margin: 0.5rem 0; }
+.canvas-dimension-list { max-height: 120px; overflow: auto; padding-left: 1.2rem; }
+.canvas-dimension-list span { font-size: 0.85rem; overflow-wrap: anywhere; }

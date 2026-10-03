@@ -157,7 +157,12 @@ rebuild until their expressions are repaired; reused names cannot retarget them.
    center/start/end arcs in a plane-local view. The canvas previews unfinished
    gestures, snaps to existing solved points and an optional millimeter grid, and
    saves complete primitives as undoable edits. Escape cancels a draft before closing.
-   Zoom, pan, Fit and construction geometry controls are available.
+   Zoom, pan, Fit, keyboard coordinate entry and construction geometry controls are available.
+   Drawing dimensions show solved lengths/radii in display units. Add a driving
+   length, radius/diameter, point distance or line angle in the canvas dimension
+   controls; click a D label to edit its expression. Pending or failed solves show
+   unavailable values. Adding a canvas dimension explicitly enables driving mode
+   for legacy sketches. Undo/redo and save/open preserve dimension IDs and intent.
    Use the rectangle/circle helpers or Sketch tools to add points, lines, circles,
    and center/start/end arcs. Construction curves appear dashed and are excluded
    from solid profiles.

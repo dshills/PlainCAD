@@ -1,3 +1,7 @@
+import {
+  withCanvasDimension,
+  type CanvasDimensionInput,
+} from "../../cad/sketch/canvasDimensions";
 import { create } from "zustand";
 import { useCadStore, type CadStore } from "../../state/useCadStore";
 import { upsertSketch } from "../../cad/document/CadDocument";
@@ -44,6 +48,7 @@ export function beginSketchCanvas() {
 export function canvasContext(
   active: CanvasSession,
   state = useCadStore.getState(),
+  allowSolveErrors = false,
 ) {
   const document = state.history.present,
     sketch = document.sketches[active.sketchId];
@@ -59,18 +64,36 @@ export function canvasContext(
     throw new Error(
       `Repair parameter errors before drawing: ${evaluation.errors[0].message}`,
     );
-  const planes = resolveDocumentPlanes(document, evaluation.values);
+  const rebuild = state.rebuild;
+  // Document edits synchronously queue a rebuild; the store rejects stale request IDs/epochs.
+  // A succeeded/failed snapshot therefore belongs to the current immutable present.
+  const current =
+    (rebuild.status === "succeeded" || rebuild.status === "failed") &&
+    rebuild.result?.documentId === document.id;
+  const solvedSketches = current ? rebuild.result?.solvedSketches : undefined;
+  const planes = resolveDocumentPlanes(
+    document,
+    evaluation.values,
+    solvedSketches ? new Map(Object.entries(solvedSketches)) : undefined,
+  );
   const plane = planes.transforms.get(sketch.id);
   if (!plane)
     throw new Error(
       planes.errors.get(sketch.id) ??
         "Sketch plane is unavailable. Repair it first.",
     );
-  const solved = solveSketch(sketch, evaluation.values);
+  const solved =
+    solvedSketches?.[sketch.id] ?? solveSketch(sketch, evaluation.values);
   const error = solved.errors.find((e) => e.severity === "error");
-  if (error)
+  if (error && !allowSolveErrors)
     throw new Error(`Repair the sketch before drawing: ${error.message}`);
-  return { document, sketch, solved, plane };
+  return {
+    document,
+    sketch,
+    solved,
+    plane,
+    pending: !solvedSketches?.[sketch.id],
+  };
 }
 export function commitCanvasGeometry(
   active: CanvasSession,
@@ -101,4 +124,40 @@ export function commitCanvasGeometry(
       useCadStore.getState().fileError ?? "Sketch edit could not be saved.",
     );
   return result;
+}
+
+export function commitCanvasDimension(
+  active: CanvasSession,
+  expected: CadStore["history"]["present"],
+  input?: CanvasDimensionInput,
+  removeId?: string,
+): string | undefined {
+  const state = useCadStore.getState();
+  if (state.history.present !== expected)
+    throw new Error(
+      "Project changed. Apply the dimension again for the current sketch.",
+    );
+  if (input && removeId)
+    throw new Error("Choose either dimension editing or deletion.");
+  const context = canvasContext(active, state, true);
+  let updated;
+  if (removeId) {
+    if (!context.sketch.dimensions.some((d) => d.id === removeId))
+      throw new Error("Dimension reference lost. Select a current dimension.");
+    updated = {
+      ...context.sketch,
+      dimensions: context.sketch.dimensions.filter((d) => d.id !== removeId),
+    };
+  } else if (input) updated = withCanvasDimension(context.sketch, input);
+  else throw new Error("Choose a dimension to create, edit or remove.");
+  if (updated !== context.sketch) {
+    const next = upsertSketch(context.document, updated);
+    assertProjectJsonShape(next);
+    state.updateDocument((d) => (d === expected ? next : d));
+    if (useCadStore.getState().history.present === expected)
+      throw new Error(
+        "Dimension edit could not be saved. Check the project diagnostics.",
+      );
+  }
+  return input ? (input.id ?? updated.dimensions.at(-1)?.id) : undefined;
 }

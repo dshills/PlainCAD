@@ -1,3 +1,4 @@
+import { useCanvasDimensions } from "./useCanvasDimensions";
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import { ModalDialog } from "../ModalDialog";
 import { useCadStore } from "../../state/useCadStore";
@@ -93,16 +94,20 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
   const document = useCadStore((s) => s.history.present),
     fileBusy = useCadStore((s) => s.fileBusy);
   const history = useCadStore((s) => s.history);
+  const rebuild = useCadStore((s) => s.rebuild);
   const analysis = useMemo(() => {
     try {
-      return { context: canvasContext(active), error: undefined };
+      return {
+        context: canvasContext(active, useCadStore.getState(), true),
+        error: undefined,
+      };
     } catch (error) {
       return {
         context: undefined,
         error: error instanceof Error ? error.message : String(error),
       };
     }
-  }, [document, fileBusy, active]);
+  }, [document, fileBusy, active, rebuild]);
   const context = analysis.context,
     sketch = document.sketches[active.sketchId];
   const [tool, setTool] = useState<CanvasTool>("line"),
@@ -135,7 +140,11 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
   const gridStep = Number(grid),
     validGrid =
       Number.isFinite(gridStep) && gridStep >= 0.000001 && gridStep <= 1e6;
-  const disabled = !context || fileBusy || (snap && !validGrid);
+  const disabled =
+    !context ||
+    fileBusy ||
+    (snap && !validGrid) ||
+    context.solved.errors.some((e) => e.severity === "error");
   const pointAt = (
     event: PointerEvent<SVGSVGElement>,
   ): CanvasPoint | undefined => {
@@ -224,6 +233,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
   };
   const preview = draft.length && cursor ? [...draft, cursor] : draft;
   const radius = view.width * 0.005;
+  const dimensions = useCanvasDimensions(active, context, view.width, cancel);
   if (!sketch) return null;
   return (
     <ModalDialog
@@ -310,7 +320,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
         <button
           disabled={!context}
           onClick={() => {
-            cancel();
+            setCursor(undefined);
             if (context) setView(fitSketch(context.solved));
           }}
         >
@@ -393,6 +403,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
           Place coordinate
         </button>
       </div>
+      {dimensions.controls}
       <p id="canvas-instructions">
         {instructions[tool]} Existing points snap within 8 screen pixels.
         Keyboard users can place exact coordinates using the fields above.
@@ -522,6 +533,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
             ) : null}
           </g>
         </g>
+        {dimensions.overlay}
       </svg>
       <p role="status">
         {cursor

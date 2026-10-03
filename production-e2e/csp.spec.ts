@@ -337,3 +337,72 @@ test("production CSP permits explicit native scope capture and subsequent STL ex
   expect(violations).toEqual([]);
   expect(errors).toEqual([]);
 });
+
+test("built app draws and dimensions a native sketch under production CSP", async ({
+  page,
+}, info) => {
+  const { errors, violations } = await observeCsp(page);
+  await page.goto("/");
+  await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+  await page
+    .getByRole("button", { name: "Create XZ sketch", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Edit sketch canvas", exact: true })
+    .click();
+  await page.getByLabel("Canvas tool", { exact: true }).selectOption("circle");
+  await page
+    .getByRole("button", { name: "Place coordinate", exact: true })
+    .click();
+  await page.getByLabel("Canvas coordinate X", { exact: true }).fill("5");
+  await page
+    .getByRole("button", { name: "Place coordinate", exact: true })
+    .click();
+  const svg = page.getByLabel("Sketch drawing canvas", { exact: true });
+  await expect(svg.locator("text")).toHaveText("R 5.0000 mm");
+  await page
+    .getByLabel("Canvas dimension type", { exact: true })
+    .selectOption("diameter");
+  await page
+    .getByLabel("Canvas dimension reference 1", { exact: true })
+    .selectOption({ index: 1 });
+  await page
+    .getByLabel("Canvas dimension expression", { exact: true })
+    .fill("20mm");
+  await page
+    .getByRole("button", { name: "Apply driving dimension", exact: true })
+    .click();
+  await expect(svg.locator("[data-dimension-id] text")).toHaveText(
+    "D1 Ø 20.0000 mm",
+  );
+  await page
+    .getByRole("button", { name: "Done editing sketch", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Extrude selected sketch", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Export STL", exact: true }),
+  ).toBeEnabled();
+  await page
+    .locator(".body-row")
+    .getByRole("button", { name: /Extrude 1/ })
+    .click();
+  await expect(
+    page.getByText("Volume (mm³)", { exact: true }).locator(".."),
+  ).toContainText("3141.593");
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export STL", exact: true }).click();
+  const path = info.outputPath("dimensioned.stl");
+  await (await download).saveAs(path);
+  const bytes = await readFile(path);
+  expect(stlVolume(bytes) / (Math.PI * 100 * 10)).toBeCloseTo(1, 2);
+  const axes: number[][] = [[], [], []];
+  for (let i = 0; i < bytes.readUInt32LE(80); i++)
+    for (let j = 0; j < 9; j++)
+      axes[j % 3].push(bytes.readFloatLE(96 + 50 * i + j * 4));
+  expect(Math.min(...axes[1])).toBeCloseTo(-10, 4);
+  expect(Math.max(...axes[1])).toBeCloseTo(0, 4);
+  expect(violations).toEqual([]);
+  expect(errors).toEqual([]);
+});
