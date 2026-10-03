@@ -1,3 +1,4 @@
+import { ModalDialog } from "../ModalDialog";
 import type { CadDocument } from "../../cad/document/schema";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useCadStore } from "../../state/useCadStore";
@@ -159,17 +160,53 @@ export function RecoveryPanel() {
       }
     }
   };
+  const dismiss = () => {
+    if (recovering) return;
+    setCandidates([]);
+    setStatus("Recovery kept; autosave ready");
+  };
+  const errorBanner = error ? (
+    <div className="kernel-banner error" role="alert">
+      <span>
+        Recovery storage: {error}. Keep working in memory and use Save project
+        to download a copy.
+      </span>
+      <button disabled={recovering} onClick={() => void checkStorage()}>
+        Retry recovery storage
+      </button>
+      <button
+        disabled={recovering}
+        onClick={() => {
+          if (
+            !window.confirm(
+              "Delete all local autosave and recovery snapshots? Downloaded project files will remain available.",
+            )
+          )
+            return;
+          void removeRecovery()
+            .then(() => {
+              setCandidates([]);
+              setReady(true);
+              setError(undefined);
+              setStatus("Recovery storage cleared");
+            })
+            .catch((e) => setError(String(e)));
+        }}
+      >
+        Clear all autosaves
+      </button>
+    </div>
+  ) : null;
   return (
     <>
       <div className="autosave-status" role="status">
         {status}
       </div>
       {candidates.length ? (
-        <section
+        <ModalDialog
           className="file-dialog"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Recover unsaved project"
+          label="Recover unsaved project"
+          onDismiss={dismiss}
         >
           <h2>Recover unsaved work</h2>
           <p>
@@ -196,48 +233,13 @@ export function RecoveryPanel() {
               ) : null}
             </div>
           ))}
-          <button
-            disabled={recovering}
-            onClick={() => {
-              setCandidates([]);
-              setStatus("Recovery kept; autosave ready");
-            }}
-          >
+          {errorBanner}
+          <button disabled={recovering} onClick={dismiss}>
             Start without recovery
           </button>
-        </section>
+        </ModalDialog>
       ) : null}
-      {error ? (
-        <div className="kernel-banner error" role="alert">
-          <span>
-            Recovery storage: {error}. Keep working in memory and use Save
-            project to download a copy.
-          </span>
-          <button onClick={() => void checkStorage()}>
-            Retry recovery storage
-          </button>
-          <button
-            onClick={() => {
-              if (
-                !window.confirm(
-                  "Delete all local autosave and recovery snapshots? Downloaded project files will remain available.",
-                )
-              )
-                return;
-              void removeRecovery()
-                .then(() => {
-                  setCandidates([]);
-                  setReady(true);
-                  setError(undefined);
-                  setStatus("Recovery storage cleared");
-                })
-                .catch((e) => setError(String(e)));
-            }}
-          >
-            Clear all autosaves
-          </button>
-        </div>
-      ) : null}
+      {!candidates.length ? errorBanner : null}
     </>
   );
 }

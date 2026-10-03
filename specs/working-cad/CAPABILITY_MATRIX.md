@@ -24,7 +24,7 @@ edits, parameter-driven diameter, empty-center failure and save/open/STL recover
 
 - React/Vite/TypeScript UI, Three.js viewer, Zustand document history and undo/redo.
 - Serializable document with stable IDs, deterministic JSON, schema migrations
-  through version 8, and validation before imported state is accepted.
+  through version 9, and validation before imported state is accepted.
 - Import unsafe-key rejection, nesting/node limits, and parameter/sketch/entity/
   constraint/feature count limits; unknown and runtime fields stripped by migration.
 - Parameter expressions, dependency ordering/cycle errors, compatible unit
@@ -152,9 +152,21 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
   under the policy, plus blocked inline scripts, JS eval and remote fetch. Final-host
   header/MIME verification remains a deployment step.
 - Broader browser/kernel acceptance coverage (complex feature chains, imported
-  fixtures, other browsers), accessibility audit, controlled performance reporting, and final-host deployment
+  fixtures, other browsers), broader accessibility audit, controlled performance reporting, and final-host deployment
   verification remain open. The bounded Chromium suite runs in the release gate
   and GitHub Actions; CI execution itself has not been verified locally.
+
+## Keyboard and modal workflows
+
+- Native palette, recovery, hole and STL dialogs keep background controls inert,
+  wrap Tab/Shift+Tab and restore previous focus; Escape dismisses (recovery waits
+  for an active load). Viewer Fit/selection shortcuts ignore open dialogs.
+- Ctrl/Cmd+K opens the palette, arrow keys browse enabled results, and Enter runs
+  the first available filtered command. Disabled/no-result searches remain open.
+  Backdrop click or Close dismisses the palette; its filter resets on close.
+- Chromium tests cover focus containment/restoration, modal-to-modal export,
+  disabled commands, camera orientation, shortcut isolation and retained recovery.
+  This is bounded keyboard coverage; screen-reader and contrast audits remain open.
 
 ## Intentionally deferred
 

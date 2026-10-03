@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { ModalDialog } from "../ModalDialog";
+import { useMemo, useState } from "react";
 import { useCadStore } from "../../state/useCadStore";
 import {
   createHole,
@@ -32,17 +33,7 @@ function HoleDialog({ draft }: { draft: HoleDraft }) {
     [depth, setDepth] = useState(DEFAULT_HOLE_DEPTH),
     [throughAll, setThroughAll] = useState(true),
     [error, setError] = useState("");
-  const ref = useRef<HTMLDialogElement>(null);
   const close = () => useHoleDraft.setState({ draft: undefined });
-  useEffect(() => {
-    const dialog = ref.current,
-      previous = document.activeElement as HTMLElement | null;
-    dialog?.showModal();
-    return () => {
-      dialog?.close();
-      previous?.focus();
-    };
-  }, []);
   const valid =
     context &&
     context.bodies.some((b) => b.id === target) &&
@@ -50,14 +41,10 @@ function HoleDialog({ draft }: { draft: HoleDraft }) {
     centers.length <= MODEL_RESOURCE_LIMITS.maxHoleCenters &&
     centers.every((id) => context.points.some((p) => p.id === id));
   return (
-    <dialog
-      ref={ref}
+    <ModalDialog
       className="file-dialog model-dialog"
-      aria-label="Create hole"
-      onCancel={(e) => {
-        e.preventDefault();
-        close();
-      }}
+      label="Create hole"
+      onDismiss={close}
     >
       <form
         onChange={() => setError("")}
@@ -170,6 +157,6 @@ function HoleDialog({ draft }: { draft: HoleDraft }) {
           Cancel hole
         </button>
       </form>
-    </dialog>
+    </ModalDialog>
   );
 }

@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { ModalDialog } from "../ModalDialog";
+import { useEffect, useState } from "react";
 import {
   useFileJobs,
   runFabrication,
@@ -14,7 +15,6 @@ export function FabricationPanel() {
   const result = useCadStore((s) => s.rebuild.result);
   const available = useCadStore((s) => canExportStl(s));
   const view = useViewerState();
-  const dialogRef = useRef<HTMLDialogElement>(null);
   const sameProject = state.exportSession === session;
   const bodies = sameProject ? (result?.bodies ?? []) : [];
   const selected = state.exportBodyIds ?? [];
@@ -31,17 +31,6 @@ export function FabricationPanel() {
     state.cancel();
     useFileJobs.setState({ exportOpen: false });
   };
-  useEffect(() => {
-    if (!state.exportOpen) return;
-    const dialog = dialogRef.current;
-    const previous = document.activeElement;
-    dialog?.showModal();
-    return () => {
-      dialog?.close();
-      if (previous instanceof HTMLElement && previous.isConnected)
-        previous.focus();
-    };
-  }, [state.exportOpen]);
   useEffect(() => {
     const prepared = useFileJobs.getState().preparedFor;
     if (
@@ -73,15 +62,10 @@ export function FabricationPanel() {
         </div>
       ) : null}
       {state.exportOpen ? (
-        <dialog
-          ref={dialogRef}
-          onCancel={(event) => {
-            event.preventDefault();
-            close();
-          }}
+        <ModalDialog
           className="file-dialog"
-          aria-modal="true"
-          aria-label="STL export options"
+          label="STL export options"
+          onDismiss={close}
         >
           <h2>Export STL</h2>
           <p>Coordinates remain in millimeters in the global model frame.</p>
@@ -207,7 +191,7 @@ export function FabricationPanel() {
             </button>
           )}
           <button onClick={close}>Close export</button>
-        </dialog>
+        </ModalDialog>
       ) : null}
     </>
   );
