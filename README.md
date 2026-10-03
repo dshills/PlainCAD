@@ -341,8 +341,9 @@ no-op cuts/joins, disconnected joins, and lost references fail rebuild and block
 export; suppress or repair the feature to recover. Failed modifiers block subsequent
 operations on the same body while retaining upstream previews.
 
-Feature-owned face references require an unmodified positive-distance new-body
-extrusion. Cap/side references are explicit roles, with reselection for repair;
+Feature-owned face references require an unmodified positive, negative, or symmetric distance new-body
+extrusion. Caps follow the shifted start/end of the sweep with outward normals;
+straight-side planes share that shifted origin. Cap/side references are explicit roles, with reselection for repair;
 arbitrary post-boolean face/edge naming remains unsupported. Hole features use
 transformed cylindrical tools. Select a sketch or point and use `Hole` to choose
 explicit centers and one native target body. The modal validates positive length

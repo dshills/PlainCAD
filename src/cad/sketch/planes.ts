@@ -1,3 +1,4 @@
+import { extrusionSweep } from "../features/extrusionSweep";
 import { targetBodyIds } from "../document/bodyScopes";
 import { KERNEL_LINEAR_TOLERANCE } from "./tolerances";
 import { evaluateExpressionRef } from "../parameters/expressionEvaluator";
@@ -104,8 +105,7 @@ export function faceOwnerModifiedBefore(
       (((f.type === "extrude" || f.type === "revolve") &&
         f.operation !== "newBody" &&
         f.targetBodyIds?.includes(`body:${ownerId}`)) ||
-        (f.type === "hole" &&
-          targetBodyIds(f).includes(`body:${ownerId}`)) ||
+        (f.type === "hole" && targetBodyIds(f).includes(`body:${ownerId}`)) ||
         ((f.type === "fillet" || f.type === "chamfer") &&
           f.targetEdgeRefs?.some((ref) => ref.featureId === ownerId))),
   );
@@ -160,7 +160,6 @@ export function resolveDocumentPlanes(
       owner.type !== "extrude" ||
       owner.suppressed ||
       owner.operation !== "newBody" ||
-      owner.direction !== "positive" ||
       (owner.termination && owner.termination.type !== "distance")
     )
       throw new Error(
@@ -193,7 +192,7 @@ export function resolveDocumentPlanes(
         );
       return;
     }
-    const base = resolve(owner.sketchId),
+    const authoredBase = resolve(owner.sketchId),
       ownerSketch = document.sketches[owner.sketchId];
     const solved =
         solvedSketches?.get(ownerSketch.id) ??
@@ -210,10 +209,9 @@ export function resolveDocumentPlanes(
         "Sketch plane reference lost: the owner profile failed to rebuild.",
       );
     const size = evaluateExpressionRef(
-      (owner.termination?.type === "distance"
+      owner.termination?.type === "distance"
         ? (owner.termination.distance ?? owner.distance)
-        : owner.distance
-      ),
+        : owner.distance,
       { parameters },
     );
     if (
@@ -225,6 +223,11 @@ export function resolveDocumentPlanes(
       throw new Error(
         "Sketch plane reference lost: the owner extrusion distance is invalid.",
       );
+    const base = extrusionSweep(
+      authoredBase,
+      size.quantity.value,
+      owner.direction,
+    );
     const add = (
       id: string,
       label: string,

@@ -4,7 +4,7 @@ import { createEmptyDocument, createExtrudeFeature, upsertFeature, upsertSketch 
 import { rebuildDocument } from "../cad/features/rebuildGraph";
 import { addCenterRectangle, createSketchOnPlane } from "../cad/sketch/SketchModel";
 import { solveSketch } from "../cad/sketch/SketchSolver";
-import { sketchPointToWorld, worldPointToSketch } from "../cad/sketch/planes";
+import { resolveDocumentPlanes, stableFaceId, sketchPointToWorld, worldPointToSketch } from "../cad/sketch/planes";
 import { detectProfiles } from "../cad/sketch/profileDetection";
 import { importProjectText } from "../persistence/importProject";
 
@@ -96,4 +96,95 @@ describe("sketch planes", () => {
       expect(result.meshes[0].bounds.max[2]).toBeGreaterThan(0);
     }
   });
+  it.each(["XY", "XZ", "YZ"] as const)(
+    "publishes signed distance faces in %s with outward, right-handed frames",
+    (plane) => {
+      for (const direction of ["positive", "negative", "symmetric"] as const) {
+        const sketch = addCenterRectangle(
+          createSketchOnPlane("Owner", plane),
+          "20mm",
+          "10mm",
+        );
+        const profile = detectProfiles(solveSketch(sketch, {})).profiles[0];
+        const feature = createExtrudeFeature({
+          name: "Signed owner",
+          sketchId: sketch.id,
+          profileId: profile.id,
+          operation: "newBody",
+          distance: { expression: "10mm", unit: "mm" },
+          direction,
+        });
+        const document = upsertFeature(
+          upsertSketch(createEmptyDocument(), sketch),
+          feature,
+        );
+        const faces = resolveDocumentPlanes(document, {}).faces;
+        expect(faces).toHaveLength(6);
+        const normal = sketchPointToWorld({ type: "origin", plane }, 0, 0, 1);
+        const start =
+          direction === "negative" ? -10 : direction === "symmetric" ? -5 : 0;
+        for (const role of ["startCap", "endCap"] as const) {
+          const face = faces.find(
+            (f) => f.id === stableFaceId(feature.id, role),
+          )!.transform;
+          const distance = role === "startCap" ? start : start + 10;
+          const expectedOrigin = sketchPointToWorld(
+            { type: "origin", plane },
+            0,
+            0,
+            distance,
+          );
+          for (const axis of ["x", "y", "z"] as const)
+            expect(face.origin[axis]).toBeCloseTo(expectedOrigin[axis]);
+          for (const axis of ["x", "y", "z"] as const)
+            expect(face.normal[axis]).toBeCloseTo(
+              normal[axis] * (role === "startCap" ? -1 : 1),
+            );
+          const cross = {
+            x: face.u.y * face.v.z - face.u.z * face.v.y,
+            y: face.u.z * face.v.x - face.u.x * face.v.z,
+            z: face.u.x * face.v.y - face.u.y * face.v.x,
+          };
+          for (const axis of ["x", "y", "z"] as const)
+            expect(cross[axis]).toBeCloseTo(face.normal[axis]);
+        }
+        for (const side of faces.filter((f) => f.id.includes(":side:"))) {
+          const local = worldPointToSketch(
+            { type: "origin", plane },
+            side.transform.origin,
+          );
+          expect(local.z).toBeCloseTo(start);
+          // Side frames begin at their oriented source segment on the shifted start cap.
+          const segment = profile.outerLoop.segments?.find(
+            (source) => side.id === stableFaceId(feature.id, "side", source.id),
+          );
+          expect(segment).toBeDefined();
+          if (!segment) throw new Error("Expected side source segment");
+          expect(local.x).toBeCloseTo(segment.start.x);
+          expect(local.y).toBeCloseTo(segment.start.y);
+          const { u, v, normal: sideNormal } = side.transform;
+          expect(u.y * v.z - u.z * v.y).toBeCloseTo(sideNormal.x);
+          expect(u.z * v.x - u.x * v.z).toBeCloseTo(sideNormal.y);
+          expect(u.x * v.y - u.y * v.x).toBeCloseTo(sideNormal.z);
+          const center = sketchPointToWorld(
+            { type: "origin", plane },
+            0,
+            0,
+            start,
+          );
+          const outward =
+            (side.transform.origin.x - center.x) * side.transform.normal.x +
+            (side.transform.origin.y - center.y) * side.transform.normal.y +
+            (side.transform.origin.z - center.z) * side.transform.normal.z;
+          expect(outward).toBeGreaterThan(0);
+        }
+        const suppressed = upsertFeature(document, {
+          ...feature,
+          suppressed: true,
+        });
+        expect(resolveDocumentPlanes(suppressed, {}).faces).toEqual([]);
+      }
+    },
+  );
+
 });

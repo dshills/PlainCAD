@@ -68,7 +68,7 @@ edits, parameter-driven diameter, empty-center failure and save/open/STL recover
 | Extrude join | Up to 64 ordered explicit targets; atomic native connected union; first target ID/name survives, secondary targets absorbed; tool must add exact volume beyond target union; disconnected/no-op joins diagnosed; no fallback | Inspector |
 | Through all | Projects all selected target bounds along the sketch normal for positive/negative directions or a symmetric total span; wrong-side targets diagnosed; subject to cut/join limits | Inspector |
 | Extrude to face | Positive termination on an upstream unmodified feature-owned planar cap/straight side, including sloped faces; native half-space trimming; end-cap area/intersection checks enforce finite face and holes | Inspector with explicit face selection and repair |
-| Negative/symmetric extrude | Distance and through-all supported with a shifted start plane and unchanged coordinate basis; to-face remains positive-only | Inspector; unsupported to-face combinations disabled and diagnosed |
+| Negative/symmetric extrude | Distance and through-all supported with a shifted start plane and unchanged coordinate basis; unmodified distance owners publish cap/straight-side sketch planes; to-face tools remain positive-only | Inspector; unsupported to-face combinations disabled and diagnosed |
 | Revolve | Native analytic closed line/arc/circle profiles with holes; coplanar world X/Y/Z or same-sketch line axes; angles greater than 0 through 360 degrees; cross-axis/zero-volume/invalid output rejected | Shared creation command and inspector; narrow full-Y/XY rectangular fallback without kernel |
 | Revolve cut/join | Native cut on up to 64 explicit saved targets with atomic publication; join merges an ordered explicit scope into one connected solid; boolean validity/volume checks | Inspector with cut/join scope checkboxes and lost-reference removal |
 | Capture intersected targets | Native common-volume checks on current upstream solids and extrude/revolve/hole tools; saved IDs only; preserves an intersected join primary; ignores downstream bodies; empty/failed/stale probes leave the scope intact; face-only joins remain explicit | Shared command and Inspector button; dedicated worker with cancellation/time limit |
@@ -240,7 +240,8 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
   lost bindings, cyclic intent and unchanged native geometry during navigation.
   This is authored structural inspection; geometry validity remains a rebuild check.
 - General post-boolean face/edge naming remains missing. Planes require an
-  unmodified positive-distance new-body owner;
+  unmodified positive/negative/symmetric distance new-body owner;
+  cap and straight-side planes follow shifted sweep origins and outward normals.
   curved side faces, hole/revolve faces, and ambiguous rebinding are unsupported.
 - Canvas constraint markers cover all 11 supported types and identify current
   satisfied/redundant/conflicting/pending/lost/unavailable states. Leaders locate
