@@ -200,7 +200,7 @@ a diagnostic; union requires full checks. These numerical checks are not a proof
 of absence of every near-degenerate or adjacent-face intersection.
 
 Imports check raw UTF-8 bytes before parsing, preflight nesting before the reviver,
-then migrate and validate in a cancellable worker. Checked-in schema 1–10 fixtures
+then migrate and validate in a cancellable worker. Checked-in schema 1–11 fixtures
 verify IDs, rebuilds, edits, save/open, and recovery. Default limits: 5 MiB JSON,
 depth 64, 500 parameters, 100 sketches, 750 entities/512 constraints and dimensions
 per sketch, 10,000 total entities, 20,000 total constraints/dimensions, 1,000 features,
@@ -252,7 +252,17 @@ ID and name; the other selected bodies are absorbed only when the whole operatio
 succeeds. Saved order chooses that surviving identity, while intermediate unions
 may be disconnected before the tool bridges them. Downstream references to
 absorbed bodies require explicit repair to the surviving body. Suppressing the
-join restores the original bodies. Hole features retain their single-target limit.
+join restores the original bodies.
+
+Hole features accept up to 64 explicit targets and 64 centers. Use **Hole target
+scope** in the creation dialog or Inspector. Each center must remove volume from
+at least one selected body, and every selected body must lose volume. Different
+centers can drill separate bodies; overlapping tools are combined before cutting.
+Any missing reference, unused center, no-op target, invalid geometry, tessellation
+failure or resource failure retains all upstream bodies and blocks STL export.
+Through-all reaches the furthest selected body along the positive sketch normal;
+blind depth is measured from the sketch plane. Schema 11 stores the target array
+and migrates older single-target holes without changing their target IDs.
 
 Use `Revolve` for a closed profile around a coplanar origin axis or a stable line
 in its sketch. The Inspector edits the axis, 0–360 degree angle (exclusive of 0),

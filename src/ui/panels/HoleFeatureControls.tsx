@@ -49,7 +49,11 @@ export function HoleFeatureControls({ feature }: { feature: HoleFeature }) {
               depth:
                 e.target.value === "throughAll"
                   ? "throughAll"
-                  : { expression: DEFAULT_HOLE_DEPTH, unit: "mm" },
+                  : {
+                      expression: DEFAULT_HOLE_DEPTH,
+                      authoredUnit: document.unitSettings.length,
+                      unit: "mm",
+                    },
             })
           }
         >
@@ -63,7 +67,13 @@ export function HoleFeatureControls({ feature }: { feature: HoleFeature }) {
           <CommitInput
             value={feature.depth.expression}
             onCommit={(expression) =>
-              update({ depth: { expression, unit: "mm" } })
+              update({
+                depth: {
+                  expression,
+                  authoredUnit: document.unitSettings.length,
+                  unit: "mm",
+                },
+              })
             }
           />
         </label>

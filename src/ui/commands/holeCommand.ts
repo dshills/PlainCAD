@@ -88,7 +88,8 @@ export function beginHoleCreation() {
 
 export function createHole(input: {
   name: string;
-  targetBodyId: string;
+  targetBodyId?: string;
+  targetBodyIds?: string[];
   centerPointIds: string[];
   diameter: string;
   depth: string;
@@ -109,8 +110,17 @@ export function createHole(input: {
     return fail(
       "Wait for a successful native rebuild and repair any lost sketch/body references.",
     );
-  if (!context.bodies.some((b) => b.id === input.targetBodyId))
-    return fail("Choose an explicit current target body.");
+  const targets =
+    input.targetBodyIds ?? (input.targetBodyId ? [input.targetBodyId] : []);
+  if (
+    !targets.length ||
+    targets.length > MODEL_RESOURCE_LIMITS.maxBodies ||
+    new Set(targets).size !== targets.length ||
+    targets.some((id) => !context.bodies.some((b) => b.id === id))
+  )
+    return fail(
+      `Choose unique explicit current target body IDs (at most ${MODEL_RESOURCE_LIMITS.maxBodies}).`,
+    );
   if (!input.centerPointIds.length)
     return fail("Choose at least one center point.");
   if (input.centerPointIds.length > MODEL_RESOURCE_LIMITS.maxHoleCenters)
@@ -152,7 +162,7 @@ export function createHole(input: {
     name: input.name.trim() || "Hole",
     type: "hole" as const,
     sketchId: context.sketch.id,
-    targetBodyId: input.targetBodyId,
+    targetBodyIds: [...targets],
     centerPointIds: input.centerPointIds,
     diameter: { expression: input.diameter, authoredUnit, unit: "mm" },
     depth: input.throughAll

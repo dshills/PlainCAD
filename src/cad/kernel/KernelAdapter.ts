@@ -74,6 +74,8 @@ export interface KernelAdapter {
   ): KernelShape;
   cut(base: KernelShape, tool: KernelShape): KernelShape;
   cutAll(base: KernelShape, tools: KernelShape[]): KernelShape;
+  /** Each tool must hit some target, and every target must lose volume; outputs publish atomically. */
+  cutScope?(targets: KernelShape[], tools: KernelShape[]): KernelShape[];
   fuse(a: KernelShape, b: KernelShape): KernelShape;
   /** Atomic connected union; the tool must add volume beyond the union of targets. */
   joinAll?(targets: KernelShape[], tool: KernelShape): KernelShape;
@@ -93,4 +95,15 @@ export interface KernelAdapter {
   /** Allocated WASM memory capacity, not live allocations or process memory. */
   getWasmHeapCapacityBytes?(): number | undefined;
   exportStep?(shape: KernelShape): ArrayBuffer;
+}
+
+export class HoleScopeError extends Error {
+  constructor(
+    readonly scope: "center" | "target",
+    readonly index: number,
+    reason: string,
+  ) {
+    super(`Hole ${scope} ${index + 1}: ${reason}`);
+    this.name = "HoleScopeError";
+  }
 }

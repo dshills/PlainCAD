@@ -281,8 +281,8 @@ test("native hole dialog requires explicit centers/target; blind/through edits, 
     dialog.getByRole("button", { name: "Create hole feature" }),
   ).toBeDisabled();
   await dialog
-    .getByRole("combobox", { name: "Hole target body" })
-    .selectOption(`body:${fixture.featureId}`);
+    .getByLabel("Include hole target Base solid Body", { exact: true })
+    .check();
   await expect(
     dialog.getByRole("button", { name: "Create hole feature" }),
   ).toBeDisabled();
@@ -349,7 +349,7 @@ test("native hole dialog requires explicit centers/target; blind/through edits, 
   expect(
     (await snapshot(page)).document.features.find((f) => f.id === holeId),
   ).toMatchObject({
-    targetBodyId: `body:${fixture.featureId}`,
+    targetBodyIds: [`body:${fixture.featureId}`],
     centerPointIds: [fixture.pointId],
     diameter: { expression: "drill", parameterRefs: { drill: "drill-param" } },
   });

@@ -1,4 +1,4 @@
-export const CURRENT_SCHEMA_VERSION = 10;
+export const CURRENT_SCHEMA_VERSION = 11;
 
 export type UnitSystem = "metric" | "imperial";
 
@@ -195,6 +195,8 @@ export interface HoleFeature extends FeatureBase {
   type: "hole";
   targetFeatureId?: string;
   targetBodyId?: string;
+  /** Explicit scope is authoritative, including an empty scope. Legacy single IDs remain readable. */
+  targetBodyIds?: string[];
   sketchId: string;
   centerPointIds: string[];
   diameter: ExpressionRef;

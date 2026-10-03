@@ -7,7 +7,7 @@ import { CURRENT_SCHEMA_VERSION } from "../cad/document/schema";
 import { recoverSnapshot } from "../persistence/autosave";
 
 describe("released-schema corpus", () => {
-  it.each([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])(
+  it.each([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])(
     "migrates schema %i with stable IDs, editable geometry, and recovery",
     (version) => {
       const text = readFileSync(
@@ -24,7 +24,7 @@ describe("released-schema corpus", () => {
         Object.keys(raw.sketches.section.entities),
       );
       expect(document.features[1]).toMatchObject({
-        targetBodyId: "body:base",
+        targetBodyIds: ["body:base"],
         centerPointIds: ["center"],
       });
       const result = rebuildDocument(document);

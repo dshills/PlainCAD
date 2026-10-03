@@ -1,3 +1,6 @@
+import { stableBodyIdForFeature } from "../document/ids";
+export { stableBodyIdForFeature } from "../document/ids";
+import { targetBodyIds } from "../document/bodyScopes";
 import { MODEL_RESOURCE_LIMITS } from "../resourceLimits";
 import { CadDocument, Feature, ValidationIssue } from "../document/schema";
 
@@ -13,10 +16,6 @@ export interface FeatureGraphPlan {
   orderedFeatures: Feature[];
   errors: FeatureGraphIssue[];
   warnings: FeatureGraphIssue[];
-}
-
-export function stableBodyIdForFeature(featureId: string): string {
-  return `body:${featureId}`;
 }
 
 export function planFeatureGraph(document: CadDocument): FeatureGraphPlan {
@@ -100,19 +99,7 @@ export function planFeatureGraph(document: CadDocument): FeatureGraphPlan {
     bodyDepths = new Map<string, number>();
   for (const feature of orderedFeatures) {
     if (feature.suppressed) continue;
-    const targets =
-      feature.type === "hole"
-        ? [
-            feature.targetBodyId ??
-              stableBodyIdForFeature(feature.targetFeatureId ?? ""),
-          ]
-        : feature.type === "fillet" || feature.type === "chamfer"
-          ? feature.targetEdgeRefs.map((ref) =>
-              stableBodyIdForFeature(ref.featureId),
-            )
-          : feature.operation === "newBody"
-            ? []
-            : (feature.targetBodyIds ?? []);
+    const targets = targetBodyIds(feature);
     let depth = 1;
     for (const id of targets)
       depth = Math.max(depth, 1 + (bodyDepths.get(id) ?? 0));

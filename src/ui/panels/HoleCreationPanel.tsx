@@ -27,7 +27,7 @@ function HoleDialog({ draft }: { draft: HoleDraft }) {
     [currentDocument, rebuild, draft],
   );
   const [name, setName] = useState("Hole"),
-    [target, setTarget] = useState(""),
+    [targets, setTargets] = useState<string[]>([]),
     [centers, setCenters] = useState(draft.centerPointIds),
     [diameter, setDiameter] = useState("3mm"),
     [depth, setDepth] = useState(DEFAULT_HOLE_DEPTH),
@@ -36,7 +36,8 @@ function HoleDialog({ draft }: { draft: HoleDraft }) {
   const close = () => useHoleDraft.setState({ draft: undefined });
   const valid =
     context &&
-    context.bodies.some((b) => b.id === target) &&
+    targets.length > 0 &&
+    targets.every((id) => context.bodies.some((b) => b.id === id)) &&
     centers.length > 0 &&
     centers.length <= MODEL_RESOURCE_LIMITS.maxHoleCenters &&
     centers.every((id) => context.points.some((p) => p.id === id));
@@ -53,7 +54,7 @@ function HoleDialog({ draft }: { draft: HoleDraft }) {
           setError("");
           const result = createHole({
             name,
-            targetBodyId: target,
+            targetBodyIds: targets,
             centerPointIds: centers,
             diameter,
             depth,
@@ -82,24 +83,41 @@ function HoleDialog({ draft }: { draft: HoleDraft }) {
             autoFocus
           />
         </label>
-        <label>
-          Hole target body
-          <select
-            aria-label="Hole target body"
-            value={target}
-            onChange={(e) => setTarget(e.target.value)}
-          >
-            <option value="">Choose an explicit target</option>
-            {target && !context?.bodies.some((b) => b.id === target) ? (
-              <option value={target}>Lost target — reselect</option>
-            ) : null}
-            {context?.bodies.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <fieldset>
+          <legend>Hole target scope</legend>
+          {[
+            ...new Set([
+              ...(context?.bodies.map((b) => b.id) ?? []),
+              ...targets,
+            ]),
+          ].map((id) => {
+            const bodyName =
+              context?.bodies.find((b) => b.id === id)?.name ??
+              `Lost target ${id}`;
+            return (
+              <label key={id}>
+                <input
+                  type="checkbox"
+                  aria-label={`Include hole target ${bodyName}`}
+                  checked={targets.includes(id)}
+                  onChange={(e) =>
+                    setTargets(
+                      e.target.checked
+                        ? [...targets, id]
+                        : targets.filter((target) => target !== id),
+                    )
+                  }
+                />
+                {bodyName}
+              </label>
+            );
+          })}
+          <p className="muted">
+            Choose every body to drill. Each center must cut at least one
+            selected body. Every selected body must lose volume; failures retain
+            all upstream bodies.
+          </p>
+        </fieldset>
         <fieldset>
           <legend>
             Hole centers (choose up to {MODEL_RESOURCE_LIMITS.maxHoleCenters})

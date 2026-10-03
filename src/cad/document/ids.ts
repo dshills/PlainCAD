@@ -5,3 +5,7 @@ export function createId(prefix: string): string {
       : `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 14)}`;
   return `${prefix}_${random}`;
 }
+
+export function stableBodyIdForFeature(featureId: string): string {
+  return `body:${featureId}`;
+}

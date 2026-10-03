@@ -1,6 +1,6 @@
 import type { CadDocument, SelectionRef } from "./schema";
 import { documentTimeline } from "./timelineOrdering";
-import { absorbedBodyIds, targetBodyIds } from "./timelineEditing";
+import { absorbedBodyIds, targetBodyIds } from "./bodyScopes";
 import { stableBodyIdForFeature } from "../features/featureGraph";
 import {
   mapDocumentExpressions,

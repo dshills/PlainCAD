@@ -1,3 +1,4 @@
+import { targetBodyIds } from "./bodyScopes";
 import { CURRENT_SCHEMA_VERSION, CadDocument, Feature, Sketch } from "./schema";
 import { stableBodyIdForFeature } from "../features/featureGraph";
 
@@ -13,6 +14,7 @@ const migrations = new Map<number, Migration>([
   [7, (document) => ({ ...document, schemaVersion: 8 })],
   [8, (document) => ({ ...document, schemaVersion: 9 })],
   [9, (document) => ({ ...document, schemaVersion: 10, displayUnits: document.displayUnits ?? { ...document.unitSettings } })],
+  [10, migrateV10ToV11],
 ]);
 
 export function migrateDocument(input: CadDocument): CadDocument {
@@ -103,6 +105,23 @@ function migrateV6ToV7(input: CadDocument): CadDocument {
         isRecord(sketch) ? { ...sketch, solveMode: "validate" } : sketch,
       ]),
     ),
+  };
+}
+
+function migrateV10ToV11(input: CadDocument): CadDocument {
+  return {
+    ...input,
+    schemaVersion: 11,
+    features: Array.isArray(input.features)
+      ? input.features.map((feature) => {
+          if (!isRecord(feature) || feature.type !== "hole") return feature;
+          assertHoleTargetScope(feature);
+          const normalized = { ...feature, targetBodyIds: targetBodyIds(feature) };
+          delete normalized.targetBodyId;
+          delete normalized.targetFeatureId;
+          return normalized;
+        })
+      : input.features,
   };
 }
 
@@ -300,11 +319,13 @@ function sanitizeFeature(feature: Feature): Feature | undefined {
     };
   }
   if (feature.type === "hole") {
+    assertHoleTargetScope(feature);
     return {
       ...base,
       type: "hole",
       ...(feature.targetFeatureId !== undefined ? { targetFeatureId: feature.targetFeatureId } : {}),
       ...(feature.targetBodyId !== undefined ? { targetBodyId: feature.targetBodyId } : {}),
+      ...(feature.targetBodyIds !== undefined ? { targetBodyIds: Array.isArray(feature.targetBodyIds) ? [...feature.targetBodyIds] : feature.targetBodyIds } : {}),
       sketchId: feature.sketchId,
       centerPointIds: Array.isArray(feature.centerPointIds) ? [...feature.centerPointIds] : [],
       diameter: sanitizeExpressionRef(feature.diameter),
@@ -342,6 +363,14 @@ function sanitizeFeature(feature: Feature): Feature | undefined {
   throw new Error(
     `Project file contains unsupported feature type ${String((feature as { type?: unknown }).type)}.`,
   );
+}
+
+// Preserve lost IDs, but reject malformed supplied scopes rather than dropping
+// them and silently falling back to a legacy target or an empty selection.
+function assertHoleTargetScope(feature: Extract<Feature, { type: "hole" }>) {
+  if (feature.targetBodyIds !== undefined &&
+      (!Array.isArray(feature.targetBodyIds) || feature.targetBodyIds.some(id => typeof id !== "string")))
+    throw new Error("Malformed hole references.");
 }
 
 function sanitizeRevolveAxis(value: unknown): Extract<Feature, { type: "revolve" }>["axis"] {

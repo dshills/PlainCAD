@@ -4,6 +4,7 @@ import openCascadeWasmUrl from "opencascade.js/dist/opencascade.wasm.wasm?url";
 import { createId } from "../document/ids";
 import { RevolveAxisReference, TopologyRef } from "../document/schema";
 import {
+  HoleScopeError,
   KernelAdapter,
   KernelShape,
   RenderMesh,
@@ -295,6 +296,56 @@ export class OpenCascadeKernel implements KernelAdapter {
     } catch (error) {
       if (current !== base) this.disposeShape(current);
       throw error;
+    }
+  }
+
+  cutScope(targets: KernelShape[], tools: KernelShape[]): KernelShape[] {
+    if (!targets.length || !tools.length)
+      throw new Error("Hole scope requires target bodies and center tools.");
+    const owned = new Set<KernelShape>();
+    const combine = (shapes: KernelShape[]) => {
+      let current = shapes[0];
+      for (const shape of shapes.slice(1)) {
+        const next = this.unionSolids(current, shape);
+        owned.add(next);
+        if (owned.delete(current)) this.disposeShape(current);
+        current = next;
+      }
+      return current;
+    };
+    try {
+      // unionSolids deliberately permits valid multi-solid compounds (also used
+      // for STL union export). cut validates reduced volume without requiring a
+      // single solid, so separated target bodies are supported here.
+      const targetUnion = combine(targets);
+      // A center may miss individual bodies but must cut the original scope.
+      // Validate against original targets so overlapping tools are order independent.
+      for (const [index, tool] of tools.entries()) {
+        try {
+          const probe = this.cut(targetUnion, tool);
+          this.disposeShape(probe);
+        } catch (error) {
+          throw new HoleScopeError("center", index,
+            error instanceof Error ? error.message : String(error),
+          );
+        }
+      }
+      const toolUnion = combine(tools);
+      const outputs = targets.map((target, index) => {
+        try {
+          const output = this.cut(target, toolUnion);
+          owned.add(output);
+          return output;
+        } catch (error) {
+          throw new HoleScopeError("target", index,
+            error instanceof Error ? error.message : String(error),
+          );
+        }
+      });
+      for (const output of outputs) owned.delete(output);
+      return outputs;
+    } finally {
+      for (const shape of owned) this.disposeShape(shape);
     }
   }
 

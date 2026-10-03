@@ -71,7 +71,7 @@ edits, parameter-driven diameter, empty-center failure and save/open/STL recover
 | Negative/symmetric extrude | Distance and through-all supported with a shifted start plane and unchanged coordinate basis; to-face remains positive-only | Inspector; unsupported to-face combinations disabled and diagnosed |
 | Revolve | Native analytic closed line/arc/circle profiles with holes; coplanar world X/Y/Z or same-sketch line axes; angles greater than 0 through 360 degrees; cross-axis/zero-volume/invalid output rejected | Shared creation command and inspector; narrow full-Y/XY rectangular fallback without kernel |
 | Revolve cut/join | Native cut on up to 64 explicit saved targets with atomic publication; join merges an ordered explicit scope into one connected solid; boolean validity/volume checks | Inspector with cut/join scope checkboxes and lost-reference removal |
-| Hole | Explicit single target and up to 64 sketch point centers; native cylindrical tools and cut validation; positive blind-depth/through-all; empty centers/lost references/no-op cuts diagnosed | Shared creation command with modal field validation and full size/termination/center/source/target inspector |
+| Hole | Up to 64 explicit saved target IDs and 64 sketch point centers; native aggregate cylindrical tools; every center must cut some target, every target must lose exact volume; atomic output publication; positive blind-depth/through-all; empty/duplicate/lost centers/targets and no-op cuts diagnosed | Shared creation command with modal target scope and center choices; full size/termination/center/source/scope repair inspector |
 | Fillet/chamfer | Real native geometry on feature-owned cap perimeters, individual line/arc cap edges, or a source line’s two extrusion-direction corners; BRep/solid-count/volume-or-surface-change checks; lost or ambiguous edges fail | Shared creation commands and size/role/source/owner repair inspector |
 | Offset/face sketch planes | Expression-driven origin/face offsets; upstream distance-extrusion caps and straight outer sides; modified/suppressed/missing owners require repair | Sketch tools with explicit replacement selection; lost planes fail rebuild |
 | STEP | Optional adapter interface only; no implemented exporter | Hidden |
@@ -105,7 +105,7 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
 
 ## Durability and fabrication
 
-- Schema 1–9 checked-in fixtures migrate, rebuild, retain IDs, edit dimensions,
+- Schema 1–11 checked-in fixtures migrate, rebuild, retain IDs, edit dimensions,
   round-trip project files, and recover through the same import codec.
 - IndexedDB autosave: 500ms debounce, latest/previous/manual snapshots, five-project
   retention, explicit startup recovery and previous-snapshot fallback. Quota and
@@ -146,7 +146,7 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
 - Timeline moves validate structural dependencies and preserve same-body modifier
   order; arbitrary modifier reordering and kernel preview before committing a move
   remain unavailable. Rebuild failures remain diagnostic and undoable. Durable
-  multi-body hole scopes and initial intersection-based scope capture need work.
+  initial intersection-based scope capture needs work.
   Extrude/revolve cuts persist explicit
   selected target sets, never add new bodies silently, retain all upstream previews
   on boolean/tessellation/resource failures, and expose lost-ID removal for repair.
@@ -156,6 +156,9 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
   Native Chromium checks cover bridge joins in non-spatial target order,
   per-body BRep volumes, a late disjoint-target failure,
   reference repair, parameter edits, undo/redo, save/open and STL output.
+  Hole patterns also support separate centers drilling separate targets, offset
+  bodies, and blind depths spanning selected bodies; unused centers and no-op targets
+  fail the whole feature. Native XY/XZ/YZ tests verify exact volumes and orientation.
 - Dependency inspection now exposes direct/transitive input and affected-output
   paths for parameters, sketches/entities, features and bodies. Stable-ID navigation
   is read-only; missing entries remain visible, suppressed/downstream owners are

@@ -1,3 +1,4 @@
+import { targetBodyIds } from "./bodyScopes";
 import { MAX_NAMED_VIEWS, validCameraPose } from "../inspection/cameraViews";
 import { CadDocument, ValidationIssue } from "./schema";
 import { validateParameterBindings } from "../parameters/expressionBindings";
@@ -424,6 +425,10 @@ export function validateDocument(document: CadDocument, mode: "modeling" | "stor
         message: `${feature.operation} revolve requires at least one target body.`,
       });
     }
+    if (feature.type === "hole" && Array.isArray(feature.centerPointIds) && new Set(feature.centerPointIds).size !== feature.centerPointIds.length)
+      issues.push({ source: "feature", sourceId: feature.id, message: "Hole scope contains duplicate center point IDs. Reselect unique centers." });
+    if (feature.type === "hole" && Array.isArray(feature.targetBodyIds) && new Set(feature.targetBodyIds).size !== feature.targetBodyIds.length)
+      issues.push({ source: "feature", sourceId: feature.id, message: "Target scope contains duplicate body IDs. Reselect unique target bodies." });
     if (feature.type === "hole" && !document.sketches[feature.sketchId]) {
       issues.push({
         source: "feature",
@@ -433,13 +438,12 @@ export function validateDocument(document: CadDocument, mode: "modeling" | "stor
     }
     if (
       feature.type === "hole" &&
-      !feature.targetBodyId &&
-      !feature.targetFeatureId
+      Array.isArray(targetBodyIds(feature)) && !targetBodyIds(feature).length
     ) {
       issues.push({
         source: "feature",
         sourceId: feature.id,
-        message: "Hole requires a target body.",
+        message: "Hole requires at least one target body.",
       });
     }
     if (
@@ -669,6 +673,7 @@ function validatePersistedFields(document: CadDocument): ValidationIssue[] {
       checkFeature(Array.isArray(feature.centerPointIds) && feature.centerPointIds.length <= MODEL_RESOURCE_LIMITS.maxHoleCenters, `Hole exceeds the ${MODEL_RESOURCE_LIMITS.maxHoleCenters}-center resource limit.`);
       checkFeature(
         strings(feature.centerPointIds) &&
+          (feature.targetBodyIds === undefined || (strings(feature.targetBodyIds) && feature.targetBodyIds.length <= MODEL_RESOURCE_LIMITS.maxBodies)) &&
           (feature.targetBodyId === undefined ||
             typeof feature.targetBodyId === "string") &&
           (feature.targetFeatureId === undefined ||

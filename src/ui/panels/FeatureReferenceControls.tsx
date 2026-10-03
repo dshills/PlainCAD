@@ -1,3 +1,4 @@
+import { targetBodyIds } from "../../cad/document/bodyScopes";
 import {
   ExtrudeFeature,
   RevolveFeature,
@@ -111,7 +112,7 @@ export function FeatureReferenceControls({
         </label>
       ) : null}
       <TargetBodyControl feature={feature} />
-      {feature.type !== "hole" && feature.operation !== "newBody" ? (
+      {feature.type === "hole" || feature.operation !== "newBody" ? (
         <BooleanTargetScope feature={feature} />
       ) : null}
       <p className="muted">
@@ -126,13 +127,7 @@ export function TargetBodyControl({ feature }: { feature: SketchFeature }) {
   const document = useCadStore((s) => s.history.present);
   const updateDocument = useCadStore((s) => s.updateDocument);
   const owners = upstreamBodyOwners(document, feature, true);
-  const target =
-    feature.type === "hole"
-      ? (feature.targetBodyId ??
-        (feature.targetFeatureId
-          ? stableBodyIdForFeature(feature.targetFeatureId)
-          : ""))
-      : (feature.targetBodyIds?.[0] ?? "");
+  const target = targetBodyIds(feature)[0] ?? "";
   return (
     <label>
       Target body
@@ -162,7 +157,8 @@ export function TargetBodyControl({ feature }: { feature: SketchFeature }) {
               stored.type === "hole"
                 ? {
                     ...stored,
-                    targetBodyId: bodyId || undefined,
+                    targetBodyIds: bodyId ? [bodyId] : [],
+                    targetBodyId: undefined,
                     targetFeatureId: undefined,
                   }
                 : { ...stored, targetBodyIds: bodyId ? [bodyId] : [] },
@@ -186,15 +182,11 @@ export function TargetBodyControl({ feature }: { feature: SketchFeature }) {
   );
 }
 
-function BooleanTargetScope({
-  feature,
-}: {
-  feature: ExtrudeFeature | RevolveFeature;
-}) {
+function BooleanTargetScope({ feature }: { feature: SketchFeature }) {
   const document = useCadStore((s) => s.history.present);
   const updateDocument = useCadStore((s) => s.updateDocument);
   const owners = upstreamBodyOwners(document, feature, true);
-  const targets = feature.targetBodyIds ?? [];
+  const targets = targetBodyIds(feature);
   const choices = new Map(
     owners.map((owner) => [
       stableBodyIdForFeature(owner.id),
@@ -205,7 +197,14 @@ function BooleanTargetScope({
     if (!choices.has(id)) choices.set(id, `Lost or downstream body ${id}`);
   return (
     <fieldset>
-      <legend>{feature.operation === "join" ? "Join" : "Cut"} target scope</legend>
+      <legend>
+        {feature.type === "hole"
+          ? "Hole"
+          : feature.operation === "join"
+            ? "Join"
+            : "Cut"}{" "}
+        target scope
+      </legend>
       {[...choices].map(([id, name]) => (
         <label key={id} className="checkbox-label">
           <input
@@ -219,8 +218,10 @@ function BooleanTargetScope({
                 if (
                   d.id !== document.id ||
                   !stored ||
-                  (stored.type !== "extrude" && stored.type !== "revolve") ||
-                  stored.operation === "newBody"
+                  (stored.type !== "extrude" &&
+                    stored.type !== "revolve" &&
+                    stored.type !== "hole") ||
+                  (stored.type !== "hole" && stored.operation === "newBody")
                 )
                   return d;
                 // Lost references may be removed, but may only be added from upstream owners.
@@ -231,10 +232,16 @@ function BooleanTargetScope({
                   )
                 )
                   return d;
-                const ids = new Set(stored.targetBodyIds ?? []);
+                const ids = new Set(targetBodyIds(stored));
                 if (checked) ids.add(id);
                 else ids.delete(id);
-                return upsertFeature(d, { ...stored, targetBodyIds: [...ids] });
+                return upsertFeature(d, {
+                  ...stored,
+                  targetBodyIds: [...ids],
+                  ...(stored.type === "hole"
+                    ? { targetBodyId: undefined, targetFeatureId: undefined }
+                    : {}),
+                });
               });
             }}
           />
@@ -242,10 +249,12 @@ function BooleanTargetScope({
         </label>
       ))}
       <p className="muted">
-        {feature.operation === "join"
-          ? "Select bodies to merge into one connected solid. The first selected target keeps its ID and name; other targets are absorbed. The tool must add volume."
-          : "Select each body to cut. Every selected body must lose volume."}
-        {" "}The Target body selector replaces the scope with one body. New bodies
+        {feature.type === "hole"
+          ? "Select bodies to drill. Each center must cut at least one selected body, and every selected body must lose volume."
+          : feature.operation === "join"
+            ? "Select bodies to merge into one connected solid. The first selected target keeps its ID and name; other targets are absorbed. The tool must add volume."
+            : "Select each body to cut. Every selected body must lose volume."}{" "}
+        The Target body selector replaces the scope with one body. New bodies
         are added only when selected. Failures retain all upstream bodies.
       </p>
       {!targets.length ? (

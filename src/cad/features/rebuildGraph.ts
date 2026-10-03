@@ -1,4 +1,4 @@
-import { absorbedBodyIds } from "../document/timelineEditing";
+import { absorbedBodyIds, targetBodyIds } from "../document/bodyScopes";
 import { extrusionSweep, throughAllDistance } from "./extrusionSweep";
 import { MODEL_RESOURCE_LIMITS } from "../resourceLimits";
 import { assertProjectJsonShape } from "../../persistence/importSafety";
@@ -24,6 +24,7 @@ import { OpenCascadeKernel } from "../kernel/OpenCascadeKernel";
 import { evaluateParameters } from "../parameters/expressionEvaluator";
 import { validateDocument } from "../document/validate";
 import {
+  HoleScopeError,
   KernelAdapter,
   KernelShape,
   RenderMesh,
@@ -201,20 +202,8 @@ export function rebuildDocument(
       if (feature.suppressed) continue;
       // Supported edge roles belong to a new-body extrusion, so this is the
       // same stable target ID used by rebuildEdgeTreatmentFeature below.
-      const affectedIds =
-        feature.type === "hole"
-          ? feature.targetBodyId
-            ? [feature.targetBodyId]
-            : feature.targetFeatureId
-              ? [stableBodyIdForFeature(feature.targetFeatureId)]
-              : []
-          : feature.type === "fillet" || feature.type === "chamfer"
-            ? feature.targetEdgeRefs.map((r) =>
-                stableBodyIdForFeature(r.featureId),
-              )
-            : feature.operation === "newBody"
-              ? [stableBodyIdForFeature(feature.id)]
-              : (feature.targetBodyIds ?? []);
+      const affectedIds = (feature.type === "extrude" || feature.type === "revolve") && feature.operation === "newBody"
+        ? [stableBodyIdForFeature(feature.id)] : targetBodyIds(feature);
       const errorsBefore = errors.length;
       try {
         if (affectedIds.some((id) => id && failedBodies.has(id))) {
@@ -646,20 +635,20 @@ function rebuildHoleFeature(
   shapesToDispose: Set<KernelShape>,
   errors: RebuildError[],
 ) {
-  const targetBodyId =
-    feature.targetBodyId ??
-    (feature.targetFeatureId
-      ? stableBodyIdForFeature(feature.targetFeatureId)
-      : undefined);
-  const target = targetBodyId ? runtimeBodies.get(targetBodyId) : undefined;
+  const ids = targetBodyIds(feature);
+  const targets = ids.map((bodyId) => ({
+    bodyId,
+    body: runtimeBodies.get(bodyId),
+  }));
   const sketch = document.sketches[feature.sketchId];
   const solved = solvedSketches.get(feature.sketchId);
-  if (!targetBodyId || !target || !target.mesh) {
+  const missing = targets.find((target) => !target.body?.mesh);
+  if (!ids.length || missing) {
     errors.push({
       id: `feature:${feature.id}:target`,
       source: "feature",
       sourceId: feature.id,
-      message: "Hole target body was not found.",
+      message: `Hole target body ${missing ? `"${missing.bodyId}" ` : ""}was not found. Reselect a surviving upstream body.`,
     });
     return;
   }
@@ -673,7 +662,13 @@ function rebuildHoleFeature(
     return;
   }
   if (!feature.centerPointIds.length) {
-    errors.push({ id: `feature:${feature.id}:centers`, source: "feature", sourceId: feature.id, message: "Hole requires at least one explicit center point. Select centers in the Inspector." });
+    errors.push({
+      id: `feature:${feature.id}:centers`,
+      source: "feature",
+      sourceId: feature.id,
+      message:
+        "Hole requires at least one explicit center point. Select centers in the Inspector.",
+    });
     return;
   }
   const diameter = evaluateExpressionRef(feature.diameter, {
@@ -704,10 +699,15 @@ function rebuildHoleFeature(
     });
     return;
   }
-  const depth =
+  const depths =
     feature.depth === "throughAll"
-      ? throughAllDistance(target.mesh.bounds, planeTransform)
-      : evaluateHoleDepth(feature.depth, parameters);
+      ? targets.map((target) =>
+          throughAllDistance(target.body!.mesh!.bounds, planeTransform),
+        )
+      : [evaluateHoleDepth(feature.depth, parameters)];
+  const depth = depths.every((value) => value !== undefined && value > 0)
+    ? Math.max(...(depths as number[]))
+    : undefined;
   if (!depth || depth <= 0) {
     errors.push({
       id: `feature:${feature.id}:depth`,
@@ -719,7 +719,6 @@ function rebuildHoleFeature(
     return;
   }
   const tools: KernelShape[] = [];
-  let current = target;
   try {
     for (const pointId of feature.centerPointIds) {
       const point = solved.points[pointId];
@@ -743,20 +742,40 @@ function rebuildHoleFeature(
       shapesToDispose.add(tool);
       tools.push(tool);
     }
-    const cut = kernel.cutAll(target.shape, tools);
-    shapesToDispose.add(cut);
-    current = { ...target, shape: cut };
-    const mesh = withStableBodyId(
-      kernel.tessellate(current.shape, TESSELLATION_LOD.default),
-      targetBodyId,
+    // The fallback remains single-target. Native scope validation allows each
+    // center to hit a different body, while rejecting unused centers and targets.
+    const native = targets.every(
+      (target) => target.body!.mesh!.geometrySource === "opencascade",
     );
-    setRuntimeBody(runtimeBodies, targetBodyId, { ...current, mesh });
+    if (targets.length > 1 && (!kernel.cutScope || !native))
+      throw new Error("Multi-body holes require native OpenCascade geometry.");
+    const cuts =
+      native && kernel.cutScope
+        ? kernel.cutScope(
+            targets.map((target) => target.body!.shape),
+            tools,
+          )
+        : targets.map((target) => kernel.cutAll(target.body!.shape, tools));
+    for (const cut of cuts) shapesToDispose.add(cut);
+    publishOperationOutputs(
+      kernel,
+      runtimeBodies,
+      cuts.map((shape, index) => ({
+        ...targets[index].body!,
+        bodyId: targets[index].bodyId,
+        shape,
+      })),
+    );
   } catch (error) {
     errors.push({
       id: `kernel:${feature.id}`,
       source: "kernel",
       sourceId: feature.id,
-      message: kernelErrorMessage(feature.type, error),
+      message: error instanceof HoleScopeError
+        ? `${error.message} ${error.scope === "target"
+          ? `Target body "${targets[error.index].body!.name}" (${targets[error.index].bodyId}).`
+          : `Center point "${feature.centerPointIds[error.index]}".`}`
+        : kernelErrorMessage(feature.type, error),
     });
     return;
   }

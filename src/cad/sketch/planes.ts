@@ -1,3 +1,4 @@
+import { targetBodyIds } from "../document/bodyScopes";
 import { KERNEL_LINEAR_TOLERANCE } from "./tolerances";
 import { evaluateExpressionRef } from "../parameters/expressionEvaluator";
 import { Quantity } from "../parameters/units";
@@ -104,8 +105,7 @@ export function faceOwnerModifiedBefore(
         f.operation !== "newBody" &&
         f.targetBodyIds?.includes(`body:${ownerId}`)) ||
         (f.type === "hole" &&
-          (f.targetBodyId === `body:${ownerId}` ||
-            f.targetFeatureId === ownerId)) ||
+          targetBodyIds(f).includes(`body:${ownerId}`)) ||
         ((f.type === "fillet" || f.type === "chamfer") &&
           f.targetEdgeRefs?.some((ref) => ref.featureId === ownerId))),
   );

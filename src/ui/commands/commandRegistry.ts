@@ -143,7 +143,7 @@ export const commands: CadCommand[] = [
   { id: "view.clearSection", label: "Clear Section View", alwaysEnabled:true, run:()=>useSectionState.getState().clear(useCadStore.getState().documentSession) },
   { id: "file.exportSelectedBody", label: "Export Selected Body STL", enablementKey: "exportSelectedBody",
     run: async () => { const id = selectedExportBody(useCadStore.getState()); if (id) await runFabrication("separate", true, [id]); } },
-  { id: "feature.hole", label: "Hole from Selected Sketch", description: "Choose explicit sketch point centers and one target body for a native cylindrical cut.", enablementKey: "createHole", run: beginHoleCreation },
+  { id: "feature.hole", label: "Hole from Selected Sketch", description: "Choose explicit sketch point centers and target bodies for native cylindrical cuts.", enablementKey: "createHole", run: beginHoleCreation },
   ...(["earlier", "later"] as const).map((direction): CadCommand => ({
     id: `timeline.move${direction === "earlier" ? "Earlier" : "Later"}`,
     label: `Move Selected Item ${direction === "earlier" ? "Earlier" : "Later"}`,
