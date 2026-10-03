@@ -3,7 +3,8 @@ import { serializeProject } from "./exportProject";
 import { importProjectText } from "./projectCodec";
 import { importProjectFile } from "./importProject";
 
-export const AUTOSAVE_DB = "plaincad-recovery";
+import { AUTOSAVE_DB, AUTOSAVE_STORE } from "./recoveryConstants";
+export { AUTOSAVE_DB } from "./recoveryConstants";
 export const AUTOSAVE_DELAY_MS = 500;
 export const AUTOSAVE_PROJECT_LIMIT = 5;
 export interface RecoverySnapshot {
@@ -32,7 +33,7 @@ function database(): Promise<IDBDatabase> {
       reject(new Error("Recovery storage timed out."));
     }, 8000);
     request.onupgradeneeded = () =>
-      request.result.createObjectStore("projects", { keyPath: "id" });
+      request.result.createObjectStore(AUTOSAVE_STORE, { keyPath: "id" });
     request.onsuccess = () => {
       clearTimeout(timeout);
       if (finished) {
@@ -67,7 +68,7 @@ async function transaction<T>(
   return new Promise((resolve, reject) => {
     let tx: IDBTransaction;
     try {
-      tx = db.transaction("projects", mode);
+      tx = db.transaction(AUTOSAVE_STORE, mode);
     } catch (error) {
       db.close();
       reject(error);
@@ -100,7 +101,7 @@ async function transaction<T>(
       finish(tx.error ?? new Error("Recovery storage transaction failed."));
     try {
       action(
-        tx.objectStore("projects"),
+        tx.objectStore(AUTOSAVE_STORE),
         (value) => {
           result = value;
         },

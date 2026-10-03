@@ -438,3 +438,6 @@ Deferred until after MVP:
 - `specs/initial/RELEASE_HARDENING.md`: release hardening checklist.
 - `specs/initial/MVP_COMPLETION.md`: MVP completion review.
 - `specs/working-cad/SPEC.md`: next-stage specification for a working parametric CAD system.
+
+Production build headers, CSP, cache/MIME requirements, and the built-app browser
+check are documented in [deployment/README.md](deployment/README.md).

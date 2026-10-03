@@ -9,8 +9,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "tsc -b --noEmit && tsc -p tsconfig.e2e.json",
-    "release:check": "npm run lint && npm test && npm run build && npm run test:browser",
-    "test:browser": "playwright test"
+    "release:check": "npm run lint && npm test && npm run build && npm run test:browser && npm run test:production",
+    "test:browser": "playwright test",
+    "preview": "vite preview",
+    "test:production": "playwright test -c playwright.production.config.ts"
   },
   "dependencies": {
     "opencascade.js": "^1.1.1",

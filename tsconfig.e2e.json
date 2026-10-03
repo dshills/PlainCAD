@@ -1,8 +1,18 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "noEmit": true
   },
-  "include": ["e2e", "playwright.config.ts", "src/vite-env.d.ts", "src/types/**/*.d.ts"]
+  "include": [
+    "e2e",
+    "playwright.config.ts",
+    "src/vite-env.d.ts",
+    "src/types/**/*.d.ts",
+    "production-e2e",
+    "playwright.production.config.ts",
+    "deployment"
+  ]
 }

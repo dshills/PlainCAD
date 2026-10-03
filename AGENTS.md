@@ -25,10 +25,13 @@ that a capability works end to end.
   the relevant file).
 - `npm run build` checks TypeScript and creates `dist/`.
 - Run `npm run release:check` before a code-change handoff or commit. It runs
-  type checking, unit/component tests, the production build, and browser tests.
+  type checking, unit/component tests, the production build, development browser
+  tests, and the built-app production CSP browser test.
 - Install Chromium once with `npx playwright install chromium`. `npm run test:browser`
   runs real-kernel acceptance tests using a dedicated server on port 5279.
-  Screenshots/downloads/traces are in ignored `test-results/`.
+  Screenshots/downloads/traces are in ignored `test-results/`. Run `npm run build`
+  before standalone `npm run test:production`; its strict preview server uses port
+  5280 and verifies native workers under the production security headers.
 
 The production build may warn about large chunks from the CAD kernel and viewer.
 Report relevant warnings, but do not treat that warning alone as a failed build.

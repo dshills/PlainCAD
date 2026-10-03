@@ -146,10 +146,14 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
 - STL validation is numerical and bounded: it does not prove absence of every
   adjacent-face or near-degenerate self-intersection. Skipping expensive checks
   is explicit. Native union remains best-effort and does not connect disjoint solids.
-- Deployment CSP remains incomplete.
+- Production CSP and security headers are generated from one policy source for
+  static hosts and Nginx, and applied by Vite preview to HTML and workers. A built-app
+  Chromium test verifies native modeling, save/open, recovery, native union and STL
+  under the policy, plus blocked inline scripts, JS eval and remote fetch. Final-host
+  header/MIME verification remains a deployment step.
 - Broader browser/kernel acceptance coverage (complex feature chains, imported
-  fixtures, other browsers), accessibility audit, controlled performance reporting, and deployment
-  documentation remain open. The bounded Chromium suite runs in the release gate
+  fixtures, other browsers), accessibility audit, controlled performance reporting, and final-host deployment
+  verification remain open. The bounded Chromium suite runs in the release gate
   and GitHub Actions; CI execution itself has not been verified locally.
 
 ## Intentionally deferred
