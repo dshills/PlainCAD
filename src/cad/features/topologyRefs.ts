@@ -49,12 +49,11 @@ export function resolveSupportedEdgeRef(
   if (
     feature.suppressed ||
     feature.operation !== "newBody" ||
-    feature.direction !== "positive" ||
     (feature.termination && feature.termination.type !== "distance")
   )
     return {
       error:
-        "Edge reference owner must be an active positive-distance new-body extrusion. Reselect a supported owner.",
+        "Edge reference owner must be an active distance new-body extrusion. Reselect a supported owner.",
     };
   const sketch = document.sketches[feature.sketchId];
   if (!sketch) return { error: "Edge reference owner sketch was not found." };

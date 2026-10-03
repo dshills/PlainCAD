@@ -249,3 +249,123 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     }
   });
 }
+
+for (const plane of ["XY", "XZ", "YZ"] as const) {
+  test(`${plane}: signed native edge treatments change exact volume and survive repair and persistence`, async ({
+    page,
+  }, testInfo) => {
+    await page.goto("/");
+    await ready(page);
+    const corner = 1 - Math.PI / 4;
+    for (const direction of ["negative", "symmetric"] as const) {
+      const ids = await fixture(page, plane, direction);
+      await ready(page);
+      const state = await snapshot(page);
+      const owner = state.document.features.find((f) => f.id === ids.owner)!;
+      if (owner.type !== "extrude") throw new Error("Expected extrusion owner");
+      const line = Object.values(
+        state.document.sketches[owner.sketchId].entities,
+      ).find((e) => e.type === "line")!;
+      await select(page, "feature", ids.owner);
+      await expect(
+        page.getByRole("button", {
+          name: "Fillet extrusion edges",
+          exact: true,
+        }),
+      ).toBeEnabled();
+      await page
+        .getByRole("button", { name: "Fillet extrusion edges", exact: true })
+        .click();
+      await page
+        .getByRole("combobox", { name: "Source edge", exact: true })
+        .selectOption(line.id);
+      await ready(page, (state) =>
+        native(state, ids.owner, 2000 - 20 * corner),
+      );
+      await page
+        .getByRole("combobox", { name: "Edge role", exact: true })
+        .selectOption("startCapPerimeter");
+      await page
+        .getByRole("combobox", { name: "Source edge", exact: true })
+        .selectOption(line.id);
+      await ready(page, (state) =>
+        native(state, ids.owner, 2000 - 20 * corner),
+      );
+      await page
+        .getByRole("combobox", { name: "Edge role", exact: true })
+        .selectOption("profileEdge");
+      await page
+        .getByRole("combobox", { name: "Source edge", exact: true })
+        .selectOption(line.id);
+      await commit(page, "Fillet radius", "2mm");
+      await ready(page, (state) =>
+        native(state, ids.owner, 2000 - 80 * corner),
+      );
+      await select(page, "parameter", "depth");
+      await commit(page, "depth expression", "20mm");
+      await ready(page, (state) =>
+        native(state, ids.owner, 4000 - 160 * corner),
+      );
+      const fillet = (await snapshot(page)).document.features[1].id;
+      await select(page, "feature", fillet);
+      await page
+        .getByRole("combobox", { name: "Edge role", exact: true })
+        .selectOption("endCapPerimeter");
+      await page
+        .getByRole("combobox", { name: "Source edge", exact: true })
+        .selectOption(line.id);
+      await ready(page, (state) =>
+        native(state, ids.owner, 4000 - 80 * corner),
+      );
+      await page
+        .getByRole("button", { name: "Chamfer extrusion edges", exact: true })
+        .click();
+      await page
+        .getByRole("combobox", { name: "Source edge", exact: true })
+        .selectOption(line.id);
+      const expected = 4000 - 80 * corner - 10;
+      await ready(page, (state) => {
+        const mesh = native(state, ids.owner, expected);
+        expect(mesh.kernelOperation).toBe("chamfer");
+        const axis = plane === "XY" ? 2 : plane === "XZ" ? 1 : 0;
+        const start = direction === "negative" ? -20 : -10;
+        const min = plane === "XZ" ? -start - 20 : start;
+        expect(mesh.bounds.min[axis]).toBeCloseTo(min, 5);
+        expect(mesh.bounds.max[axis]).toBeCloseTo(min + 20, 5);
+      });
+      await commit(page, "Chamfer distance", "100mm");
+      await expect(async () => {
+        const state = await snapshot(page);
+        expect(state.status).toBe("failed");
+        expect(state.result?.errors).toContainEqual(
+          expect.objectContaining({
+            sourceId: state.document.features[2].id,
+            message: expect.stringContaining("chamfer failed"),
+          }),
+        );
+      }).toPass({ timeout: 20000 });
+      await expect(
+        page.getByRole("button", { name: "Export STL", exact: true }),
+      ).toBeDisabled();
+      await commit(page, "Chamfer distance", "1mm");
+      await ready(page, (state) => native(state, ids.owner, expected));
+      const saved = page.waitForEvent("download");
+      await page
+        .getByRole("button", { name: "Save project", exact: true })
+        .click();
+      const projectPath = testInfo.outputPath(`${direction}-edges.pcaddoc`);
+      await (await saved).saveAs(projectPath);
+      await page.reload();
+      await ready(page);
+      await page.locator('input[type="file"]').setInputFiles(projectPath);
+      await ready(page, (state) => native(state, ids.owner, expected));
+      const exported = page.waitForEvent("download");
+      await page
+        .getByRole("button", { name: "Export STL", exact: true })
+        .click();
+      const path = testInfo.outputPath(`${direction}-edges.stl`);
+      await (await exported).saveAs(path);
+      expect(signedVolume(await readFile(path)) / expected).toBeCloseTo(1, 2);
+    }
+  });
+}

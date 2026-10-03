@@ -216,7 +216,6 @@ export function ModelingFeatureControls({ feature }: { feature: Feature }) {
       f.type === "extrude" &&
       !f.suppressed &&
       f.operation === "newBody" &&
-      f.direction === "positive" &&
       (!f.termination || f.termination.type === "distance") &&
       (f.timelineStep === undefined ||
         feature.timelineStep === undefined ||

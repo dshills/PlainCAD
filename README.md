@@ -333,7 +333,8 @@ Use `Revolve` for a closed profile around a coplanar origin axis or a stable lin
 in its sketch. The Inspector edits the axis, 0–360 degree angle (exclusive of 0),
 and new-body/cut/join operation. Profiles crossing the axis fail with a diagnostic.
 
-Select a supported distance extrusion and use `Fillet` or `Chamfer`. The Inspector
+Select a supported positive, negative, or symmetric distance extrusion and use
+`Fillet` or `Chamfer`. The Inspector
 edits size expressions and selects an entire cap perimeter, a cap edge derived from
 a line/arc, or the two side corners at a source line's endpoints. Native operations
 validate BRep geometry, solid count, and exact volume/surface-area changes. Invalid sizes,

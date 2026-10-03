@@ -662,7 +662,6 @@ function edgeTreatmentOwner(state = useCadStore.getState()) {
     feature?.type !== "extrude" ||
     feature.suppressed ||
     feature.operation !== "newBody" ||
-    feature.direction !== "positive" ||
     (feature.termination && feature.termination.type !== "distance")
   )
     return undefined;
