@@ -24,7 +24,7 @@ edits, parameter-driven diameter, empty-center failure and save/open/STL recover
 
 - React/Vite/TypeScript UI, Three.js viewer, Zustand document history and undo/redo.
 - Serializable document with stable IDs, deterministic JSON, schema migrations
-  through version 10, and validation before imported state is accepted.
+  through version 11, and validation before imported state is accepted.
 - Import unsafe-key rejection, nesting/node limits, and parameter/sketch/entity/
   constraint/feature count limits; unknown and runtime fields stripped by migration.
 - Parameter expressions, dependency ordering/cycle errors, compatible unit
@@ -140,8 +140,15 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
   numerical heuristic, not proof of a globally unique solution. Distance/angle
   branch checks reject mirrored changes; canonical reset returns to authored
   coordinates. Previous valid seeds live in worker memory and are not serialized.
-- Intersecting boundaries are diagnosed; intersection fragmentation and direct
-  canvas drawing/dragging remain missing. Arcs retain analytic kernel boundaries;
+- A plane-local SVG sketch canvas draws points, connected lines, rectangles,
+  circles and center/start/end arcs with previews, existing-point/grid snapping,
+  construction curves, pan/zoom/Fit, primitive undo/redo and stale-gesture protection.
+  Pointer-driven native Chromium workflows cover XY/XZ/YZ, an offset plane,
+  non-template extrusion/cut, edits, save/open and STL. The canvas edits local
+  millimeter coordinates on resolved origin/offset/supported face planes; lost
+  planes block drawing. Point dragging and graphical dimensions remain open.
+  Intersecting boundaries are diagnosed; intersection fragmentation remains missing.
+  Arcs retain analytic kernel boundaries;
   profile classification and fallback meshes sample their sweeps. Face selection
   uses explicit feature-owned roles in Sketch tools, not arbitrary viewer picks.
 - Timeline moves validate structural dependencies and preserve same-body modifier

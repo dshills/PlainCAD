@@ -1,3 +1,4 @@
+import { beginSketchCanvas, selectedCanvasSketch } from "./sketchCanvasCommand";
 import { canCaptureTargetScope, captureSelectedTargetScope, useTargetScopeCapture } from "./targetScopeCaptureCommand";
 import { captureCamera, restoreCamera, showStandardView } from "../../viewer/cameraController";
 import { MAX_NAMED_VIEWS, STANDARD_VIEWS, saveNamedCamera, unusedViewName } from "../../cad/inspection/cameraViews";
@@ -95,10 +96,12 @@ export interface CommandEnablement {
   moveLater: boolean;
   createHole: boolean;
   captureTargetScope: boolean;
+  sketchCanvas: boolean;
 }
 
 export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useTargetScopeCapture.getState().busy): CommandEnablement {
   return {
+    sketchCanvas: Boolean(selectedCanvasSketch(state)),
     document: Boolean(state.history.present),
     saveNamedView: (state.history.present.viewState?.namedViews?.length ?? 0) < MAX_NAMED_VIEWS,
     restoreNamedView: Boolean(state.history.present.viewState?.namedViews?.length),
@@ -128,6 +131,7 @@ export function isCommandEnabledForSnapshot(
 }
 
 export const commands: CadCommand[] = [
+  { id: "sketch.editCanvas", label: "Edit Sketch Canvas", description: "Draw geometry in the selected sketch’s local plane.", enablementKey: "sketchCanvas", run: beginSketchCanvas },
   {id:"feature.captureTargetScope",label:"Capture Intersected Targets",description:"Save the current native body/tool intersections as explicit target IDs.",enablementKey:"captureTargetScope",run:captureSelectedTargetScope},
   ...STANDARD_VIEWS.map((view): CadCommand => ({ id: `view.${view}`, label: `${view[0].toUpperCase()}${view.slice(1)} View`, alwaysEnabled: true, run: () => { showStandardView(view); } })),
   { id: "view.saveNamed", label: "Save Named View", enablementKey: "saveNamedView", run: (ctx) => {

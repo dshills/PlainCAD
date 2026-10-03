@@ -1,3 +1,4 @@
+import { SketchCanvasPanel } from "../ui/panels/SketchCanvasPanel";
 import { useCommandEnablement } from "../ui/commands/useCommandEnablement";
 import { ViewPanel } from "../ui/panels/ViewPanel";
 import { MeasurementPanel } from "../ui/panels/MeasurementPanel";
@@ -42,6 +43,7 @@ const toolbarGroups: ToolbarGroup[] = [
   {
     label: "Sketch",
     buttons: [
+      { command: "sketch.editCanvas", label: "Canvas", icon: "Draw", title: "Draw in the selected sketch plane", ariaLabel: "Edit sketch canvas" },
       { command: "sketch.createXY", label: "XY", icon: "XY", title: "Create an XY sketch", ariaLabel: "Create XY sketch" },
       { command: "sketch.createXZ", label: "XZ", icon: "XZ", title: "Create an XZ sketch", ariaLabel: "Create XZ sketch" },
       { command: "sketch.createYZ", label: "YZ", icon: "YZ", title: "Create a YZ sketch", ariaLabel: "Create YZ sketch" },
@@ -173,6 +175,7 @@ export function App() {
       <RecoveryPanel />
       <FabricationPanel />
       <HoleCreationPanel />
+      <SketchCanvasPanel />
       <main className="workspace">
         <aside className="left-panel">
           <SketchPanel />

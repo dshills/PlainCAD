@@ -694,3 +694,20 @@ dialog.file-dialog::backdrop { background: #0006; }
 .dependency-list { padding-left: 18px; }
 .dependency-list li { margin: 8px 0; }
 .dependency-list li span { display: block; font-size: 0.8rem; overflow-wrap: anywhere; }
+
+
+.sketch-canvas-dialog { top: 2vh; box-sizing: border-box; width: min(900px, 96vw); max-height: 96vh; overflow: auto; }
+.canvas-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.7rem; margin: 0.6rem 0; }
+.canvas-toolbar label { display: flex; align-items: center; gap: 0.3rem; }
+.canvas-toolbar input[type="number"] { width: 100px; }
+.sketch-canvas { display: block; width: min(100%, 60vh); height: auto; aspect-ratio: 4 / 3; border: 1px solid #637080; background: #111923; cursor: crosshair; touch-action: none; }
+.sketch-canvas:focus { outline: 2px solid #e9b749; }
+.canvas-grid { stroke: #283747; }
+.canvas-axes { stroke: #7e8997; }
+.canvas-geometry { stroke: #64d8f5; }
+.canvas-construction { stroke: #ca96ff; stroke-dasharray: 0.8% 0.5%; }
+.canvas-point { stroke: #a5eafd; fill: #123b50; }
+.canvas-preview { stroke: #ffc45c; stroke-dasharray: 0.7% 0.5%; }
+
+.sketch-canvas-dialog .canvas-toolbar label { display: flex; margin: 0; }
+.sketch-canvas-dialog .canvas-toolbar select { width: auto; margin: 0; }

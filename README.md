@@ -153,7 +153,12 @@ rebuild until their expressions are repaired; reused names cannot retarget them.
 ### Work With Sketches
 
 1. Create an XY, XZ, or YZ sketch and select it in the Browser.
-2. Use the rectangle/circle helpers or Sketch tools to add points, lines, circles,
+2. Use Edit Sketch Canvas to draw points, connected lines, rectangles, circles and
+   center/start/end arcs in a plane-local view. The canvas previews unfinished
+   gestures, snaps to existing solved points and an optional millimeter grid, and
+   saves complete primitives as undoable edits. Escape cancels a draft before closing.
+   Zoom, pan, Fit and construction geometry controls are available.
+   Use the rectangle/circle helpers or Sketch tools to add points, lines, circles,
    and center/start/end arcs. Construction curves appear dashed and are excluded
    from solid profiles.
 3. Add constraints and driving dimensions in Sketch tools; dimension expressions

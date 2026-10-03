@@ -1,3 +1,4 @@
+import { runCommand } from "../commands/commandRegistry";
 import { useMemo, useState } from "react";
 import {
   CadDocument,
@@ -222,6 +223,7 @@ export function SketchTools({
         Reset sketch solve
       </button>
       <h3>Draw geometry</h3>
+      <button onClick={() => { useCadStore.getState().select({ kind: "sketch", id: sketch.id, documentId: document.id }); void runCommand("sketch.editCanvas"); }}>Open sketch canvas</button>
       <label>
         Geometry type
         <select
