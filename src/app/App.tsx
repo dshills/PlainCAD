@@ -188,12 +188,12 @@ export function App() {
       <FabricationPanel />
       <HoleCreationPanel />
       <ExtrudeCreationPanel />
-      <ProjectWorkflowPanel />
       <main className="workspace">
         <aside className="left-panel">
           <SketchPanel />
         </aside>
         <div className="model-area">
+          <ProjectWorkflowPanel />
           <section className="viewer-region" aria-label="3D CAD viewer">
             <div className="model-view" hidden={Boolean(sketchActive)}><CadViewer /></div>
             <SketchCanvasPanel />

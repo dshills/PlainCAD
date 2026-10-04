@@ -975,3 +975,8 @@ button:disabled:not(.ribbon-button) { opacity: 0.6; }
 .sketch-workspace-drawing { grid-column: 1; grid-row: 1; min-width: 0; }
 .sketch-workspace .sketch-canvas { width: 100%; }
 @media (max-width: 1300px) { .sketch-workspace-layout { grid-template-columns: 1fr; } .sketch-workspace-controls { grid-column: 1; grid-row: 2; } }
+
+.model-area { position: relative; }
+.sketch-plane-picker { position: absolute; z-index: 4; top: 12px; right: 12px; width: min(340px, calc(100% - 24px)); max-height: calc(100% - 130px); overflow: auto; box-sizing: border-box; padding: 16px; background: var(--panel); border: 1px solid var(--accent); border-radius: 4px; box-shadow: 0 8px 24px #0003; }
+.sketch-plane-picker h2 { font-size: 1rem; margin: 0 0 8px; }
+.sketch-plane-picker .plane-choices { display: flex; flex-direction: column; }

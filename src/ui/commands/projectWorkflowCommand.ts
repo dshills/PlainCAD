@@ -1,9 +1,14 @@
+import {
+  currentPlaneChoices,
+  alignToSketchPlane,
+  useSketchPlanePicker,
+} from "./sketchPlanePicker";
+import type { FacePlaneReference } from "../../cad/document/schema";
 import { create } from "zustand";
 import { useCadStore, type CadStore } from "../../state/useCadStore";
 import { addComponent } from "../../cad/document/components";
 import { upsertSketch } from "../../cad/document/CadDocument";
 import { createSketchOnPlane } from "../../cad/sketch/SketchModel";
-import type { OriginPlane } from "../../cad/document/schema";
 import { beginSketchCanvas, useSketchCanvas } from "./sketchCanvasCommand";
 
 interface WorkflowSession {
@@ -24,6 +29,7 @@ export function activeComponentId(state: CadStore): string {
 export function beginProjectWorkflow(kind: WorkflowSession["kind"]) {
   const state = useCadStore.getState();
   if (state.fileBusy) return;
+  useSketchPlanePicker.setState({ hover: undefined, error: undefined });
   useProjectWorkflow.setState({
     active: {
       kind,
@@ -46,7 +52,7 @@ export function workflowCurrent(
 }
 export function finishProjectWorkflow(
   active: WorkflowSession,
-  nameOrPlane: string,
+  nameOrPlane: string | FacePlaneReference,
 ) {
   const state = useCadStore.getState();
   if (!workflowCurrent(active, state))
@@ -54,6 +60,8 @@ export function finishProjectWorkflow(
       "Project or active component changed. Start this command again.",
     );
   if (active.kind === "component") {
+    if (typeof nameOrPlane !== "string")
+      throw new Error("Enter a component name.");
     const result = addComponent(state.history.present, nameOrPlane),
       before = state.history.present;
     state.updateDocument((document) =>
@@ -65,12 +73,21 @@ export function finishProjectWorkflow(
       );
     state.activateComponent(result.component.id);
   } else {
-    if (!["XY", "XZ", "YZ"].includes(nameOrPlane))
-      throw new Error("Choose an origin plane.");
+    const choice = currentPlaneChoices(state).find((item) =>
+      typeof nameOrPlane === "string"
+        ? item.reference === nameOrPlane
+        : typeof item.reference !== "string" &&
+          item.reference.featureId === nameOrPlane.featureId &&
+          item.reference.stableFaceId === nameOrPlane.stableFaceId,
+    );
+    if (!choice)
+      throw new Error(
+        "Choose a current supported origin plane or native planar face.",
+      );
     const sketch = {
       ...createSketchOnPlane(
         `Sketch ${Object.keys(state.history.present.sketches).length + 1}`,
-        nameOrPlane as OriginPlane,
+        choice.reference,
       ),
       componentId: active.componentId,
     };
@@ -81,6 +98,7 @@ export function finishProjectWorkflow(
         "Sketch could not be created. Check project diagnostics.",
       );
     state.select({ kind: "sketch", id: sketch.id, documentId: before.id });
+    alignToSketchPlane(choice);
     beginSketchCanvas();
   }
   useProjectWorkflow.setState({ active: undefined });

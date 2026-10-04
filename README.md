@@ -126,7 +126,7 @@ behavior while applying the console styling to panels, dialogs and drawing views
 
 1. Start the dev server and open the local URL.
 2. Choose **New** for a blank local project, then **New Component** and name the part.
-3. Choose **Create Sketch**, select an XY/XZ/YZ plane, and draw in sketch mode in the main workspace. Drawing controls appear beside the canvas; **Finish Sketch** returns to the 3D model.
+3. Choose **Create Sketch**, click a colored XY/XZ/YZ plane or a supported native planar face in the viewer, and draw in sketch mode in the main workspace. Drawing controls appear beside the canvas; **Finish Sketch** returns to the 3D model.
 4. Choose **Finish Sketch**, then **Extrude**. Select a profile, distance, direction, and New Body/Cut/Join operation; inspect the native geometry preview, then choose **Apply extrusion**. Cut and Join require explicit target bodies in the active component. Cancel leaves the project unchanged.
 5. The Browser groups each component’s origin, sketches and bodies. Activate a
    component before adding another sketch; selecting a sketch, body or timeline
@@ -646,3 +646,11 @@ pending primitive or drag, then finishes the sketch when no draft remains. F fit
 the sketch when drawing has focus. Creation of another sketch/component and solid
 modeling commands wait until Finish Sketch. Selecting another component closes
 the current sketch mode and discards only incomplete drawing gestures.
+
+Create Sketch keeps the 3D viewer interactive while selecting a plane. Hovering a
+colored origin plane or an eligible native face highlights it; clicking creates
+one sketch in the active component and aligns the camera to its local axes. The
+chooser also offers keyboard-accessible plane/face buttons. Faces require an
+unmodified native distance-extrusion owner; curved, modified, ambiguous and
+fallback faces give a diagnostic without creating a sketch. Face references use
+the existing stable feature-owned roles and follow supported owner edits.

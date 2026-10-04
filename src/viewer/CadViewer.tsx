@@ -1,3 +1,4 @@
+import { installSketchPlanePicking } from "./sketchPlanePicking";
 import type { RebuildResult } from "../cad/worker/workerProtocol";
 import { useThemeState } from "../state/useThemeState";
 import { viewerThemeColors } from "../ui/themes/themes";
@@ -208,6 +209,7 @@ export function CadViewer() {
     };
     animate();
 
+    const uninstallPlanePicking = installSketchPlanePicking(scene, renderer, camera, modelGroup, () => clippingRef.current);
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
     const click = (event: MouseEvent) => {
@@ -223,6 +225,7 @@ export function CadViewer() {
     renderer.domElement.addEventListener("click", click);
 
     return () => {
+      uninstallPlanePicking();
       unregisterDiagnostics?.();
       unregisterCamera();
       cancelAnimationFrame(raf);

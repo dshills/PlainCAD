@@ -271,7 +271,7 @@ describe("component project ownership", () => {
     fireEvent.click(
       within(ribbon).getByRole("button", { name: "Create sketch" }),
     );
-    const chooser = screen.getByRole("dialog", { name: "Create Sketch" });
+    const chooser = screen.getByRole("region", { name: "Create Sketch" });
     expect(chooser).toHaveTextContent("Bracket");
     fireEvent.click(
       within(chooser).getByRole("button", { name: "Sketch on XZ plane" }),

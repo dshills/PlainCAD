@@ -399,3 +399,15 @@ finishing; F fits the focused sketch. Shared command enablement blocks solid
 creation and a second sketch/component during this mode. The 3D viewer remains
 mounted so finishing does not discard its runtime resources or camera controller.
 Project replacement, sketch removal and component changes end obsolete sessions.
+
+### Interactive sketch-plane selection
+
+Create Sketch offers colored origin planes and native cap/straight-side picking in
+the 3D viewer, with hover highlighting, matching keyboard buttons, and plane-local
+camera alignment. Native picking matches body ID, outward normal and plane
+position to exactly one supported role; ambiguous, curved, modified and fallback
+faces diagnose without document edits. Origin selections and supported face
+references create one sketch in the active component using existing persisted
+plane data. Native browser tests cover origin picking, cap highlighting/selection,
+owner parameter edits, save/open and curved-face rejection. Generic topology and
+post-boolean face references remain outside this selection scope.
