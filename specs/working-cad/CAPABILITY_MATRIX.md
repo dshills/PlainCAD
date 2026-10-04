@@ -74,7 +74,7 @@ edits, parameter-driven diameter, empty-center failure and save/open/STL recover
 | Extrude cut | Up to 64 explicit saved target IDs; atomic updates of all targets; native world-coordinate tools; valid nonempty solid output with reduced exact volume; disjoint/no-op and empty cuts diagnosed; narrow rectangle/circular-through-hole fallback | Creation dialog with explicit targets and native preview; Inspector |
 | Extrude join | Up to 64 ordered explicit targets; atomic native connected union; first target ID/name survives, secondary targets absorbed; tool must add exact volume beyond target union; disconnected/no-op joins diagnosed; no fallback | Creation dialog with explicit targets and native preview; Inspector |
 | Through all | Projects all selected target bounds along the sketch normal for positive/negative directions or a symmetric total span; wrong-side targets diagnosed; subject to cut/join limits | Creation dialog with explicit targets, direction and native preview; Inspector |
-| Extrude to face | Positive termination on an upstream unmodified feature-owned planar cap/straight side, including sloped faces; native half-space trimming; end-cap area/intersection checks enforce finite face and holes | Inspector with explicit face selection and repair |
+| Extrude to face | Positive termination on an upstream unmodified feature-owned planar cap/straight side, including sloped faces; native half-space trimming; end-cap area/intersection checks enforce finite face and holes | Creation dialog with explicit face selection and native preview; Inspector with repair |
 | Negative/symmetric extrude | Distance and through-all supported with a shifted start plane and unchanged coordinate basis; distance owners publish native-validated retained cap/straight-side sketch planes and authored edge treatments; to-face tools remain positive-only | Inspector; unsupported to-face combinations disabled and diagnosed |
 | Revolve | Native analytic closed line/arc/circle profiles with holes; coplanar world X/Y/Z or same-sketch line axes; angles greater than 0 through 360 degrees; cross-axis/zero-volume/invalid output rejected | Shared creation command and inspector; narrow full-Y/XY rectangular fallback without kernel |
 | Revolve cut/join | Native cut on up to 64 explicit saved targets with atomic publication; join merges an ordered explicit scope into one connected solid; boolean validity/volume checks | Inspector with cut/join scope checkboxes and lost-reference removal |
@@ -381,15 +381,16 @@ remain open; this fixture does not expand supported topology roles.
 The Extrude command opens a draft dialog rather than inserting a default feature.
 It selects one closed profile and distance termination, with positive, negative or
 symmetric total span and New Body/Cut/Join. Cut and Join also offer Through All
-against explicit selected target bounds. Explicit target IDs are limited to
+against explicit selected target bounds. Positive extrusion also offers To Face
+with explicit unmodified upstream planar face selection and native coverage checks. Explicit target IDs are limited to
 current native bodies in the active component. A separate preview worker rebuilds
 the staged project, checks successful native solid assertions, and displays exact
 volume and orbitable geometry. Apply is unavailable for invalid/no-op geometry,
 pending or stale settings, project replacement/edits, or component changes. Cancel
 terminates pending work without changing project history, rebuild meshes, save,
 autosave or export. Worker cancellation and a 30-second limit bound preview jobs;
-changing inputs is debounced by 300 ms. To-face settings remain in
-the Inspector; multiple simultaneous profiles are not offered in this dialog.
+changing inputs is debounced by 300 ms. Multiple simultaneous profiles are not
+offered in this dialog.
 
 ### Sketch workspace
 

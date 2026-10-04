@@ -159,3 +159,30 @@ it("rejects fallback meshes and exposes feature diagnostics", () => {
     "does not remove material",
   );
 });
+it("requires the native To Face operation tag for a To Face new-body preview", () => {
+  const draft = useExtrudeDraft.getState().draft!;
+  const result = simulatedNative({
+    ...draft.document,
+    features: [draft.feature],
+  });
+  const feature = {
+    ...draft.feature,
+    termination: {
+      type: "toFace" as const,
+      faceRef: {
+        kind: "face" as const,
+        featureId: "owner",
+        transientId: "owner-cap",
+        stableHint: "owner-cap",
+        role: "planarFace" as const,
+      },
+    },
+  };
+  expect(() =>
+    assertNativeExtrudePreview(result, draft.document.id, feature),
+  ).toThrow("requested extrusion operation");
+  result.meshes[0].kernelOperation = "toFace";
+  expect(() =>
+    assertNativeExtrudePreview(result, draft.document.id, feature),
+  ).not.toThrow();
+});

@@ -10,6 +10,7 @@ import {
   sketchComponentId,
 } from "../../cad/document/components";
 import type { CadDocument, ExtrudeFeature } from "../../cad/document/schema";
+import { faceOwnerModifiedBefore } from "../../cad/sketch/planes";
 import { detectProfiles } from "../../cad/sketch/profileDetection";
 import { solveSketch } from "../../cad/sketch/SketchSolver";
 import { evaluateParameters } from "../../cad/parameters/expressionEvaluator";
@@ -58,7 +59,14 @@ export function extrudeContext(state: CadStore, sketchId: string) {
           mesh.geometryAssertions?.valid,
       ),
   );
-  return { sketch, profiles, bodies };
+  // To Face retains its narrower unmodified-owner contract. The native face
+  // list also excludes failed/absorbed bodies and lost or ambiguous planes.
+  const faces = current
+    ? (state.rebuild.result?.availableFaces ?? []).filter(
+        (face) => !faceOwnerModifiedBefore(document, face.featureId, {}),
+      )
+    : [];
+  return { sketch, profiles, bodies, faces };
 }
 
 export function beginExtrudeCreation(sketchId: string) {
@@ -136,7 +144,9 @@ export function assertNativeExtrudePreview(
           : (feature.targetBodyIds ?? []);
     const operation =
       feature.operation === "newBody"
-        ? "extrusion"
+        ? feature.termination?.type === "toFace"
+          ? "toFace"
+          : "extrusion"
         : feature.operation === "join"
           ? "fuse"
           : "cut";

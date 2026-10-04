@@ -198,3 +198,96 @@ test("Through All creation rejects wrong-side targets and follows native XZ targ
     ),
   ).toBeLessThan(VOLUME_TOLERANCE);
 });
+
+test("To Face creation requires a covering native face and follows its owner through XZ edits and save/open", async ({
+  page,
+}, info) => {
+  let dialog = await seed(page);
+  const before = await snapshot(page),
+    owner = before.document.features[0];
+  await dialog.getByLabel("Extrude distance", { exact: true }).fill("0mm");
+  await dialog
+    .getByLabel("Extrude termination", { exact: true })
+    .selectOption("toFace");
+  await expect(dialog.getByRole("status")).toContainText(
+    "Choose a covering planar target face",
+  );
+  await expect(
+    dialog.getByRole("button", { name: "Apply extrusion" }),
+  ).toBeDisabled();
+  await expect(dialog.locator('option[value="negative"]')).toHaveAttribute(
+    "disabled",
+    "",
+  );
+  await expect(dialog.locator('option[value="symmetric"]')).toHaveAttribute(
+    "disabled",
+    "",
+  );
+  await dialog
+    .getByLabel("Extrude target face", { exact: true })
+    .selectOption(`extrude:${owner.id}:startCap`);
+  await expect(dialog.getByRole("alert")).toBeVisible();
+  await expect(
+    dialog.getByRole("button", { name: "Apply extrusion" }),
+  ).toBeDisabled();
+  await dialog
+    .getByLabel("Extrude target face", { exact: true })
+    .selectOption(`extrude:${owner.id}:endCap`);
+  await expect(dialog.getByRole("status")).toContainText(
+    `${(1000 + Math.PI * 4 * 10).toFixed(3)} mm³`,
+  );
+  expect(await snapshot(page)).toEqual(before);
+  await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
+  expect(await snapshot(page)).toEqual(before);
+  await page
+    .getByRole("button", { name: "Extrude selected sketch", exact: true })
+    .click();
+  dialog = page.getByRole("dialog", { name: "Extrude", exact: true });
+  await dialog
+    .getByLabel("Extrude termination", { exact: true })
+    .selectOption("toFace");
+  await dialog
+    .getByLabel("Extrude target face", { exact: true })
+    .selectOption(`extrude:${owner.id}:endCap`);
+  await applyExtrusion(page);
+  await ready(page);
+  let current = await snapshot(page),
+    feature = current.document.features[1];
+  expect(feature).toMatchObject({
+    termination: {
+      type: "toFace",
+      faceRef: {
+        featureId: owner.id,
+        stableHint: `extrude:${owner.id}:endCap`,
+      },
+    },
+  });
+  const body = () =>
+    current.result.meshes.find((mesh) => mesh.bodyId === `body:${feature.id}`)!;
+  expect(body().geometryAssertions).toMatchObject({
+    valid: true,
+    solidCount: 1,
+  });
+  expect(body().geometryAssertions!.volume).toBeCloseTo(Math.PI * 4 * 10, 7);
+  await page.locator(".timeline-chip.feature-chip").filter({ hasText: "Base" }).click();
+  await page.getByLabel("Distance", { exact: true }).fill("25mm");
+  await page.getByLabel("Distance", { exact: true }).press("Enter");
+  await ready(page);
+  current = await snapshot(page);
+  expect(body().geometryAssertions!.volume).toBeCloseTo(Math.PI * 4 * 25, 7);
+  expect(body().bounds.min[1]).toBeCloseTo(-25, 6);
+  expect(body().bounds.max[1]).toBeCloseTo(0, 6);
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const path = info.outputPath("to-face.pcaddoc");
+  await (await download).saveAs(path);
+  await page.getByRole("button", { name: "New project", exact: true }).click();
+  await ready(page);
+  await page.locator('input[type="file"]').setInputFiles(path);
+  await expect
+    .poll(async () => (await snapshot(page)).document.id)
+    .toBe(current.document.id);
+  await ready(page);
+  current = await snapshot(page);
+  expect(body().geometryAssertions!.volume).toBeCloseTo(Math.PI * 4 * 25, 7);
+});

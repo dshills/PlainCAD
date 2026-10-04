@@ -43,9 +43,11 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
     [operation, setOperation] =
       useState<ExtrudeFeature["operation"]>("newBody"),
     [targets, setTargets] = useState<string[]>([]),
-    [termination, setTermination] = useState<"distance" | "throughAll">(
-      "distance",
-    );
+    [termination, setTermination] = useState<
+      "distance" | "throughAll" | "toFace"
+    >("distance"),
+    [faceId, setFaceId] = useState("");
+  const targetFace = context?.faces.find((face) => face.id === faceId);
   const staged = useMemo(
     () =>
       upsertFeature(draft.document, {
@@ -57,13 +59,33 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
         termination:
           termination === "throughAll"
             ? { type: "throughAll" }
-            : {
-                type: "distance",
-                distance: { ...draft.feature.distance, expression: distance },
-              },
+            : termination === "toFace" && targetFace
+              ? {
+                  type: "toFace",
+                  faceRef: {
+                    kind: "face",
+                    featureId: targetFace.featureId,
+                    role: "planarFace",
+                    transientId: targetFace.id,
+                    stableHint: targetFace.id,
+                  },
+                }
+              : {
+                  type: "distance",
+                  distance: { ...draft.feature.distance, expression: distance },
+                },
         ...(operation === "newBody" ? {} : { targetBodyIds: targets }),
       }),
-    [draft, profileId, distance, direction, operation, targets, termination],
+    [
+      draft,
+      profileId,
+      distance,
+      direction,
+      operation,
+      targets,
+      termination,
+      targetFace,
+    ],
   );
   const [preview, setPreview] = useState<{
     staged: CadDocument;
@@ -72,12 +94,13 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
   }>();
   const [commitError, setCommitError] = useState("");
   const hasTargets = operation === "newBody" || targets.length > 0;
+  const hasFace = termination !== "toFace" || Boolean(targetFace);
   const validProfile = context?.profiles.some(
     (profile) => profile.id === profileId,
   );
   useEffect(() => {
     setCommitError("");
-    if (!current || !hasTargets || !validProfile) return;
+    if (!current || !hasTargets || !validProfile || !hasFace) return;
     const controller = new AbortController();
     const timer = setTimeout(() => {
       void previewExtrusion(staged, controller.signal)
@@ -104,7 +127,7 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [draft, staged, current, hasTargets, validProfile]);
+  }, [draft, staged, current, hasTargets, validProfile, hasFace]);
   const shown = current && preview?.staged === staged ? preview : undefined;
   const close = () => useExtrudeDraft.setState({ draft: undefined });
   return (
@@ -157,7 +180,7 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
                 value={termination}
                 onChange={(event) =>
                   setTermination(
-                    event.target.value as "distance" | "throughAll",
+                    event.target.value as "distance" | "throughAll" | "toFace",
                   )
                 }
               >
@@ -165,8 +188,31 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
                 <option value="throughAll" disabled={operation === "newBody"}>
                   Through All (Cut or Join)
                 </option>
+                <option
+                  value="toFace"
+                  disabled={direction !== "positive" || !context?.faces.length}
+                >
+                  To Face (positive only)
+                </option>
               </select>
             </label>
+            {termination === "toFace" ? (
+              <label>
+                Extrude target face
+                <select
+                  aria-label="Extrude target face"
+                  value={faceId}
+                  onChange={(event) => setFaceId(event.target.value)}
+                >
+                  <option value="">Choose a covering planar face</option>
+                  {context?.faces.map((face) => (
+                    <option key={face.id} value={face.id}>
+                      {face.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
             {termination === "distance" ? (
               <label>
                 Extrude distance
@@ -177,8 +223,9 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
               </label>
             ) : (
               <p className="muted">
-                Through All spans the selected target bounds in the chosen
-                direction.
+                {termination === "throughAll"
+                  ? "Through All spans the selected target bounds in the chosen direction."
+                  : "To Face requires an upstream unmodified planar face covering the whole profile. Holes and face boundaries are checked by the native preview."}
               </p>
             )}
             <label>
@@ -193,8 +240,12 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
                 }
               >
                 <option value="positive">Positive normal</option>
-                <option value="negative">Negative normal</option>
-                <option value="symmetric">Symmetric (total distance)</option>
+                <option value="negative" disabled={termination === "toFace"}>
+                  Negative normal
+                </option>
+                <option value="symmetric" disabled={termination === "toFace"}>
+                  Symmetric (total distance)
+                </option>
               </select>
             </label>
             <label>
@@ -206,7 +257,8 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
                   const next = event.target
                     .value as ExtrudeFeature["operation"];
                   setOperation(next);
-                  if (next === "newBody") setTermination("distance");
+                  if (next === "newBody" && termination === "throughAll")
+                    setTermination("distance");
                 }}
               >
                 <option value="newBody">New Body</option>
@@ -255,11 +307,13 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
                   ? "Choose a current closed profile."
                   : !hasTargets
                     ? "Choose at least one target body."
-                    : shown?.error
-                      ? "Preview failed"
-                      : shown?.result
-                        ? `Native preview ready · ${shown.result.meshes.length} bodies · ${shown.result.meshes.reduce((sum, mesh) => sum + mesh.geometryAssertions!.volume, 0).toFixed(3)} mm³`
-                        : "Building native preview…"}
+                    : !hasFace
+                      ? "Choose a covering planar target face."
+                      : shown?.error
+                        ? "Preview failed"
+                        : shown?.result
+                          ? `Native preview ready · ${shown.result.meshes.length} bodies · ${shown.result.meshes.reduce((sum, mesh) => sum + mesh.geometryAssertions!.volume, 0).toFixed(3)} mm³`
+                          : "Building native preview…"}
             </p>
             {shown?.error || commitError ? (
               <p role="alert">{shown?.error || commitError}</p>
