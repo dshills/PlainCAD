@@ -1,4 +1,5 @@
 import { SketchCanvasPanel } from "../ui/panels/SketchCanvasPanel";
+import { ThemeSelector } from "../ui/themes/ThemeSelector";
 import { useCommandEnablement } from "../ui/commands/useCommandEnablement";
 import { ViewPanel } from "../ui/panels/ViewPanel";
 import { MeasurementPanel } from "../ui/panels/MeasurementPanel";
@@ -155,6 +156,7 @@ export function App() {
             </section>
           ))}
         </nav>
+        <ThemeSelector />
         <div className={`rebuild-pill ${rebuild.status}`}>{rebuild.status}</div>
       </header>
       {rebuild.status === "loadingKernel" ? (

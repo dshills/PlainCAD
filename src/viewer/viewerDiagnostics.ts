@@ -1,6 +1,7 @@
 // Read-only development diagnostics used by browser acceptance tests. No runtime
 // geometry, camera, or store mutation is exposed to the browser tests here.
 export interface ViewerSnapshot {
+  background: string;
   resources: { geometries: number; textures: number; programs: number };
   cameraUp: number[];
   cameraPosition: number[];

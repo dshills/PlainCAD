@@ -18,6 +18,7 @@ The MVP is intentionally narrow: make parameters, sketches, rebuilds, inspection
 - Project import/export as `.pcaddoc` or JSON.
 - Mesh-based STL export after successful rebuilds.
 - Command palette with `Cmd/Ctrl+K`.
+- Light, Dark, and Saturn Command UI themes with a local browser preference.
 - Rebuild, file, import, and export errors shown in the UI.
 
 ## Prerequisites
@@ -107,6 +108,19 @@ rectangle/through-hole workflow, not general CAD completeness or other browsers.
 The production build currently emits a Vite chunk-size warning because OpenCascade WebAssembly and related viewer code are large. The warning is expected for the current MVP and does not fail the build.
 
 ## Using the App
+
+### Choose a Theme
+
+Use **Theme** in the top toolbar to choose Light, Dark, or Saturn Command. The
+selection applies to panels, controls, dialogs, sketch drawings, and the 3D viewer.
+It is saved in this browser separately from projects; switching themes preserves
+geometry, camera position, undo history, and saved model colors. If browser storage
+is unavailable, the choice still works for the current session.
+
+Saturn Command uses an instrument-console style: near-black
+panels, cyan borders/readouts, monospaced labels, illuminated square controls,
+and green/amber/red status accents. It keeps the CAD layout and real command
+behavior while applying the console styling to panels, dialogs and drawing views.
 
 ### Create a Model
 

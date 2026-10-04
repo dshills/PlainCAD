@@ -79,6 +79,8 @@ test("built app enforces CSP while native modeling, import, recovery and STL wor
   const response = await page.goto("/");
   for (const [header, value] of Object.entries(SECURITY_HEADERS))
     expect(response!.headers()[header.toLowerCase()]).toBe(value);
+  await page.getByLabel("UI theme", { exact: true }).selectOption("saturn");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "saturn");
   await page
     .getByRole("button", { name: "Load parametric box template" })
     .click();

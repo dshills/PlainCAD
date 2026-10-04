@@ -1,4 +1,6 @@
 import type { RebuildResult } from "../cad/worker/workerProtocol";
+import { useThemeState } from "../state/useThemeState";
+import { viewerThemeColors } from "../ui/themes/themes";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
@@ -21,6 +23,8 @@ import { solveSketch } from "../cad/sketch/SketchSolver";
 import { resolveDocumentPlanes, transformPoint } from "../cad/sketch/planes";
 
 interface ViewerRuntime {
+  background: THREE.Color;
+  grid: THREE.GridHelper;
   camera: THREE.PerspectiveCamera;
   applyPose(pose: CameraPose, remember?: boolean): boolean;
   controls: OrbitControls;
@@ -44,6 +48,7 @@ interface SketchOverlayResources {
 const EMPTY_MESHES: RenderMesh[] = [];
 
 export function CadViewer() {
+  const theme = useThemeState((state) => state.theme);
   const hostRef = useRef<HTMLDivElement>(null);
   const runtimeRef = useRef<ViewerRuntime | undefined>(undefined);
   const meshesRef = useRef<RenderMesh[]>([]);
@@ -77,7 +82,8 @@ export function CadViewer() {
     const host = hostRef.current;
     if (!host) return undefined;
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color("#e7ebe8");
+    const background = new THREE.Color("#e7ebe8");
+    scene.background = background;
     const camera = new THREE.PerspectiveCamera(45, host.clientWidth / host.clientHeight, 0.1, 10000);
     camera.up.set(0, 0, 1);
     camera.position.set(120, -140, 110);
@@ -128,7 +134,7 @@ export function CadViewer() {
       if (runtimeRef.current) runtimeRef.current.controls = controls;
       return true;
     };
-    runtimeRef.current = { camera, controls, applyPose, modelGroup, sketchGroup, measurementGroup, sketchResources: createSketchOverlayResources() };
+    runtimeRef.current = { background, grid, camera, controls, applyPose, modelGroup, sketchGroup, measurementGroup, sketchResources: createSketchOverlayResources() };
     const unregisterCamera = registerCameraController({
       read: () => ({ cameraPosition: camera.position.toArray(), cameraTarget: controls.target.toArray(), cameraUp: camera.up.toArray() }),
       apply: applyPose,
@@ -146,6 +152,7 @@ export function CadViewer() {
     const unregisterDiagnostics = import.meta.env.DEV ? registerViewerDiagnostics(() => ({
       resources: { geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, programs: renderer.info.programs?.length ?? 0 },
       cameraUp: camera.up.toArray(),
+      background: background.getHexString(),
       cameraPosition: camera.position.toArray(),
       sectionPlane: clippingRef.current ? { normal: clippingRef.current.normal.toArray(), constant: clippingRef.current.constant } : undefined,
       cameraTarget: controls.target.toArray(),
@@ -227,6 +234,31 @@ export function CadViewer() {
       runtimeRef.current = undefined;
     };
   }, []);
+
+  useEffect(() => {
+    const runtime = runtimeRef.current;
+    if (!runtime) return;
+    const colors = viewerThemeColors[theme];
+    runtime.background.set(colors.background);
+    const positions = runtime.grid.geometry.getAttribute("position");
+    const attribute = runtime.grid.geometry.getAttribute("color");
+    const major = new THREE.Color(colors.gridMajor), minor = new THREE.Color(colors.gridMinor);
+    for (let i = 0; i < positions.count; i += 2) {
+      const center = (Math.abs(positions.getX(i)) < 1e-6 && Math.abs(positions.getX(i + 1)) < 1e-6) ||
+        (Math.abs(positions.getZ(i)) < 1e-6 && Math.abs(positions.getZ(i + 1)) < 1e-6);
+      const color = center ? major : minor;
+      attribute.setXYZ(i, color.r, color.g, color.b);
+      attribute.setXYZ(i + 1, color.r, color.g, color.b);
+    }
+    attribute.needsUpdate = true;
+    const resources = runtime.sketchResources;
+    resources.lineMaterial.color.set(colors.line);
+    resources.pointMaterial.color.set(colors.line);
+    resources.constructionMaterial.color.set(colors.construction);
+    resources.errorLineMaterial.color.set(colors.error);
+    resources.errorPointMaterial.color.set(colors.error);
+    resources.circleMaterial.color.set(colors.circle);
+  }, [theme]);
 
   useEffect(() => {
     const runtime = runtimeRef.current;
