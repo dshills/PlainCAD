@@ -411,3 +411,14 @@ references create one sketch in the active component using existing persisted
 plane data. Native browser tests cover origin picking, cap highlighting/selection,
 owner parameter edits, save/open and curved-face rejection. Generic topology and
 post-boolean face references remain outside this selection scope.
+
+### Component navigation
+
+The Browser provides component visibility and isolation, including owned native
+bodies and sketch overlays. Hidden bodies are excluded from viewer fitting and
+picking; visibility does not alter rebuilds or the explicit fabrication scope.
+Timeline chips label their component owner, with an optional active-component
+filter that follows activation. Timeline movement still validates the full
+project order. These are runtime view preferences, reset when replacing/opening
+a project and excluded from undo history and project JSON. Components remain
+flat parts at a shared origin; assembly placements and joints are unavailable.

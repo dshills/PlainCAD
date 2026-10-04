@@ -1,3 +1,4 @@
+import { useViewerState } from "../../state/viewerState";
 import { beginExtrudeCreation } from "./extrudeCommand";
 import { activeComponentId, beginProjectWorkflow, finishSketchCanvas } from "./projectWorkflowCommand";
 import { renameComponent, sketchComponentId } from "../../cad/document/components";
@@ -169,6 +170,20 @@ export const commands: CadCommand[] = [
     id: "component.activate", internal: true, label: "Activate Component", enablementKey: "editProject",
     run: ({ componentId }) => { if (componentId) useCadStore.getState().activateComponent(componentId); },
   },
+  ...(["toggleVisibility", "isolate"] as const).map((action): CadCommand => ({
+    id: `component.${action}`, internal: true, label: action === "isolate" ? "Isolate Component" : "Toggle Component Visibility", enablementKey: "document",
+    run: ({ componentId, documentSession }) => {
+      const state = useCadStore.getState();
+      // Context-only component buttons capture their document session; palette entries exclude these commands.
+      if (documentSession === undefined || documentSession !== state.documentSession) return;
+      if (!componentId || !Object.hasOwn(state.history.present.components, componentId)) return;
+      const view = useViewerState.getState(), ids = Object.keys(state.history.present.components);
+      if (action === "isolate") view.isolateComponent(state.documentSession, componentId, ids);
+      else view.toggleComponent(state.documentSession, componentId, ids);
+    },
+  })),
+  { id: "view.showAllComponents", label: "Show All Components and Bodies", enablementKey: "document", run: () => useViewerState.getState().showAll(useCadStore.getState().documentSession) },
+  { id: "timeline.toggleComponentFilter", internal: true, label: "Filter Timeline to Active Component", enablementKey: "document", run: () => useViewerState.getState().toggleTimelineFilter(useCadStore.getState().documentSession) },
   { id: "sketch.create", label: "Create Sketch", enablementKey: "createSketch", run: () => beginProjectWorkflow("sketch") },
   { id: "sketch.finish", label: "Finish Sketch", enablementKey: "finishSketch", run: finishSketchCanvas },
   { id: "sketch.editCanvas", label: "Edit Sketch Canvas", description: "Draw geometry in the selected sketch’s local plane.", enablementKey: "sketchCanvas", run: beginSketchCanvas },

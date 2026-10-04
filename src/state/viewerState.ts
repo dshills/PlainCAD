@@ -1,31 +1,103 @@
 import { create } from "zustand";
+import type { CadDocument } from "../cad/document/schema";
+import { bodyComponentId } from "../cad/document/components";
 
 interface ViewerState {
   session: number;
   hiddenBodyIds: string[];
+  hiddenComponentIds: string[];
+  activeComponentTimeline: boolean;
   toggleBody(
     session: number,
     bodyId: string,
     availableIds: readonly string[],
   ): void;
+  toggleComponent(
+    session: number,
+    componentId: string,
+    availableIds: readonly string[],
+  ): void;
+  isolateComponent(
+    session: number,
+    componentId: string,
+    availableIds: readonly string[],
+  ): void;
+  toggleTimelineFilter(session: number): void;
   showAll(session: number): void;
 }
-
+const defaults = {
+  hiddenBodyIds: [] as string[],
+  hiddenComponentIds: [] as string[],
+  activeComponentTimeline: false,
+};
 // Runtime view preferences never enter document history or project JSON.
-export const useViewerState = create<ViewerState>((set, get) => ({
-  session: -1,
-  hiddenBodyIds: [],
-  toggleBody: (session, bodyId, availableIds) => {
-    const hidden =
-      get().session === session
-        ? get().hiddenBodyIds.filter((id) => availableIds.includes(id))
-        : [];
-    set({
-      session,
-      hiddenBodyIds: hidden.includes(bodyId)
-        ? hidden.filter((id) => id !== bodyId)
-        : [...hidden, bodyId],
-    });
-  },
-  showAll: (session) => set({ session, hiddenBodyIds: [] }),
-}));
+export const useViewerState = create<ViewerState>((set, get) => {
+  const current = (session: number) =>
+    get().session === session ? get() : defaults;
+  return {
+    session: -1,
+    ...defaults,
+    toggleBody: (session, bodyId, availableIds) => {
+      if (!availableIds.includes(bodyId)) return;
+      const view = current(session),
+        hidden = view.hiddenBodyIds.filter((id) => availableIds.includes(id));
+      set({
+        ...view,
+        session,
+        hiddenBodyIds: hidden.includes(bodyId)
+          ? hidden.filter((id) => id !== bodyId)
+          : [...hidden, bodyId],
+      });
+    },
+    toggleComponent: (session, componentId, availableIds) => {
+      if (!availableIds.includes(componentId)) return;
+      const view = current(session),
+        hidden = view.hiddenComponentIds.filter((id) =>
+          availableIds.includes(id),
+        );
+      set({
+        ...view,
+        session,
+        hiddenComponentIds: hidden.includes(componentId)
+          ? hidden.filter((id) => id !== componentId)
+          : [...hidden, componentId],
+      });
+    },
+    isolateComponent: (session, componentId, availableIds) => {
+      if (!availableIds.includes(componentId)) return;
+      set({
+        ...current(session),
+        session,
+        hiddenBodyIds: [],
+        hiddenComponentIds: availableIds.filter((id) => id !== componentId),
+      });
+    },
+    toggleTimelineFilter: (session) =>
+      set({
+        ...current(session),
+        session,
+        activeComponentTimeline: !current(session).activeComponentTimeline,
+      }),
+    showAll: (session) =>
+      set({
+        ...current(session),
+        session,
+        hiddenBodyIds: [],
+        hiddenComponentIds: [],
+      }),
+  };
+});
+
+export function hiddenViewerBodies(
+  document: CadDocument,
+  bodyIds: readonly string[],
+  session: number,
+  view: Pick<ViewerState, "session" | "hiddenBodyIds" | "hiddenComponentIds">,
+): string[] {
+  if (view.session !== session) return [];
+  return bodyIds.filter(
+    (id) =>
+      view.hiddenBodyIds.includes(id) ||
+      view.hiddenComponentIds.includes(bodyComponentId(document, id) ?? ""),
+  );
+}

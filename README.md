@@ -143,6 +143,12 @@ face-plane references may refer to another component’s supported upstream geom
 There are no nested assemblies, component placement transforms, joints or external
 linked designs. Parameters and the timeline belong to the whole project. Components
 can be renamed in the Browser; component creation and renaming support undo/redo.
+Use each component’s **Visible** checkbox or **Isolate** to focus the 3D view, and
+**Show all components** to restore bodies and sketch overlays. Timeline chips show
+component ownership; **Active component only** filters the display while timeline
+moves still use the full project order. Visibility, isolation and filtering are
+temporary view preferences and reset on New/Open; they do not change geometry,
+history, saved project data, or the explicit STL export scope.
 
 ### Edit Parameters
 

@@ -1,3 +1,6 @@
+import { featureComponentId, sketchComponentId } from "../../cad/document/components";
+import { activeComponentId } from "../commands/projectWorkflowCommand";
+import { useViewerState } from "../../state/viewerState";
 import { useCommandEnablement } from "../commands/useCommandEnablement";
 import { useMemo } from "react";
 import { useCadStore } from "../../state/useCadStore";
@@ -16,6 +19,12 @@ const emptyCommandContext: CommandContext = {};
 
 export function FeatureTimeline({ commandContext = emptyCommandContext }: FeatureTimelineProps) {
   const document = useCadStore((state) => state.history.present);
+  const session = useCadStore(state => state.documentSession);
+  const componentId = useCadStore(activeComponentId);
+  const view = useViewerState();
+  const filtered = view.session === session && view.activeComponentTimeline;
+  // Activation clears selection; selecting a timeline item activates its owner.
+  // The filter therefore cannot leave another component’s selected item hidden.
   const select = useCadStore((state) => state.select);
   const selection = useCadStore((state) => state.selection.selectedIds[0]);
   const commandEnablement = useCommandEnablement();
@@ -29,6 +38,7 @@ export function FeatureTimeline({ commandContext = emptyCommandContext }: Featur
     <section className="timeline-panel" aria-labelledby="timeline-heading">
       <div className="timeline-header">
         <h2 id="timeline-heading">Parametric Timeline</h2>
+        <label className="timeline-filter"><input type="checkbox" aria-label="Timeline: active component only" checked={filtered} onChange={() => void runCommand("timeline.toggleComponentFilter")} /> Active component only</label>
         <div className="timeline-actions" aria-label="Timeline commands">
           <button onClick={() => runCommand("feature.extrude", commandContext)} disabled={!isCommandEnabledForSnapshot("feature.extrude", commandEnablement)}>Extrude</button>
           {["revolve", "hole", "fillet", "chamfer"].map((type) => <button key={type} onClick={() => runCommand(`feature.${type}`, commandContext)} disabled={!isCommandEnabledForSnapshot(`feature.${type}`, commandEnablement)}>{type[0].toUpperCase() + type.slice(1)}</button>)}
@@ -45,8 +55,9 @@ export function FeatureTimeline({ commandContext = emptyCommandContext }: Featur
         const reason = planTimelineMove(document, selection, direction).reason;
         return reason ? [`Cannot move ${direction}: ${reason}`] : [];
       }).join(" ")}</p> : null}
+      {filtered ? <p className="muted">Showing {document.components[componentId]?.name}. Timeline moves use the complete project order.</p> : null}
       <div className="timeline-track" role="list" aria-label="Sketch and feature history">
-        {timelineItems.map((item) => {
+        {timelineItems.filter(item => !filtered || (item.kind === "sketch" ? sketchComponentId(document, item.sketch.id) : featureComponentId(document, item.feature)) === componentId).map((item) => {
           if (item.kind === "sketch") {
             const sketch = item.sketch;
             return (
@@ -57,6 +68,7 @@ export function FeatureTimeline({ commandContext = emptyCommandContext }: Featur
                 >
                   <span className="timeline-glyph">S</span>
                   <strong>{sketch.name}</strong>
+                  <span className="timeline-owner">{document.components[sketchComponentId(document, sketch.id)]?.name}</span>
                   <span>{Object.keys(sketch.entities).length} entities</span>
                 </button>
               </div>
@@ -71,6 +83,7 @@ export function FeatureTimeline({ commandContext = emptyCommandContext }: Featur
               >
                 <span className="timeline-glyph">{featureGlyph(feature)}</span>
                 <strong>{feature.name}</strong>
+                <span className="timeline-owner">{document.components[featureComponentId(document, feature)]?.name}</span>
                 <span>{feature.type}{feature.suppressed ? " suppressed" : ""}</span>
               </button>
             </div>

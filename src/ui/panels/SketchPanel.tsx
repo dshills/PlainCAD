@@ -1,3 +1,4 @@
+import { useViewerState } from "../../state/viewerState";
 import { useCommandEnablement } from "../commands/useCommandEnablement";
 import { CommitInput } from "./CommitInput";
 import { runCommand } from "../commands/commandRegistry";
@@ -16,6 +17,9 @@ import { sketchPlaneLabel } from "../../cad/sketch/planes";
 export function SketchPanel() {
   const document = useCadStore((state) => state.history.present);
   const componentId = useCadStore(activeComponentId);
+  const session = useCadStore(state => state.documentSession);
+  const view = useViewerState();
+  const hidden = view.session === session ? view.hiddenComponentIds : [];
   const enablement = useCommandEnablement();
   const canExtrude = enablement.createExtrude;
   const select = useCadStore((state) => state.select);
@@ -84,6 +88,8 @@ export function SketchPanel() {
         <p className="muted">
           Active: <strong>{document.components[componentId]?.name}</strong>
         </p>
+        {/* View commands are always available for a loaded document, including sketch mode. */}
+        <button onClick={() => void runCommand("view.showAllComponents")}>Show all components</button>
         <div className="component-tree">
           {Object.values(document.components)
             .sort((a, b) =>
@@ -106,6 +112,9 @@ export function SketchPanel() {
                   active={active}
                   root={component.id === document.rootComponentId}
                   canActivate={enablement.editProject}
+                  visible={!hidden.includes(component.id)}
+                  onVisibility={() => void runCommand("component.toggleVisibility", { componentId: component.id, documentSession: session })}
+                  onIsolate={() => void runCommand("component.isolate", { componentId: component.id, documentSession: session })}
                   onActivate={() =>
                     void runCommand("component.activate", {
                       componentId: component.id,
@@ -235,6 +244,9 @@ function ComponentFolder({
   root,
   canActivate,
   onActivate,
+  visible,
+  onVisibility,
+  onIsolate,
   children,
 }: {
   name: string;
@@ -242,6 +254,9 @@ function ComponentFolder({
   root: boolean;
   canActivate: boolean;
   onActivate: () => void;
+  visible: boolean;
+  onVisibility: () => void;
+  onIsolate: () => void;
   children: ReactNode;
 }) {
   const [expanded, setExpanded] = useState(active);
@@ -269,6 +284,10 @@ function ComponentFolder({
         >
           {active ? "Active" : "Activate"}
         </button>
+      </div>
+      <div className="component-view-actions">
+        <label><input type="checkbox" aria-label={`Show component ${name}`} checked={visible} onChange={onVisibility} /> Visible</label>
+        <button aria-label={`Isolate component ${name}`} onClick={onIsolate}>Isolate</button>
       </div>
       {expanded ? children : null}
     </div>

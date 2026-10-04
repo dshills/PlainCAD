@@ -980,3 +980,7 @@ button:disabled:not(.ribbon-button) { opacity: 0.6; }
 .sketch-plane-picker { position: absolute; z-index: 4; top: 12px; right: 12px; width: min(340px, calc(100% - 24px)); max-height: calc(100% - 130px); overflow: auto; box-sizing: border-box; padding: 16px; background: var(--panel); border: 1px solid var(--accent); border-radius: 4px; box-shadow: 0 8px 24px #0003; }
 .sketch-plane-picker h2 { font-size: 1rem; margin: 0 0 8px; }
 .sketch-plane-picker .plane-choices { display: flex; flex-direction: column; }
+
+.component-view-actions { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+.component-view-actions label, .timeline-filter { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+.timeline-owner { color: var(--muted); font-size: 0.72rem; }

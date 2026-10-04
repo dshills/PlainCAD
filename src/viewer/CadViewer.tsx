@@ -2,7 +2,7 @@ import { installSketchPlanePicking } from "./sketchPlanePicking";
 import type { RebuildResult } from "../cad/worker/workerProtocol";
 import { useThemeState } from "../state/useThemeState";
 import { viewerThemeColors } from "../ui/themes/themes";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { registerViewerDiagnostics } from "./viewerDiagnostics";
@@ -12,7 +12,8 @@ import { useSectionState } from "../state/sectionState";
 import type { CameraPose } from "../cad/document/schema";
 import { useInspectionState } from "../state/inspectionState";
 import { MeasurementError, measureWorldPoint } from "../cad/inspection/measurements";
-import { useViewerState } from "../state/viewerState";
+import { sketchComponentId } from "../cad/document/components";
+import { hiddenViewerBodies, useViewerState } from "../state/viewerState";
 import { useCadStore } from "../state/useCadStore";
 import { SelectionRef } from "../cad/document/schema";
 import { RenderMesh } from "../cad/kernel/KernelAdapter";
@@ -67,7 +68,8 @@ export function CadViewer() {
   const inspection = useInspectionState();
   const section = useSectionState();
   const clippingRef = useRef<THREE.Plane | undefined>(undefined);
-  const hidden = view.session === session ? view.hiddenBodyIds : [];
+  const hidden = useMemo(() => hiddenViewerBodies(document, meshes.map(mesh => mesh.bodyId), session, { session: view.session, hiddenBodyIds: view.hiddenBodyIds, hiddenComponentIds: view.hiddenComponentIds }), [document, meshes, session, view.session, view.hiddenBodyIds, view.hiddenComponentIds]);
+  const hiddenComponents = view.session === session ? view.hiddenComponentIds : [];
   const documentId = useCadStore((state) => state.history.present.id);
   const selectedBodyId = useCadStore((state) => {
     const selection = state.selection.selectedIds[0];
@@ -284,13 +286,14 @@ export function CadViewer() {
         runtime.sketchGroup,
         document,
         runtime.sketchResources,
+        hiddenComponents,
         rebuild.status === "succeeded" &&
           rebuild.result?.documentId === document.id
           ? rebuild.result
           : undefined,
       );
     if (runtime) applyClipping(runtime.sketchGroup, clippingRef.current);
-  }, [document, rebuild]);
+  }, [document, rebuild, view.hiddenComponentIds, view.session, session]);
 
   useEffect(() => {
     meshesRef.current = meshes.filter((mesh) => !hidden.includes(mesh.bodyId));
@@ -303,7 +306,7 @@ export function CadViewer() {
       if (!intent?.preservePose) fitMeshes(runtime.camera, runtime.controls, meshesRef.current);
       lastAutoFitSessionRef.current = session;
     }
-  }, [meshes, view.hiddenBodyIds, view.session, session]);
+  }, [meshes, document, view.hiddenBodyIds, view.hiddenComponentIds, view.session, session]);
 
   useEffect(() => {
     const group = runtimeRef.current?.measurementGroup;
@@ -467,6 +470,7 @@ function updateSketchOverlay(
   sketchGroup: THREE.Group,
   document: CadDocument,
   resources: SketchOverlayResources,
+  hiddenComponents: readonly string[],
   result?: RebuildResult,
 ) {
   disposeSketchOverlayObjects(sketchGroup, resources);
@@ -480,6 +484,7 @@ function updateSketchOverlay(
     ? { transforms: new Map(Object.entries(result.sketchPlanes)) }
     : resolveDocumentPlanes(document, evaluated.values);
   for (const sketch of Object.values(document.sketches)) {
+    if (hiddenComponents.includes(sketchComponentId(document, sketch.id))) continue;
     const transform = planes.transforms.get(sketch.id);
     if (!transform) continue;
     const solved =
