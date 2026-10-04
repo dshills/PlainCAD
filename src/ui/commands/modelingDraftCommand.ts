@@ -1,3 +1,5 @@
+import { createId } from "../../cad/document/ids";
+import { featureComponentId } from "../../cad/document/components";
 import { create } from "zustand";
 import type {
   CadDocument,
@@ -13,6 +15,8 @@ import { useCadStore, type CadStore } from "../../state/useCadStore";
 export type ModelingDraftFeature =
   RevolveFeature | FilletFeature | ChamferFeature;
 export interface ModelingDraft {
+  editing?: boolean;
+  editId?: string;
   document: CadDocument;
   session: number;
   componentId: string;
@@ -31,6 +35,53 @@ export function beginModelingCreation(feature: ModelingDraftFeature) {
     },
   });
 }
+export function editableModelingFeature(state: CadStore) {
+  const selected = state.selection.selectedIds[0];
+  // Succeeded/failed results are current immutable store snapshots; all edit
+  // choices are independently verified by a fresh native upstream worker. Native
+  // failed operations retain only valid upstream meshes, or none if the first
+  // operation failed; both cases allow repair without accepting fallback geometry.
+  if (
+    state.fileBusy ||
+    selected?.kind !== "feature" ||
+    selected.documentId !== state.history.present.id ||
+    !state.rebuild.kernelReady ||
+    (state.rebuild.status !== "succeeded" &&
+      state.rebuild.status !== "failed") ||
+    state.rebuild.result?.documentId !== state.history.present.id ||
+    state.rebuild.result.meshes.some(
+      (mesh) =>
+        mesh.geometrySource !== "opencascade" ||
+        !mesh.geometryAssertions?.valid,
+    )
+  )
+    return;
+  const feature = state.history.present.features.find(
+    (feature) => feature.id === selected.id,
+  );
+  return feature?.type === "revolve" &&
+    !feature.suppressed &&
+    featureComponentId(state.history.present, feature) ===
+      state.activeComponentId
+    ? feature
+    : undefined;
+}
+export function beginModelingEditing() {
+  const state = useCadStore.getState(),
+    feature = editableModelingFeature(state);
+  if (!feature) return;
+  useModelingDraft.setState({
+    draft: {
+      editing: true,
+      editId: createId("edit"),
+      document: state.history.present,
+      session: state.documentSession,
+      componentId: state.activeComponentId,
+      feature,
+    },
+  });
+}
+
 export function isCurrentModelingDraft(
   draft: ModelingDraft,
   state: CadStore = useCadStore.getState(),
@@ -42,10 +93,9 @@ export function isCurrentModelingDraft(
     !state.fileBusy
   );
 }
-export function assertNativeModelingPreview(
+export function assertNativeSolidPreview(
   result: RebuildResult,
   documentId: string,
-  feature: ModelingDraftFeature,
 ) {
   if (result.documentId !== documentId)
     throw new Error(
@@ -69,6 +119,13 @@ export function assertNativeModelingPreview(
     throw new Error(
       "Modeling preview did not produce valid native solid geometry.",
     );
+}
+export function assertNativeModelingPreview(
+  result: RebuildResult,
+  documentId: string,
+  feature: ModelingDraftFeature,
+) {
+  assertNativeSolidPreview(result, documentId);
   const ids =
     feature.type !== "revolve"
       ? [
@@ -115,6 +172,7 @@ export function commitModelingDraft(
   draft: ModelingDraft,
   staged: CadDocument,
   result: RebuildResult,
+  operationResult?: RebuildResult,
 ) {
   if (
     useModelingDraft.getState().draft !== draft ||
@@ -132,12 +190,18 @@ export function commitModelingDraft(
     feature.type !== draft.feature.type
   )
     throw new Error("Modeling draft was lost.");
-  assertNativeModelingPreview(result, staged.id, feature);
+  if (draft.editing) {
+    if (!operationResult)
+      throw new Error("Wait for the feature and downstream native previews.");
+    assertNativeModelingPreview(operationResult, staged.id, feature);
+    assertNativeSolidPreview(result, staged.id);
+  } else assertNativeModelingPreview(result, staged.id, feature);
   const state = useCadStore.getState();
   state.updateDocument((document) =>
     document === draft.document ? upsertFeature(document, feature) : document,
   );
   if (
+    useCadStore.getState().history.present === draft.document ||
     !useCadStore
       .getState()
       .history.present.features.some((item) => item.id === feature.id)

@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import { bindDocumentExpressions } from "../../cad/parameters/expressionBindings";
+import { documentAtFeature } from "../../cad/document/featureStage";
+import { useFeatureDraftContext } from "./useFeatureDraftContext";
 import { upsertFeature } from "../../cad/document/CadDocument";
 import type { CadDocument, RevolveFeature } from "../../cad/document/schema";
 import type { RebuildResult } from "../../cad/worker/workerProtocol";
@@ -10,6 +13,7 @@ import { EdgeDraftControls } from "./EdgeDraftControls";
 import { extrudeContext } from "../commands/extrudeCommand";
 import {
   assertNativeModelingPreview,
+  assertNativeSolidPreview,
   commitModelingDraft,
   isCurrentModelingDraft,
   useModelingDraft,
@@ -19,32 +23,44 @@ import {
 const EMPTY_MESHES: RebuildResult["meshes"] = [];
 export function ModelingCreationPanel() {
   const draft = useModelingDraft((state) => state.draft);
-  return draft ? <ModelingDialog key={draft.feature.id} draft={draft} /> : null;
+  return draft ? (
+    <ModelingDialog
+      key={`${draft.feature.id}:${draft.session}:${draft.editId ?? "create"}`}
+      draft={draft}
+    />
+  ) : null;
 }
 function ModelingDialog({ draft }: { draft: ModelingDraft }) {
   const current = useCadStore((state) => isCurrentModelingDraft(draft, state));
-  const [context] = useState(() =>
-    draft.feature.type === "revolve"
-      ? extrudeContext(useCadStore.getState(), draft.feature.sketchId)
-      : undefined,
+  const base = useFeatureDraftContext(
+    draft,
+    current,
+    draft.feature.type === "revolve" ? draft.feature.sketchId : undefined,
   );
+  const context = base.context;
   const [feature, setFeature] = useState(draft.feature);
   const staged = useMemo(
-    () => upsertFeature(draft.document, feature),
+    () =>
+      bindDocumentExpressions(
+        upsertFeature(draft.document, feature),
+        draft.document,
+      ),
     [draft, feature],
   );
   const [preview, setPreview] = useState<{
     staged: CadDocument;
     result?: RebuildResult;
+    operationResult?: RebuildResult;
     error?: string;
   }>();
   const [commitError, setCommitError] = useState("");
-  const title =
+  const featureTitle =
     feature.type === "revolve"
       ? "Revolve"
       : feature.type === "fillet"
         ? "Fillet"
         : "Chamfer";
+  const title = draft.editing ? `Edit ${featureTitle}` : featureTitle;
   const hasProfile =
     feature.type !== "revolve" ||
     Boolean(
@@ -56,15 +72,32 @@ function ModelingDialog({ draft }: { draft: ModelingDraft }) {
     Boolean(feature.targetBodyIds?.length);
   useEffect(() => {
     setCommitError("");
-    if (!current || !hasProfile || !hasTargets) return;
+    if (!current || !base.ready || base.error || !hasProfile || !hasTargets)
+      return;
     const controller = new AbortController();
     const timer = setTimeout(() => {
-      void previewModeling(staged, controller.signal)
-        .then((result) => {
+      void (async () => {
+        if (!draft.editing)
+          return { result: await previewModeling(staged, controller.signal) };
+        // Verify the operation first and stop on failure. Sequential jobs also
+        // dispose one OpenCascade worker before allocating the downstream worker;
+        // this trades preview latency for bounded simultaneous kernel memory.
+        const operationResult = await previewModeling(
+          documentAtFeature(staged, feature.id, true),
+          controller.signal,
+        );
+        assertNativeModelingPreview(operationResult, staged.id, feature);
+        if (controller.signal.aborted) throw new Error("Preview canceled.");
+        const result = await previewModeling(staged, controller.signal);
+        assertNativeSolidPreview(result, staged.id);
+        return { result, operationResult };
+      })()
+        .then(({ result, operationResult }) => {
           if (controller.signal.aborted || !isCurrentModelingDraft(draft))
             return;
-          assertNativeModelingPreview(result, staged.id, feature);
-          setPreview({ staged, result });
+          if (!draft.editing)
+            assertNativeModelingPreview(result, staged.id, feature);
+          setPreview({ staged, result, operationResult });
         })
         .catch((error) => {
           if (!controller.signal.aborted && isCurrentModelingDraft(draft))
@@ -78,7 +111,16 @@ function ModelingDialog({ draft }: { draft: ModelingDraft }) {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [draft, staged, feature, current, hasProfile, hasTargets]);
+  }, [
+    draft,
+    staged,
+    feature,
+    current,
+    base.ready,
+    base.error,
+    hasProfile,
+    hasTargets,
+  ]);
   const shown = current && preview?.staged === staged ? preview : undefined;
   const close = () => useModelingDraft.setState({ draft: undefined });
   return (
@@ -92,7 +134,12 @@ function ModelingDialog({ draft }: { draft: ModelingDraft }) {
           event.preventDefault();
           if (!shown?.result) return;
           try {
-            commitModelingDraft(draft, staged, shown.result);
+            commitModelingDraft(
+              draft,
+              staged,
+              shown.result,
+              shown.operationResult,
+            );
           } catch (error) {
             setCommitError(
               error instanceof Error ? error.message : String(error),
@@ -121,7 +168,10 @@ function ModelingDialog({ draft }: { draft: ModelingDraft }) {
               />
             )}
             <p className="muted">
-              Drag the preview to orbit. Apply adds one feature to the timeline;
+              Drag the preview to orbit.{" "}
+              {draft.editing
+                ? "Apply replaces this feature in one history edit after validating downstream geometry."
+                : "Apply adds one feature to the timeline."}{" "}
               Cancel leaves the project unchanged.
             </p>
           </div>
@@ -133,18 +183,22 @@ function ModelingDialog({ draft }: { draft: ModelingDraft }) {
             <p role="status">
               {!current
                 ? `Project or component changed. Close and reopen ${title}.`
-                : !hasProfile
-                  ? "Choose a current closed profile."
-                  : !hasTargets
-                    ? "Choose at least one target body."
-                    : shown?.error
-                      ? "Preview failed"
-                      : shown?.result
-                        ? `Native preview ready · ${shown.result.meshes.length} bodies · ${shown.result.meshes.reduce((sum, mesh) => sum + mesh.geometryAssertions!.volume, 0).toFixed(3)} mm³`
-                        : "Building native preview…"}
+                : base.error
+                  ? "Upstream geometry needs repair."
+                  : !base.ready
+                    ? "Loading geometry before this feature…"
+                    : !hasProfile
+                      ? "Choose a current closed profile."
+                      : !hasTargets
+                        ? "Choose at least one target body."
+                        : shown?.error
+                          ? "Preview failed"
+                          : shown?.result
+                            ? `Native preview ready · ${shown.result.meshes.length} bodies · ${shown.result.meshes.reduce((sum, mesh) => sum + mesh.geometryAssertions!.volume, 0).toFixed(3)} mm³`
+                            : "Building native preview…"}
             </p>
-            {shown?.error || commitError ? (
-              <p role="alert">{shown?.error || commitError}</p>
+            {base.error || shown?.error || commitError ? (
+              <p role="alert">{base.error || shown?.error || commitError}</p>
             ) : null}
           </div>
         </div>
@@ -279,25 +333,36 @@ function RevolveDraftControls({
       {feature.operation !== "newBody" ? (
         <fieldset>
           <legend>Revolve target bodies</legend>
-          {context?.bodies.map((body) => (
-            <label key={body.id}>
-              <input
-                type="checkbox"
-                checked={feature.targetBodyIds?.includes(body.id) ?? false}
-                onChange={(event) =>
-                  onChange({
-                    ...feature,
-                    targetBodyIds: event.target.checked
-                      ? [...(feature.targetBodyIds ?? []), body.id]
-                      : (feature.targetBodyIds?.filter(
-                          (id) => id !== body.id,
-                        ) ?? []),
-                  })
-                }
-              />
-              {body.name}
-            </label>
-          ))}
+          {[
+            ...new Set([
+              ...(context?.bodies.map((body) => body.id) ?? []),
+              ...(feature.targetBodyIds ?? []),
+            ]),
+          ].map((id) => {
+            const body = context?.bodies.find((candidate) => candidate.id === id) ?? {
+              id,
+              name: `Lost target ${id}`,
+            };
+            return (
+              <label key={body.id}>
+                <input
+                  type="checkbox"
+                  checked={feature.targetBodyIds?.includes(body.id) ?? false}
+                  onChange={(event) =>
+                    onChange({
+                      ...feature,
+                      targetBodyIds: event.target.checked
+                        ? [...(feature.targetBodyIds ?? []), body.id]
+                        : (feature.targetBodyIds?.filter(
+                            (targetId) => targetId !== body.id,
+                          ) ?? []),
+                    })
+                  }
+                />
+                {body.name}
+              </label>
+            );
+          })}
         </fieldset>
       ) : null}
       <p className="muted">

@@ -519,3 +519,15 @@ Editing is also available for a current failed rebuild so invalid settings can
 be repaired; choices must first pass a fresh native upstream rebuild. Editing
 uses bounded isolated workers sequentially for the operation and downstream
 validation, so it costs more than creation previews on large projects.
+
+### Revolve feature editing
+
+Edit Feature also previews replacements of unsuppressed Revolve features at their
+original timeline position. Profile, coplanar origin/sketch-line axis, angle,
+operation and saved target scope are editable. The native sweep and full downstream
+rebuild must both succeed before Apply; canceled, invalid and stale drafts leave
+history unchanged. IDs, ownership and timeline ordering survive one undoable edit.
+Operation and downstream previews run sequentially to stop on a failed operation
+and avoid retaining two live OpenCascade workers; this adds latency on larger
+projects. Native acceptance also repairs a failed first Revolve with no published
+body, so repair does not depend on an old successful output mesh.

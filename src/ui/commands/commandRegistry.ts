@@ -1,5 +1,5 @@
 import { beginExtrudeCreation, beginExtrudeEditing, editableExtrude } from "./extrudeCommand";
-import { beginModelingCreation } from "./modelingDraftCommand";
+import { beginModelingCreation, beginModelingEditing, editableModelingFeature } from "./modelingDraftCommand";
 import { useViewerState } from "../../state/viewerState";
 import { activeComponentId, beginProjectWorkflow, finishSketchCanvas } from "./projectWorkflowCommand";
 import { renameComponent, sketchComponentId } from "../../cad/document/components";
@@ -132,7 +132,7 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
     exportSelectedBody: canExportStl(state) && !state.fileBusy && Boolean(selectedExportBody(state)),
     createExtrude: !canvasActive && canCreateExtrude(state),
     createRevolve: !canvasActive && Boolean(defaultRevolveAxis(state)),
-    editFeature: !canvasActive && Boolean(editableExtrude(state)),
+    editFeature: !canvasActive && Boolean(editableExtrude(state) || editableModelingFeature(state)),
     selectedFeature: !canvasActive && Boolean(getSelectedFeature(state)),
     createEdgeTreatment: !canvasActive && Boolean(edgeTreatmentOwner(state)),
     moveEarlier: !canvasActive && !planTimelineMove(state.history.present, state.selection.selectedIds[0], "earlier").reason,
@@ -153,7 +153,7 @@ export function isCommandEnabledForSnapshot(
 }
 
 export const commands: CadCommand[] = [
-  { id: "feature.edit", label: "Edit Selected Feature", description: "Preview changes to the selected Extrude and its downstream geometry.", enablementKey: "editFeature", run: beginExtrudeEditing },
+  { id: "feature.edit", label: "Edit Selected Feature", description: "Preview changes to the selected Extrude or Revolve and its downstream geometry.", enablementKey: "editFeature", run: () => { if (editableExtrude(useCadStore.getState())) beginExtrudeEditing(); else beginModelingEditing(); } },
   {
     id: "file.renameProject", internal: true, label: "Rename Project", enablementKey: "editProject",
     run: ({ projectName }) => {
