@@ -1,74 +1,15 @@
 import { test, expect, type Page } from "@playwright/test";
 import { writeFile } from "node:fs/promises";
 import { cpus, platform, arch } from "node:os";
-import {
-  createEmptyDocument,
-  createExtrudeFeature,
-  upsertFeature,
-  upsertParameter,
-  upsertSketch,
-} from "../src/cad/document/CadDocument";
-import {
-  addCornerRectangle,
-  addCircleAt,
-  createXySketch,
-} from "../src/cad/sketch/SketchModel";
-import { solveSketch } from "../src/cad/sketch/SketchSolver";
-import { detectProfiles } from "../src/cad/sketch/profileDetection";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
+import {
+  nativeBenchmarkDocument,
+  WARMUP,
+  TRIALS,
+  EXPORT_WARMUP,
+  EXPORT_TRIALS,
+} from "./nativeBenchmarkFixture";
 
-const WARMUP = 5,
-  TRIALS = 20;
-function fixture() {
-  let doc = upsertParameter(createEmptyDocument("Native rebuild benchmark"), {
-    id: "parameter_width",
-    name: "width",
-    expression: "60mm",
-    value: 60,
-    unit: "mm",
-  });
-  const base = addCornerRectangle(
-    createXySketch("Benchmark base"),
-    "width",
-    "40mm",
-  );
-  const tool = addCircleAt(
-    createXySketch("Benchmark cut"),
-    "10mm",
-    "20mm",
-    "3mm",
-  );
-  doc = upsertSketch(upsertSketch(doc, base), tool);
-  const profile = (sketch: typeof base) =>
-    detectProfiles(
-      solveSketch(sketch, {
-        width: { value: 60, unit: "mm", dimension: "length" },
-      }),
-    ).profiles[0].id;
-  const extrude = createExtrudeFeature({
-    name: "Benchmark solid",
-    sketchId: base.id,
-    profileId: profile(base),
-    operation: "newBody",
-    direction: "positive",
-    distance: { expression: "12mm", unit: "mm" },
-  });
-  doc = upsertFeature(doc, extrude);
-  doc = upsertFeature(
-    doc,
-    createExtrudeFeature({
-      name: "Benchmark subtraction",
-      sketchId: tool.id,
-      profileId: profile(tool),
-      operation: "cut",
-      targetBodyIds: [`body:${extrude.id}`],
-      termination: { type: "throughAll" },
-      direction: "positive",
-      distance: { expression: "12mm", unit: "mm" },
-    }),
-  );
-  return doc;
-}
 async function state(page: Page) {
   return page.evaluate(async () => {
     const path = "/src/state/useCadStore.ts";
@@ -120,7 +61,7 @@ test("controlled native rebuild/export timings and bounded viewer/WASM resource 
 }, info) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  const doc = fixture();
+  const doc = nativeBenchmarkDocument();
   const coldStart = performance.now();
   await page.goto("/");
   await page.locator('input[type="file"]').setInputFiles({
@@ -187,7 +128,7 @@ test("controlled native rebuild/export timings and bounded viewer/WASM resource 
     });
   }
   const exports = [];
-  for (let i = 0; i < 11; i++) {
+  for (let i = 0; i < EXPORT_WARMUP + EXPORT_TRIALS; i++) {
     const output = await page.evaluate(async () => {
       const storePath = "/src/state/useCadStore.ts",
         exportPath = "/src/fabrication/exportClient.ts";
@@ -216,7 +157,7 @@ test("controlled native rebuild/export timings and bounded viewer/WASM resource 
     });
     expect(output.warnings).toEqual([]);
     expect(output.bytes).toBe(84 + output.triangles * 50);
-    exports.push({ warmup: i === 0, ...output });
+    exports.push({ warmup: i < EXPORT_WARMUP, ...output });
   }
   const measured = samples.filter((sample) => !sample.warmup),
     first = measured[0];
@@ -249,7 +190,7 @@ test("controlled native rebuild/export timings and bounded viewer/WASM resource 
       bodies: 1,
       warmup: WARMUP,
       measured: TRIALS,
-      exportsMeasured: 10,
+      exportsMeasured: EXPORT_TRIALS,
     },
     coldLoadToFirstModelMs,
     timingsMs: Object.fromEntries(
@@ -266,13 +207,13 @@ test("controlled native rebuild/export timings and bounded viewer/WASM resource 
     ),
     exportTimingsMs: {
       workerRoundTrip: distribution(
-        exports.slice(1).map((s) => s.workerRoundTripMs),
+        exports.slice(EXPORT_WARMUP).map((s) => s.workerRoundTripMs),
       ),
       meshValidation: distribution(
-        exports.slice(1).map((s) => s.metrics!.meshValidationMs),
+        exports.slice(EXPORT_WARMUP).map((s) => s.metrics!.meshValidationMs),
       ),
       encoding: distribution(
-        exports.slice(1).map((s) => s.metrics!.encodingMs),
+        exports.slice(EXPORT_WARMUP).map((s) => s.metrics!.encodingMs),
       ),
     },
     bounds,

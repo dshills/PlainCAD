@@ -305,8 +305,15 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
   scoped/outer disposal counters, WASM capacity and Three.js resource counts.
 - The release gate checks bounded resource growth and zero disposal failures;
   shared-CI latency is reported without hard timing thresholds. Capacity/resource
-  counts do not prove absence of every leak. Broader workloads and production-build
-  benchmarking remain open. See [method and local results](PERFORMANCE.md).
+  counts do not prove absence of every leak.
+- The built app runs the same controlled fixture under production CSP with public
+  UI controls: five warmups, twenty edits and ten full-check STL exports. Reports
+  record edit-to-current-native-readout and export-to-download timings, sample
+  p50/p95, rounded observed native volumes and environment. Every edit checks
+  current volume/solid count/bounds; every STL checks finite data, triangle count,
+  positive signed volume and bounds. Internal phase/resource counters remain
+  unavailable in production; broader workloads and browsers remain open.
+  See [method and local results](PERFORMANCE.md).
 
 ## Intentionally deferred
 

@@ -583,3 +583,10 @@ BRep volume after every operation and depth/radius edits, stable body identity a
 bounds, undo/redo, blocked downstream operations after a middle-feature failure,
 suppression/repair, save/open, and STL volume/winding. This is one bounded XY part;
 it does not establish arbitrary topology naming or every complex model workload.
+
+
+The release gate records controlled native performance reports for both Vite
+development and the production build under CSP. The shared rectangle/through-cut
+workload verifies current geometry across twenty measured edits and ten STL
+exports. Production reports UI edit/export timings; detailed phase and resource
+counters remain development-only. See [measurement scope and commands](specs/working-cad/PERFORMANCE.md).
