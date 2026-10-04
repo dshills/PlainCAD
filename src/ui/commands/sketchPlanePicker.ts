@@ -6,6 +6,7 @@ import {
 import { useCadStore, type CadStore } from "../../state/useCadStore";
 import { captureCamera, restoreCamera } from "../../viewer/cameraController";
 export const useSketchPlanePicker = create<{
+  offset?: string;
   hover?: SketchPlaneChoice;
   error?: string;
 }>(() => ({}));

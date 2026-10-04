@@ -1,3 +1,5 @@
+import { sketchPlaneTransform } from "../cad/sketch/planes";
+import { useSketchPlanePicker } from "../ui/commands/sketchPlanePicker";
 import { useExtrudeDraft } from "../ui/commands/extrudeCommand";
 import {
   act,
@@ -40,6 +42,7 @@ beforeEach(() => {
   useCadStore.getState().setDocument(createEmptyDocument());
 });
 afterEach(() => {
+  useSketchPlanePicker.setState({ offset: undefined, error: undefined, hover: undefined });
   useExtrudeDraft.setState({ draft: undefined });
   cleanup();
   useProjectWorkflow.setState({ active: undefined });
@@ -249,6 +252,38 @@ describe("component project ownership", () => {
     expect(
       Object.keys(useCadStore.getState().history.present.sketches),
     ).toEqual([]);
+  });
+  it("creates expression-driven offset sketches and rejects invalid lengths without history edits", () => {
+    useCadStore.getState().setDocument(createEmptyDocument());
+    runCommand("sketch.create");
+    const active = useProjectWorkflow.getState().active!;
+    useSketchPlanePicker.setState({ offset: "3deg" });
+    const before = useCadStore.getState().history.present;
+    expect(() => finishProjectWorkflow(active, "XZ")).toThrow();
+    expect(useCadStore.getState().history.present).toBe(before);
+    useSketchPlanePicker.setState({ offset: "-4" });
+    finishProjectWorkflow(active, "XZ");
+    const sketch = Object.values(useCadStore.getState().history.present.sketches)[0];
+    expect(sketch.plane).toEqual({ type: "offset", base: "XZ", offset: { expression: "-4", unit: "mm", authoredUnit: "mm" } });
+    expect(useCadStore.getState().history.past).toHaveLength(1);
+    expect(importProjectText(serializeProject(useCadStore.getState().history.present)).sketches[sketch.id].plane).toEqual(sketch.plane);
+    for (const metadata of [{ authoredUnit: 4 }, { parameterRefs: { lift: 123 } }]) {
+      const invalid = { ...useCadStore.getState().history.present, sketches: { [sketch.id]: { ...sketch, plane: { ...sketch.plane, offset: { expression: "4", unit: "mm", ...metadata } } } } };
+      expect(() => importProjectText(JSON.stringify(invalid))).toThrow();
+    }
+    useSketchPlanePicker.setState({ offset: undefined });
+  });
+  it("preserves bare-number offsets authored in inches after changing defaults and reopening", () => {
+    const document = createEmptyDocument();
+    useCadStore.getState().setDocument({ ...document, unitSettings: { length: "in", angle: "deg" } });
+    runCommand("sketch.create");
+    useSketchPlanePicker.setState({ offset: "2" });
+    finishProjectWorkflow(useProjectWorkflow.getState().active!, "XY");
+    const authored = useCadStore.getState().history.present;
+    const sketch = Object.values(authored.sketches)[0];
+    expect(sketchPlaneTransform(sketch.plane).origin.z).toBeCloseTo(50.8, 7);
+    const reopened = importProjectText(serializeProject({ ...authored, unitSettings: { length: "mm", angle: "deg" } }));
+    expect(sketchPlaneTransform(reopened.sketches[sketch.id].plane).origin.z).toBeCloseTo(50.8, 7);
   });
   it("guides a blank project through a named component, plane choice and Finish Sketch", async () => {
     useCadStore.getState().setDocument(createEmptyDocument());

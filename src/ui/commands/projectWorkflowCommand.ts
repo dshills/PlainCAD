@@ -3,7 +3,9 @@ import {
   alignToSketchPlane,
   useSketchPlanePicker,
 } from "./sketchPlanePicker";
-import type { FacePlaneReference } from "../../cad/document/schema";
+import { evaluateParameters } from "../../cad/parameters/expressionEvaluator";
+import { sketchPlaneTransform } from "../../cad/sketch/planes";
+import type { SketchPlaneReference, FacePlaneReference } from "../../cad/document/schema";
 import { create } from "zustand";
 import { useCadStore, type CadStore } from "../../state/useCadStore";
 import { addComponent } from "../../cad/document/components";
@@ -29,7 +31,7 @@ export function activeComponentId(state: CadStore): string {
 export function beginProjectWorkflow(kind: WorkflowSession["kind"]) {
   const state = useCadStore.getState();
   if (state.fileBusy) return;
-  useSketchPlanePicker.setState({ hover: undefined, error: undefined });
+  useSketchPlanePicker.setState({ hover: undefined, error: undefined, offset: undefined });
   useProjectWorkflow.setState({
     active: {
       kind,
@@ -84,21 +86,33 @@ export function finishProjectWorkflow(
       throw new Error(
         "Choose a current supported origin plane or native planar face.",
       );
+    const offset = useSketchPlanePicker.getState().offset;
+    let reference: SketchPlaneReference = typeof choice.reference === "string" ? { type: "origin", plane: choice.reference } : choice.reference;
+    let transform = choice.transform;
+    if (offset !== undefined) {
+      const evaluation = evaluateParameters(state.history.present.parameters);
+      if (evaluation.errors.length) throw new Error(`Repair project parameters before creating an offset plane: ${evaluation.errors[0].message}`);
+      // Millimeters are canonical; authoredUnit supplies the meaning of bare numbers.
+      reference = { type: "offset", base: choice.reference, offset: { expression: offset, unit: "mm", authoredUnit: state.history.present.unitSettings.length } };
+      // Resolve with the selected native face's measured basis, preserving its normal.
+      transform = sketchPlaneTransform(reference, evaluation.values, new Map([[choice.id, choice.transform]]));
+    }
     const sketch = {
       ...createSketchOnPlane(
         `Sketch ${Object.keys(state.history.present.sketches).length + 1}`,
-        choice.reference,
+        reference,
       ),
       componentId: active.componentId,
     };
     const before = state.history.present;
+    // Store edits bind offset parameter tokens to stable IDs before publication.
     state.updateDocument((document) => upsertSketch(document, sketch));
     if (useCadStore.getState().history.present === before)
       throw new Error(
         "Sketch could not be created. Check project diagnostics.",
       );
     state.select({ kind: "sketch", id: sketch.id, documentId: before.id });
-    alignToSketchPlane(choice);
+    alignToSketchPlane({ ...choice, transform });
     beginSketchCanvas();
   }
   useProjectWorkflow.setState({ active: undefined });

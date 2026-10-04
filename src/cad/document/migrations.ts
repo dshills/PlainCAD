@@ -532,9 +532,13 @@ function normalizePlaneReference(value: unknown): Sketch["plane"] {
       value.base === "YZ" ||
       (isRecord(value.base) && value.base.type === "face"))
   ) {
+    // Preserve schema-owned expression metadata for final validateParameterBindings;
+    // malformed units/bindings must be rejected rather than silently discarded.
     const offset = isRecord(value.offset)
       ? {
           expression: String(value.offset.expression ?? ""),
+          ...(value.offset.authoredUnit !== undefined ? { authoredUnit: value.offset.authoredUnit } : {}),
+          ...(value.offset.parameterRefs !== undefined ? { parameterRefs: value.offset.parameterRefs } : {}),
           ...(typeof value.offset.resolvedValue === "number" ? { resolvedValue: value.offset.resolvedValue } : {}),
           unit: String(value.offset.unit ?? ""),
         }

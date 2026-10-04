@@ -81,7 +81,7 @@ edits, parameter-driven diameter, empty-center failure and save/open/STL recover
 | Capture intersected targets | Native common-volume checks on current upstream solids and extrude/revolve/hole tools; saved IDs only; preserves an intersected join primary; ignores downstream bodies; empty/failed/stale probes leave the scope intact; face-only joins remain explicit | Shared command and Inspector button; dedicated worker with cancellation/time limit |
 | Hole | Up to 64 explicit saved target IDs and 64 sketch point centers; native aggregate cylindrical tools; every center must cut some target, every target must lose exact volume; atomic output publication; positive blind-depth/through-all; empty/duplicate/lost centers/targets and no-op cuts diagnosed | Native preview-and-Apply creation with modal target scope and center choices; full size/termination/center/source/scope repair inspector |
 | Fillet/chamfer | Real native geometry on feature-owned cap perimeters, individual line/arc cap edges, or a source line’s two extrusion-direction corners; BRep/solid-count/volume-or-surface-change checks; retained authored edges also work after native booleans; grouped perimeters require every original edge and exclude new Cut/Join edges; lost/trimmed/ambiguous edges fail | Native preview-and-Apply creation dialogs with size/role/source/owner choices; repair inspector |
-| Offset/face sketch planes | Expression-driven origin/face offsets; upstream distance-extrusion caps and straight outer sides; retained native faces after Cut/Join supported at the sketch’s timeline position; removed/split/ambiguous/suppressed/missing faces require repair | Sketch tools with explicit replacement selection; lost planes fail rebuild |
+| Offset/face sketch planes | Expression-driven origin/face offsets; upstream distance-extrusion caps and straight outer sides; retained native faces after Cut/Join supported at the sketch’s timeline position; removed/split/ambiguous/suppressed/missing faces require repair | Create Sketch with signed expression-driven origin/face offsets; Sketch tools with explicit replacement selection; lost planes fail rebuild |
 | STEP | Optional adapter interface only; no implemented exporter | Hidden |
 
 Failed operations retain upstream preview bodies but fail rebuild and disable STL.
@@ -496,3 +496,11 @@ Through All changes invalidate previous previews; Cancel, document replacement
 Every resulting body must remain a valid native solid, and each selected body must
 publish a native Cut. The kernel rejects unchanged cuts before success. Applying
 adds one history edit.
+
+### Offset-plane creation
+
+Create Sketch offers a signed length offset before selecting an origin plane or
+a supported native face. Viewer clicks and keyboard plane buttons select the
+base; the sketch opens aligned to the offset basis. Invalid expressions and units
+create no sketch or history entry. Saved expressions follow parameter and face
+owner edits using the existing plane validation and repair rules.

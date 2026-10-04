@@ -13,7 +13,8 @@ export function SketchPlanePickerPanel() {
   const document = useCadStore((state) => state.history.present),
     rebuild = useCadStore((state) => state.rebuild);
   const hover = useSketchPlanePicker((state) => state.hover),
-    error = useSketchPlanePicker((state) => state.error);
+    error = useSketchPlanePicker((state) => state.error),
+    offset = useSketchPlanePicker((state) => state.offset);
   const choices = useMemo(() => currentPlaneChoices(), [document, rebuild]);
   const ref = useRef<HTMLElement>(null);
   const close = () => useProjectWorkflow.setState({ active: undefined });
@@ -34,7 +35,7 @@ export function SketchPlanePickerPanel() {
     window.addEventListener("keydown", cancel);
     return () => {
       window.removeEventListener("keydown", cancel);
-      useSketchPlanePicker.setState({ hover: undefined, error: undefined });
+      useSketchPlanePicker.setState({ hover: undefined, error: undefined, offset: undefined });
       if (
         previous?.isConnected &&
         window.document.activeElement === window.document.body
@@ -58,6 +59,15 @@ export function SketchPlanePickerPanel() {
         Hover highlights the choice. These buttons also support keyboard
         selection.
       </p>
+      <label>
+        <input type="checkbox" aria-label="Use offset sketch plane" checked={offset !== undefined}
+          onChange={event => useSketchPlanePicker.setState({ offset: event.target.checked ? "5mm" : undefined, error: undefined })} />
+        Offset from selected plane or face
+      </label>
+      {offset !== undefined ? <label>Sketch plane offset
+        <input value={offset} onChange={event => useSketchPlanePicker.setState({ offset: event.target.value, error: undefined })} />
+      </label> : null}
+      {offset !== undefined ? <p className="muted">Pick the base plane or face. The signed offset follows its normal and accepts length parameters. The sketch opens aligned to the resulting offset plane.</p> : null}
       <div className="plane-choices">
         {choices.map((choice) => (
           <button
