@@ -955,3 +955,10 @@ button:disabled:not(.ribbon-button) { opacity: 0.6; }
 
 .component-heading { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
 .component-heading .component-disclosure { flex: 1; text-align: left; background: transparent; border-color: transparent; padding: 4px 0; overflow-wrap: anywhere; }
+
+.extrude-dialog { top: 8%; width: min(960px, 94vw); max-height: 84vh; }
+.extrude-dialog-layout { display: grid; grid-template-columns: minmax(200px, 1fr) minmax(250px, 1.5fr); gap: 24px; }
+.extrude-preview, .extrude-preview-placeholder { width: 100%; height: 320px; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+.extrude-preview-placeholder { display: grid; place-items: center; color: var(--text-muted); }
+.extrude-preview canvas { display: block; }
+@media (max-width: 680px) { .extrude-dialog-layout { grid-template-columns: 1fr; } .extrude-preview, .extrude-preview-placeholder { height: 220px; } }

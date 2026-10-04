@@ -1,4 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
+import { useExtrudeDraft } from "../ui/commands/extrudeCommand";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { upsertSketch, createEmptyDocument } from "../cad/document/CadDocument";
 import { rebuildDocument } from "../cad/features/rebuildGraph";
 import * as solver from "../cad/sketch/SketchSolver";
@@ -18,6 +19,7 @@ import {
 } from "../cad/sketch/SketchModel";
 
 describe("sketch commands", () => {
+  afterEach(() => useExtrudeDraft.setState({ draft: undefined }));
   it("creates an XY sketch and adds helper geometry to the selected sketch", () => {
     const document = createEmptyDocument();
     useCadStore.setState({
@@ -101,7 +103,7 @@ describe("sketch commands", () => {
     ).toHaveLength(2);
   });
 
-  it("creates, suppresses, and deletes an extrude feature from commands", () => {
+  it("opens an extrusion draft without changing the document or history", () => {
     const document = createEmptyDocument();
     useCadStore.setState({
       history: { past: [], present: document, future: [] },
@@ -112,25 +114,11 @@ describe("sketch commands", () => {
     runCommand("sketch.addCenterRectangle");
     runCommand("feature.extrude");
 
-    const feature = useCadStore.getState().history.present.features[0];
-    expect(feature).toMatchObject({
-      type: "extrude",
-      operation: "newBody",
-      direction: "positive",
-    });
-    expect(useCadStore.getState().selection.selectedIds[0]).toMatchObject({
-      kind: "feature",
-      id: feature.id,
-    });
-
-    runCommand("feature.suppress");
-    expect(useCadStore.getState().history.present.features[0].suppressed).toBe(
-      true,
-    );
-
-    runCommand("feature.delete");
     expect(useCadStore.getState().history.present.features).toHaveLength(0);
-    expect(useCadStore.getState().selection.selectedIds).toHaveLength(0);
+    expect(useExtrudeDraft.getState().draft?.feature).toMatchObject({
+      type: "extrude", operation: "newBody", direction: "positive",
+    });
+    useExtrudeDraft.setState({ draft: undefined });
   });
   it("enables offset-plane revolve only when a usable stable axis exists", () => {
     let sketch = addCircleAt(createXySketch(), "10mm", "0mm", "2mm");

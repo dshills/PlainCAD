@@ -1,3 +1,4 @@
+import { applyExtrusion } from "./extrudeWorkflow";
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import type { CadDocument } from "../src/cad/document/schema";
@@ -162,6 +163,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     await page
       .getByRole("button", { name: "Extrude selected sketch", exact: true })
       .click();
+    await applyExtrusion(page);
     await ready(page, 2000);
     const original = await snapshot(page),
       bodyId = original.result!.bodies[0].id;

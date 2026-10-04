@@ -1,3 +1,4 @@
+import { applyExtrusion } from "./extrudeWorkflow";
 import { test, expect, type Page, type Locator } from "@playwright/test";
 
 async function ready(page: Page) {
@@ -43,6 +44,7 @@ test("keyboard palette traps/restores focus, runs available commands and isolate
   await page
     .getByRole("button", { name: "Extrude selected sketch", exact: true })
     .click();
+  await applyExtrusion(page);
   await ready(page);
   await page.locator(".body-row button").first().click();
   const width = page.getByLabel("Parameter width expression");

@@ -127,7 +127,7 @@ behavior while applying the console styling to panels, dialogs and drawing views
 1. Start the dev server and open the local URL.
 2. Choose **New** for a blank local project, then **New Component** and name the part.
 3. Choose **Create Sketch**, select an XY/XZ/YZ plane, and draw in the sketch canvas.
-4. Choose **Finish Sketch**, then **Extrude** to create a body in that component.
+4. Choose **Finish Sketch**, then **Extrude**. Select a profile, distance, direction, and New Body/Cut/Join operation; inspect the native geometry preview, then choose **Apply extrusion**. Cut and Join require explicit target bodies in the active component. Cancel leaves the project unchanged.
 5. The Browser groups each component’s origin, sketches and bodies. Activate a
    component before adding another sketch; selecting a sketch, body or timeline
    feature activates its owner. Double-click a sketch to edit its canvas.
@@ -315,7 +315,7 @@ Each hole feature is limited to 64 explicit centers.
 ### Work With Features
 
 1. Select a sketch with a detected profile.
-2. Click `Extrude` in the Feature Timeline.
+2. Click `Extrude` in the Feature Timeline. Choose the profile and settings in the dialog, inspect the OpenCascade preview, then click **Apply extrusion**.
 3. Select a feature to inspect or rename it.
 4. Use `Suppress` or `Delete` on selected features.
 
@@ -630,3 +630,11 @@ development and the production build under CSP. The shared rectangle/through-cut
 workload verifies current geometry across twenty measured edits and ten STL
 exports. Production reports UI edit/export timings; detailed phase and resource
 counters remain development-only. See [measurement scope and commands](specs/working-cad/PERFORMANCE.md).
+
+Extrusion creation previews run in an isolated, cancellable native worker with a
+30-second time limit. Changing settings discards the previous preview immediately;
+project edits, replacement, or component changes invalidate Apply. Preview geometry
+and its camera are temporary and excluded from project saves, undo history,
+autosave, and STL export. Apply records one feature edit and schedules the normal
+project rebuild. The dialog supports distance termination and one selected profile;
+through-all and supported to-face termination remain available in the Inspector.

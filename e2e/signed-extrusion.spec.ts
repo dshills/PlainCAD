@@ -1,3 +1,4 @@
+import { applyExtrusion } from "./extrudeWorkflow";
 import { expect, test, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import type { CadDocument, OriginPlane } from "../src/cad/document/schema";
@@ -177,6 +178,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
       await page
         .getByRole("button", { name: "Extrude selected sketch", exact: true })
         .click();
+      await applyExtrusion(page);
       await commit(page, "Distance", "2mm");
       const childFeature = (await snapshot(page)).document.features[1].id;
       await select(page, "parameter", "depth");

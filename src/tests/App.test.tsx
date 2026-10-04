@@ -90,6 +90,10 @@ describe("App", () => {
 
     const timeline = screen.getByRole("list", { name: /Sketch and feature history/i });
     expect(within(timeline).getByRole("button", { name: /Sketch 1/i })).toBeInTheDocument();
-    expect(within(timeline).getByRole("button", { name: /Extrude 1/i })).toBeInTheDocument();
+    const dialog = screen.getByRole("dialog", { name: "Extrude" });
+    expect(within(dialog).getByLabelText("Extrude distance")).toHaveValue("10mm");
+    expect(within(dialog).getByRole("button", { name: "Apply extrusion" })).toBeDisabled();
+    expect(useCadStore.getState().history.present.features).toHaveLength(0);
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
   });
 });

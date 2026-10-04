@@ -1,3 +1,4 @@
+import { applyExtrusion } from "./extrudeWorkflow";
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import type { CadDocument } from "../src/cad/document/schema";
@@ -182,6 +183,7 @@ test("authored/display units, current evaluated readouts, scalar parameters, gro
   await page
     .getByRole("button", { name: "Extrude selected sketch", exact: true })
     .click();
+  await applyExtrusion(page);
   await ready(page, 50.8);
   const added = (await state(page)).selected!.id;
   await edit(page, "Distance", "0.25");

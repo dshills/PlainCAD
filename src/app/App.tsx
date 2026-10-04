@@ -1,3 +1,4 @@
+import { ExtrudeCreationPanel } from "../ui/panels/ExtrudeCreationPanel";
 import { ProjectWorkflowPanel } from "../ui/panels/ProjectWorkflowPanel";
 import { SketchCanvasPanel } from "../ui/panels/SketchCanvasPanel";
 import { ThemeSelector } from "../ui/themes/ThemeSelector";
@@ -180,6 +181,7 @@ export function App() {
       <RecoveryPanel />
       <FabricationPanel />
       <HoleCreationPanel />
+      <ExtrudeCreationPanel />
       <ProjectWorkflowPanel />
       <SketchCanvasPanel />
       <main className="workspace">

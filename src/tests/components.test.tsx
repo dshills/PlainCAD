@@ -1,3 +1,4 @@
+import { useExtrudeDraft } from "../ui/commands/extrudeCommand";
 import {
   act,
   cleanup,
@@ -39,6 +40,7 @@ beforeEach(() => {
   useCadStore.getState().setDocument(createEmptyDocument());
 });
 afterEach(() => {
+  useExtrudeDraft.setState({ draft: undefined });
   cleanup();
   useProjectWorkflow.setState({ active: undefined });
   useSketchCanvas.setState({ active: undefined });
@@ -293,17 +295,21 @@ describe("component project ownership", () => {
     fireEvent.click(
       within(ribbon).getByRole("button", { name: "Extrude selected sketch" }),
     );
-    await waitFor(() =>
-      expect(useCadStore.getState().history.present.features).toHaveLength(1),
-    );
+    const draft = useExtrudeDraft.getState().draft;
+    expect(draft).toBeDefined();
+    expect(useCadStore.getState().history.present.features).toHaveLength(0);
     const state = useCadStore.getState(),
       sketch = Object.values(state.history.present.sketches)[0];
     expect(state.history.present.components[sketch.componentId!].name).toBe(
       "Bracket",
     );
-    expect(state.history.present.features[0].componentId).toBe(
-      sketch.componentId,
+    expect(draft?.feature.componentId).toBe(sketch.componentId);
+    expect(state.selection.selectedIds[0].kind).toBe("sketch");
+    fireEvent.click(
+      within(screen.getByRole("dialog", { name: "Extrude" })).getByRole(
+        "button",
+        { name: "Cancel" },
+      ),
     );
-    expect(state.selection.selectedIds[0].kind).toBe("feature");
   });
 });

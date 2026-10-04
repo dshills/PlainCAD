@@ -1,3 +1,4 @@
+import { applyExtrusion } from "./extrudeWorkflow";
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import type { CadDocument } from "../src/cad/document/schema";
@@ -134,6 +135,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     await page.getByRole("button", { name: `Create ${plane} sketch`, exact: true }).click();
     await page.getByRole("button", { name: "Add center rectangle", exact: true }).click();
     await page.getByRole("button", { name: "Extrude selected sketch", exact: true }).click();
+    await applyExtrusion(page);
     await commit(page, "Distance", "thickness");
     await ready(page, (state) => { assertGeometry(state, 10, false, plane); });
     const base = assertGeometry(await snapshot(page), 10, false, plane);
@@ -142,6 +144,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     await page.getByRole("button", { name: `Create ${plane} sketch`, exact: true }).click();
     await page.getByRole("button", { name: "Add circle", exact: true }).click();
     await page.getByRole("button", { name: "Extrude selected sketch", exact: true }).click();
+    await applyExtrusion(page);
     await ready(page, (state) => { expect(state.result?.meshes).toHaveLength(2); });
     await page.getByRole("combobox", { name: "Target body", exact: true }).selectOption(base.bodyId);
     await page.getByRole("combobox", { name: "Operation", exact: true }).selectOption("cut");

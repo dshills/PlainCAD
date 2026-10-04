@@ -1,3 +1,4 @@
+import { applyExtrusion } from "./extrudeWorkflow";
 import { test, expect } from "@playwright/test";
 import { REBUILD_DEBOUNCE_MS } from "../src/cad/worker/workerLifecycle";
 import type { CadStore } from "../src/state/useCadStore";
@@ -74,6 +75,7 @@ for (const outcome of ["result", "worker failure"] as const) {
     await page.getByRole("button", { name: "Create XY sketch", exact: true }).click();
     await page.getByRole("button", { name: "Add center rectangle", exact: true }).click();
     await page.getByRole("button", { name: "Extrude selected sketch", exact: true }).click();
+    await applyExtrusion(page);
     await page.getByLabel("Distance", { exact: true }).fill("param_1");
     await page.getByLabel("Distance", { exact: true }).press("Enter");
     await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");

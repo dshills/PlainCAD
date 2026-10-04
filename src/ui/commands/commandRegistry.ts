@@ -1,3 +1,4 @@
+import { beginExtrudeCreation } from "./extrudeCommand";
 import { activeComponentId, beginProjectWorkflow, finishSketchCanvas } from "./projectWorkflowCommand";
 import { renameComponent, sketchComponentId } from "../../cad/document/components";
 import { MODEL_RESOURCE_LIMITS } from "../../cad/resourceLimits";
@@ -30,7 +31,6 @@ import {
 } from "../../persistence/exportProject";
 import {
   createEmptyDocument,
-  createExtrudeFeature,
   deleteFeature,
   suppressFeature,
   upsertFeature,
@@ -393,23 +393,8 @@ export const commands: CadCommand[] = [
     label: "Extrude Selected Sketch",
     enablementKey: "createExtrude",
     run: () => {
-      const state = useCadStore.getState();
       const match = findActiveSketchWithProfile();
-      if (!match) return;
-      const feature = createExtrudeFeature({
-        name: `Extrude ${state.history.present.features.length + 1}`,
-        sketchId: match.sketch.id,
-        profileId: match.profileId,
-        operation: "newBody",
-        distance: { expression: "10mm", unit: "mm" },
-        direction: "positive",
-      });
-      state.updateDocument((document) => upsertFeature(document, feature));
-      state.select({
-        kind: "feature",
-        id: feature.id,
-        documentId: state.history.present.id,
-      });
+      if (match) beginExtrudeCreation(match.sketch.id);
     },
   },
   {

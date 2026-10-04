@@ -1,3 +1,4 @@
+import { applyExtrusion } from "./extrudeWorkflow";
 import { test, expect, type Page } from "@playwright/test";
 import { readFile, writeFile } from "node:fs/promises";
 import type { CadDocument } from "../src/cad/document/schema";
@@ -88,6 +89,7 @@ test("arc authoring, construction, driving dimensions, face offsets, save/open a
   await page
     .getByRole("button", { name: "Extrude selected sketch", exact: true })
     .click();
+  await applyExtrusion(page);
   await ready(page, (state) => expect(state.result?.meshes).toHaveLength(1));
   await page
     .getByRole("button", { name: "Create XY sketch", exact: true })
@@ -162,6 +164,7 @@ test("arc authoring, construction, driving dimensions, face offsets, save/open a
   await page
     .getByRole("button", { name: "Extrude selected sketch", exact: true })
     .click();
+  await applyExtrusion(page);
   await commit(page, "Distance", "5mm");
   await ready(page, (state) => arcBody(state, 10, 13));
   const original = await snapshot(page),

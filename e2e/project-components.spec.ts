@@ -1,3 +1,4 @@
+import { applyExtrusion } from "./extrudeWorkflow";
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import type { CadDocument } from "../src/cad/document/schema";
@@ -71,6 +72,7 @@ async function sketch(page: Page, tool: string, points: number[][]) {
   await page
     .getByRole("button", { name: "Extrude selected sketch", exact: true })
     .click();
+  await applyExtrusion(page);
   await ready(page);
 }
 

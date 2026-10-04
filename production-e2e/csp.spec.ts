@@ -1,3 +1,4 @@
+import { applyExtrusion } from "../e2e/extrudeWorkflow";
 import {
   AUTOSAVE_DB,
   AUTOSAVE_STORE,
@@ -383,6 +384,7 @@ test("built app draws and dimensions a native sketch under production CSP", asyn
   await page
     .getByRole("button", { name: "Extrude selected sketch", exact: true })
     .click();
+  await applyExtrusion(page);
   await expect(
     page.getByRole("button", { name: "Export STL", exact: true }),
   ).toBeEnabled();

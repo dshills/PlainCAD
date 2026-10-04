@@ -1,3 +1,4 @@
+import { applyExtrusion } from "./extrudeWorkflow";
 import type { ViewerSnapshot } from "../src/viewer/viewerDiagnostics";
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
@@ -160,6 +161,7 @@ test("dimension labels move without modeling edits and cancel stale pointer gest
   await page
     .getByRole("button", { name: "Extrude selected sketch", exact: true })
     .click();
+  await applyExtrusion(page);
   await ready(page, 250 * Math.PI);
   await page.locator(".sketch-chip").first().click();
   await openCanvas(page);
@@ -328,6 +330,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     await page
       .getByRole("button", { name: "Extrude selected sketch", exact: true })
       .click();
+    await applyExtrusion(page);
     await ready(page, 2000);
     const original = await snapshot(page);
     await page.locator(".sketch-chip").first().click();
@@ -549,6 +552,7 @@ test("constraint markers inspect, repair and remove intent while native geometry
   await page
     .getByRole("button", { name: "Extrude selected sketch", exact: true })
     .click();
+  await applyExtrusion(page);
   await ready(page, 2000);
   await page.getByRole("button", { name: /^Sketch 1 XY plane/ }).click();
   await openCanvas(page);
@@ -771,6 +775,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     await page
       .getByRole("button", { name: "Extrude selected sketch", exact: true })
       .click();
+    await applyExtrusion(page);
     await ready(page);
     await page
       .locator(".feature-chip")
@@ -886,6 +891,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     await page
       .getByRole("button", { name: "Extrude selected sketch", exact: true })
       .click();
+    await applyExtrusion(page);
     await ready(page, 6000);
     const base = (await snapshot(page)).result!.meshes[0];
     const expected =
@@ -942,6 +948,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     await page
       .getByRole("button", { name: "Extrude selected sketch", exact: true })
       .click();
+    await applyExtrusion(page);
     await ready(page);
     await page
       .getByRole("combobox", { name: "Target body", exact: true })
@@ -1061,6 +1068,7 @@ test("draft cancellation, primitive undo/redo, analytic arcs and construction ge
   await page
     .getByRole("button", { name: "Extrude selected sketch", exact: true })
     .click();
+  await applyExtrusion(page);
   await ready(page, Math.PI * 100 * 5);
   const mesh = (await snapshot(page)).result!.meshes[0];
   expect(mesh.bounds.min[2]).toBeCloseTo(7, 5);
@@ -1157,6 +1165,7 @@ test("drawing dimensions drive native geometry, diagnose conflicts, persist and 
   await page
     .getByRole("button", { name: "Extrude selected sketch", exact: true })
     .click();
+  await applyExtrusion(page);
   await ready(page, Math.PI * 49 * 10);
   await page
     .getByLabel("Parameter bore expression", { exact: true })
@@ -1217,6 +1226,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     await page
       .getByRole("button", { name: "Extrude selected sketch", exact: true })
       .click();
+    await applyExtrusion(page);
     await ready(page, 6000);
     const original = await snapshot(page),
       sketch = Object.values(original.document.sketches)[0],
@@ -1386,6 +1396,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     await page
       .getByRole("button", { name: "Extrude selected sketch", exact: true })
       .click();
+    await applyExtrusion(page);
     await ready(page, 2000);
     const original = await snapshot(page);
     await page.locator(".sketch-chip").first().click();
@@ -1581,6 +1592,7 @@ test("analytic arc group translates without changing native radius or volume", a
   await page
     .getByRole("button", { name: "Extrude selected sketch", exact: true })
     .click();
+  await applyExtrusion(page);
   await ready(page, 500 * Math.PI);
   const original = await snapshot(page),
     sketch = Object.values(original.document.sketches)[0];
@@ -1715,6 +1727,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     await page
       .getByRole("button", { name: "Extrude selected sketch", exact: true })
       .click();
+    await applyExtrusion(page);
     await ready(page);
     await page
       .locator(".feature-chip")
@@ -1914,6 +1927,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     await page
       .getByRole("button", { name: "Extrude selected sketch", exact: true })
       .click();
+    await applyExtrusion(page);
     await ready(page);
     await page
       .locator(".feature-chip")
@@ -2091,6 +2105,7 @@ test("major arc fragmentation produces the exact larger native circular region",
   await page
     .getByRole("button", { name: "Extrude selected sketch", exact: true })
     .click();
+  await applyExtrusion(page);
   await ready(page);
   await page.locator(".feature-chip").filter({ hasText: "Extrude 1" }).click();
   await page
@@ -2176,6 +2191,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     await page
       .getByRole("button", { name: "Extrude selected sketch", exact: true })
       .click();
+    await applyExtrusion(page);
     await ready(page);
     await page
       .locator(".feature-chip")
@@ -2396,6 +2412,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     await page
       .getByRole("button", { name: "Extrude selected sketch", exact: true })
       .click();
+    await applyExtrusion(page);
     await ready(page);
     await page
       .locator(".feature-chip")
@@ -2606,6 +2623,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     await page
       .getByRole("button", { name: "Extrude selected sketch", exact: true })
       .click();
+    await applyExtrusion(page);
     await ready(page);
     await page
       .locator(".feature-chip")
