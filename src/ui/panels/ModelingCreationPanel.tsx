@@ -6,6 +6,7 @@ import { previewModeling } from "../../cad/worker/extrudePreviewClient";
 import { useCadStore } from "../../state/useCadStore";
 import { ExtrudePreview } from "../../viewer/ExtrudePreview";
 import { ModalDialog } from "../ModalDialog";
+import { EdgeDraftControls } from "./EdgeDraftControls";
 import { extrudeContext } from "../commands/extrudeCommand";
 import {
   assertNativeModelingPreview,
@@ -23,7 +24,9 @@ export function ModelingCreationPanel() {
 function ModelingDialog({ draft }: { draft: ModelingDraft }) {
   const current = useCadStore((state) => isCurrentModelingDraft(draft, state));
   const [context] = useState(() =>
-    extrudeContext(useCadStore.getState(), draft.feature.sketchId),
+    draft.feature.type === "revolve"
+      ? extrudeContext(useCadStore.getState(), draft.feature.sketchId)
+      : undefined,
   );
   const [feature, setFeature] = useState(draft.feature);
   const staged = useMemo(
@@ -36,11 +39,21 @@ function ModelingDialog({ draft }: { draft: ModelingDraft }) {
     error?: string;
   }>();
   const [commitError, setCommitError] = useState("");
-  const hasProfile = Boolean(
-    context?.profiles.some((profile) => profile.id === feature.profileId),
-  );
+  const title =
+    feature.type === "revolve"
+      ? "Revolve"
+      : feature.type === "fillet"
+        ? "Fillet"
+        : "Chamfer";
+  const hasProfile =
+    feature.type !== "revolve" ||
+    Boolean(
+      context?.profiles.some((profile) => profile.id === feature.profileId),
+    );
   const hasTargets =
-    feature.operation === "newBody" || Boolean(feature.targetBodyIds?.length);
+    feature.type !== "revolve" ||
+    feature.operation === "newBody" ||
+    Boolean(feature.targetBodyIds?.length);
   useEffect(() => {
     setCommitError("");
     if (!current || !hasProfile || !hasTargets) return;
@@ -70,7 +83,7 @@ function ModelingDialog({ draft }: { draft: ModelingDraft }) {
   const close = () => useModelingDraft.setState({ draft: undefined });
   return (
     <ModalDialog
-      label="Revolve"
+      label={title}
       className="file-dialog model-dialog extrude-dialog"
       onDismiss={close}
     >
@@ -87,18 +100,26 @@ function ModelingDialog({ draft }: { draft: ModelingDraft }) {
           }
         }}
       >
-        <h2>Revolve</h2>
+        <h2>{title}</h2>
         <p>
-          {context?.sketch.name} ·{" "}
+          {context?.sketch.name ?? feature.name} ·{" "}
           {draft.document.components[draft.componentId]?.name}
         </p>
         <div className="extrude-dialog-layout">
           <div>
-            <RevolveDraftControls
-              feature={feature}
-              onChange={setFeature}
-              context={context}
-            />
+            {feature.type === "revolve" ? (
+              <RevolveDraftControls
+                feature={feature}
+                onChange={setFeature}
+                context={context}
+              />
+            ) : (
+              <EdgeDraftControls
+                draft={draft}
+                feature={feature}
+                onChange={setFeature}
+              />
+            )}
             <p className="muted">
               Drag the preview to orbit. Apply adds one feature to the timeline;
               Cancel leaves the project unchanged.
@@ -107,11 +128,11 @@ function ModelingDialog({ draft }: { draft: ModelingDraft }) {
           <div>
             <ExtrudePreview
               meshes={shown?.result?.meshes ?? EMPTY_MESHES}
-              label="Native revolve geometry preview"
+              label={`Native ${feature.type} geometry preview`}
             />
             <p role="status">
               {!current
-                ? "Project or component changed. Close and reopen Revolve."
+                ? `Project or component changed. Close and reopen ${title}.`
                 : !hasProfile
                   ? "Choose a current closed profile."
                   : !hasTargets
@@ -132,7 +153,7 @@ function ModelingDialog({ draft }: { draft: ModelingDraft }) {
             Cancel
           </button>
           <button type="submit" disabled={!shown?.result}>
-            Apply revolve
+            Apply {feature.type}
           </button>
         </div>
       </form>

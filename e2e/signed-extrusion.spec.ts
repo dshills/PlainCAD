@@ -1,3 +1,4 @@
+import { applyModeling } from "./modelingWorkflow";
 import { applyExtrusion } from "./extrudeWorkflow";
 import { expect, test, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
@@ -279,8 +280,10 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
         .getByRole("button", { name: "Fillet extrusion edges", exact: true })
         .click();
       await page
+        .getByRole("dialog", { name: "Fillet", exact: true })
         .getByRole("combobox", { name: "Source edge", exact: true })
         .selectOption(line.id);
+      await applyModeling(page, "Fillet");
       await ready(page, (state) =>
         native(state, ids.owner, 2000 - 20 * corner),
       );
@@ -323,9 +326,11 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
         .getByRole("button", { name: "Chamfer extrusion edges", exact: true })
         .click();
       await page
+        .getByRole("dialog", { name: "Chamfer", exact: true })
         .getByRole("combobox", { name: "Source edge", exact: true })
         .selectOption(line.id);
       const expected = 4000 - 80 * corner - 10;
+      await applyModeling(page, "Chamfer");
       await ready(page, (state) => {
         const mesh = native(state, ids.owner, expected);
         expect(mesh.kernelOperation).toBe("chamfer");

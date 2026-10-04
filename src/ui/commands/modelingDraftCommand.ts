@@ -1,11 +1,17 @@
 import { create } from "zustand";
-import type { CadDocument, RevolveFeature } from "../../cad/document/schema";
+import type {
+  CadDocument,
+  RevolveFeature,
+  FilletFeature,
+  ChamferFeature,
+} from "../../cad/document/schema";
 import { upsertFeature } from "../../cad/document/CadDocument";
 import { stableBodyIdForFeature } from "../../cad/features/featureGraph";
 import type { RebuildResult } from "../../cad/worker/workerProtocol";
 import { useCadStore, type CadStore } from "../../state/useCadStore";
 
-export type ModelingDraftFeature = RevolveFeature;
+export type ModelingDraftFeature =
+  RevolveFeature | FilletFeature | ChamferFeature;
 export interface ModelingDraft {
   document: CadDocument;
   session: number;
@@ -64,21 +70,32 @@ export function assertNativeModelingPreview(
       "Modeling preview did not produce valid native solid geometry.",
     );
   const ids =
-    feature.operation === "newBody"
-      ? [stableBodyIdForFeature(feature.id)]
-      : feature.operation === "join"
-        ? (feature.targetBodyIds?.slice(0, 1) ?? [])
-        : (feature.targetBodyIds ?? []);
+    feature.type !== "revolve"
+      ? [
+          ...new Set(
+            feature.targetEdgeRefs.map((ref) =>
+              stableBodyIdForFeature(ref.featureId),
+            ),
+          ),
+        ]
+      : feature.operation === "newBody"
+        ? [stableBodyIdForFeature(feature.id)]
+        : feature.operation === "join"
+          ? (feature.targetBodyIds?.slice(0, 1) ?? [])
+          : (feature.targetBodyIds ?? []);
   const operation =
-    feature.operation === "newBody"
-      ? "revolve"
-      : feature.operation === "join"
-        ? "fuse"
-        : "cut";
+    feature.type !== "revolve"
+      ? feature.type
+      : feature.operation === "newBody"
+        ? "revolve"
+        : feature.operation === "join"
+          ? "fuse"
+          : "cut";
   // Native Join consumes every selected target and publishes the connected
   // union under the first target's identity; secondary IDs must disappear.
   if (
-    (feature.operation === "join" &&
+    (feature.type === "revolve" &&
+      feature.operation === "join" &&
       feature.targetBodyIds
         ?.slice(1)
         .some((id) => result.meshes.some((mesh) => mesh.bodyId === id))) ||
@@ -107,7 +124,13 @@ export function commitModelingDraft(
       "Project or component changed. Reopen the modeling command.",
     );
   const feature = staged.features.find((item) => item.id === draft.feature.id);
-  if (!feature || feature.type !== "revolve")
+  if (
+    !feature ||
+    (feature.type !== "revolve" &&
+      feature.type !== "fillet" &&
+      feature.type !== "chamfer") ||
+    feature.type !== draft.feature.type
+  )
     throw new Error("Modeling draft was lost.");
   assertNativeModelingPreview(result, staged.id, feature);
   const state = useCadStore.getState();

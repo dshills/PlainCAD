@@ -159,8 +159,10 @@ test("native edge treatments: edit, parameter change, save/open, STL, and invali
     .getByRole("button", { name: "Fillet extrusion edges", exact: true })
     .click();
   await page
+    .getByRole("dialog", { name: "Fillet", exact: true })
     .getByRole("combobox", { name: "Source edge", exact: true })
     .selectOption(base.lineId);
+  await applyModeling(page, "Fillet");
   await ready(page, (s) =>
     geometry(s, base.id, 2000 - 20 * (1 - Math.PI / 4), "fillet"),
   );
@@ -179,12 +181,15 @@ test("native edge treatments: edit, parameter change, save/open, STL, and invali
     .getByRole("button", { name: "Chamfer extrusion edges", exact: true })
     .click();
   await page
+    .getByRole("dialog", { name: "Chamfer", exact: true })
     .getByRole("combobox", { name: "Edge role", exact: true })
     .selectOption("startCapPerimeter");
   await page
+    .getByRole("dialog", { name: "Chamfer", exact: true })
     .getByRole("combobox", { name: "Source edge", exact: true })
     .selectOption(base.lineId);
   const expected = 2000 - 80 * (1 - Math.PI / 4) - 10;
+  await applyModeling(page, "Chamfer");
   await ready(page, (s) => geometry(s, base.id, expected, "chamfer"));
   await commit(page, "Chamfer distance", "100mm");
   await expect(async () => {
@@ -543,9 +548,11 @@ test("long native feature chain preserves exact geometry through edits, blocked 
     .getByRole("button", { name: "Fillet extrusion edges", exact: true })
     .click();
   await page
+    .getByRole("dialog", { name: "Fillet", exact: true })
     .getByRole("combobox", { name: "Source edge", exact: true })
     .selectOption(base.lineId);
   await commit(page, "Fillet radius", "edgeRadius");
+  await applyModeling(page, "Fillet");
   await ready(page, (state) =>
     geometry(state, base.id, 2000 - 20 * rounded, "fillet"),
   );
@@ -553,9 +560,11 @@ test("long native feature chain preserves exact geometry through edits, blocked 
     .getByRole("button", { name: "Chamfer extrusion edges", exact: true })
     .click();
   await page
+    .getByRole("dialog", { name: "Chamfer", exact: true })
     .getByRole("combobox", { name: "Source edge", exact: true })
     .selectOption(base.lineId);
   const treated = 2000 - 20 * rounded - 10;
+  await applyModeling(page, "Chamfer");
   await ready(page, (state) => geometry(state, base.id, treated, "chamfer"));
   await chainFeature(page, base.id, "hole");
   await ready(page, (state) =>

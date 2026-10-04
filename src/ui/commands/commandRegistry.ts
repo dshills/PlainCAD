@@ -707,8 +707,7 @@ function edgeTreatmentOwner(state = useCadStore.getState()) {
   const mesh = state.rebuild.result?.meshes.find(
     (m) => m.bodyId === stableBodyIdForFeature(feature.id),
   );
-  return availableCapRole(document, feature.id) &&
-    mesh?.geometrySource === "opencascade" &&
+  return mesh?.geometrySource === "opencascade" &&
     ["extrusion", "cut", "fuse", "fillet", "chamfer"].includes(mesh.kernelOperation ?? "")
     ? feature
     : undefined;
@@ -723,7 +722,7 @@ function createEdgeTreatment(type: "fillet" | "chamfer") {
     targetEdgeRefs: [
       createExtrudeEdgeRef(
         owner.id,
-        availableCapRole(state.history.present, owner.id)!,
+        preferredCapRole(state.history.present, owner.id),
       ),
     ],
     createdAt: new Date().toISOString(),
@@ -732,18 +731,15 @@ function createEdgeTreatment(type: "fillet" | "chamfer") {
     type === "fillet"
       ? { ...common, type, radius: { expression: "1mm", unit: "mm" } }
       : { ...common, type, distance: { expression: "1mm", unit: "mm" } };
-  state.updateDocument((d) => upsertFeature(d, feature));
-  state.select({
-    kind: "feature",
-    id: feature.id,
-    documentId: state.history.present.id,
-  });
+  beginModelingCreation(feature);
 }
 
-function availableCapRole(
+// Initial UI preference only: used cap roles can still contain untouched source
+// edges. The native draft preview decides whether the explicit edge survives.
+function preferredCapRole(
   document: CadDocument,
   ownerId: string,
-): "endCapPerimeter" | "startCapPerimeter" | undefined {
+): "endCapPerimeter" | "startCapPerimeter" {
   const used = new Set(
     document.features.flatMap((feature) =>
       !feature.suppressed &&
@@ -758,7 +754,7 @@ function availableCapRole(
     ? "endCapPerimeter"
     : !used.has("startCapPerimeter")
       ? "startCapPerimeter"
-      : undefined;
+      : "endCapPerimeter";
 }
 
 const defaultAxisCache: AnalysisCache<RevolveAxisReference> = new WeakMap();

@@ -80,7 +80,7 @@ edits, parameter-driven diameter, empty-center failure and save/open/STL recover
 | Revolve cut/join | Native cut on up to 64 explicit saved targets with atomic publication; join merges an ordered explicit scope into one connected solid; boolean validity/volume checks | Creation dialog with explicit native target previews; Inspector with cut/join scope checkboxes and lost-reference removal |
 | Capture intersected targets | Native common-volume checks on current upstream solids and extrude/revolve/hole tools; saved IDs only; preserves an intersected join primary; ignores downstream bodies; empty/failed/stale probes leave the scope intact; face-only joins remain explicit | Shared command and Inspector button; dedicated worker with cancellation/time limit |
 | Hole | Up to 64 explicit saved target IDs and 64 sketch point centers; native aggregate cylindrical tools; every center must cut some target, every target must lose exact volume; atomic output publication; positive blind-depth/through-all; empty/duplicate/lost centers/targets and no-op cuts diagnosed | Shared creation command with modal target scope and center choices; full size/termination/center/source/scope repair inspector |
-| Fillet/chamfer | Real native geometry on feature-owned cap perimeters, individual line/arc cap edges, or a source line’s two extrusion-direction corners; BRep/solid-count/volume-or-surface-change checks; retained authored edges also work after native booleans; grouped perimeters require every original edge and exclude new Cut/Join edges; lost/trimmed/ambiguous edges fail | Shared creation commands and size/role/source/owner repair inspector |
+| Fillet/chamfer | Real native geometry on feature-owned cap perimeters, individual line/arc cap edges, or a source line’s two extrusion-direction corners; BRep/solid-count/volume-or-surface-change checks; retained authored edges also work after native booleans; grouped perimeters require every original edge and exclude new Cut/Join edges; lost/trimmed/ambiguous edges fail | Native preview-and-Apply creation dialogs with size/role/source/owner choices; repair inspector |
 | Offset/face sketch planes | Expression-driven origin/face offsets; upstream distance-extrusion caps and straight outer sides; retained native faces after Cut/Join supported at the sketch’s timeline position; removed/split/ambiguous/suppressed/missing faces require repair | Sketch tools with explicit replacement selection; lost planes fail rebuild |
 | STEP | Optional adapter interface only; no implemented exporter | Hidden |
 
@@ -458,3 +458,16 @@ no-op booleans, pending or stale settings, project edits/replacement and compone
 changes block Apply. Cancel leaves document history and main rebuild results
 unchanged. Chromium checks analytic torus quarter-sweep volume/orientation,
 construction axes, Cut/Join target volumes, cancellation and save/open.
+
+### Edge-treatment creation preview
+
+Fillet and Chamfer creation now stages size, current native distance-extrusion
+owner, cap/side-corner role and original source edge choices. The shared isolated
+worker requires real native treatment geometry before Apply. Invalid sizes,
+unchanged/lost/trimmed edges and stale settings diagnose without a history edit.
+Using both cap roles no longer prevents another treatment on a surviving authored
+edge; the preview validates that choice against current geometry. Chromium checks
+three successive native XZ treatments, exact volume changes, cancellation, invalid
+size/edge recovery, stable body ownership and save/open. Existing XY/XZ/YZ and
+post-boolean edge workflows also use the new Apply step. Arbitrary native edge
+picking and new boolean-created edge identities remain unavailable.

@@ -1,3 +1,4 @@
+import { applyModeling } from "./modelingWorkflow";
 import { test, expect, type Page, type TestInfo } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import type {
@@ -328,6 +329,7 @@ test("original outer perimeter after Cut excludes the new hole edge; fillet afte
     .getByRole("button", { name: "Chamfer extrusion edges", exact: true })
     .click();
   await commit(page, "Chamfer distance", "1mm");
+  await applyModeling(page, "Chamfer");
   await ready(page);
   geometry(
     (await snapshot(page)).result,
@@ -341,8 +343,10 @@ test("original outer perimeter after Cut excludes the new hole edge; fillet afte
     .getByRole("button", { name: "Fillet extrusion edges", exact: true })
     .click();
   await page
+    .getByRole("dialog", { name: "Fillet", exact: true })
     .getByRole("combobox", { name: "Source edge", exact: true })
     .selectOption(f.leftId);
+  await applyModeling(page, "Fillet");
   await ready(page);
   geometry(
     (await snapshot(page)).result,
@@ -489,6 +493,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     await page
       .getByRole("button", { name: "Fillet extrusion edges", exact: true })
       .click();
+    await applyModeling(page, "Fillet");
     await ready(page);
     const removed =
       2 * Math.PI * (10 * (1 - Math.PI / 4) - (5 / 6 - Math.PI / 4));
