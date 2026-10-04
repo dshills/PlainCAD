@@ -1,6 +1,6 @@
 # Working CAD Capability Matrix
 
-Reviewed against source and automated tests on 2026-10-03. This is the current
+Reviewed against source and automated tests on 2026-10-04. This is the current
 implementation status, not a declaration that the working-CAD spec is complete.
 Unit/component tests exercise fallback geometry and jsdom. Chromium acceptance
 coverage now verifies native OpenCascade rectangle extrusion and circular through-cut
@@ -531,3 +531,15 @@ Operation and downstream previews run sequentially to stop on a failed operation
 and avoid retaining two live OpenCascade workers; this adds latency on larger
 projects. Native acceptance also repairs a failed first Revolve with no published
 body, so repair does not depend on an old successful output mesh.
+
+### Fillet and Chamfer feature editing
+
+Edit Feature supports unsuppressed Fillet and Chamfer replacements with native
+operation-stage and downstream validation. Size, original distance-extrusion owner,
+supported edge role and source entity are editable. Features with multiple edge
+references expose an explicit reference selector; changing one reference preserves
+the others. Owner choices use the native timeline stage before the selected feature,
+so the feature's own treatment and future bodies cannot contaminate the choices.
+Cancel, invalid sizes, lost/changed edges and stale projects cannot Apply; valid
+edits retain IDs and timeline order in one undoable history entry.
+Arbitrary BRep edge picking and new post-boolean topology roles remain unavailable.

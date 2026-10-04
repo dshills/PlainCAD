@@ -59,7 +59,9 @@ export function editableModelingFeature(state: CadStore) {
   const feature = state.history.present.features.find(
     (feature) => feature.id === selected.id,
   );
-  return feature?.type === "revolve" &&
+  return (feature?.type === "revolve" ||
+    feature?.type === "fillet" ||
+    feature?.type === "chamfer") &&
     !feature.suppressed &&
     featureComponentId(state.history.present, feature) ===
       state.activeComponentId

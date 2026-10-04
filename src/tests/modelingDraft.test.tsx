@@ -7,7 +7,11 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { createEmptyDocument, upsertSketch } from "../cad/document/CadDocument";
+import {
+  createEmptyDocument,
+  upsertSketch,
+  upsertFeature,
+} from "../cad/document/CadDocument";
 import { addCornerRectangle, createXySketch } from "../cad/sketch/SketchModel";
 import { rebuildDocument } from "../cad/features/rebuildGraph";
 import type { CadDocument } from "../cad/document/schema";
@@ -16,13 +20,15 @@ import { previewModeling } from "../cad/worker/extrudePreviewClient";
 import { useCadStore } from "../state/useCadStore";
 import {
   assertNativeModelingPreview,
+  beginModelingEditing,
   useModelingDraft,
 } from "../ui/commands/modelingDraftCommand";
 import { runCommand } from "../ui/commands/commandRegistry";
 import { ModelingCreationPanel } from "../ui/panels/ModelingCreationPanel";
-vi.mock("../cad/worker/extrudePreviewClient", () => ({
-  previewModeling: vi.fn(),
-}));
+vi.mock("../cad/worker/extrudePreviewClient", () => {
+  const preview = vi.fn();
+  return { previewModeling: preview, previewExtrusion: preview };
+});
 vi.mock("../viewer/ExtrudePreview", () => ({ ExtrudePreview: () => <div /> }));
 const jobs: Array<{
   document: CadDocument;
@@ -147,4 +153,45 @@ it("rejects fallback, failed and wrongly tagged modeling previews", () => {
   expect(() =>
     assertNativeModelingPreview(result, draft.document.id, draft.feature),
   ).toThrow("must not cross");
+});
+
+it("aborts an in-flight downstream edit preview on settings or same-ID project replacement", async () => {
+  const creation = useModelingDraft.getState().draft!;
+  const document = upsertFeature(creation.document, creation.feature);
+  useCadStore.setState({
+    history: { present: document, past: [], future: [] },
+    rebuild: {
+      status: "succeeded",
+      kernelReady: true,
+      result: response(document),
+    },
+  });
+  useCadStore
+    .getState()
+    .select({
+      kind: "feature",
+      id: creation.feature.id,
+      documentId: document.id,
+    });
+  beginModelingEditing();
+  render(<ModelingCreationPanel />);
+  await waitFor(() => expect(jobs).toHaveLength(1)); // upstream choices
+  await act(async () => jobs[0].resolve(response(jobs[0].document)));
+  await waitFor(() => expect(jobs).toHaveLength(2)); // original operation
+  await act(async () => jobs[1].resolve(response(jobs[1].document)));
+  await waitFor(() => expect(jobs).toHaveLength(3)); // original downstream model
+  fireEvent.change(screen.getByLabelText("Revolve angle"), {
+    target: { value: "90deg" },
+  });
+  expect(jobs[2].signal.aborted).toBe(true);
+  await act(async () => jobs[2].resolve(response(jobs[2].document)));
+  expect(screen.getByRole("button", { name: "Apply revolve" })).toBeDisabled();
+  await waitFor(() => expect(jobs).toHaveLength(4));
+  await act(async () => jobs[3].resolve(response(jobs[3].document)));
+  await waitFor(() => expect(jobs).toHaveLength(5));
+  act(() => useCadStore.getState().setDocument(document));
+  expect(jobs[4].signal.aborted).toBe(true);
+  await act(async () => jobs[4].resolve(response(jobs[4].document)));
+  expect(screen.getByRole("button", { name: "Apply revolve" })).toBeDisabled();
+  expect(useCadStore.getState().history.past).toEqual([]);
 });

@@ -103,7 +103,12 @@ test("keyboard palette traps/restores focus, runs available commands and isolate
 
   await page.keyboard.press("Control+k");
   await filter.fill("Fillet");
-  await expect(dialog.locator("button[data-command]")).toBeDisabled();
+  await expect(
+    dialog.locator('button[data-command="feature.fillet"]'),
+  ).toBeDisabled();
+  await expect(
+    dialog.locator('button[data-command="feature.edit"]'),
+  ).toBeDisabled();
   await filter.press("Enter");
   await expect(dialog).toBeVisible();
   await filter.fill("Export STL");

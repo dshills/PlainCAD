@@ -153,7 +153,7 @@ export function isCommandEnabledForSnapshot(
 }
 
 export const commands: CadCommand[] = [
-  { id: "feature.edit", label: "Edit Selected Feature", description: "Preview changes to the selected Extrude or Revolve and its downstream geometry.", enablementKey: "editFeature", run: () => { if (editableExtrude(useCadStore.getState())) beginExtrudeEditing(); else beginModelingEditing(); } },
+  { id: "feature.edit", label: "Edit Selected Feature", description: "Preview changes to the selected Extrude, Revolve, Fillet or Chamfer and its downstream geometry.", enablementKey: "editFeature", run: () => { if (editableExtrude(useCadStore.getState())) beginExtrudeEditing(); else beginModelingEditing(); } },
   {
     id: "file.renameProject", internal: true, label: "Rename Project", enablementKey: "editProject",
     run: ({ projectName }) => {

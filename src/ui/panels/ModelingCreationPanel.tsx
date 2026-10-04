@@ -163,6 +163,8 @@ function ModelingDialog({ draft }: { draft: ModelingDraft }) {
             ) : (
               <EdgeDraftControls
                 draft={draft}
+                baseDocument={base.document}
+                baseResult={base.ready ? base.result : undefined}
                 feature={feature}
                 onChange={setFeature}
               />

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type {
+  CadDocument,
   ChamferFeature,
   ExtrudeFeature,
   FilletFeature,
@@ -10,30 +11,33 @@ import {
   createExtrudeEdgeRef,
   type SupportedEdgeRole,
 } from "../../cad/features/topologyRefs";
-import { useCadStore } from "../../state/useCadStore";
+import type { RebuildResult } from "../../cad/worker/workerProtocol";
 import type { ModelingDraft } from "../commands/modelingDraftCommand";
 
 export function EdgeDraftControls({
   draft,
   feature,
   onChange,
+  baseDocument,
+  baseResult,
 }: {
   draft: ModelingDraft;
+  baseDocument: CadDocument;
+  baseResult?: RebuildResult;
   feature: FilletFeature | ChamferFeature;
   onChange: (feature: FilletFeature | ChamferFeature) => void;
 }) {
-  // Snapshot the successful native rebuild used to open this draft. Document,
-  // session and component edits invalidate the parent preview rather than
-  // refreshing choices against a different project state.
-  const [owners] = useState(() => {
-    const meshes = useCadStore.getState().rebuild.result?.meshes ?? [];
-    return draft.document.features.filter(
+  // Edit owners are measured immediately before this feature, so future owners
+  // and already-absorbed bodies are excluded. Creation uses its current snapshot.
+  const owners = useMemo(() => {
+    const meshes = baseResult?.meshes ?? [];
+    return baseDocument.features.filter(
       (owner): owner is ExtrudeFeature =>
         owner.type === "extrude" &&
         !owner.suppressed &&
         owner.operation === "newBody" &&
         (!owner.termination || owner.termination.type === "distance") &&
-        featureComponentId(draft.document, owner) === draft.componentId &&
+        featureComponentId(baseDocument, owner) === draft.componentId &&
         meshes.some(
           (mesh) =>
             mesh.bodyId === stableBodyIdForFeature(owner.id) &&
@@ -41,11 +45,16 @@ export function EdgeDraftControls({
             mesh.geometryAssertions?.valid,
         ),
     );
-  });
-  const ref = feature.targetEdgeRefs[0],
+  }, [baseDocument, baseResult, draft.componentId]);
+  const [referenceIndex, setReferenceIndex] = useState(0);
+  const selectedIndex = Math.min(
+    referenceIndex,
+    Math.max(0, feature.targetEdgeRefs.length - 1),
+  );
+  const ref = feature.targetEdgeRefs[selectedIndex],
     owner = owners.find((item) => item.id === ref?.featureId);
   const entities = Object.values(
-    draft.document.sketches[owner?.sketchId ?? ""]?.entities ?? {},
+    baseDocument.sketches[owner?.sketchId ?? ""]?.entities ?? {},
   ).filter(
     (entity) =>
       !entity.construction && (entity.type === "line" || entity.type === "arc"),
@@ -57,12 +66,34 @@ export function EdgeDraftControls({
   ) =>
     onChange({
       ...feature,
-      targetEdgeRefs: [createExtrudeEdgeRef(ownerId, role, sourceEntityId)],
+      targetEdgeRefs: feature.targetEdgeRefs.length
+        ? feature.targetEdgeRefs.map((existing, index) =>
+            index === selectedIndex
+              ? createExtrudeEdgeRef(ownerId, role, sourceEntityId)
+              : existing,
+          )
+        : [createExtrudeEdgeRef(ownerId, role, sourceEntityId)],
     });
   const expression =
     feature.type === "fillet" ? feature.radius : feature.distance;
   return (
     <>
+      {feature.targetEdgeRefs.length > 1 ? (
+        <label>
+          Edge reference
+          <select
+            aria-label="Edge reference"
+            value={selectedIndex}
+            onChange={(event) => setReferenceIndex(Number(event.target.value))}
+          >
+            {feature.targetEdgeRefs.map((edge, index) => (
+              <option key={index} value={index}>
+                Reference {index + 1} · {edge.role ?? "Lost role"}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : null}
       <label>
         {feature.type === "fillet" ? "Fillet radius" : "Chamfer distance"}
         <input
@@ -118,12 +149,14 @@ export function EdgeDraftControls({
           onChange={(event) => {
             if (!ref) return;
             const role = event.target.value as SupportedEdgeRole;
+            // Preserve a lost source until explicitly reselected; clearing it
+            // would silently change an individual edge into an entire perimeter.
             replace(
               ref.featureId,
               role,
               role === "profileEdge"
                 ? entities.find((entity) => entity.type === "line")?.id
-                : undefined,
+                : ref?.sourceEntityId,
             );
           }}
         >
@@ -152,6 +185,10 @@ export function EdgeDraftControls({
               );
           }}
         >
+          {ref?.sourceEntityId &&
+          !entities.some((entity) => entity.id === ref.sourceEntityId) ? (
+            <option value={ref.sourceEntityId}>Lost source — reselect</option>
+          ) : null}
           <option value="" disabled={ref?.role === "profileEdge"}>
             Entire perimeter
           </option>
