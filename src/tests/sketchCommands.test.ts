@@ -1,3 +1,4 @@
+import { useModelingDraft } from "../ui/commands/modelingDraftCommand";
 import { useExtrudeDraft } from "../ui/commands/extrudeCommand";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { upsertSketch, createEmptyDocument } from "../cad/document/CadDocument";
@@ -19,7 +20,10 @@ import {
 } from "../cad/sketch/SketchModel";
 
 describe("sketch commands", () => {
-  afterEach(() => useExtrudeDraft.setState({ draft: undefined }));
+  afterEach(() => {
+    useExtrudeDraft.setState({ draft: undefined });
+    useModelingDraft.setState({ draft: undefined });
+  });
   it("creates an XY sketch and adds helper geometry to the selected sketch", () => {
     const document = createEmptyDocument();
     useCadStore.setState({
@@ -116,7 +120,9 @@ describe("sketch commands", () => {
 
     expect(useCadStore.getState().history.present.features).toHaveLength(0);
     expect(useExtrudeDraft.getState().draft?.feature).toMatchObject({
-      type: "extrude", operation: "newBody", direction: "positive",
+      type: "extrude",
+      operation: "newBody",
+      direction: "positive",
     });
     useExtrudeDraft.setState({ draft: undefined });
   });
@@ -151,7 +157,8 @@ describe("sketch commands", () => {
       true,
     );
     runCommand("feature.revolve");
-    expect(useCadStore.getState().history.present.features[0]).toMatchObject({
+    expect(useCadStore.getState().history.present.features).toHaveLength(0);
+    expect(useModelingDraft.getState().draft?.feature).toMatchObject({
       type: "revolve",
       axis: { type: "sketchLine", sketchId: sketch.id, lineId: line.lineId },
     });

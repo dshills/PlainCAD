@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { applyModeling } from "./modelingWorkflow";
 import { readFile } from "node:fs/promises";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
 import type { CadDocument } from "../src/cad/document/schema";
@@ -293,6 +294,8 @@ test("native revolve axes and angle edits, plus real boolean cut and join", asyn
   await page
     .getByRole("button", { name: "Revolve selected sketch", exact: true })
     .click();
+  await applyModeling(page, "Revolve");
+  await ready(page);
   let state = await snapshot(page),
     id = state.document.features[0].id;
   await commit(page, "Angle", "90deg");

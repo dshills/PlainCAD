@@ -648,7 +648,7 @@ exports. Production reports UI edit/export timings; detailed phase and resource
 counters remain development-only. See [measurement scope and commands](specs/working-cad/PERFORMANCE.md).
 
 Extrusion creation previews run in an isolated, cancellable native worker with a
-30-second time limit. Changing settings discards the previous preview immediately;
+30-second time limit. Revolve creation uses the same isolated preview with explicit profile, coplanar origin/sketch-line axis, angle, New Body/Cut/Join operation and target bodies. Apply adds one timeline feature; Cancel leaves history unchanged. Changing settings discards the previous preview immediately;
 project edits, replacement, or component changes invalidate Apply. Preview geometry
 and its camera are temporary and excluded from project saves, undo history,
 autosave, and STL export. Apply records one feature edit and schedules the normal

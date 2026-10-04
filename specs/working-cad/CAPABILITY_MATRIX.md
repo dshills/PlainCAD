@@ -76,8 +76,8 @@ edits, parameter-driven diameter, empty-center failure and save/open/STL recover
 | Through all | Projects all selected target bounds along the sketch normal for positive/negative directions or a symmetric total span; wrong-side targets diagnosed; subject to cut/join limits | Creation dialog with explicit targets, direction and native preview; Inspector |
 | Extrude to face | Positive termination on an upstream unmodified feature-owned planar cap/straight side, including sloped faces; native half-space trimming; end-cap area/intersection checks enforce finite face and holes | Creation dialog with explicit face selection and native preview; Inspector with repair |
 | Negative/symmetric extrude | Distance and through-all supported with a shifted start plane and unchanged coordinate basis; distance owners publish native-validated retained cap/straight-side sketch planes and authored edge treatments; to-face tools remain positive-only | Inspector; unsupported to-face combinations disabled and diagnosed |
-| Revolve | Native analytic closed line/arc/circle profiles with holes; coplanar world X/Y/Z or same-sketch line axes; angles greater than 0 through 360 degrees; cross-axis/zero-volume/invalid output rejected | Shared creation command and inspector; narrow full-Y/XY rectangular fallback without kernel |
-| Revolve cut/join | Native cut on up to 64 explicit saved targets with atomic publication; join merges an ordered explicit scope into one connected solid; boolean validity/volume checks | Inspector with cut/join scope checkboxes and lost-reference removal |
+| Revolve | Native analytic closed line/arc/circle profiles with holes; coplanar world X/Y/Z or same-sketch line axes; angles greater than 0 through 360 degrees; cross-axis/zero-volume/invalid output rejected | Native preview-and-Apply creation dialog with explicit profile/axis/angle; inspector; narrow full-Y/XY rectangular fallback for loaded documents without kernel |
+| Revolve cut/join | Native cut on up to 64 explicit saved targets with atomic publication; join merges an ordered explicit scope into one connected solid; boolean validity/volume checks | Creation dialog with explicit native target previews; Inspector with cut/join scope checkboxes and lost-reference removal |
 | Capture intersected targets | Native common-volume checks on current upstream solids and extrude/revolve/hole tools; saved IDs only; preserves an intersected join primary; ignores downstream bodies; empty/failed/stale probes leave the scope intact; face-only joins remain explicit | Shared command and Inspector button; dedicated worker with cancellation/time limit |
 | Hole | Up to 64 explicit saved target IDs and 64 sketch point centers; native aggregate cylindrical tools; every center must cut some target, every target must lose exact volume; atomic output publication; positive blind-depth/through-all; empty/duplicate/lost centers/targets and no-op cuts diagnosed | Shared creation command with modal target scope and center choices; full size/termination/center/source/scope repair inspector |
 | Fillet/chamfer | Real native geometry on feature-owned cap perimeters, individual line/arc cap edges, or a source line’s two extrusion-direction corners; BRep/solid-count/volume-or-surface-change checks; retained authored edges also work after native booleans; grouped perimeters require every original edge and exclude new Cut/Join edges; lost/trimmed/ambiguous edges fail | Shared creation commands and size/role/source/owner repair inspector |
@@ -447,3 +447,14 @@ Cut caps, Join sides, post-boolean chamfer/fillet volumes, owner edits, save/ope
 STL, and split-face repair. Arbitrary newly created boolean faces/edges and stable
 topology naming remain unavailable; to-face termination retains its unmodified
 owner restriction.
+
+### Revolve creation preview
+
+Revolve creation selects a closed profile, a coplanar origin or same-sketch line
+axis, angle, operation and explicit active-component target bodies. A cancellable
+native worker previews the staged project and validates BRep solid assertions and
+operation tags before Apply adds one feature. Axis crossing, invalid angles,
+no-op booleans, pending or stale settings, project edits/replacement and component
+changes block Apply. Cancel leaves document history and main rebuild results
+unchanged. Chromium checks analytic torus quarter-sweep volume/orientation,
+construction axes, Cut/Join target volumes, cancellation and save/open.

@@ -22,7 +22,13 @@ function clearMeshes(group: THREE.Group) {
   group.clear();
 }
 /** Independent camera and resources: never registers the project viewer controller. */
-export function ExtrudePreview({ meshes }: { meshes: RenderMesh[] }) {
+export function ExtrudePreview({
+  meshes,
+  label = "Native extrusion geometry preview",
+}: {
+  meshes: RenderMesh[];
+  label?: string;
+}) {
   const host = useRef<HTMLDivElement>(null);
   const runtime = useRef<PreviewRuntime>(undefined);
   const [error, setError] = useState("");
@@ -128,7 +134,7 @@ export function ExtrudePreview({ meshes }: { meshes: RenderMesh[] }) {
         ref={host}
         className="extrude-preview"
         role="img"
-        aria-label="Native extrusion geometry preview"
+        aria-label={label}
       />
       {error ? <p role="alert">{error}</p> : null}
     </div>

@@ -1,3 +1,4 @@
+import { beginModelingCreation } from "./modelingDraftCommand";
 import { useViewerState } from "../../state/viewerState";
 import { beginExtrudeCreation } from "./extrudeCommand";
 import { activeComponentId, beginProjectWorkflow, finishSketchCanvas } from "./projectWorkflowCommand";
@@ -435,12 +436,7 @@ export const commands: CadCommand[] = [
         axis,
         createdAt: new Date().toISOString(),
       };
-      state.updateDocument((d) => upsertFeature(d, feature));
-      state.select({
-        kind: "feature",
-        id: feature.id,
-        documentId: state.history.present.id,
-      });
+      beginModelingCreation(feature);
     },
   },
   {

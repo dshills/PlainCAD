@@ -1,3 +1,4 @@
+import { ModelingCreationPanel } from "../ui/panels/ModelingCreationPanel";
 import { useSketchCanvas } from "../ui/commands/sketchCanvasCommand";
 import { ExtrudeCreationPanel } from "../ui/panels/ExtrudeCreationPanel";
 import { ProjectWorkflowPanel } from "../ui/panels/ProjectWorkflowPanel";
@@ -188,6 +189,7 @@ export function App() {
       <FabricationPanel />
       <HoleCreationPanel />
       <ExtrudeCreationPanel />
+      <ModelingCreationPanel />
       <main className="workspace">
         <aside className="left-panel">
           <SketchPanel />
