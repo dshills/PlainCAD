@@ -1,4 +1,8 @@
 import {
+  canvasDeformationPlan,
+  deformedCanvasSketch,
+} from "../../cad/sketch/canvasDeformation";
+import {
   useCallback,
   useMemo,
   useRef,
@@ -14,18 +18,39 @@ import type { CanvasPoint } from "../../cad/sketch/canvasGeometry";
 import {
   canvasContext,
   commitCanvasPointMove,
+  commitCanvasDeformation,
   commitCanvasTranslation,
   type CanvasSession,
 } from "../commands/sketchCanvasCommand";
 
 type Context = ReturnType<typeof canvasContext>;
+// Preserve unexpected stack traces for debugging without breaking the canvas UI.
+function prepareDeformation(
+  context: Context,
+  pointId: string,
+): ReturnType<typeof canvasDeformationPlan> {
+  try {
+    return canvasDeformationPlan(context.sketch, context.solved, pointId);
+  } catch (error) {
+    console.error("Unable to prepare sketch deformation", error);
+    return {
+      xIds: [],
+      yIds: [],
+      pointIds: [],
+      reason:
+        "Deformation could not be prepared. Reopen the canvas or repair sketch diagnostics.",
+    };
+  }
+}
 export function useCanvasPointDrag(
   active: CanvasSession,
   context: Context | undefined,
   span: number,
   showCoordinates: (point: CanvasPoint) => void,
-  translate = false,
+  mode: "move" | "translate" | "deform" = "move",
 ) {
+  const translate = mode === "translate",
+    deform = mode === "deform";
   const [pointId, setPointId] = useState(""),
     [target, setTarget] = useState<CanvasPoint>(),
     [error, setError] = useState<string>();
@@ -38,6 +63,7 @@ export function useCanvasPointDrag(
         startY: number;
         element: SVGSVGElement;
         translate: boolean;
+        deform: boolean;
       }
     | undefined
   >(undefined);
@@ -65,10 +91,12 @@ export function useCanvasPointDrag(
       return;
     }
     select(point.pointId);
-    const reason = translate
-      ? canvasTranslationGroup(context.sketch, context.solved, point.pointId)
-          .reason
-      : canvasPointMoveReason(context.sketch, point.pointId);
+    const reason = deform
+      ? prepareDeformation(context, point.pointId).reason
+      : translate
+        ? canvasTranslationGroup(context.sketch, context.solved, point.pointId)
+            .reason
+        : canvasPointMoveReason(context.sketch, point.pointId);
     if (reason) {
       setError(reason);
       return;
@@ -83,6 +111,7 @@ export function useCanvasPointDrag(
       startY: event.clientY,
       element: event.currentTarget,
       translate,
+      deform,
     };
     setTarget(point);
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -114,7 +143,11 @@ export function useCanvasPointDrag(
         throw new Error(
           "Point move was cancelled because the sketch is unavailable.",
         );
-      (captured.translate ? commitCanvasTranslation : commitCanvasPointMove)(
+      (captured.deform
+        ? commitCanvasDeformation
+        : captured.translate
+          ? commitCanvasTranslation
+          : commitCanvasPointMove)(
         active,
         captured.document,
         captured.pointId,
@@ -135,12 +168,11 @@ export function useCanvasPointDrag(
   const keyboardMove = (point: CanvasPoint) => {
     if (!context) return;
     try {
-      (translate ? commitCanvasTranslation : commitCanvasPointMove)(
-        active,
-        context.document,
-        pointId,
-        point,
-      );
+      (deform
+        ? commitCanvasDeformation
+        : translate
+          ? commitCanvasTranslation
+          : commitCanvasPointMove)(active, context.document, pointId, point);
       setError(undefined);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -153,12 +185,42 @@ export function useCanvasPointDrag(
         : { pointIds: [pointId] },
     [translate, context?.sketch, context?.solved, pointId],
   );
-  const movingPointIds = useMemo(() => new Set(group.pointIds), [group]);
+  const deformationPlan = useMemo(
+    () =>
+      deform && context && pointId
+        ? prepareDeformation(context, pointId)
+        : undefined,
+    [deform, context?.sketch, context?.solved, pointId],
+  );
+  const sketch = context?.sketch,
+    solved = context?.solved;
+  const deformationPreview = useMemo(() => {
+    if (!deform || !sketch || !solved || !target || !pointId) return undefined;
+    try {
+      return {
+        result: deformedCanvasSketch(
+          sketch,
+          solved,
+          pointId,
+          target,
+          deformationPlan,
+        ),
+      };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : String(error) };
+    }
+  }, [deform, sketch, solved, target, pointId, deformationPlan]);
+  const movingPointIds = useMemo(
+    () => new Set(deform ? (deformationPlan?.pointIds ?? []) : group.pointIds),
+    [deform, deformationPlan, group],
+  );
   const reason =
     context && pointId
-      ? translate
-        ? group.reason
-        : canvasPointMoveReason(context.sketch, pointId)
+      ? deform
+        ? deformationPlan?.reason
+        : translate
+          ? group.reason
+          : canvasPointMoveReason(context.sketch, pointId)
       : undefined;
   const controls = (
     <>
@@ -180,6 +242,12 @@ export function useCanvasPointDrag(
           ))}
         </select>
       </label>
+      {deform && pointId && !reason ? (
+        <span>
+          Orthogonal deformation preserves constraints and dimensions.
+          Fixed/parameter-bound axes may block a requested coordinate.
+        </span>
+      ) : null}
       {translate && pointId && !reason ? (
         <span>
           Connected group: {group.pointIds.length} points. Dimensions and
@@ -191,6 +259,7 @@ export function useCanvasPointDrag(
   const shifted = (p: CanvasPoint & { id: string }) => {
     const anchor = context?.solved.points[pointId];
     if (!target || !anchor || !movingPointIds.has(p.id)) return p;
+    if (deform) return deformationPreview?.result?.targets.get(p.id) ?? p;
     return translate
       ? { x: p.x + target.x - anchor.x, y: p.y + target.y - anchor.y }
       : target;
@@ -200,19 +269,26 @@ export function useCanvasPointDrag(
       <g
         className="canvas-preview"
         aria-label={
-          translate ? "Group translation preview" : "Point move preview"
+          deform
+            ? "Orthogonal deformation preview"
+            : translate
+              ? "Group translation preview"
+              : "Point move preview"
         }
       >
-        {context.solved.lines
-          .filter(
-            (l) =>
-              movingPointIds.has(l.start.id) || movingPointIds.has(l.end.id),
-          )
-          .map((l) => {
-            const a = shifted(l.start),
-              b = shifted(l.end);
-            return <line key={l.id} x1={a.x} y1={a.y} x2={b.x} y2={b.y} />;
-          })}
+        {!deform || deformationPreview?.result
+          ? context.solved.lines
+              .filter(
+                (l) =>
+                  movingPointIds.has(l.start.id) ||
+                  movingPointIds.has(l.end.id),
+              )
+              .map((l) => {
+                const a = shifted(l.start),
+                  b = shifted(l.end);
+                return <line key={l.id} x1={a.x} y1={a.y} x2={b.x} y2={b.y} />;
+              })
+          : null}
         {context.solved.circles
           .filter((c) => movingPointIds.has(c.center.id))
           .map((c) => {
@@ -233,7 +309,7 @@ export function useCanvasPointDrag(
                 );
               })
           : null}
-        {group.pointIds
+        {[...movingPointIds]
           .map((id) => context.solved.points[id])
           .filter(Boolean)
           .map((p) => {
@@ -250,7 +326,7 @@ export function useCanvasPointDrag(
     pointId,
     movingPointIds,
     reason,
-    error,
+    error: error ?? deformationPreview?.error,
     inProgress: !!target,
     begin,
     move,

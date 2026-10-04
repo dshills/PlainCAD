@@ -66,8 +66,10 @@ function arcPath(
     : (b - a + Math.PI * 2) % (Math.PI * 2);
   return `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${sweep > Math.PI ? 1 : 0} ${clockwise ? 0 : 1} ${end.x} ${end.y}`;
 }
-type CanvasMode = CanvasTool | "move" | "translate";
+type CanvasMode = CanvasTool | "move" | "translate" | "deform";
 const instructions: Record<CanvasMode, string> = {
+  deform:
+    "Drag a point to deform a point-and-line sketch through horizontal, vertical and coincident constraints. Fixed/parameter coordinates and supported orthogonal dimensions stay intact. Release validates the solve and profile topology; Escape cancels.",
   translate:
     "Drag a point to translate its connected group. Dimensions and constraints stay intact. Fixed or parameter-bound coordinates block translation. Escape cancels.",
   move: "Drag a free numeric point; release to save one edit. Escape cancels. Parameter-bound, constrained and arc points use geometry/dimension controls.",
@@ -130,6 +132,8 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     [error, setError] = useState<string>();
   const [keyboardX, setKeyboardX] = useState("0"),
     [keyboardY, setKeyboardY] = useState("0");
+  const isDragTool =
+    tool === "move" || tool === "translate" || tool === "deform";
   const drag = useCanvasPointDrag(
     active,
     context,
@@ -138,7 +142,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
       setKeyboardX(String(p.x));
       setKeyboardY(String(p.y));
     },
-    tool === "translate",
+    tool === "translate" ? "translate" : tool === "deform" ? "deform" : "move",
   );
   useEffect(() => {
     if (draftDocument.current !== document) {
@@ -175,7 +179,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     };
     let result = snapCanvasPoint(
       point,
-      (tool === "move" || tool === "translate") && drag.inProgress
+      isDragTool && drag.inProgress
         ? {
             ...context.solved,
             points: Object.fromEntries(
@@ -195,7 +199,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
   const draw = (event: PointerEvent<SVGSVGElement>) => {
     if (event.button !== 0) return;
     const point = pointAt(event);
-    if (tool === "move" || tool === "translate") {
+    if (isDragTool) {
       if (!disabled) drag.begin(event, point);
       return;
     }
@@ -206,7 +210,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
   };
   const place = (point: CanvasPoint) => {
     if (disabled) return;
-    if (tool === "move" || tool === "translate") {
+    if (isDragTool) {
       drag.keyboardMove(point);
       return;
     }
@@ -413,7 +417,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
         </button>
       </div>
       <div className="canvas-toolbar">
-        {tool === "move" || tool === "translate" ? drag.controls : null}
+        {isDragTool ? drag.controls : null}
         <label>
           Local X (mm)
           <input
@@ -435,8 +439,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
         <button
           disabled={
             disabled ||
-            ((tool === "move" || tool === "translate") &&
-              (!drag.pointId || !!drag.reason)) ||
+            (isDragTool && (!drag.pointId || !!drag.reason)) ||
             keyboardX.trim() === "" ||
             keyboardY.trim() === "" ||
             !Number.isFinite(Number(keyboardX)) ||
@@ -457,9 +460,11 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
         >
           {tool === "translate"
             ? "Translate group to coordinate"
-            : tool === "move"
-              ? "Move point to coordinate"
-              : "Place coordinate"}
+            : tool === "deform"
+              ? "Deform sketch to coordinate"
+              : tool === "move"
+                ? "Move point to coordinate"
+                : "Place coordinate"}
         </button>
       </div>
       {dimensions.controls}
@@ -471,13 +476,12 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
       </p>
       {analysis.error ||
       error ||
-      ((tool === "move" || tool === "translate") &&
-        (drag.error || drag.reason)) ||
+      (isDragTool && (drag.error || drag.reason)) ||
       (snap && !validGrid) ? (
         <p role="alert">
           {analysis.error ??
             error ??
-            (tool === "move" || tool === "translate"
+            (tool === "move" || tool === "translate" || tool === "deform"
               ? (drag.error ?? drag.reason)
               : undefined) ??
             "Grid step must be between 0.000001 and 1,000,000 mm."}
@@ -496,11 +500,10 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
         onPointerMove={(event) => {
           const point = pointAt(event);
           setCursor(point);
-          if (tool === "move" || tool === "translate") drag.move(event, point);
+          if (isDragTool) drag.move(event, point);
         }}
         onPointerUp={(event) => {
-          if (tool === "move" || tool === "translate")
-            drag.finish(event, pointAt(event));
+          if (isDragTool) drag.finish(event, pointAt(event));
         }}
         onPointerCancel={() => drag.cancel()}
         onLostPointerCapture={drag.lostCapture}
@@ -619,7 +622,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
           ? `X ${cursor.x.toFixed(3)} mm, Y ${cursor.y.toFixed(3)} mm${cursor.pointId ? " — existing point" : ""}. `
           : ""}
         {drag.inProgress
-          ? `${tool === "translate" ? "Group translation" : "Point move"} preview; release to save, Escape to cancel. `
+          ? `${tool === "translate" ? "Group translation" : tool === "deform" ? "Sketch deformation" : "Point move"} preview; release to save, Escape to cancel. `
           : ""}
         {draft.length
           ? `${draft.length} draft point${draft.length === 1 ? "" : "s"}; nothing incomplete is saved.`

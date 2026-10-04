@@ -182,6 +182,15 @@ rebuild until their expressions are repaired; reused names cannot retarget them.
    block translation. Parameter-driven lengths and radii remain supported. Solver
    deformation, new point collisions and changes to valid profile topology reject
    the move with a diagnostic. General constraint-driven deformation is unavailable.
+   The **deform** tool changes linked X/Y coordinates in point-and-line sketches
+   with horizontal, vertical, coincident and fixed constraints. Orthogonal point
+   distances and lengths on horizontal/vertical-constrained lines retain their
+   dimensions. Fixed and parameter-bound axes block incompatible moves. Drag a
+   point or use Deform sketch to coordinate; release validates the solve and
+   profile topology before one undoable edit. Escape cancels. This is bounded to
+   80 points and rejects curves, nonlinear constraints, general distance/angle
+   dimensions, new coincidences, reversed edges and topology changes. Use existing
+   geometry/dimension controls for those cases.
    C markers show the current constraint status and locate referenced geometry.
    Select a marker or constraint list entry to inspect, repair ordered references,
    or remove intent through undoable edits. Lost references stay in the list;

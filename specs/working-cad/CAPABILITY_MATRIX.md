@@ -170,8 +170,20 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
   rejects solver deformation, new coincidences and changes to valid profile topology.
   Fixed geometry and parameter-bound coordinates block translation; dimension/radius
   expressions may remain parameter-driven. Groups are bounded to 80 points.
-  General constraint-driven deformation remains unavailable. Native XY/XZ/YZ
-  checks verify BRep volume/bounds, cancellation, parameter edits, save/open and STL.
+  The Deform tool supports point-and-line sketches with horizontal, vertical,
+  coincident and fixed constraints, horizontal/vertical point-distance dimensions,
+  and lengths on explicitly horizontal/vertical-constrained lines. Coordinate
+  changes propagate through supported relations; fixed and parameter-bound axes
+  block incompatible targets without rewriting expressions. The complete sketch
+  is bounded to 80 points. Solver movement outside the planned deformation,
+  new point coincidences, collapsed/reversed edges and valid-profile topology
+  changes fail before a history edit. IDs, constraints, dimensions and bindings
+  survive deformation, undo/redo and save/open. Native XY/XZ/YZ checks verify
+  corner deformations, parameter-driven width locks/edits, cancellation/stale
+  gestures, exact BRep volume/bounds and STL winding. Curves (including construction),
+  nonlinear constraints, general distance/angle dimensions and unconstrained-line
+  lengths remain unavailable for deformation; existing geometry/dimension controls
+  retain their support. General nonlinear constraint-driven dragging remains open.
   Straight-line T-junctions and crossing dividers are fragmented before bounded
   planar face extraction. Runtime segments retain source lineage; stable split
   anchors preserve profile IDs through ordinary size, ordering and winding edits.

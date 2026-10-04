@@ -1,3 +1,7 @@
+import {
+  deformedCanvasSketch,
+  validateCanvasDeformation,
+} from "../../cad/sketch/canvasDeformation";
 import { movedCanvasPoint } from "../../cad/sketch/canvasPointMove";
 import {
   translatedCanvasGroup,
@@ -227,6 +231,39 @@ export function commitCanvasPointMove(
   if (useCadStore.getState().history.present === expected)
     throw new Error(
       "Point move could not be saved. Check the project diagnostics.",
+    );
+}
+
+export function commitCanvasDeformation(
+  active: CanvasSession,
+  expected: CadStore["history"]["present"],
+  pointId: string,
+  target: CanvasPoint,
+) {
+  const state = useCadStore.getState();
+  if (state.history.present !== expected)
+    throw new Error(
+      "Project changed during deformation. Cancel and try again.",
+    );
+  const context = canvasContext(active, state);
+  const result = deformedCanvasSketch(
+    context.sketch,
+    context.solved,
+    pointId,
+    target,
+  );
+  if (result.unchanged) return;
+  const solved = solveSketch(
+    result.sketch,
+    evaluateParameters(context.document.parameters).values,
+  );
+  validateCanvasDeformation(context.solved, solved, result.targets);
+  const next = upsertSketch(context.document, result.sketch);
+  assertProjectJsonShape(next);
+  state.updateDocument((document) => (document === expected ? next : document));
+  if (useCadStore.getState().history.present === expected)
+    throw new Error(
+      "Deformation could not be saved. Check project diagnostics.",
     );
 }
 
