@@ -127,7 +127,7 @@ behavior while applying the console styling to panels, dialogs and drawing views
 1. Start the dev server and open the local URL.
 2. Choose **New** for a blank local project, then **New Component** and name the part.
 3. Choose **Create Sketch**, click a colored XY/XZ/YZ plane or a supported native planar face in the viewer, and draw in sketch mode in the main workspace. Drawing controls appear beside the canvas; **Finish Sketch** returns to the 3D model.
-4. Choose **Finish Sketch**, then **Extrude**. Select a profile, distance, direction, and New Body/Cut/Join operation; inspect the native geometry preview, then choose **Apply extrusion**. Cut and Join require explicit target bodies in the active component. Cancel leaves the project unchanged.
+4. Choose **Finish Sketch**, then **Extrude**. Select a profile, distance, direction, and New Body/Cut/Join operation; inspect the native geometry preview, then choose **Apply extrusion**. Cut and Join require explicit target bodies in the active component and offer **Through All** termination in positive, negative or symmetric directions. Cancel leaves the project unchanged.
 5. The Browser groups each component’s origin, sketches and bodies. Activate a
    component before adding another sketch; selecting a sketch, body or timeline
    feature activates its owner. Double-click a sketch to edit its canvas.

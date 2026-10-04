@@ -34,13 +34,18 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
   const [context] = useState(() =>
     extrudeContext(useCadStore.getState(), draft.sketchId),
   );
+  // The native modal focuses the first control on open. Conditional distance
+  // inputs must not steal focus when keyboard users switch termination.
   const [profileId, setProfile] = useState(draft.feature.profileId),
     [distance, setDistance] = useState(draft.feature.distance.expression),
     [direction, setDirection] =
       useState<ExtrudeFeature["direction"]>("positive"),
     [operation, setOperation] =
       useState<ExtrudeFeature["operation"]>("newBody"),
-    [targets, setTargets] = useState<string[]>([]);
+    [targets, setTargets] = useState<string[]>([]),
+    [termination, setTermination] = useState<"distance" | "throughAll">(
+      "distance",
+    );
   const staged = useMemo(
     () =>
       upsertFeature(draft.document, {
@@ -49,9 +54,16 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
         distance: { ...draft.feature.distance, expression: distance },
         direction,
         operation,
+        termination:
+          termination === "throughAll"
+            ? { type: "throughAll" }
+            : {
+                type: "distance",
+                distance: { ...draft.feature.distance, expression: distance },
+              },
         ...(operation === "newBody" ? {} : { targetBodyIds: targets }),
       }),
-    [draft, profileId, distance, direction, operation, targets],
+    [draft, profileId, distance, direction, operation, targets, termination],
   );
   const [preview, setPreview] = useState<{
     staged: CadDocument;
@@ -139,13 +151,36 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
               </select>
             </label>
             <label>
-              Extrude distance
-              <input
-                autoFocus
-                value={distance}
-                onChange={(event) => setDistance(event.target.value)}
-              />
+              Extrude termination
+              <select
+                aria-label="Extrude termination"
+                value={termination}
+                onChange={(event) =>
+                  setTermination(
+                    event.target.value as "distance" | "throughAll",
+                  )
+                }
+              >
+                <option value="distance">Distance</option>
+                <option value="throughAll" disabled={operation === "newBody"}>
+                  Through All (Cut or Join)
+                </option>
+              </select>
             </label>
+            {termination === "distance" ? (
+              <label>
+                Extrude distance
+                <input
+                  value={distance}
+                  onChange={(event) => setDistance(event.target.value)}
+                />
+              </label>
+            ) : (
+              <p className="muted">
+                Through All spans the selected target bounds in the chosen
+                direction.
+              </p>
+            )}
             <label>
               Extrude direction
               <select
@@ -167,11 +202,12 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
               <select
                 aria-label="Extrude operation"
                 value={operation}
-                onChange={(event) =>
-                  setOperation(
-                    event.target.value as ExtrudeFeature["operation"],
-                  )
-                }
+                onChange={(event) => {
+                  const next = event.target
+                    .value as ExtrudeFeature["operation"];
+                  setOperation(next);
+                  if (next === "newBody") setTermination("distance");
+                }}
               >
                 <option value="newBody">New Body</option>
                 <option value="cut" disabled={!context?.bodies.length}>
