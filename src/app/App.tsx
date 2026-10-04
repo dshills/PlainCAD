@@ -1,3 +1,4 @@
+import { ProjectWorkflowPanel } from "../ui/panels/ProjectWorkflowPanel";
 import { SketchCanvasPanel } from "../ui/panels/SketchCanvasPanel";
 import { ThemeSelector } from "../ui/themes/ThemeSelector";
 import { useCommandEnablement } from "../ui/commands/useCommandEnablement";
@@ -36,7 +37,7 @@ const toolbarGroups: ToolbarGroup[] = [
     label: "File",
     buttons: [
       { command: "file.openProject", label: "Open", icon: "O", title: "Open a .pcaddoc or JSON project file", ariaLabel: "Open project" },
-      { command: "file.newProject", label: "New", icon: "N", title: "Create a new mounting plate project", ariaLabel: "New project" },
+      { command: "file.newProject", label: "New", icon: "N", title: "Create a blank local project", ariaLabel: "New project" },
       { command: "file.saveProject", label: "Save", icon: "S", title: "Download this project as a .pcaddoc file", ariaLabel: "Save project" },
       { command: "file.exportStl", label: "STL", icon: "STL", title: "Export the current rebuilt model as STL", ariaLabel: "Export STL" },
     ],
@@ -44,6 +45,8 @@ const toolbarGroups: ToolbarGroup[] = [
   {
     label: "Sketch",
     buttons: [
+      { command: "component.create", label: "Component", icon: "+", title: "Create and activate a component", ariaLabel: "New component" },
+      { command: "sketch.create", label: "Create Sketch", icon: "+Sketch", title: "Choose a plane and draw in the active component", ariaLabel: "Create sketch" },
       { command: "sketch.editCanvas", label: "Canvas", icon: "Draw", title: "Draw in the selected sketch plane", ariaLabel: "Edit sketch canvas" },
       { command: "sketch.createXY", label: "XY", icon: "XY", title: "Create an XY sketch", ariaLabel: "Create XY sketch" },
       { command: "sketch.createXZ", label: "XZ", icon: "XZ", title: "Create an XZ sketch", ariaLabel: "Create XZ sketch" },
@@ -177,6 +180,7 @@ export function App() {
       <RecoveryPanel />
       <FabricationPanel />
       <HoleCreationPanel />
+      <ProjectWorkflowPanel />
       <SketchCanvasPanel />
       <main className="workspace">
         <aside className="left-panel">

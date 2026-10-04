@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { selectionComponentId } from "../cad/document/components";
 import { normalizeQuantity } from "../cad/parameters/units";
 import { CadDocument, SelectionState } from "../cad/document/schema";
 import { createEmptyDocument, removeParameter, upsertParameter } from "../cad/document/CadDocument";
@@ -25,6 +26,8 @@ interface RebuildState {
 
 export interface CadStore {
   documentSession: number;
+  activeComponentId: string;
+  activateComponent(id: string): void;
   history: HistoryState;
   selection: SelectionState;
   rebuild: RebuildState;
@@ -130,6 +133,10 @@ function failPendingWorkerRequests(message: string) {
 
 export const useCadStore = create<CadStore>((set, get) => ({
   documentSession: 0,
+  activeComponentId: initialDocument.rootComponentId,
+  activateComponent: (id) => {
+    if (Object.hasOwn(get().history.present.components, id)) set({ activeComponentId: id, selection: { selectedIds: [] } });
+  },
   history: { past: [], present: initialDocument, future: [] },
   selection: { selectedIds: [] },
   rebuild: { status: initialRebuild.success ? "succeeded" : "failed", result: initialRebuild, kernelReady: false },
@@ -145,7 +152,7 @@ export const useCadStore = create<CadStore>((set, get) => ({
       set({ fileError: error instanceof Error ? error.message : String(error) });
       return;
     }
-    set({ history: { past: [], present: bound, future: [] }, rebuild: { ...get().rebuild, result: undefined }, documentSession: get().documentSession + 1, selection: { selectedIds: [] }, fileError: undefined });
+    set({ activeComponentId: bound.rootComponentId, history: { past: [], present: bound, future: [] }, rebuild: { ...get().rebuild, result: undefined }, documentSession: get().documentSession + 1, selection: { selectedIds: [] }, fileError: undefined });
     get().rebuildNow();
   },
   updateDocument: (mutator) => {
@@ -159,7 +166,7 @@ export const useCadStore = create<CadStore>((set, get) => ({
       set({ fileError: error instanceof Error ? error.message : String(error) });
       return;
     }
-    set({ history: { past: [...history.past, history.present].slice(-50), present: next, future: [] } });
+    set({ activeComponentId: Object.hasOwn(next.components, get().activeComponentId) ? get().activeComponentId : next.rootComponentId, history: { past: [...history.past, history.present].slice(-50), present: next, future: [] } });
     get().rebuildNow();
   },
   addParameter: () => {
@@ -192,6 +199,7 @@ export const useCadStore = create<CadStore>((set, get) => ({
     const previous = history.past.at(-1);
     if (!previous) return;
     set({
+      activeComponentId: Object.hasOwn(previous.components, get().activeComponentId) ? get().activeComponentId : previous.rootComponentId,
       history: {
         past: history.past.slice(0, -1),
         present: previous,
@@ -205,6 +213,7 @@ export const useCadStore = create<CadStore>((set, get) => ({
     const next = history.future[0];
     if (!next) return;
     set({
+      activeComponentId: Object.hasOwn(next.components, get().activeComponentId) ? get().activeComponentId : next.rootComponentId,
       history: {
         past: [...history.past, history.present].slice(-50),
         present: next,
@@ -213,7 +222,10 @@ export const useCadStore = create<CadStore>((set, get) => ({
     });
     get().rebuildNow();
   },
-  select: (selection) => set({ selection: { selectedIds: selection ? [selection] : [] } }),
+  select: (selection) => set({
+    activeComponentId: selectionComponentId(get().history.present, selection) ?? get().activeComponentId,
+    selection: { selectedIds: selection ? [selection] : [] },
+  }),
   initializeKernel: () => {
     if (kernelInitialized || kernelInitializing) return;
     const requestId = nextRequestId();

@@ -939,3 +939,19 @@ button:disabled:not(.ribbon-button) { opacity: 0.6; }
 :root[data-theme="saturn"] .rebuild-pill { align-self: center; padding: 0.45rem 0.6rem; border: 1px solid var(--border); text-transform: uppercase; letter-spacing: 0.04em; }
 :root[data-theme="saturn"] .rebuild-pill.succeeded { box-shadow: inset 0 0 10px #50e6a01a; }
 :root[data-theme="saturn"] .brand strong { text-transform: uppercase; letter-spacing: 0.08em; }
+
+.workflow-dialog { width: min(560px, 90vw); padding: 24px; color: var(--text); background: var(--dialog-bg); border: 1px solid var(--border); }
+.workflow-dialog form, .workflow-dialog label { display: grid; gap: 10px; }
+.plane-choices { display: flex; gap: 12px; margin: 20px 0; }
+.plane-choices button { flex: 1; display: grid; gap: 12px; padding: 16px 8px; }
+.plane-choices strong { font-size: 24px; }
+.plane-choices span { font-size: 12px; }
+.workflow-actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+.workflow-hint { line-height: 1.6; font-size: 12px; }
+.component-node { margin: 8px 0; padding: 10px; border: 1px solid var(--border); }
+.component-node.active { border-color: var(--accent); }
+.component-node summary { cursor: pointer; margin-bottom: 8px; }
+.component-name { display: grid; gap: 6px; margin: 10px 0; }
+
+.component-heading { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
+.component-heading .component-disclosure { flex: 1; text-align: left; background: transparent; border-color: transparent; padding: 4px 0; overflow-wrap: anywhere; }

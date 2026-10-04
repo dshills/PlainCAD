@@ -161,7 +161,7 @@ for (const theme of ["light", "dark", "saturn"] as const) {
       .scrollIntoViewIfNeeded();
     await page.screenshot({ path: info.outputPath(`${theme}-sketch.png`) });
     await page
-      .getByRole("button", { name: "Done editing sketch", exact: true })
+      .getByRole("button", { name: "Finish Sketch", exact: true })
       .click();
 
     const width = page.getByLabel("Parameter width expression", {

@@ -1,6 +1,9 @@
+import { MODEL_RESOURCE_LIMITS } from "../cad/resourceLimits";
+
 export const PROJECT_IMPORT_LIMITS = {
   maxBytes: 5 * 1024 * 1024,
   maxDepth: 64,
+  maxComponents: MODEL_RESOURCE_LIMITS.maxComponents,
   maxParameters: 500,
   maxSketches: 100,
   maxSketchEntities: 10000,
@@ -88,6 +91,8 @@ function assertJsonDepth(value: unknown, maxDepth: number) {
 }
 
 function assertEntityLimits(document: Record<string, unknown>) {
+  if (plainRecord(document.components) && Object.keys(document.components).length > PROJECT_IMPORT_LIMITS.maxComponents)
+    throw new Error("Project file has too many components.");
   const parameters = plainRecord(document.parameters)
     ? document.parameters
     : {};

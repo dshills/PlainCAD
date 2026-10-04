@@ -1,3 +1,5 @@
+import { componentScopeIssues } from "./components";
+
 import { targetBodyIds } from "./bodyScopes";
 import { MAX_NAMED_VIEWS, validCameraPose } from "../inspection/cameraViews";
 import { CadDocument, Sketch, ValidationIssue } from "./schema";
@@ -6,7 +8,7 @@ import { MODEL_RESOURCE_LIMITS } from "../resourceLimits";
 import { validAuthoredUnit, validUnitSettings } from "../parameters/parameterUnits";
 
 const PARAMETER_NAME_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
-const REQUIRED_DOCUMENT_OBJECTS = ["parameters", "sketches"] as const;
+const REQUIRED_DOCUMENT_OBJECTS = ["parameters", "sketches", "components"] as const;
 
 export function validateDocument(document: CadDocument, mode: "modeling" | "storage" = "modeling"): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
@@ -48,6 +50,15 @@ export function validateDocument(document: CadDocument, mode: "modeling" | "stor
       message: "Document is missing features.",
     });
   if (issues.length > 0) return issues;
+  if (typeof document.rootComponentId !== "string" || !Object.hasOwn(document.components, document.rootComponentId))
+    issues.push({ source: "document", message: "Project is missing its root component." });
+  if (Object.keys(document.components).length > MODEL_RESOURCE_LIMITS.maxComponents)
+    issues.push({ source: "document", message: "Project has too many components." });
+  for (const [id, component] of Object.entries(document.components)) {
+    if (!component || typeof component !== "object" || Array.isArray(component) || component.id !== id || typeof component.name !== "string" || !component.name.trim() || component.name.length > 120)
+      issues.push({ source: "document", sourceId: id, message: "Component must have a matching ID and a name of 1–120 characters." });
+  }
+  if (issues.length) return issues;
   issues.push(...validatePersistedFields(document));
   if (issues.length > 0) return issues;
 
@@ -62,6 +73,7 @@ export function validateDocument(document: CadDocument, mode: "modeling" | "stor
     ids.add(id);
   };
   addId(document.id, "document");
+  for (const component of Object.values(document.components)) addId(component.id, "document");
 
   for (const [name, parameter] of Object.entries(document.parameters)) {
     addId(parameter.id, "parameter");
@@ -454,6 +466,7 @@ export function validateDocument(document: CadDocument, mode: "modeling" | "stor
   }
 
   if (!issues.length) issues.push(...validateParameterBindings(document));
+  if (!issues.length) issues.push(...componentScopeIssues(document));
   return issues;
 }
 

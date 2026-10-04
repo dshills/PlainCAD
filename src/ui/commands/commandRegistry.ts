@@ -1,4 +1,7 @@
-import { beginSketchCanvas, selectedCanvasSketch } from "./sketchCanvasCommand";
+import { activeComponentId, beginProjectWorkflow, finishSketchCanvas } from "./projectWorkflowCommand";
+import { renameComponent, sketchComponentId } from "../../cad/document/components";
+import { MODEL_RESOURCE_LIMITS } from "../../cad/resourceLimits";
+import { beginSketchCanvas, selectedCanvasSketch, useSketchCanvas } from "./sketchCanvasCommand";
 import { canCaptureTargetScope, captureSelectedTargetScope, useTargetScopeCapture } from "./targetScopeCaptureCommand";
 import { captureCamera, restoreCamera, showStandardView } from "../../viewer/cameraController";
 import { MAX_NAMED_VIEWS, STANDARD_VIEWS, saveNamedCamera, unusedViewName } from "../../cad/inspection/cameraViews";
@@ -26,6 +29,7 @@ import {
   serializeProject,
 } from "../../persistence/exportProject";
 import {
+  createEmptyDocument,
   createExtrudeFeature,
   deleteFeature,
   suppressFeature,
@@ -63,6 +67,9 @@ import { moveTimelineItem, planTimelineMove } from "../../cad/document/timelineE
 import { beginHoleCreation, holeCreationContext } from "./holeCommand";
 
 export interface CommandContext {
+  componentId?: string;
+  componentName?: string;
+  projectName?: string;
   viewName?: string;
   viewId?: string;
   documentSession?: number;
@@ -76,12 +83,18 @@ export interface CadCommand {
   description?: string;
   shortcut?: string;
   alwaysEnabled?: boolean;
+  /** Context-only browser actions are excluded from the palette. */
+  internal?: boolean;
   enablementKey?: keyof CommandEnablement;
   run: (ctx: CommandContext) => Promise<void> | void;
 }
 
 export interface CommandEnablement {
   document: boolean;
+  editProject: boolean;
+  newComponent: boolean;
+  createSketch: boolean;
+  finishSketch: boolean;
   undo: boolean;
   redo: boolean;
   exportStl: boolean;
@@ -99,8 +112,12 @@ export interface CommandEnablement {
   sketchCanvas: boolean;
 }
 
-export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useTargetScopeCapture.getState().busy): CommandEnablement {
+export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useTargetScopeCapture.getState().busy, canvasActive = Boolean(useSketchCanvas.getState().active)): CommandEnablement {
   return {
+    editProject: !state.fileBusy,
+    newComponent: !state.fileBusy && Object.keys(state.history.present.components).length < MODEL_RESOURCE_LIMITS.maxComponents,
+    createSketch: !state.fileBusy,
+    finishSketch: canvasActive,
     sketchCanvas: Boolean(selectedCanvasSketch(state)),
     document: Boolean(state.history.present),
     saveNamedView: (state.history.present.viewState?.namedViews?.length ?? 0) < MAX_NAMED_VIEWS,
@@ -131,6 +148,29 @@ export function isCommandEnabledForSnapshot(
 }
 
 export const commands: CadCommand[] = [
+  {
+    id: "file.renameProject", internal: true, label: "Rename Project", enablementKey: "editProject",
+    run: ({ projectName }) => {
+      if (projectName === undefined) return;
+      const name = projectName.trim(), state = useCadStore.getState();
+      if (!name || name.length > 120) { state.setFileError("Project name must contain 1–120 characters."); return; }
+      state.updateDocument(document => document.name === name ? document : { ...document, name, updatedAt: new Date().toISOString() });
+    },
+  },
+  { id: "component.create", label: "New Component", enablementKey: "newComponent", run: () => beginProjectWorkflow("component") },
+  {
+    id: "component.rename", internal: true, label: "Rename Active Component", enablementKey: "editProject",
+    run: ({ componentId, componentName }) => {
+      if (componentId && componentName !== undefined)
+        useCadStore.getState().updateDocument(document => renameComponent(document, componentId, componentName));
+    },
+  },
+  {
+    id: "component.activate", internal: true, label: "Activate Component", enablementKey: "editProject",
+    run: ({ componentId }) => { if (componentId) useCadStore.getState().activateComponent(componentId); },
+  },
+  { id: "sketch.create", label: "Create Sketch", enablementKey: "createSketch", run: () => beginProjectWorkflow("sketch") },
+  { id: "sketch.finish", label: "Finish Sketch", enablementKey: "finishSketch", run: finishSketchCanvas },
   { id: "sketch.editCanvas", label: "Edit Sketch Canvas", description: "Draw geometry in the selected sketch’s local plane.", enablementKey: "sketchCanvas", run: beginSketchCanvas },
   {id:"feature.captureTargetScope",label:"Capture Intersected Targets",description:"Save the current native body/tool intersections as explicit target IDs.",enablementKey:"captureTargetScope",run:captureSelectedTargetScope},
   ...STANDARD_VIEWS.map((view): CadCommand => ({ id: `view.${view}`, label: `${view[0].toUpperCase()}${view.slice(1)} View`, alwaysEnabled: true, run: () => { showStandardView(view); } })),
@@ -167,7 +207,7 @@ export const commands: CadCommand[] = [
     shortcut: "Cmd/Ctrl+N",
     alwaysEnabled: true,
     run: () =>
-      useCadStore.getState().setDocument(createMountingPlateTemplate()),
+      useCadStore.getState().setDocument(createEmptyDocument()),
   },
   {
     id: "file.openProject",
@@ -503,7 +543,7 @@ function updateSelectedSketch(
   const sketch =
     selectedSketch ??
     createXySketch(`Sketch ${Object.keys(document.sketches).length + 1}`);
-  const updated = mutator(sketch);
+  const updated = mutator({ ...sketch, componentId: selectedSketch ? sketchComponentId(document, sketch.id) : activeComponentId(state) });
   state.updateDocument((nextDocument) => upsertSketch(nextDocument, updated));
   state.select({ kind: "sketch", id: updated.id, documentId: document.id });
 }
@@ -516,7 +556,8 @@ function createSketchCommand(plane: OriginPlane) {
     `Sketch ${Object.keys(document.sketches).length + 1}`,
     plane,
   );
-  state.updateDocument((document) => upsertSketch(document, sketch));
+  const componentId = activeComponentId(state);
+  state.updateDocument((document) => upsertSketch(document, { ...sketch, componentId }));
   state.select({ kind: "sketch", id: sketch.id, documentId: document.id });
 }
 
@@ -599,14 +640,15 @@ function findActiveSketchWithProfile(
   const analysis = currentAnalysis(state);
   if (usesWorkerAnalysis(state) && !analysis) return undefined;
   const selection = state.selection.selectedIds[0],
-    sketches = Object.values(document.sketches);
+    sketches = Object.values(document.sketches).filter(sketch => sketchComponentId(document, sketch.id) === activeComponentId(state));
   const selectedSketch =
     selection?.kind === "sketch"
       ? document.sketches[selection.id]
       : selection?.kind === "sketchEntity"
         ? sketches.find((s) => Boolean(s.entities[selection.id]))
         : undefined;
-  const key = selectedSketch?.id ?? "all";
+  if (selectedSketch && sketchComponentId(document, selectedSketch.id) !== activeComponentId(state)) return undefined;
+  const key = selectedSketch?.id ?? `all:${activeComponentId(state)}`;
   const cache = cachedAnalysis(
     activeProfileCache,
     document,

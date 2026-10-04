@@ -1,3 +1,4 @@
+import { featureComponentId, sketchComponentId } from "../../cad/document/components";
 import { create } from "zustand";
 import type { CadStore } from "../../state/useCadStore";
 import { useCadStore } from "../../state/useCadStore";
@@ -52,6 +53,7 @@ export function holeCreationContext(state: CadStore, sketchId?: string) {
   const bodies = document.features
     .filter(
       (f) =>
+        featureComponentId(document, f) === sketchComponentId(document, sketch.id) &&
         !f.suppressed &&
         (f.type === "extrude" || f.type === "revolve") &&
         f.operation === "newBody",

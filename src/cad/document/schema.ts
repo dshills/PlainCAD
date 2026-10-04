@@ -1,4 +1,4 @@
-export const CURRENT_SCHEMA_VERSION = 11;
+export const CURRENT_SCHEMA_VERSION = 12;
 
 export type UnitSystem = "metric" | "imperial";
 
@@ -19,11 +19,19 @@ export interface CadDocument {
   createdAt: string;
   updatedAt: string;
   timelineCursor?: number;
+  rootComponentId: string;
+  components: Record<string, CadComponent>;
   parameters: Record<string, CadParameter>;
   sketches: Record<string, Sketch>;
   features: Feature[];
   viewState?: ViewState;
   metadata?: Record<string, unknown>;
+}
+
+/** Internal parts share the project origin; assembly transforms are not supported. */
+export interface CadComponent {
+  id: string;
+  name: string;
 }
 
 export interface CadParameter {
@@ -67,6 +75,7 @@ export interface FacePlaneReference {
 }
 
 export interface Sketch {
+  componentId?: string;
   id: string;
   name: string;
   plane: SketchPlaneReference;
@@ -153,6 +162,7 @@ export interface SketchDimension {
 }
 
 export interface FeatureBase {
+  componentId?: string;
   id: string;
   name: string;
   type: string;

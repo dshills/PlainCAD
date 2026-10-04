@@ -1,3 +1,4 @@
+import { runCommand } from "../commands/commandRegistry";
 import { useCanvasPointDrag } from "./useCanvasPointDrag";
 import { useCanvasDimensions } from "./useCanvasDimensions";
 import { useCanvasConstraints } from "./useCanvasConstraints";
@@ -152,7 +153,10 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
       draftDocument.current = document;
     }
   }, [document, drag.cancel]);
-  const close = () => useSketchCanvas.setState({ active: undefined });
+  const close = async () => {
+    try { await runCommand("sketch.finish"); }
+    catch (error) { setError(error instanceof Error ? error.message : String(error)); }
+  };
   const cancel = () => {
     setDraft([]);
     setCursor(undefined);
@@ -632,7 +636,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
         Use Sketch tools for exact coordinate expressions and driving
         dimensions. The 3D viewer uses this sketch’s resolved plane.
       </p>
-      <button onClick={close}>Done editing sketch</button>
+      <button onClick={close}>Finish Sketch</button>
     </ModalDialog>
   );
 }

@@ -125,9 +125,24 @@ behavior while applying the console styling to panels, dialogs and drawing views
 ### Create a Model
 
 1. Start the dev server and open the local URL.
-2. Click `Mounting Plate` to load the primary MVP workflow.
-3. Or click `Box` to load a simpler parametric box.
-4. The rebuild status pill in the toolbar shows the current rebuild state.
+2. Choose **New** for a blank local project, then **New Component** and name the part.
+3. Choose **Create Sketch**, select an XY/XZ/YZ plane, and draw in the sketch canvas.
+4. Choose **Finish Sketch**, then **Extrude** to create a body in that component.
+5. The Browser groups each component’s origin, sketches and bodies. Activate a
+   component before adding another sketch; selecting a sketch, body or timeline
+   feature activates its owner. Double-click a sketch to edit its canvas.
+6. Save downloads one `.pcaddoc` containing the project’s components and geometry
+   instructions. Open restores them; older projects migrate into a root component.
+   Active component is a temporary editing context, so opening starts at the root.
+7. **Mount Plate** and **Box** remain available as examples. The rebuild status pill
+   shows the current rebuild state.
+
+Components currently organize internal parts at the shared project origin. Modeling
+sources and cut/join/hole/edge-treatment targets stay within their component. Explicit
+face-plane references may refer to another component’s supported upstream geometry.
+There are no nested assemblies, component placement transforms, joints or external
+linked designs. Parameters and the timeline belong to the whole project. Components
+can be renamed in the Browser; component creation and renaming support undo/redo.
 
 ### Edit Parameters
 
@@ -172,7 +187,9 @@ rebuild until their expressions are repaired; reused names cannot retarget them.
 
 ### Work With Sketches
 
-1. Create an XY, XZ, or YZ sketch and select it in the Browser.
+1. Activate a component, choose **Create Sketch**, and choose an origin plane.
+   The canvas opens immediately. The XY/XZ/YZ ribbon shortcuts also create sketches
+   in the active component; use **Edit Sketch** to open their canvas.
 2. Use Edit Sketch Canvas to draw points, connected lines, rectangles, circles and
    center/start/end arcs in a plane-local view. The canvas previews unfinished
    gestures, snaps to existing solved points and an optional millimeter grid, and
@@ -282,7 +299,7 @@ a diagnostic; union requires full checks. These numerical checks are not a proof
 of absence of every near-degenerate or adjacent-face intersection.
 
 Imports check raw UTF-8 bytes before parsing, preflight nesting before the reviver,
-then migrate and validate in a cancellable worker. Checked-in schema 1–11 fixtures
+then migrate and validate in a cancellable worker. Checked-in schema 1–12 fixtures
 verify IDs, rebuilds, edits, save/open, and recovery. The production Chromium suite
 also imports every released fixture under CSP, verifies native BRep volume/solid count,
 edits thickness, saves/reopens with stable IDs, and checks STL volume and global bounds.

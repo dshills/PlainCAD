@@ -1,3 +1,4 @@
+import { bodyComponentId } from "../../cad/document/components";
 import { useCadStore } from "../../state/useCadStore";
 import { useViewerState } from "../../state/viewerState";
 import {
@@ -5,9 +6,10 @@ import {
   selectCommandEnablement,
 } from "../commands/commandRegistry";
 
-export function BodyPanel() {
+export function BodyPanel({ componentId, controls = true }: { componentId?: string; controls?: boolean }) {
   const session = useCadStore((s) => s.documentSession);
-  const documentId = useCadStore((s) => s.history.present.id);
+  const document = useCadStore((s) => s.history.present);
+  const documentId = document.id;
   const rebuild = useCadStore((s) => s.rebuild);
   const selection = useCadStore((s) => s.selection.selectedIds[0]);
   const exportSelected = useCadStore(
@@ -15,7 +17,7 @@ export function BodyPanel() {
   );
   const view = useViewerState();
   const bodies =
-    rebuild.result?.documentId === documentId ? rebuild.result.bodies : [];
+    rebuild.result?.documentId === documentId ? rebuild.result.bodies.filter(body => !componentId || bodyComponentId(document, body.id) === componentId) : [];
   const hidden = view.session === session ? view.hiddenBodyIds : [];
   return (
     <>
@@ -44,7 +46,7 @@ export function BodyPanel() {
                 view.toggleBody(
                   session,
                   body.id,
-                  bodies.map((body) => body.id),
+                  rebuild.result?.bodies.map((body) => body.id) ?? [],
                 )
               }
             />
@@ -52,7 +54,7 @@ export function BodyPanel() {
           </label>
         </div>
       ))}
-      {bodies.length ? (
+      {bodies.length && controls ? (
         <>
           <button onClick={() => view.showAll(session)}>Show all bodies</button>
           <button

@@ -1,3 +1,4 @@
+import { featureComponentId } from "./components";
 import { targetBodyIds } from "./bodyScopes";
 import { CURRENT_SCHEMA_VERSION, CadDocument, Feature, Sketch } from "./schema";
 import { stableBodyIdForFeature } from "../features/featureGraph";
@@ -15,6 +16,7 @@ const migrations = new Map<number, Migration>([
   [8, (document) => ({ ...document, schemaVersion: 9 })],
   [9, (document) => ({ ...document, schemaVersion: 10, displayUnits: document.displayUnits ?? { ...document.unitSettings } })],
   [10, migrateV10ToV11],
+  [11, migrateV11ToV12],
 ]);
 
 export function migrateDocument(input: CadDocument): CadDocument {
@@ -125,6 +127,28 @@ function migrateV10ToV11(input: CadDocument): CadDocument {
   };
 }
 
+function migrateV11ToV12(document: CadDocument): CadDocument {
+  if (!isRecord(document.sketches)) throw new Error("Project file is missing sketches.");
+  if (!Array.isArray(document.features)) throw new Error("Project file is missing features.");
+  // Deterministic ownership preserves recovery equality and stable legacy IDs.
+  const ids = new Set<string>();
+  const stack: unknown[] = [document];
+  while (stack.length) {
+    const value = stack.pop();
+    if (!value || typeof value !== "object") continue;
+    if ("id" in value && typeof value.id === "string") ids.add(value.id);
+    for (const child of Object.values(value)) stack.push(child);
+  }
+  let rootComponentId = `component:${document.id}:root`;
+  while (ids.has(rootComponentId)) rootComponentId += ":root";
+  return {
+    ...document, schemaVersion: 12, rootComponentId,
+    components: { [rootComponentId]: { id: rootComponentId, name: "Root Component" } },
+    sketches: Object.fromEntries(Object.entries(document.sketches).map(([id, sketch]) => [id, { ...sketch, componentId: rootComponentId }])),
+    features: document.features.map(feature => ({ ...feature, componentId: rootComponentId })),
+  };
+}
+
 function sanitizeCurrentDocument(input: CadDocument): CadDocument {
   const rawParameters = isRecord(input.parameters) ? input.parameters : {};
   const rawSketches = isRecord(input.sketches) ? input.sketches : {};
@@ -150,9 +174,15 @@ function sanitizeCurrentDocument(input: CadDocument): CadDocument {
     }),
   );
   const sketches = Object.fromEntries(
-    Object.entries(rawSketches).map(([key, sketch]) => [key, sanitizeSketch(sketch)]),
+    Object.entries(rawSketches).map(([key, sketch]) => [key, { ...sanitizeSketch(sketch), componentId: isRecord(sketch) && sketch.componentId !== undefined ? sketch.componentId : input.rootComponentId }]),
   );
-  const features = Array.isArray(input.features) ? input.features.map(sanitizeFeature).filter((feature): feature is Feature => !!feature) : [];
+  const featureDrafts = Array.isArray(input.features)
+    ? input.features.map(sanitizeFeature).filter((feature): feature is Feature => !!feature) : [];
+  const ownershipDocument = { ...input, sketches, features: featureDrafts };
+  const features = featureDrafts.map(feature => ({
+    ...feature,
+    componentId: feature.componentId !== undefined ? feature.componentId : featureComponentId(ownershipDocument, feature),
+  }));
 
   return {
     schemaVersion: input.schemaVersion,
@@ -173,6 +203,8 @@ function sanitizeCurrentDocument(input: CadDocument): CadDocument {
     } : input.displayUnits } : {}),
     updatedAt: input.updatedAt,
     ...(input.timelineCursor !== undefined ? { timelineCursor: input.timelineCursor } : {}),
+    rootComponentId: input.rootComponentId,
+    components: isRecord(input.components) ? Object.fromEntries(Object.entries(input.components).map(([id, component]) => [id, isRecord(component) ? { id: component.id, name: component.name } : component])) : input.components,
     parameters,
     sketches,
     features,
@@ -197,6 +229,7 @@ function sanitizeSketch(sketch: Sketch): Sketch {
   return {
     id: sketchRecord.id,
     name: sketchRecord.name,
+    ...(sketchRecord.componentId !== undefined ? { componentId: sketchRecord.componentId } : {}),
     plane: normalizePlaneReference(sketchRecord.plane),
     ...(sketchRecord.solveRevision !== undefined
       ? { solveRevision: sketchRecord.solveRevision }
@@ -301,6 +334,7 @@ function sanitizeFeature(feature: Feature): Feature | undefined {
   const base = {
     id: feature.id,
     name: feature.name,
+    ...(feature.componentId !== undefined ? { componentId: feature.componentId } : {}),
     suppressed: feature.suppressed,
     timelineStep: feature.timelineStep,
     createdAt: feature.createdAt,

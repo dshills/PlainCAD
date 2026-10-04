@@ -1,3 +1,4 @@
+import { featureComponentId, sketchComponentId } from "./components";
 import { absorbedBodyIds, targetBodyIds } from "./bodyScopes";
 export { absorbedBodyIds, targetBodyIds } from "./bodyScopes";
 import { CadDocument, Feature, SelectionRef } from "./schema";
@@ -224,6 +225,7 @@ export function upstreamBodyOwners(
   consumer: Feature,
   includeSuppressed = false,
 ): Feature[] {
+  const consumerComponent = featureComponentId(document, consumer);
   const items = documentTimeline(document);
   const index = items.findIndex(
     (item) => item.kind === "feature" && item.feature.id === consumer.id,
@@ -236,6 +238,7 @@ export function upstreamBodyOwners(
   );
   return prefix.flatMap((item) =>
     item.kind === "feature" &&
+    featureComponentId(document, item.feature) === consumerComponent &&
     !absorbed.has(stableBodyIdForFeature(item.feature.id)) &&
     (includeSuppressed || !item.feature.suppressed) &&
     (item.feature.type === "extrude" || item.feature.type === "revolve") &&
@@ -246,11 +249,12 @@ export function upstreamBodyOwners(
 }
 
 export function upstreamSketches(document: CadDocument, consumer: Feature) {
+  const consumerComponent = featureComponentId(document, consumer);
   const items = documentTimeline(document);
   const index = items.findIndex(
     (item) => item.kind === "feature" && item.feature.id === consumer.id,
   );
   return items
     .slice(0, Math.max(index, 0))
-    .flatMap((item) => (item.kind === "sketch" ? [item.sketch] : []));
+    .flatMap((item) => (item.kind === "sketch" && sketchComponentId(document, item.sketch.id) === consumerComponent ? [item.sketch] : []));
 }

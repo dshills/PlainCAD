@@ -6,6 +6,7 @@ import {
   Feature,
   Sketch,
 } from "./schema";
+import { featureComponentId } from "./components";
 import { createId } from "./ids";
 import { sketchIdForFeature } from "../features/featureMetadata";
 
@@ -15,6 +16,7 @@ export function nowIso(): string {
 
 export function createEmptyDocument(name = "Untitled"): CadDocument {
   const timestamp = nowIso();
+  const rootComponentId = createId("component");
   return {
     schemaVersion: CURRENT_SCHEMA_VERSION,
     id: createId("doc"),
@@ -25,6 +27,8 @@ export function createEmptyDocument(name = "Untitled"): CadDocument {
     createdAt: timestamp,
     updatedAt: timestamp,
     timelineCursor: 0,
+    rootComponentId,
+    components: { [rootComponentId]: { id: rootComponentId, name: "Root Component" } },
     parameters: {},
     sketches: {},
     features: [],
@@ -54,6 +58,7 @@ export function upsertSketch(document: CadDocument, sketch: Sketch): CadDocument
   const timelineStep = sketch.timelineStep ?? current?.timelineStep ?? nextTimelineStep(baseDocument);
   const nextSketch = {
     ...sketch,
+    componentId: sketch.componentId ?? current?.componentId ?? document.rootComponentId,
     timelineStep,
     createdAt: sketch.createdAt ?? current?.createdAt ?? nowIso(),
   };
@@ -71,6 +76,7 @@ export function upsertFeature(document: CadDocument, feature: Feature): CadDocum
   const timelineStep = feature.timelineStep ?? existingFeature?.timelineStep ?? nextTimelineStep(baseDocument);
   const nextFeature = {
     ...feature,
+    componentId: feature.componentId ?? existingFeature?.componentId ?? featureComponentId(document, feature),
     timelineStep,
     createdAt: feature.createdAt ?? existingFeature?.createdAt ?? nowIso(),
   };

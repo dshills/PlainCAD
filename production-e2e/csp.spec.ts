@@ -378,7 +378,7 @@ test("built app draws and dimensions a native sketch under production CSP", asyn
     "D1 Ø 20.0000 mm",
   );
   await page
-    .getByRole("button", { name: "Done editing sketch", exact: true })
+    .getByRole("button", { name: "Finish Sketch", exact: true })
     .click();
   await page
     .getByRole("button", { name: "Extrude selected sketch", exact: true })

@@ -7,7 +7,7 @@ import { CURRENT_SCHEMA_VERSION } from "../cad/document/schema";
 import { recoverSnapshot } from "../persistence/autosave";
 
 describe("released-schema corpus", () => {
-  it.each([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])(
+  it.each([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])(
     "migrates schema %i with stable IDs, editable geometry, and recovery",
     (version) => {
       const text = readFileSync(

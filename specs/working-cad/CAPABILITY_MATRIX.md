@@ -24,9 +24,16 @@ edits, parameter-driven diameter, empty-center failure and save/open/STL recover
 
 - React/Vite/TypeScript UI, Three.js viewer, Zustand document history and undo/redo.
 - Serializable document with stable IDs, deterministic JSON, schema migrations
-  through version 11, and validation before imported state is accepted.
-- Import unsafe-key rejection, nesting/node limits, and parameter/sketch/entity/
+  through version 12, and validation before imported state is accepted.
+- Import unsafe-key rejection, nesting/node limits, and component/parameter/sketch/entity/
   constraint/feature count limits; unknown and runtime fields stripped by migration.
+- Local project files contain a root component and up to 99 additional internal
+  components with stable ownership of sketches/features/bodies. Browser activation,
+  component naming, Create Sketch → origin plane → canvas → Finish Sketch → Extrude,
+  undo/redo, legacy migration and native save/open/STL are covered. Modeling targets
+  and source sketch choices are scoped to the owning component. All components
+  share the project origin; the parameter table and timeline remain project-wide.
+  Nested assemblies, placements, joints and linked external components are unavailable.
 - Parameter expressions, dependency ordering/cycle errors, compatible unit
   conversion, dimensional arithmetic, CAD math functions, and expression limits.
 - Schema 10 captures per-expression bare-number length/angle defaults, saved display
@@ -106,7 +113,7 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
 
 ## Durability and fabrication
 
-- Schema 1–11 checked-in fixtures migrate, rebuild, retain IDs, edit dimensions,
+- Schema 1–12 checked-in fixtures migrate, rebuild, retain IDs, edit dimensions,
   round-trip project files, and recover through the same import codec. Production
   Chromium imports the entire released corpus under CSP and verifies native BRep
   volume/solid count, thickness edits, saved feature/entity/parameter IDs, save/open

@@ -84,7 +84,7 @@ async function separatedAnnotations(page: Page) {
 }
 async function done(page: Page) {
   await page
-    .getByRole("button", { name: "Done editing sketch", exact: true })
+    .getByRole("button", { name: "Finish Sketch", exact: true })
     .click();
 }
 function stlVolume(bytes: Buffer) {

@@ -17,7 +17,7 @@ export function CommandPalette({ context }: { context: CommandContext }) {
   const [query, setQuery] = useState("");
   const filtered = useMemo(() => {
     const normalizedQuery = query.toLowerCase();
-    return commands.filter(
+    return commands.filter(command => !command.internal).filter(
       (command) =>
         command.label.toLowerCase().includes(normalizedQuery) ||
         command.id.toLowerCase().includes(normalizedQuery) ||

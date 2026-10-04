@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
-import type { CadDocument } from "../src/cad/document/schema";
+import { CURRENT_SCHEMA_VERSION, type CadDocument } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
 
 type State = { document: CadDocument; status: string; result?: RebuildResult };
@@ -241,7 +241,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     const saved = JSON.parse(
       await readFile(projectPath, "utf8"),
     ) as CadDocument;
-    expect(saved.schemaVersion).toBe(11);
+    expect(saved.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
     expect(saved.features.find((f) => f.id === hole.id)).toMatchObject({
       targetBodyIds: ids.slice(0, 2),
       centerPointIds: centers.slice(0, 2),
