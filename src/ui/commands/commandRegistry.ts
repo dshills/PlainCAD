@@ -115,10 +115,10 @@ export interface CommandEnablement {
 export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useTargetScopeCapture.getState().busy, canvasActive = Boolean(useSketchCanvas.getState().active)): CommandEnablement {
   return {
     editProject: !state.fileBusy,
-    newComponent: !state.fileBusy && Object.keys(state.history.present.components).length < MODEL_RESOURCE_LIMITS.maxComponents,
-    createSketch: !state.fileBusy,
+    newComponent: !state.fileBusy && !canvasActive && Object.keys(state.history.present.components).length < MODEL_RESOURCE_LIMITS.maxComponents,
+    createSketch: !state.fileBusy && !canvasActive,
     finishSketch: canvasActive,
-    sketchCanvas: Boolean(selectedCanvasSketch(state)),
+    sketchCanvas: !canvasActive && Boolean(selectedCanvasSketch(state)),
     document: Boolean(state.history.present),
     saveNamedView: (state.history.present.viewState?.namedViews?.length ?? 0) < MAX_NAMED_VIEWS,
     restoreNamedView: Boolean(state.history.present.viewState?.namedViews?.length),
@@ -126,14 +126,14 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
     redo: state.history.future.length > 0,
     exportStl: canExportStl(state) && !state.fileBusy,
     exportSelectedBody: canExportStl(state) && !state.fileBusy && Boolean(selectedExportBody(state)),
-    createExtrude: canCreateExtrude(state),
-    createRevolve: Boolean(defaultRevolveAxis(state)),
-    selectedFeature: Boolean(getSelectedFeature(state)),
-    createEdgeTreatment: Boolean(edgeTreatmentOwner(state)),
-    moveEarlier: !planTimelineMove(state.history.present, state.selection.selectedIds[0], "earlier").reason,
-    moveLater: !planTimelineMove(state.history.present, state.selection.selectedIds[0], "later").reason,
-    createHole: Boolean(holeCreationContext(state)),
-    captureTargetScope: canCaptureTargetScope(state,scopeCaptureBusy),
+    createExtrude: !canvasActive && canCreateExtrude(state),
+    createRevolve: !canvasActive && Boolean(defaultRevolveAxis(state)),
+    selectedFeature: !canvasActive && Boolean(getSelectedFeature(state)),
+    createEdgeTreatment: !canvasActive && Boolean(edgeTreatmentOwner(state)),
+    moveEarlier: !canvasActive && !planTimelineMove(state.history.present, state.selection.selectedIds[0], "earlier").reason,
+    moveLater: !canvasActive && !planTimelineMove(state.history.present, state.selection.selectedIds[0], "later").reason,
+    createHole: !canvasActive && Boolean(holeCreationContext(state)),
+    captureTargetScope: !canvasActive && canCaptureTargetScope(state,scopeCaptureBusy),
   };
 }
 
@@ -344,7 +344,7 @@ export const commands: CadCommand[] = [
   {
     id: "sketch.createXY",
     label: "Create XY Sketch",
-    enablementKey: "document",
+    enablementKey: "createSketch",
     run: () => {
       createSketchCommand("XY");
     },
@@ -352,13 +352,13 @@ export const commands: CadCommand[] = [
   {
     id: "sketch.createXZ",
     label: "Create XZ Sketch",
-    enablementKey: "document",
+    enablementKey: "createSketch",
     run: () => createSketchCommand("XZ"),
   },
   {
     id: "sketch.createYZ",
     label: "Create YZ Sketch",
-    enablementKey: "document",
+    enablementKey: "createSketch",
     run: () => createSketchCommand("YZ"),
   },
   {
@@ -483,7 +483,10 @@ export const commands: CadCommand[] = [
     label: "Fit View",
     shortcut: "F",
     alwaysEnabled: true,
-    run: () => globalThis.dispatchEvent(new Event("plaincad:fit-view")),
+    run: () => {
+      const name = useSketchCanvas.getState().active ? "plaincad:fit-sketch" : "plaincad:fit-view";
+      globalThis.dispatchEvent(new Event(name));
+    },
   },
   {
     id: "view.resetCamera",

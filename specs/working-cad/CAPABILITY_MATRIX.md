@@ -388,3 +388,14 @@ terminates pending work without changing project history, rebuild meshes, save,
 autosave or export. Worker cancellation and a 30-second limit bound preview jobs;
 changing inputs is debounced by 300 ms. Through-all and to-face settings remain in
 the Inspector; multiple simultaneous profiles are not offered in this dialog.
+
+### Sketch workspace
+
+Sketch editing uses the main model area with a contextual control panel and sticky
+Finish Sketch action. The Browser, parameters and timeline remain accessible.
+The existing plane-local SVG geometry, dimensions, constraints, snapping, exact
+coordinate input and guarded edits are retained. Escape cancels a draft/drag before
+finishing; F fits the focused sketch. Shared command enablement blocks solid
+creation and a second sketch/component during this mode. The 3D viewer remains
+mounted so finishing does not discard its runtime resources or camera controller.
+Project replacement, sketch removal and component changes end obsolete sessions.

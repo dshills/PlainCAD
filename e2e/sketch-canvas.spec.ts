@@ -54,7 +54,7 @@ async function openCanvas(page: Page) {
     .getByRole("button", { name: "Edit sketch canvas", exact: true })
     .click();
   await expect(
-    page.getByRole("dialog", { name: "Sketch canvas", exact: true }),
+    page.getByRole("region", { name: "Sketch canvas", exact: true }),
   ).toBeVisible();
 }
 async function separatedAnnotations(page: Page) {
@@ -209,7 +209,7 @@ test("dimension labels move without modeling edits and cancel stale pointer gest
   await page.keyboard.press("Escape");
   await page.mouse.up();
   await expect(
-    page.getByRole("dialog", { name: "Sketch canvas", exact: true }),
+    page.getByRole("region", { name: "Sketch canvas", exact: true }),
   ).toBeVisible();
   expect(await position()).toEqual(original);
   await begin();
@@ -465,7 +465,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     await page.mouse.up();
     expect(await position()).toEqual(initial);
     await expect(
-      page.getByRole("dialog", { name: "Sketch canvas", exact: true }),
+      page.getByRole("region", { name: "Sketch canvas", exact: true }),
     ).toBeVisible();
     const stale = await begin();
     await page.mouse.move(stale.x + 25, stale.y - 15, { steps: 3 });
@@ -1003,7 +1003,7 @@ test("draft cancellation, primitive undo/redo, analytic arcs and construction ge
   await clickLocal(page, 0, 0);
   await page.keyboard.press("Escape");
   await expect(
-    page.getByRole("dialog", { name: "Sketch canvas" }),
+    page.getByRole("region", { name: "Sketch canvas" }),
   ).toBeVisible();
   expect(
     Object.values((await snapshot(page)).document.sketches)[0].entities,
@@ -1278,7 +1278,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     await page.mouse.up();
     expect((await snapshot(page)).document).toEqual(afterMove);
     await expect(
-      page.getByRole("dialog", { name: "Sketch canvas", exact: true }),
+      page.getByRole("region", { name: "Sketch canvas", exact: true }),
     ).toBeVisible();
     await page.getByLabel("Canvas coordinate X", { exact: true }).fill("0");
     await page.getByLabel("Canvas coordinate Y", { exact: true }).fill("45");

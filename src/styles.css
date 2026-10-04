@@ -962,3 +962,16 @@ button:disabled:not(.ribbon-button) { opacity: 0.6; }
 .extrude-preview-placeholder { display: grid; place-items: center; color: var(--text-muted); }
 .extrude-preview canvas { display: block; }
 @media (max-width: 680px) { .extrude-dialog-layout { grid-template-columns: 1fr; } .extrude-preview, .extrude-preview-placeholder { height: 220px; } }
+
+.model-view { height: 100%; width: 100%; }
+.sketch-workspace { box-sizing: border-box; height: 100%; overflow: auto; padding: 12px; background: var(--panel); color: var(--text); }
+.sketch-workspace-header { position: sticky; top: -12px; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; background: var(--panel); border-bottom: 1px solid var(--border); }
+.sketch-workspace-header h2 { font-size: 0.95rem; margin: 4px 0; }
+.finish-sketch { padding: 12px 16px; font-weight: 700; color: var(--on-accent); background: var(--accent); }
+.sketch-workspace-layout { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 14px; align-items: start; padding-top: 12px; }
+.sketch-workspace-controls { grid-column: 2; grid-row: 1; font-size: 0.85rem; }
+.sketch-workspace-controls select { max-width: 100%; }
+.sketch-workspace-controls .canvas-toolbar { padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.sketch-workspace-drawing { grid-column: 1; grid-row: 1; min-width: 0; }
+.sketch-workspace .sketch-canvas { width: 100%; }
+@media (max-width: 1300px) { .sketch-workspace-layout { grid-template-columns: 1fr; } .sketch-workspace-controls { grid-column: 1; grid-row: 2; } }

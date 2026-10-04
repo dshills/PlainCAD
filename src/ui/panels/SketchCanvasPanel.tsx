@@ -1,9 +1,10 @@
+import { activeComponentId } from "../commands/projectWorkflowCommand";
+import { sketchComponentId } from "../../cad/document/components";
 import { runCommand } from "../commands/commandRegistry";
 import { useCanvasPointDrag } from "./useCanvasPointDrag";
 import { useCanvasDimensions } from "./useCanvasDimensions";
 import { useCanvasConstraints } from "./useCanvasConstraints";
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
-import { ModalDialog } from "../ModalDialog";
 import { useCadStore } from "../../state/useCadStore";
 import {
   canvasContext,
@@ -84,11 +85,13 @@ export function SketchCanvasPanel() {
   const active = useSketchCanvas((s) => s.active);
   const session = useCadStore((s) => s.documentSession),
     document = useCadStore((s) => s.history.present);
+  const component = useCadStore(activeComponentId);
   const current =
     active &&
     active.session === session &&
     active.documentId === document.id &&
-    !!document.sketches[active.sketchId];
+    !!document.sketches[active.sketchId] &&
+    sketchComponentId(document, active.sketchId) === component;
   useEffect(() => {
     if (active && !current) useSketchCanvas.setState({ active: undefined });
   }, [active, current]);
@@ -123,6 +126,23 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     [draft, setDraft] = useState<CanvasPoint[]>([]),
     [cursor, setCursor] = useState<CanvasPoint>();
   const draftDocument = useRef(document);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const workspaceRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const previous = window.document.activeElement as HTMLElement | null;
+    const workspace = workspaceRef.current;
+    svgRef.current?.focus();
+    return () => {
+      const focused = window.document.activeElement;
+      if (
+        previous?.isConnected &&
+        (focused === window.document.body ||
+          workspace?.contains(focused)) &&
+        !window.document.querySelector("dialog[open]")
+      )
+        previous.focus();
+    };
+  }, []);
   const [view, setView] = useState(() =>
     context ? fitSketch(context.solved) : INITIAL_VIEW,
   );
@@ -146,6 +166,17 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     tool === "translate" ? "translate" : tool === "deform" ? "deform" : "move",
   );
   useEffect(() => {
+    const fit = () => {
+      if (context) {
+        drag.cancel();
+        setCursor(undefined);
+        setView(fitSketch(context.solved));
+      }
+    };
+    window.addEventListener("plaincad:fit-sketch", fit);
+    return () => window.removeEventListener("plaincad:fit-sketch", fit);
+  }, [context, drag.cancel]);
+  useEffect(() => {
     if (draftDocument.current !== document) {
       setDraft([]);
       setCursor(undefined);
@@ -154,8 +185,11 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     }
   }, [document, drag.cancel]);
   const close = async () => {
-    try { await runCommand("sketch.finish"); }
-    catch (error) { setError(error instanceof Error ? error.message : String(error)); }
+    try {
+      await runCommand("sketch.finish");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : String(error));
+    }
   };
   const cancel = () => {
     setDraft([]);
@@ -295,348 +329,406 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
   );
   if (!sketch) return null;
   return (
-    <ModalDialog
-      label="Sketch canvas"
-      className="file-dialog sketch-canvas-dialog"
-      onDismiss={() => (draft.length || drag.inProgress ? cancel() : close())}
+    <section
+      ref={workspaceRef}
+      aria-label="Sketch canvas"
+      className="sketch-workspace"
+      onKeyDown={(event) => {
+        if (
+          event.defaultPrevented ||
+          !event.currentTarget.contains(event.target as Node)
+        )
+          return;
+        const target = event.target as HTMLElement;
+        if (
+          event.key === "Escape" &&
+          !["SELECT", "INPUT", "TEXTAREA"].includes(target.tagName) &&
+          !target.isContentEditable
+        ) {
+          event.preventDefault();
+          event.stopPropagation();
+          if (draft.length || drag.inProgress) cancel();
+          else void close();
+        }
+        if (
+          !event.repeat &&
+          event.key.toLowerCase() === "f" &&
+          !event.metaKey &&
+          !event.ctrlKey &&
+          !event.altKey &&
+          !event.shiftKey &&
+          !["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) &&
+          !target.isContentEditable &&
+          context
+        ) {
+          event.preventDefault();
+          event.stopPropagation();
+          window.dispatchEvent(new Event("plaincad:fit-sketch"));
+        }
+      }}
     >
-      <h2>
-        {sketch.name} — {sketchPlaneLabel(sketch.plane)} canvas
-      </h2>
-      <p>
-        Local X points right; local Y points up. Coordinates and snapping are in
-        millimeters.
-      </p>
-      <div className="canvas-toolbar">
-        <label>
-          Canvas tool{" "}
-          <select
-            aria-label="Canvas tool"
-            value={tool}
-            onChange={(e) => {
-              cancel();
-              setTool(e.target.value as CanvasMode);
-            }}
-          >
-            {Object.keys(instructions).map((kind) => (
-              <option key={kind}>{kind}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          <input
-            type="checkbox"
-            checked={construction}
-            onChange={(e) => {
-              cancel();
-              setConstruction(e.target.checked);
-            }}
-          />
-          Canvas construction geometry
-        </label>
-        {tool === "arc" ? (
-          <label>
-            <input
-              type="checkbox"
-              checked={clockwise}
-              onChange={(e) => {
-                cancel();
-                setClockwise(e.target.checked);
+      <header className="sketch-workspace-header">
+        <div>
+          <strong>Sketch mode</strong>
+          <h2>
+            {sketch.name} — {sketchPlaneLabel(sketch.plane)}
+          </h2>
+        </div>
+        <button className="finish-sketch" onClick={close}>
+          Finish Sketch
+        </button>
+      </header>
+      <div className="sketch-workspace-layout">
+        <div
+          className="sketch-workspace-controls"
+          role="toolbar"
+          aria-label="Sketch drawing controls"
+        >
+          <p>
+            Local X points right; local Y points up. Coordinates and snapping
+            are in millimeters.
+          </p>
+          <div className="canvas-toolbar">
+            <label>
+              Canvas tool{" "}
+              <select
+                aria-label="Canvas tool"
+                value={tool}
+                onChange={(e) => {
+                  cancel();
+                  setTool(e.target.value as CanvasMode);
+                }}
+              >
+                {Object.keys(instructions).map((kind) => (
+                  <option key={kind}>{kind}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={construction}
+                onChange={(e) => {
+                  cancel();
+                  setConstruction(e.target.checked);
+                }}
+              />
+              Canvas construction geometry
+            </label>
+            {tool === "arc" ? (
+              <label>
+                <input
+                  type="checkbox"
+                  checked={clockwise}
+                  onChange={(e) => {
+                    cancel();
+                    setClockwise(e.target.checked);
+                  }}
+                />
+                Canvas clockwise arc
+              </label>
+            ) : null}
+            <label>
+              <input
+                type="checkbox"
+                checked={snap}
+                onChange={(e) => {
+                  cancel();
+                  setSnap(e.target.checked);
+                }}
+              />
+              Snap to grid
+            </label>
+            <label>
+              Grid step (mm)
+              <input
+                aria-label="Canvas grid step"
+                type="number"
+                min="0.000001"
+                max="1000000"
+                value={grid}
+                onChange={(e) => {
+                  cancel();
+                  setGrid(e.target.value);
+                }}
+              />
+            </label>
+          </div>
+          <div className="canvas-toolbar">
+            <button onClick={() => zoom(0.5)}>Zoom in</button>
+            <button onClick={() => zoom(2)}>Zoom out</button>
+            <button
+              disabled={!context}
+              onClick={() => {
+                drag.cancel();
+                setCursor(undefined);
+                if (context) setView(fitSketch(context.solved));
               }}
-            />
-            Canvas clockwise arc
-          </label>
-        ) : null}
-        <label>
-          <input
-            type="checkbox"
-            checked={snap}
-            onChange={(e) => {
-              cancel();
-              setSnap(e.target.checked);
+            >
+              Fit sketch
+            </button>
+            <button aria-label="Pan canvas left" onClick={() => pan(-0.25, 0)}>
+              ←
+            </button>
+            <button aria-label="Pan canvas right" onClick={() => pan(0.25, 0)}>
+              →
+            </button>
+            <button aria-label="Pan canvas up" onClick={() => pan(0, 0.25)}>
+              ↑
+            </button>
+            <button aria-label="Pan canvas down" onClick={() => pan(0, -0.25)}>
+              ↓
+            </button>
+            <button
+              disabled={!history.past.length || fileBusy}
+              onClick={() => {
+                cancel();
+                useCadStore.getState().undo();
+              }}
+            >
+              Undo canvas edit
+            </button>
+            <button
+              disabled={!history.future.length || fileBusy}
+              onClick={() => {
+                cancel();
+                useCadStore.getState().redo();
+              }}
+            >
+              Redo canvas edit
+            </button>
+            <button
+              disabled={!draft.length && !drag.inProgress}
+              onClick={cancel}
+            >
+              Cancel drawing
+            </button>
+          </div>
+          <div className="canvas-toolbar">
+            {isDragTool ? drag.controls : null}
+            <label>
+              Local X (mm)
+              <input
+                aria-label="Canvas coordinate X"
+                type="number"
+                value={keyboardX}
+                onChange={(e) => setKeyboardX(e.target.value)}
+              />
+            </label>
+            <label>
+              Local Y (mm)
+              <input
+                aria-label="Canvas coordinate Y"
+                type="number"
+                value={keyboardY}
+                onChange={(e) => setKeyboardY(e.target.value)}
+              />
+            </label>
+            <button
+              disabled={
+                disabled ||
+                (isDragTool && (!drag.pointId || !!drag.reason)) ||
+                keyboardX.trim() === "" ||
+                keyboardY.trim() === "" ||
+                !Number.isFinite(Number(keyboardX)) ||
+                !Number.isFinite(Number(keyboardY))
+              }
+              onClick={() => {
+                if (!context) return;
+                let point = snapCanvasPoint(
+                  { x: Number(keyboardX), y: Number(keyboardY) },
+                  context.solved,
+                  1e-8,
+                  0,
+                );
+                if (tool === "arc" && draft.length === 2)
+                  point = arcEndpoint(draft[0], draft[1], point);
+                place(point);
+              }}
+            >
+              {tool === "translate"
+                ? "Translate group to coordinate"
+                : tool === "deform"
+                  ? "Deform sketch to coordinate"
+                  : tool === "move"
+                    ? "Move point to coordinate"
+                    : "Place coordinate"}
+            </button>
+          </div>
+          {dimensions.controls}
+          {constraints.controls}
+          <p id="canvas-instructions">
+            {instructions[tool]} Existing points snap within 8 screen pixels.
+            Keyboard users can place exact coordinates using the fields above.
+            Escape cancels a draft, then closes.
+          </p>
+          {analysis.error ||
+          error ||
+          (isDragTool && (drag.error || drag.reason)) ||
+          (snap && !validGrid) ? (
+            <p role="alert">
+              {analysis.error ??
+                error ??
+                (tool === "move" || tool === "translate" || tool === "deform"
+                  ? (drag.error ?? drag.reason)
+                  : undefined) ??
+                "Grid step must be between 0.000001 and 1,000,000 mm."}
+            </p>
+          ) : null}
+        </div>
+        <div className="sketch-workspace-drawing">
+          <svg
+            ref={svgRef}
+            className="sketch-canvas"
+            aria-label="Sketch drawing canvas"
+            aria-describedby="canvas-instructions"
+            aria-disabled={disabled}
+            tabIndex={0}
+            role="group"
+            viewBox={`${view.x} ${-view.y - view.height} ${view.width} ${view.height}`}
+            preserveAspectRatio="none"
+            onPointerDown={draw}
+            onPointerMove={(event) => {
+              const point = pointAt(event);
+              setCursor(point);
+              if (isDragTool) drag.move(event, point);
             }}
-          />
-          Snap to grid
-        </label>
-        <label>
-          Grid step (mm)
-          <input
-            aria-label="Canvas grid step"
-            type="number"
-            min="0.000001"
-            max="1000000"
-            value={grid}
-            onChange={(e) => {
-              cancel();
-              setGrid(e.target.value);
+            onPointerUp={(event) => {
+              if (isDragTool) drag.finish(event, pointAt(event));
             }}
-          />
-        </label>
+            onPointerCancel={() => drag.cancel()}
+            onLostPointerCapture={drag.lostCapture}
+            onPointerLeave={() => setCursor(undefined)}
+          >
+            <g
+              transform="scale(1,-1)"
+              fill="none"
+              strokeWidth={view.width / 700}
+            >
+              <g className="canvas-grid">
+                {gridLines("x").map((x) => (
+                  <line
+                    key={`x${x}`}
+                    x1={x}
+                    x2={x}
+                    y1={view.y}
+                    y2={view.y + view.height}
+                  />
+                ))}
+                {gridLines("y").map((y) => (
+                  <line
+                    key={`y${y}`}
+                    y1={y}
+                    y2={y}
+                    x1={view.x}
+                    x2={view.x + view.width}
+                  />
+                ))}
+              </g>
+              <g className="canvas-axes">
+                <line x1={view.x} x2={view.x + view.width} y1={0} y2={0} />
+                <line x1={0} x2={0} y1={view.y} y2={view.y + view.height} />
+              </g>
+              {context?.solved.lines.map((l) => (
+                <line
+                  key={l.id}
+                  className={
+                    l.construction ? "canvas-construction" : "canvas-geometry"
+                  }
+                  x1={l.start.x}
+                  y1={l.start.y}
+                  x2={l.end.x}
+                  y2={l.end.y}
+                />
+              ))}
+              {context?.solved.circles.map((c) => (
+                <circle
+                  key={c.id}
+                  className={
+                    c.construction ? "canvas-construction" : "canvas-geometry"
+                  }
+                  cx={c.center.x}
+                  cy={c.center.y}
+                  r={c.radius}
+                />
+              ))}
+              {context?.solved.arcs.map((a) => (
+                <path
+                  key={a.id}
+                  className={
+                    a.construction ? "canvas-construction" : "canvas-geometry"
+                  }
+                  d={arcPath(a.center, a.start, a.end, a.sweep < 0)}
+                />
+              ))}
+              {Object.values(context?.solved.points ?? {}).map((p) => (
+                <circle
+                  key={p.id}
+                  data-point-id={p.id}
+                  className="canvas-point"
+                  cx={p.x}
+                  cy={p.y}
+                  r={radius}
+                />
+              ))}
+              {drag.preview}
+              <g className="canvas-preview">
+                {preview.length > 1 && tool === "line" ? (
+                  <line
+                    x1={preview[0].x}
+                    y1={preview[0].y}
+                    x2={preview[1].x}
+                    y2={preview[1].y}
+                  />
+                ) : null}
+                {preview.length > 1 && tool === "rectangle" ? (
+                  <rect
+                    x={Math.min(preview[0].x, preview[1].x)}
+                    y={Math.min(preview[0].y, preview[1].y)}
+                    width={Math.abs(preview[1].x - preview[0].x)}
+                    height={Math.abs(preview[1].y - preview[0].y)}
+                  />
+                ) : null}
+                {preview.length > 1 && (tool === "circle" || tool === "arc") ? (
+                  <circle
+                    cx={preview[0].x}
+                    cy={preview[0].y}
+                    r={distance2d(preview[0], preview[1])}
+                  />
+                ) : null}
+                {preview.length === 3 && tool === "arc" ? (
+                  <path
+                    d={arcPath(preview[0], preview[1], preview[2], clockwise)}
+                  />
+                ) : null}
+                {preview.map((p, i) => (
+                  <circle key={i} cx={p.x} cy={p.y} r={radius} />
+                ))}
+                {cursor ? (
+                  <circle cx={cursor.x} cy={cursor.y} r={radius * 1.5} />
+                ) : null}
+              </g>
+            </g>
+            {dimensions.overlay}
+            {constraints.overlay}
+          </svg>
+          <p role="status">
+            {cursor
+              ? `X ${cursor.x.toFixed(3)} mm, Y ${cursor.y.toFixed(3)} mm${cursor.pointId ? " — existing point" : ""}. `
+              : ""}
+            {drag.inProgress
+              ? `${tool === "translate" ? "Group translation" : tool === "deform" ? "Sketch deformation" : "Point move"} preview; release to save, Escape to cancel. `
+              : ""}
+            {draft.length
+              ? `${draft.length} draft point${draft.length === 1 ? "" : "s"}; nothing incomplete is saved.`
+              : "Ready to draw."}
+          </p>
+          <p>
+            Use Sketch tools for exact coordinate expressions and driving
+            dimensions. The 3D viewer uses this sketch’s resolved plane.
+          </p>
+        </div>
       </div>
-      <div className="canvas-toolbar">
-        <button onClick={() => zoom(0.5)}>Zoom in</button>
-        <button onClick={() => zoom(2)}>Zoom out</button>
-        <button
-          disabled={!context}
-          onClick={() => {
-            drag.cancel();
-            setCursor(undefined);
-            if (context) setView(fitSketch(context.solved));
-          }}
-        >
-          Fit sketch
-        </button>
-        <button aria-label="Pan canvas left" onClick={() => pan(-0.25, 0)}>
-          ←
-        </button>
-        <button aria-label="Pan canvas right" onClick={() => pan(0.25, 0)}>
-          →
-        </button>
-        <button aria-label="Pan canvas up" onClick={() => pan(0, 0.25)}>
-          ↑
-        </button>
-        <button aria-label="Pan canvas down" onClick={() => pan(0, -0.25)}>
-          ↓
-        </button>
-        <button
-          disabled={!history.past.length || fileBusy}
-          onClick={() => {
-            cancel();
-            useCadStore.getState().undo();
-          }}
-        >
-          Undo canvas edit
-        </button>
-        <button
-          disabled={!history.future.length || fileBusy}
-          onClick={() => {
-            cancel();
-            useCadStore.getState().redo();
-          }}
-        >
-          Redo canvas edit
-        </button>
-        <button disabled={!draft.length && !drag.inProgress} onClick={cancel}>
-          Cancel drawing
-        </button>
-      </div>
-      <div className="canvas-toolbar">
-        {isDragTool ? drag.controls : null}
-        <label>
-          Local X (mm)
-          <input
-            aria-label="Canvas coordinate X"
-            type="number"
-            value={keyboardX}
-            onChange={(e) => setKeyboardX(e.target.value)}
-          />
-        </label>
-        <label>
-          Local Y (mm)
-          <input
-            aria-label="Canvas coordinate Y"
-            type="number"
-            value={keyboardY}
-            onChange={(e) => setKeyboardY(e.target.value)}
-          />
-        </label>
-        <button
-          disabled={
-            disabled ||
-            (isDragTool && (!drag.pointId || !!drag.reason)) ||
-            keyboardX.trim() === "" ||
-            keyboardY.trim() === "" ||
-            !Number.isFinite(Number(keyboardX)) ||
-            !Number.isFinite(Number(keyboardY))
-          }
-          onClick={() => {
-            if (!context) return;
-            let point = snapCanvasPoint(
-              { x: Number(keyboardX), y: Number(keyboardY) },
-              context.solved,
-              1e-8,
-              0,
-            );
-            if (tool === "arc" && draft.length === 2)
-              point = arcEndpoint(draft[0], draft[1], point);
-            place(point);
-          }}
-        >
-          {tool === "translate"
-            ? "Translate group to coordinate"
-            : tool === "deform"
-              ? "Deform sketch to coordinate"
-              : tool === "move"
-                ? "Move point to coordinate"
-                : "Place coordinate"}
-        </button>
-      </div>
-      {dimensions.controls}
-      {constraints.controls}
-      <p id="canvas-instructions">
-        {instructions[tool]} Existing points snap within 8 screen pixels.
-        Keyboard users can place exact coordinates using the fields above.
-        Escape cancels a draft, then closes.
-      </p>
-      {analysis.error ||
-      error ||
-      (isDragTool && (drag.error || drag.reason)) ||
-      (snap && !validGrid) ? (
-        <p role="alert">
-          {analysis.error ??
-            error ??
-            (tool === "move" || tool === "translate" || tool === "deform"
-              ? (drag.error ?? drag.reason)
-              : undefined) ??
-            "Grid step must be between 0.000001 and 1,000,000 mm."}
-        </p>
-      ) : null}
-      <svg
-        className="sketch-canvas"
-        aria-label="Sketch drawing canvas"
-        aria-describedby="canvas-instructions"
-        aria-disabled={disabled}
-        tabIndex={0}
-        role="group"
-        viewBox={`${view.x} ${-view.y - view.height} ${view.width} ${view.height}`}
-        preserveAspectRatio="none"
-        onPointerDown={draw}
-        onPointerMove={(event) => {
-          const point = pointAt(event);
-          setCursor(point);
-          if (isDragTool) drag.move(event, point);
-        }}
-        onPointerUp={(event) => {
-          if (isDragTool) drag.finish(event, pointAt(event));
-        }}
-        onPointerCancel={() => drag.cancel()}
-        onLostPointerCapture={drag.lostCapture}
-        onPointerLeave={() => setCursor(undefined)}
-      >
-        <g transform="scale(1,-1)" fill="none" strokeWidth={view.width / 700}>
-          <g className="canvas-grid">
-            {gridLines("x").map((x) => (
-              <line
-                key={`x${x}`}
-                x1={x}
-                x2={x}
-                y1={view.y}
-                y2={view.y + view.height}
-              />
-            ))}
-            {gridLines("y").map((y) => (
-              <line
-                key={`y${y}`}
-                y1={y}
-                y2={y}
-                x1={view.x}
-                x2={view.x + view.width}
-              />
-            ))}
-          </g>
-          <g className="canvas-axes">
-            <line x1={view.x} x2={view.x + view.width} y1={0} y2={0} />
-            <line x1={0} x2={0} y1={view.y} y2={view.y + view.height} />
-          </g>
-          {context?.solved.lines.map((l) => (
-            <line
-              key={l.id}
-              className={
-                l.construction ? "canvas-construction" : "canvas-geometry"
-              }
-              x1={l.start.x}
-              y1={l.start.y}
-              x2={l.end.x}
-              y2={l.end.y}
-            />
-          ))}
-          {context?.solved.circles.map((c) => (
-            <circle
-              key={c.id}
-              className={
-                c.construction ? "canvas-construction" : "canvas-geometry"
-              }
-              cx={c.center.x}
-              cy={c.center.y}
-              r={c.radius}
-            />
-          ))}
-          {context?.solved.arcs.map((a) => (
-            <path
-              key={a.id}
-              className={
-                a.construction ? "canvas-construction" : "canvas-geometry"
-              }
-              d={arcPath(a.center, a.start, a.end, a.sweep < 0)}
-            />
-          ))}
-          {Object.values(context?.solved.points ?? {}).map((p) => (
-            <circle
-              key={p.id}
-              data-point-id={p.id}
-              className="canvas-point"
-              cx={p.x}
-              cy={p.y}
-              r={radius}
-            />
-          ))}
-          {drag.preview}
-          <g className="canvas-preview">
-            {preview.length > 1 && tool === "line" ? (
-              <line
-                x1={preview[0].x}
-                y1={preview[0].y}
-                x2={preview[1].x}
-                y2={preview[1].y}
-              />
-            ) : null}
-            {preview.length > 1 && tool === "rectangle" ? (
-              <rect
-                x={Math.min(preview[0].x, preview[1].x)}
-                y={Math.min(preview[0].y, preview[1].y)}
-                width={Math.abs(preview[1].x - preview[0].x)}
-                height={Math.abs(preview[1].y - preview[0].y)}
-              />
-            ) : null}
-            {preview.length > 1 && (tool === "circle" || tool === "arc") ? (
-              <circle
-                cx={preview[0].x}
-                cy={preview[0].y}
-                r={distance2d(preview[0], preview[1])}
-              />
-            ) : null}
-            {preview.length === 3 && tool === "arc" ? (
-              <path
-                d={arcPath(preview[0], preview[1], preview[2], clockwise)}
-              />
-            ) : null}
-            {preview.map((p, i) => (
-              <circle key={i} cx={p.x} cy={p.y} r={radius} />
-            ))}
-            {cursor ? (
-              <circle cx={cursor.x} cy={cursor.y} r={radius * 1.5} />
-            ) : null}
-          </g>
-        </g>
-        {dimensions.overlay}
-        {constraints.overlay}
-      </svg>
-      <p role="status">
-        {cursor
-          ? `X ${cursor.x.toFixed(3)} mm, Y ${cursor.y.toFixed(3)} mm${cursor.pointId ? " — existing point" : ""}. `
-          : ""}
-        {drag.inProgress
-          ? `${tool === "translate" ? "Group translation" : tool === "deform" ? "Sketch deformation" : "Point move"} preview; release to save, Escape to cancel. `
-          : ""}
-        {draft.length
-          ? `${draft.length} draft point${draft.length === 1 ? "" : "s"}; nothing incomplete is saved.`
-          : "Ready to draw."}
-      </p>
-      <p>
-        Use Sketch tools for exact coordinate expressions and driving
-        dimensions. The 3D viewer uses this sketch’s resolved plane.
-      </p>
-      <button onClick={close}>Finish Sketch</button>
-    </ModalDialog>
+    </section>
   );
 }

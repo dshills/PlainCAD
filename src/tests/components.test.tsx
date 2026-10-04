@@ -276,7 +276,7 @@ describe("component project ownership", () => {
     fireEvent.click(
       within(chooser).getByRole("button", { name: "Sketch on XZ plane" }),
     );
-    const canvas = screen.getByRole("dialog", { name: "Sketch canvas" });
+    const canvas = screen.getByRole("region", { name: "Sketch canvas" });
     expect(canvas).toHaveTextContent("XZ");
     await act(async () => {
       await runCommand("sketch.addCenterRectangle");

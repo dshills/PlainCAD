@@ -183,22 +183,27 @@ export function CadViewer() {
     }) : undefined;
 
     const resize = () => {
-      const width = host.clientWidth || 1;
-      const height = host.clientHeight || 1;
+      const width = host.clientWidth;
+      const height = host.clientHeight;
+      if (!width || !height) return;
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
       renderer.setSize(width, height);
     };
     const fit = () => fitMeshes(camera, controls, meshesRef.current);
     const reset = () => applyPose(DEFAULT_CAMERA_POSE);
+    const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(resize) : undefined;
+    resizeObserver?.observe(host);
     window.addEventListener("resize", resize);
     window.addEventListener("plaincad:fit-view", fit);
     window.addEventListener("plaincad:reset-camera", reset);
 
     let raf = 0;
     const animate = () => {
-      controls.update();
-      renderer.render(scene, camera);
+      if (host.clientWidth && host.clientHeight) {
+        controls.update();
+        renderer.render(scene, camera);
+      }
       raf = requestAnimationFrame(animate);
     };
     animate();
@@ -221,6 +226,7 @@ export function CadViewer() {
       unregisterDiagnostics?.();
       unregisterCamera();
       cancelAnimationFrame(raf);
+      resizeObserver?.disconnect();
       window.removeEventListener("resize", resize);
       window.removeEventListener("plaincad:fit-view", fit);
       window.removeEventListener("plaincad:reset-camera", reset);

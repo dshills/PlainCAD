@@ -126,7 +126,7 @@ behavior while applying the console styling to panels, dialogs and drawing views
 
 1. Start the dev server and open the local URL.
 2. Choose **New** for a blank local project, then **New Component** and name the part.
-3. Choose **Create Sketch**, select an XY/XZ/YZ plane, and draw in the sketch canvas.
+3. Choose **Create Sketch**, select an XY/XZ/YZ plane, and draw in sketch mode in the main workspace. Drawing controls appear beside the canvas; **Finish Sketch** returns to the 3D model.
 4. Choose **Finish Sketch**, then **Extrude**. Select a profile, distance, direction, and New Body/Cut/Join operation; inspect the native geometry preview, then choose **Apply extrusion**. Cut and Join require explicit target bodies in the active component. Cancel leaves the project unchanged.
 5. The Browser groups each component’s origin, sketches and bodies. Activate a
    component before adding another sketch; selecting a sketch, body or timeline
@@ -638,3 +638,11 @@ and its camera are temporary and excluded from project saves, undo history,
 autosave, and STL export. Apply records one feature edit and schedules the normal
 project rebuild. The dialog supports distance termination and one selected profile;
 through-all and supported to-face termination remain available in the Inspector.
+
+Sketch mode keeps the Browser, parameter controls and timeline visible while the
+main model area becomes a plane-local drawing canvas. Finish Sketch returns to
+the mounted 3D viewer; completed sketch edits remain undoable. Escape cancels a
+pending primitive or drag, then finishes the sketch when no draft remains. F fits
+the sketch when drawing has focus. Creation of another sketch/component and solid
+modeling commands wait until Finish Sketch. Selecting another component closes
+the current sketch mode and discards only incomplete drawing gestures.

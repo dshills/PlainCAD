@@ -1,3 +1,4 @@
+import { useSketchCanvas } from "../ui/commands/sketchCanvasCommand";
 import { ExtrudeCreationPanel } from "../ui/panels/ExtrudeCreationPanel";
 import { ProjectWorkflowPanel } from "../ui/panels/ProjectWorkflowPanel";
 import { SketchCanvasPanel } from "../ui/panels/SketchCanvasPanel";
@@ -97,6 +98,7 @@ const helpItems = [
 
 export function App() {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const sketchActive = useSketchCanvas(state => state.active);
   const documentName = useCadStore((state) => state.history.present?.name ?? "Untitled");
   const rebuild = useCadStore((state) => state.rebuild);
   const fileError = useCadStore((state) => state.fileError);
@@ -107,12 +109,16 @@ export function App() {
   const toolbarEnablement = useCommandEnablement();
 
   useEffect(() => {
+    window.dispatchEvent(new Event("resize"));
+  }, [sketchActive]);
+
+  useEffect(() => {
     initializeKernel();
   }, [initializeKernel]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.defaultPrevented || document.querySelector("dialog[open]")) return;
+      if (event.defaultPrevented || document.querySelector("dialog[open]") || useSketchCanvas.getState().active) return;
       const target = event.target as HTMLElement | null;
       const tagName = target?.tagName.toUpperCase();
       const isTyping = tagName === "INPUT" || tagName === "TEXTAREA" || tagName === "SELECT" || target?.isContentEditable === true;
@@ -183,14 +189,14 @@ export function App() {
       <HoleCreationPanel />
       <ExtrudeCreationPanel />
       <ProjectWorkflowPanel />
-      <SketchCanvasPanel />
       <main className="workspace">
         <aside className="left-panel">
           <SketchPanel />
         </aside>
         <div className="model-area">
           <section className="viewer-region" aria-label="3D CAD viewer">
-            <CadViewer />
+            <div className="model-view" hidden={Boolean(sketchActive)}><CadViewer /></div>
+            <SketchCanvasPanel />
           </section>
           <FeatureTimeline commandContext={commandContext} />
         </div>

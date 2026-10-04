@@ -172,7 +172,7 @@ export function SketchPanel() {
         </div>
         {selection?.kind === "sketch" ? (
           <div className="workflow-actions">
-            <button onClick={() => void runCommand("sketch.editCanvas")}>
+            <button disabled={!enablement.sketchCanvas} onClick={() => void runCommand("sketch.editCanvas")}>
               Edit Sketch
             </button>
             <button
