@@ -984,3 +984,7 @@ button:disabled:not(.ribbon-button) { opacity: 0.6; }
 .component-view-actions { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
 .component-view-actions label, .timeline-filter { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
 .timeline-owner { color: var(--muted); font-size: 0.72rem; }
+
+.sketch-browser-row { display: flex; gap: 8px; align-items: center; }
+.sketch-browser-row .item-card { flex: 1; min-width: 0; }
+.sketch-browser-row label { display: flex; align-items: center; gap: 4px; white-space: nowrap; }

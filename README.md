@@ -144,7 +144,10 @@ There are no nested assemblies, component placement transforms, joints or extern
 linked designs. Parameters and the timeline belong to the whole project. Components
 can be renamed in the Browser; component creation and renaming support undo/redo.
 Use each component’s **Visible** checkbox or **Isolate** to focus the 3D view, and
-**Show all components** to restore bodies and sketch overlays. Timeline chips show
+**Show all components** to restore bodies and sketch overlays. Each sketch’s
+**3D** checkbox hides only that sketch overlay; **Edit Sketch** still shows its full
+canvas. **Show all bodies** restores bodies/components while preserving individual
+sketch hiding. Timeline chips show
 component ownership; **Active component only** filters the display while timeline
 moves still use the full project order. Visibility, isolation and filtering are
 temporary view preferences and reset on New/Open; they do not change geometry,

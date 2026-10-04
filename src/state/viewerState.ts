@@ -6,10 +6,16 @@ interface ViewerState {
   session: number;
   hiddenBodyIds: string[];
   hiddenComponentIds: string[];
+  hiddenSketchIds: string[];
   activeComponentTimeline: boolean;
   toggleBody(
     session: number,
     bodyId: string,
+    availableIds: readonly string[],
+  ): void;
+  toggleSketch(
+    session: number,
+    sketchId: string,
     availableIds: readonly string[],
   ): void;
   toggleComponent(
@@ -23,11 +29,13 @@ interface ViewerState {
     availableIds: readonly string[],
   ): void;
   toggleTimelineFilter(session: number): void;
+  showAllBodies(session: number): void;
   showAll(session: number): void;
 }
 const defaults = {
   hiddenBodyIds: [] as string[],
   hiddenComponentIds: [] as string[],
+  hiddenSketchIds: [] as string[],
   activeComponentTimeline: false,
 };
 // Runtime view preferences never enter document history or project JSON.
@@ -47,6 +55,18 @@ export const useViewerState = create<ViewerState>((set, get) => {
         hiddenBodyIds: hidden.includes(bodyId)
           ? hidden.filter((id) => id !== bodyId)
           : [...hidden, bodyId],
+      });
+    },
+    toggleSketch: (session, sketchId, availableIds) => {
+      if (!availableIds.includes(sketchId)) return;
+      const view = current(session),
+        hidden = view.hiddenSketchIds.filter((id) => availableIds.includes(id));
+      set({
+        ...view,
+        session,
+        hiddenSketchIds: hidden.includes(sketchId)
+          ? hidden.filter((id) => id !== sketchId)
+          : [...hidden, sketchId],
       });
     },
     toggleComponent: (session, componentId, availableIds) => {
@@ -69,6 +89,7 @@ export const useViewerState = create<ViewerState>((set, get) => {
         ...current(session),
         session,
         hiddenBodyIds: [],
+        hiddenSketchIds: [],
         hiddenComponentIds: availableIds.filter((id) => id !== componentId),
       });
     },
@@ -78,12 +99,21 @@ export const useViewerState = create<ViewerState>((set, get) => {
         session,
         activeComponentTimeline: !current(session).activeComponentTimeline,
       }),
+    // Restoring body/component visibility preserves deliberate sketch decluttering.
+    showAllBodies: (session) =>
+      set({
+        ...current(session),
+        session,
+        hiddenBodyIds: [],
+        hiddenComponentIds: [],
+      }),
     showAll: (session) =>
       set({
         ...current(session),
         session,
         hiddenBodyIds: [],
         hiddenComponentIds: [],
+        hiddenSketchIds: [],
       }),
   };
 });

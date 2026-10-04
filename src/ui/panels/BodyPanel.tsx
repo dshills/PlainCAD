@@ -80,7 +80,7 @@ export function BodyPanel({
       })}
       {bodies.length && controls ? (
         <>
-          <button onClick={() => view.showAll(session)}>Show all bodies</button>
+          <button onClick={() => void runCommand("view.showAllBodies")}>Show all bodies</button>
           <button
             disabled={!exportSelected}
             onClick={() => void runCommand("file.exportSelectedBody")}

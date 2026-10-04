@@ -69,6 +69,7 @@ export function CadViewer() {
   const section = useSectionState();
   const clippingRef = useRef<THREE.Plane | undefined>(undefined);
   const hidden = useMemo(() => hiddenViewerBodies(document, meshes.map(mesh => mesh.bodyId), session, { session: view.session, hiddenBodyIds: view.hiddenBodyIds, hiddenComponentIds: view.hiddenComponentIds }), [document, meshes, session, view.session, view.hiddenBodyIds, view.hiddenComponentIds]);
+  const hiddenSketches = view.session === session ? view.hiddenSketchIds : [];
   const hiddenComponents = view.session === session ? view.hiddenComponentIds : [];
   const documentId = useCadStore((state) => state.history.present.id);
   const selectedBodyId = useCadStore((state) => {
@@ -287,13 +288,14 @@ export function CadViewer() {
         document,
         runtime.sketchResources,
         hiddenComponents,
+        hiddenSketches,
         rebuild.status === "succeeded" &&
           rebuild.result?.documentId === document.id
           ? rebuild.result
           : undefined,
       );
     if (runtime) applyClipping(runtime.sketchGroup, clippingRef.current);
-  }, [document, rebuild, view.hiddenComponentIds, view.session, session]);
+  }, [document, rebuild, view.hiddenComponentIds, view.hiddenSketchIds, view.session, session]);
 
   useEffect(() => {
     meshesRef.current = meshes.filter((mesh) => !hidden.includes(mesh.bodyId));
@@ -471,6 +473,7 @@ function updateSketchOverlay(
   document: CadDocument,
   resources: SketchOverlayResources,
   hiddenComponents: readonly string[],
+  hiddenSketches: readonly string[],
   result?: RebuildResult,
 ) {
   disposeSketchOverlayObjects(sketchGroup, resources);
@@ -484,7 +487,7 @@ function updateSketchOverlay(
     ? { transforms: new Map(Object.entries(result.sketchPlanes)) }
     : resolveDocumentPlanes(document, evaluated.values);
   for (const sketch of Object.values(document.sketches)) {
-    if (hiddenComponents.includes(sketchComponentId(document, sketch.id))) continue;
+    if (hiddenSketches.includes(sketch.id) || hiddenComponents.includes(sketchComponentId(document, sketch.id))) continue;
     const transform = planes.transforms.get(sketch.id);
     if (!transform) continue;
     const solved =

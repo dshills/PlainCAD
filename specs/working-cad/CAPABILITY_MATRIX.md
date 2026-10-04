@@ -418,7 +418,10 @@ new boolean face roles remain outside this selection scope.
 ### Component navigation
 
 The Browser provides component visibility and isolation, including owned native
-bodies and sketch overlays. Hidden bodies are excluded from viewer fitting and
+bodies and sketch overlays. Per-sketch 3D checkboxes independently hide overlays
+without hiding their editor canvases. Show All Bodies preserves individual sketch
+hiding; Show All Components and Isolate restore sketch visibility within their
+view scope. Hidden bodies are excluded from viewer fitting and
 picking; visibility does not alter rebuilds or the explicit fabrication scope.
 Timeline chips label their component owner, with an optional active-component
 filter that follows activation. Timeline movement still validates the full
@@ -471,3 +474,14 @@ three successive native XZ treatments, exact volume changes, cancellation, inval
 size/edge recovery, stable body ownership and save/open. Existing XY/XZ/YZ and
 post-boolean edge workflows also use the new Apply step. Arbitrary native edge
 picking and new boolean-created edge identities remain unavailable.
+
+### Per-sketch visibility
+
+Sketch visibility is a runtime stable-ID preference scoped to the project session.
+Browser checkboxes respect component hiding; editing a hidden sketch opens its
+complete SVG canvas while its 3D overlay stays hidden after Finish Sketch. Native
+Chromium verifies actual overlay point counts, unchanged BRep/history/results,
+depth edits and undo while hidden, body/component view restoration, save/open
+reset and native STL volume. Stale context commands cannot hide reused IDs in a
+replacement project. No visibility state is serialized or used as fabrication
+scope.

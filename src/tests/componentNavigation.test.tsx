@@ -191,4 +191,85 @@ describe("component navigation", () => {
       document.rootComponentId,
     );
   });
+  it("independently hides sketch overlays, preserves hiding when restoring bodies and clears it for full views", () => {
+    const { document, a, session } = project();
+    useCadStore.setState({
+      rebuild: {
+        ...useCadStore.getState().rebuild,
+        status: "succeeded",
+        result: rebuildDocument(document),
+      },
+    });
+    render(<SketchPanel />);
+    act(() => useCadStore.getState().activateComponent(a.id));
+    const sketch = Object.values(document.sketches).find(
+      (item) => item.componentId === a.id,
+    )!;
+    fireEvent.click(screen.getByLabelText("Show sketch Bracket section in 3D"));
+    expect(useViewerState.getState().hiddenSketchIds).toEqual([sketch.id]);
+    fireEvent.click(screen.getByLabelText("Show component Bracket"));
+    expect(
+      screen.getByLabelText("Show sketch Bracket section in 3D"),
+    ).toBeDisabled();
+    expect(
+      screen.getByLabelText("Show sketch Bracket section in 3D"),
+    ).not.toBeChecked();
+    act(() => runCommand("view.showAllBodies"));
+    expect(screen.getByLabelText("Show component Bracket")).toBeChecked();
+    expect(
+      screen.getByLabelText("Show sketch Bracket section in 3D"),
+    ).toBeEnabled();
+    expect(
+      screen.getByLabelText("Show sketch Bracket section in 3D"),
+    ).not.toBeChecked();
+    act(() => runCommand("view.showAllComponents"));
+    expect(
+      screen.getByLabelText("Show sketch Bracket section in 3D"),
+    ).toBeChecked();
+    act(() => {
+      runCommand("sketch.toggleVisibility", {
+        sketchId: sketch.id,
+        documentSession: session,
+      });
+      runCommand("component.isolate", {
+        componentId: a.id,
+        documentSession: session,
+      });
+    });
+    expect(
+      screen.getByLabelText("Show sketch Bracket section in 3D"),
+    ).toBeChecked();
+    expect(useCadStore.getState().history.present).toBe(document);
+    expect(useCadStore.getState().history.past).toEqual([]);
+    expect(serializeProject(document)).not.toContain("hiddenSketchIds");
+  });
+  it("rejects stale or missing sketch visibility contexts even when project IDs are reused", () => {
+    const { document, session } = project(),
+      sketchId = Object.keys(document.sketches)[0];
+    runCommand("sketch.toggleVisibility", { sketchId });
+    runCommand("sketch.toggleVisibility", {
+      sketchId: "lost",
+      documentSession: session,
+    });
+    expect(useViewerState.getState().hiddenSketchIds).toEqual([]);
+    runCommand("sketch.toggleVisibility", {
+      sketchId,
+      documentSession: session,
+    });
+    expect(useViewerState.getState().hiddenSketchIds).toEqual([sketchId]);
+    useCadStore.getState().setDocument(document);
+    const replacement = useCadStore.getState().documentSession;
+    runCommand("view.showAllComponents");
+    runCommand("sketch.toggleVisibility", {
+      sketchId,
+      documentSession: session,
+    });
+    expect(useViewerState.getState().session).toBe(replacement);
+    expect(useViewerState.getState().hiddenSketchIds).toEqual([]);
+    runCommand("sketch.toggleVisibility", {
+      sketchId,
+      documentSession: replacement,
+    });
+    expect(useViewerState.getState().hiddenSketchIds).toEqual([sketchId]);
+  });
 });

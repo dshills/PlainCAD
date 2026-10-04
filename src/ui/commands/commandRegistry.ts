@@ -69,6 +69,7 @@ import { moveTimelineItem, planTimelineMove } from "../../cad/document/timelineE
 import { beginHoleCreation, holeCreationContext } from "./holeCommand";
 
 export interface CommandContext {
+  sketchId?: string;
   componentId?: string;
   componentName?: string;
   projectName?: string;
@@ -183,7 +184,16 @@ export const commands: CadCommand[] = [
       else view.toggleComponent(state.documentSession, componentId, ids);
     },
   })),
-  { id: "view.showAllComponents", label: "Show All Components and Bodies", enablementKey: "document", run: () => useViewerState.getState().showAll(useCadStore.getState().documentSession) },
+  {
+    id: "sketch.toggleVisibility", internal: true, label: "Toggle Sketch Visibility", enablementKey: "document",
+    run: ({ sketchId, documentSession }) => {
+      const state = useCadStore.getState();
+      if (documentSession === undefined || documentSession !== state.documentSession || !sketchId || !Object.hasOwn(state.history.present.sketches, sketchId)) return;
+      useViewerState.getState().toggleSketch(documentSession, sketchId, Object.keys(state.history.present.sketches));
+    },
+  },
+  { id: "view.showAllBodies", label: "Show All Bodies", enablementKey: "document", run: () => useViewerState.getState().showAllBodies(useCadStore.getState().documentSession) },
+  { id: "view.showAllComponents", label: "Show All Components, Bodies and Sketches", enablementKey: "document", run: () => useViewerState.getState().showAll(useCadStore.getState().documentSession) },
   { id: "timeline.toggleComponentFilter", internal: true, label: "Filter Timeline to Active Component", enablementKey: "document", run: () => useViewerState.getState().toggleTimelineFilter(useCadStore.getState().documentSession) },
   { id: "sketch.create", label: "Create Sketch", enablementKey: "createSketch", run: () => beginProjectWorkflow("sketch") },
   { id: "sketch.finish", label: "Finish Sketch", enablementKey: "finishSketch", run: finishSketchCanvas },

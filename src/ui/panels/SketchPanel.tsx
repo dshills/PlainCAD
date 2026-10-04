@@ -19,6 +19,7 @@ export function SketchPanel() {
   const componentId = useCadStore(activeComponentId);
   const session = useCadStore(state => state.documentSession);
   const view = useViewerState();
+  const hiddenSketches = view.session === session ? view.hiddenSketchIds : [];
   const hidden = view.session === session ? view.hiddenComponentIds : [];
   const enablement = useCommandEnablement();
   const canExtrude = enablement.createExtrude;
@@ -145,32 +146,48 @@ export function SketchPanel() {
                     <span className="muted">{owned.length} sketches</span>
                   </div>
                   {owned.map((sketch) => (
-                    <button
-                      className={`item-card ${activeSketch?.id === sketch.id ? "selected" : ""}`}
-                      key={sketch.id}
-                      onClick={() =>
-                        select({
-                          kind: "sketch",
-                          id: sketch.id,
-                          documentId: document.id,
-                        })
-                      }
-                      onDoubleClick={() => {
-                        select({
-                          kind: "sketch",
-                          id: sketch.id,
-                          documentId: document.id,
-                        });
-                        void runCommand("sketch.editCanvas");
-                      }}
-                    >
-                      <strong>{sketch.name}</strong>
-                      <span className="muted">
-                        {" "}
-                        {sketchPlaneLabel(sketch.plane)} plane,{" "}
-                        {Object.keys(sketch.entities).length} entities
-                      </span>
-                    </button>
+                    <div className="sketch-browser-row" key={sketch.id}>
+                      <button
+                        className={`item-card ${activeSketch?.id === sketch.id ? "selected" : ""}`}
+                        onClick={() =>
+                          select({
+                            kind: "sketch",
+                            id: sketch.id,
+                            documentId: document.id,
+                          })
+                        }
+                        onDoubleClick={() => {
+                          select({
+                            kind: "sketch",
+                            id: sketch.id,
+                            documentId: document.id,
+                          });
+                          void runCommand("sketch.editCanvas");
+                        }}
+                      >
+                        <strong>{sketch.name}</strong>
+                        <span className="muted">
+                          {" "}
+                          {sketchPlaneLabel(sketch.plane)} plane,{" "}
+                          {Object.keys(sketch.entities).length} entities
+                        </span>
+                      </button>
+                      <label>
+                        <input
+                          type="checkbox"
+                          aria-label={`Show sketch ${sketch.name} in 3D`}
+                          checked={!hidden.includes(component.id) && !hiddenSketches.includes(sketch.id)}
+                          disabled={hidden.includes(component.id)}
+                          title={hidden.includes(component.id)
+                            ? "Show the component to change sketch visibility."
+                            : "3D overlay visibility; Edit Sketch keeps the canvas visible."}
+                          onChange={() => void runCommand("sketch.toggleVisibility", {
+                            sketchId: sketch.id, documentSession: session,
+                          })}
+                        />
+                        3D
+                      </label>
+                    </div>
                   ))}
                   {!owned.length ? (
                     <p className="muted">Create a sketch in this component.</p>
