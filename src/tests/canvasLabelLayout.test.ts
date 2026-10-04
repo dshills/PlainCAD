@@ -15,6 +15,42 @@ function labels(count: number): CanvasLabelInput[] {
   }));
 }
 describe("bounded transient canvas annotation layout", () => {
+  it("reserves manual placements, clamps them and reports both overlapping labels", () => {
+    const input = labels(3);
+    const placements = layoutCanvasLabels(
+      [
+        input[0],
+        { ...input[1], manualPosition: { x: 2, y: 2 } },
+        { ...input[2], manualPosition: { x: 2, y: 2 } },
+      ],
+      1,
+      view,
+    );
+    expect(placements.get(input[1].id)!.position).toEqual({ x: 2, y: 2 });
+    expect(placements.get(input[1].id)!.crowded).toBe(true);
+    expect(placements.get(input[2].id)!.crowded).toBe(true);
+    expect(
+      canvasBoxesOverlap(
+        placements.get(input[0].id)!.box,
+        placements.get(input[1].id)!.box,
+      ),
+    ).toBe(false);
+    const clamped = layoutCanvasLabels(
+      [{ ...input[0], manualPosition: { x: 1000, y: -1000 } }],
+      1,
+      view,
+    ).get(input[0].id)!;
+    expect(clamped.box.maxX).toBeLessThanOrEqual(view.x + view.width);
+    expect(clamped.box.minY).toBeGreaterThanOrEqual(view.y);
+    const invalid = layoutCanvasLabels(
+      [{ ...input[0], manualPosition: { x: Infinity, y: 0 } }],
+      1,
+      view,
+    ).get(input[0].id)!;
+    expect(invalid.crowded).toBe(true);
+    expect(Number.isFinite(invalid.position.x)).toBe(true);
+  });
+
   it("separates coincident labels and point handles deterministically without editing input", () => {
     const input = labels(8),
       original = structuredClone(input);

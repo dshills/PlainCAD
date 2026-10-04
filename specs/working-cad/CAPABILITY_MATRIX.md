@@ -262,8 +262,14 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
   geometry leaders. Layout is transient and follows the current view. All intent
   remains accessible in selection/list controls; dense or oversized labels stay
   visible with an explicit crowded-view diagnostic. This is best-effort box
-  avoidance, not guaranteed placement around every curve/leader. Direct label
-  dragging remains unavailable.
+  avoidance, not guaranteed placement around every curve/leader. Dimension labels support pointer dragging and keyboard arrow positioning
+  (Shift for larger steps), with Home/per-family reset and Escape/pointer-cancel
+  rollback. Manual positions clamp to the view and reserve space before automatic
+  labels; overlapping manual positions remain explicit crowded placements.
+  Reference measurements remain pointer-transparent until Position reference labels
+  is enabled. Positions last only in the open canvas, never edit history or project JSON,
+  and document/view changes cancel in-flight gestures. Constraint dragging remains
+  unavailable.
 - STL validation is numerical and bounded: it does not prove absence of every
   adjacent-face or near-degenerate self-intersection. Skipping expensive checks
   is explicit. Native union remains best-effort and does not connect disjoint solids.

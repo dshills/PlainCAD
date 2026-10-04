@@ -102,6 +102,194 @@ function stlVolume(bytes: Buffer) {
   }
   return sum;
 }
+test("dimension labels move without modeling edits and cancel stale pointer gestures", async ({
+  page,
+}, info) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto("/");
+  await ready(page);
+  await page
+    .getByRole("button", { name: "Create XY sketch", exact: true })
+    .click();
+  await openCanvas(page);
+  await page.getByLabel("Canvas tool", { exact: true }).selectOption("circle");
+  await clickLocal(page, 0, 0);
+  await clickLocal(page, 5, 0);
+  await ready(page);
+  const reference = page.locator(".canvas-reference-dimension").first();
+  expect(await reference.getAttribute("role")).toBeNull();
+  const referenceBefore = await snapshot(page);
+  await page.getByLabel("Position reference labels", { exact: true }).check();
+  const refText = reference.locator("text"),
+    refStart = await refText.getAttribute("x");
+  await refText.scrollIntoViewIfNeeded();
+  const refBox = await refText.boundingBox();
+  if (!refBox) throw new Error("Reference label unavailable");
+  await page.mouse.move(
+    refBox.x + refBox.width / 2,
+    refBox.y + refBox.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    refBox.x + refBox.width / 2 + 20,
+    refBox.y + refBox.height / 2 - 15,
+    { steps: 5 },
+  );
+  await page.mouse.up();
+  expect(await refText.getAttribute("x")).not.toBe(refStart);
+  await reference.press("Home");
+  expect(await refText.getAttribute("x")).toBe(refStart);
+  await page.getByLabel("Position reference labels", { exact: true }).uncheck();
+  expect(await reference.getAttribute("role")).toBeNull();
+  expect(await snapshot(page)).toEqual(referenceBefore);
+  await page
+    .getByLabel("Canvas dimension type", { exact: true })
+    .selectOption("diameter");
+  await page
+    .getByLabel("Canvas dimension reference 1", { exact: true })
+    .selectOption({ index: 1 });
+  await page
+    .getByLabel("Canvas dimension expression", { exact: true })
+    .fill("10mm");
+  await page
+    .getByRole("button", { name: "Apply driving dimension", exact: true })
+    .click();
+  await ready(page);
+  await done(page);
+  await page
+    .getByRole("button", { name: "Extrude selected sketch", exact: true })
+    .click();
+  await ready(page, 250 * Math.PI);
+  await page.locator(".sketch-chip").first().click();
+  await openCanvas(page);
+  const svg = page.getByLabel("Sketch drawing canvas", { exact: true });
+  const label = svg.locator("[data-dimension-id]"),
+    text = label.locator("text");
+  const position = async () => ({
+    x: Number(await text.getAttribute("x")),
+    y: Number(await text.getAttribute("y")),
+  });
+  const original = await position(),
+    before = await snapshot(page);
+  const history = await page.evaluate(async () => {
+    const path = "/src/state/useCadStore.ts",
+      { useCadStore } = await import(path);
+    const state = useCadStore.getState();
+    return {
+      past: state.history.past.length,
+      request: state.rebuild.requestId,
+    };
+  });
+  await text.scrollIntoViewIfNeeded();
+  const begin = async () => {
+    const box = await text.boundingBox();
+    if (!box) throw new Error("Dimension label unavailable");
+    const x = box.x + box.width / 2,
+      y = box.y + box.height / 2;
+    await label.evaluate((element) => {
+      element.addEventListener(
+        "pointerdown",
+        (event) =>
+          element.setAttribute(
+            "data-pointer-id",
+            String((event as PointerEvent).pointerId),
+          ),
+        { once: true },
+      );
+    });
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x + 35, y - 20, { steps: 5 });
+  };
+  await begin();
+  expect(await position()).not.toEqual(original);
+  await page.keyboard.press("Escape");
+  await page.mouse.up();
+  await expect(
+    page.getByRole("dialog", { name: "Sketch canvas", exact: true }),
+  ).toBeVisible();
+  expect(await position()).toEqual(original);
+  await begin();
+  await page.mouse.up();
+  const manual = await position();
+  expect(manual.x).toBeGreaterThan(original.x);
+  expect(manual.y).toBeLessThan(original.y);
+  await label.press("ArrowRight");
+  await expect(label.locator(".canvas-label-focus")).toBeVisible();
+  expect((await position()).x).toBeGreaterThan(manual.x);
+  await label.press("Shift+ArrowUp");
+  expect((await position()).y).toBeLessThan(manual.y);
+  await label.press("Home");
+  expect(await position()).toEqual(original);
+  await begin();
+  await label.dispatchEvent("pointercancel", {
+    pointerId: Number(await label.getAttribute("data-pointer-id")),
+  });
+  await page.mouse.up();
+  expect(await position()).toEqual(original);
+  expect(await snapshot(page)).toEqual(before);
+  // A document replacement during capture must cancel rather than accept the old gesture.
+  await begin();
+  await page.evaluate(async () => {
+    const path = "/src/state/useCadStore.ts",
+      { useCadStore } = await import(path);
+    useCadStore.getState().updateDocument((document: CadDocument) => ({
+      ...document,
+      name: "Changed during drag",
+    }));
+  });
+  await page.mouse.up();
+  expect(await position()).toEqual(original);
+  await ready(page, 250 * Math.PI);
+  await begin();
+  await page.mouse.up();
+  await page.getByLabel("Show drawing dimensions", { exact: true }).uncheck();
+  await page.getByLabel("Show drawing dimensions", { exact: true }).check();
+  expect(await position()).not.toEqual(original);
+  await page
+    .getByRole("button", {
+      name: "Reset dimension label placement",
+      exact: true,
+    })
+    .click();
+  expect(await position()).toEqual(original);
+  const after = await snapshot(page);
+  expect(after.document.sketches).toEqual(before.document.sketches);
+  expect(after.document.features).toEqual(before.document.features);
+  expect(after.result!.meshes[0].geometryAssertions).toEqual(
+    before.result!.meshes[0].geometryAssertions,
+  );
+  const afterHistory = await page.evaluate(async () => {
+    const path = "/src/state/useCadStore.ts",
+      { useCadStore } = await import(path);
+    const state = useCadStore.getState();
+    return {
+      past: state.history.past.length,
+      request: state.rebuild.requestId,
+    };
+  });
+  expect(afterHistory.past).toBe(history.past + 1); // Only the explicit external rename.
+  await label.press("ArrowLeft");
+  await page.screenshot({ path: info.outputPath("dimension-placement.png") });
+  await done(page);
+  await openCanvas(page);
+  expect(await position()).toEqual(original); // Closing discards view-only placement.
+  await done(page);
+  const saving = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const saved = info.outputPath("label-placement.pcaddoc");
+  await (await saving).saveAs(saved);
+  expect(JSON.parse(await readFile(saved, "utf8")).sketches).toEqual(
+    before.document.sketches,
+  );
+  const downloading = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export STL", exact: true }).click();
+  const stl = info.outputPath("label-placement.stl");
+  await (await downloading).saveAs(stl);
+  expect(stlVolume(await readFile(stl)) / (250 * Math.PI)).toBeCloseTo(1, 2);
+  expect(errors).toEqual([]);
+});
 test("constraint markers inspect, repair and remove intent while native geometry persists", async ({
   page,
 }, info) => {

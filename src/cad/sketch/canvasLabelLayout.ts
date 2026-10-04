@@ -19,6 +19,8 @@ export interface CanvasLabelInput {
   label: string;
   position: CanvasPoint;
   align: "start" | "middle";
+  /** Manual canvas position: clamp to the view, but do not relocate around obstacles. */
+  manualPosition?: CanvasPoint;
 }
 export interface CanvasLabelPlacement {
   position: CanvasPoint;
@@ -82,13 +84,18 @@ export function layoutCanvasLabels(
     [1, -1],
     [-1, -1],
   ];
-  for (const label of labels.slice(0, MAX_CANVAS_LABELS)) {
-    const invalid = ![label.position.x, label.position.y].every(
-      Number.isFinite,
-    );
+  const bounded = labels.slice(0, MAX_CANVAS_LABELS);
+  // Reserve manual labels first so automatic labels avoid the user's placement.
+  const ordered = [
+    ...bounded.filter((l) => l.manualPosition),
+    ...bounded.filter((l) => !l.manualPosition),
+  ];
+  for (const label of ordered) {
+    const requested = label.manualPosition ?? label.position;
+    const invalid = ![requested.x, requested.y].every(Number.isFinite);
     const origin = invalid
       ? { x: view.x + view.width / 2, y: view.y + view.height / 2 }
-      : label.position;
+      : requested;
     const width =
       Math.max(fontSize, label.label.length * fontSize * 0.75) + padding * 2;
     const left = label.align === "middle" ? width / 2 : padding;
@@ -99,7 +106,7 @@ export function layoutCanvasLabels(
     const clamp = (value: number, min: number, max: number) =>
       min <= max ? Math.max(min, Math.min(max, value)) : (min + max) / 2;
     const candidates: CanvasPoint[] = [origin];
-    for (let ring = 1; ring <= 6; ring++)
+    for (let ring = 1; !label.manualPosition && ring <= 6; ring++)
       for (const [x, y] of directions)
         candidates.push({
           x: origin.x + x * ring * (width + fontSize),
@@ -137,5 +144,21 @@ export function layoutCanvasLabels(
       obstacles.push(best.box);
     }
   }
-  return result;
+  // A later manual label can overlap an earlier one; report both consistently.
+  const entries = [...result];
+  for (const [id, placement] of entries) {
+    if (
+      entries.some(
+        ([otherId, other]) =>
+          otherId !== id && canvasBoxesOverlap(placement.box, other.box),
+      )
+    )
+      placement.crowded = true;
+  }
+  return new Map(
+    bounded.flatMap((label) => {
+      const placement = result.get(label.id);
+      return placement ? [[label.id, placement] as const] : [];
+    }),
+  );
 }

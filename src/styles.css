@@ -752,3 +752,16 @@ dialog.file-dialog::backdrop { background: #0006; }
 .commit-input-draft::after {
   content: attr(data-hint);
 }
+
+.canvas-dimensions [role="button"] { cursor: grab; pointer-events: auto; touch-action: none; }
+.canvas-dimensions [role="button"] line { pointer-events: none; }
+.canvas-dimensions [role="button"]:focus-visible { outline: none; }
+.canvas-dimensions [role="button"]:focus-visible text { fill: #fff; text-decoration: underline; }
+
+.canvas-label-focus { display: none; fill: none; stroke: #fff; pointer-events: none; }
+.canvas-dimensions [role="button"]:focus-visible .canvas-label-focus { display: block; }
+
+@media (forced-colors: active) {
+  .canvas-label-focus { stroke: CanvasText; }
+  .canvas-dimensions [role="button"]:focus-visible text { fill: CanvasText; }
+}

@@ -1,3 +1,4 @@
+import { useCanvasLabelDrag } from "./useCanvasLabelDrag";
 import {
   layoutCanvasLabels,
   MAX_CANVAS_LABELS,
@@ -28,7 +29,8 @@ export function useCanvasDimensions(
   view: CanvasLabelView,
 ) {
   const [showReference, setShowReference] = useState(true),
-    [showDimensions, setShowDimensions] = useState(true);
+    [showDimensions, setShowDimensions] = useState(true),
+    [positionReferences, setPositionReferences] = useState(false);
   const [selectedId, setSelectedId] = useState("");
   const [type, setType] = useState<SketchDimension["type"]>("length"),
     [ref1, setRef1] = useState(""),
@@ -73,16 +75,28 @@ export function useCanvasDimensions(
         : [],
     [annotations, showDimensions],
   );
+  const labelDrag = useCanvasLabelDrag(
+    document,
+    view,
+    annotations
+      .filter((a) => a.anchored)
+      .slice(0, MAX_CANVAS_LABELS)
+      .map((a) => a.id),
+  );
   const placements = useMemo(
     () =>
       layoutCanvasLabels(
-        visible.map((a) => ({ ...a, align: "middle" as const })),
+        visible.map((a) => ({
+          ...a,
+          align: "middle" as const,
+          manualPosition: labelDrag.positions[a.id],
+        })),
         span / 48,
         view,
         [],
         Object.values(context?.solved.points ?? {}),
       ),
-    [visible, span, view, context?.solved],
+    [visible, span, view, context?.solved, labelDrag.positions],
   );
   const labelBoxes = useMemo(
     () => [...placements.values()].map((p) => p.box),
@@ -161,6 +175,17 @@ export function useCanvasDimensions(
             onChange={(e) => setShowReference(e.target.checked)}
           />
           Show reference measurements
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={positionReferences}
+            onChange={(event) => {
+              labelDrag.cancel();
+              setPositionReferences(event.target.checked);
+            }}
+          />
+          Position reference labels
         </label>
         <label>
           Dimension
@@ -274,9 +299,20 @@ export function useCanvasDimensions(
       </div>
       <p>
         Reference measurements describe solved geometry. D labels are editable
-        driving dimensions; click a D label or choose it above. Failed solves
-        report unavailable values. Display units follow project settings.
+        driving dimensions; click a D label or choose it above. Drag any
+        dimension label to reposition it in this open canvas. Focus a label and
+        use arrow keys (Shift for larger steps); Home restores automatic
+        placement. Escape cancels a drag. Placement does not edit or save the
+        model. Failed solves report unavailable values. Display units follow
+        project settings.
       </p>
+      <button
+        type="button"
+        disabled={!Object.keys(labelDrag.positions).length}
+        onClick={labelDrag.reset}
+      >
+        Reset dimension label placement
+      </button>
       {showDimensions &&
       annotations.filter((a) => a.anchored).length > MAX_CANVAS_LABELS ? (
         <p>
@@ -332,22 +368,16 @@ export function useCanvasDimensions(
             data-dimension-id={a.dimensionId}
             data-layout-crowded={placed.crowded}
             className={`${a.dimensionId ? "canvas-driving-dimension" : "canvas-reference-dimension"}${a.unavailable ? " canvas-dimension-unavailable" : ""}`}
-            {...(a.dimensionId
+            {...(a.dimensionId || positionReferences
               ? {
                   role: "button",
                   tabIndex: 0,
-                  "aria-label": `Edit drawing ${a.label}`,
-                  onPointerDown: (e: React.PointerEvent<SVGGElement>) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    select(a.dimensionId!);
-                  },
-                  onKeyDown: (e: React.KeyboardEvent<SVGGElement>) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      select(a.dimensionId!);
-                    }
-                  },
+                  "aria-label": a.dimensionId
+                    ? `Edit drawing ${a.label}`
+                    : `Position drawing ${a.label}`,
+                  ...labelDrag.handlers(a.id, placed.position, () => {
+                    if (a.dimensionId) select(a.dimensionId);
+                  }),
                 }
               : {})}
           >
@@ -368,6 +398,16 @@ export function useCanvasDimensions(
                 y1={-a.position.y}
                 x2={placed.position.x}
                 y2={-placed.position.y}
+              />
+            ) : null}
+            {a.dimensionId || positionReferences ? (
+              <rect
+                className="canvas-label-focus"
+                aria-hidden="true"
+                x={placed.box.minX}
+                y={-placed.box.maxY}
+                width={placed.box.maxX - placed.box.minX}
+                height={placed.box.maxY - placed.box.minY}
               />
             ) : null}
             <text
