@@ -504,3 +504,18 @@ a supported native face. Viewer clicks and keyboard plane buttons select the
 base; the sketch opens aligned to the offset basis. Invalid expressions and units
 create no sketch or history entry. Saved expressions follow parameter and face
 owner edits using the existing plane validation and repair rules.
+
+### Extrude feature editing
+
+Edit Feature in the timeline/palette and Edit feature with preview in the Inspector
+open the selected unsuppressed Extrude with its current settings. Double-clicking
+a supported timeline feature does the same. Choices come from an isolated native
+rebuild immediately before its original timeline position, excluding future/self
+target bodies. The replacement operation and the complete downstream project must
+both rebuild as valid native solids before Apply. Cancel and invalid/stale previews
+leave the document unchanged; Apply preserves feature/body IDs and timeline order
+in one undoable edit. Source-sketch repair remains available in the Inspector.
+Editing is also available for a current failed rebuild so invalid settings can
+be repaired; choices must first pass a fresh native upstream rebuild. Editing
+uses bounded isolated workers sequentially for the operation and downstream
+validation, so it costs more than creation previews on large projects.

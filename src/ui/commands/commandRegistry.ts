@@ -1,6 +1,6 @@
+import { beginExtrudeCreation, beginExtrudeEditing, editableExtrude } from "./extrudeCommand";
 import { beginModelingCreation } from "./modelingDraftCommand";
 import { useViewerState } from "../../state/viewerState";
-import { beginExtrudeCreation } from "./extrudeCommand";
 import { activeComponentId, beginProjectWorkflow, finishSketchCanvas } from "./projectWorkflowCommand";
 import { renameComponent, sketchComponentId } from "../../cad/document/components";
 import { MODEL_RESOURCE_LIMITS } from "../../cad/resourceLimits";
@@ -107,6 +107,7 @@ export interface CommandEnablement {
   createExtrude: boolean;
   createRevolve: boolean;
   selectedFeature: boolean;
+  editFeature: boolean;
   createEdgeTreatment: boolean;
   moveEarlier: boolean;
   moveLater: boolean;
@@ -131,6 +132,7 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
     exportSelectedBody: canExportStl(state) && !state.fileBusy && Boolean(selectedExportBody(state)),
     createExtrude: !canvasActive && canCreateExtrude(state),
     createRevolve: !canvasActive && Boolean(defaultRevolveAxis(state)),
+    editFeature: !canvasActive && Boolean(editableExtrude(state)),
     selectedFeature: !canvasActive && Boolean(getSelectedFeature(state)),
     createEdgeTreatment: !canvasActive && Boolean(edgeTreatmentOwner(state)),
     moveEarlier: !canvasActive && !planTimelineMove(state.history.present, state.selection.selectedIds[0], "earlier").reason,
@@ -151,6 +153,7 @@ export function isCommandEnabledForSnapshot(
 }
 
 export const commands: CadCommand[] = [
+  { id: "feature.edit", label: "Edit Selected Feature", description: "Preview changes to the selected Extrude and its downstream geometry.", enablementKey: "editFeature", run: beginExtrudeEditing },
   {
     id: "file.renameProject", internal: true, label: "Rename Project", enablementKey: "editProject",
     run: ({ projectName }) => {

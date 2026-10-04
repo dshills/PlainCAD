@@ -1,3 +1,5 @@
+import { runCommand } from "../commands/commandRegistry";
+import { useCommandEnablement } from "../commands/useCommandEnablement";
 import { useEffect, useMemo, useState } from "react";
 import { useCadStore } from "../../state/useCadStore";
 import { SketchCircle, SketchPoint } from "../../cad/document/schema";
@@ -28,6 +30,7 @@ const DEFAULT_SKETCH_NAME = "Untitled Sketch";
 const DEFAULT_FEATURE_NAME = "Untitled Feature";
 
 export function InspectorPanel() {
+  const enablement = useCommandEnablement();
   const [pendingToFace, setPendingToFace] = useState<string>();
   const [groupError, setGroupError] = useState<{ id: string; message: string }>();
   const selection = useCadStore((state) => state.selection.selectedIds[0]);
@@ -180,6 +183,7 @@ export function InspectorPanel() {
             {feature.type}
             {feature.suppressed ? " suppressed" : ""}
           </p>
+          <button disabled={!enablement.editFeature} onClick={() => void runCommand("feature.edit")}>Edit feature with preview</button>
           <ModelingFeatureControls feature={feature} />
           <AuthoredUnitsNote expressions={
             feature.type === "extrude" ? [["Distance", feature.termination?.type === "distance" ? feature.termination.distance ?? feature.distance : feature.distance]] :

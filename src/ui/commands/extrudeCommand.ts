@@ -1,3 +1,5 @@
+import { createId } from "../../cad/document/ids";
+import { featureComponentId } from "../../cad/document/components";
 import { stableBodyIdForFeature } from "../../cad/features/featureGraph";
 import { create } from "zustand";
 import { useCadStore, type CadStore } from "../../state/useCadStore";
@@ -17,6 +19,8 @@ import { evaluateParameters } from "../../cad/parameters/expressionEvaluator";
 import type { RebuildResult } from "../../cad/worker/workerProtocol";
 
 export interface ExtrudeDraft {
+  editing?: boolean;
+  editId?: string;
   document: CadDocument;
   session: number;
   componentId: string;
@@ -34,6 +38,8 @@ export function extrudeContext(state: CadStore, sketchId: string) {
     sketchComponentId(document, sketchId) !== state.activeComponentId
   )
     return;
+  // Store edits synchronously queue a rebuild and worker errors publish a fresh
+  // failed result; succeeded/failed snapshots therefore refer to immutable present.
   const current =
     (state.rebuild.status === "succeeded" ||
       state.rebuild.status === "failed") &&
@@ -92,6 +98,50 @@ export function beginExtrudeCreation(sketchId: string) {
         },
         direction: "positive",
       }),
+    },
+  });
+}
+
+export function editableExtrude(state: CadStore) {
+  const selected = state.selection.selectedIds[0];
+  if (
+    state.fileBusy ||
+    selected?.kind !== "feature" ||
+    selected.documentId !== state.history.present.id ||
+    !state.rebuild.kernelReady ||
+    (state.rebuild.status !== "succeeded" &&
+      state.rebuild.status !== "failed") ||
+    state.rebuild.result?.documentId !== state.history.present.id ||
+    state.rebuild.result.meshes.some(
+      (mesh) =>
+        mesh.geometrySource !== "opencascade" ||
+        !mesh.geometryAssertions?.valid,
+    )
+  )
+    return;
+  const feature = state.history.present.features.find(
+    (feature) => feature.id === selected.id,
+  );
+  return feature?.type === "extrude" &&
+    !feature.suppressed &&
+    featureComponentId(state.history.present, feature) ===
+      state.activeComponentId
+    ? feature
+    : undefined;
+}
+export function beginExtrudeEditing() {
+  const state = useCadStore.getState(),
+    feature = editableExtrude(state);
+  if (!feature) return;
+  useExtrudeDraft.setState({
+    draft: {
+      editing: true,
+      editId: createId("edit"),
+      document: state.history.present,
+      session: state.documentSession,
+      componentId: state.activeComponentId,
+      sketchId: feature.sketchId,
+      feature,
     },
   });
 }
@@ -169,6 +219,7 @@ export function commitExtrude(
   draft: ExtrudeDraft,
   staged: CadDocument,
   result: RebuildResult,
+  operationResult?: RebuildResult,
 ) {
   const state = useCadStore.getState();
   if (
@@ -179,11 +230,17 @@ export function commitExtrude(
   const feature = staged.features.find((item) => item.id === draft.feature.id);
   if (!feature || feature.type !== "extrude")
     throw new Error("Extrusion draft was lost.");
-  assertNativeExtrudePreview(result, staged.id, feature);
+  if (draft.editing) {
+    if (!operationResult)
+      throw new Error("Wait for the feature and downstream native previews.");
+    assertNativeExtrudePreview(operationResult, staged.id, feature);
+    assertNativeExtrudePreview(result, staged.id);
+  } else assertNativeExtrudePreview(result, staged.id, feature);
   state.updateDocument((document) =>
     document === draft.document ? upsertFeature(document, feature) : document,
   );
   if (
+    useCadStore.getState().history.present === draft.document ||
     !useCadStore
       .getState()
       .history.present.features.some((item) => item.id === feature.id)

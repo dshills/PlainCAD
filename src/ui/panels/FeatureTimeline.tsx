@@ -42,6 +42,7 @@ export function FeatureTimeline({ commandContext = emptyCommandContext }: Featur
         <div className="timeline-actions" aria-label="Timeline commands">
           <button onClick={() => runCommand("feature.extrude", commandContext)} disabled={!isCommandEnabledForSnapshot("feature.extrude", commandEnablement)}>Extrude</button>
           {["revolve", "hole", "fillet", "chamfer"].map((type) => <button key={type} onClick={() => runCommand(`feature.${type}`, commandContext)} disabled={!isCommandEnabledForSnapshot(`feature.${type}`, commandEnablement)}>{type[0].toUpperCase() + type.slice(1)}</button>)}
+          <button onClick={() => runCommand("feature.edit", commandContext)} disabled={!isCommandEnabledForSnapshot("feature.edit", commandEnablement)}>Edit Feature</button>
           <button onClick={() => runCommand("feature.suppress", commandContext)} disabled={!isCommandEnabledForSnapshot("feature.suppress", commandEnablement)}>Suppress</button>
           <button onClick={() => runCommand("feature.delete", commandContext)} disabled={!isCommandEnabledForSnapshot("feature.delete", commandEnablement)}>Delete</button>
           {(["earlier", "later"] as const).map((direction) => {
@@ -80,6 +81,7 @@ export function FeatureTimeline({ commandContext = emptyCommandContext }: Featur
               <button
                 className={`timeline-chip feature-chip ${selectedFeatureId === feature.id ? "selected" : ""}`}
                 onClick={() => select({ kind: "feature", id: feature.id, documentId: document.id })}
+                onDoubleClick={() => { select({ kind: "feature", id: feature.id, documentId: document.id }); void runCommand("feature.edit", commandContext); }}
               >
                 <span className="timeline-glyph">{featureGlyph(feature)}</span>
                 <strong>{feature.name}</strong>
