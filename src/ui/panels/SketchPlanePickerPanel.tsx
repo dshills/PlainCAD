@@ -94,8 +94,8 @@ export function SketchPlanePickerPanel() {
       </p>
       {error ? <p role="alert">{error}</p> : null}
       <p className="muted">
-        Faces currently require an unmodified native distance extrusion. Curved,
-        ambiguous and modified faces remain unavailable.
+        Faces require a native-validated extrusion cap or straight side. Retained
+        faces after Cut/Join are supported; curved, lost and split faces remain unavailable.
       </p>
       <button onClick={close}>Cancel plane selection</button>
     </section>

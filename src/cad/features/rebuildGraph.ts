@@ -1,3 +1,4 @@
+import { currentNativeFaces, nativeSketchPlaneValidator } from "./nativeSketchPlanes";
 import { absorbedBodyIds, targetBodyIds } from "../document/bodyScopes";
 import { extrusionSweep, throughAllDistance } from "./extrusionSweep";
 import { MODEL_RESOURCE_LIMITS } from "../resourceLimits";
@@ -180,10 +181,12 @@ export function rebuildDocument(
       });
     }
   }
+  const nativeReferences = OpenCascadeKernel.isInitialized() && typeof kernel.validatePlanarFace === "function";
   const planes = resolveDocumentPlanes(
     document,
     evaluated.values,
     solvedSketches,
+    nativeReferences,
   );
   for (const [id, message] of planes.errors)
     errors.push({
@@ -207,10 +210,14 @@ export function rebuildDocument(
   };
   const featureStarted = performance.now();
   const failedBodies = new Set<string>();
+  const nativePlanes = nativeReferences
+    ? nativeSketchPlaneValidator(document, planes, kernel, runtimeBodies, failedBodies, errors)
+    : undefined;
 
   // Any sketch/parameter/validation error blocks feature execution, including unsupported planes.
   if (errors.length === 0) {
     for (const feature of graphPlan.orderedFeatures) {
+      nativePlanes?.beforeFeature(feature.id);
       if (feature.suppressed) continue;
       // Supported edge roles belong to a new-body extrusion, so this is the
       // same stable target ID used by rebuildEdgeTreatmentFeature below.
@@ -230,6 +237,10 @@ export function rebuildDocument(
           continue;
         }
         if ("sketchId" in feature) {
+          if (nativePlanes?.invalidSketchIds.has(feature.sketchId)) {
+            errors.push({ id: `feature:${feature.id}:invalid-plane`, source: "feature", sourceId: feature.id, message: "Sketch plane failed native validation. Repair its face reference before rebuilding this feature." });
+            continue;
+          }
           const plane = document.sketches[feature.sketchId]?.plane;
           const owner =
             plane?.type === "face"
@@ -433,10 +444,12 @@ export function rebuildDocument(
           });
         }
       } finally {
+        // Also runs for every continue above, including invalid face planes.
         if (errors.length > errorsBefore)
           for (const id of affectedIds) if (id) failedBodies.add(id);
       }
     }
+    nativePlanes?.finish();
   }
   if (options.exportUnion && options.exportBodyIds && !errors.length) {
     const ids = options.exportBodyIds;
@@ -510,6 +523,7 @@ export function rebuildDocument(
       message:
         "Model exceeds the total triangle resource limit. Simplify or suppress bodies.",
     });
+  const availableFaces = nativeReferences ? currentNativeFaces(planes.faces, kernel, runtimeBodies, failedBodies) : undefined;
   let disposalFailures = 0;
   shapesToDispose.forEach((shape) => {
     try {
@@ -534,6 +548,7 @@ export function rebuildDocument(
       [...profilesBySketch].map(([id, detected]) => [id, detected.profiles]),
     ),
     sketchPlanes: Object.fromEntries(planes.transforms),
+    ...(availableFaces !== undefined ? { availableFaces } : {}),
     parameterValues: evaluated.values,
     ...(capturedTargetBodyIds !== undefined ? { capturedTargetBodyIds } : {}),
     metrics: {

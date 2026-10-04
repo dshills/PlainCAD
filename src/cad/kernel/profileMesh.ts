@@ -152,3 +152,39 @@ export function transformProfileMesh(
   }
   return { ...mesh, positions, normals, bounds: meshBounds(positions) };
 }
+
+/** Original authored boundary roles, including analytic circles without segments. */
+export function authoredBoundarySegments(
+  profile: SketchProfile,
+): ProfileSegment[] {
+  return [profile.outerLoop, ...profile.innerLoops].flatMap((loop) => {
+    if (loop.type !== "circle")
+      return orientedSegments(loop, loop !== profile.outerLoop);
+    const hole = profile.holes.find((item) => loop.entityIds.includes(item.id));
+    if (loop !== profile.outerLoop && !hole)
+      throw new Error("Inner circle profile lost its geometry.");
+    const center = hole
+      ? { x: hole.x, y: hole.y }
+      : {
+          x: (profile.bounds.minX + profile.bounds.maxX) / 2,
+          y: (profile.bounds.minY + profile.bounds.maxY) / 2,
+        };
+    const radius =
+        hole?.radius ?? (profile.bounds.maxX - profile.bounds.minX) / 2,
+      id = loop.entityIds[0];
+    if (!id) throw new Error("Circle perimeter lost its source entity.");
+    const start = { x: center.x + radius, y: center.y };
+    return [
+      {
+        type: "arc" as const,
+        id,
+        start,
+        end: start,
+        center,
+        radius,
+        startAngle: 0,
+        sweep: Math.PI * 2,
+      },
+    ];
+  });
+}

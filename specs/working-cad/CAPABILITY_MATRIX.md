@@ -75,13 +75,13 @@ edits, parameter-driven diameter, empty-center failure and save/open/STL recover
 | Extrude join | Up to 64 ordered explicit targets; atomic native connected union; first target ID/name survives, secondary targets absorbed; tool must add exact volume beyond target union; disconnected/no-op joins diagnosed; no fallback | Creation dialog with explicit targets and native preview; Inspector |
 | Through all | Projects all selected target bounds along the sketch normal for positive/negative directions or a symmetric total span; wrong-side targets diagnosed; subject to cut/join limits | Inspector |
 | Extrude to face | Positive termination on an upstream unmodified feature-owned planar cap/straight side, including sloped faces; native half-space trimming; end-cap area/intersection checks enforce finite face and holes | Inspector with explicit face selection and repair |
-| Negative/symmetric extrude | Distance and through-all supported with a shifted start plane and unchanged coordinate basis; unmodified distance owners publish cap/straight-side sketch planes and edge treatments; to-face tools remain positive-only | Inspector; unsupported to-face combinations disabled and diagnosed |
+| Negative/symmetric extrude | Distance and through-all supported with a shifted start plane and unchanged coordinate basis; distance owners publish native-validated retained cap/straight-side sketch planes and authored edge treatments; to-face tools remain positive-only | Inspector; unsupported to-face combinations disabled and diagnosed |
 | Revolve | Native analytic closed line/arc/circle profiles with holes; coplanar world X/Y/Z or same-sketch line axes; angles greater than 0 through 360 degrees; cross-axis/zero-volume/invalid output rejected | Shared creation command and inspector; narrow full-Y/XY rectangular fallback without kernel |
 | Revolve cut/join | Native cut on up to 64 explicit saved targets with atomic publication; join merges an ordered explicit scope into one connected solid; boolean validity/volume checks | Inspector with cut/join scope checkboxes and lost-reference removal |
 | Capture intersected targets | Native common-volume checks on current upstream solids and extrude/revolve/hole tools; saved IDs only; preserves an intersected join primary; ignores downstream bodies; empty/failed/stale probes leave the scope intact; face-only joins remain explicit | Shared command and Inspector button; dedicated worker with cancellation/time limit |
 | Hole | Up to 64 explicit saved target IDs and 64 sketch point centers; native aggregate cylindrical tools; every center must cut some target, every target must lose exact volume; atomic output publication; positive blind-depth/through-all; empty/duplicate/lost centers/targets and no-op cuts diagnosed | Shared creation command with modal target scope and center choices; full size/termination/center/source/scope repair inspector |
-| Fillet/chamfer | Real native geometry on feature-owned cap perimeters, individual line/arc cap edges, or a source line’s two extrusion-direction corners; BRep/solid-count/volume-or-surface-change checks; lost or ambiguous edges fail | Shared creation commands and size/role/source/owner repair inspector |
-| Offset/face sketch planes | Expression-driven origin/face offsets; upstream distance-extrusion caps and straight outer sides; modified/suppressed/missing owners require repair | Sketch tools with explicit replacement selection; lost planes fail rebuild |
+| Fillet/chamfer | Real native geometry on feature-owned cap perimeters, individual line/arc cap edges, or a source line’s two extrusion-direction corners; BRep/solid-count/volume-or-surface-change checks; retained authored edges also work after native booleans; grouped perimeters require every original edge and exclude new Cut/Join edges; lost/trimmed/ambiguous edges fail | Shared creation commands and size/role/source/owner repair inspector |
+| Offset/face sketch planes | Expression-driven origin/face offsets; upstream distance-extrusion caps and straight outer sides; retained native faces after Cut/Join supported at the sketch’s timeline position; removed/split/ambiguous/suppressed/missing faces require repair | Sketch tools with explicit replacement selection; lost planes fail rebuild |
 | STEP | Optional adapter interface only; no implemented exporter | Hidden |
 
 Failed operations retain upstream preview bodies but fail rebuild and disable STL.
@@ -258,8 +258,9 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
   paginate at 50 entries. Unit and Chromium checks cover rename propagation,
   lost bindings, cyclic intent and unchanged native geometry during navigation.
   This is authored structural inspection; geometry validity remains a rebuild check.
-- General post-boolean face/edge naming remains missing. Planes require an
-  unmodified positive/negative/symmetric distance new-body owner;
+- General post-boolean face/edge naming remains missing. Sketch planes use a
+  native-validated positive/negative/symmetric distance new-body role, including
+  unique retained cap/straight-side planes after booleans;
   cap and straight-side planes follow shifted sweep origins and outward normals.
   curved side faces, hole/revolve faces, and ambiguous rebinding are unsupported.
 - Canvas constraint markers cover all 11 supported types and identify current
@@ -405,12 +406,12 @@ Project replacement, sketch removal and component changes end obsolete sessions.
 Create Sketch offers colored origin planes and native cap/straight-side picking in
 the 3D viewer, with hover highlighting, matching keyboard buttons, and plane-local
 camera alignment. Native picking matches body ID, outward normal and plane
-position to exactly one supported role; ambiguous, curved, modified and fallback
+position to exactly one supported role; ambiguous, curved, lost/split and fallback
 faces diagnose without document edits. Origin selections and supported face
 references create one sketch in the active component using existing persisted
 plane data. Native browser tests cover origin picking, cap highlighting/selection,
 owner parameter edits, save/open and curved-face rejection. Generic topology and
-post-boolean face references remain outside this selection scope.
+new boolean face roles remain outside this selection scope.
 
 ### Component navigation
 
@@ -422,3 +423,25 @@ filter that follows activation. Timeline movement still validates the full
 project order. These are runtime view preferences, reset when replacing/opening
 a project and excluded from undo history and project JSON. Components remain
 flat parts at a shared origin; assembly placements and joints are unavailable.
+
+
+### Retained references after booleans
+
+Current native solids publish only surviving, unique planar extrusion cap/straight
+side roles. Sketch references, including face offsets and standalone sketches,
+are validated at their timeline position; lost, split or absorbed references
+produce sketch-linked diagnostics and block dependent modeling/export. Later
+modifiers do not invalidate earlier sketches. The canvas and repair controls use
+current validated planes. Native face measurements are cached per runtime shape
+and discarded on disposal; neither these records nor available face lists enter
+project files. Existing schema-12 references retain their saved identities.
+
+Fillet/chamfer resolve the original distance extrusion through Cut/Join lineage,
+then match authored edges against the current BRep. Entire perimeters require all
+original edges, exclude newly introduced hole/Join edges, and reject trimmed or
+ambiguous matches. Analytic circle rims match geometry independently of their
+native seam, with exact native volume checks on XY/XZ/YZ. Tests cover retained
+Cut caps, Join sides, post-boolean chamfer/fillet volumes, owner edits, save/open,
+STL, and split-face repair. Arbitrary newly created boolean faces/edges and stable
+topology naming remain unavailable; to-face termination retains its unmodified
+owner restriction.

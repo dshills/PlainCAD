@@ -94,6 +94,7 @@ export function SketchTools({
     [document.parameters],
   );
   const rebuild = useCadStore((s) => s.rebuild);
+  const currentResult = (rebuild.status === "succeeded" || rebuild.status === "failed") && rebuild.result?.documentId === document.id ? rebuild.result : undefined;
   const canonical = useMemo(
     () => solveSketch(sketch, parameters),
     [sketch, parameters],
@@ -110,8 +111,9 @@ export function SketchTools({
         rebuild.status === "succeeded" && rebuild.result?.solvedSketches
           ? new Map(Object.entries(rebuild.result.solvedSketches))
           : undefined,
+        currentResult?.availableFaces !== undefined,
       ),
-    [document, parameters, rebuild],
+    [document, parameters, rebuild, currentResult],
   );
   const entities = Object.values(sketch.entities);
   const points = entities.filter((e) => e.type === "point"),
@@ -174,10 +176,12 @@ export function SketchTools({
           ? (labels.get(error.entityId) ?? "Geometry")
           : "Sketch";
   };
+  const nativeFaces = new Set(currentResult?.availableFaces?.map(face => face.id));
+  const currentReference = sketch.plane.type === "face" ? sketch.plane : sketch.plane.type === "offset" && typeof sketch.plane.base !== "string" ? sketch.plane.base : undefined;
   const availableFaces = planes.faces.filter((f) => {
     const feature = document.features.find((item) => item.id === f.featureId);
     return (
-      !faceOwnerModifiedBefore(document, f.featureId, sketch) &&
+      (!faceOwnerModifiedBefore(document, f.featureId, sketch) || nativeFaces.has(f.id) || (currentReference?.stableFaceId === f.id && Boolean(currentResult?.sketchPlanes?.[sketch.id]))) &&
       feature?.timelineStep !== undefined &&
       sketch.timelineStep !== undefined &&
       feature.timelineStep < sketch.timelineStep

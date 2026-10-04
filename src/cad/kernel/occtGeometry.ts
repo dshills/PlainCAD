@@ -107,3 +107,45 @@ export function near(a: Point3, b: Point3): boolean {
     Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z) <= KERNEL_LINEAR_TOLERANCE * 10
   );
 }
+
+export interface NativePlanarFaceMeasurement {
+  origin: Point3;
+  normal: Point3;
+  area: number;
+}
+
+/** Measure once per current shape; records contain no native handles. */
+export function measurePlanarFaces(
+  oc: Record<string, any>,
+  shape: any,
+): NativePlanarFaceMeasurement[] {
+  return withDisposableScope((scope) => {
+    const records: NativePlanarFaceMeasurement[] = [];
+    const explorer = scope.use(
+      new oc.TopExp_Explorer_2(
+        shape,
+        oc.TopAbs_ShapeEnum.TopAbs_FACE,
+        oc.TopAbs_ShapeEnum.TopAbs_SHAPE,
+      ),
+    );
+    for (; explorer.More(); explorer.Next()) {
+      const current = scope.use(explorer.Current()),
+        face = scope.use(oc.TopoDS.Face_1(current));
+      const surface = scope.use(new oc.BRepAdaptor_Surface_2(face, true));
+      if (
+        surface.GetType().value !== oc.GeomAbs_SurfaceType.GeomAbs_Plane.value
+      )
+        continue;
+      const plane = scope.use(surface.Plane()),
+        axis = scope.use(plane.Axis()),
+        direction = scope.use(axis.Direction()),
+        origin = scope.use(axis.Location());
+      records.push({
+        origin: { x: origin.X(), y: origin.Y(), z: origin.Z() },
+        normal: { x: direction.X(), y: direction.Y(), z: direction.Z() },
+        area: surfaceArea(oc, face, scope),
+      });
+    }
+    return records;
+  });
+}

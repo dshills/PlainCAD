@@ -187,7 +187,7 @@ test("curved-face clicks diagnose unsupported picking and cancel without documen
   await page.mouse.click(projected.x, projected.y);
   const picker = page.getByRole("region", { name: "Create Sketch" });
   await expect(picker.getByRole("alert")).toContainText(
-    "curved, modified, ambiguous",
+    "curved, lost, ambiguous",
   );
   expect(await snapshot(page)).toEqual(before);
   await picker.getByRole("button", { name: "Cancel plane selection" }).click();

@@ -158,7 +158,11 @@ export function timelineDependencyErrors(document: CadDocument): string[] {
         : plane.type === "offset" && typeof plane.base !== "string"
           ? plane.base
           : undefined;
-    if (ref) requireOwner(ref.featureId, sketch, "sketch plane", true);
+    // Static dependencies check identity/order, not retained geometry. Native
+    // rebuilds validate sketch faces at their timeline position; fallback
+    // rebuilds keep the explicit modified-owner diagnostic.
+    // To-face termination below retains its stricter unmodified-owner rule.
+    if (ref) requireOwner(ref.featureId, sketch, "sketch plane");
   }
   const absorbed = new Map<string, Feature>();
   for (const item of documentTimeline(document)) {

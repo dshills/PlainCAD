@@ -31,6 +31,7 @@ import {
 import {
   extrudedProfileMesh,
   orientedSegments,
+  authoredBoundarySegments,
   transformProfileMesh,
 } from "./profileMesh";
 import {
@@ -49,6 +50,8 @@ import {
   volumeTolerance,
   planarFaces,
   surfaceArea,
+  measurePlanarFaces,
+  NativePlanarFaceMeasurement,
 } from "./occtGeometry";
 
 const BOOLEAN_FALLBACK_EPSILON = KERNEL_LINEAR_TOLERANCE;
@@ -175,12 +178,31 @@ export class OpenCascadeKernel implements KernelAdapter {
     return measured;
   }
 
+  private readonly planarReferenceCache = new WeakMap<KernelShape, NativePlanarFaceMeasurement[]>();
+
   private static openCascade: Record<string, any> | undefined;
   private static initPromise: Promise<Record<string, any>> | undefined;
 
   getWasmHeapCapacityBytes(): number | undefined {
     const bytes = OpenCascadeKernel.openCascade?.HEAPU8?.buffer?.byteLength;
     return typeof bytes === "number" && Number.isSafeInteger(bytes) && bytes > 0 ? bytes : undefined;
+  }
+
+  static isInitialized(): boolean {
+    return OpenCascadeKernel.openCascade !== undefined;
+  }
+
+  validatePlanarFace(shape: KernelShape, plane: SketchPlaneTransform): void {
+    const oc = OpenCascadeKernel.openCascade, handle = shape.kernelHandle as KernelHandle;
+    if (!oc || !handle.occtShape) throw new Error("Face reference validation requires initialized OpenCascade geometry.");
+    let measurements = this.planarReferenceCache.get(shape);
+    if (!measurements) {
+      measurements = measurePlanarFaces(oc, handle.occtShape);
+      this.planarReferenceCache.set(shape, measurements);
+    }
+    const matches = measurements.filter(face => Math.abs(Math.abs(dot(face.normal, plane.normal)) - 1) <= 1e-9 && Math.abs(dot(subtract(face.origin, plane.origin), face.normal)) <= KERNEL_LINEAR_TOLERANCE);
+    if (matches.length !== 1 || !Number.isFinite(matches[0].area) || matches[0].area <= KERNEL_LINEAR_TOLERANCE ** 2)
+      throw new Error("Sketch plane reference was lost or split into ambiguous faces. Reselect a retained planar face or an origin plane.");
   }
 
   static async initialize(): Promise<void> {
@@ -623,11 +645,11 @@ export class OpenCascadeKernel implements KernelAdapter {
   ): any[] {
     const oc = OpenCascadeKernel.openCascade!;
     let source = handle;
-    while (source.kind === "fillet" || source.kind === "chamfer")
+    while (source.kind === "fillet" || source.kind === "chamfer" || source.kind === "boolean")
       source = source.base;
     if (source.kind !== "extrusion" || !source.transform)
       throw new Error(
-        "Edge reference requires repair: its owner is no longer an unmodified distance extrusion or an edge treatment of one.",
+        "Edge reference requires repair: its source is no longer a supported distance extrusion.",
       );
     const transform = source.transform;
     const explorer = scope.use(
@@ -639,6 +661,7 @@ export class OpenCascadeKernel implements KernelAdapter {
     );
     const candidates: Array<{
       edge: any;
+      fullCircle: boolean;
       points: Array<{ x: number; y: number; z: number }>;
     }> = [];
     for (; explorer.More(); explorer.Next()) {
@@ -660,18 +683,23 @@ export class OpenCascadeKernel implements KernelAdapter {
           return { x: p.X(), y: p.Y(), z: p.Z() };
         });
       });
-      candidates.push({ edge, points });
+      candidates.push({ edge, points, fullCircle: curve.GetType().value === oc.GeomAbs_CurveType.GeomAbs_Circle.value && Math.abs(last - first - Math.PI * 2) < 1e-7 });
     }
     const selected: any[] = [];
-    const segments = orientedSegments(source.profile.outerLoop, false).concat(
-      ...source.profile.innerLoops.map((l) => orientedSegments(l, true)),
+    const segments = authoredBoundarySegments(source.profile);
+    // A grouped perimeter requires every original edge to survive. New boolean
+    // edges are excluded; missing/trimmed edges fail and matches are deduplicated below.
+    const authoredRefs = refs.flatMap(ref =>
+      (ref.role === "startCapPerimeter" || ref.role === "endCapPerimeter") && !ref.sourceEntityId
+        ? segments.map(segment => ({ ...ref, sourceEntityId: segment.id }))
+        : [ref],
     );
-    for (const ref of refs) {
+    for (const ref of authoredRefs) {
       if (ref.repairRequired || ref.kind !== "edge")
         throw new Error("Edge reference requires repair.");
       const segment = segments.find((s) => s.id === ref.sourceEntityId);
       const height = ref.role === "startCapPerimeter" ? 0 : source.distance;
-      const matches = candidates.filter(({ points }) => {
+      const matches = candidates.filter(({ points, fullCircle }) => {
         if (ref.role === "profileEdge") {
           if (!segment || segment.type !== "line") return false;
           return [segment.start, segment.end].some((p) => {
@@ -697,6 +725,13 @@ export class OpenCascadeKernel implements KernelAdapter {
           return false;
         if (!ref.sourceEntityId) return true;
         if (!segment) return false;
+        if (segment.type === "arc" && Math.abs(Math.abs(segment.sweep) - Math.PI * 2) < 1e-7) {
+          // All points passed the cap-plane membership check above.
+          // Native circle seams depend on the plane basis. Match the complete
+          // geometric circle, never a trimmed arc or a newly cut circular edge.
+          const center = transformPoint(transform, segment.center.x, segment.center.y, height);
+          return fullCircle && points.every(point => Math.abs(Math.hypot(point.x - center.x, point.y - center.y, point.z - center.z) - segment.radius) < KERNEL_LINEAR_TOLERANCE * 10);
+        }
         const start = transformPoint(
             transform,
             segment.start.x,
@@ -883,6 +918,7 @@ export class OpenCascadeKernel implements KernelAdapter {
   }
 
   disposeShape(shape: KernelShape): void {
+    this.planarReferenceCache.delete(shape);
     const handle = shape.kernelHandle as KernelHandle;
     if (handle.occtShape) this.assertions.delete(handle.occtShape);
     deleteOcct(handle.occtShape);

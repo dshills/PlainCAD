@@ -1,6 +1,6 @@
 import type { SketchProfile } from "../sketch/profileDetection";
 import type { ResolvedSketch } from "../sketch/SketchSolver";
-import type { SketchPlaneTransform } from "../sketch/planes";
+import type { AvailableFace, SketchPlaneTransform } from "../sketch/planes";
 import { RenderMesh } from "../kernel/KernelAdapter";
 import type { Quantity } from "../parameters/units";
 
@@ -27,6 +27,8 @@ export interface RebuildResult {
   solvedSketches?: Record<string, ResolvedSketch>;
   profiles?: Record<string, SketchProfile[]>;
   sketchPlanes?: Record<string, SketchPlaneTransform>;
+  /** Native-validated current faces, without kernel handles. Never persisted. */
+  availableFaces?: AvailableFace[];
 }
 
 export interface RebuildMetrics {

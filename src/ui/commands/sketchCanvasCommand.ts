@@ -87,10 +87,21 @@ export function canvasContext(
     evaluation.values,
     solvedSketches ? new Map(Object.entries(solvedSketches)) : undefined,
   );
-  const plane = planes.transforms.get(sketch.id);
+  // A current native result contains only planes that passed the timeline-stage
+  // face check. Pending rebuilds retain the conservative metadata rules.
+  const nativePlanes = current && rebuild.result?.availableFaces !== undefined;
+  const plane = nativePlanes
+    ? rebuild.result?.sketchPlanes?.[sketch.id]
+    : planes.transforms.get(sketch.id);
   if (!plane)
     throw new Error(
-      planes.errors.get(sketch.id) ??
+      (nativePlanes
+        ? rebuild.result?.errors.find(
+            (error) =>
+              error.source === "sketch" && error.sourceId === sketch.id,
+          )?.message
+        : undefined) ??
+        planes.errors.get(sketch.id) ??
         "Sketch plane is unavailable. Repair it first.",
     );
   const solved =

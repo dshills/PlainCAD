@@ -279,7 +279,7 @@ export function installSketchPlanePicking(
     if (!selected.choice) {
       useSketchPlanePicker.setState({
         error: selected.body
-          ? "This face is curved, modified, ambiguous, or not a supported native distance-extrusion face. Choose a highlighted origin plane or supported face."
+          ? "This face is curved, lost, ambiguous, or not a retained native distance-extrusion face. Choose a highlighted origin plane or supported face."
           : "Click a visible origin plane or supported planar face.",
       });
       return;

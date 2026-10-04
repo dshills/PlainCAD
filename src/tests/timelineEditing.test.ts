@@ -235,9 +235,7 @@ describe("dependency-validated timeline editing", () => {
     ).toMatch(/edge owner/);
     let modified = upsertFeature(base, { ...consumer, timelineStep: 3 });
     modified = upsertSketch(modified, { ...sketch, timelineStep: 4 });
-    expect(timelineDependencyErrors(modified).join(" ")).toMatch(
-      /modified before this reference/,
-    );
+    expect(timelineDependencyErrors(modified)).toEqual([]);
   });
 
   it("preserves the order of same-body modifiers and rejects missing or future target owners", () => {

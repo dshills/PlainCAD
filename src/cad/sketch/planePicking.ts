@@ -53,15 +53,17 @@ export function sketchPlaneChoices(
     evaluateParameters(document.parameters).values,
     new Map(Object.entries(result.solvedSketches ?? {})),
   );
+  // Current native faces are measured before shape disposal. Legacy/fallback
+  // results retain the conservative unmodified-owner rule.
+  const faces =
+    result.availableFaces ??
+    planes.faces.filter(
+      (face) => !faceOwnerModifiedBefore(document, face.featureId, {}),
+    );
   const choices = [
     ...origins,
-    ...planes.faces
-      .filter(
-        (face) =>
-          native.has(stableBodyIdForFeature(face.featureId)) &&
-          // No consumer step: check modifications through the end of the current timeline.
-          !faceOwnerModifiedBefore(document, face.featureId, {}),
-      )
+    ...faces
+      .filter((face) => native.has(stableBodyIdForFeature(face.featureId)))
       .map((face) => ({
         id: face.id,
         label: face.label,

@@ -397,11 +397,21 @@ no-op cuts/joins, disconnected joins, and lost references fail rebuild and block
 export; suppress or repair the feature to recover. Failed modifiers block subsequent
 operations on the same body while retaining upstream previews.
 
-Feature-owned face references require an unmodified positive, negative, or symmetric distance new-body
-extrusion. Caps follow the shifted start/end of the sweep with outward normals;
-straight-side planes share that shifted origin. Cap/side references are explicit roles, with reselection for repair;
-arbitrary post-boolean face/edge naming remains unsupported. Hole features use
-transformed cylindrical tools. Select a sketch or point and use `Hole` to choose
+Feature-owned sketch face references originate from positive, negative, or symmetric distance new-body
+extrusions. Retained caps and straight sides after Cut/Join are checked against the
+actual native solid at the sketch’s timeline position. Removed or split/ambiguous
+faces require repair; a later modifier does not invalidate an earlier sketch.
+Caps follow the shifted start/end of the sweep with outward normals; straight-side
+planes share that shifted origin. Cap/side references are explicit roles, with
+reselection for repair.
+
+Retained authored cap edges and side corners support native fillet/chamfer after
+booleans. An entire perimeter requires every original edge to survive; new hole or
+Join edges are excluded, and trimmed/missing edges fail explicitly. Arbitrary new
+boolean faces/edges remain unsupported. To-face termination still requires an
+unmodified upstream owner.
+
+Hole features use transformed cylindrical tools. Select a sketch or point and use `Hole` to choose
 explicit centers and one native target body. The modal validates positive length
 expressions before creating a feature. Its Inspector edits diameter, blind-depth/
 through-all termination, centers, source sketch and target body. Holes cut along
@@ -656,7 +666,8 @@ the current sketch mode and discards only incomplete drawing gestures.
 Create Sketch keeps the 3D viewer interactive while selecting a plane. Hovering a
 colored origin plane or an eligible native face highlights it; clicking creates
 one sketch in the active component and aligns the camera to its local axes. The
-chooser also offers keyboard-accessible plane/face buttons. Faces require an
-unmodified native distance-extrusion owner; curved, modified, ambiguous and
+chooser also offers keyboard-accessible plane/face buttons. Faces require a
+native-validated distance-extrusion owner, including retained faces after Cut/Join.
+Curved, lost, split/ambiguous and
 fallback faces give a diagnostic without creating a sketch. Face references use
 the existing stable feature-owned roles and follow supported owner edits.

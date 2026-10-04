@@ -114,6 +114,8 @@ export function resolveDocumentPlanes(
   document: CadDocument,
   parameters: Record<string, Quantity>,
   solvedSketches?: Map<string, ReturnType<typeof solveSketch>>,
+  // Metadata alone cannot establish that a modified face survives. Native rebuilds validate it at the consumer’s timeline position.
+  allowModifiedFaces = false,
 ): {
   transforms: Map<string, SketchPlaneTransform>;
   errors: Map<string, string>;
@@ -177,7 +179,7 @@ export function resolveDocumentPlanes(
         );
       // Modified feature faces are not guessed back onto the original surface.
       const modified = faceOwnerModifiedBefore(document, owner.id, consumer);
-      if (modified)
+      if (modified && !allowModifiedFaces)
         throw new Error(
           "Sketch plane reference requires repair: its owner body was modified. Reselect an unmodified feature-owned planar face.",
         );

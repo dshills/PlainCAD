@@ -695,9 +695,7 @@ function edgeTreatmentOwner(state = useCadStore.getState()) {
   if (selection?.kind === "body")
     feature = document.features.find(
       (f) =>
-        f.id ===
-        state.rebuild.result?.bodies.find((b) => b.id === selection.id)
-          ?.featureId,
+        stableBodyIdForFeature(f.id) === selection.id,
     );
   if (feature?.type === "fillet" || feature?.type === "chamfer") {
     const ownerId = feature.targetEdgeRefs[0]?.featureId;
@@ -715,7 +713,7 @@ function edgeTreatmentOwner(state = useCadStore.getState()) {
   );
   return availableCapRole(document, feature.id) &&
     mesh?.geometrySource === "opencascade" &&
-    ["extrusion", "fillet", "chamfer"].includes(mesh.kernelOperation ?? "")
+    ["extrusion", "cut", "fuse", "fillet", "chamfer"].includes(mesh.kernelOperation ?? "")
     ? feature
     : undefined;
 }

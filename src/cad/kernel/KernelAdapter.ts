@@ -72,6 +72,8 @@ export interface KernelAdapter {
     target: KernelShape,
     face: SketchPlaneTransform,
   ): KernelShape;
+  /** Require one finite native planar face matching an authored plane role. */
+  validatePlanarFace?(shape: KernelShape, plane: SketchPlaneTransform): void;
   cut(base: KernelShape, tool: KernelShape): KernelShape;
   cutAll(base: KernelShape, tools: KernelShape[]): KernelShape;
   /** Each tool must hit some target, and every target must lose volume; outputs publish atomically. */
