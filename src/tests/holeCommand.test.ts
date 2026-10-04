@@ -3,13 +3,18 @@ import { createBoxTemplate } from "../templates/templates";
 import { createEmptyDocument, upsertSketch } from "../cad/document/CadDocument";
 import { addPoint, createXySketch } from "../cad/sketch/SketchModel";
 import { useCadStore } from "../state/useCadStore";
-import { evaluateExpressionRef, evaluateParameters } from "../cad/parameters/expressionEvaluator";
+import {
+  evaluateExpressionRef,
+  evaluateParameters,
+} from "../cad/parameters/expressionEvaluator";
 import { importProjectText } from "../persistence/importProject";
 import { serializeProject } from "../persistence/exportProject";
 import { rebuildDocument } from "../cad/features/rebuildGraph";
 import {
   beginHoleCreation,
   createHole,
+  stageHole,
+  assertNativeHolePreview,
   holeCreationContext,
   useHoleDraft,
 } from "../ui/commands/holeCommand";
@@ -71,12 +76,39 @@ describe("explicit hole creation guards", () => {
       ok: false,
       reason: expect.stringContaining("diameter"),
     });
-    expect(
-      createHole({ ...input, throughAll: false, depth: "3deg" }),
-    ).toMatchObject({ ok: false, reason: expect.stringContaining("depth") });
+    expect(stageHole({ ...input, throughAll: false, depth: "3deg" })).toMatchObject({ ok: false, reason: expect.stringContaining("depth") });
+    const staged = stageHole(input);
+    if (!staged.ok) throw new Error(staged.reason);
+    const native = useCadStore.getState().rebuild.result!;
+    expect(createHole(input).ok).toBe(false);
+    expect(() => assertNativeHolePreview({ ...native, documentId: "another" }, document.id, staged.feature)).toThrow(/another project/);
+    expect(() => assertNativeHolePreview({ ...native, meshes: [] }, document.id, staged.feature)).toThrow(/native solid/);
+    expect(() => assertNativeHolePreview(native, document.id, staged.feature)).toThrow(/every selected target/);
+    expect(() => assertNativeHolePreview({ ...native, meshes: native.meshes.map(mesh => ({ ...mesh, geometryAssertions: { ...mesh.geometryAssertions!, volume: 0 } })) }, document.id, staged.feature)).toThrow(/native solid/);
     expect(useCadStore.getState().history.past).toHaveLength(0);
+    const bareInput = {
+      ...input,
+      diameter: "4",
+      depth: "5",
+      throughAll: false,
+    };
+    const bareDraft = stageHole(bareInput);
+    if (!bareDraft.ok) throw new Error(bareDraft.reason);
+    const cutResult = {
+      ...useCadStore.getState().rebuild.result!,
+      meshes: useCadStore
+        .getState()
+        .rebuild.result!.meshes.map((mesh) => ({
+          ...mesh,
+          kernelOperation: "cut" as const,
+        })),
+    };
     expect(
-      createHole({ ...input, diameter: "4", depth: "5", throughAll: false }).ok,
+      createHole(input, { feature: bareDraft.feature, result: cutResult }).ok,
+    ).toBe(false);
+    expect(
+      createHole(bareInput, { feature: bareDraft.feature, result: cutResult })
+        .ok,
     ).toBe(true);
     const authored = useCadStore.getState().history.present;
     const hole = authored.features.find((f) => f.type === "hole")!;
@@ -92,8 +124,13 @@ describe("explicit hole creation guards", () => {
       }),
     );
     expect(evaluateParameters(changed.parameters).errors).toEqual([]);
-    expect(evaluateExpressionRef(hole.diameter, { parameters: {} }).quantity?.value).toBe(4);
-    expect(hole.depth !== "throughAll" && evaluateExpressionRef(hole.depth, { parameters: {} }).quantity?.value).toBe(5);
+    expect(
+      evaluateExpressionRef(hole.diameter, { parameters: {} }).quantity?.value,
+    ).toBe(4);
+    expect(
+      hole.depth !== "throughAll" &&
+        evaluateExpressionRef(hole.depth, { parameters: {} }).quantity?.value,
+    ).toBe(5);
     // The new feature keeps its captured mm sizing after defaults change and save/open.
     expect(changed.features.find((f) => f.type === "hole")).toMatchObject({
       diameter: { authoredUnit: "mm" },
@@ -106,6 +143,8 @@ describe("explicit hole creation guards", () => {
       rebuild: { ...useCadStore.getState().rebuild, status: "queued" },
     });
     expect(holeCreationContext(useCadStore.getState())).toBeUndefined();
+    expect(createHole(input).ok).toBe(false);
+    useCadStore.getState().setDocument(document);
     expect(createHole(input).ok).toBe(false);
     useCadStore.getState().setDocument(createEmptyDocument());
     expect(createHole(input).ok).toBe(false);

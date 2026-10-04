@@ -295,15 +295,22 @@ test("native hole dialog requires explicit centers/target; blind/through edits, 
   await dialog
     .getByRole("textbox", { name: "Hole diameter", exact: true })
     .fill("-1mm");
-  await dialog.getByRole("button", { name: "Create hole feature" }).click();
-  await expect(dialog.getByRole("alert")).toContainText(
-    "Hole diameter must be a positive length",
-  );
+  await expect(dialog.getByRole("status", { name: "Hole preview status" })).toContainText("Hole diameter must be a positive length");
+  await expect(dialog.getByRole("button", { name: "Create hole feature" })).toBeDisabled();
   expect((await snapshot(page)).document.features).toHaveLength(1);
   await dialog
     .getByRole("textbox", { name: "Hole diameter", exact: true })
     .fill("drill");
   await expect(dialog.getByRole("alert")).not.toBeVisible();
+  await expect(dialog.getByRole("status", { name: "Hole preview status" })).toContainText("Native preview ready");
+  const beforeApply = await snapshot(page);
+  await dialog.getByRole("button", { name: "Cancel hole" }).click();
+  expect((await snapshot(page)).document).toEqual(beforeApply.document);
+  await page.getByRole("button", { name: "Hole from selected sketch", exact: true }).click();
+  await dialog.getByLabel("Include hole target Base solid Body", { exact: true }).check();
+  await dialog.getByLabel("Hole center at 5.000, 5.000 mm", { exact: true }).check();
+  await dialog.getByLabel("Hole diameter", { exact: true }).fill("drill");
+  await expect(dialog.getByRole("status", { name: "Hole preview status" })).toContainText("Native preview ready");
   await dialog.getByRole("button", { name: "Create hole feature" }).click();
   await expect(dialog).not.toBeVisible();
   const full = 2000 - Math.PI * 4 * 10;

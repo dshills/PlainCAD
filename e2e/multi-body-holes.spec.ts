@@ -152,6 +152,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
         .getByLabel(`Hole center at ${x.toFixed(3)}, 5.000 mm`, { exact: true })
         .check();
     await dialog.getByLabel("Hole diameter", { exact: true }).fill("drill");
+    await expect(dialog.getByRole("status", { name: "Hole preview status" })).toContainText("Native preview ready");
     await dialog.getByRole("button", { name: "Create hole feature" }).click();
     await expect(dialog).not.toBeVisible();
     const volume = (diameter: number, depth = 10) =>

@@ -1,4 +1,9 @@
-import { featureComponentId, sketchComponentId } from "../../cad/document/components";
+import type { CadDocument, HoleFeature } from "../../cad/document/schema";
+import type { RebuildResult } from "../../cad/worker/workerProtocol";
+import {
+  featureComponentId,
+  sketchComponentId,
+} from "../../cad/document/components";
 import { create } from "zustand";
 import type { CadStore } from "../../state/useCadStore";
 import { useCadStore } from "../../state/useCadStore";
@@ -12,7 +17,15 @@ import {
 } from "../../cad/parameters/expressionEvaluator";
 
 export const useHoleDraft = create<{
-  draft?: { documentId: string; sketchId: string; centerPointIds: string[] };
+  draft?: {
+    document: CadDocument;
+    session: number;
+    componentId: string;
+    featureId: string;
+    documentId: string;
+    sketchId: string;
+    centerPointIds: string[];
+  };
 }>(() => ({}));
 export type HoleDraft = NonNullable<
   ReturnType<typeof useHoleDraft.getState>["draft"]
@@ -23,6 +36,7 @@ export function holeCreationContext(state: CadStore, sketchId?: string) {
   const document = state.history.present,
     { rebuild } = state;
   if (
+    state.fileBusy ||
     !rebuild.kernelReady ||
     rebuild.status !== "succeeded" ||
     !rebuild.result?.success ||
@@ -37,7 +51,11 @@ export function holeCreationContext(state: CadStore, sketchId?: string) {
       : selected?.kind === "sketchEntity"
         ? Object.values(document.sketches).find((s) => s.entities[selected.id])
         : undefined;
-  if (!sketch) return undefined;
+  if (
+    !sketch ||
+    sketchComponentId(document, sketch.id) !== state.activeComponentId
+  )
+    return undefined;
   const solved = rebuild.result.solvedSketches?.[sketch.id];
   const points = Object.values(sketch.entities).filter(
     (e) => e.type === "point" && solved?.points[e.id],
@@ -53,7 +71,8 @@ export function holeCreationContext(state: CadStore, sketchId?: string) {
   const bodies = document.features
     .filter(
       (f) =>
-        featureComponentId(document, f) === sketchComponentId(document, sketch.id) &&
+        featureComponentId(document, f) ===
+          sketchComponentId(document, sketch.id) &&
         !f.suppressed &&
         (f.type === "extrude" || f.type === "revolve") &&
         f.operation === "newBody",
@@ -81,6 +100,10 @@ export function beginHoleCreation() {
       : [];
   useHoleDraft.setState({
     draft: {
+      document: context.document,
+      session: state.documentSession,
+      componentId: state.activeComponentId,
+      featureId: createId("feature"),
       documentId: context.document.id,
       sketchId: context.sketch.id,
       centerPointIds: centers,
@@ -88,7 +111,7 @@ export function beginHoleCreation() {
   });
 }
 
-export function createHole(input: {
+export interface HoleInput {
   name: string;
   targetBodyId?: string;
   targetBodyIds?: string[];
@@ -96,14 +119,30 @@ export function createHole(input: {
   diameter: string;
   depth: string;
   throughAll: boolean;
-}): { ok: true } | { ok: false; reason: string } {
-  const state = useCadStore.getState(),
-    draft = useHoleDraft.getState().draft;
+}
+export function isCurrentHoleDraft(
+  draft: HoleDraft,
+  state: CadStore = useCadStore.getState(),
+) {
+  return (
+    state.history.present === draft.document &&
+    state.documentSession === draft.session &&
+    state.activeComponentId === draft.componentId &&
+    !state.fileBusy
+  );
+}
+export function stageHole(
+  input: HoleInput,
+  state: CadStore = useCadStore.getState(),
+  draft = useHoleDraft.getState().draft,
+):
+  | { ok: true; feature: HoleFeature; document: CadDocument }
+  | { ok: false; reason: string } {
   const fail = (reason: string): { ok: false; reason: string } => ({
     ok: false,
     reason,
   });
-  if (!draft || draft.documentId !== state.history.present.id)
+  if (!draft || !isCurrentHoleDraft(draft, state))
     return fail(
       "Project changed. Close this dialog and choose the source sketch again.",
     );
@@ -160,7 +199,7 @@ export function createHole(input: {
       );
   }
   const feature = {
-    id: createId("feature"),
+    id: draft.featureId,
     name: input.name.trim() || "Hole",
     type: "hole" as const,
     sketchId: context.sketch.id,
@@ -171,19 +210,89 @@ export function createHole(input: {
       ? ("throughAll" as const)
       : { expression: input.depth, authoredUnit, unit: "mm" },
   };
+  return {
+    ok: true,
+    feature,
+    document: upsertFeature(draft.document, feature),
+  };
+}
+export function assertNativeHolePreview(
+  result: RebuildResult,
+  documentId: string,
+  feature: HoleFeature,
+) {
+  if (result.documentId !== documentId || !result.success)
+    throw new Error(
+      result.errors.map((error) => error.message).join(" ") ||
+        "Hole preview failed or belongs to another project.",
+    );
+  if (
+    !result.meshes.length ||
+    result.meshes.some(
+      (mesh) =>
+        mesh.geometrySource !== "opencascade" ||
+        !mesh.geometryAssertions?.valid ||
+        !(mesh.geometryAssertions.volume > 0) ||
+        !(mesh.geometryAssertions.solidCount > 0),
+    )
+  )
+    throw new Error("Hole preview requires valid native solid geometry.");
+  // The native rebuild rejects no-op centers/targets before publishing a
+  // successful result; this guard additionally refuses fallback or wrong outputs.
+  const targets =
+    feature.targetBodyIds ??
+    (feature.targetBodyId ? [feature.targetBodyId] : []);
+  if (
+    !targets.length ||
+    targets.some(
+      (id) =>
+        !result.meshes.some(
+          (mesh) => mesh.bodyId === id && mesh.kernelOperation === "cut",
+        ),
+    )
+  )
+    throw new Error("Hole preview did not drill every selected target body.");
+}
+export function createHole(
+  input: HoleInput,
+  preview?: { feature: HoleFeature; result: RebuildResult },
+): { ok: true } | { ok: false; reason: string } {
+  const staged = stageHole(input);
+  if (!staged.ok) return staged;
+  if (
+    !preview ||
+    JSON.stringify(preview.feature) !== JSON.stringify(staged.feature)
+  )
+    return {
+      ok: false,
+      reason: "Wait for the current native hole preview before applying.",
+    };
+  try {
+    assertNativeHolePreview(preview.result, staged.document.id, staged.feature);
+  } catch (error) {
+    return {
+      ok: false,
+      reason: error instanceof Error ? error.message : String(error),
+    };
+  }
+  const state = useCadStore.getState(),
+    feature = staged.feature;
   state.updateDocument((d) => upsertFeature(d, feature));
   if (
     !useCadStore
       .getState()
       .history.present.features.some((f) => f.id === feature.id)
   )
-    return fail(
-      useCadStore.getState().fileError ?? "Hole feature could not be created.",
-    );
+    return {
+      ok: false,
+      reason:
+        useCadStore.getState().fileError ??
+        "Hole feature could not be created.",
+    };
   state.select({
     kind: "feature",
     id: feature.id,
-    documentId: context.document.id,
+    documentId: staged.document.id,
   });
   useHoleDraft.setState({ draft: undefined });
   return { ok: true };

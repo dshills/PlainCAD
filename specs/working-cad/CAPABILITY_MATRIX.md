@@ -79,7 +79,7 @@ edits, parameter-driven diameter, empty-center failure and save/open/STL recover
 | Revolve | Native analytic closed line/arc/circle profiles with holes; coplanar world X/Y/Z or same-sketch line axes; angles greater than 0 through 360 degrees; cross-axis/zero-volume/invalid output rejected | Native preview-and-Apply creation dialog with explicit profile/axis/angle; inspector; narrow full-Y/XY rectangular fallback for loaded documents without kernel |
 | Revolve cut/join | Native cut on up to 64 explicit saved targets with atomic publication; join merges an ordered explicit scope into one connected solid; boolean validity/volume checks | Creation dialog with explicit native target previews; Inspector with cut/join scope checkboxes and lost-reference removal |
 | Capture intersected targets | Native common-volume checks on current upstream solids and extrude/revolve/hole tools; saved IDs only; preserves an intersected join primary; ignores downstream bodies; empty/failed/stale probes leave the scope intact; face-only joins remain explicit | Shared command and Inspector button; dedicated worker with cancellation/time limit |
-| Hole | Up to 64 explicit saved target IDs and 64 sketch point centers; native aggregate cylindrical tools; every center must cut some target, every target must lose exact volume; atomic output publication; positive blind-depth/through-all; empty/duplicate/lost centers/targets and no-op cuts diagnosed | Shared creation command with modal target scope and center choices; full size/termination/center/source/scope repair inspector |
+| Hole | Up to 64 explicit saved target IDs and 64 sketch point centers; native aggregate cylindrical tools; every center must cut some target, every target must lose exact volume; atomic output publication; positive blind-depth/through-all; empty/duplicate/lost centers/targets and no-op cuts diagnosed | Native preview-and-Apply creation with modal target scope and center choices; full size/termination/center/source/scope repair inspector |
 | Fillet/chamfer | Real native geometry on feature-owned cap perimeters, individual line/arc cap edges, or a source line’s two extrusion-direction corners; BRep/solid-count/volume-or-surface-change checks; retained authored edges also work after native booleans; grouped perimeters require every original edge and exclude new Cut/Join edges; lost/trimmed/ambiguous edges fail | Native preview-and-Apply creation dialogs with size/role/source/owner choices; repair inspector |
 | Offset/face sketch planes | Expression-driven origin/face offsets; upstream distance-extrusion caps and straight outer sides; retained native faces after Cut/Join supported at the sketch’s timeline position; removed/split/ambiguous/suppressed/missing faces require repair | Sketch tools with explicit replacement selection; lost planes fail rebuild |
 | STEP | Optional adapter interface only; no implemented exporter | Hidden |
@@ -485,3 +485,14 @@ depth edits and undo while hidden, body/component view restoration, save/open
 reset and native STL volume. Stale context commands cannot hide reused IDs in a
 replacement project. No visibility state is serialized or used as fabrication
 scope.
+
+### Hole creation preview
+
+Hole creation now rebuilds the staged project in an isolated native worker before
+Create hole feature becomes available. Invalid dimensions, unused centers, no-op
+cuts and missing targets leave the document unchanged. Diameter, blind depth and
+Through All changes invalidate previous previews; Cancel, document replacement
+(including the same ID), component changes and file jobs reject stale drafts.
+Every resulting body must remain a valid native solid, and each selected body must
+publish a native Cut. The kernel rejects unchanged cuts before success. Applying
+adds one history edit.
