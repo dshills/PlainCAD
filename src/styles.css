@@ -726,9 +726,10 @@ dialog.file-dialog::backdrop { background: #0006; }
 .canvas-constraints { fill: #8de0cd; stroke: #8de0cd; }
 .canvas-constraints line { fill: none; pointer-events: none; }
 .canvas-constraints text { stroke: #111923; stroke-width: 0.07em; paint-order: stroke; }
-.canvas-constraint-marker { cursor: pointer; }
+.canvas-constraint-marker { cursor: grab; touch-action: none; }
 .canvas-constraint-selected, .canvas-constraint-marker:focus { fill: #fff; stroke: #fff; }
-.canvas-constraint-marker:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.canvas-constraint-marker:focus-visible { outline: none; }
+.canvas-constraint-marker:focus-visible .canvas-label-focus { display: block; }
 .canvas-constraint-marker[data-constraint-state="redundant"] { fill: #ffc45c; stroke: #ffc45c; }
 .canvas-constraint-marker[data-constraint-state="conflicting"], .canvas-constraint-marker[data-constraint-state="unavailable"] { fill: #ff9292; stroke: #ff9292; }
 
@@ -763,5 +764,6 @@ dialog.file-dialog::backdrop { background: #0006; }
 
 @media (forced-colors: active) {
   .canvas-label-focus { stroke: CanvasText; }
-  .canvas-dimensions [role="button"]:focus-visible text { fill: CanvasText; }
+  .canvas-dimensions [role="button"]:focus-visible text,
+  .canvas-constraint-marker:focus-visible text { fill: CanvasText; }
 }

@@ -34,6 +34,7 @@ export function useCanvasLabelDrag(
         pointer: CanvasPoint;
         clientX: number;
         clientY: number;
+        select: () => void;
       }
     | undefined
   >(undefined);
@@ -116,7 +117,6 @@ export function useCanvasLabelDrag(
       event.preventDefault();
       if (event.button !== 0 || !document) return;
       cancel();
-      select();
       event.currentTarget.focus();
       const pointer = localPoint(event);
       if (!pointer) return;
@@ -130,6 +130,7 @@ export function useCanvasLabelDrag(
         pointer,
         clientX: event.clientX,
         clientY: event.clientY,
+        select,
       };
       event.currentTarget.setPointerCapture(event.pointerId);
     },
@@ -141,10 +142,19 @@ export function useCanvasLabelDrag(
     onPointerUp: (event: PointerEvent<SVGGElement>) => {
       event.stopPropagation();
       if (gesture.current?.pointerId !== event.pointerId) return;
+      const captured = gesture.current;
       const next = target(event);
+      const click =
+        captured.document === document &&
+        captured.viewKey === viewKey &&
+        Math.hypot(
+          event.clientX - captured.clientX,
+          event.clientY - captured.clientY,
+        ) < 3;
       cancel();
       if (next)
         setPositions((previous) => ({ ...previous, [next.id]: next.position }));
+      else if (click) captured.select();
     },
     onPointerCancel: (event: PointerEvent<SVGGElement>) => {
       event.stopPropagation();

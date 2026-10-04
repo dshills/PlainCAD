@@ -251,8 +251,9 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
   Native Chromium checks conflict recovery, missing-reference repair, unchanged
   volume through annotation/repair/removal, undo/redo, save/open and STL.
   Lists paginate at 20 entries and at most 128 anchored markers/16 leaders per
-  marker render. Creation remains in Sketch tools; constraint glyph dragging
-  remains unavailable.
+  marker render. Creation remains in Sketch tools. Constraint labels support pointer
+  and keyboard positioning, Home/family reset and cancelled-gesture rollback;
+  leaders follow the referenced geometry and inspection/repair retain stable IDs.
 - Dimension and constraint labels now share bounded automatic placement:
   dimension labels reserve space first; constraint labels avoid those boxes and
   point handles. Font-size estimates and 49 candidate positions bound work to
@@ -262,14 +263,14 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
   geometry leaders. Layout is transient and follows the current view. All intent
   remains accessible in selection/list controls; dense or oversized labels stay
   visible with an explicit crowded-view diagnostic. This is best-effort box
-  avoidance, not guaranteed placement around every curve/leader. Dimension labels support pointer dragging and keyboard arrow positioning
+  avoidance, not guaranteed placement around every curve/leader. Dimension and constraint labels support pointer dragging and keyboard arrow positioning
   (Shift for larger steps), with Home/per-family reset and Escape/pointer-cancel
   rollback. Manual positions clamp to the view and reserve space before automatic
   labels; overlapping manual positions remain explicit crowded placements.
   Reference measurements remain pointer-transparent until Position reference labels
   is enabled. Positions last only in the open canvas, never edit history or project JSON,
-  and document/view changes cancel in-flight gestures. Constraint dragging remains
-  unavailable.
+  and document/view changes cancel in-flight gestures. Constraint positions remain
+  while markers are hidden; closing the canvas discards all manual placement.
 - STL validation is numerical and bounded: it does not prove absence of every
   adjacent-face or near-degenerate self-intersection. Skipping expensive checks
   is explicit. Native union remains best-effort and does not connect disjoint solids.

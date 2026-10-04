@@ -1,3 +1,4 @@
+import { useCanvasLabelDrag } from "./useCanvasLabelDrag";
 import {
   layoutCanvasLabels,
   MAX_CANVAS_LABELS,
@@ -60,6 +61,11 @@ export function useCanvasConstraints(
     ),
     annotation = annotations.find((a) => a.id === selectedId);
   const anchored = annotations.filter((a) => a.position);
+  const labelDrag = useCanvasLabelDrag(
+    context?.document,
+    view,
+    anchored.slice(0, MARKER_LIMIT).map((a) => a.id),
+  );
   const placements = useMemo(
     () =>
       layoutCanvasLabels(
@@ -72,6 +78,7 @@ export function useCanvasConstraints(
                 label: a.label,
                 position: a.position!,
                 align: "start" as const,
+                manualPosition: labelDrag.positions[a.id],
               }))
           : [],
         span / 48,
@@ -79,7 +86,15 @@ export function useCanvasConstraints(
         reserved,
         Object.values(context?.solved.points ?? {}),
       ),
-    [annotations, show, span, view, reserved, context?.solved],
+    [
+      annotations,
+      show,
+      span,
+      view,
+      reserved,
+      context?.solved,
+      labelDrag.positions,
+    ],
   );
   const crowded = [...placements.values()].filter((p) => p.crowded).length;
   const currentPage = Math.min(
@@ -171,15 +186,29 @@ export function useCanvasConstraints(
         <input
           type="checkbox"
           checked={show}
-          onChange={(e) => setShow(e.target.checked)}
+          onChange={(e) => {
+            labelDrag.cancel();
+            setShow(e.target.checked);
+          }}
         />{" "}
         Show constraint markers
       </label>
       <p>
         C labels locate referenced geometry, rather than tangency contact
         points. Select a marker or list entry to inspect and repair its ordered
-        references. Create constraints in Sketch tools.
+        references. Drag a marker to position its label, or focus it and use
+        arrow keys (Shift for larger steps). Home restores automatic placement;
+        Escape cancels a drag. Positions last only in this open canvas,
+        including while markers are hidden, and never change geometry or saved
+        intent. Create constraints in Sketch tools.
       </p>
+      <button
+        type="button"
+        disabled={!Object.keys(labelDrag.positions).length}
+        onClick={labelDrag.reset}
+      >
+        Reset constraint label placement
+      </button>
       <ul className="canvas-constraint-list">
         {annotations
           .slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE)
@@ -274,17 +303,7 @@ export function useCanvasConstraints(
             role="button"
             tabIndex={0}
             aria-label={`Inspect drawing constraint ${a.label}`}
-            onPointerDown={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              select(a.id);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                select(a.id);
-              }
-            }}
+            {...labelDrag.handlers(a.id, placed.position, () => select(a.id))}
           >
             <title>
               {a.title}
@@ -301,6 +320,14 @@ export function useCanvasConstraints(
                   y2={-placed.position.y}
                 />
               ))}
+            <rect
+              className="canvas-label-focus"
+              aria-hidden="true"
+              x={placed.box.minX}
+              y={-placed.box.maxY}
+              width={placed.box.maxX - placed.box.minX}
+              height={placed.box.maxY - placed.box.minY}
+            />
             <text x={placed.position.x} y={-placed.position.y}>
               {a.label}
             </text>

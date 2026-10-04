@@ -191,14 +191,13 @@ rebuild until their expressions are repaired; reused names cannot retarget them.
    drawing gestures to pass through. Layout stays transient during zoom/pan and
    does not edit the document. Each family shows at most 128 labels; all intent
    remains in its selection/list controls. Crowded views report when placement
-   cannot separate labels. Dimension labels can be dragged or moved with arrow
-   keys (Shift for larger
-   steps); Home or Reset dimension label placement restores automatic layout.
-   Enable Position reference labels to move reference measurements; they otherwise
-   allow drawing clicks through. Escape cancels a drag. Placement lasts only in the open canvas and does not
-   alter geometry or project JSON. Hide references or zoom in; constraint
-   dragging and
-   guaranteed collision-free placement remain unavailable.
+   cannot separate labels. Dimension and constraint labels can be dragged or moved
+   with arrow keys (Shift for larger steps). Home or the respective Reset label
+   placement button restores automatic layout. Enable Position reference labels
+   to move reference measurements; they otherwise allow drawing clicks through.
+   Escape cancels a drag. Placement lasts only in the open canvas and does not
+   alter geometry or project JSON. Hide references or zoom in when crowded;
+   guaranteed collision-free placement remains unavailable.
    Use the rectangle/circle helpers or Sketch tools to add points, lines, circles,
    and center/start/end arcs. Construction curves appear dashed and are excluded
    from solid profiles.

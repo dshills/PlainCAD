@@ -290,6 +290,229 @@ test("dimension labels move without modeling edits and cancel stale pointer gest
   expect(stlVolume(await readFile(stl)) / (250 * Math.PI)).toBeCloseTo(1, 2);
   expect(errors).toEqual([]);
 });
+for (const plane of ["XY", "XZ", "YZ"] as const) {
+  test(`${plane}: constraint labels position, report crowding and cancel view changes without changing native geometry`, async ({
+    page,
+  }, info) => {
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    await page.goto("/");
+    await ready(page);
+    await page
+      .getByRole("button", { name: `Create ${plane} sketch`, exact: true })
+      .click();
+    await openCanvas(page);
+    await page
+      .getByLabel("Canvas tool", { exact: true })
+      .selectOption("rectangle");
+    await clickLocal(page, 0, 0);
+    await clickLocal(page, 20, 10);
+    await done(page);
+    await ready(page);
+    const sketch = Object.values((await snapshot(page)).document.sketches)[0];
+    const lines = Object.values(sketch.entities).filter(
+      (entity) => entity.type === "line",
+    );
+    await page
+      .getByLabel("Constraint type", { exact: true })
+      .selectOption("horizontal");
+    await page
+      .getByLabel("Constraint entities", { exact: true })
+      .selectOption(lines[0].id);
+    await page
+      .getByRole("button", { name: "Add constraint", exact: true })
+      .click();
+    await ready(page);
+    const id = (await snapshot(page)).document.sketches[sketch.id]
+      .constraints[0].id;
+    await page
+      .getByRole("button", { name: "Extrude selected sketch", exact: true })
+      .click();
+    await ready(page, 2000);
+    const original = await snapshot(page);
+    await page.locator(".sketch-chip").first().click();
+    await openCanvas(page);
+    const svg = page.getByLabel("Sketch drawing canvas", { exact: true });
+    const marker = svg.locator(`[data-constraint-id="${id}"]`),
+      text = marker.locator("text");
+    const position = async () => ({
+      x: Number(await text.getAttribute("x")),
+      y: Number(await text.getAttribute("y")),
+    });
+    const initial = await position();
+    // A first drag must not open controls and move the SVG under the pointer.
+    await text.scrollIntoViewIfNeeded();
+    const initialBox = await text.boundingBox();
+    const scale = await svg.evaluate((element) => {
+      const matrix = (element as SVGSVGElement).getScreenCTM();
+      if (!matrix) throw new Error("Canvas transform unavailable");
+      return { x: matrix.a, y: matrix.d };
+    });
+    if (!initialBox) throw new Error("Canvas label unavailable");
+    await page.mouse.move(
+      initialBox.x + initialBox.width / 2,
+      initialBox.y + initialBox.height / 2,
+    );
+    await page.mouse.down();
+    await page.mouse.move(
+      initialBox.x + initialBox.width / 2 + 20,
+      initialBox.y + initialBox.height / 2 - 10,
+      { steps: 5 },
+    );
+    await page.mouse.up();
+    expect((await position()).x - initial.x).toBeCloseTo(20 / scale.x, 3);
+    expect((await position()).y - initial.y).toBeCloseTo(-10 / scale.y, 3);
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+        ),
+    );
+    await expect(
+      page.getByRole("button", {
+        name: "Apply constraint references",
+        exact: true,
+      }),
+    ).toHaveCount(0);
+    await marker.press("Home");
+    expect(await position()).toEqual(initial);
+    // Minor click jitter uses the same threshold as dragging and still inspects.
+    const clickBox = await text.boundingBox();
+    if (!clickBox) throw new Error("Constraint label unavailable");
+    await page.mouse.move(
+      clickBox.x + clickBox.width / 2,
+      clickBox.y + clickBox.height / 2,
+    );
+    await page.mouse.down();
+    await page.mouse.move(
+      clickBox.x + clickBox.width / 2 + 1,
+      clickBox.y + clickBox.height / 2 + 1,
+    );
+    await page.mouse.up();
+    await expect(
+      page.getByRole("button", {
+        name: "Apply constraint references",
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", {
+        name: "Reset constraint label placement",
+        exact: true,
+      }),
+    ).toBeDisabled();
+    expect(await position()).toEqual(initial);
+    await marker.press("Enter");
+    await expect(
+      page.getByRole("button", {
+        name: "Apply constraint references",
+        exact: true,
+      }),
+    ).toBeVisible();
+    await marker.press("ArrowRight");
+    await expect(marker.locator(".canvas-label-focus")).toBeVisible();
+    expect((await position()).x).toBeGreaterThan(initial.x);
+    await marker.press("Shift+ArrowUp");
+    expect((await position()).y).toBeLessThan(initial.y);
+    await marker.press("Home");
+    expect(await position()).toEqual(initial);
+    const begin = async () => {
+      await text.scrollIntoViewIfNeeded();
+      const box = await text.boundingBox();
+      if (!box) throw new Error("Constraint label unavailable");
+      const start = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+      await page.mouse.move(start.x, start.y);
+      await page.mouse.down();
+      return start;
+    };
+    await begin();
+    const referenceBox = await svg
+      .locator(".canvas-reference-dimension text")
+      .first()
+      .boundingBox();
+    if (!referenceBox) throw new Error("Reference dimension unavailable");
+    await page.mouse.move(
+      referenceBox.x + referenceBox.width / 2,
+      referenceBox.y + referenceBox.height / 2,
+      { steps: 5 },
+    );
+    await page.mouse.up();
+    expect(await position()).not.toEqual(initial);
+    await expect(marker).toHaveAttribute("data-layout-crowded", "true");
+    await expect(
+      page.getByText("1 constraint labels remain crowded in this view.", {
+        exact: false,
+      }),
+    ).toBeVisible();
+    const manual = await position();
+    await page.getByLabel("Show constraint markers", { exact: true }).uncheck();
+    await page.getByLabel("Show constraint markers", { exact: true }).check();
+    expect(await position()).toEqual(manual);
+    await page
+      .getByRole("button", {
+        name: "Reset constraint label placement",
+        exact: true,
+      })
+      .click();
+    expect(await position()).toEqual(initial);
+    await separatedAnnotations(page);
+    const cancelled = await begin();
+    await page.mouse.move(cancelled.x + 25, cancelled.y - 15, { steps: 3 });
+    await page.keyboard.press("Escape");
+    await page.mouse.up();
+    expect(await position()).toEqual(initial);
+    await expect(
+      page.getByRole("dialog", { name: "Sketch canvas", exact: true }),
+    ).toBeVisible();
+    const stale = await begin();
+    await page.mouse.move(stale.x + 25, stale.y - 15, { steps: 3 });
+    // Change the view while the pointer remains captured; the gesture must roll back.
+    await page
+      .getByRole("button", { name: "Zoom out", exact: true })
+      .evaluate((button) => (button as HTMLButtonElement).click());
+    await page.mouse.up();
+    await expect(
+      page.getByRole("button", {
+        name: "Reset constraint label placement",
+        exact: true,
+      }),
+    ).toBeDisabled();
+    expect(await snapshot(page)).toEqual(original);
+    await marker.press("ArrowLeft");
+    await page.screenshot({
+      path: info.outputPath("constraint-placement.png"),
+    });
+    await done(page);
+    await openCanvas(page);
+    expect(await position()).toEqual(initial);
+    await done(page);
+    const saving = page.waitForEvent("download");
+    await page
+      .getByRole("button", { name: "Save project", exact: true })
+      .click();
+    const saved = info.outputPath("constraint-placement.pcaddoc");
+    await (await saving).saveAs(saved);
+    expect(JSON.parse(await readFile(saved, "utf8")).sketches).toEqual(
+      original.document.sketches,
+    );
+    await page.reload();
+    await ready(page);
+    await page.locator('input[type="file"]').setInputFiles(saved);
+    await ready(page, 2000);
+    const reopened = await snapshot(page);
+    expect(reopened.document.sketches).toEqual(original.document.sketches);
+    expect(reopened.result!.meshes[0].geometryAssertions).toEqual(
+      original.result!.meshes[0].geometryAssertions,
+    );
+    const downloading = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Export STL", exact: true }).click();
+    const stl = info.outputPath("constraint-placement.stl");
+    await (await downloading).saveAs(stl);
+    expect(stlVolume(await readFile(stl))).toBeCloseTo(2000, 3);
+    expect(errors).toEqual([]);
+  });
+}
+
 test("constraint markers inspect, repair and remove intent while native geometry persists", async ({
   page,
 }, info) => {
