@@ -114,3 +114,24 @@ export const aiHolePatternPlan: AiPlan = {
     },
   ],
 };
+
+export const aiDimensionedPolygonPlan: AiPlan = {
+  ...aiPolygonPlan,
+  name: "Dimensioned triangular block",
+  steps: aiPolygonPlan.steps.map((step) =>
+    step.type === "sketch"
+      ? {
+          ...step,
+          intent: {
+            constraints: [
+              { type: "fixed", entities: [], points: [0] },
+              { type: "horizontal", entities: [0], points: [] },
+            ],
+            dimensions: [
+              { type: "length", entities: [0], points: [], value: "width" },
+            ],
+          },
+        }
+      : step,
+  ),
+};

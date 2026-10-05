@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { aiPlatePlan } from "../src/tests/fixtures/aiPlan";
 import {
   aiPolygonPlan,
+  aiDimensionedPolygonPlan,
   aiArcPlan,
   aiHolePatternPlan,
 } from "../src/tests/fixtures/aiExpandedPlans";
@@ -60,6 +61,83 @@ async function setup(page: Page) {
   );
   return drawer;
 }
+test("AI-generated driving dimensions are visible and editable in the drawing and rebuild exact centered native geometry", async ({
+  page,
+}, info) => {
+  const drawer = await setup(page);
+  await page.route("**/api/ai/generate", (route) =>
+    route.fulfill({ json: { plan: aiPlatePlan } }),
+  );
+  await drawer
+    .getByLabel("What would you like to make?")
+    .fill("A dimensioned plate with a center hole");
+  await drawer.getByRole("button", { name: "Generate preview" }).click();
+  await drawer.getByRole("button", { name: "Apply AI component" }).click();
+  await expect
+    .poll(
+      async () =>
+        (await snapshot(page)).result?.meshes[0]?.geometryAssertions?.volume,
+    )
+    .toBeCloseTo(12000 - 20 * Math.PI, 4);
+  await page
+    .getByRole("button", { name: "Close AI drawer", exact: true })
+    .click();
+  await page.locator(".sketch-chip").first().click();
+  await page
+    .getByRole("button", { name: "Edit sketch canvas", exact: true })
+    .click();
+  const svg = page.getByLabel("Sketch drawing canvas", { exact: true });
+  await expect(svg.locator("[data-dimension-id] text")).toContainText([
+    "60.0000 mm",
+    "40.0000 mm",
+  ]);
+  const before = await snapshot(page),
+    sketch = Object.values(before.document.sketches)[0];
+  await page
+    .getByLabel("Canvas dimension selection", { exact: true })
+    .selectOption(sketch.dimensions[0].id);
+  await page
+    .getByLabel("Canvas dimension expression", { exact: true })
+    .fill("70mm");
+  await page
+    .getByRole("button", { name: "Apply driving dimension", exact: true })
+    .click();
+  await expect(svg.locator("[data-dimension-id] text").first()).toContainText(
+    "70.0000 mm",
+  );
+  await page
+    .getByRole("button", { name: "Finish Sketch", exact: true })
+    .click();
+  const volume = 14000 - 20 * Math.PI;
+  await expect
+    .poll(
+      async () =>
+        (await snapshot(page)).result?.meshes[0]?.geometryAssertions?.volume,
+    )
+    .toBeCloseTo(volume, 4);
+  const changed = await snapshot(page),
+    positions = Array.from(changed.result!.meshes[0].positions);
+  const xs = positions.filter((_, index) => index % 3 === 0);
+  expect(Math.min(...xs)).toBeCloseTo(-35, 5);
+  expect(Math.max(...xs)).toBeCloseTo(35, 5);
+  expect(
+    changed.document.sketches[sketch.id].dimensions.map((d) => d.id),
+  ).toEqual(sketch.dimensions.map((d) => d.id));
+  const saved = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const path = info.outputPath("ai-dimensions.pcaddoc");
+  await (await saved).saveAs(path);
+  await page.locator('input[type="file"]').setInputFiles(path);
+  await expect
+    .poll(async () => (await snapshot(page)).session)
+    .toBeGreaterThan(changed.session);
+  await expect
+    .poll(
+      async () =>
+        (await snapshot(page)).result?.meshes[0]?.geometryAssertions?.volume,
+    )
+    .toBeCloseTo(volume, 4);
+});
 test("selected-feature AI edits change native Extrude/Hole geometry, preserve IDs and parameters, undo once, and reject a changed selection", async ({
   page,
 }) => {
@@ -434,6 +512,7 @@ test("AI polygons, analytic arcs and indexed Hole patterns produce exact native 
   );
   for (const [recipe, volume] of [
     [aiPolygonPlan, 500],
+    [aiDimensionedPolygonPlan, 500],
     [aiArcPlan, 37.5 * Math.PI],
     [aiHolePatternPlan, 12000 - 80 * Math.PI],
   ] as const) {

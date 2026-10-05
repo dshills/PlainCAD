@@ -28,6 +28,7 @@ import { detectProfiles } from "../cad/sketch/profileDetection";
 import { MIN_ENTITY_SIZE, SKETCH_TOLERANCE } from "../cad/sketch/tolerances";
 import { assertProjectJsonShape } from "../persistence/importSafety";
 import { validateAiPlan } from "./plan";
+import { addAiSketchIntent } from "./sketchIntent";
 
 export function buildAiPlan(base: CadDocument, input: unknown) {
   const plan = validateAiPlan(input);
@@ -64,7 +65,7 @@ export function buildAiPlan(base: CadDocument, input: unknown) {
   const expr = (
     source: string,
     dimension: "length" | "angle",
-    positive = false,
+    positive: boolean | "nonNegative" = false,
   ) => {
     for (const name of collectExpressionDependencies(source))
       if (!names.has(name))
@@ -93,10 +94,11 @@ export function buildAiPlan(base: CadDocument, input: unknown) {
       measured.quantity?.dimension !== dimension ||
       !Number.isFinite(measured.quantity.value) ||
       Math.abs(measured.quantity.value) > 100000 ||
-      (positive && !(measured.quantity.value > 0))
+      (positive === true && !(measured.quantity.value > 0)) ||
+      (positive === "nonNegative" && measured.quantity.value < 0)
     )
       throw new Error(
-        `AI expression "${source}" must be a ${positive ? "positive " : ""}${dimension} within modeling limits. ${measured.error ?? "Use explicit units."}`,
+        `AI expression "${source}" must be a ${positive === true ? "positive " : positive === "nonNegative" ? "nonnegative " : ""}${dimension} within modeling limits. ${measured.error ?? "Use explicit units."}`,
       );
     if (dimension === "angle" && measured.quantity.value > 2 * Math.PI + 1e-12)
       throw new Error(
@@ -227,6 +229,7 @@ export function buildAiPlan(base: CadDocument, input: unknown) {
             `AI sketch ${step.name}: coincident hole centers must be removed.`,
           );
       }
+      sketch = addAiSketchIntent(sketch, p, step.intent, expr);
       const profiles = detectProfiles(solveSketch(sketch, evaluation.values));
       if (
         profiles.errors.length ||

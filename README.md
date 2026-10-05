@@ -759,3 +759,10 @@ native-validated distance-extrusion owner, including retained faces after Cut/Jo
 Curved, lost, split/ambiguous and
 fallback faces give a diagnostic without creating a sketch. Face references use
 the existing stable feature-owned roles and follow supported owner edits.
+
+AI rectangle sketches include driving width/height dimensions, horizontal/vertical
+constraints and a fixed construction center; circles include a driving radius and
+fixed center. Open the generated sketch drawing to edit its D labels. Polygon,
+line/arc wire and points recipes can supply bounded indexed constraints and driving
+dimensions. Conflicting, redundant or missing design-intent references reject the
+proposal before Apply. Construction anchors do not become solid boundaries.

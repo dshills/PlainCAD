@@ -615,3 +615,13 @@ Provider context is bounded to three complete recent turns and 32000 UTF-8 reque
 bytes, dropping only whole older turns with a visible notice. An oversized latest
 proposal blocks follow-up with local-edit/reset guidance. Preview diagnostics can
 be included in a reviewed next description; no automatic retries incur provider calls.
+
+### AI sketch design intent
+
+Generated rectangles have centered, fully constrained driving width/height dimensions;
+circles have fixed centers and driving radii. These durable dimensions appear as
+editable D labels in the sketch canvas. Polygon/wire/points recipes may supply up to
+64 constraints and 64 driving dimensions using authored point/boundary-curve indices.
+The existing solver rejects conflicting, redundant and lost references before native
+preview; ordinary graphical edits, parameter bindings and project persistence apply.
+Automatic rectangle/circle intent cannot be combined with duplicate explicit intent.

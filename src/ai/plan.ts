@@ -1,3 +1,4 @@
+import type { ConstraintType, SketchDimension } from "../cad/document/schema";
 /** A bounded recipe, never executable code or a provider-authored CadDocument. */
 export const AI_PROVIDERS = ["anthropic", "openai", "google"] as const;
 export type AiProvider = (typeof AI_PROVIDERS)[number];
@@ -18,6 +19,41 @@ export type AiProfile =
   | { type: "polygon"; vertices: AiPoint[] }
   | { type: "wire"; vertices: AiPoint[]; edges: AiWireEdge[] }
   | { type: "points"; points: AiPoint[] };
+export interface AiSketchIntent {
+  constraints: Array<{
+    type: ConstraintType;
+    entities: number[];
+    points: number[];
+  }>;
+  dimensions: Array<{
+    type: SketchDimension["type"];
+    entities: number[];
+    points: number[];
+    value: string;
+  }>;
+}
+const constraintTypes = [
+  "fixed",
+  "horizontal",
+  "vertical",
+  "coincident",
+  "parallel",
+  "perpendicular",
+  "tangent",
+  "equalLength",
+  "equalRadius",
+  "midpoint",
+  "symmetric",
+] as const;
+const dimensionTypes = [
+  "length",
+  "radius",
+  "diameter",
+  "horizontalDistance",
+  "verticalDistance",
+  "distance",
+  "angle",
+] as const;
 export type AiStep =
   | {
       type: "sketch";
@@ -26,6 +62,7 @@ export type AiStep =
       plane: "XY" | "XZ" | "YZ";
       offset: string;
       profile: AiProfile;
+      intent?: AiSketchIntent;
     }
   | {
       type: "extrude";
@@ -156,6 +193,7 @@ export const AI_LIMITS = {
   parameters: 24,
   steps: 32,
   profileVertices: 32,
+  sketchIntentEntries: 64,
   holeCenters: 64,
   targets: 8,
   history: 6,
@@ -170,10 +208,13 @@ const choice = (...values: string[]): JsonSchema => ({
   enum: values,
 });
 const array = (items: JsonSchema): JsonSchema => ({ type: "array", items });
-const object = (properties: Record<string, JsonSchema>): JsonSchema => ({
+const object = (
+  properties: Record<string, JsonSchema>,
+  optional: string[] = [],
+): JsonSchema => ({
   type: "object",
   properties,
-  required: Object.keys(properties),
+  required: Object.keys(properties).filter((key) => !optional.includes(key)),
   additionalProperties: false,
 });
 const base = { id: text, name: text };
@@ -183,6 +224,8 @@ const operation = {
   targets: array(text),
 };
 const pointSchema = object({ x: text, y: text });
+// This detailed recipe schema documents JSON-encoded steps in the prompt.
+// Providers receive AI_TRANSPORT_SCHEMA, whose fields are all required.
 export const AI_PLAN_SCHEMA = object({
   name: text,
   summary: text,
@@ -196,40 +239,65 @@ export const AI_PLAN_SCHEMA = object({
   ),
   steps: array({
     anyOf: [
-      object({
-        ...base,
-        type: choice("sketch"),
-        plane: choice("XY", "XZ", "YZ"),
-        offset: text,
-        profile: {
-          anyOf: [
-            object({
-              type: choice("rectangle"),
-              x: text,
-              y: text,
-              width: text,
-              height: text,
-            }),
-            object({ type: choice("circle"), x: text, y: text, radius: text }),
-            object({ type: choice("polygon"), vertices: array(pointSchema) }),
-            object({
-              type: choice("wire"),
-              vertices: array(pointSchema),
-              edges: array({
-                anyOf: [
-                  object({ type: choice("line") }),
-                  object({
-                    type: choice("arc"),
-                    center: pointSchema,
-                    clockwise: { type: "boolean" },
-                  }),
-                ],
+      object(
+        {
+          ...base,
+          type: choice("sketch"),
+          plane: choice("XY", "XZ", "YZ"),
+          offset: text,
+          intent: object({
+            constraints: array(
+              object({
+                type: choice(...constraintTypes),
+                entities: array({ type: "integer" }),
+                points: array({ type: "integer" }),
               }),
-            }),
-            object({ type: choice("points"), points: array(pointSchema) }),
-          ],
+            ),
+            dimensions: array(
+              object({
+                type: choice(...dimensionTypes),
+                entities: array({ type: "integer" }),
+                points: array({ type: "integer" }),
+                value: text,
+              }),
+            ),
+          }),
+          profile: {
+            anyOf: [
+              object({
+                type: choice("rectangle"),
+                x: text,
+                y: text,
+                width: text,
+                height: text,
+              }),
+              object({
+                type: choice("circle"),
+                x: text,
+                y: text,
+                radius: text,
+              }),
+              object({ type: choice("polygon"), vertices: array(pointSchema) }),
+              object({
+                type: choice("wire"),
+                vertices: array(pointSchema),
+                edges: array({
+                  anyOf: [
+                    object({ type: choice("line") }),
+                    object({
+                      type: choice("arc"),
+                      center: pointSchema,
+                      clockwise: { type: "boolean" },
+                    }),
+                  ],
+                }),
+              }),
+              object({ type: choice("points"), points: array(pointSchema) }),
+            ],
+          },
         },
-      }),
+        ["intent"],
+      ),
       object({
         ...base,
         type: choice("extrude"),
@@ -420,6 +488,57 @@ function aiProfile(value: unknown): AiProfile {
     : { type, ...coords, radius: expression(p.radius) };
 }
 
+function aiSketchIntent(value: unknown): AiSketchIntent {
+  const intent = record(value, ["constraints", "dimensions"], "sketch intent");
+  const indices = (value: unknown) => {
+    const values = list(value, 4, (item) => {
+      if (
+        typeof item !== "number" ||
+        !Number.isInteger(item) ||
+        item < 0 ||
+        item >= 128
+      )
+        throw new Error(
+          "AI sketch intent indices must be integers from 0 to 127.",
+        );
+      return item;
+    });
+    if (new Set(values).size !== values.length)
+      throw new Error("AI sketch intent references must be unique.");
+    return values;
+  };
+  return {
+    constraints: list(
+      intent.constraints,
+      AI_LIMITS.sketchIntentEntries,
+      (item) => {
+        const c = record(item, ["type", "entities", "points"], "constraint");
+        return {
+          type: enumeration(c.type, constraintTypes, "constraint type"),
+          entities: indices(c.entities),
+          points: indices(c.points),
+        };
+      },
+    ),
+    dimensions: list(
+      intent.dimensions,
+      AI_LIMITS.sketchIntentEntries,
+      (item) => {
+        const d = record(
+          item,
+          ["type", "entities", "points", "value"],
+          "dimension",
+        );
+        return {
+          type: enumeration(d.type, dimensionTypes, "dimension type"),
+          entities: indices(d.entities),
+          points: indices(d.points),
+          value: expression(d.value),
+        };
+      },
+    ),
+  };
+}
 export function validateAiPlan(value: unknown): AiPlan {
   const root = record(
     value,
@@ -457,7 +576,12 @@ export function validateAiPlan(value: unknown): AiPlan {
     );
     const keys =
       type === "sketch"
-        ? ["plane", "offset", "profile"]
+        ? [
+            "plane",
+            "offset",
+            "profile",
+            ...(Object.hasOwn(item as object, "intent") ? ["intent"] : []),
+          ]
         : type === "extrude"
           ? [
               "sketch",
@@ -488,6 +612,7 @@ export function validateAiPlan(value: unknown): AiPlan {
         plane: enumeration(s.plane, ["XY", "XZ", "YZ"], "plane"),
         offset: expression(s.offset),
         profile: aiProfile(s.profile),
+        ...("intent" in s ? { intent: aiSketchIntent(s.intent) } : {}),
       };
     }
     if (type === "hole") {
