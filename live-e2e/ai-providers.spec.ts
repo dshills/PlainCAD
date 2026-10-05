@@ -43,6 +43,8 @@ for (const provider of AI_PROVIDERS)
       const drawer = page.getByRole("region", {
         name: "AI modeling assistant",
       });
+      if (!(await drawer.getByLabel("AI provider", { exact: true }).isVisible()))
+        await drawer.getByText("AI settings", { exact: true }).click();
       await drawer
         .getByLabel("AI provider", { exact: true })
         .selectOption(provider);

@@ -1,3 +1,4 @@
+import { resetWorkspace } from "./workspaceTestHelpers";
 import { sketchPlaneTransform } from "../cad/sketch/planes";
 import { useSketchPlanePicker } from "../ui/commands/sketchPlanePicker";
 import { useExtrudeDraft } from "../ui/commands/extrudeCommand";
@@ -38,6 +39,7 @@ import { upstreamBodyOwners } from "../cad/document/timelineEditing";
 
 vi.mock("../viewer/CadViewer", () => ({ CadViewer: () => <div /> }));
 beforeEach(() => {
+  resetWorkspace();
   useCadStore.setState(useCadStore.getInitialState(), true);
   useCadStore.getState().setDocument(createEmptyDocument());
 });

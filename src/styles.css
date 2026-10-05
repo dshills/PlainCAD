@@ -1004,3 +1004,50 @@ button:disabled:not(.ribbon-button) { opacity: 0.6; }
 .sketch-browser-row { display: flex; gap: 8px; align-items: center; }
 .sketch-browser-row .item-card { flex: 1; min-width: 0; }
 .sketch-browser-row label { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+
+/* Focused workspace keeps the canvas and one task visible. Hidden panels retain drafts. */
+.workspace [hidden] { display: none !important; }
+.workspace-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; padding: 0.4rem 0.75rem; border-bottom: 1px solid var(--border); background: var(--toolbar); font-size: 0.8rem; }
+.workspace-controls label { display: flex; align-items: center; gap: 0.4rem; }
+.workspace-target { margin-left: auto; overflow-wrap: anywhere; }
+.workspace-focused { display: flex; position: relative; }
+.workspace-focused > .left-panel { flex: 0 0 280px; width: 280px; }
+.workspace-focused > .right-panel { flex: 0 0 320px; width: 320px; display: block; }
+.workspace-focused > .model-area { flex: 1; grid-template-rows: minmax(0, 1fr) auto; }
+.workspace-panel-header { display: flex; align-items: center; justify-content: space-between; padding: 0.35rem 0.7rem; }
+.panel-pin { margin: 0.35rem 0.7rem 0; font-size: 0.75rem; }
+.panel-pin[aria-pressed="true"] { color: var(--on-accent); background: var(--accent); }
+.workspace-history { position: relative; max-height: 25vh; overflow: auto; }
+.workspace-history > .panel-pin { position: absolute; right: 0; top: 0; z-index: 1; }
+.workspace-history .timeline-header { padding-right: 4rem; }
+.viewer-region { position: relative; }
+.project-start { position: absolute; z-index: 2; top: 12%; left: 50%; transform: translateX(-50%); width: min(540px, calc(100% - 32px)); max-height: 80%; overflow: auto; padding: 1.5rem; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 6px 24px #0002; }
+.project-start h1 { margin: 0; font-size: 1.4rem; }
+.project-start-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.project-start-actions > button, .project-start-actions > details { text-align: left; padding: 0.85rem; border: 1px solid var(--border); background: var(--surface); border-radius: 6px; }
+.project-start-actions > button:first-child { color: var(--on-accent); background: var(--accent); }
+.project-start-actions details button { display: block; margin-top: 0.7rem; width: 100%; }
+summary { cursor: pointer; }
+summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.appearance-settings { align-self: center; position: relative; }
+.appearance-settings .theme-control { position: absolute; z-index: 8; right: 0; top: 100%; padding: 0.75rem; background: var(--panel); border: 1px solid var(--border); }
+.ai-settings { margin-top: 0.5rem; }
+.ai-settings > summary { font-size: 0.85rem; }
+.ai-provider-summary { color: var(--muted); }
+.focused-workspace .top-toolbar { align-items: center; flex-wrap: wrap; }
+.focused-workspace .ribbon { flex: 1; }
+.focused-workspace .ribbon-button { min-width: 44px; padding: 0.2rem; }
+.focused-workspace .ribbon-icon { height: 22px; }
+@media (max-width: 1060px) {
+  .workspace-focused > .left-panel, .workspace-focused > .right-panel { position: absolute; z-index: 5; top: 0; bottom: 0; width: min(340px, 85%); max-width: 85%; }
+  .workspace-focused > .left-panel { left: 0; }
+  .workspace-focused > .right-panel { right: 0; }
+  .workspace-target { margin-left: 0; }
+}
+@media (max-width: 760px) {
+  .project-start { top: 4%; padding: 1rem; }
+  .project-start-actions { grid-template-columns: 1fr; gap: 0.5rem; }
+  .focused-workspace .brand { width: auto; border: 0; }
+  .workspace-controls { gap: 0.35rem; }
+  .workspace-target { width: 100%; }
+}

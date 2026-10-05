@@ -1,3 +1,11 @@
+import { useShallow } from "zustand/react/shallow";
+import { useWorkspacePresentation } from "../ui/workspace/useWorkspacePresentation";
+import { useWorkspaceState } from "../state/useWorkspaceState";
+import { WorkspacePanels, PinPanel } from "../ui/workspace/WorkspacePanels";
+import { WorkspaceControls } from "../ui/workspace/WorkspaceControls";
+import { ProjectStart } from "../ui/workspace/ProjectStart";
+import { useAiDrawer } from "../ui/commands/aiCommand";
+import { useProjectWorkflow } from "../ui/commands/projectWorkflowCommand";
 import { ModelingCreationPanel } from "../ui/panels/ModelingCreationPanel";
 import { AiDrawer } from "../ui/panels/AiDrawer";
 import { useSketchCanvas } from "../ui/commands/sketchCanvasCommand";
@@ -6,21 +14,19 @@ import { ProjectWorkflowPanel } from "../ui/panels/ProjectWorkflowPanel";
 import { SketchCanvasPanel } from "../ui/panels/SketchCanvasPanel";
 import { ThemeSelector } from "../ui/themes/ThemeSelector";
 import { useCommandEnablement } from "../ui/commands/useCommandEnablement";
-import { ViewPanel } from "../ui/panels/ViewPanel";
-import { MeasurementPanel } from "../ui/panels/MeasurementPanel";
 import { RecoveryPanel } from "../ui/panels/RecoveryPanel";
 import { FabricationPanel } from "../ui/panels/FabricationPanel";
 import { HoleCreationPanel } from "../ui/panels/HoleCreationPanel";
 import { useEffect, useMemo, useRef } from "react";
 import { CadViewer } from "../viewer/CadViewer";
-import { CommandContext, isCommandEnabledForSnapshot, runCommand, } from "../ui/commands/commandRegistry";
+import {
+  CommandContext,
+  isCommandEnabledForSnapshot,
+  runCommand,
+} from "../ui/commands/commandRegistry";
 import { CommandPalette } from "../ui/commands/CommandPalette";
-import { ParameterPanel } from "../ui/panels/ParameterPanel";
-import { DependencyPanel } from "../ui/panels/DependencyPanel";
 import { FeatureTimeline } from "../ui/panels/FeatureTimeline";
 import { SketchPanel } from "../ui/panels/SketchPanel";
-import { InspectorPanel } from "../ui/panels/InspectorPanel";
-import { RebuildErrorsPanel } from "../ui/panels/RebuildErrorsPanel";
 import { useCadStore } from "../state/useCadStore";
 
 type ToolbarButton = {
@@ -89,19 +95,21 @@ const toolbarGroups: ToolbarGroup[] = [
   },
 ];
 
-const helpItems = [
-  ["Select", "Click objects in the viewer or side panels."],
-  ["Orbit", "Drag in the viewer."],
-  ["Pan", "Right-drag or middle-drag."],
-  ["Zoom", "Scroll over the viewer."],
-  ["Fit", "Press F or use Fit."],
-  ["Cancel", "Press Escape."],
-] as const;
+const FOCUSED_ALWAYS = new Set(["history.undo", "history.redo", "view.fit", "sketch.create"]);
+const FOCUSED_WHEN_ENABLED = new Set(["sketch.editCanvas", "feature.extrude", "feature.revolve", "feature.hole"]);
 
 export function App() {
+  const workspace = useWorkspaceState(useShallow(({ layout, activePanel, pins, toggleParts }) => ({ layout, activePanel, pins, toggleParts })));
+  const setPaletteOpen = useCadStore((s) => s.setPaletteOpen);
+  const { full, hasHistory, partsVisible, historyVisible } =
+    useWorkspacePresentation();
+  const aiOpen = useAiDrawer((s) => s.open);
+  const workflow = useProjectWorkflow((s) => s.active);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const sketchActive = useSketchCanvas(state => state.active);
-  const documentName = useCadStore((state) => state.history.present?.name ?? "Untitled");
+  const sketchActive = useSketchCanvas((state) => state.active);
+  const documentName = useCadStore(
+    (state) => state.history.present?.name ?? "Untitled",
+  );
   const rebuild = useCadStore((state) => state.rebuild);
   const fileError = useCadStore((state) => state.fileError);
   const initializeKernel = useCadStore((state) => state.initializeKernel);
@@ -112,7 +120,14 @@ export function App() {
 
   useEffect(() => {
     window.dispatchEvent(new Event("resize"));
-  }, [sketchActive]);
+  }, [
+    sketchActive,
+    workspace.layout,
+    partsVisible,
+    historyVisible,
+    workspace.activePanel,
+    workspace.pins,
+  ]);
 
   useEffect(() => {
     initializeKernel();
@@ -120,11 +135,27 @@ export function App() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.defaultPrevented || document.querySelector("dialog[open]") || useSketchCanvas.getState().active) return;
+      if (
+        event.defaultPrevented ||
+        document.querySelector("dialog[open]") ||
+        useSketchCanvas.getState().active
+      )
+        return;
       const target = event.target as HTMLElement | null;
       const tagName = target?.tagName.toUpperCase();
-      const isTyping = tagName === "INPUT" || tagName === "TEXTAREA" || tagName === "SELECT" || target?.isContentEditable === true;
-      if (!isTyping && event.key.toLowerCase() === "f" && !event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey) {
+      const isTyping =
+        tagName === "INPUT" ||
+        tagName === "TEXTAREA" ||
+        tagName === "SELECT" ||
+        target?.isContentEditable === true;
+      if (
+        !isTyping &&
+        event.key.toLowerCase() === "f" &&
+        !event.metaKey &&
+        !event.ctrlKey &&
+        !event.altKey &&
+        !event.shiftKey
+      ) {
         event.preventDefault();
         void runCommand("view.fit", commandContext);
       }
@@ -137,7 +168,9 @@ export function App() {
   }, [commandContext, select]);
 
   return (
-    <div className="app-shell">
+    <div
+      className={`app-shell ${full ? "full-workspace" : "focused-workspace"}`}
+    >
       <header className="top-toolbar">
         <div className="brand">
           <span className="brand-mark">P</span>
@@ -147,34 +180,81 @@ export function App() {
           </div>
         </div>
         <nav className="ribbon" aria-label="Main CAD commands">
-          {toolbarGroups.map((group) => (
-            <section className="ribbon-group" aria-label={group.label} key={group.label}>
-              <div className="ribbon-buttons">
-                {group.buttons.map((button) => (
-                  <button
-                    className="ribbon-button"
-                    key={button.command}
-                    title={button.title}
-                    aria-label={button.ariaLabel}
-                    onClick={() => runCommand(button.command, commandContext)}
-                    disabled={!isCommandEnabledForSnapshot(button.command, toolbarEnablement)}
-                  >
-                    <span className="ribbon-icon" aria-hidden="true">{button.icon}</span>
-                    <span>{button.label}</span>
-                  </button>
-                ))}
-              </div>
-              <span className="ribbon-label">{group.label}</span>
-            </section>
-          ))}
+          {toolbarGroups.map((group) => {
+            const buttons = group.buttons.filter(
+              (button) =>
+                full ||
+                group.label === "File" ||
+                FOCUSED_ALWAYS.has(button.command) ||
+                (FOCUSED_WHEN_ENABLED.has(button.command) &&
+                  isCommandEnabledForSnapshot(
+                    button.command,
+                    toolbarEnablement,
+                  )),
+            );
+            if (!buttons.length) return null;
+            return (
+              <section
+                className="ribbon-group"
+                aria-label={group.label}
+                key={group.label}
+              >
+                <div className="ribbon-buttons">
+                  {buttons.map((button) => (
+                    <button
+                      className="ribbon-button"
+                      key={button.command}
+                      title={button.title}
+                      aria-label={button.ariaLabel}
+                      onClick={() => runCommand(button.command, commandContext)}
+                      disabled={
+                        !isCommandEnabledForSnapshot(
+                          button.command,
+                          toolbarEnablement,
+                        )
+                      }
+                    >
+                      <span className="ribbon-icon" aria-hidden="true">
+                        {button.icon}
+                      </span>
+                      <span>{button.label}</span>
+                    </button>
+                  ))}
+                </div>
+                <span className="ribbon-label">{group.label}</span>
+              </section>
+            );
+          })}
         </nav>
-        <ThemeSelector />
+        <button
+          type="button"
+          className="all-tools-button"
+          title="Search all CAD commands (Ctrl/Cmd+K)"
+          onClick={(event) => {
+            // WebKit does not focus buttons on mouse click; capture a stable modal return target.
+            event.currentTarget.focus();
+            setPaletteOpen(true);
+          }}
+        >
+          All tools
+        </button>
+        {full ? (
+          <ThemeSelector />
+        ) : (
+          <details className="appearance-settings">
+            <summary>Settings</summary>
+            <ThemeSelector />
+          </details>
+        )}
         <div className={`rebuild-pill ${rebuild.status}`}>{rebuild.status}</div>
       </header>
       {rebuild.status === "loadingKernel" ? (
         <div className="kernel-banner" role="status">
           <strong>Loading CAD kernel...</strong>
-          <span>{rebuild.message ?? "OpenCascade is starting in a worker. Geometry commands will run when it is ready."}</span>
+          <span>
+            {rebuild.message ??
+              "OpenCascade is starting in a worker. Geometry commands will run when it is ready."}
+          </span>
         </div>
       ) : null}
       {fileError ? (
@@ -191,37 +271,56 @@ export function App() {
       <HoleCreationPanel />
       <ExtrudeCreationPanel />
       <ModelingCreationPanel />
-      <main className="workspace">
-        <aside className="left-panel">
+      <WorkspaceControls />
+      <main
+        className={`workspace ${full ? "" : "workspace-focused"} ${partsVisible ? "parts-open" : ""}`}
+      >
+        <aside
+          id="workspace-parts"
+          className="left-panel"
+          aria-label="Parts browser"
+          hidden={!partsVisible}
+        >
+          <div className="workspace-panel-header">
+            <PinPanel panel="parts" label="Parts" />
+            {!full && (
+              <button
+                type="button"
+                onClick={() => {
+                  workspace.toggleParts();
+                  window.document
+                    .getElementById("workspace-parts-toggle")
+                    ?.focus();
+                }}
+                disabled={workspace.pins.includes("parts")}
+              >
+                Close Parts
+              </button>
+            )}
+          </div>
           <SketchPanel />
         </aside>
         <div className="model-area">
           <ProjectWorkflowPanel />
           <section className="viewer-region" aria-label="3D CAD viewer">
-            <div className="model-view" hidden={Boolean(sketchActive)}><CadViewer /></div>
+            <div className="model-view" hidden={Boolean(sketchActive)}>
+              <CadViewer />
+            </div>
+            {!full && !hasHistory && !sketchActive && !workflow && !aiOpen ? (
+              <ProjectStart context={commandContext} />
+            ) : null}
             <SketchCanvasPanel />
           </section>
-          <FeatureTimeline commandContext={commandContext} />
+          <div
+            id="workspace-history"
+            className="workspace-history"
+            hidden={!historyVisible}
+          >
+            <PinPanel panel="history" label="History" />
+            <FeatureTimeline commandContext={commandContext} />
+          </div>
         </div>
-        <aside className="right-panel">
-          <ParameterPanel />
-          <InspectorPanel />
-          <DependencyPanel />
-          <MeasurementPanel />
-          <ViewPanel />
-          <RebuildErrorsPanel />
-          <section className="panel help-panel" aria-labelledby="help-heading">
-            <h2 id="help-heading">Help</h2>
-            <dl className="help-list">
-              {helpItems.map(([term, description]) => (
-                <div key={term}>
-                  <dt>{term}</dt>
-                  <dd>{description}</dd>
-                </div>
-              ))}
-            </dl>
-          </section>
-        </aside>
+        <WorkspacePanels />
       </main>
       <AiDrawer />
       <CommandPalette context={commandContext} />

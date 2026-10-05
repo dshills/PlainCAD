@@ -1,7 +1,8 @@
+import { fullWorkspaceStorageState } from "./e2e/workspaceStorage";
 import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "./e2e",
-  testMatch: "ai-corpus.spec.ts",
+  testMatch: ["ai-corpus.spec.ts", "focused-workspace.spec.ts"],
   timeout: 120000,
   expect: { timeout: 30000 },
   workers: 1,
@@ -11,6 +12,8 @@ export default defineConfig({
   use: {
     baseURL: "http://127.0.0.1:5281",
     viewport: { width: 1600, height: 1000 },
+    // Existing CAD acceptance flows exercise the full workspace; focused-workspace cases override this.
+    storageState: fullWorkspaceStorageState("http://127.0.0.1:5281"),
     actionTimeout: 15000,
     trace: "retain-on-failure",
     screenshot: "only-on-failure",

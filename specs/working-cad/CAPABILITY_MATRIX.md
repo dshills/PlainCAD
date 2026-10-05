@@ -673,3 +673,24 @@ sleeve with OpenAI (five of six cases). OpenAI's face-boss response used an inva
 identifier and was rejected before Apply. Identifier rules are now explicit in
 provider instructions; that prompt refinement has not been retested live. These
 results do not establish deterministic provider reliability.
+
+### Focused and Full workspace layouts
+
+Focused is the default presentation, with an empty-project Draw/Describe/Example/Open
+start surface, compact Parts/History controls, and a selection-driven or explicitly
+chosen Details panel. Empty timeline controls and unrelated inspection panels are
+hidden. All tools opens the existing command palette; ribbon, palette and start
+actions retain shared command enablement. Issues remain linked from the workspace
+bar. Full workspace preserves the complete CAD UI, and individual panels can be
+pinned. At compact widths only the chosen Parts/Details sheet is exposed.
+Layout/pins/expansion persist locally with bounded preference validation and
+storage-failure handling, outside project JSON/history. Hidden panels stay mounted;
+layout changes do not discard form drafts or native model state. AI provider/model
+controls move into AI settings, collapsed initially in Focused layout.
+Native browser acceptance covers mouse sketch→extrude→cut→parameter edit→save/open→STL
+in Focused layout; UI checks cover persistence, command access, keyboard focus and
+compact layouts across Light/Dark/Saturn themes. The built app checks the Focused
+example/edit/export path under production CSP. Existing detailed CAD acceptance
+explicitly uses Full workspace. These changes do not implement inline drawing
+size inputs, parametric drag handles, operation drops, new AI scope routing, or
+new geometry capabilities.

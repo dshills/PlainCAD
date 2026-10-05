@@ -1,3 +1,4 @@
+import { useWorkspaceState } from "../../state/useWorkspaceState";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchAiProviders, requestAiPlan } from "../../ai/client";
 import { buildAiPlan } from "../../ai/buildPlan";
@@ -43,6 +44,10 @@ interface Proposal {
 }
 type Message = AiMessage & { summary?: string };
 export function AiDrawer() {
+  // Layout seeds the initial disclosure; later layout changes preserve the user’s choice.
+  const [settingsOpen, setSettingsOpen] = useState(
+    () => useWorkspaceState.getState().layout === "full",
+  );
   const open = useAiDrawer((state) => state.open);
   const document = useCadStore((state) => state.history.present);
   const session = useCadStore((state) => state.documentSession);
@@ -462,6 +467,7 @@ export function AiDrawer() {
       );
     }
   };
+  const selectedProvider = providers.find((p) => p.id === provider);
   return (
     <section
       className={`ai-drawer${open ? " open" : ""}`}
@@ -564,55 +570,69 @@ export function AiDrawer() {
                 )}
               </div>
             ) : null}
-            <div className="ai-provider-controls">
-              <label>
-                AI provider
-                <select
-                  aria-label="AI provider"
-                  value={provider}
+            <p className="ai-provider-summary">
+              Provider:{" "}
+              {selectedProvider?.label ?? provider}
+              {selectedProvider?.available === false
+                ? " — key not configured; open AI settings"
+                : ""}
+            </p>
+            <details
+              className="ai-settings"
+              open={settingsOpen}
+              onToggle={(event) => setSettingsOpen(event.currentTarget.open)}
+            >
+              <summary>AI settings</summary>
+              <div className="ai-provider-controls">
+                <label>
+                  AI provider
+                  <select
+                    aria-label="AI provider"
+                    value={provider}
+                    disabled={busy}
+                    onChange={(event) => {
+                      cancel("Provider changed. Generate a new preview.");
+                      setReply(undefined);
+                      setError("");
+                      setHistory([]);
+                      const id = event.target.value as AiProvider;
+                      setProvider(id);
+                      setModel(providers.find((p) => p.id === id)?.model ?? "");
+                    }}
+                  >
+                    {providers.length ? (
+                      providers.map((p) => (
+                        <option key={p.id} value={p.id} disabled={!p.available}>
+                          {p.label}
+                          {p.available ? "" : " — key not configured"}
+                        </option>
+                      ))
+                    ) : (
+                      <option value={provider}>Loading providers…</option>
+                    )}
+                  </select>
+                </label>
+                <label>
+                  AI model
+                  <input
+                    value={model}
+                    disabled={busy}
+                    maxLength={100}
+                    onChange={(event) => {
+                      cancel("Model changed. Generate a new preview.");
+                      setModel(event.target.value);
+                    }}
+                  />
+                </label>
+                <button
+                  type="button"
                   disabled={busy}
-                  onChange={(event) => {
-                    cancel("Provider changed. Generate a new preview.");
-                    setReply(undefined);
-                    setError("");
-                    setHistory([]);
-                    const id = event.target.value as AiProvider;
-                    setProvider(id);
-                    setModel(providers.find((p) => p.id === id)?.model ?? "");
-                  }}
+                  onClick={() => setRefresh((value) => value + 1)}
                 >
-                  {providers.length ? (
-                    providers.map((p) => (
-                      <option key={p.id} value={p.id} disabled={!p.available}>
-                        {p.label}
-                        {p.available ? "" : " — key not configured"}
-                      </option>
-                    ))
-                  ) : (
-                    <option value={provider}>Loading providers…</option>
-                  )}
-                </select>
-              </label>
-              <label>
-                AI model
-                <input
-                  value={model}
-                  disabled={busy}
-                  maxLength={100}
-                  onChange={(event) => {
-                    cancel("Model changed. Generate a new preview.");
-                    setModel(event.target.value);
-                  }}
-                />
-              </label>
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => setRefresh((value) => value + 1)}
-              >
-                Refresh providers
-              </button>
-            </div>
+                  Refresh providers
+                </button>
+              </div>
+            </details>
             <label htmlFor="ai-description">What would you like to make?</label>
             <textarea
               ref={input}

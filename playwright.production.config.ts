@@ -1,3 +1,4 @@
+import { fullWorkspaceStorageState } from "./e2e/workspaceStorage";
 import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "./production-e2e",
@@ -10,6 +11,8 @@ export default defineConfig({
     ...devices["Desktop Chrome"],
     baseURL: "http://127.0.0.1:5280",
     viewport: { width: 1600, height: 1000 },
+    // Existing CAD acceptance flows exercise the full workspace; focused-workspace cases override this.
+    storageState: fullWorkspaceStorageState("http://127.0.0.1:5280"),
     actionTimeout: 15000,
     trace: "retain-on-failure",
     screenshot: "only-on-failure",

@@ -111,6 +111,33 @@ The production build currently emits a Vite chunk-size warning because OpenCasca
 
 ## Using the App
 
+### Choose your workspace
+
+PlainCAD opens in **Focused** layout: a canvas with **Draw a shape**, **Describe a
+part with AI**, **Start from example**, and **Open an existing project** choices.
+Use **Parts** to open the project browser, **History** to expand existing steps,
+and **Details** to select one contextual inspector, parameter, measurement, view,
+dependency, help or issue panel. Empty history and diagnostic panels stay hidden.
+Model issues remain accessible from the workspace bar; **All tools** opens the
+searchable command palette with the same command enablement as the ribbon.
+
+Choose **Full workspace** for the complete ribbon, browser, history and inspection
+panels. **Pin** keeps an individual panel available in Focused layout. At compact
+widths, choosing Parts or Details switches the active sheet, including when panels
+are pinned. Workspace layout, pins and Parts/History expansion are local browser
+preferences, separate from CAD files and undo history; the active task is transient.
+Open tabs retain their own layout until reload; the most recently saved preferences
+are used when opening another tab.
+Details panels mount when first opened and remain mounted when hidden, preserving
+form drafts while deferring unused panel work.
+If browser storage is blocked, preferences work for the session with a visible notice.
+
+The AI drawer keeps provider/model administration in **AI settings**, collapsed
+on first use in Focused layout, while showing the current provider. Drawing and
+ordinary CAD commands remain available without an AI service. This is the first
+step of the [simplified workflow proposal](specs/working-cad/SIMPLIFIED_WORKFLOW.md);
+inline drawing sizes, extrusion drag handles and operation drops remain planned.
+
 ### Describe a Part with AI
 
 Open **AI drawer** at the bottom, choose a provider/model, and describe the part
@@ -217,7 +244,7 @@ driven triangular prism, analytic semicircle, hollow sleeve, rectangular spacer,
 island pocket, cap boss, straight-side tab and to-face pillar. Its oracles verify
 native BRep validity, solid count, exact volume, coordinate orientation and rendered
 WebGL meshes. Chromium release checks include the corpus; a separate CI job runs
-it on Firefox and WebKit. The mounting-plate case also covers parameter
+it and the Focused-workspace acceptance cases on Firefox and WebKit. The mounting-plate case also covers parameter
 editing, undo, save/open and positive STL volume in each engine.
 
 ```sh
@@ -762,6 +789,7 @@ Deferred until after MVP:
 - `specs/initial/RELEASE_HARDENING.md`: release hardening checklist.
 - `specs/initial/MVP_COMPLETION.md`: MVP completion review.
 - `specs/working-cad/SPEC.md`: next-stage specification for a working parametric CAD system.
+- [Simplifying the PlainCAD workflow](specs/working-cad/SIMPLIFIED_WORKFLOW.md): proposed adaptive UI, mouse drawing, drag-and-drop, AI assistance and implementation priorities.
 
 Production build headers, CSP, cache/MIME requirements, and the built-app browser
 check are documented in [deployment/README.md](deployment/README.md).

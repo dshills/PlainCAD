@@ -1,3 +1,4 @@
+import { resetWorkspace } from "./workspaceTestHelpers";
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -12,6 +13,7 @@ vi.mock("../viewer/CadViewer", () => ({
 
 describe("App", () => {
   beforeEach(async () => {
+    resetWorkspace();
     useCadStore.setState(useCadStore.getInitialState(), true);
     // Replace the queued document as well as the store snapshot from the previous test.
     useCadStore.getState().setDocument(createEmptyDocument());

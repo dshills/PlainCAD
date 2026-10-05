@@ -1,3 +1,4 @@
+import { resetWorkspace } from "./workspaceTestHelpers";
 import {
   act,
   cleanup,
@@ -7,7 +8,7 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
-import { afterEach, expect, it, vi } from "vitest";
+import { beforeEach, afterEach, expect, it, vi } from "vitest";
 import { App } from "../app/App";
 import { createEmptyDocument, upsertSketch } from "../cad/document/CadDocument";
 import { addCenterRectangle, createXySketch } from "../cad/sketch/SketchModel";
@@ -17,6 +18,7 @@ import { runCommand } from "../ui/commands/commandRegistry";
 vi.mock("../viewer/CadViewer", () => ({
   CadViewer: () => <div data-testid="retained-viewer" />,
 }));
+beforeEach(() => resetWorkspace());
 afterEach(() => {
   cleanup();
   useSketchCanvas.setState({ active: undefined });
