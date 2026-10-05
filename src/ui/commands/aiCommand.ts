@@ -5,6 +5,9 @@ import { useCadStore } from "../../state/useCadStore";
 import { assertNativeSolidPreview } from "./modelingDraftCommand";
 import { useSketchCanvas } from "./sketchCanvasCommand";
 import type { buildAiPlan } from "../../ai/buildPlan";
+export type AiStaged = ReturnType<typeof buildAiPlan> & {
+  changes?: Array<{ name: string; before: string; after: string }>;
+};
 
 export const useAiDrawer = create<{ open: boolean }>(() => ({ open: false }));
 export const toggleAiDrawer = () =>
@@ -24,10 +27,7 @@ export function currentAiFrame(frame: AiDraftFrame) {
     !useSketchCanvas.getState().active
   );
 }
-export function assertAiGeometry(
-  staged: ReturnType<typeof buildAiPlan>,
-  result: RebuildResult,
-) {
+export function assertAiGeometry(staged: AiStaged, result: RebuildResult) {
   assertNativeSolidPreview(result, staged.document.id);
   for (const id of staged.bodyIds)
     if (!result.meshes.some((mesh) => mesh.bodyId === id))
@@ -54,7 +54,7 @@ export function assertAiGeometry(
 }
 export function applyAiPlan(
   frame: AiDraftFrame,
-  staged: ReturnType<typeof buildAiPlan>,
+  staged: AiStaged,
   result: RebuildResult,
 ) {
   if (!currentAiFrame(frame))

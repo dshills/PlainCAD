@@ -60,6 +60,49 @@ export interface AiProviderStatus {
   available: boolean;
   model: string;
 }
+export interface AiEditContext {
+  componentName: string;
+  parameters: Array<AiParameter & { id: string; expression: string }>;
+}
+
+export function validateAiEditContext(value: unknown): AiEditContext {
+  const context = record(
+    value,
+    ["componentName", "parameters"],
+    "edit context",
+  );
+  const parameters = list(context.parameters, AI_LIMITS.parameters, (value) => {
+    const p = record(
+      value,
+      ["id", "name", "expression", "value", "unit"],
+      "edit parameter",
+    );
+    if (
+      typeof p.value !== "number" ||
+      !Number.isFinite(p.value) ||
+      Math.abs(p.value) > 100000
+    )
+      throw new Error(
+        `AI edit parameter ${typeof p.name === "string" ? p.name : "value"} is outside modeling limits.`,
+      );
+    return {
+      id: string(p.id, "parameter ID"),
+      name: identifier(p.name),
+      expression: string(p.expression, "parameter expression", 256),
+      value: p.value,
+      unit: enumeration(p.unit, ["mm", "deg"], "parameter unit"),
+    };
+  });
+  if (
+    new Set(parameters.map((p) => p.name)).size !== parameters.length ||
+    new Set(parameters.map((p) => p.id)).size !== parameters.length
+  )
+    throw new Error("AI edit parameters must be unique.");
+  return {
+    componentName: string(context.componentName, "component name"),
+    parameters,
+  };
+}
 export const AI_LIMITS = {
   promptCharacters: 6000,
   requestBytes: 32000,

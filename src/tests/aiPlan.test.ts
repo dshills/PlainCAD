@@ -4,6 +4,7 @@ import {
   upsertParameter,
 } from "../cad/document/CadDocument";
 import { buildAiPlan } from "../ai/buildPlan";
+import { aiEditContext, buildAiParameterEdit } from "../ai/editPlan";
 import { validateAiPlan } from "../ai/plan";
 import { aiPlatePlan } from "./fixtures/aiPlan";
 import { rebuildDocument } from "../cad/features/rebuildGraph";
@@ -14,6 +15,68 @@ import { useCadStore } from "../state/useCadStore";
 import { applyAiPlan, assertAiGeometry } from "../ui/commands/aiCommand";
 
 afterEach(() => useCadStore.setState(useCadStore.getInitialState(), true));
+it("limits AI edits to independent exclusive parameters and preserves durable IDs, bindings and other parts", () => {
+  const created = buildAiPlan(createEmptyDocument(), aiPlatePlan);
+  const base = created.document,
+    original = JSON.stringify(base);
+  const edit = {
+    name: "Edit plate",
+    summary: "Thicken the plate",
+    warnings: [],
+    steps: [],
+    parameters: [{ name: "ai_1_thickness", value: 8, unit: "mm" }],
+  };
+  const context = aiEditContext(base, created.componentId);
+  expect(context.parameters.map((p) => p.name)).toContain("ai_1_thickness");
+  const staged = buildAiParameterEdit(base, created.componentId, edit);
+  expect(JSON.stringify(base)).toBe(original);
+  expect(staged.document.features).toEqual(base.features);
+  expect(staged.document.sketches).toEqual(base.sketches);
+  expect(staged.document.components).toEqual(base.components);
+  expect(staged.document.parameters.ai_1_thickness.id).toBe(
+    base.parameters.ai_1_thickness.id,
+  );
+  expect(staged.document.parameters.ai_1_thickness.expression).toBe("8mm");
+  expect(staged.bodyIds).toEqual(created.bodyIds);
+  expect(staged.changes).toEqual([
+    { name: "ai_1_thickness", before: "5mm", after: "8mm" },
+  ]);
+  expect(() => buildAiParameterEdit(base, base.rootComponentId, edit)).toThrow(
+    /cannot edit/,
+  );
+  expect(() =>
+    buildAiParameterEdit(base, created.componentId, {
+      ...edit,
+      parameters: [{ ...edit.parameters[0], value: 5 }],
+    }),
+  ).toThrow(/no parameter changes/);
+  const locked = upsertParameter(base, {
+    ...base.parameters.ai_1_thickness,
+    locked: true,
+  });
+  expect(() => buildAiParameterEdit(locked, created.componentId, edit)).toThrow(
+    /cannot edit/,
+  );
+  const derived = upsertParameter(base, {
+    ...base.parameters.ai_1_thickness,
+    expression: "ai_1_width / 12",
+  });
+  expect(() =>
+    buildAiParameterEdit(derived, created.componentId, edit),
+  ).toThrow(/cannot edit/);
+  // An indirect consumer in another component makes its independent driver shared.
+  const other = buildAiPlan(base, aiPlatePlan);
+  const shared = upsertParameter(other.document, {
+    ...other.document.parameters.ai_2_thickness,
+    expression: "ai_1_thickness",
+  });
+  expect(() => buildAiParameterEdit(shared, created.componentId, edit)).toThrow(
+    /cannot edit/,
+  );
+  expect(() =>
+    buildAiParameterEdit(base, created.componentId, aiPlatePlan),
+  ).toThrow(/parameter changes only/);
+});
 it("creates an editable isolated component, namespaces parameters, preserves the base and round-trips durable intent", () => {
   const base = upsertParameter(createEmptyDocument(), {
     id: "existing",

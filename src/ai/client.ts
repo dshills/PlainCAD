@@ -5,6 +5,7 @@ import {
   type AiPlan,
   type AiProvider,
   type AiProviderStatus,
+  type AiEditContext,
 } from "./plan";
 import { parseProjectJson } from "../persistence/importSafety";
 
@@ -103,6 +104,7 @@ export async function requestAiPlan(
   prompt: string,
   history: Array<{ role: "user" | "assistant"; content: string }>,
   signal: AbortSignal,
+  editContext?: AiEditContext,
 ): Promise<AiPlan> {
   if (!prompt.trim() || prompt.length > AI_LIMITS.promptCharacters)
     throw new Error(
@@ -120,6 +122,7 @@ export async function requestAiPlan(
     model,
     prompt,
     history,
+    ...(editContext ? { editContext } : {}),
   });
   return validateAiPlan(value.plan);
 }

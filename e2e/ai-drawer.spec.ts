@@ -197,6 +197,120 @@ test("all three provider choices create real native previews; Cancel/Apply, para
   expect(signedVolume).toBeGreaterThan(0);
   expect(Math.abs(signedVolume / volume - 1)).toBeLessThan(0.01);
 });
+test("AI parameter edits preserve existing component/feature/body IDs, preview before Apply, undo once and persist native geometry", async ({
+  page,
+}, info) => {
+  const drawer = await setup(page);
+  let edit = false;
+  const editRequests: Array<{
+    editContext: {
+      componentName: string;
+      parameters: Array<{ name: string; value: number }>;
+    };
+  }> = [];
+  await page.route("**/api/ai/generate", async (route) => {
+    const request = route.request().postDataJSON();
+    if (edit) editRequests.push(request);
+    await route.fulfill({
+      json: {
+        plan: edit
+          ? {
+              name: "Thicker plate",
+              summary: "Increase thickness to 8mm",
+              warnings: [],
+              steps: [],
+              parameters: [{ name: "ai_1_thickness", value: 8, unit: "mm" }],
+            }
+          : aiPlatePlan,
+      },
+    });
+  });
+  await drawer.getByLabel("What would you like to make?").fill("Make a plate");
+  await drawer.getByRole("button", { name: "Generate preview" }).click();
+  await expect(
+    drawer.getByRole("button", { name: "Apply AI component" }),
+  ).toBeEnabled();
+  await drawer.getByRole("button", { name: "Apply AI component" }).click();
+  await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+  const before = await snapshot(page);
+  edit = true;
+  await drawer.getByLabel("AI task", { exact: true }).selectOption("edit");
+  await drawer
+    .getByLabel("What would you like to make?")
+    .fill("Make this plate 8mm thick");
+  await drawer.getByRole("button", { name: "Generate preview" }).click();
+  await expect(
+    drawer.getByRole("button", { name: "Apply AI parameter edits" }),
+  ).toBeEnabled();
+  await expect(drawer.getByLabel("Proposed parameter changes")).toContainText(
+    "ai_1_thickness: 5mm → 8mm",
+  );
+  expect(editRequests[0].editContext.componentName).toBe(aiPlatePlan.name);
+  expect(
+    editRequests[0].editContext.parameters.find(
+      (p) => p.name === "ai_1_thickness",
+    )?.value,
+  ).toBe(5);
+  expect((await snapshot(page)).document).toEqual(before.document);
+  await drawer.getByRole("button", { name: "Cancel AI proposal" }).click();
+  expect((await snapshot(page)).past).toBe(before.past);
+  await drawer.getByRole("button", { name: "Generate preview" }).click();
+  await expect(
+    drawer.getByRole("button", { name: "Apply AI parameter edits" }),
+  ).toBeEnabled();
+  await drawer
+    .getByRole("button", { name: "Apply AI parameter edits" })
+    .click();
+  await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+  const after = await snapshot(page),
+    expectedVolume = 19200 - 32 * Math.PI;
+  expect(after.document.components).toEqual(before.document.components);
+  expect(after.document.features).toEqual(before.document.features);
+  expect(after.document.sketches).toEqual(before.document.sketches);
+  expect(after.document.parameters.ai_1_thickness.id).toBe(
+    before.document.parameters.ai_1_thickness.id,
+  );
+  expect(after.result!.meshes[0].bodyId).toBe(before.result!.meshes[0].bodyId);
+  expect(after.result!.meshes[0].geometryAssertions!.volume).toBeCloseTo(
+    expectedVolume,
+    5,
+  );
+  expect(after.past).toBe(before.past + 1);
+  await page.getByRole("button", { name: "Undo", exact: true }).click();
+  await expect
+    .poll(
+      async () =>
+        (await snapshot(page)).result?.meshes[0]?.geometryAssertions?.volume,
+    )
+    .toBeCloseTo(12000 - 20 * Math.PI, 5);
+  await page.getByRole("button", { name: "Redo", exact: true }).click();
+  await expect
+    .poll(
+      async () =>
+        (await snapshot(page)).result?.meshes[0]?.geometryAssertions?.volume,
+    )
+    .toBeCloseTo(expectedVolume, 5);
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const path = info.outputPath("ai-edited.pcaddoc");
+  await (await download).saveAs(path);
+  const session = (await snapshot(page)).session;
+  await page.locator('input[type="file"]').setInputFiles(path);
+  await expect
+    .poll(async () => (await snapshot(page)).session)
+    .toBeGreaterThan(session);
+  await expect
+    .poll(
+      async () =>
+        (await snapshot(page)).result?.meshes[0]?.geometryAssertions?.volume,
+    )
+    .toBeCloseTo(expectedVolume, 5);
+  const stl = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export STL", exact: true }).click();
+  const stlPath = info.outputPath("ai-edited.stl");
+  await (await stl).saveAs(stlPath);
+  expect((await readFile(stlPath)).readUInt32LE(80)).toBeGreaterThan(0);
+});
 test("AI failures, unsupported operations and stale same-ID project responses cannot mutate the document or enable Apply", async ({
   page,
 }) => {

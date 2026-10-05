@@ -61,6 +61,42 @@ it("builds provider-native structured requests and forwards recent conversation 
   });
 });
 it.each(["anthropic", "openai", "google"] as const)(
+  "sends bounded parameter context and edit instructions to %s without accepting arbitrary project data",
+  (provider) => {
+    const editContext = {
+      componentName: "Plate",
+      parameters: [
+        {
+          id: "parameter-thickness",
+          name: "thickness",
+          expression: "5mm",
+          value: 5,
+          unit: "mm",
+        },
+      ],
+    };
+    const valid = validateAiRequest({ ...request, provider, editContext });
+    expect(valid.editContext).toEqual(editContext);
+    const payload = JSON.stringify(providerPayload(valid).body);
+    expect(payload).toContain("PARAMETER EDITS");
+    expect(payload).toContain("thickness");
+    const body = providerPayload(valid).body;
+    const instructions =
+      "system" in body
+        ? body.system
+        : "instructions" in body
+          ? body.instructions
+          : JSON.stringify(body.systemInstruction);
+    expect(instructions).not.toContain("parameter-thickness");
+    expect(() =>
+      validateAiRequest({
+        ...request,
+        editContext: { ...editContext, meshes: [] },
+      }),
+    ).toThrow(/format/);
+  },
+);
+it.each(["anthropic", "openai", "google"] as const)(
   "extracts a validated %s recipe and rejects incomplete output",
   (provider) => {
     const text = JSON.stringify(aiPlatePlan);

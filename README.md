@@ -147,7 +147,14 @@ bounded to 24 parameters and 32 steps, validated as data, then rebuilt with nati
 OpenCascade before Apply. Unsupported shapes/operations require clarification;
 failed geometry, malformed responses, missing keys, model access, quota, and
 network errors are shown without changing the document. AI generation does not
-implement unrestricted CAD or modification of an existing component.
+implement unrestricted CAD or replacement of existing features.
+For an existing part, choose **AI task → Edit active component parameters**.
+Only independent length/angle parameters used exclusively by the active component
+are listed and sent to the provider. Review the before/after values and native
+preview, then **Apply AI parameter edits**. This preserves component, sketch,
+feature and parameter IDs in one undo step. Shared, locked, derived and unused
+parameters are unavailable; feature replacement remains unsupported. The entire
+project is rebuilt, including dependent face references in other components.
 
 The provider adapters follow [Anthropic structured outputs](https://platform.claude.com/docs/en/build-with-claude/structured-outputs),
 [OpenAI structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs),

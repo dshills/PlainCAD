@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchAiProviders, requestAiPlan } from "../../ai/client";
 import { buildAiPlan } from "../../ai/buildPlan";
+import { aiEditContext, buildAiParameterEdit } from "../../ai/editPlan";
 import {
   AI_LIMITS,
   type AiPlan,
@@ -18,13 +19,14 @@ import {
   currentAiFrame,
   useAiDrawer,
   type AiDraftFrame,
+  type AiStaged,
 } from "../commands/aiCommand";
 import { runCommand } from "../commands/commandRegistry";
 
 interface Proposal {
   frame: AiDraftFrame;
   plan: AiPlan;
-  staged: ReturnType<typeof buildAiPlan>;
+  staged: AiStaged;
   result: RebuildResult;
   geometry: ReturnType<typeof assertAiGeometry>;
 }
@@ -41,6 +43,20 @@ export function AiDrawer() {
   const [provider, setProvider] = useState<AiProvider>("anthropic");
   const [model, setModel] = useState("");
   const [prompt, setPrompt] = useState("");
+  const [task, setTask] = useState<"create" | "edit">("create");
+  const editing = useMemo(() => {
+    if (task !== "edit") return {};
+    try {
+      return { context: aiEditContext(document, componentId) };
+    } catch (error) {
+      return {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Component parameters are unavailable.",
+      };
+    }
+  }, [document, componentId, task]);
   const [history, setHistory] = useState<Message[]>([]);
   const [reply, setReply] = useState<AiPlan>();
   const [proposal, setProposal] = useState<Proposal>();
@@ -66,6 +82,7 @@ export function AiDrawer() {
     Boolean(prompt.trim()) &&
     /^[A-Za-z0-9._-]{1,100}$/.test(model) &&
     !configError &&
+    (task === "create" || Boolean(editing.context?.parameters.length)) &&
     providers.some((p) => p.id === provider && p.available);
   const cancel = (message = "Request canceled. The project is unchanged.") => {
     controller.current?.abort();
@@ -131,6 +148,12 @@ export function AiDrawer() {
     setReply(undefined);
     setError("");
   }, [session]);
+  useEffect(() => {
+    if (task === "edit") {
+      setHistory([]);
+      setReply(undefined);
+    }
+  }, [componentId, task]);
   const generate = async () => {
     if (!canGenerate) return;
     cancel();
@@ -151,6 +174,7 @@ export function AiDrawer() {
         description,
         history.slice(-AI_LIMITS.history),
         abort.signal,
+        task === "edit" ? editing.context : undefined,
       );
       if (
         abort.signal.aborted ||
@@ -165,13 +189,16 @@ export function AiDrawer() {
         { role: "assistant", content: JSON.stringify(plan) },
       ];
       setHistory(nextHistory.slice(-AI_LIMITS.history));
-      if (!plan.steps.length) {
+      if (!plan.steps.length && (task !== "edit" || !plan.parameters.length)) {
         setStatus(
           "More information is needed, or this request is unsupported.",
         );
         return;
       }
-      const staged = buildAiPlan(document, plan);
+      const staged =
+        task === "edit"
+          ? buildAiParameterEdit(document, componentId, plan)
+          : buildAiPlan(document, plan);
       setStatus("Checking native geometry…");
       const result = await previewModeling(staged.document, abort.signal);
       if (
@@ -182,7 +209,11 @@ export function AiDrawer() {
         return;
       const geometry = assertAiGeometry(staged, result);
       setProposal({ frame: base, plan, staged, result, geometry });
-      setStatus("Native preview ready. Apply adds one editable component.");
+      setStatus(
+        task === "edit"
+          ? "Native preview ready. Apply updates the existing component in one undo step."
+          : "Native preview ready. Apply adds one editable component.",
+      );
     } catch (failure) {
       if (controller.current !== abort || !currentAiFrame(base)) return;
       setError(
@@ -207,7 +238,9 @@ export function AiDrawer() {
       applyAiPlan(proposal.frame, proposal.staged, proposal.result);
       setProposal(undefined);
       setStatus(
-        `Added ${proposal.plan.name}. You can edit its parameters, sketches and features.`,
+        proposal.staged.changes
+          ? "Updated component parameters. Feature and sketch IDs are preserved."
+          : `Added ${proposal.plan.name}. You can edit its parameters, sketches and features.`,
       );
       frame.current = undefined;
     } catch (failure) {
@@ -252,6 +285,56 @@ export function AiDrawer() {
           }}
         >
           <div className="ai-composer">
+            <label>
+              AI task
+              <select
+                aria-label="AI task"
+                value={task}
+                disabled={busy}
+                onChange={(event) => {
+                  cancel("AI task changed. Generate a fresh preview.");
+                  setTask(event.target.value as "create" | "edit");
+                  setHistory([]);
+                  setReply(undefined);
+                  setError("");
+                }}
+              >
+                <option value="create">Create new component</option>
+                <option value="edit">Edit active component parameters</option>
+              </select>
+            </label>
+            {task === "edit" ? (
+              <div>
+                <p>
+                  Editing {document.components[componentId]?.name}. Listed
+                  parameter names, expressions and values will be sent to the
+                  provider. Shared, locked and derived parameters are excluded;
+                  dependent face references are rebuilt throughout the project.
+                </p>
+                {editing.error ? (
+                  <p role="alert">{editing.error}</p>
+                ) : editing.context?.parameters.length ? (
+                  <details>
+                    <summary>
+                      Editable parameters ({editing.context.parameters.length})
+                    </summary>
+                    <ul>
+                      {editing.context.parameters.map((p) => (
+                        <li key={p.id}>
+                          {p.name}: {p.expression}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                ) : (
+                  <p role="status">
+                    This component has no independent, exclusive length/angle
+                    parameters. Select a parameterized component or use ordinary
+                    feature controls.
+                  </p>
+                )}
+              </div>
+            ) : null}
             <div className="ai-provider-controls">
               <label>
                 AI provider
@@ -324,7 +407,10 @@ export function AiDrawer() {
             />
             <p className="muted">
               Your description and recent AI conversation go to the selected
-              provider. Apply adds a new component; current parts stay in place.
+              provider.{" "}
+              {task === "edit"
+                ? "Apply updates the listed parameters of the active component."
+                : "Apply adds a new component; current parts stay in place."}
               Ctrl/Cmd+Enter generates a preview.
             </p>
             {canvasActive ? (
@@ -352,7 +438,9 @@ export function AiDrawer() {
                 disabled={!proposal || !current || busy || fileBusy}
                 onClick={apply}
               >
-                Apply AI component
+                {task === "edit"
+                  ? "Apply AI parameter edits"
+                  : "Apply AI component"}
               </button>
               <button
                 type="button"
@@ -400,6 +488,15 @@ export function AiDrawer() {
             ) : null}
             {proposal && current ? (
               <>
+                {proposal.staged.changes ? (
+                  <ul aria-label="Proposed parameter changes">
+                    {proposal.staged.changes.map((change) => (
+                      <li key={change.name}>
+                        {change.name}: {change.before} → {change.after}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
                 <ExtrudePreview
                   meshes={proposal.geometry.meshes}
                   label="Native AI component preview"

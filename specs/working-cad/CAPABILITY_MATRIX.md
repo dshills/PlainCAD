@@ -563,8 +563,16 @@ stale, canceled or failed geometry cannot Apply. Project/component replacement,
 sketch editing and file operations invalidate in-flight proposals.
 
 The selected provider receives only the description and recent AI turns. No
-project geometry or runtime resources are sent. AI does not edit existing parts,
+project geometry or runtime resources are sent. Create mode does not edit existing parts,
 create arbitrary profiles, assemblies, loft/sweep/shell/thread geometry, or STEP.
 Deterministic browser tests isolate provider responses while requiring actual
 native BRep geometry, parameter edits, save/open/STL and stale-result rejection;
 live-provider verification is separate from reproducible release checks.
+
+AI task selection also supports existing-component parameter edits. Context is
+limited to independent mm/deg parameters used exclusively by the active component;
+transitive sharing, locked/derived/unused parameters and arbitrary feature changes
+are rejected. Before/after values and a full native project preview precede one
+undoable Apply, preserving durable IDs and bindings. Other components' dependent
+face references are rebuilt. Empty/no-change edits require clarification; stale
+and failed geometry retain the same Apply guard as component creation.
