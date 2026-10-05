@@ -15,65 +15,132 @@ import { previewModeling } from "../../cad/worker/extrudePreviewClient";
 import type { RebuildResult } from "../../cad/worker/workerProtocol";
 import { ExtrudePreview } from "../../viewer/ExtrudePreview";
 import { MODEL_RESOURCE_LIMITS } from "../../cad/resourceLimits";
+import { documentAtFeature } from "../../cad/document/featureStage";
+import { sketchComponentId } from "../../cad/document/components";
+import { targetBodyIds } from "../../cad/document/bodyScopes";
+import { assertNativeSolidPreview } from "../commands/modelingDraftCommand";
+import { useFeatureDraftContext } from "./useFeatureDraftContext";
 
 const EMPTY_MESHES: RebuildResult["meshes"] = [];
 export function HoleCreationPanel() {
   const draft = useHoleDraft((s) => s.draft);
   return draft ? (
-    <HoleDialog key={`${draft.documentId}:${draft.sketchId}`} draft={draft} />
+    <HoleDialog
+      key={`${draft.featureId}:${draft.session}:${draft.editId ?? "new"}`}
+      draft={draft}
+    />
   ) : null;
 }
 function HoleDialog({ draft }: { draft: HoleDraft }) {
   const current = useCadStore((state) => isCurrentHoleDraft(draft, state));
   const [sourceState] = useState(() => useCadStore.getState());
-  const [context] = useState(() =>
-    holeCreationContext(sourceState, draft.sketchId),
+  const contextDraft = useMemo(
+    () => ({ ...draft, feature: draft.feature ?? { id: draft.featureId } }),
+    [draft],
   );
+  const base = useFeatureDraftContext(contextDraft, current);
   const currentDocument = draft.document;
-  const [name, setName] = useState("Hole"),
-    [targets, setTargets] = useState<string[]>([]),
+  const original = draft.feature;
+  const [sketchId, setSketchId] = useState(draft.sketchId);
+  const context = useMemo(
+    () =>
+      base.ready && base.result
+        ? holeCreationContext(
+            {
+              ...sourceState,
+              history: { ...sourceState.history, present: base.document },
+              rebuild: {
+                ...sourceState.rebuild,
+                status: "succeeded",
+                result: base.result,
+              },
+            },
+            sketchId,
+          )
+        : undefined,
+    [base, sourceState, sketchId],
+  );
+  const [name, setName] = useState(original?.name ?? "Hole"),
+    [targets, setTargets] = useState<string[]>(
+      original ? targetBodyIds(original) : [],
+    ),
     [centers, setCenters] = useState(draft.centerPointIds),
-    [diameter, setDiameter] = useState("3mm"),
-    [depth, setDepth] = useState(DEFAULT_HOLE_DEPTH),
-    [throughAll, setThroughAll] = useState(true),
+    [diameter, setDiameter] = useState(original?.diameter.expression ?? "3mm"),
+    [depth, setDepth] = useState(
+      original && original.depth !== "throughAll"
+        ? original.depth.expression
+        : DEFAULT_HOLE_DEPTH,
+    ),
+    [throughAll, setThroughAll] = useState(
+      !original || original.depth === "throughAll",
+    ),
     [error, setError] = useState("");
   const close = () => useHoleDraft.setState({ draft: undefined });
   const input = useMemo(
     () => ({
       name,
+      sketchId,
       targetBodyIds: targets,
       centerPointIds: centers,
       diameter,
       depth,
       throughAll,
     }),
-    [name, targets, centers, diameter, depth, throughAll],
+    [name, sketchId, targets, centers, diameter, depth, throughAll],
   );
   const staged = useMemo(
     () =>
       current
-        ? stageHole(input, sourceState, draft)
+        ? stageHole(
+            input,
+            sourceState,
+            draft,
+            base.ready ? base.result : undefined,
+          )
         : {
             ok: false as const,
             reason: "Project or component changed. Close and reopen Hole.",
           },
-    [input, sourceState, draft, current],
+    [input, sourceState, draft, current, base.ready, base.result],
   );
   const [preview, setPreview] = useState<{
     staged: typeof staged;
     result?: RebuildResult;
+    operationResult?: RebuildResult;
     error?: string;
   }>();
   useEffect(() => {
     setError("");
-    if (!current || !staged.ok) return;
+    if (!current || !base.ready || base.error || !staged.ok) return;
     const controller = new AbortController();
     const timer = setTimeout(() => {
-      void previewModeling(staged.document, controller.signal)
-        .then((result) => {
+      void (async () => {
+        if (!draft.editing)
+          return {
+            result: await previewModeling(staged.document, controller.signal),
+          };
+        const operationResult = await previewModeling(
+          documentAtFeature(staged.document, staged.feature.id, true),
+          controller.signal,
+        );
+        if (controller.signal.aborted) throw new Error("Preview canceled.");
+        assertNativeHolePreview(
+          operationResult,
+          staged.document.id,
+          staged.feature,
+        );
+        const result = await previewModeling(
+          staged.document,
+          controller.signal,
+        );
+        assertNativeSolidPreview(result, staged.document.id);
+        return { result, operationResult };
+      })()
+        .then(({ result, operationResult }) => {
           if (controller.signal.aborted || !isCurrentHoleDraft(draft)) return;
-          assertNativeHolePreview(result, staged.document.id, staged.feature);
-          setPreview({ staged, result });
+          if (!draft.editing)
+            assertNativeHolePreview(result, staged.document.id, staged.feature);
+          setPreview({ staged, result, operationResult });
         })
         .catch((error) => {
           if (!controller.signal.aborted && isCurrentHoleDraft(draft))
@@ -87,12 +154,12 @@ function HoleDialog({ draft }: { draft: HoleDraft }) {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [current, staged, draft]);
+  }, [current, staged, draft, base.ready, base.error]);
   const shown = current && preview?.staged === staged ? preview : undefined;
   return (
     <ModalDialog
       className="file-dialog model-dialog"
-      label="Create hole"
+      label={draft.editing ? "Edit Hole" : "Create hole"}
       onDismiss={close}
     >
       <form
@@ -105,15 +172,45 @@ function HoleDialog({ draft }: { draft: HoleDraft }) {
           const result = createHole(input, {
             feature: staged.feature,
             result: shown.result,
+            operationResult: shown.operationResult,
+            baseResult: base.result,
           });
           if (!result.ok) setError(result.reason);
         }}
       >
-        <h2>Create hole</h2>
+        <h2>{draft.editing ? "Edit Hole" : "Create hole"}</h2>
+        {draft.editing ? (
+          <label>
+            Hole source sketch
+            <select
+              aria-label="Hole source sketch"
+              value={sketchId}
+              onChange={(e) => {
+                setSketchId(e.target.value);
+                setCenters([]);
+              }}
+            >
+              {!base.document.sketches[sketchId] ? (
+                <option value={sketchId}>Lost sketch {sketchId}</option>
+              ) : null}
+              {Object.values(base.document.sketches)
+                .filter(
+                  (sketch) =>
+                    sketchComponentId(base.document, sketch.id) ===
+                    draft.componentId,
+                )
+                .map((sketch) => (
+                  <option key={sketch.id} value={sketch.id}>
+                    {sketch.name}
+                  </option>
+                ))}
+            </select>
+          </label>
+        ) : null}
         <p>
           Source sketch:{" "}
-          {currentDocument.sketches[draft.sketchId]?.name ?? "Lost sketch"}.
-          Holes cut along its positive normal.
+          {currentDocument.sketches[sketchId]?.name ?? "Lost sketch"}. Holes cut
+          along its positive normal.
         </p>
         {!context ? (
           <p role="status">
@@ -168,23 +265,33 @@ function HoleDialog({ draft }: { draft: HoleDraft }) {
           <legend>
             Hole centers (choose up to {MODEL_RESOURCE_LIMITS.maxHoleCenters})
           </legend>
-          {context?.points.map((point) => {
-            const solved = context.solved.points[point.id];
+          {[
+            ...new Set([
+              ...(context?.points.map((point) => point.id) ?? []),
+              ...centers,
+            ]),
+          ].map((id) => {
+            const solved = context?.solved.points[id];
+            const label = solved
+              ? `Hole center at ${solved.x.toFixed(3)}, ${solved.y.toFixed(3)} mm`
+              : `Lost hole center ${id}`;
             return (
-              <label key={point.id}>
+              <label key={id}>
                 <input
                   type="checkbox"
-                  aria-label={`Hole center at ${solved.x.toFixed(3)}, ${solved.y.toFixed(3)} mm`}
-                  checked={centers.includes(point.id)}
+                  aria-label={label}
+                  checked={centers.includes(id)}
                   onChange={(e) =>
                     setCenters(
                       e.target.checked
-                        ? [...centers, point.id]
-                        : centers.filter((id) => id !== point.id),
+                        ? [...centers, id]
+                        : centers.filter((center) => center !== id),
                     )
                   }
                 />
-                {solved.x.toFixed(3)}, {solved.y.toFixed(3)} mm
+                {solved
+                  ? `${solved.x.toFixed(3)}, ${solved.y.toFixed(3)} mm`
+                  : label}
               </label>
             );
           })}
@@ -220,19 +327,23 @@ function HoleDialog({ draft }: { draft: HoleDraft }) {
         <p role="status" aria-label="Hole preview status">
           {!current
             ? "Project or component changed. Close and reopen Hole."
-            : !staged.ok
-              ? staged.reason
-              : shown?.error
-                ? "Preview failed"
-                : shown?.result
-                  ? `Native preview ready · ${shown.result.meshes.reduce((sum, mesh) => sum + mesh.geometryAssertions!.volume, 0).toFixed(3)} mm³`
-                  : "Building native preview…"}
+            : base.error
+              ? base.error
+              : !base.ready
+                ? "Checking native geometry before this Hole…"
+                : !staged.ok
+                  ? staged.reason
+                  : shown?.error
+                    ? "Preview failed"
+                    : shown?.result
+                      ? `Native preview ready · ${shown.result.meshes.reduce((sum, mesh) => sum + mesh.geometryAssertions!.volume, 0).toFixed(3)} mm³`
+                      : "Building native preview…"}
         </p>
         {error || shown?.error ? (
           <p role="alert">{error || shown?.error}</p>
         ) : null}
         <button type="submit" disabled={!shown?.result}>
-          Create hole feature
+          {draft.editing ? "Apply hole edits" : "Create hole feature"}
         </button>
         <button type="button" onClick={close}>
           Cancel hole

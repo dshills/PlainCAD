@@ -486,9 +486,15 @@ boolean faces/edges remain unsupported. To-face termination still requires an
 unmodified upstream owner.
 
 Hole features use transformed cylindrical tools. Select a sketch or point and use `Hole` to choose
-explicit centers and one native target body. The modal validates positive length
-expressions before creating a feature. Its Inspector edits diameter, blind-depth/
-through-all termination, centers, source sketch and target body. Holes cut along
+explicit centers and native target bodies. The modal validates positive length
+expressions before creating a feature. **Edit Feature** also opens an existing Hole
+with its diameter, blind-depth/through-all termination, centers, source sketch and
+target scope. Choices come from a fresh native rebuild immediately before the Hole;
+lost references remain visible for repair. The edited cut and all downstream
+features must pass separate native previews before **Apply hole edits**. Cancel
+leaves the project untouched; Apply preserves feature/body IDs and timeline order
+in one undo step. Unchanged expressions retain their authored units and parameter
+bindings. The Inspector still offers direct repairs. Holes cut along
 the sketch's positive normal. Empty/lost centers and unchanged cuts fail rebuild.
 
 The **Dependencies** panel traces the selected parameter, sketch/entity, feature or

@@ -67,7 +67,7 @@ import {
   detectProfiles,
 } from "../../cad/sketch/profileDetection";
 import { moveTimelineItem, planTimelineMove } from "../../cad/document/timelineEditing";
-import { beginHoleCreation, holeCreationContext } from "./holeCommand";
+import { beginHoleCreation, beginHoleEditing, editableHole, holeCreationContext } from "./holeCommand";
 
 export interface CommandContext {
   sketchId?: string;
@@ -133,7 +133,7 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
     exportSelectedBody: canExportStl(state) && !state.fileBusy && Boolean(selectedExportBody(state)),
     createExtrude: !canvasActive && canCreateExtrude(state),
     createRevolve: !canvasActive && Boolean(defaultRevolveAxis(state)),
-    editFeature: !canvasActive && Boolean(editableExtrude(state) || editableModelingFeature(state)),
+    editFeature: !canvasActive && Boolean(editableExtrude(state) || editableModelingFeature(state) || editableHole(state)),
     selectedFeature: !canvasActive && Boolean(getSelectedFeature(state)),
     createEdgeTreatment: !canvasActive && Boolean(edgeTreatmentOwner(state)),
     moveEarlier: !canvasActive && !planTimelineMove(state.history.present, state.selection.selectedIds[0], "earlier").reason,
@@ -155,7 +155,7 @@ export function isCommandEnabledForSnapshot(
 
 export const commands: CadCommand[] = [
   { id: "ai.toggle", label: "Toggle AI Drawer", description: "Describe a part and preview an editable AI component.", alwaysEnabled: true, run: toggleAiDrawer },
-  { id: "feature.edit", label: "Edit Selected Feature", description: "Preview changes to the selected Extrude, Revolve, Fillet or Chamfer and its downstream geometry.", enablementKey: "editFeature", run: () => { if (editableExtrude(useCadStore.getState())) beginExtrudeEditing(); else beginModelingEditing(); } },
+  { id: "feature.edit", label: "Edit Selected Feature", description: "Preview changes to the selected Extrude, Revolve, Fillet, Chamfer or Hole and its downstream geometry.", enablementKey: "editFeature", run: () => { if (editableExtrude(useCadStore.getState())) beginExtrudeEditing(); else if (editableHole(useCadStore.getState())) beginHoleEditing(); else beginModelingEditing(); } },
   {
     id: "file.renameProject", internal: true, label: "Rename Project", enablementKey: "editProject",
     run: ({ projectName }) => {

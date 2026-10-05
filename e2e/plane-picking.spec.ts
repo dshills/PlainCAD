@@ -5,7 +5,12 @@ import type { CadDocument } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
 async function snapshot(
   page: Page,
-): Promise<{ document: CadDocument; result: RebuildResult; past: number }> {
+): Promise<{
+  document: CadDocument;
+  result: RebuildResult;
+  past: number;
+  session: number;
+}> {
   return page.evaluate(async () => {
     const path = "/src/state/useCadStore.ts",
       { useCadStore } = await import(path),
@@ -14,6 +19,7 @@ async function snapshot(
       document: state.history.present,
       result: state.rebuild.result,
       past: state.history.past.length,
+      session: state.documentSession,
     };
   });
 }
@@ -157,13 +163,20 @@ test("native cap picking persists its reference and follows owner edits through 
   await (await download).saveAs(path);
   const saved = JSON.parse(await readFile(path, "utf8")) as CadDocument;
   expect(saved.sketches[sketch.id].plane).toEqual(sketch.plane);
+  const session = (await snapshot(page)).session;
   await page.locator('input[type="file"]').setInputFiles(path);
-  await ready(page);
-  expect(
-    (await snapshot(page)).result.meshes.find(
-      (mesh) => mesh.bodyId === `body:${child.id}`,
-    )!.bounds.min[2],
-  ).toBeCloseTo(14, 6);
+  // File selection is asynchronous: the old succeeded pill can still be visible
+  // before Open replaces the session and clears its previous rebuild result.
+  await expect(async () => {
+    const reopened = await snapshot(page);
+    expect(reopened.session).toBeGreaterThan(session);
+    expect(reopened.result?.documentId).toBe(saved.id);
+    expect(reopened.result?.success).toBe(true);
+    expect(
+      reopened.result?.meshes.find((mesh) => mesh.bodyId === `body:${child.id}`)
+        ?.bounds.min[2],
+    ).toBeCloseTo(14, 6);
+  }).toPass();
 });
 test("curved-face clicks diagnose unsupported picking and cancel without document edits", async ({
   page,
