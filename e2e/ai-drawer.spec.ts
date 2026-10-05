@@ -197,6 +197,64 @@ test("all three provider choices create real native previews; Cancel/Apply, para
   expect(signedVolume).toBeGreaterThan(0);
   expect(Math.abs(signedVolume / volume - 1)).toBeLessThan(0.01);
 });
+test("proposal dimension edits invalidate Apply, reject invalid values and re-preview native geometry without another provider call", async ({
+  page,
+}) => {
+  const drawer = await setup(page);
+  let calls = 0;
+  await page.route("**/api/ai/generate", (route) => {
+    calls++;
+    return route.fulfill({ json: { plan: aiPlatePlan } });
+  });
+  await drawer.getByLabel("What would you like to make?").fill("A plate");
+  await drawer.getByRole("button", { name: "Generate preview" }).click();
+  const apply = drawer.getByRole("button", { name: "Apply AI component" });
+  await expect(apply).toBeEnabled();
+  const before = await snapshot(page);
+  const thickness = drawer.getByLabel("Proposed thickness (mm)");
+  await thickness.fill("");
+  await expect(apply).toBeDisabled();
+  await drawer
+    .getByRole("button", { name: "Preview dimension changes" })
+    .click();
+  await expect(drawer.getByRole("alert")).toContainText(
+    "finite numeric value for thickness",
+  );
+  expect((await snapshot(page)).document).toEqual(before.document);
+  await thickness.fill("8");
+  await drawer
+    .getByRole("button", { name: "Preview dimension changes" })
+    .click();
+  await expect(apply).toBeEnabled();
+  await expect(drawer).toContainText(
+    `${(19200 - 32 * Math.PI).toFixed(3)} mm³`,
+  );
+  expect(calls).toBe(1);
+  await thickness.fill("-2");
+  await drawer
+    .getByRole("button", { name: "Preview dimension changes" })
+    .click();
+  await expect(drawer.getByRole("alert")).toContainText("positive length");
+  await expect(apply).toBeDisabled();
+  await thickness.fill("8");
+  await drawer
+    .getByRole("button", { name: "Preview dimension changes" })
+    .click();
+  await expect(apply).toBeEnabled();
+  await apply.click();
+  await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+  const after = await snapshot(page);
+  expect(after.result!.meshes[0].geometryAssertions!.volume).toBeCloseTo(
+    19200 - 32 * Math.PI,
+    5,
+  );
+  expect(after.document.parameters.ai_1_thickness.expression).toBe("8mm");
+  expect(after.past).toBe(before.past + 1);
+  await expect(
+    drawer.getByRole("button", { name: "Preview dimension changes" }),
+  ).toBeDisabled();
+  expect(calls).toBe(1);
+});
 test("AI parameter edits preserve existing component/feature/body IDs, preview before Apply, undo once and persist native geometry", async ({
   page,
 }, info) => {

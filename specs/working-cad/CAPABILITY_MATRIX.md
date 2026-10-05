@@ -576,3 +576,7 @@ are rejected. Before/after values and a full native project preview precede one
 undoable Apply, preserving durable IDs and bindings. Other components' dependent
 face references are rebuilt. Empty/no-change edits require clarification; stale
 and failed geometry retain the same Apply guard as component creation.
+Proposed numeric mm/deg values can be edited locally before Apply. Explicit native
+re-preview uses the same immutable frame and geometry gate without another provider
+call; units, parameter names and recipe operations cannot be changed by these
+controls. Any dimension edit immediately disables the previous Apply result.

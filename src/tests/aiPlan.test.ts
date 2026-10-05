@@ -5,6 +5,7 @@ import {
 } from "../cad/document/CadDocument";
 import { buildAiPlan } from "../ai/buildPlan";
 import { aiEditContext, buildAiParameterEdit } from "../ai/editPlan";
+import { reviseAiParameters } from "../ai/revisePlan";
 import { validateAiPlan } from "../ai/plan";
 import { aiPlatePlan } from "./fixtures/aiPlan";
 import { rebuildDocument } from "../cad/features/rebuildGraph";
@@ -15,6 +16,35 @@ import { useCadStore } from "../state/useCadStore";
 import { applyAiPlan, assertAiGeometry } from "../ui/commands/aiCommand";
 
 afterEach(() => useCadStore.setState(useCadStore.getInitialState(), true));
+it("revises only bounded numeric proposal values, retaining recipe structure and rejecting invalid drafts", () => {
+  const values = Object.fromEntries(
+    aiPlatePlan.parameters.map((p) => [p.name, String(p.value)]),
+  );
+  const updated = reviseAiParameters(aiPlatePlan, {
+    ...values,
+    thickness: "8",
+  });
+  expect(updated.parameters.find((p) => p.name === "thickness")?.value).toBe(8);
+  expect(updated.steps).toEqual(aiPlatePlan.steps);
+  expect(
+    aiPlatePlan.parameters.find((p) => p.name === "thickness")?.value,
+  ).toBe(5);
+  for (const thickness of [
+    "",
+    "NaN",
+    "Infinity",
+    "0x10",
+    "1+2",
+    "8mm",
+    "100001",
+  ])
+    expect(() =>
+      reviseAiParameters(aiPlatePlan, { ...values, thickness }),
+    ).toThrow();
+  expect(() =>
+    reviseAiParameters(aiPlatePlan, { ...values, unknown: "1" }),
+  ).toThrow(/unknown/);
+});
 it("limits AI edits to independent exclusive parameters and preserves durable IDs, bindings and other parts", () => {
   const created = buildAiPlan(createEmptyDocument(), aiPlatePlan);
   const base = created.document,

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchAiProviders, requestAiPlan } from "../../ai/client";
 import { buildAiPlan } from "../../ai/buildPlan";
 import { aiEditContext, buildAiParameterEdit } from "../../ai/editPlan";
+import { reviseAiParameters } from "../../ai/revisePlan";
 import {
   AI_LIMITS,
   type AiPlan,
@@ -59,7 +60,17 @@ export function AiDrawer() {
   }, [document, componentId, task]);
   const [history, setHistory] = useState<Message[]>([]);
   const [reply, setReply] = useState<AiPlan>();
+  const [dimensionDrafts, setDimensionDrafts] = useState<
+    Record<string, string>
+  >({});
+  const [replyFrame, setReplyFrame] = useState<AiDraftFrame>();
   const [proposal, setProposal] = useState<Proposal>();
+  useEffect(() => {
+    if (!reply) {
+      setReplyFrame(undefined);
+      setDimensionDrafts({});
+    }
+  }, [reply]);
   const [status, setStatus] = useState("Describe the part you want to make.");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -183,6 +194,12 @@ export function AiDrawer() {
       )
         return;
       setReply(plan);
+      setReplyFrame(base);
+      setDimensionDrafts(
+        Object.fromEntries(
+          plan.parameters.map((p) => [p.name, String(p.value)]),
+        ),
+      );
       const nextHistory: Message[] = [
         ...history,
         { role: "user", content: description },
@@ -226,6 +243,65 @@ export function AiDrawer() {
       setStatus("The project is unchanged.");
     } finally {
       window.clearTimeout(timer);
+      if (controller.current === abort) {
+        controller.current = undefined;
+        setBusy(false);
+      }
+    }
+  };
+  const canPreviewDimensions = Boolean(
+    reply?.parameters.length &&
+    replyFrame &&
+    currentAiFrame(replyFrame) &&
+    !busy &&
+    kernelReady &&
+    !fileBusy &&
+    !canvasActive,
+  );
+  const previewDimensions = async () => {
+    if (!canPreviewDimensions || !reply || !replyFrame) return;
+    const base = replyFrame;
+    cancel("Checking edited dimensions…");
+    const abort = new AbortController();
+    controller.current = abort;
+    frame.current = base;
+    setBusy(true);
+    setError("");
+    try {
+      const plan = reviseAiParameters(reply, dimensionDrafts);
+      const staged =
+        task === "edit"
+          ? buildAiParameterEdit(base.document, base.componentId, plan)
+          : buildAiPlan(base.document, plan);
+      const result = await previewModeling(staged.document, abort.signal);
+      if (
+        abort.signal.aborted ||
+        controller.current !== abort ||
+        !currentAiFrame(base)
+      )
+        return;
+      const geometry = assertAiGeometry(staged, result);
+      setReply(plan);
+      setProposal({ frame: base, plan, staged, result, geometry });
+      setHistory((entries) =>
+        entries.map((entry, index) =>
+          index === entries.length - 1 && entry.role === "assistant"
+            ? { ...entry, content: JSON.stringify(plan) }
+            : entry,
+        ),
+      );
+      setStatus(
+        "Native preview ready with edited dimensions. No additional AI request was sent.",
+      );
+    } catch (failure) {
+      if (controller.current !== abort || !currentAiFrame(base)) return;
+      setError(
+        failure instanceof Error
+          ? failure.message
+          : "Edited dimensions could not be previewed.",
+      );
+      setStatus("The project is unchanged. Repair the proposed dimensions.");
+    } finally {
       if (controller.current === abort) {
         controller.current = undefined;
         setBusy(false);
@@ -477,6 +553,47 @@ export function AiDrawer() {
               <>
                 <strong>{reply.name}</strong>
                 <p>{reply.summary}</p>
+                {reply.parameters.length ? (
+                  <fieldset>
+                    <legend>Proposed dimensions</legend>
+                    {reply.parameters.map((parameter) => (
+                      <label key={parameter.name}>
+                        Proposed {parameter.name} ({parameter.unit})
+                        <input
+                          inputMode="decimal"
+                          maxLength={64}
+                          value={
+                            dimensionDrafts[parameter.name] ??
+                            String(parameter.value)
+                          }
+                          disabled={!canPreviewDimensions}
+                          onChange={(event) => {
+                            cancel(
+                              "Dimensions changed. Preview edited dimensions before Apply.",
+                            );
+                            setError("");
+                            setDimensionDrafts((values) => ({
+                              ...values,
+                              [parameter.name]: event.target.value,
+                            }));
+                          }}
+                        />
+                      </label>
+                    ))}
+                    <button
+                      type="button"
+                      disabled={!canPreviewDimensions}
+                      onClick={() => void previewDimensions()}
+                    >
+                      Preview dimension changes
+                    </button>
+                    <p className="muted">
+                      Adjust numeric values in the displayed units, then preview
+                      locally. Geometry is rebuilt before Apply; no AI request
+                      is needed.
+                    </p>
+                  </fieldset>
+                ) : null}
                 {reply.warnings.length ? (
                   <ul>
                     {reply.warnings.map((warning, i) => (

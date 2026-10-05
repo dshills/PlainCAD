@@ -155,6 +155,12 @@ preview, then **Apply AI parameter edits**. This preserves component, sketch,
 feature and parameter IDs in one undo step. Shared, locked, derived and unused
 parameters are unavailable; feature replacement remains unsupported. The entire
 project is rebuilt, including dependent face references in other components.
+The response's **Proposed dimensions** are editable before Apply. Change numeric
+values in the displayed units, then choose **Preview dimension changes** for a
+fresh native preview without a provider call. Editing invalidates Apply immediately;
+failed, stale and canceled previews cannot modify the project. This also works for
+existing-component parameter proposals; after applying or changing projects,
+generate a fresh proposal.
 
 The provider adapters follow [Anthropic structured outputs](https://platform.claude.com/docs/en/build-with-claude/structured-outputs),
 [OpenAI structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs),
