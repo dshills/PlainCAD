@@ -1,0 +1,32 @@
+.project-file-drop {
+  display: contents;
+}
+.project-drop-feedback {
+  position: fixed;
+  inset: 12px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  border: 3px dashed var(--accent, #087fa8);
+  background: var(--panel, #fff);
+  color: var(--text, #172b3a);
+  opacity: 0.95;
+  pointer-events: none;
+  font-size: 1.2rem;
+}
+.project-drop-dialog {
+  max-width: min(560px, 90vw);
+  background: var(--panel, #fff);
+  color: var(--text, #172b3a);
+  border: 1px solid var(--border, #778);
+  border-radius: 8px;
+  padding: 24px;
+}
+.project-drop-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

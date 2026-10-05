@@ -4,6 +4,7 @@ import { useWorkspaceState } from "../state/useWorkspaceState";
 import { WorkspacePanels, PinPanel } from "../ui/workspace/WorkspacePanels";
 import { WorkspaceControls } from "../ui/workspace/WorkspaceControls";
 import { ProjectStart } from "../ui/workspace/ProjectStart";
+import { ProjectFileDrop } from "../ui/workspace/ProjectFileDrop";
 import { useAiDrawer } from "../ui/commands/aiCommand";
 import { useProjectWorkflow } from "../ui/commands/projectWorkflowCommand";
 import { ModelingCreationPanel } from "../ui/panels/ModelingCreationPanel";
@@ -167,7 +168,7 @@ export function App() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [commandContext, select]);
 
-  return (
+  const shell = (
     <div
       className={`app-shell ${full ? "full-workspace" : "focused-workspace"}`}
     >
@@ -339,4 +340,5 @@ export function App() {
       />
     </div>
   );
+  return <ProjectFileDrop>{shell}</ProjectFileDrop>;
 }

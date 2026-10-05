@@ -138,6 +138,12 @@ ordinary CAD commands remain available without an AI service. The first two
 steps of the [simplified workflow proposal](specs/working-cad/SIMPLIFIED_WORKFLOW.md)
 are implemented. Extrusion drag handles and operation drops remain planned.
 
+Drop one `.pcaddoc` or `.json` file anywhere on the workspace to open a project.
+The same bounded validation and migration used by Open runs before replacement.
+For a nonempty project, choose **Keep current project**, **Save current and open**,
+or **Replace without saving**. Active modeling tasks and dialogs must be finished
+or canceled first. File drops open a project; they do not append or position parts.
+
 ### Describe a Part with AI
 
 Open **AI drawer** at the bottom, choose a provider/model, and describe the part

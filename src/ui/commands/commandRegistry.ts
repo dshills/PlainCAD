@@ -68,6 +68,7 @@ import {
 } from "../../cad/sketch/profileDetection";
 import { moveTimelineItem, planTimelineMove } from "../../cad/document/timelineEditing";
 import { beginHoleCreation, beginHoleEditing, editableHole, holeCreationContext } from "./holeCommand";
+import { prepareProjectDrop, replaceWithDroppedProject, saveAndReplaceDroppedProject } from "./projectDropCommand";
 
 export interface CommandContext {
   sketchId?: string;
@@ -156,6 +157,9 @@ export function isCommandEnabledForSnapshot(
 }
 
 export const commands: CadCommand[] = [
+  { id: "file.dropProject", internal: true, label: "Open Dropped Project", enablementKey: "editProject", run: ({ file }) => { if (file) return prepareProjectDrop(file); } },
+  { id: "file.replaceDroppedProject", internal: true, label: "Replace With Dropped Project", enablementKey: "editProject", run: replaceWithDroppedProject },
+  { id: "file.saveAndReplaceDroppedProject", internal: true, label: "Save Current and Open Dropped Project", enablementKey: "editProject", run: saveAndReplaceDroppedProject },
   { id: "sketch.entity.delete", internal: true, label: "Delete selected sketch item", enablementKey: "deleteSketchEntity", run: deleteSelectedCanvasEntity },
   { id: "ai.toggle", label: "Toggle AI Drawer", description: "Describe a part and preview an editable AI component.", alwaysEnabled: true, run: toggleAiDrawer },
   { id: "feature.edit", label: "Edit Selected Feature", description: "Preview changes to the selected Extrude, Revolve, Fillet, Chamfer or Hole and its downstream geometry.", enablementKey: "editFeature", run: () => { if (editableExtrude(useCadStore.getState())) beginExtrudeEditing(); else if (editableHole(useCadStore.getState())) beginHoleEditing(); else beginModelingEditing(); } },

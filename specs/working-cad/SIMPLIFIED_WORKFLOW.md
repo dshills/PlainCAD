@@ -379,6 +379,11 @@ sketch camera gestures described earlier remain future work.
 
 Start with extrusion distance handles and file-open drops. Then add supported face-to-sketch and guided Hole drops, bounded edge-treatment drops and validated history reordering. Define all alternatives, preview contexts and invalid-target messages before each gesture ships.
 
+Project-file drops are implemented: drop one `.pcaddoc` or `.json` file to validate
+and open it. Nonempty projects get explicit keep/save/replace choices; invalid,
+stale, multiple-file or active-task drops preserve the current document. This opens
+a project and does not append reusable parts or place assemblies.
+
 Acceptance: drag and typed input produce equivalent feature data and native geometry. Cancel, pointer loss, stale selection and invalid geometry create no committed edits. An accepted operation is one undo step. Do not bundle reusable-part append or free assembly placement into this phase.
 
 ### Step 4 Make AI contextual

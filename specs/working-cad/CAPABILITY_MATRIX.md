@@ -722,3 +722,12 @@ Chromium, Firefox and WebKit. The built app covers precise XZ dimensions, native
 volume and STL orientation under production CSP.
 Box selection, new snap types and sketch camera gestures remain planned; existing
 snap, grid, pan/zoom and advanced editing modes retain their supported limits.
+
+### Project-file drops
+
+One `.pcaddoc` or `.json` file can be dropped onto the workspace to open it through
+the existing import limits, validation and migrations. A nonempty current project
+gets a replacement confirmation with keep/save/open options. Invalid files,
+multiple-file drops, active tasks and stale import/confirmation contexts leave the
+current project intact. Native browser acceptance covers parameter edits, save,
+reopen and STL after a drop. Part append and assembly placement remain unavailable.
