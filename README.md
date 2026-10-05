@@ -140,10 +140,16 @@ provider. It does not send project files, meshes, API keys, or other components.
 Chat, drafts and provider choices are temporary; only applied CAD intent is saved.
 Generation requires an available native kernel and finished sketch editing.
 
-Initial recipes support single rectangle/circle sketches on origin planes with
+Initial recipes support single rectangle/circle/polygon/line-arc wire sketches on origin planes with
 offsets, parameterized distance/through-all extrudes, coplanar origin-axis revolves,
-explicit Cut/Join scopes, and feature-owned whole-cap Fillet/Chamfer. Recipes are
-bounded to 24 parameters and 32 steps, validated as data, then rebuilt with native
+explicit Cut/Join scopes, and feature-owned whole-cap Fillet/Chamfer. Recipes can
+also use point sketches and native Hole features with up to 64 explicit
+centers for mounting patterns. Polygon/wire profiles have at most 32 vertices,
+close through shared vertex IDs, and reject degenerate, self-crossing or inconsistent
+arcs. Points sketches cannot be extruded. Hole centers/targets must all participate
+in a real native cut; invalid patterns do not Apply. These remain ordinary editable
+sketch entities and Hole timeline features after saving.
+Recipes are bounded to 24 parameters and 32 steps, validated as data, then rebuilt with native
 OpenCascade before Apply. Unsupported shapes/operations require clarification;
 failed geometry, malformed responses, missing keys, model access, quota, and
 network errors are shown without changing the document. AI generation does not

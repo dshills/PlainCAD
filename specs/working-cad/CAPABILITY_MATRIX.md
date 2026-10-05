@@ -552,7 +552,8 @@ Apply/Cancel. Provider credentials are read only by a loopback-only, same-origin
 Node gateway in Vite development/preview; browser/project data never contain keys.
 Static deployment reports a missing AI service without changing ordinary CAD.
 
-AI recipes support single rectangle/circle sketches, signed origin offsets,
+AI recipes support single rectangle/circle/polygon/line-arc wire profiles and point
+sketches for native Hole patterns (up to 64 centers), signed origin offsets,
 distance/through-all extrudes, coplanar origin-axis revolves, explicit Cut/Join
 targets, and supported entire extrusion-cap fillets/chamfers. At most 24 numeric
 parameters and 32 chronological steps are accepted. Recipes are validated as data,
@@ -564,7 +565,7 @@ sketch editing and file operations invalidate in-flight proposals.
 
 The selected provider receives only the description and recent AI turns. No
 project geometry or runtime resources are sent. Create mode does not edit existing parts,
-create arbitrary profiles, assemblies, loft/sweep/shell/thread geometry, or STEP.
+create unrestricted profiles, assemblies, loft/sweep/shell/thread geometry, or STEP.
 Deterministic browser tests isolate provider responses while requiring actual
 native BRep geometry, parameter edits, save/open/STL and stale-result rejection;
 live-provider verification is separate from reproducible release checks.
@@ -580,3 +581,7 @@ Proposed numeric mm/deg values can be edited locally before Apply. Explicit nati
 re-preview uses the same immutable frame and geometry gate without another provider
 call; units, parameter names and recipe operations cannot be changed by these
 controls. Any dimension edit immediately disables the previous Apply result.
+AI polygon/wire profiles use at most 32 shared vertices with explicit outgoing
+line/arc edges; points-only sketches support native Hole features with up to 64
+indexed centers and explicit live body targets. Arc radius/winding, closed profile,
+pattern participation and exact native geometry are validated before Apply.

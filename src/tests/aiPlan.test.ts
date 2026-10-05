@@ -8,6 +8,11 @@ import { aiEditContext, buildAiParameterEdit } from "../ai/editPlan";
 import { reviseAiParameters } from "../ai/revisePlan";
 import { validateAiPlan } from "../ai/plan";
 import { aiPlatePlan } from "./fixtures/aiPlan";
+import {
+  aiPolygonPlan,
+  aiArcPlan,
+  aiHolePatternPlan,
+} from "./fixtures/aiExpandedPlans";
 import { rebuildDocument } from "../cad/features/rebuildGraph";
 import { serializeProject } from "../persistence/exportProject";
 import { parseProjectJson } from "../persistence/importSafety";
@@ -16,6 +21,65 @@ import { useCadStore } from "../state/useCadStore";
 import { applyAiPlan, assertAiGeometry } from "../ui/commands/aiCommand";
 
 afterEach(() => useCadStore.setState(useCadStore.getInitialState(), true));
+it("compiles closed polygon/arc wires and indexed native Hole patterns into durable editable entities", () => {
+  for (const plan of [aiPolygonPlan, aiArcPlan, aiHolePatternPlan]) {
+    const staged = buildAiPlan(createEmptyDocument(), plan);
+    expect(parseProjectJson(serializeProject(staged.document))).toMatchObject({
+      features: JSON.parse(JSON.stringify(staged.document.features)),
+    });
+    expect(staged.bodyIds).toHaveLength(1);
+  }
+  const arc = buildAiPlan(createEmptyDocument(), aiArcPlan);
+  expect(
+    Object.values(Object.values(arc.document.sketches)[0].entities).filter(
+      (e) => e.type === "arc",
+    ),
+  ).toHaveLength(1);
+  const holes = buildAiPlan(createEmptyDocument(), aiHolePatternPlan);
+  expect(holes.document.features[1]).toMatchObject({
+    type: "hole",
+    centerPointIds: expect.any(Array),
+    targetBodyIds: holes.bodyIds,
+    depth: "throughAll",
+  });
+  const hole = holes.document.features[1];
+  if (hole.type !== "hole") throw new Error("Expected native Hole feature");
+  expect(hole.centerPointIds).toHaveLength(4);
+  const missing = structuredClone(aiHolePatternPlan);
+  if (missing.steps[3].type === "hole") missing.steps[3].centers = [9];
+  expect(() => buildAiPlan(createEmptyDocument(), missing)).toThrow(
+    /center indices/,
+  );
+  const duplicate = structuredClone(aiHolePatternPlan);
+  if (duplicate.steps[3].type === "hole") duplicate.steps[3].centers = [0, 0];
+  expect(() => validateAiPlan(duplicate)).toThrow(/unique/);
+  const wire = structuredClone(aiArcPlan);
+  if (wire.steps[0].type === "sketch" && wire.steps[0].profile.type === "wire")
+    wire.steps[0].profile.edges.pop();
+  expect(() => validateAiPlan(wire)).toThrow(/outgoing edge/);
+  const badArc = structuredClone(aiArcPlan);
+  const arcStep = badArc.steps[0];
+  if (
+    arcStep.type !== "sketch" ||
+    arcStep.profile.type !== "wire" ||
+    arcStep.profile.edges[0].type !== "arc"
+  )
+    throw new Error("Expected arc fixture");
+  arcStep.profile.edges[0].center.x = "1mm";
+  expect(() => buildAiPlan(createEmptyDocument(), badArc)).toThrow(
+    /equidistant/,
+  );
+  const pointsExtrude = {
+    ...aiPolygonPlan,
+    steps: [
+      aiHolePatternPlan.steps[2],
+      { ...aiPolygonPlan.steps[1], sketch: "centers" },
+    ],
+  };
+  expect(() => buildAiPlan(createEmptyDocument(), pointsExtrude)).toThrow(
+    /closed profile/,
+  );
+});
 it("revises only bounded numeric proposal values, retaining recipe structure and rejecting invalid drafts", () => {
   const values = Object.fromEntries(
     aiPlatePlan.parameters.map((p) => [p.name, String(p.value)]),

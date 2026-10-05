@@ -1,6 +1,11 @@
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { aiPlatePlan } from "../src/tests/fixtures/aiPlan";
+import {
+  aiPolygonPlan,
+  aiArcPlan,
+  aiHolePatternPlan,
+} from "../src/tests/fixtures/aiExpandedPlans";
 import type { AiPlan } from "../src/ai/plan";
 import type { CadDocument } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
@@ -196,6 +201,119 @@ test("all three provider choices create real native previews; Cancel/Apply, para
   }
   expect(signedVolume).toBeGreaterThan(0);
   expect(Math.abs(signedVolume / volume - 1)).toBeLessThan(0.01);
+});
+test("AI polygons, analytic arcs and indexed Hole patterns produce exact native geometry and survive edits/save/open/STL", async ({
+  page,
+}, info) => {
+  const drawer = await setup(page);
+  let plan = aiPolygonPlan;
+  await page.route("**/api/ai/generate", (route) =>
+    route.fulfill({ json: { plan } }),
+  );
+  for (const [recipe, volume] of [
+    [aiPolygonPlan, 500],
+    [aiArcPlan, 37.5 * Math.PI],
+    [aiHolePatternPlan, 12000 - 80 * Math.PI],
+  ] as const) {
+    plan = recipe;
+    await drawer.getByRole("button", { name: "New conversation" }).click();
+    await drawer
+      .getByLabel("What would you like to make?")
+      .fill(recipe.summary);
+    await drawer.getByRole("button", { name: "Generate preview" }).click();
+    await expect(
+      drawer.getByRole("button", { name: "Apply AI component" }),
+    ).toBeEnabled();
+    await expect(drawer).toContainText(`${volume.toFixed(3)} mm³`);
+    await drawer.getByRole("button", { name: "Apply AI component" }).click();
+    await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+    const state = await snapshot(page),
+      mesh = state.result!.meshes.at(-1)!;
+    expect(mesh.geometrySource).toBe("opencascade");
+    expect(mesh.geometryAssertions!.valid).toBe(true);
+    expect(mesh.geometryAssertions!.solidCount).toBe(1);
+    expect(Math.abs(mesh.geometryAssertions!.volume / volume - 1)).toBeLessThan(
+      1e-8,
+    );
+    await expect(
+      drawer.getByRole("button", { name: "Apply AI component" }),
+    ).toBeDisabled();
+  }
+  const state = await snapshot(page);
+  expect(state.document.features.at(-1)?.type).toBe("hole");
+  plan = structuredClone(aiHolePatternPlan);
+  const centers = plan.steps[2];
+  if (centers.type !== "sketch" || centers.profile.type !== "points")
+    throw new Error("Expected points-sketch fixture");
+  centers.profile.points[3].x = "1000mm";
+  await drawer
+    .getByLabel("What would you like to make?")
+    .fill("An invalid pattern with an unused center");
+  await drawer.getByRole("button", { name: "Generate preview" }).click();
+  await expect(drawer.getByRole("alert")).toContainText(
+    /center|intersect|hit/i,
+  );
+  await expect(
+    drawer.getByRole("button", { name: "Apply AI component" }),
+  ).toBeDisabled();
+  expect((await snapshot(page)).document).toEqual(state.document);
+  const hole = state.document.features.at(-1)!;
+  if (hole.type !== "hole") throw new Error("Expected native hole pattern");
+  const parameterId = Object.values(hole.diameter.parameterRefs ?? {})[0];
+  const diameterName = Object.values(state.document.parameters).find(
+    (p) => p.id === parameterId,
+  )?.name;
+  expect(diameterName).toBeTruthy();
+  const diameterInput = page.getByLabel(
+    `Parameter ${diameterName} expression`,
+    { exact: true },
+  );
+  await diameterInput.fill("6mm");
+  await diameterInput.press("Enter");
+  await expect
+    .poll(async () =>
+      Math.abs(
+        ((await snapshot(page)).result?.meshes.at(-1)?.geometryAssertions
+          ?.volume ?? 0) /
+          (12000 - 180 * Math.PI) -
+          1,
+      ),
+    )
+    .toBeLessThan(1e-8);
+  const saved = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const path = info.outputPath("ai-expanded.pcaddoc");
+  await (await saved).saveAs(path);
+  const session = (await snapshot(page)).session;
+  await page.locator('input[type="file"]').setInputFiles(path);
+  await expect
+    .poll(async () => (await snapshot(page)).session)
+    .toBeGreaterThan(session);
+  await expect
+    .poll(async () =>
+      Math.abs(
+        ((await snapshot(page)).result?.meshes.at(-1)?.geometryAssertions
+          ?.volume ?? 0) /
+          (12000 - 180 * Math.PI) -
+          1,
+      ),
+    )
+    .toBeLessThan(1e-8);
+  const stl = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export STL", exact: true }).click();
+  const exportPanel = page.getByRole("dialog", { name: "STL export options" });
+  await exportPanel
+    .getByRole("button", { name: "Clear body selection", exact: true })
+    .click();
+  await exportPanel
+    .getByLabel("Export body Plate extrusion", { exact: true })
+    .check();
+  await exportPanel
+    .getByRole("button", { name: "Generate STL", exact: true })
+    .click();
+  const stlPath = info.outputPath("ai-expanded.stl");
+  await (await stl).saveAs(stlPath);
+  expect((await readFile(stlPath)).readUInt32LE(80)).toBeGreaterThan(0);
 });
 test("proposal dimension edits invalidate Apply, reject invalid values and re-preview native geometry without another provider call", async ({
   page,

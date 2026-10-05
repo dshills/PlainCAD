@@ -6,9 +6,18 @@ export interface AiParameter {
   value: number;
   unit: "mm" | "deg";
 }
+export interface AiPoint {
+  x: string;
+  y: string;
+}
+export type AiWireEdge =
+  { type: "line" } | { type: "arc"; center: AiPoint; clockwise: boolean };
 export type AiProfile =
   | { type: "rectangle"; x: string; y: string; width: string; height: string }
-  | { type: "circle"; x: string; y: string; radius: string };
+  | { type: "circle"; x: string; y: string; radius: string }
+  | { type: "polygon"; vertices: AiPoint[] }
+  | { type: "wire"; vertices: AiPoint[]; edges: AiWireEdge[] }
+  | { type: "points"; points: AiPoint[] };
 export type AiStep =
   | {
       type: "sketch";
@@ -38,6 +47,17 @@ export type AiStep =
       axis: "X" | "Y" | "Z";
       angle: string;
       targets: string[];
+    }
+  | {
+      type: "hole";
+      id: string;
+      name: string;
+      sketch: string;
+      targets: string[];
+      centers: number[];
+      diameter: string;
+      depth: string;
+      termination: "distance" | "throughAll";
     }
   | {
       type: "fillet" | "chamfer";
@@ -109,6 +129,9 @@ export const AI_LIMITS = {
   responseBytes: 256000,
   parameters: 24,
   steps: 32,
+  profileVertices: 32,
+  holeCenters: 64,
+  targets: 8,
   history: 6,
   historyEntryCharacters: 12000,
 } as const;
@@ -132,6 +155,7 @@ const operation = {
   operation: choice("newBody", "cut", "join"),
   targets: array(text),
 };
+const pointSchema = object({ x: text, y: text });
 export const AI_PLAN_SCHEMA = object({
   name: text,
   summary: text,
@@ -160,6 +184,22 @@ export const AI_PLAN_SCHEMA = object({
               height: text,
             }),
             object({ type: choice("circle"), x: text, y: text, radius: text }),
+            object({ type: choice("polygon"), vertices: array(pointSchema) }),
+            object({
+              type: choice("wire"),
+              vertices: array(pointSchema),
+              edges: array({
+                anyOf: [
+                  object({ type: choice("line") }),
+                  object({
+                    type: choice("arc"),
+                    center: pointSchema,
+                    clockwise: { type: "boolean" },
+                  }),
+                ],
+              }),
+            }),
+            object({ type: choice("points"), points: array(pointSchema) }),
           ],
         },
       }),
@@ -180,12 +220,39 @@ export const AI_PLAN_SCHEMA = object({
       }),
       object({
         ...base,
+        type: choice("hole"),
+        sketch: text,
+        targets: array(text),
+        centers: array({
+          type: "integer",
+          description: `Zero-based center index from 0 to ${AI_LIMITS.holeCenters - 1}.`,
+        }),
+        diameter: text,
+        depth: text,
+        termination: choice("distance", "throughAll"),
+      }),
+      object({
+        ...base,
         type: choice("fillet", "chamfer"),
         owner: text,
         role: choice("startCapPerimeter", "endCapPerimeter"),
         size: text,
       }),
     ],
+  }),
+});
+/** Keep provider grammar shallow; each step is JSON data parsed and fully
+ * validated locally. Nested wire/profile unions can exceed provider grammar limits. */
+export const AI_TRANSPORT_SCHEMA = object({
+  name: text,
+  summary: text,
+  warnings: array(text),
+  parameters:
+    (AI_PLAN_SCHEMA.properties as Record<string, JsonSchema>).parameters,
+  steps: array({
+    type: "string",
+    description:
+      "One JSON-encoded modeling step object, never executable code.",
   }),
 });
 
@@ -242,6 +309,89 @@ function list<T>(
   return value.map(parse);
 }
 const expression = (value: unknown) => string(value, "expression", 256);
+function aiPoint(value: unknown): AiPoint {
+  const p = record(value, ["x", "y"], "point");
+  return { x: expression(p.x), y: expression(p.y) };
+}
+function aiProfile(value: unknown): AiProfile {
+  const type = enumeration(
+    (value as { type?: unknown } | null)?.type,
+    ["rectangle", "circle", "polygon", "wire", "points"],
+    "profile",
+  );
+  if (type === "polygon" || type === "wire" || type === "points") {
+    const p = record(
+      value,
+      [
+        "type",
+        ...(type === "points"
+          ? ["points"]
+          : type === "wire"
+            ? ["vertices", "edges"]
+            : ["vertices"]),
+      ],
+      "profile",
+    );
+    if (type === "points") {
+      const points = list(p.points, AI_LIMITS.holeCenters, aiPoint);
+      if (!points.length)
+        throw new Error("AI hole sketch needs at least one point.");
+      return { type, points };
+    }
+    const vertices = list(p.vertices, AI_LIMITS.profileVertices, aiPoint);
+    if (vertices.length < (type === "polygon" ? 3 : 2))
+      throw new Error("AI closed profile needs more vertices.");
+    if (type === "polygon") return { type, vertices };
+    const edges = list(
+      p.edges,
+      AI_LIMITS.profileVertices,
+      (value): AiWireEdge => {
+        const type = enumeration(
+          (value as { type?: unknown } | null)?.type,
+          ["line", "arc"],
+          "wire edge",
+        );
+        const e = record(
+          value,
+          type === "line" ? ["type"] : ["type", "center", "clockwise"],
+          "wire edge",
+        );
+        if (type === "line") return { type };
+        if (typeof e.clockwise !== "boolean")
+          throw new Error("AI arc winding must be boolean.");
+        return { type, center: aiPoint(e.center), clockwise: e.clockwise };
+      },
+    );
+    if (edges.length !== vertices.length)
+      throw new Error(
+        "AI wire requires one outgoing edge per vertex, including the closing edge.",
+      );
+    if (vertices.length === 2 && edges.every((edge) => edge.type === "line"))
+      throw new Error(
+        "AI two-vertex wire needs an arc; two lines enclose no area.",
+      );
+    return { type, vertices, edges };
+  }
+  const p = record(
+    value,
+    [
+      "type",
+      "x",
+      "y",
+      ...(type === "rectangle" ? ["width", "height"] : ["radius"]),
+    ],
+    "profile",
+  );
+  const coords = { x: expression(p.x), y: expression(p.y) };
+  return type === "rectangle"
+    ? {
+        type,
+        ...coords,
+        width: expression(p.width),
+        height: expression(p.height),
+      }
+    : { type, ...coords, radius: expression(p.radius) };
+}
 
 export function validateAiPlan(value: unknown): AiPlan {
   const root = record(
@@ -275,7 +425,7 @@ export function validateAiPlan(value: unknown): AiPlan {
   const steps = list(root.steps, AI_LIMITS.steps, (item): AiStep => {
     const type = enumeration(
       (item as { type?: unknown } | null)?.type,
-      ["sketch", "extrude", "revolve", "fillet", "chamfer"],
+      ["sketch", "extrude", "revolve", "hole", "fillet", "chamfer"],
       "operation",
     );
     const keys =
@@ -290,42 +440,65 @@ export function validateAiPlan(value: unknown): AiPlan {
               "termination",
               "direction",
             ]
-          : type === "revolve"
-            ? ["sketch", "operation", "targets", "axis", "angle"]
-            : ["owner", "role", "size"];
+          : type === "hole"
+            ? [
+                "sketch",
+                "targets",
+                "centers",
+                "diameter",
+                "depth",
+                "termination",
+              ]
+            : type === "revolve"
+              ? ["sketch", "operation", "targets", "axis", "angle"]
+              : ["owner", "role", "size"];
     const s = record(item, ["id", "name", "type", ...keys], "step");
     const common = { id: identifier(s.id), name: string(s.name, "step name") };
     if (type === "sketch") {
-      const shape = enumeration(
-        (s.profile as { type?: unknown } | null)?.type,
-        ["rectangle", "circle"],
-        "profile",
-      );
-      const p = record(
-        s.profile,
-        [
-          "type",
-          "x",
-          "y",
-          ...(shape === "rectangle" ? ["width", "height"] : ["radius"]),
-        ],
-        "profile",
-      );
-      const coords = { x: expression(p.x), y: expression(p.y) };
       return {
         ...common,
         type,
         plane: enumeration(s.plane, ["XY", "XZ", "YZ"], "plane"),
         offset: expression(s.offset),
-        profile:
-          shape === "rectangle"
-            ? {
-                ...coords,
-                type: shape,
-                width: expression(p.width),
-                height: expression(p.height),
-              }
-            : { ...coords, type: shape, radius: expression(p.radius) },
+        profile: aiProfile(s.profile),
+      };
+    }
+    if (type === "hole") {
+      const targets = list(s.targets, AI_LIMITS.targets, identifier);
+      const centers = list(s.centers, AI_LIMITS.holeCenters, (value) => {
+        if (
+          typeof value !== "number" ||
+          !Number.isInteger(value) ||
+          value < 0 ||
+          value >= AI_LIMITS.holeCenters
+        )
+          throw new Error(
+            `AI hole center indices must be integers from 0 to ${AI_LIMITS.holeCenters - 1}.`,
+          );
+        return value;
+      });
+      if (
+        !targets.length ||
+        new Set(targets).size !== targets.length ||
+        !centers.length ||
+        new Set(centers).size !== centers.length
+      )
+        throw new Error(
+          "AI holes require unique explicit targets and center indices.",
+        );
+      return {
+        ...common,
+        type,
+        sketch: identifier(s.sketch),
+        targets,
+        centers,
+        diameter: expression(s.diameter),
+        depth: expression(s.depth),
+        termination: enumeration(
+          s.termination,
+          ["distance", "throughAll"],
+          "hole termination",
+        ),
       };
     }
     if (type === "fillet" || type === "chamfer")
@@ -347,7 +520,7 @@ export function validateAiPlan(value: unknown): AiPlan {
         ["newBody", "cut", "join"],
         "boolean operation",
       ),
-      targets: list(s.targets, 8, identifier),
+      targets: list(s.targets, AI_LIMITS.targets, identifier),
     };
     if (
       new Set(scope.targets).size !== scope.targets.length ||

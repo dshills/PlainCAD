@@ -52,6 +52,10 @@ it("builds provider-native structured requests and forwards recent conversation 
     history,
   });
   expect(google.url).not.toContain("key=");
+  // Shared raw schema must avoid Anthropic's unsupported numeric constraints;
+  // the recipe validator enforces center index bounds instead.
+  expect(JSON.stringify(google.body)).not.toContain('"minimum"');
+  expect(JSON.stringify(google.body)).not.toContain('"maximum"');
   expect(google.body).toMatchObject({
     contents: [
       { role: "model", parts: [{ text: "Previous proposal" }] },
@@ -155,6 +159,26 @@ it("never forwards raw upstream errors, including echoed credentials", async () 
   expect(fetcher.mock.calls[0][0]).toBe(
     "https://api.anthropic.com/v1/messages",
   );
+});
+it("decodes shallow structured transport into validated CAD steps and refuses encoded code or unsafe keys", () => {
+  const reply = (steps: unknown[]) => ({
+    stop_reason: "end_turn",
+    content: [
+      { type: "text", text: JSON.stringify({ ...aiPlatePlan, steps }) },
+    ],
+  });
+  expect(
+    extractProviderPlan(
+      "anthropic",
+      reply(aiPlatePlan.steps.map((step) => JSON.stringify(step))),
+    ),
+  ).toEqual(aiPlatePlan);
+  expect(() => extractProviderPlan("anthropic", reply(["alert(1)"]))).toThrow(
+    /invalid/,
+  );
+  expect(() =>
+    extractProviderPlan("anthropic", reply(['{"__proto__":{}}'])),
+  ).toThrow(/invalid/);
 });
 it("bounds successful response streams and refuses missing keys before any request", async () => {
   await expect(
