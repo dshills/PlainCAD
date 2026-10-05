@@ -95,7 +95,7 @@ export function deleteSelectedCanvasEntity() {
   const expected = state.history.present;
   const next = upsertSketch(
     expected,
-    deleteSketchEntity(selected.sketch, selected.entityId),
+    deleteSketchEntity(selected.sketch, selected.entityId, expected),
   );
   assertProjectJsonShape(next);
   state.updateDocument((document) => (document === expected ? next : document));

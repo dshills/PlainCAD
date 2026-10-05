@@ -170,9 +170,9 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
   const deletionPlan = useMemo(
     () =>
       selectedItemId && sketch?.entities[selectedItemId]
-        ? planSketchEntityDeletion(sketch, selectedItemId)
+        ? planSketchEntityDeletion(sketch, selectedItemId, document)
         : undefined,
-    [sketch, selectedItemId],
+    [sketch, selectedItemId, document],
   );
   useEffect(() => {
     if (selection && selection.document !== document)

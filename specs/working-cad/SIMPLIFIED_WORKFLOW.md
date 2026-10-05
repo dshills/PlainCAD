@@ -364,7 +364,9 @@ lists stay available through disclosures and expanded in Full workspace.
 Selected sketch geometry can be deleted with a visible button or Delete/Backspace
 while the canvas has focus. The item list supports selection even when geometry
 cannot render. Deleting a point removes its attached curves and affected dimensions/
-constraints in one undo edit; deleting a curve retains its points. The UI shows the
+constraints in one undo edit. Unused endpoints and centers of deleted curves are
+removed too; shared points, surviving references and hole centers remain. Unrelated
+standalone points are preserved. The UI shows the
 impact before deletion. Missing downstream profiles remain diagnostic.
 
 Acceptance is covered by unit/component and native browser checks for precise

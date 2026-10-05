@@ -249,7 +249,7 @@ it("selects geometry on the canvas and deletes it with the visible button as one
   expect(button).toBeEnabled();
   expect(screen.getByLabelText("Selected sketch item")).toHaveValue(id);
   expect(
-    screen.getByText(/Removes 1 geometry item\(s\), 1 dimension/),
+    screen.getByText(/Removes 2 geometry item\(s\), 1 dimension/),
   ).toBeVisible();
   expect(
     screen.queryByRole("form", { name: "Selected sketch size" }),
@@ -270,7 +270,7 @@ it("selects geometry on the canvas and deletes it with the visible button as one
     Object.values(after.present.sketches[sketch.id].entities).map(
       (e) => e.type,
     ),
-  ).toEqual(["point"]);
+  ).toEqual([]);
   expect(after.past.length).toBe(before.past.length + 1);
   expect(button).toBeDisabled();
   act(() => useCadStore.getState().undo());

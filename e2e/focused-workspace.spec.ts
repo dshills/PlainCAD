@@ -78,10 +78,10 @@ test("focused sketch deletion cleans references, rejects typing, diagnoses lost 
   await page
     .getByRole("button", { name: "Draw tool: select", exact: true })
     .click();
-  await clickLocal(page, 55, 35);
+  await clickLocal(page, 58, 35);
   await expect(
     page.getByLabel("Selected sketch item", { exact: true }),
-  ).toHaveValue(centerId);
+  ).toHaveValue(circle.id);
   await expect(page.getByText(/Removes 2 geometry item/)).toBeVisible();
   await page.keyboard.press("Backspace");
   const withoutCircle = await aiSnapshot(page);
@@ -93,6 +93,8 @@ test("focused sketch deletion cleans references, rejects typing, diagnoses lost 
   ).toBeUndefined();
   expect(withoutCircle.document.sketches[sketch.id].dimensions).toHaveLength(2);
   expect(withoutCircle.past).toBe(full.past + 1);
+  await expect(page.locator(`[data-point-id="${centerId}"]`)).toHaveCount(0);
+  await expect(page.locator(".canvas-point")).toHaveCount(4);
   await page
     .getByRole("button", { name: "Finish Sketch", exact: true })
     .click();
@@ -145,6 +147,8 @@ test("focused sketch deletion cleans references, rejects typing, diagnoses lost 
   expect(deleted.document.sketches[sketch.id].constraints).toHaveLength(3);
   expect(deleted.document.features).toEqual(solid.document.features);
   expect(deleted.past).toBe(solid.past + 1);
+  // Both endpoints still belong to the neighboring rectangle edges.
+  await expect(page.locator(".canvas-point")).toHaveCount(4);
   expect(
     deleted.result?.errors.some(
       (e) => e.source === "feature" && /profile.*not found/i.test(e.message),
@@ -182,6 +186,41 @@ test("focused sketch deletion cleans references, rejects typing, diagnoses lost 
   await expect(
     page.getByRole("button", { name: "Export STL", exact: true }),
   ).toBeDisabled();
+  const historyButton = page.getByRole("button", { name: /^History \(/ });
+  if ((await historyButton.getAttribute("aria-expanded")) !== "true")
+    await historyButton.click();
+  await page
+    .getByRole("list", { name: "Sketch and feature history" })
+    .getByRole("button")
+    .filter({ has: page.getByText(sketch.name, { exact: true }) })
+    .click();
+  await page
+    .getByRole("button", { name: "Edit sketch canvas", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Draw tool: select", exact: true })
+    .click();
+  const remaining = Object.values(
+    deleted.document.sketches[sketch.id].entities,
+  ).filter((e) => e.type === "line");
+  // Rectangle creation inserts perimeter edges in cyclic order. The first edge
+  // was removed above, so these form a three-edge chain ordered from one end.
+  for (const [index, edge] of remaining.entries()) {
+    await page
+      .getByLabel("Selected sketch item", { exact: true })
+      .selectOption(edge.id);
+    await page
+      .getByRole("button", { name: "Delete selected sketch item", exact: true })
+      .click();
+    await expect(page.locator(".canvas-point")).toHaveCount([3, 2, 0][index]);
+  }
+  expect(
+    (await aiSnapshot(page)).document.sketches[sketch.id].entities,
+  ).toEqual({});
+  await page.getByRole("button", { name: "Undo", exact: true }).click();
+  await expect(page.locator(".canvas-point")).toHaveCount(2);
+  await page.getByRole("button", { name: "Redo", exact: true }).click();
+  await expect(page.locator(".canvas-point")).toHaveCount(0);
 });
 test("focused mouse sketch, native extrude/cut, parameter edit, save/open and STL work without the full workspace", async ({
   page,

@@ -382,7 +382,9 @@ rebuild until their expressions are repaired; reused names cannot retarget them.
    Select a point, line, circle or arc and choose **Delete selected sketch item**,
    or press Delete/Backspace with the canvas focused. The **Sketch item** list also
    selects geometry that cannot currently render. Deleting a point removes attached
-   curves; deleting a curve preserves its points. Related dimensions and constraints
+   curves. Deleting geometry also removes its unused endpoints and centers, while
+   preserving shared points, surviving dimension/constraint references and hole centers.
+   Related dimensions and constraints
    are removed in the same undoable edit, with counts shown before deletion. Undo
    restores IDs and intent. Downstream features keep their profile references and
    report missing profiles instead of silently switching geometry. Typing in a field

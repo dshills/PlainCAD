@@ -710,7 +710,9 @@ repairable. Top/Front/Side plane buttons show axes/normals and retain native pla
 hover previews. Precision and advanced controls remain expanded in Full workspace.
 Select points/lines/circles/arcs (including construction geometry) on the canvas or
 item list; Delete/Backspace or the visible delete button removes the selection.
-Point deletion cascades to attached curves, while curve deletion retains points.
+Point deletion cascades to attached curves. Deleting geometry removes its unused
+endpoints and centers; shared points, surviving dimension/constraint references and
+hole centers retain their IDs. Unrelated standalone points remain intact.
 Dependent dimensions/constraints are removed in one undoable edit with an impact
 count. Invalid sketches remain deletable; stale selections and typing are protected.
 Downstream profile references remain explicit and fail when their profile is lost.
