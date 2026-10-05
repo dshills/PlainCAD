@@ -65,6 +65,36 @@ it("builds provider-native structured requests and forwards recent conversation 
   });
 });
 it.each(["anthropic", "openai", "google"] as const)(
+  "instructs %s on identifier syntax and rejects a hyphenated returned step ID",
+  (provider) => {
+    const payload = JSON.stringify(
+      providerPayload({ ...request, provider }).body,
+    );
+    expect(payload).toContain("^[A-Za-z_][A-Za-z0-9_]*$");
+    expect(payload).toContain("never base-body");
+    const text = JSON.stringify({
+      ...aiPlatePlan,
+      steps: aiPlatePlan.steps.map((step, index) =>
+        JSON.stringify(index === 0 ? { ...step, id: "base-body" } : step),
+      ),
+    });
+    const response =
+      provider === "anthropic"
+        ? { stop_reason: "end_turn", content: [{ type: "text", text }] }
+        : provider === "openai"
+          ? {
+              status: "completed",
+              output: [{ content: [{ type: "output_text", text }] }],
+            }
+          : {
+              candidates: [
+                { finishReason: "STOP", content: { parts: [{ text }] } },
+              ],
+            };
+    expect(() => extractProviderPlan(provider, response)).toThrow(/safe names/);
+  },
+);
+it.each(["anthropic", "openai", "google"] as const)(
   "sends bounded parameter context and edit instructions to %s without accepting arbitrary project data",
   (provider) => {
     const editContext = {

@@ -13,6 +13,9 @@
     "src/types/**/*.d.ts",
     "production-e2e",
     "playwright.production.config.ts",
-    "deployment"
+    "deployment",
+    "playwright.ai.config.ts",
+    "playwright.ai-live.config.ts",
+    "live-e2e"
   ]
 }

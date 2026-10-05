@@ -650,3 +650,26 @@ and missing material under target holes are covered. Curved and inner-loop sides
 modified/revolve/modifier owners, forward references, arbitrary existing-project
 face picks and negative/symmetric To Face are diagnosed or unavailable. References
 remain ordinary durable plane/topology data and use existing manual repair controls.
+
+### AI acceptance corpus and provider checks
+
+Nine named mechanical prompts share bounded recipe fixtures and independent analytic
+volume/body-count/coordinate-span oracles. Provider transport decoding and durable
+round trips cover all nine through Anthropic, OpenAI and Google response formats.
+Native browser cases verify WebAssembly BRep validity/volume and actual rendered
+WebGL meshes on Chromium, Firefox and WebKit; the plate case includes parameter
+editing, undo, save/open and positive STL volume. Default Chromium release checks
+include this corpus; CI additionally runs Firefox and WebKit.
+Opt-in live checks use the ordinary loopback gateway and existing configured models
+for a hollow sleeve and face-mounted boss per provider, at most six requests with
+no retries. Geometry/orientation/rendering and one-step Apply are asserted. Without
+`PLAINCAD_LIVE_AI=1` they skip before requests; missing keys skip per provider. Live
+nondeterministic/API-dependent checks stay outside release gates and CI. This
+coverage establishes these bounded workflows, not unrestricted CAD or complete
+browser compatibility across every feature.
+
+The October 5, 2026 live run passed both prompts with Anthropic and Google and the
+sleeve with OpenAI (five of six cases). OpenAI's face-boss response used an invalid
+identifier and was rejected before Apply. Identifier rules are now explicit in
+provider instructions; that prompt refinement has not been retested live. These
+results do not establish deterministic provider reliability.

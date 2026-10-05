@@ -212,6 +212,35 @@ The provider adapters follow [Anthropic structured outputs](https://platform.cla
 [OpenAI structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs),
 and [Google Generate Content structured outputs](https://ai.google.dev/gemini-api/docs/generate-content/structured-output).
 
+The AI acceptance corpus contains nine mechanical parts: a four-hole mounting plate,
+driven triangular prism, analytic semicircle, hollow sleeve, rectangular spacer,
+island pocket, cap boss, straight-side tab and to-face pillar. Its oracles verify
+native BRep validity, solid count, exact volume, coordinate orientation and rendered
+WebGL meshes. Chromium release checks include the corpus; a separate CI job runs
+it on Firefox and WebKit. The mounting-plate case also covers parameter
+editing, undo, save/open and positive STL volume in each engine.
+
+```sh
+npx playwright install chromium firefox webkit
+npm run test:ai:browser
+```
+
+The cross-browser server uses strict port 5281. Live provider checks are separate,
+use strict port 5291 and make at most six ordinary AI gateway requests: a one-sketch
+sleeve and a face-mounted boss through each configured Anthropic/OpenAI/Google model.
+They require existing server-side environment keys, use no retries or automatic
+repairs, and validate generated native geometry, orientation and rendering. Missing
+provider keys are reported as skipped tests. Without the opt-in flag, all live
+tests skip and no provider generation requests are sent.
+
+```sh
+PLAINCAD_LIVE_AI=1 npm run test:ai:live
+```
+
+Live tests incur the configured providers' API charges and are excluded from normal
+release checks and CI. Traces, screenshots and downloads are under ignored
+`test-results/ai-cross-browser/` and `test-results/ai-live/`.
+
 ### Choose a Theme
 
 Use **Theme** in the top toolbar to choose Light, Dark, or Saturn Command. The

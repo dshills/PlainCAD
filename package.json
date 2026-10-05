@@ -12,7 +12,9 @@
     "release:check": "npm run lint && npm test && npm run build && npm run test:browser && npm run test:production",
     "test:browser": "playwright test",
     "preview": "vite preview",
-    "test:production": "playwright test -c playwright.production.config.ts"
+    "test:production": "playwright test -c playwright.production.config.ts",
+    "test:ai:browser": "playwright test -c playwright.ai.config.ts",
+    "test:ai:live": "playwright test -c playwright.ai-live.config.ts"
   },
   "dependencies": {
     "opencascade.js": "^1.1.1",
