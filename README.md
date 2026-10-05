@@ -137,7 +137,8 @@ on first use in Focused layout, while showing the current provider. Drawing and
 ordinary CAD commands remain available without an AI service. The first two
 steps of the [simplified workflow proposal](specs/working-cad/SIMPLIFIED_WORKFLOW.md)
 are implemented. Distance extrusion handles and protected project-file drops are
-also available; further operation drops remain planned.
+also available. Contextual AI scopes and local numeric previews are implemented;
+further operation drops remain planned.
 
 Drop one `.pcaddoc` or `.json` file anywhere on the workspace to open a project.
 The same bounded validation and migration used by Open runs before replacement.
@@ -212,14 +213,14 @@ OpenCascade before Apply. Unsupported shapes/operations require clarification;
 failed geometry, malformed responses, missing keys, model access, quota, and
 network errors are shown without changing the document. AI generation does not
 implement unrestricted CAD or arbitrary replacement of existing features.
-For an existing part, choose **AI task → Edit active component parameters**.
+For an existing part, choose **This part**.
 Only independent length/angle parameters used exclusively by the active component
 are listed and sent to the provider. Review the before/after values and native
 preview, then **Apply AI parameter edits**. This preserves component, sketch,
 feature and parameter IDs in one undo step. Shared, locked, derived and unused
 parameters are unavailable. The entire
 project is rebuilt, including dependent face references in other components.
-Choose **AI task → Edit selected feature dimensions** for a selected Hole, distance
+Choose **Selected feature** for a selected Hole, distance
 Extrude or Revolve in the active component. Diameter/blind depth, extrusion distance
 or revolve angle can change while sketch/profile/axis/operation/target/center and
 termination references stay intact. Changed fields become explicit mm/deg literals,
@@ -892,3 +893,20 @@ capture loss, focus loss and resizing discard an unfinished gesture. Apply waits
 for the latest valid native preview; one Apply is one Undo edit. Native XY/XZ/YZ
 acceptance checks exact volume/orientation, existing-feature edits, save/open/STL
 and stale same-ID project replacement.
+
+### Contextual AI scope and local edits
+
+The AI drawer shows **New part**, **This part**, and **Selected feature** scope
+chips. A selected distance Extrude routes “make this thicker” to its distance; an
+active part uses a unique eligible thickness parameter or asks you to choose.
+Generated parameter names have readable labels. Independent exclusive parameters
+are eligible; shared, locked and derived values stay protected. Exact supported
+requests such as “make this thicker to 12 mm” can prepare a local native preview
+without an AI key or provider request. Simple contradictory size directions ask
+for clarification; explicit absolute values or a user-chosen field remain authoritative.
+Numeric refinements also stay local. Vague
+or multi-field changes use the selected provider only after the target is clear.
+Unsupported requests, wrong dimensions and stale contexts show diagnostics. Review
+the proposed values and actual native geometry before Apply; accepted edits retain
+IDs in one Undo step. Native acceptance covers selected Extrude/Hole/Revolve and
+component parameters, cancellation, stale replies, save/open and STL.

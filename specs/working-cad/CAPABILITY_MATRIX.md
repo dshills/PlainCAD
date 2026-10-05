@@ -692,7 +692,8 @@ in Focused layout; UI checks cover persistence, command access, keyboard focus a
 compact layouts across Light/Dark/Saturn themes. The built app checks the Focused
 example/edit/export path under production CSP. Existing detailed CAD acceptance
 explicitly uses Full workspace. Distance extrusion handles and protected project-file
-drops are implemented. Further operation drops and new AI scope routing remain planned.
+drops and contextual AI scopes/local edits are implemented within their documented
+limits. Further operation drops remain planned.
 
 ### Direct and precise sketch controls
 
@@ -756,3 +757,16 @@ with an explanation; Through All/To Face remain typed/target workflows. Unfinish
 gestures cancel on Escape, pointer loss, focus loss, resize or unmount. Pending,
 invalid and stale previews cannot Apply. Native tests verify exact volume,
 orientation, one Undo, binding protection, save/open and STL.
+
+### Contextual AI intent routing
+
+Explicit New part / This part / Selected feature chips determine edit scope.
+Thickness intent targets a selected distance Extrude or a unique eligible
+component thickness parameter; ambiguous targets require a user choice. Shared,
+locked and derived values are excluded. Exact mm/deg edits can prepare local
+native previews without provider availability; numeric refinements send no API
+request. Unsupported/mismatched requests diagnose, while other bounded proposals
+retain provider validation. Display-only numeric preview context is excluded from
+provider conversation history. IDs, native operation/downstream checks, one Undo,
+stale-frame protection, save/open and STL are verified for Extrude/Hole/Revolve
+and component-parameter edits. This does not implement arbitrary direct modeling.

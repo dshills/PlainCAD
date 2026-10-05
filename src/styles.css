@@ -1083,3 +1083,8 @@ summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 }
 
 .focused-workspace .sketch-workspace-drawing { width: 100%; max-width: 80vh; justify-self: center; }
+
+.ai-scope button[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--on-accent);
+}

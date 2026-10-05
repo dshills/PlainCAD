@@ -7,6 +7,11 @@ import {
   aiFeatureEditContext,
   buildAiFeatureEdit,
 } from "../../ai/featureEditPlan";
+import {
+  assertAiIntentPlan,
+  resolveAiIntent,
+  type AiScope,
+} from "../../ai/contextualIntent";
 import { reviseAiParameters } from "../../ai/revisePlan";
 import {
   createAiConversationBudget,
@@ -42,7 +47,7 @@ interface Proposal {
   operationResult?: RebuildResult;
   geometry: ReturnType<typeof assertAiGeometry>;
 }
-type Message = AiMessage & { summary?: string };
+type Message = AiMessage & { summary?: string; display?: string };
 export function AiDrawer() {
   // Layout seeds the initial disclosure; later layout changes preserve the user’s choice.
   const [settingsOpen, setSettingsOpen] = useState(
@@ -64,7 +69,9 @@ export function AiDrawer() {
   const [provider, setProvider] = useState<AiProvider>("anthropic");
   const [model, setModel] = useState("");
   const [prompt, setPrompt] = useState("");
-  const [task, setTask] = useState<"create" | "edit" | "feature">("create");
+  const [task, setTask] = useState<AiScope>("create");
+  const [chosenTarget, setChosenTarget] = useState<string>();
+  const [clarifying, setClarifying] = useState(false);
   const editingFeatureId = task === "feature" ? selectedFeatureId : undefined;
   const editing = useMemo(() => {
     if (task === "create") return {};
@@ -88,6 +95,28 @@ export function AiDrawer() {
       };
     }
   }, [document, componentId, task, editingFeatureId]);
+  const intent = useMemo(() => {
+    try {
+      return resolveAiIntent(task, prompt, editing.context, chosenTarget);
+    } catch (failure) {
+      return {
+        prompt,
+        clarification:
+          failure instanceof Error
+            ? failure.message
+            : "Describe a valid dimension.",
+      };
+    }
+  }, [task, prompt, editing.context, chosenTarget]);
+  const requestContext = useMemo(() => {
+    if (!editing.context || !intent.target) return editing.context;
+    return {
+      ...editing.context,
+      parameters: editing.context.parameters.filter(
+        (p) => p.name === intent.target,
+      ),
+    };
+  }, [editing.context, intent.target]);
   const [history, setHistory] = useState<Message[]>([]);
   const [reply, setReply] = useState<AiPlan>();
   const [dimensionDrafts, setDimensionDrafts] = useState<
@@ -118,7 +147,7 @@ export function AiDrawer() {
           provider,
           model,
           history,
-          task !== "create" ? editing.context : undefined,
+          task !== "create" ? requestContext : undefined,
         ),
       };
     } catch (failure) {
@@ -129,11 +158,11 @@ export function AiDrawer() {
             : "Conversation context is unavailable.",
       };
     }
-  }, [provider, model, history, task, editing.context]);
+  }, [provider, model, history, task, requestContext]);
   const conversation = useMemo(() => {
     try {
       return {
-        prepared: conversationBudget.prepare?.(prompt),
+        prepared: conversationBudget.prepare?.(intent.prompt),
         error: conversationBudget.error,
       };
     } catch (failure) {
@@ -144,7 +173,7 @@ export function AiDrawer() {
             : "Conversation context is unavailable.",
       };
     }
-  }, [conversationBudget, prompt]);
+  }, [conversationBudget, intent.prompt]);
   useEffect(() => {
     preference.current = { provider, model };
   }, [provider, model]);
@@ -156,12 +185,13 @@ export function AiDrawer() {
     kernelReady &&
     Boolean(prompt.trim()) &&
     prompt.length <= AI_LIMITS.promptCharacters &&
-    /^[A-Za-z0-9._-]{1,100}$/.test(model) &&
-    !configError &&
-    !conversation.error &&
+    (Boolean(intent.localPlan || intent.clarification) ||
+      (/^[A-Za-z0-9._-]{1,100}$/.test(model) &&
+        !configError &&
+        !conversation.error &&
+        providers.some((p) => p.id === provider && p.available))) &&
     !editing.error &&
-    (task === "create" || Boolean(editing.context?.parameters.length)) &&
-    providers.some((p) => p.id === provider && p.available);
+    (task === "create" || Boolean(editing.context?.parameters.length));
   const cancel = (message = "Request canceled. The project is unchanged.") => {
     controller.current?.abort();
     controller.current = undefined;
@@ -232,13 +262,26 @@ export function AiDrawer() {
     setHistory([]);
     setReply(undefined);
     setError("");
+    setChosenTarget(undefined);
+    setClarifying(false);
   }, [session]);
   useEffect(() => {
     if (task !== "create") {
       setHistory([]);
       setReply(undefined);
     }
+    setChosenTarget(undefined);
+    setClarifying(false);
   }, [componentId, task, editingFeatureId]);
+  useEffect(() => {
+    if (
+      chosenTarget &&
+      !editing.context?.parameters.some((p) => p.name === chosenTarget)
+    ) {
+      setChosenTarget(undefined);
+      setClarifying(false);
+    }
+  }, [editing.context, chosenTarget]);
   const requireFeatureId = (base: AiDraftFrame) => {
     if (!base.featureId)
       throw new Error("Select a feature before editing dimensions.");
@@ -250,6 +293,17 @@ export function AiDrawer() {
       setError("Select a feature before generating dimension edits.");
       return;
     }
+    if (intent.clarification) {
+      setClarifying(true);
+      setError("");
+      setStatus(
+        intent.choices?.length
+          ? "Choose the dimension to change before generating a preview."
+          : "Clarify your request or choose a different scope before generating a preview.",
+      );
+      return;
+    }
+    setClarifying(false);
     cancel();
     const abort = new AbortController(),
       timer = window.setTimeout(() => abort.abort(), 120000);
@@ -264,23 +318,30 @@ export function AiDrawer() {
     setBusy(true);
     setError("");
     setReply(undefined);
-    setStatus("Asking AI to propose your part…");
+    setStatus(
+      intent.localPlan
+        ? "Checking your dimension locally…"
+        : "Asking AI to propose your part…",
+    );
     const description = prompt.trim();
     try {
-      const plan = await requestAiPlan(
-        provider,
-        model,
-        description,
-        history,
-        abort.signal,
-        task !== "create" ? editing.context : undefined,
-      );
+      const plan =
+        intent.localPlan ??
+        (await requestAiPlan(
+          provider,
+          model,
+          intent.prompt,
+          history,
+          abort.signal,
+          task !== "create" ? requestContext : undefined,
+        ));
       if (
         abort.signal.aborted ||
         controller.current !== abort ||
         !currentAiFrame(base)
       )
         return;
+      assertAiIntentPlan(intent, plan);
       setReply(plan);
       setReplyFrame(base);
       setDimensionDrafts(
@@ -290,7 +351,7 @@ export function AiDrawer() {
       );
       const nextHistory: Message[] = [
         ...history,
-        { role: "user", content: description },
+        { role: "user", content: intent.prompt, display: description },
         {
           role: "assistant",
           content: JSON.stringify(plan),
@@ -502,27 +563,67 @@ export function AiDrawer() {
           }}
         >
           <div className="ai-composer">
-            <label>
-              AI task
-              <select
-                aria-label="AI task"
-                value={task}
-                disabled={busy}
-                onChange={(event) => {
-                  cancel("AI task changed. Generate a fresh preview.");
-                  setTask(event.target.value as "create" | "edit" | "feature");
-                  setHistory([]);
-                  setReply(undefined);
-                  setError("");
-                }}
-              >
-                <option value="create">Create new component</option>
-                <option value="edit">Edit active component parameters</option>
-                <option value="feature">
-                  Edit selected feature dimensions
-                </option>
-              </select>
-            </label>
+            <fieldset className="ai-scope" aria-label="AI scope">
+              <legend>What do you want to work on?</legend>
+              <div className="ai-actions">
+                {(
+                  [
+                    ["create", "New part"],
+                    ["edit", "This part"],
+                    ["feature", "Selected feature"],
+                  ] as const
+                ).map(([scope, label]) => (
+                  <button
+                    key={scope}
+                    type="button"
+                    aria-pressed={task === scope}
+                    disabled={busy}
+                    onClick={() => {
+                      cancel("Scope changed. Generate a fresh preview.");
+                      setTask(scope);
+                      setHistory([]);
+                      setReply(undefined);
+                      setError("");
+                      setChosenTarget(undefined);
+                      setClarifying(false);
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+            {intent.target ? (
+              <p role="status" aria-label="AI edit target">
+                Target:{" "}
+                {editing.context?.feature?.name ??
+                  editing.context?.componentName}{" "}
+                → {intent.target}. Only this dimension will change.
+              </p>
+            ) : null}
+            {clarifying && intent.clarification ? (
+              <div role="status" aria-label="AI clarification">
+                <p>{intent.clarification}</p>
+                <div className="ai-actions">
+                  {intent.choices?.map((parameter) => (
+                    <button
+                      key={parameter.id}
+                      type="button"
+                      onClick={() => {
+                        cancel("Dimension chosen. Generate a fresh preview.");
+                        setChosenTarget(parameter.name);
+                        setHistory([]);
+                        setReply(undefined);
+                        setClarifying(false);
+                      }}
+                    >
+                      Change {parameter.name} ({parameter.value}
+                      {parameter.unit})
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
             {task !== "create" ? (
               <div>
                 <p>
@@ -571,8 +672,7 @@ export function AiDrawer() {
               </div>
             ) : null}
             <p className="ai-provider-summary">
-              Provider:{" "}
-              {selectedProvider?.label ?? provider}
+              Provider: {selectedProvider?.label ?? provider}
               {selectedProvider?.available === false
                 ? " — key not configured; open AI settings"
                 : ""}
@@ -646,6 +746,8 @@ export function AiDrawer() {
                 if (proposal)
                   cancel("Description changed. Generate a fresh preview.");
                 setPrompt(event.target.value);
+                setChosenTarget(undefined);
+                setClarifying(false);
               }}
               onKeyDown={(event) => {
                 if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
@@ -654,9 +756,20 @@ export function AiDrawer() {
                 }
               }}
             />
+            <p className="muted" role="note" aria-label="AI next action">
+              {task === "create"
+                ? "Next: describe a part, review its dimensions and native preview, then Apply."
+                : task === "feature"
+                  ? "Next: select an Extrude, Hole or Revolve, then describe the dimension change."
+                  : "Next: describe a named dimension change. Shared, locked and derived parameters cannot be edited here."}
+              {intent.localPlan
+                ? " This exact numeric edit will preview locally without an AI request."
+                : ""}
+            </p>
             <p className="muted">
-              Your description and recent AI conversation go to the selected
-              provider.{" "}
+              For AI requests, your description and recent conversation go to
+              the selected provider. Exact numeric dimension edits preview
+              locally.{" "}
               {task === "feature"
                 ? "Apply updates the selected feature dimensions."
                 : task === "edit"
@@ -711,6 +824,8 @@ export function AiDrawer() {
                   setHistory([]);
                   setReply(undefined);
                   setPrompt("");
+                  setChosenTarget(undefined);
+                  setClarifying(false);
                   setError("");
                   input.current?.focus();
                 }}
@@ -731,7 +846,7 @@ export function AiDrawer() {
                       </strong>
                       <p style={{ whiteSpace: "pre-wrap" }}>
                         {entry.role === "user"
-                          ? entry.content
+                          ? (entry.display ?? entry.content)
                           : entry.summary || "Proposed component"}
                       </p>
                     </li>

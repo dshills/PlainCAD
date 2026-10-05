@@ -537,10 +537,12 @@ test("selected-feature AI edits change native Extrude/Hole geometry, preserve ID
         documentId: state.history.present.id,
       });
     }, feature.id);
-    await drawer.getByLabel("AI task", { exact: true }).selectOption("feature");
+    await drawer
+      .getByRole("button", { name: "Selected feature", exact: true })
+      .click();
     await drawer
       .getByLabel("What would you like to make?")
-      .fill(`Change ${name} to ${value}mm`);
+      .fill(`Change ${name} using ${value}mm`);
     plan = {
       name: "Feature edits",
       summary: "Requested size",
@@ -655,7 +657,9 @@ test("selected Revolve angle edits retain the axis and native geometry through u
       state = (await import(path)).useCadStore.getState();
     state.select({ kind: "feature", id, documentId: state.history.present.id });
   }, feature.id);
-  await drawer.getByLabel("AI task", { exact: true }).selectOption("feature");
+  await drawer
+    .getByRole("button", { name: "Selected feature", exact: true })
+    .click();
   plan = {
     name: "Quarter ring",
     summary: "90 degree sweep",
@@ -1137,7 +1141,7 @@ test("AI parameter edits preserve existing component/feature/body IDs, preview b
   await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
   const before = await snapshot(page);
   edit = true;
-  await drawer.getByLabel("AI task", { exact: true }).selectOption("edit");
+  await drawer.getByRole("button", { name: "This part", exact: true }).click();
   await drawer
     .getByLabel("What would you like to make?")
     .fill("Make this plate 8mm thick");
