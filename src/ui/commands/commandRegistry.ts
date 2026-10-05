@@ -1,6 +1,7 @@
 import { beginExtrudeCreation, beginExtrudeEditing, editableExtrude } from "./extrudeCommand";
 import { beginModelingCreation, beginModelingEditing, editableModelingFeature } from "./modelingDraftCommand";
 import { useViewerState } from "../../state/viewerState";
+import { toggleAiDrawer } from "./aiCommand";
 import { activeComponentId, beginProjectWorkflow, finishSketchCanvas } from "./projectWorkflowCommand";
 import { renameComponent, sketchComponentId } from "../../cad/document/components";
 import { MODEL_RESOURCE_LIMITS } from "../../cad/resourceLimits";
@@ -153,6 +154,7 @@ export function isCommandEnabledForSnapshot(
 }
 
 export const commands: CadCommand[] = [
+  { id: "ai.toggle", label: "Toggle AI Drawer", description: "Describe a part and preview an editable AI component.", alwaysEnabled: true, run: toggleAiDrawer },
   { id: "feature.edit", label: "Edit Selected Feature", description: "Preview changes to the selected Extrude, Revolve, Fillet or Chamfer and its downstream geometry.", enablementKey: "editFeature", run: () => { if (editableExtrude(useCadStore.getState())) beginExtrudeEditing(); else beginModelingEditing(); } },
   {
     id: "file.renameProject", internal: true, label: "Rename Project", enablementKey: "editProject",

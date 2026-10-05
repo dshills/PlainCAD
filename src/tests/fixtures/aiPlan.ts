@@ -1,0 +1,58 @@
+import type { AiPlan } from "../../ai/plan";
+export const aiPlatePlan: AiPlan = {
+  name: "AI mounting plate",
+  summary: "A centered 60 × 40 × 5 mm plate with a 4 mm through hole.",
+  warnings: [],
+  parameters: [
+    { name: "width", value: 60, unit: "mm" },
+    { name: "height", value: 40, unit: "mm" },
+    { name: "thickness", value: 5, unit: "mm" },
+    { name: "diameter", value: 4, unit: "mm" },
+  ],
+  steps: [
+    {
+      id: "outline",
+      name: "Plate outline",
+      type: "sketch",
+      plane: "XY",
+      offset: "0mm",
+      profile: {
+        type: "rectangle",
+        x: "0mm",
+        y: "0mm",
+        width: "width",
+        height: "height",
+      },
+    },
+    {
+      id: "plate",
+      name: "Plate extrusion",
+      type: "extrude",
+      sketch: "outline",
+      operation: "newBody",
+      distance: "thickness",
+      termination: "distance",
+      direction: "positive",
+      targets: [],
+    },
+    {
+      id: "drill",
+      name: "Hole profile",
+      type: "sketch",
+      plane: "XY",
+      offset: "0mm",
+      profile: { type: "circle", x: "0mm", y: "0mm", radius: "diameter / 2" },
+    },
+    {
+      id: "hole",
+      name: "Through hole",
+      type: "extrude",
+      sketch: "drill",
+      operation: "cut",
+      distance: "1mm",
+      termination: "throughAll",
+      direction: "positive",
+      targets: ["plate"],
+    },
+  ],
+};

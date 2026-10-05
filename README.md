@@ -19,6 +19,8 @@ The MVP is intentionally narrow: make parameters, sketches, rebuilds, inspection
 - Mesh-based STL export after successful rebuilds.
 - Command palette with `Cmd/Ctrl+K`.
 - Light, Dark, and Saturn Command UI themes with a local browser preference.
+- Collapsible AI drawer with Anthropic, OpenAI and Google AI providers, native
+  preview and editable component creation.
 - Rebuild, file, import, and export errors shown in the UI.
 
 ## Prerequisites
@@ -108,6 +110,48 @@ rectangle/through-hole workflow, not general CAD completeness or other browsers.
 The production build currently emits a Vite chunk-size warning because OpenCascade WebAssembly and related viewer code are large. The warning is expected for the current MVP and does not fail the build.
 
 ## Using the App
+
+### Describe a Part with AI
+
+Open **AI drawer** at the bottom, choose a provider/model, and describe the part
+and its dimensions in plain text. Click **Generate preview** (or Ctrl/Cmd+Enter),
+inspect the native geometry, then **Apply AI component**. Apply adds one component
+with ordinary editable parameters, sketches and timeline features, in one undo
+step. Existing parts remain in place. Cancel, close, or Escape discards the preview;
+project/component changes invalidate pending responses. Follow-up descriptions
+revise the full proposal before applying. **New conversation** clears local chat.
+
+Set server environment variables or copy `.env.example` to the ignored
+`.env.local`, fill the desired keys, and restart `npm run dev`. Supported keys are
+`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, and `GOOGLE_API_KEY` (or `GEMINI_API_KEY`).
+Optional `ANTHROPIC_MODEL`, `OPENAI_MODEL`, and `GOOGLE_MODEL`/`GEMINI_MODEL`
+override defaults; the drawer also accepts a model identifier. Never prefix keys
+with `VITE_`. Keys stay on the Node server and are never included in browser
+bundles or project files. No provider SDK dependency is required.
+
+The same local gateway works with `npm run preview` after building. It accepts
+only loopback, same-origin requests, even when Vite binds to all interfaces.
+Static-only deployment has no AI endpoint and reports that limitation; ordinary
+CAD continues to work. Deploying shared/public AI access requires a separate
+authenticated service. The browser CSP continues to allow only same-origin fetch.
+
+AI sends your description and up to three recent conversation turns to the chosen
+provider. It does not send project files, meshes, API keys, or other components.
+Chat, drafts and provider choices are temporary; only applied CAD intent is saved.
+Generation requires an available native kernel and finished sketch editing.
+
+Initial recipes support single rectangle/circle sketches on origin planes with
+offsets, parameterized distance/through-all extrudes, coplanar origin-axis revolves,
+explicit Cut/Join scopes, and feature-owned whole-cap Fillet/Chamfer. Recipes are
+bounded to 24 parameters and 32 steps, validated as data, then rebuilt with native
+OpenCascade before Apply. Unsupported shapes/operations require clarification;
+failed geometry, malformed responses, missing keys, model access, quota, and
+network errors are shown without changing the document. AI generation does not
+implement unrestricted CAD or modification of an existing component.
+
+The provider adapters follow [Anthropic structured outputs](https://platform.claude.com/docs/en/build-with-claude/structured-outputs),
+[OpenAI structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs),
+and [Google Generate Content structured outputs](https://ai.google.dev/gemini-api/docs/generate-content/structured-output).
 
 ### Choose a Theme
 

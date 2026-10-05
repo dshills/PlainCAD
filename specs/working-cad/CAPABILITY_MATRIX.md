@@ -338,7 +338,7 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
 ## Intentionally deferred
 
 Assemblies/mates, CAM, simulation, sheet metal, generative design, collaboration,
-cloud sync, mobile-first editing, plugins, AI generation, and general cross-feature
+cloud sync, mobile-first editing, plugins, unrestricted AI generation, and general cross-feature
 topological naming remain outside the working-CAD target. STEP can remain hidden
 until validated support exists.
 
@@ -543,3 +543,28 @@ so the feature's own treatment and future bodies cannot contaminate the choices.
 Cancel, invalid sizes, lost/changed edges and stale projects cannot Apply; valid
 edits retain IDs and timeline order in one undoable history entry.
 Arbitrary BRep edge picking and new post-boolean topology roles remain unavailable.
+
+### AI component generation
+
+A collapsible bottom drawer offers plain-text descriptions, provider/model choices
+for Anthropic/OpenAI/Google AI, bounded recent conversation, native preview and
+Apply/Cancel. Provider credentials are read only by a loopback-only, same-origin
+Node gateway in Vite development/preview; browser/project data never contain keys.
+Static deployment reports a missing AI service without changing ordinary CAD.
+
+AI recipes support single rectangle/circle sketches, signed origin offsets,
+distance/through-all extrudes, coplanar origin-axis revolves, explicit Cut/Join
+targets, and supported entire extrusion-cap fillets/chamfers. At most 24 numeric
+parameters and 32 chronological steps are accepted. Recipes are validated as data,
+compiled through immutable document helpers and native-rebuilt before Apply.
+Applied geometry adds a separate component and namespaced editable parameters in
+one undo step; other parts are preserved. Malformed, unsupported, incomplete,
+stale, canceled or failed geometry cannot Apply. Project/component replacement,
+sketch editing and file operations invalidate in-flight proposals.
+
+The selected provider receives only the description and recent AI turns. No
+project geometry or runtime resources are sent. AI does not edit existing parts,
+create arbitrary profiles, assemblies, loft/sweep/shell/thread geometry, or STEP.
+Deterministic browser tests isolate provider responses while requiring actual
+native BRep geometry, parameter edits, save/open/STL and stale-result rejection;
+live-provider verification is separate from reproducible release checks.

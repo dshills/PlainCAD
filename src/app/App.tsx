@@ -1,4 +1,5 @@
 import { ModelingCreationPanel } from "../ui/panels/ModelingCreationPanel";
+import { AiDrawer } from "../ui/panels/AiDrawer";
 import { useSketchCanvas } from "../ui/commands/sketchCanvasCommand";
 import { ExtrudeCreationPanel } from "../ui/panels/ExtrudeCreationPanel";
 import { ProjectWorkflowPanel } from "../ui/panels/ProjectWorkflowPanel";
@@ -222,6 +223,7 @@ export function App() {
           </section>
         </aside>
       </main>
+      <AiDrawer />
       <CommandPalette context={commandContext} />
       <input
         ref={fileInputRef}

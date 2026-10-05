@@ -4,7 +4,8 @@
 
 PlainCAD is a browser-first, local-first parametric CAD application for mechanical
 parts. It uses React 19, TypeScript, Vite, Zustand, Three.js, and OpenCascade.js.
-There is no backend in this repository. Prioritize predictable rebuilds, durable
+CAD remains local with no modeling backend. An optional loopback-only Vite AI
+gateway in `server/` keeps provider credentials out of the browser. Prioritize predictable rebuilds, durable
 project files, and useful diagnostics when extending CAD capabilities.
 
 Read `README.md` for setup and workflows. `specs/initial/` contains the original
@@ -57,6 +58,9 @@ configuration files. Keep `package-lock.json` consistent with dependency changes
 - `src/ui/commands/`: command execution and shared enablement; `src/ui/panels/`:
   parameter, sketch, feature, inspector, and diagnostic controls.
 - `src/viewer/CadViewer.tsx`: Three.js rendering and viewer resource lifecycle.
+- `src/ai/`: bounded AI recipes, validation, and immutable CAD generation;
+  `server/`: local Anthropic/OpenAI/Google adapters and same-origin AI middleware.
+  Never expose API keys through VITE_ variables, client code, responses or project JSON.
 - `src/templates/`: built-in models and mounting-plate checks.
 - `e2e/` and `playwright.config.ts`: Chromium modeling and worker-race acceptance tests.
 - `src/tests/`: Vitest and React Testing Library tests; setup is configured in

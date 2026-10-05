@@ -5,10 +5,12 @@ import {
 } from "./deployment/securityHeaders";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
+import { aiPlugin } from "./server/aiMiddleware";
 
 export default defineConfig({
   plugins: [
     react(),
+    aiPlugin(),
     {
       name: "plaincad-deployment-headers",
       configurePreviewServer(server) {

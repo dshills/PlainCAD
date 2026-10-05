@@ -983,6 +983,22 @@ button:disabled:not(.ribbon-button) { opacity: 0.6; }
 
 .component-view-actions { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
 .component-view-actions label, .timeline-filter { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+
+.ai-drawer { flex: 0 0 auto; border-top: 1px solid var(--border); background: var(--panel); color: var(--text); }
+.ai-drawer-header { display: flex; align-items: center; gap: 1rem; padding: 0.35rem 0.75rem; background: var(--toolbar); }
+.ai-drawer-header > span { color: var(--muted); font-size: 0.8rem; }
+.ai-drawer-content { display: grid; grid-template-columns: minmax(320px, 1fr) minmax(300px, 1fr); gap: 1rem; padding: 0.75rem; max-height: 36vh; overflow: auto; }
+.ai-composer, .ai-result { min-width: 0; }
+.ai-composer > label { display: block; margin: 0.6rem 0 0.3rem; }
+.ai-composer textarea { display: block; width: 100%; box-sizing: border-box; resize: vertical; min-height: 5rem; max-height: 10rem; padding: 0.65rem; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--text); font: inherit; }
+.ai-composer textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ai-provider-controls, .ai-actions { display: flex; flex-wrap: wrap; align-items: end; gap: 0.5rem; }
+.ai-provider-controls label { display: grid; gap: 0.25rem; font-size: 0.8rem; }
+.ai-provider-controls input { width: 15rem; }
+.ai-composer p, .ai-result p, .ai-result li { font-size: 0.8rem; }
+.ai-result .extrude-preview { height: 150px; }
+.ai-result [role="alert"] { color: var(--error); }
+@media (max-width: 900px) { .ai-drawer-content { grid-template-columns: 1fr; max-height: 42vh; } }
 .timeline-owner { color: var(--muted); font-size: 0.72rem; }
 
 .sketch-browser-row { display: flex; gap: 8px; align-items: center; }

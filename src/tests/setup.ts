@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 
 // jsdom has no top layer; real focus trapping/Escape are verified by Playwright.
-if (!HTMLDialogElement.prototype.showModal) {
+if (typeof HTMLDialogElement !== "undefined" && !HTMLDialogElement.prototype.showModal) {
   HTMLDialogElement.prototype.showModal = function () {
     this.setAttribute("open", "");
     this.querySelector<HTMLElement>(
