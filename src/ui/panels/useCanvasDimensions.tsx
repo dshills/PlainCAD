@@ -31,6 +31,7 @@ export function useCanvasDimensions(
   view: CanvasLabelView,
   focused = false,
   inspectReferences = true,
+  onInspect?: () => void,
 ) {
   const [showReference, setShowReference] = useState(true),
     [showDimensions, setShowDimensions] = useState(true),
@@ -129,6 +130,7 @@ export function useCanvasDimensions(
   );
   const crowded = [...placements.values()].filter((p) => p.crowded).length;
   const select = (id: string, openEditor = true) => {
+    onInspect?.();
     cancelDrawing();
     setError(undefined);
     setSelectedId(id);
@@ -137,6 +139,7 @@ export function useCanvasDimensions(
     setEditorOpen(focused && openEditor && Boolean(id));
   };
   const selectEntity = (id: string) => {
+    onInspect?.();
     if (!context) return;
     const size = canvasEntitySize(context.solved, id);
     if (!size) return;
@@ -519,12 +522,20 @@ export function useCanvasDimensions(
             {a.lines
               .filter(([p, q]) => [p.x, p.y, q.x, q.y].every(Number.isFinite))
               .map(([p, q], j) => (
-                <line key={j} x1={p.x} y1={-p.y} x2={q.x} y2={-q.y} />
+                <line
+                  pointerEvents="none"
+                  key={j}
+                  x1={p.x}
+                  y1={-p.y}
+                  x2={q.x}
+                  y2={-q.y}
+                />
               ))}
             {[a.position.x, a.position.y].every(Number.isFinite) &&
             (placed.position.x !== a.position.x ||
               placed.position.y !== a.position.y) ? (
               <line
+                pointerEvents="none"
                 x1={a.position.x}
                 y1={-a.position.y}
                 x2={placed.position.x}
@@ -629,6 +640,13 @@ export function useCanvasDimensions(
     selectEntity,
     selectedEntityId,
     selectedId,
+    clearSelection: () => {
+      setSelectedId("");
+      setRef1("");
+      setRef2("");
+      setEditorOpen(false);
+      setError(undefined);
+    },
     closeInlineEditor: () => setEditorOpen(false),
   };
 }

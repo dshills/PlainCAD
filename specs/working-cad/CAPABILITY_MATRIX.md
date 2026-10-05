@@ -708,6 +708,12 @@ labels and shows relevant or failing constraint markers, with all controls/lists
 available through disclosures. Failed/pending dimensions remain unavailable and
 repairable. Top/Front/Side plane buttons show axes/normals and retain native plane
 hover previews. Precision and advanced controls remain expanded in Full workspace.
+Select points/lines/circles/arcs (including construction geometry) on the canvas or
+item list; Delete/Backspace or the visible delete button removes the selection.
+Point deletion cascades to attached curves, while curve deletion retains points.
+Dependent dimensions/constraints are removed in one undoable edit with an impact
+count. Invalid sketches remain deletable; stale selections and typing are protected.
+Downstream profile references remain explicit and fail when their profile is lost.
 Native acceptance covers mouse drags/cancellation, precise XY/XZ/YZ dimensions,
 BRep validity/volume/orientation, inline edits, undo/redo, save/open and STL on
 Chromium, Firefox and WebKit. The built app covers precise XZ dimensions, native

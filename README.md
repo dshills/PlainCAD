@@ -367,9 +367,10 @@ rebuild until their expressions are repaired; reused names cannot retarget them.
    length units; explicit units and length parameter expressions also work. Sized
    shapes add driving dimensions in one undoable edit. Sized rectangles retain
    horizontal/vertical constraints so later dimension edits keep them rectangular.
-   Choose **Select**, then click geometry or a dimension label to inspect or edit
-   its size. A reference measurement changes geometry only after **Make driving
-   dimension**; D labels edit existing intent. Escape cancels the size editor.
+   Choose **Select**, click geometry, then **Edit selected size**, or click a
+   dimension label to inspect or edit its size. A reference measurement changes
+   geometry only after **Make driving dimension**; D labels edit existing intent.
+   Escape cancels the size editor.
    **Precision and advanced tools** exposes exact coordinates, Point/Move/Translate/
    Deform, grid spacing, pan/zoom and undo. **Dimension tools and display** exposes
    other dimension types and display settings. Full workspace keeps these controls
@@ -378,6 +379,14 @@ rebuild until their expressions are repaired; reused names cannot retarget them.
    gestures, snaps to existing solved points and an optional millimeter grid, and
    saves complete primitives as undoable edits. Escape cancels a draft before closing.
    Zoom, pan, Fit, keyboard coordinate entry and construction geometry controls are available.
+   Select a point, line, circle or arc and choose **Delete selected sketch item**,
+   or press Delete/Backspace with the canvas focused. The **Sketch item** list also
+   selects geometry that cannot currently render. Deleting a point removes attached
+   curves; deleting a curve preserves its points. Related dimensions and constraints
+   are removed in the same undoable edit, with counts shown before deletion. Undo
+   restores IDs and intent. Downstream features keep their profile references and
+   report missing profiles instead of silently switching geometry. Typing in a field
+   never triggers geometry deletion.
    Drawing dimensions show solved lengths/radii in display units. Add a driving
    length, radius/diameter, point distance or line angle in the canvas dimension
    controls; click a D label to edit its expression. Pending or failed solves show

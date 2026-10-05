@@ -6,7 +6,12 @@ import {
 } from "../../cad/sketch/sizedCanvasGeometry";
 import { activeComponentId } from "../commands/projectWorkflowCommand";
 import { sketchComponentId } from "../../cad/document/components";
-import { runCommand } from "../commands/commandRegistry";
+import {
+  runCommand,
+  selectCommandEnablement,
+} from "../commands/commandRegistry";
+import { planSketchEntityDeletion } from "../../cad/sketch/entityDeletion";
+import { canvasEntitySize } from "../../cad/sketch/canvasDimensions";
 import { useCanvasPointDrag } from "./useCanvasPointDrag";
 import { useCanvasDimensions } from "./useCanvasDimensions";
 import { useCanvasConstraints } from "./useCanvasConstraints";
@@ -22,6 +27,7 @@ import { useCadStore } from "../../state/useCadStore";
 import {
   canvasContext,
   commitCanvasGeometry,
+  selectCanvasEntity,
   useSketchCanvas,
   type CanvasSession,
 } from "../commands/sketchCanvasCommand";
@@ -84,7 +90,7 @@ function arcPath(
 type CanvasMode = CanvasTool | "select" | "move" | "translate" | "deform";
 const instructions: Record<CanvasMode, string> = {
   select:
-    "Click a line, circle, arc or dimension to inspect its size. Selecting does not edit geometry.",
+    "Click a point, line, circle or arc to select it. Delete/Backspace removes the selected item; Undo restores it. Click a dimension to edit its size.",
   deform:
     "Drag a point to deform a point-and-line sketch through horizontal, vertical and coincident constraints. Fixed/parameter coordinates and supported orthogonal dimensions stay intact. Release validates the solve and profile topology; Escape cancels.",
   translate:
@@ -138,6 +144,13 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
   const document = useCadStore((s) => s.history.present),
     fileBusy = useCadStore((s) => s.fileBusy);
   const history = useCadStore((s) => s.history);
+  const selection = useSketchCanvas((s) => s.selection);
+  const selectedItemId =
+    selection?.document === document ? selection.entityId : undefined;
+  const subscribedCanDelete = useCadStore(
+    (s) => selectCommandEnablement(s).deleteSketchEntity,
+  );
+  const canDelete = Boolean(selectedItemId) && subscribedCanDelete;
   const rebuild = useCadStore((s) => s.rebuild);
   const analysis = useMemo(() => {
     try {
@@ -154,6 +167,17 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
   }, [document, fileBusy, active, rebuild]);
   const context = analysis.context,
     sketch = document.sketches[active.sketchId];
+  const deletionPlan = useMemo(
+    () =>
+      selectedItemId && sketch?.entities[selectedItemId]
+        ? planSketchEntityDeletion(sketch, selectedItemId)
+        : undefined,
+    [sketch, selectedItemId],
+  );
+  useEffect(() => {
+    if (selection && selection.document !== document)
+      useSketchCanvas.setState({ selection: undefined });
+  }, [document, selection]);
   const [tool, setTool] = useState<CanvasMode>("line"),
     [draft, setDraft] = useState<CanvasPoint[]>([]),
     [cursor, setCursor] = useState<CanvasPoint>();
@@ -290,11 +314,17 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
   const draw = (event: PointerEvent<SVGSVGElement>) => {
     if (event.button !== 0 || primitiveGesture.current) return;
     if (tool === "select") {
+      if (fileBusy) return;
       event.preventDefault();
-      const id = (event.target as Element)
-        .closest("[data-entity-id]")
-        ?.getAttribute("data-entity-id");
-      if (id) dimensions.selectEntity(id);
+      const id = (event.target as Element).closest(
+        "[data-entity-id], [data-point-id], [data-hit-entity-id]",
+      );
+      chooseItem(
+        id?.getAttribute("data-entity-id") ??
+          id?.getAttribute("data-point-id") ??
+          id?.getAttribute("data-hit-entity-id") ??
+          undefined,
+      );
       return;
     }
     const point = pointAt(event);
@@ -428,7 +458,30 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     view,
     focused,
     tool === "select",
+    () => useSketchCanvas.setState({ selection: undefined }),
   );
+  const chooseItem = (id?: string) => {
+    cancel();
+    if (id) dimensions.selectEntity(id);
+    dimensions.closeInlineEditor();
+    try {
+      selectCanvasEntity(active, document, id);
+      svgRef.current?.focus({ preventScroll: true });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  };
+  const deleteItem = async () => {
+    cancel();
+    dimensions.clearSelection();
+    try {
+      await runCommand("sketch.entity.delete");
+      svgRef.current?.focus({ preventScroll: true });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  };
+  const highlightedEntityId = selectedItemId ?? dimensions.selectedEntityId;
   const constraints = useCanvasConstraints(
     active,
     context,
@@ -437,7 +490,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     view,
     dimensions.labelBoxes,
     focused,
-    dimensions.selectedEntityId,
+    highlightedEntityId,
   );
   if (!sketch) return null;
   return (
@@ -452,6 +505,21 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
         )
           return;
         const target = event.target as HTMLElement;
+        if (
+          (event.key === "Delete" || event.key === "Backspace") &&
+          !event.repeat &&
+          !event.metaKey &&
+          !event.ctrlKey &&
+          !event.altKey &&
+          !event.shiftKey &&
+          !["SELECT", "INPUT", "TEXTAREA"].includes(target.tagName) &&
+          !target.isContentEditable &&
+          canDelete
+        ) {
+          event.preventDefault();
+          event.stopPropagation();
+          void deleteItem();
+        }
         if (
           event.key === "Escape" &&
           !["SELECT", "INPUT", "TEXTAREA"].includes(target.tagName) &&
@@ -505,6 +573,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
               onClick={() => {
                 cancel();
                 dimensions.closeInlineEditor();
+                useSketchCanvas.setState({ selection: undefined });
                 setTool(kind);
               }}
             >
@@ -535,6 +604,68 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
           Snap
         </label>
       </div>
+      {tool === "select" ? (
+        <div
+          className="canvas-toolbar sketch-item-tools"
+          aria-label="Sketch item selection"
+        >
+          <label>
+            Sketch item
+            <select
+              aria-label="Selected sketch item"
+              value={selectedItemId ?? ""}
+              disabled={fileBusy}
+              onChange={(event) => {
+                setTool("select");
+                chooseItem(event.target.value || undefined);
+              }}
+            >
+              <option value="">Select geometry to delete</option>
+              {Object.values(sketch.entities).map((entity) => (
+                <option key={entity.id} value={entity.id}>
+                  {entity.construction ? "Construction " : ""}
+                  {entity.type} · {entity.id}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            type="button"
+            disabled={!canDelete}
+            onClick={() => void deleteItem()}
+          >
+            Delete selected sketch item
+          </button>
+          <button
+            type="button"
+            disabled={
+              !selectedItemId ||
+              !context ||
+              !canvasEntitySize(context.solved, selectedItemId)
+            }
+            onClick={() => {
+              try {
+                if (selectedItemId) {
+                  dimensions.selectEntity(selectedItemId);
+                  selectCanvasEntity(active, document, selectedItemId);
+                }
+              } catch (e) {
+                setError(e instanceof Error ? e.message : String(e));
+              }
+            }}
+          >
+            Edit selected size
+          </button>
+          {deletionPlan ? (
+            <span role="status">
+              Removes {deletionPlan.entityIds.size} geometry item(s),{" "}
+              {deletionPlan.dimensionIds.size} dimension(s),{" "}
+              {deletionPlan.constraintIds.size} constraint(s). Undo restores
+              them.
+            </span>
+          ) : null}
+        </div>
+      ) : null}
       <div className="sketch-workspace-layout">
         <div
           className="sketch-workspace-controls"
@@ -565,6 +696,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
                   onChange={(e) => {
                     cancel();
                     dimensions.closeInlineEditor();
+                    useSketchCanvas.setState({ selection: undefined });
                     setTool(e.target.value as CanvasMode);
                   }}
                 >
@@ -837,7 +969,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
             className="sketch-canvas"
             aria-label="Sketch drawing canvas"
             aria-describedby="canvas-instructions"
-            aria-disabled={disabled}
+            aria-disabled={tool === "select" ? fileBusy : disabled}
             tabIndex={0}
             role="group"
             viewBox={`${view.x} ${-view.y - view.height} ${view.width} ${view.height}`}
@@ -922,7 +1054,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
                     (l.construction
                       ? "canvas-construction"
                       : "canvas-geometry") +
-                    (dimensions.selectedEntityId === l.id
+                    (highlightedEntityId === l.id
                       ? " canvas-entity-selected"
                       : "")
                   }
@@ -940,7 +1072,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
                     (c.construction
                       ? "canvas-construction"
                       : "canvas-geometry") +
-                    (dimensions.selectedEntityId === c.id
+                    (highlightedEntityId === c.id
                       ? " canvas-entity-selected"
                       : "")
                   }
@@ -957,18 +1089,65 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
                     (a.construction
                       ? "canvas-construction"
                       : "canvas-geometry") +
-                    (dimensions.selectedEntityId === a.id
+                    (highlightedEntityId === a.id
                       ? " canvas-entity-selected"
                       : "")
                   }
                   d={arcPath(a.center, a.start, a.end, a.sweep < 0)}
                 />
               ))}
+              {tool === "select" ? (
+                <g
+                  fill="none"
+                  stroke="transparent"
+                  strokeWidth={view.width / 60}
+                >
+                  {context?.solved.lines.map((l) => (
+                    <line
+                      key={l.id}
+                      data-hit-entity-id={l.id}
+                      x1={l.start.x}
+                      y1={l.start.y}
+                      x2={l.end.x}
+                      y2={l.end.y}
+                    />
+                  ))}
+                  {context?.solved.circles.map((c) => (
+                    <circle
+                      key={c.id}
+                      data-hit-entity-id={c.id}
+                      cx={c.center.x}
+                      cy={c.center.y}
+                      r={c.radius}
+                    />
+                  ))}
+                  {context?.solved.arcs.map((a) => (
+                    <path
+                      key={a.id}
+                      data-hit-entity-id={a.id}
+                      d={arcPath(a.center, a.start, a.end, a.sweep < 0)}
+                    />
+                  ))}
+                </g>
+              ) : null}
+              {tool === "select"
+                ? Object.values(context?.solved.points ?? {}).map((p) => (
+                    <circle
+                      key={`hit:${p.id}`}
+                      data-hit-entity-id={p.id}
+                      fill="transparent"
+                      stroke="none"
+                      cx={p.x}
+                      cy={p.y}
+                      r={view.width / 80}
+                    />
+                  ))
+                : null}
               {Object.values(context?.solved.points ?? {}).map((p) => (
                 <circle
                   key={p.id}
                   data-point-id={p.id}
-                  className="canvas-point"
+                  className={`canvas-point${selectedItemId === p.id ? " canvas-entity-selected" : ""}`}
                   cx={p.x}
                   cy={p.y}
                   r={radius}

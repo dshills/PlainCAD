@@ -233,3 +233,84 @@ it("reports unmeasurable reference sizes without replacing the previous dimensio
   );
   expect(useCadStore.getState().history).toBe(before);
 });
+
+it("selects geometry on the canvas and deletes it with the visible button as one undoable edit", async () => {
+  const { id, sketch } = await open();
+  const before = useCadStore.getState().history;
+  fireEvent.click(screen.getByRole("button", { name: "Draw tool: select" }));
+  const button = screen.getByRole("button", {
+    name: "Delete selected sketch item",
+  });
+  expect(button).toBeDisabled();
+  fireEvent.pointerDown(
+    window.document.querySelector(`[data-entity-id="${id}"]`)!,
+    { button: 0 },
+  );
+  expect(button).toBeEnabled();
+  expect(screen.getByLabelText("Selected sketch item")).toHaveValue(id);
+  expect(
+    screen.getByText(/Removes 1 geometry item\(s\), 1 dimension/),
+  ).toBeVisible();
+  expect(
+    screen.queryByRole("form", { name: "Selected sketch size" }),
+  ).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Edit selected size" }));
+  expect(screen.getByLabelText("Selected sketch item")).toHaveValue(id);
+  expect(button).toBeEnabled();
+  fireEvent.keyDown(screen.getByLabelText("Sketch size expression"), {
+    key: "Delete",
+  });
+  expect(useCadStore.getState().history).toBe(before);
+  fireEvent.click(screen.getByRole("button", { name: "Cancel size edit" }));
+  fireEvent.click(button);
+  const after = useCadStore.getState().history;
+  expect(after.present.sketches[sketch.id].entities[id]).toBeUndefined();
+  expect(after.present.sketches[sketch.id].dimensions).toEqual([]);
+  expect(
+    Object.values(after.present.sketches[sketch.id].entities).map(
+      (e) => e.type,
+    ),
+  ).toEqual(["point"]);
+  expect(after.past.length).toBe(before.past.length + 1);
+  expect(button).toBeDisabled();
+  act(() => useCadStore.getState().undo());
+  expect(useCadStore.getState().history.present).toBe(before.present);
+});
+
+it.each(["Delete", "Backspace"])(
+  "deletes a selected point and its attached circle with %s, while typing never deletes geometry",
+  async (key) => {
+    const { sketch } = await open();
+    fireEvent.keyDown(screen.getByRole("button", { name: /^Edit drawing D/ }), {
+      key: "Enter",
+    });
+    const before = useCadStore.getState().history;
+    fireEvent.keyDown(screen.getByLabelText("Sketch size expression"), { key });
+    expect(useCadStore.getState().history).toBe(before);
+    const pointId = Object.values(sketch.entities).find(
+      (e) => e.type === "point",
+    )!.id;
+    fireEvent.click(screen.getByRole("button", { name: "Draw tool: select" }));
+    fireEvent.change(screen.getByLabelText("Selected sketch item"), {
+      target: { value: pointId },
+    });
+    expect(screen.getByText(/Removes 2 geometry/)).toBeVisible();
+    const canvas = screen.getByRole("group", { name: "Sketch drawing canvas" });
+    expect(canvas).toHaveFocus();
+    fireEvent.keyDown(canvas, { key, ctrlKey: true });
+    expect(useCadStore.getState().history).toBe(before);
+    fireEvent.keyDown(canvas, { key });
+    expect(
+      Object.keys(
+        useCadStore.getState().history.present.sketches[sketch.id].entities,
+      ),
+    ).toEqual([]);
+    expect(useCadStore.getState().history.past.length).toBe(
+      before.past.length + 1,
+    );
+    fireEvent.keyDown(canvas, { key, repeat: true });
+    expect(useCadStore.getState().history.past.length).toBe(
+      before.past.length + 1,
+    );
+  },
+);

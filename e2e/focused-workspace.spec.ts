@@ -31,16 +31,158 @@ async function clickLocal(page: Page, x: number, y: number) {
     name: "Sketch drawing canvas",
     exact: true,
   });
+  await svg.scrollIntoViewIfNeeded();
   const bounds = await svg.boundingBox();
   if (!bounds) throw new Error("Drawing canvas unavailable");
   const view = (await svg.getAttribute("viewBox"))!.split(/\s+/).map(Number);
-  await svg.click({
-    position: {
-      x: ((x - view[0]) / view[2]) * bounds.width,
-      y: ((-y - view[1]) / view[3]) * bounds.height,
-    },
-  });
+  // Match the pointer handler's border-box coordinates, avoiding padding offsets.
+  await page.mouse.click(
+    Math.round(bounds.x + ((x - view[0]) / view[2]) * bounds.width),
+    Math.round(bounds.y + ((-y - view[1]) / view[3]) * bounds.height),
+  );
 }
+test("focused sketch deletion cleans references, rejects typing, diagnoses lost native profiles and restores geometry through undo/save/open", async ({
+  page,
+}, info) => {
+  await page.goto("/");
+  await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+  await page.getByRole("button", { name: "Draw a shape", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Sketch on Top (XY) plane", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Draw tool: rectangle", exact: true })
+    .click();
+  await clickLocal(page, 0, 0);
+  await page.getByLabel("Draft width", { exact: true }).fill("20mm");
+  await page.getByLabel("Draft height", { exact: true }).fill("12mm");
+  await page.getByLabel("Draft height", { exact: true }).press("Enter");
+  await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+  await page
+    .getByRole("button", { name: "Draw tool: circle", exact: true })
+    .click();
+  await page
+    .getByRole("toolbar", { name: "Drawing tools" })
+    .getByLabel("Construction", { exact: true })
+    .check();
+  // Keep the construction-circle anchor clear of the rectangle's size labels.
+  await clickLocal(page, 55, 35);
+  await page.getByLabel("Draft diameter", { exact: true }).fill("6mm");
+  await page.getByLabel("Draft diameter", { exact: true }).press("Enter");
+  const full = await aiSnapshot(page);
+  const sketch = Object.values(full.document.sketches)[0];
+  const circle = Object.values(sketch.entities).find(
+    (e) => e.type === "circle",
+  )!;
+  const centerId = circle.type === "circle" ? circle.centerPointId : "";
+  await page
+    .getByRole("button", { name: "Draw tool: select", exact: true })
+    .click();
+  await clickLocal(page, 55, 35);
+  await expect(
+    page.getByLabel("Selected sketch item", { exact: true }),
+  ).toHaveValue(centerId);
+  await expect(page.getByText(/Removes 2 geometry item/)).toBeVisible();
+  await page.keyboard.press("Backspace");
+  const withoutCircle = await aiSnapshot(page);
+  expect(
+    withoutCircle.document.sketches[sketch.id].entities[circle.id],
+  ).toBeUndefined();
+  expect(
+    withoutCircle.document.sketches[sketch.id].entities[centerId],
+  ).toBeUndefined();
+  expect(withoutCircle.document.sketches[sketch.id].dimensions).toHaveLength(2);
+  expect(withoutCircle.past).toBe(full.past + 1);
+  await page
+    .getByRole("button", { name: "Finish Sketch", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Extrude selected sketch", exact: true })
+    .click();
+  await page.getByLabel("Extrude distance", { exact: true }).fill("5mm");
+  await applyExtrusion(page);
+  await volume(page, 1200);
+  const solid = await aiSnapshot(page);
+  await page.getByRole("button", { name: /^History \(/ }).click();
+  await page
+    .getByRole("list", { name: "Sketch and feature history" })
+    .getByRole("button")
+    .filter({ has: page.getByText(sketch.name, { exact: true }) })
+    .click();
+  await page
+    .getByRole("button", { name: "Edit sketch canvas", exact: true })
+    .click();
+  const line = Object.values(sketch.entities).find((e) => e.type === "line")!;
+  await page
+    .getByRole("button", { name: "Draw tool: select", exact: true })
+    .click();
+  await clickLocal(page, 10, 0);
+  await expect(
+    page.getByLabel("Selected sketch item", { exact: true }),
+  ).toHaveValue(line.id);
+  await page
+    .getByRole("button", { name: "Edit selected size", exact: true })
+    .click();
+  const input = page.getByLabel("Sketch size expression", { exact: true });
+  await input.fill("20mm");
+  await input.press("Backspace");
+  expect((await aiSnapshot(page)).document).toEqual(solid.document);
+  await page
+    .getByRole("button", { name: "Cancel size edit", exact: true })
+    .click();
+  await page
+    .getByLabel("Selected sketch item", { exact: true })
+    .selectOption(line.id);
+  await page
+    .getByRole("button", { name: "Delete selected sketch item", exact: true })
+    .click();
+  await expect(page.locator(".rebuild-pill")).toHaveText("failed");
+  const deleted = await aiSnapshot(page);
+  expect(
+    deleted.document.sketches[sketch.id].entities[line.id],
+  ).toBeUndefined();
+  expect(deleted.document.sketches[sketch.id].dimensions).toHaveLength(1);
+  expect(deleted.document.sketches[sketch.id].constraints).toHaveLength(3);
+  expect(deleted.document.features).toEqual(solid.document.features);
+  expect(deleted.past).toBe(solid.past + 1);
+  expect(
+    deleted.result?.errors.some(
+      (e) => e.source === "feature" && /profile.*not found/i.test(e.message),
+    ),
+  ).toBe(true);
+  await page
+    .getByRole("button", { name: "Finish Sketch", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Export STL", exact: true }),
+  ).toBeDisabled();
+  const save = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const broken = info.outputPath("deleted-profile.pcaddoc");
+  await (await save).saveAs(broken);
+  await page.getByRole("button", { name: "Undo", exact: true }).click();
+  await volume(page, 1200);
+  expect((await aiSnapshot(page)).document.sketches[sketch.id]).toEqual(
+    solid.document.sketches[sketch.id],
+  );
+  await page.getByRole("button", { name: "Redo", exact: true }).click();
+  await expect(page.locator(".rebuild-pill")).toHaveText("failed");
+  await page.getByRole("button", { name: "Undo", exact: true }).click();
+  await volume(page, 1200);
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export STL", exact: true }).click();
+  const stl = info.outputPath("restored-profile.stl");
+  await (await download).saveAs(stl);
+  expect(stlSignedVolume(await readFile(stl))).toBeCloseTo(1200, 2);
+  await page.locator('input[type="file"]').setInputFiles(broken);
+  await expect(page.locator(".rebuild-pill")).toHaveText("failed");
+  expect((await aiSnapshot(page)).document.sketches[sketch.id]).toEqual(
+    deleted.document.sketches[sketch.id],
+  );
+  await expect(
+    page.getByRole("button", { name: "Export STL", exact: true }),
+  ).toBeDisabled();
+});
 test("focused mouse sketch, native extrude/cut, parameter edit, save/open and STL work without the full workspace", async ({
   page,
 }, info) => {

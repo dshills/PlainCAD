@@ -361,6 +361,11 @@ on later size edits. Dimensions remain enabled by default. Focused layout dims
 unselected dimension labels and reduces satisfied constraint markers to selected
 geometry; errors and unavailable values remain visible. Advanced controls and full
 lists stay available through disclosures and expanded in Full workspace.
+Selected sketch geometry can be deleted with a visible button or Delete/Backspace
+while the canvas has focus. The item list supports selection even when geometry
+cannot render. Deleting a point removes its attached curves and affected dimensions/
+constraints in one undo edit; deleting a curve retains its points. The UI shows the
+impact before deletion. Missing downstream profiles remain diagnostic.
 
 Acceptance is covered by unit/component and native browser checks for precise
 non-template sketches, all origin-plane orientations, dimension errors/recovery,

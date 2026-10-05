@@ -1066,6 +1066,9 @@ summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .canvas-inline-dimension input { width: 100%; }
 .canvas-inline-dimension button { margin: 3px; }
 .canvas-entity-selected { stroke: var(--accent); stroke-width: 0.65; }
+.sketch-item-tools { padding: 0 12px; }
+.sketch-item-tools select { width: min(320px, 45vw); }
+.sketch-item-tools [role="status"] { font-size: 0.8rem; color: var(--muted); }
 .canvas-dimension-muted { opacity: 0.55; }
 .sketch-workspace-controls > details, .canvas-dimension-controls > details, .canvas-constraint-controls > details { margin: 8px 0; }
 .focused-workspace .sketch-workspace-layout { grid-template-columns: minmax(0, 1fr) 260px; }

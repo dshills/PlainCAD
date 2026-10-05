@@ -42,12 +42,12 @@ async function clickLocal(page: Page, x: number, y: number) {
   const bounds = await svg.boundingBox(),
     view = (await svg.getAttribute("viewBox"))!.split(" ").map(Number);
   if (!bounds) throw new Error("Sketch canvas unavailable");
-  await svg.click({
-    position: {
-      x: ((x - view[0]) / view[2]) * bounds.width,
-      y: ((-y - view[1]) / view[3]) * bounds.height,
-    },
-  });
+  // The canvas handler measures the border box; locator click offsets start at
+  // the padding box and can move a grid-snapped point by a millimeter.
+  await page.mouse.click(
+    Math.round(bounds.x + ((x - view[0]) / view[2]) * bounds.width),
+    Math.round(bounds.y + ((-y - view[1]) / view[3]) * bounds.height),
+  );
 }
 async function openCanvas(page: Page) {
   await page

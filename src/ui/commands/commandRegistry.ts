@@ -5,7 +5,7 @@ import { toggleAiDrawer } from "./aiCommand";
 import { activeComponentId, beginProjectWorkflow, finishSketchCanvas } from "./projectWorkflowCommand";
 import { renameComponent, sketchComponentId } from "../../cad/document/components";
 import { MODEL_RESOURCE_LIMITS } from "../../cad/resourceLimits";
-import { beginSketchCanvas, selectedCanvasSketch, useSketchCanvas } from "./sketchCanvasCommand";
+import { beginSketchCanvas, deleteSelectedCanvasEntity, selectedCanvasEntity, selectedCanvasSketch, useSketchCanvas } from "./sketchCanvasCommand";
 import { canCaptureTargetScope, captureSelectedTargetScope, useTargetScopeCapture } from "./targetScopeCaptureCommand";
 import { captureCamera, restoreCamera, showStandardView } from "../../viewer/cameraController";
 import { MAX_NAMED_VIEWS, STANDARD_VIEWS, saveNamedCamera, unusedViewName } from "../../cad/inspection/cameraViews";
@@ -115,6 +115,7 @@ export interface CommandEnablement {
   createHole: boolean;
   captureTargetScope: boolean;
   sketchCanvas: boolean;
+  deleteSketchEntity: boolean;
 }
 
 export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useTargetScopeCapture.getState().busy, canvasActive = Boolean(useSketchCanvas.getState().active)): CommandEnablement {
@@ -124,6 +125,7 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
     createSketch: !state.fileBusy && !canvasActive,
     finishSketch: canvasActive,
     sketchCanvas: !canvasActive && Boolean(selectedCanvasSketch(state)),
+    deleteSketchEntity: canvasActive && Boolean(selectedCanvasEntity(state)),
     document: Boolean(state.history.present),
     saveNamedView: (state.history.present.viewState?.namedViews?.length ?? 0) < MAX_NAMED_VIEWS,
     restoreNamedView: Boolean(state.history.present.viewState?.namedViews?.length),
@@ -154,6 +156,7 @@ export function isCommandEnabledForSnapshot(
 }
 
 export const commands: CadCommand[] = [
+  { id: "sketch.entity.delete", internal: true, label: "Delete selected sketch item", enablementKey: "deleteSketchEntity", run: deleteSelectedCanvasEntity },
   { id: "ai.toggle", label: "Toggle AI Drawer", description: "Describe a part and preview an editable AI component.", alwaysEnabled: true, run: toggleAiDrawer },
   { id: "feature.edit", label: "Edit Selected Feature", description: "Preview changes to the selected Extrude, Revolve, Fillet, Chamfer or Hole and its downstream geometry.", enablementKey: "editFeature", run: () => { if (editableExtrude(useCadStore.getState())) beginExtrudeEditing(); else if (editableHole(useCadStore.getState())) beginHoleEditing(); else beginModelingEditing(); } },
   {

@@ -120,7 +120,7 @@ export function finishProjectWorkflow(
 export function finishSketchCanvas() {
   const active = useSketchCanvas.getState().active,
     state = useCadStore.getState();
-  useSketchCanvas.setState({ active: undefined });
+  useSketchCanvas.setState({ active: undefined, selection: undefined });
   if (
     active &&
     !state.fileBusy &&
