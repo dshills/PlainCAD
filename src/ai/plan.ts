@@ -13,12 +13,15 @@ export interface AiPoint {
 }
 export type AiWireEdge =
   { type: "line" } | { type: "arc"; center: AiPoint; clockwise: boolean };
-export type AiProfile =
+export type AiLoopProfile =
   | { type: "rectangle"; x: string; y: string; width: string; height: string }
   | { type: "circle"; x: string; y: string; radius: string }
   | { type: "polygon"; vertices: AiPoint[] }
-  | { type: "wire"; vertices: AiPoint[]; edges: AiWireEdge[] }
-  | { type: "points"; points: AiPoint[] };
+  | { type: "wire"; vertices: AiPoint[]; edges: AiWireEdge[] };
+export type AiProfile =
+  | AiLoopProfile
+  | { type: "points"; points: AiPoint[] }
+  | { type: "compound"; outer: AiLoopProfile; holes: AiLoopProfile[] };
 export interface AiSketchIntent {
   constraints: Array<{
     type: ConstraintType;
@@ -194,6 +197,8 @@ export const AI_LIMITS = {
   steps: 32,
   profileVertices: 32,
   sketchIntentEntries: 64,
+  profileHoles: 8,
+  sketchPoints: 64,
   holeCenters: 64,
   targets: 8,
   history: 6,
@@ -224,6 +229,38 @@ const operation = {
   targets: array(text),
 };
 const pointSchema = object({ x: text, y: text });
+const loopProfileSchema: JsonSchema = {
+  anyOf: [
+    object({
+      type: choice("rectangle"),
+      x: text,
+      y: text,
+      width: text,
+      height: text,
+    }),
+    object({
+      type: choice("circle"),
+      x: text,
+      y: text,
+      radius: text,
+    }),
+    object({ type: choice("polygon"), vertices: array(pointSchema) }),
+    object({
+      type: choice("wire"),
+      vertices: array(pointSchema),
+      edges: array({
+        anyOf: [
+          object({ type: choice("line") }),
+          object({
+            type: choice("arc"),
+            center: pointSchema,
+            clockwise: { type: "boolean" },
+          }),
+        ],
+      }),
+    }),
+  ],
+};
 // This detailed recipe schema documents JSON-encoded steps in the prompt.
 // Providers receive AI_TRANSPORT_SCHEMA, whose fields are all required.
 export const AI_PLAN_SCHEMA = object({
@@ -264,35 +301,13 @@ export const AI_PLAN_SCHEMA = object({
           }),
           profile: {
             anyOf: [
-              object({
-                type: choice("rectangle"),
-                x: text,
-                y: text,
-                width: text,
-                height: text,
-              }),
-              object({
-                type: choice("circle"),
-                x: text,
-                y: text,
-                radius: text,
-              }),
-              object({ type: choice("polygon"), vertices: array(pointSchema) }),
-              object({
-                type: choice("wire"),
-                vertices: array(pointSchema),
-                edges: array({
-                  anyOf: [
-                    object({ type: choice("line") }),
-                    object({
-                      type: choice("arc"),
-                      center: pointSchema,
-                      clockwise: { type: "boolean" },
-                    }),
-                  ],
-                }),
-              }),
+              loopProfileSchema,
               object({ type: choice("points"), points: array(pointSchema) }),
+              object({
+                type: choice("compound"),
+                outer: loopProfileSchema,
+                holes: array(loopProfileSchema),
+              }),
             ],
           },
         },
@@ -408,12 +423,53 @@ function aiPoint(value: unknown): AiPoint {
   const p = record(value, ["x", "y"], "point");
   return { x: expression(p.x), y: expression(p.y) };
 }
-function aiProfile(value: unknown): AiProfile {
+function aiProfile(value: unknown, compoundAllowed = true): AiProfile {
   const type = enumeration(
     (value as { type?: unknown } | null)?.type,
-    ["rectangle", "circle", "polygon", "wire", "points"],
+    [
+      "rectangle",
+      "circle",
+      "polygon",
+      "wire",
+      "points",
+      ...(compoundAllowed ? ["compound" as const] : []),
+    ],
     "profile",
   );
+  if (type === "compound") {
+    const p = record(value, ["type", "outer", "holes"], "compound profile");
+    const loop = (value: unknown): AiLoopProfile => {
+      const parsed = aiProfile(value, false);
+      if (parsed.type === "points" || parsed.type === "compound")
+        throw new Error("AI compound boundaries must be closed loops.");
+      return parsed;
+    };
+    const outer = loop(p.outer),
+      holes = list(p.holes, AI_LIMITS.profileHoles, loop);
+    if (!holes.length)
+      throw new Error(
+        "AI compound profiles require at least one inner opening.",
+      );
+    if (outer.type === "circle" && holes.some((h) => h.type !== "circle"))
+      throw new Error(
+        "AI circular outer loops currently support circular inner openings only.",
+      );
+    const points = (p: AiLoopProfile) =>
+      p.type === "rectangle"
+        ? 5
+        : p.type === "circle"
+          ? 1
+          : p.vertices.length +
+            (p.type === "wire"
+              ? p.edges.filter((e) => e.type === "arc").length
+              : 0);
+    if (
+      [outer, ...holes].reduce((sum, p) => sum + points(p), 0) >
+      AI_LIMITS.sketchPoints
+    )
+      throw new Error("AI compound profile exceeds the sketch point budget.");
+    return { type, outer, holes };
+  }
   if (type === "polygon" || type === "wire" || type === "points") {
     const p = record(
       value,

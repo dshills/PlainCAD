@@ -8,7 +8,7 @@ import {
 } from "../cad/sketch/SketchModel";
 import type { AiProfile, AiSketchIntent } from "./plan";
 
-type Expression = (
+export type AiExpression = (
   source: string,
   dimension: "length" | "angle",
   positive?: boolean | "nonNegative",
@@ -16,9 +16,9 @@ type Expression = (
 /** Recipe indices refer only to authored points and boundary curves, before construction anchors. */
 export function addAiSketchIntent(
   sketch: Sketch,
-  profile: AiProfile,
+  profile: Exclude<AiProfile, { type: "compound" }>,
   intent: AiSketchIntent | undefined,
-  expr: Expression,
+  expr: AiExpression,
 ): Sketch {
   const points = Object.values(sketch.entities)
     .filter((e) => e.type === "point")

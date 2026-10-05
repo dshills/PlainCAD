@@ -16,19 +16,15 @@ import {
   evaluateParameters,
   tokenize,
 } from "../cad/parameters/expressionEvaluator";
-import {
-  addCircleAt,
-  addArc,
-  addLine,
-  addPoint,
-  createSketchOnPlane,
-} from "../cad/sketch/SketchModel";
+import { createSketchOnPlane } from "../cad/sketch/SketchModel";
 import { solveSketch } from "../cad/sketch/SketchSolver";
 import { detectProfiles } from "../cad/sketch/profileDetection";
-import { MIN_ENTITY_SIZE, SKETCH_TOLERANCE } from "../cad/sketch/tolerances";
 import { assertProjectJsonShape } from "../persistence/importSafety";
 import { validateAiPlan } from "./plan";
-import { addAiSketchIntent } from "./sketchIntent";
+import {
+  compileAiSketchProfile,
+  assertAiCompoundProfile,
+} from "./sketchProfile";
 
 export function buildAiPlan(base: CadDocument, input: unknown) {
   const plan = validateAiPlan(input);
@@ -111,27 +107,6 @@ export function buildAiPlan(base: CadDocument, input: unknown) {
     { sketch: Sketch; profileId?: string; pointIds: string[] }
   >();
   const features = new Map<string, Feature>();
-  const coordinate = (sketch: Sketch, id: string) => {
-    const point = sketch.entities[id];
-    if (point?.type !== "point")
-      throw new Error("AI sketch has a missing point.");
-    const x = evaluateExpression(point.x.expression, {
-      parameters: evaluation.values,
-    });
-    const y = evaluateExpression(point.y.expression, {
-      parameters: evaluation.values,
-    });
-    if (
-      x.error ||
-      y.error ||
-      x.quantity?.dimension !== "length" ||
-      y.quantity?.dimension !== "length" ||
-      !Number.isFinite(x.quantity.value) ||
-      !Number.isFinite(y.quantity.value)
-    )
-      throw new Error("AI point coordinates must be finite lengths.");
-    return { x: x.quantity.value, y: y.quantity.value };
-  };
   const liveBodies = new Set<string>();
   const featureIds: string[] = [];
   for (const step of plan.steps) {
@@ -144,100 +119,25 @@ export function buildAiPlan(base: CadDocument, input: unknown) {
         offset: expr(step.offset, "length"),
       });
       sketch = { ...sketch, componentId: added.component.id };
-      if (p.type === "points" || p.type === "polygon" || p.type === "wire") {
-        for (const vertex of p.type === "points" ? p.points : p.vertices) {
-          const point = addPoint(
-            sketch,
-            expr(vertex.x, "length").expression,
-            expr(vertex.y, "length").expression,
-          );
-          sketch = point.sketch;
-          pointIds.push(point.pointId);
-        }
-        if (p.type !== "points")
-          for (let i = 0; i < pointIds.length; i++) {
-            const edge =
-              p.type === "wire" ? p.edges[i] : { type: "line" as const };
-            const start = pointIds[i],
-              end = pointIds[(i + 1) % pointIds.length];
-            if (edge.type === "line")
-              sketch = addLine(sketch, start, end).sketch;
-            else {
-              const center = addPoint(
-                sketch,
-                expr(edge.center.x, "length").expression,
-                expr(edge.center.y, "length").expression,
-              );
-              // The driving solver may move free points to satisfy its intrinsic
-              // equal-radius relation. Reject malformed authored AI arcs first.
-              const c = coordinate(center.sketch, center.pointId),
-                a = coordinate(center.sketch, start),
-                b = coordinate(center.sketch, end);
-              const r1 = Math.hypot(a.x - c.x, a.y - c.y),
-                r2 = Math.hypot(b.x - c.x, b.y - c.y);
-              if (r1 < MIN_ENTITY_SIZE || Math.abs(r1 - r2) > SKETCH_TOLERANCE)
-                throw new Error(
-                  `AI sketch ${step.name}: arc center must be equidistant from both endpoints with a nonzero radius.`,
-                );
-              sketch = addArc(
-                center.sketch,
-                center.pointId,
-                start,
-                end,
-                edge.clockwise,
-              ).sketch;
-            }
-          }
-      } else if (p.type === "circle")
-        sketch = addCircleAt(
-          sketch,
-          expr(p.x, "length").expression,
-          expr(p.y, "length").expression,
-          expr(p.radius, "length", true).expression,
-        );
-      else {
-        const x = expr(p.x, "length").expression,
-          y = expr(p.y, "length").expression;
-        const width = expr(p.width, "length", true).expression,
-          height = expr(p.height, "length", true).expression;
-        const ids: string[] = [];
-        for (const [cx, cy] of [
-          [`(${x}) - (${width}) / 2`, `(${y}) - (${height}) / 2`],
-          [`(${x}) + (${width}) / 2`, `(${y}) - (${height}) / 2`],
-          [`(${x}) + (${width}) / 2`, `(${y}) + (${height}) / 2`],
-          [`(${x}) - (${width}) / 2`, `(${y}) + (${height}) / 2`],
-        ]) {
-          const point = addPoint(sketch, cx, cy);
-          sketch = point.sketch;
-          ids.push(point.pointId);
-        }
-        for (let i = 0; i < 4; i++)
-          sketch = addLine(sketch, ids[i], ids[(i + 1) % 4]).sketch;
-      }
-      if (p.type === "points") {
-        const positions = pointIds.map((id) => coordinate(sketch, id));
-        if (
-          positions.some((a, i) =>
-            positions
-              .slice(i + 1)
-              .some(
-                (b) => Math.hypot(a.x - b.x, a.y - b.y) <= SKETCH_TOLERANCE,
-              ),
-          )
-        )
-          throw new Error(
-            `AI sketch ${step.name}: coincident hole centers must be removed.`,
-          );
-      }
-      sketch = addAiSketchIntent(sketch, p, step.intent, expr);
+      const compiled = compileAiSketchProfile(
+        sketch,
+        p,
+        step.intent,
+        expr,
+        evaluation.values,
+      );
+      sketch = compiled.sketch;
+      pointIds.push(...compiled.pointIds);
       const profiles = detectProfiles(solveSketch(sketch, evaluation.values));
       if (
         profiles.errors.length ||
         (p.type !== "points" && profiles.profiles.length !== 1)
       )
         throw new Error(
-          `AI sketch ${step.name}: ${profiles.errors.join(" ") || "Exactly one closed profile is required."}`,
+          `AI sketch ${step.name}: ${profiles.errors.join(" ") || (p.type === "compound" ? "Compound openings must be separate and strictly inside one outer loop, without touching or nested islands." : "Exactly one closed profile is required.")}`,
         );
+      if (p.type === "compound")
+        assertAiCompoundProfile(compiled.boundaries, profiles.profiles[0]);
       document = upsertSketch(document, sketch);
       sketches.set(step.id, {
         sketch,

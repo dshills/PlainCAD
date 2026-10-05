@@ -577,7 +577,7 @@ Apply/Cancel. Provider credentials are read only by a loopback-only, same-origin
 Node gateway in Vite development/preview; browser/project data never contain keys.
 Static deployment reports a missing AI service without changing ordinary CAD.
 
-AI recipes support single rectangle/circle/polygon/line-arc wire profiles and point
+AI recipes support rectangle/circle/polygon/line-arc wire and flat compound profiles, plus point
 sketches for native Hole patterns (up to 64 centers), signed origin offsets,
 distance/through-all extrudes, coplanar origin-axis revolves, explicit Cut/Join
 targets, and supported entire extrusion-cap fillets/chamfers. At most 24 numeric
@@ -625,3 +625,14 @@ editable D labels in the sketch canvas. Polygon/wire/points recipes may supply u
 The existing solver rejects conflicting, redundant and lost references before native
 preview; ordinary graphical edits, parameter bindings and project persistence apply.
 Automatic rectangle/circle intent cannot be combined with duplicate explicit intent.
+
+### AI profiles with inner openings
+
+Compound recipes support one outer rectangle/circle/polygon/line-arc wire with
+1–8 separate closed inner loops in the same sketch, within a 64-point total budget.
+The detected material region must preserve every authored boundary and exclude
+every requested opening; outside, overlapping, touching and nested-island contours
+fail with diagnostics. Native sleeve, rectangular spacer and island-pocket volumes,
+YZ orientation, parameter edits, stable profiles, save/open and positive STL volume
+are covered. Circular outers are limited to circular openings. Per-loop automatic
+rectangle/circle intent remains durable; cross-loop indexed intent is unavailable.

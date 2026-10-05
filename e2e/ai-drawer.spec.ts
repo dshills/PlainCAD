@@ -7,6 +7,11 @@ import {
   aiArcPlan,
   aiHolePatternPlan,
 } from "../src/tests/fixtures/aiExpandedPlans";
+import {
+  aiRingPlan,
+  aiTubePlan,
+  aiIslandPocketPlan,
+} from "../src/tests/fixtures/aiCompoundPlans";
 import type { AiPlan } from "../src/ai/plan";
 import type { CadDocument } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
@@ -61,6 +66,122 @@ async function setup(page: Page) {
   );
   return drawer;
 }
+test("AI compound profiles create exact native sleeves, hollow sections and island pockets, with stable edits/save/open/STL and rejected outside openings", async ({
+  page,
+}, info) => {
+  const drawer = await setup(page);
+  let plan: AiPlan = aiRingPlan;
+  await page.route("**/api/ai/generate", (route) =>
+    route.fulfill({ json: { plan } }),
+  );
+  for (const [recipe, volume] of [
+    [aiRingPlan, 512 * Math.PI],
+    [aiTubePlan, 3200],
+    [aiIslandPocketPlan, 2612 + 27 * Math.PI],
+  ] as const) {
+    plan = recipe;
+    await page
+      .getByRole("button", { name: "New project", exact: true })
+      .click();
+    await drawer
+      .getByLabel("What would you like to make?")
+      .fill(recipe.summary);
+    await drawer.getByRole("button", { name: "Generate preview" }).click();
+    const apply = drawer.getByRole("button", { name: "Apply AI component" });
+    await expect(apply).toBeEnabled();
+    await expect(drawer).toContainText(`${volume.toFixed(3)} mm³`);
+    await apply.click();
+    await expect
+      .poll(
+        async () =>
+          (await snapshot(page)).result?.meshes[0]?.geometryAssertions?.volume,
+      )
+      .toBeCloseTo(volume, 4);
+    const original = await snapshot(page);
+    expect(original.result?.meshes[0]).toMatchObject({
+      geometrySource: "opencascade",
+      geometryAssertions: { valid: true, solidCount: 1 },
+    });
+    if (recipe !== aiRingPlan) continue;
+    const xs = Array.from(original.result!.meshes[0].positions).filter(
+      (_, i) => i % 3 === 0,
+    );
+    expect(Math.min(...xs)).toBeCloseTo(-4, 5);
+    expect(Math.max(...xs)).toBeCloseTo(4, 5);
+    const parameter = page.getByLabel("Parameter ai_1_innerRadius expression", {
+      exact: true,
+    });
+    await parameter.fill("7mm");
+    await parameter.press("Enter");
+    const changedVolume = 408 * Math.PI;
+    await expect
+      .poll(
+        async () =>
+          (await snapshot(page)).result?.meshes[0]?.geometryAssertions?.volume,
+      )
+      .toBeCloseTo(changedVolume, 4);
+    const edited = await snapshot(page);
+    expect(edited.document.features.map((f) => f.id)).toEqual(
+      original.document.features.map((f) => f.id),
+    );
+    expect(edited.document.features[0]).toEqual(original.document.features[0]);
+    const saved = page.waitForEvent("download");
+    await page
+      .getByRole("button", { name: "Save project", exact: true })
+      .click();
+    const path = info.outputPath("ai-sleeve.pcaddoc");
+    await (await saved).saveAs(path);
+    await page.locator('input[type="file"]').setInputFiles(path);
+    await expect
+      .poll(async () => (await snapshot(page)).session)
+      .toBeGreaterThan(edited.session);
+    await expect
+      .poll(
+        async () =>
+          (await snapshot(page)).result?.meshes[0]?.geometryAssertions?.volume,
+      )
+      .toBeCloseTo(changedVolume, 4);
+    const exported = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Export STL", exact: true }).click();
+    const stlPath = info.outputPath("ai-sleeve.stl");
+    await (await exported).saveAs(stlPath);
+    const bytes = await readFile(stlPath),
+      count = bytes.readUInt32LE(80);
+    expect(bytes.length).toBe(84 + count * 50);
+    let signed = 0;
+    for (let i = 0; i < count; i++) {
+      const p = Array.from({ length: 9 }, (_, j) =>
+        bytes.readFloatLE(84 + 50 * i + 12 + j * 4),
+      );
+      signed +=
+        (p[0] * (p[4] * p[8] - p[5] * p[7]) -
+          p[1] * (p[3] * p[8] - p[5] * p[6]) +
+          p[2] * (p[3] * p[7] - p[4] * p[6])) /
+        6;
+    }
+    expect(signed).toBeGreaterThan(0);
+    expect(Math.abs(signed / changedVolume - 1)).toBeLessThan(0.01);
+  }
+  const before = await snapshot(page);
+  plan = structuredClone(aiRingPlan);
+  const first = plan.steps[0];
+  if (
+    first.type !== "sketch" ||
+    first.profile.type !== "compound" ||
+    first.profile.holes[0].type !== "circle"
+  )
+    throw new Error("Expected compound fixture");
+  first.profile.holes[0].x = "30mm";
+  await drawer
+    .getByLabel("What would you like to make?")
+    .fill("An outside opening");
+  await drawer.getByRole("button", { name: "Generate preview" }).click();
+  await expect(drawer.getByRole("alert")).toContainText(/strictly inside/);
+  await expect(
+    drawer.getByRole("button", { name: "Apply AI component" }),
+  ).toBeDisabled();
+  expect((await snapshot(page)).document).toEqual(before.document);
+});
 test("AI-generated driving dimensions are visible and editable in the drawing and rebuild exact centered native geometry", async ({
   page,
 }, info) => {

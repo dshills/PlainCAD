@@ -140,7 +140,7 @@ provider. It does not send project files, meshes, API keys, or other components.
 Chat, drafts and provider choices are temporary; only applied CAD intent is saved.
 Generation requires an available native kernel and finished sketch editing.
 
-Initial recipes support single rectangle/circle/polygon/line-arc wire sketches on origin planes with
+Recipes support rectangle/circle/polygon/line-arc wire and flat compound sketches on origin planes with
 offsets, parameterized distance/through-all extrudes, coplanar origin-axis revolves,
 explicit Cut/Join scopes, and feature-owned whole-cap Fillet/Chamfer. Recipes can
 also use point sketches and native Hole features with up to 64 explicit
@@ -149,6 +149,22 @@ close through shared vertex IDs, and reject degenerate, self-crossing or inconsi
 arcs. Points sketches cannot be extruded. Hole centers/targets must all participate
 in a real native cut; invalid patterns do not Apply. These remain ordinary editable
 sketch entities and Hole timeline features after saving.
+AI rectangle sketches include driving width/height dimensions, horizontal/vertical
+constraints and a fixed construction center; circles include a driving radius and
+fixed center. Open the generated sketch drawing to edit its D labels. Polygon,
+line/arc wire and points recipes can supply bounded indexed constraints and driving
+dimensions. Conflicting, redundant or missing design-intent references reject the
+proposal before Apply. Construction anchors do not become solid boundaries.
+
+AI compound profiles can contain one outer closed loop and up to eight separate
+inner openings in a single sketch. Sleeves, hollow rectangular sections and pocket
+cuts around an island use real native geometry. Openings must be strictly contained
+and cannot overlap, touch or create nested islands. Circular outer loops currently
+support circular openings; rectangle/polygon/wire outers also support closed line
+and arc openings. The recipe allows at most 64 total sketch points and no recursive
+compound profiles or explicit indexed intent across their loops.
+
+
 Recipes are bounded to 24 parameters and 32 steps, validated as data, then rebuilt with native
 OpenCascade before Apply. Unsupported shapes/operations require clarification;
 failed geometry, malformed responses, missing keys, model access, quota, and
@@ -759,10 +775,3 @@ native-validated distance-extrusion owner, including retained faces after Cut/Jo
 Curved, lost, split/ambiguous and
 fallback faces give a diagnostic without creating a sketch. Face references use
 the existing stable feature-owned roles and follow supported owner edits.
-
-AI rectangle sketches include driving width/height dimensions, horizontal/vertical
-constraints and a fixed construction center; circles include a driving radius and
-fixed center. Open the generated sketch drawing to edit its D labels. Polygon,
-line/arc wire and points recipes can supply bounded indexed constraints and driving
-dimensions. Conflicting, redundant or missing design-intent references reject the
-proposal before Apply. Construction anchors do not become solid boundaries.
