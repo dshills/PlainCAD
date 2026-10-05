@@ -17,6 +17,7 @@ import {
   useExtrudeDraft,
   assertNativeExtrudePreview,
 } from "../ui/commands/extrudeCommand";
+import type { ExtrudeDistanceHandle } from "../viewer/ExtrudePreview";
 import { ExtrudeCreationPanel } from "../ui/panels/ExtrudeCreationPanel";
 import { previewExtrusion } from "../cad/worker/extrudePreviewClient";
 import type { CadDocument } from "../cad/document/schema";
@@ -26,7 +27,28 @@ vi.mock("../cad/worker/extrudePreviewClient", () => ({
   previewExtrusion: vi.fn(),
 }));
 vi.mock("../viewer/ExtrudePreview", () => ({
-  ExtrudePreview: () => <div data-testid="preview" />,
+  ExtrudePreview: ({
+    distanceHandle,
+  }: {
+    distanceHandle?: ExtrudeDistanceHandle;
+  }) => (
+    <div data-testid="preview">
+      <button
+        type="button"
+        disabled={Boolean(distanceHandle?.disabledReason)}
+        onClick={() => {
+          distanceHandle?.onDragging?.(true);
+          distanceHandle?.onChange(15);
+        }}
+      >
+        Start simulated drag
+      </button>
+      <button type="button" onClick={() => distanceHandle?.onDragging?.(false)}>
+        Finish simulated drag
+      </button>
+      <span>{distanceHandle?.disabledReason}</span>
+    </div>
+  ),
 }));
 const jobs: Array<{
   document: CadDocument;
@@ -185,4 +207,65 @@ it("requires the native To Face operation tag for a To Face new-body preview", (
   expect(() =>
     assertNativeExtrudePreview(result, draft.document.id, feature),
   ).not.toThrow();
+});
+
+it("keeps drag edits in the draft, rejects pending previews, and commits the latest distance once", async () => {
+  const before = useCadStore.getState().history.present;
+  render(<ExtrudeCreationPanel />);
+  await waitFor(() => expect(jobs).toHaveLength(1));
+  await act(async () => jobs[0].resolve(simulatedNative(jobs[0].document)));
+  fireEvent.change(screen.getByLabelText("Extrude distance"), {
+    target: { value: "1cm" },
+  });
+  await waitFor(() => expect(jobs).toHaveLength(2));
+  await act(async () => jobs[1].resolve(simulatedNative(jobs[1].document)));
+  fireEvent.click(screen.getByRole("button", { name: "Start simulated drag" }));
+  expect(useCadStore.getState().history.present).toBe(before);
+  expect(screen.getByLabelText("Extrude distance")).toHaveValue("15mm");
+  expect(
+    screen.getByRole("button", { name: "Apply extrusion" }),
+  ).toBeDisabled();
+  await waitFor(() => expect(jobs).toHaveLength(3));
+  expect(jobs[2].document.features[0]).toMatchObject({
+    distance: { expression: "15mm" },
+  });
+  await act(async () => jobs[2].resolve(simulatedNative(jobs[2].document)));
+  expect(
+    screen.getByRole("button", { name: "Apply extrusion" }),
+  ).toBeDisabled();
+  fireEvent.click(
+    screen.getByRole("button", { name: "Finish simulated drag" }),
+  );
+  expect(screen.getByRole("button", { name: "Apply extrusion" })).toBeEnabled();
+  fireEvent.click(screen.getByRole("button", { name: "Apply extrusion" }));
+  expect(useCadStore.getState().history.past).toEqual([before]);
+  expect(useCadStore.getState().history.present.features[0]).toMatchObject({
+    distance: { expression: "15mm" },
+    termination: { type: "distance", distance: { expression: "15mm" } },
+  });
+});
+it("keeps parameter and formula editing available without enabling destructive dragging", async () => {
+  render(<ExtrudeCreationPanel />);
+  fireEvent.change(screen.getByLabelText("Extrude distance"), {
+    target: { value: "depth*2" },
+  });
+  expect(
+    screen.getByRole("button", { name: "Start simulated drag" }),
+  ).toBeDisabled();
+  expect(
+    screen.getByText(/dragging preserves parameter and formula bindings/),
+  ).toBeVisible();
+  expect(screen.getByLabelText("Extrude distance")).toBeEnabled();
+  fireEvent.change(screen.getByLabelText("Extrude distance"), {
+    target: { value: "2*5mm" },
+  });
+  expect(
+    screen.getByRole("button", { name: "Start simulated drag" }),
+  ).toBeDisabled();
+  fireEvent.change(screen.getByLabelText("Extrude distance"), {
+    target: { value: "1cm" },
+  });
+  expect(
+    screen.getByRole("button", { name: "Start simulated drag" }),
+  ).toBeEnabled();
 });

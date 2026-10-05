@@ -691,8 +691,8 @@ Native browser acceptance covers mouse sketch→extrude→cut→parameter edit�
 in Focused layout; UI checks cover persistence, command access, keyboard focus and
 compact layouts across Light/Dark/Saturn themes. The built app checks the Focused
 example/edit/export path under production CSP. Existing detailed CAD acceptance
-explicitly uses Full workspace. Parametric drag handles, operation drops and new
-AI scope routing remain planned.
+explicitly uses Full workspace. Distance extrusion handles and protected project-file
+drops are implemented. Further operation drops and new AI scope routing remain planned.
 
 ### Direct and precise sketch controls
 
@@ -745,3 +745,14 @@ endpoints/centers are cleaned; shared points, surviving references and Hole cent
 remain. Busy, stale document/session/component and typing contexts are protected.
 Native browser acceptance verifies whole-shape deletion without leftover dots,
 Undo/Redo, exact solid geometry, save/open and STL.
+
+### Extrusion distance handles
+
+Native Distance Extrude creation/edit previews include a perspective-aware axial
+arrow and keyboard distance control (1 mm, Shift 10 mm). Positive/negative and
+symmetric total-span semantics match typed input on XY/XZ/YZ. Drag values are
+explicit mm at 0.001 mm resolution. Parameter/formula-bound values disable dragging
+with an explanation; Through All/To Face remain typed/target workflows. Unfinished
+gestures cancel on Escape, pointer loss, focus loss, resize or unmount. Pending,
+invalid and stale previews cannot Apply. Native tests verify exact volume,
+orientation, one Undo, binding protection, save/open and STL.

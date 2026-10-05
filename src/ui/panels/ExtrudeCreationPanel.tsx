@@ -1,3 +1,9 @@
+import {
+  evaluateExpressionRef,
+  evaluateParameters,
+} from "../../cad/parameters/expressionEvaluator";
+import { transformPoint } from "../../cad/sketch/planes";
+import { literalExtrusionDistance } from "../../viewer/extrudeDistanceHandle";
 import { bindDocumentExpressions } from "../../cad/parameters/expressionBindings";
 import { useFeatureDraftContext } from "./useFeatureDraftContext";
 import { documentAtFeature } from "../../cad/document/featureStage";
@@ -121,6 +127,7 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
     error?: string;
   }>();
   const [commitError, setCommitError] = useState("");
+  const [dragging, setDragging] = useState(false);
   const hasTargets = operation === "newBody" || targets.length > 0;
   const hasFace = termination !== "toFace" || Boolean(targetFace);
   const validProfile = context?.profiles.some(
@@ -192,6 +199,57 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
     hasFace,
   ]);
   const shown = current && preview?.staged === staged ? preview : undefined;
+  const handle = useMemo(() => {
+    const profile = context?.profiles.find((item) => item.id === profileId),
+      plane = base.result?.sketchPlanes?.[draft.sketchId],
+      feature = staged.features.find((item) => item.id === draft.feature.id);
+    if (!profile || !plane || !feature || feature.type !== "extrude") return;
+    const ref =
+      feature.termination?.type === "distance"
+        ? (feature.termination.distance ?? feature.distance)
+        : feature.distance;
+    const evaluated = evaluateExpressionRef(ref, {
+      parameters: evaluateParameters(staged.parameters).values,
+    });
+    const value =
+      evaluated.quantity?.dimension === "length"
+        ? evaluated.quantity.value
+        : undefined;
+    return {
+      key: `${profileId}:${direction}:${termination}`,
+      origin: transformPoint(
+        plane,
+        (profile.bounds.minX + profile.bounds.maxX) / 2,
+        (profile.bounds.minY + profile.bounds.maxY) / 2,
+      ),
+      normal: plane.normal,
+      direction,
+      distance: value && Number.isFinite(value) && value > 0 ? value : 10,
+      expression: distance,
+      disabledReason: !current
+        ? "Project or component changed. Reopen Extrude."
+        : termination !== "distance"
+          ? "Distance dragging is available only with Distance termination."
+          : !literalExtrusionDistance(distance)
+            ? "Distance is an expression. Enter a literal length to enable dragging; dragging preserves parameter and formula bindings."
+            : !value || !Number.isFinite(value) || value <= 0
+              ? "Enter a positive valid length to enable dragging."
+              : undefined,
+      onChange: (next: number) => setDistance(`${Number(next.toFixed(3))}mm`),
+      onCancel: (expression: string) => setDistance(expression),
+      onDragging: setDragging,
+    };
+  }, [
+    context,
+    base.result,
+    draft,
+    staged,
+    profileId,
+    direction,
+    termination,
+    distance,
+    current,
+  ]);
   const close = () => useExtrudeDraft.setState({ draft: undefined });
   return (
     <ModalDialog
@@ -202,7 +260,7 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          if (!shown?.result) return;
+          if (!shown?.result || dragging) return;
           try {
             commitExtrude(draft, staged, shown.result, shown.operationResult);
           } catch (error) {
@@ -371,7 +429,8 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
             ) : null}
             <p className="muted">
               Distance accepts lengths and project parameter expressions. Drag
-              the preview to orbit.{" "}
+              the arrow to change distance; drag the preview background to
+              orbit.{" "}
               {draft.editing
                 ? "Apply replaces this feature in one history edit after validating downstream geometry."
                 : "Apply adds one feature to the timeline."}
@@ -380,6 +439,7 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
           <div>
             <ExtrudePreview
               meshes={shown?.result?.meshes ?? EMPTY_PREVIEW_MESHES}
+              distanceHandle={handle}
             />
             <p role="status">
               {!current
@@ -409,7 +469,7 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
           <button type="button" onClick={close}>
             Cancel
           </button>
-          <button type="submit" disabled={!shown?.result}>
+          <button type="submit" disabled={!shown?.result || dragging}>
             Apply extrusion
           </button>
         </div>

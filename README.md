@@ -136,7 +136,8 @@ The AI drawer keeps provider/model administration in **AI settings**, collapsed
 on first use in Focused layout, while showing the current provider. Drawing and
 ordinary CAD commands remain available without an AI service. The first two
 steps of the [simplified workflow proposal](specs/working-cad/SIMPLIFIED_WORKFLOW.md)
-are implemented. Extrusion drag handles and operation drops remain planned.
+are implemented. Distance extrusion handles and protected project-file drops are
+also available; further operation drops remain planned.
 
 Drop one `.pcaddoc` or `.json` file anywhere on the workspace to open a project.
 The same bounded validation and migration used by Open runs before replacement.
@@ -877,3 +878,17 @@ native-validated distance-extrusion owner, including retained faces after Cut/Jo
 Curved, lost, split/ambiguous and
 fallback faces give a diagnostic without creating a sketch. Face references use
 the existing stable feature-owned roles and follow supported owner edits.
+
+### Extrusion distance handles
+
+Distance Extrude creation and Edit Feature previews have an arrow handle. Drag
+along the shown sketch-normal axis, or focus the handle and use arrow keys (1 mm,
+Shift for 10 mm); the typed distance stays synchronized. Positive/negative arrows
+control their corresponding extent; symmetric distance is the total span. Drag
+updates use explicit mm values at 0.001 mm precision. Parameter/formula-bound
+expressions disable the handle with an explanation; typed edits remain available.
+Through All and To Face retain their existing controls. Cancel, Escape, pointer
+capture loss, focus loss and resizing discard an unfinished gesture. Apply waits
+for the latest valid native preview; one Apply is one Undo edit. Native XY/XZ/YZ
+acceptance checks exact volume/orientation, existing-feature edits, save/open/STL
+and stale same-ID project replacement.
