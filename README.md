@@ -385,7 +385,12 @@ rebuild until their expressions are repaired; reused names cannot retarget them.
    gestures, snaps to existing solved points and an optional millimeter grid, and
    saves complete primitives as undoable edits. Escape cancels a draft before closing.
    Zoom, pan, Fit, keyboard coordinate entry and construction geometry controls are available.
-   Select a point, line, circle or arc and choose **Delete selected sketch item**,
+   Click a point, line, circle or arc; Shift-click toggles more items. Drag a
+   selection box from left to right for fully contained curves/standalone points,
+   or from right to left for crossing selection. Shift-drag toggles the box hits.
+   **Select all sketch geometry** includes every point and curve. Box selection omits
+   support points of curves so adjoining curves outside the box remain intact.
+   Choose **Delete selected sketch item** for the whole selection,
    or press Delete/Backspace with the canvas focused. The **Sketch item** list also
    selects geometry that cannot currently render. Deleting a point removes attached
    curves. Deleting geometry also removes its unused endpoints and centers, while

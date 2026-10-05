@@ -28,7 +28,7 @@ import {
   type CanvasTool,
 } from "../../cad/sketch/canvasGeometry";
 import { assertProjectJsonShape } from "../../persistence/importSafety";
-import { deleteSketchEntity } from "../../cad/sketch/entityDeletion";
+import { deleteSketchEntities } from "../../cad/sketch/entityDeletion";
 import { sketchComponentId } from "../../cad/document/components";
 
 export interface CanvasSession {
@@ -38,10 +38,24 @@ export interface CanvasSession {
 }
 export const useSketchCanvas = create<{
   active?: CanvasSession;
-  selection?: { entityId: string; document: CadStore["history"]["present"] };
+  selection?: {
+    entityIds: string[];
+    document: CadStore["history"]["present"];
+  };
 }>(() => ({}));
 
-export function selectedCanvasEntity(state = useCadStore.getState()) {
+function sketchInActiveComponent(state: CadStore, sketchId: string) {
+  const document = state.history.present;
+  const componentId = Object.hasOwn(
+    document.components,
+    state.activeComponentId,
+  )
+    ? state.activeComponentId
+    : document.rootComponentId;
+  return sketchComponentId(document, sketchId) === componentId;
+}
+
+export function selectedCanvasEntities(state = useCadStore.getState()) {
   const { active, selection } = useSketchCanvas.getState();
   if (
     !active ||
@@ -53,22 +67,26 @@ export function selectedCanvasEntity(state = useCadStore.getState()) {
   )
     return;
   const sketch = state.history.present.sketches[active.sketchId];
-  const componentId = Object.hasOwn(
-    state.history.present.components,
-    state.activeComponentId,
+  if (!sketchInActiveComponent(state, active.sketchId)) return;
+  if (
+    sketch &&
+    selection.entityIds.length &&
+    selection.entityIds.every((id) => Object.hasOwn(sketch.entities, id))
   )
-    ? state.activeComponentId
-    : state.history.present.rootComponentId;
-  if (sketchComponentId(state.history.present, active.sketchId) !== componentId)
-    return;
-  if (sketch?.entities[selection.entityId])
-    return { active, sketch, entityId: selection.entityId };
+    return { active, sketch, entityIds: [...selection.entityIds] };
+}
+export function selectedCanvasEntity(state = useCadStore.getState()) {
+  const selection = selectedCanvasEntities(state);
+  return selection
+    ? { ...selection, entityId: selection.entityIds[0] }
+    : undefined;
 }
 
-export function selectCanvasEntity(
+export function selectCanvasEntities(
   active: CanvasSession,
   expected: CadStore["history"]["present"],
-  entityId?: string,
+  ids: readonly string[],
+  toggle = false,
 ) {
   const state = useCadStore.getState();
   if (
@@ -76,26 +94,78 @@ export function selectCanvasEntity(
     state.documentSession !== active.session ||
     state.history.present.id !== active.documentId ||
     state.fileBusy ||
-    useSketchCanvas.getState().active !== active
+    useSketchCanvas.getState().active !== active ||
+    !sketchInActiveComponent(state, active.sketchId)
   )
-    throw new Error("Project changed. Select a current sketch item.");
-  if (entityId && !expected.sketches[active.sketchId]?.entities[entityId])
+    throw new Error("Project changed. Select current sketch geometry.");
+  const sketch = expected.sketches[active.sketchId];
+  if (!sketch) throw new Error("Sketch was removed. Choose a current sketch.");
+  if (ids.some((id) => !Object.hasOwn(sketch.entities, id)))
     throw new Error("Sketch item was removed. Select a current item.");
+  const entityIds = new Set(
+    toggle ? selectedCanvasEntities(state)?.entityIds : [],
+  );
+  for (const id of new Set(ids)) {
+    if (toggle && entityIds.has(id)) entityIds.delete(id);
+    else entityIds.add(id);
+  }
+  const selected = [...entityIds];
   useSketchCanvas.setState({
-    selection: entityId ? { entityId, document: expected } : undefined,
+    selection: selected.length
+      ? { entityIds: selected, document: expected }
+      : undefined,
   });
 }
-
+export function selectCanvasEntity(
+  active: CanvasSession,
+  expected: CadStore["history"]["present"],
+  entityId?: string,
+) {
+  selectCanvasEntities(active, expected, entityId ? [entityId] : []);
+}
+export function canSelectAllCanvasEntities(state = useCadStore.getState()) {
+  const active = useSketchCanvas.getState().active,
+    document = state.history.present;
+  if (
+    !active ||
+    state.fileBusy ||
+    active.session !== state.documentSession ||
+    active.documentId !== document.id
+  )
+    return false;
+  return (
+    sketchInActiveComponent(state, active.sketchId) &&
+    Boolean(
+      document.sketches[active.sketchId] &&
+      Object.keys(document.sketches[active.sketchId].entities).length,
+    )
+  );
+}
+export function selectAllCanvasEntities() {
+  const state = useCadStore.getState(),
+    active = useSketchCanvas.getState().active;
+  if (!active || !canSelectAllCanvasEntities(state))
+    throw new Error(
+      "Open a current sketch with geometry before selecting all.",
+    );
+  selectCanvasEntities(
+    active,
+    state.history.present,
+    Object.keys(
+      state.history.present.sketches[active.sketchId]?.entities ?? {},
+    ),
+  );
+}
 export function deleteSelectedCanvasEntity() {
   const state = useCadStore.getState(),
-    selected = selectedCanvasEntity(state);
+    selected = selectedCanvasEntities(state);
   if (!selected)
     throw new Error("Select a current sketch item before deleting.");
   // Deletion also repairs sketches with invalid parameters, solves or planes.
   const expected = state.history.present;
   const next = upsertSketch(
     expected,
-    deleteSketchEntity(selected.sketch, selected.entityId, expected),
+    deleteSketchEntities(selected.sketch, selected.entityIds, expected),
   );
   assertProjectJsonShape(next);
   state.updateDocument((document) => (document === expected ? next : document));

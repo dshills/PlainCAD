@@ -22,6 +22,7 @@ import {
 } from "../ui/commands/sketchCanvasCommand";
 
 beforeEach(() => {
+  useCadStore.setState({ fileBusy: false });
   resetWorkspace("focused");
   useCadStore.getState().setDocument(createEmptyDocument());
 });
@@ -314,3 +315,148 @@ it.each(["Delete", "Backspace"])(
     );
   },
 );
+
+it("supports Shift-click toggles and focused Select All without affecting size input typing; bulk deletion is one undo edit", async () => {
+  const { id, sketch } = await open();
+  const point = Object.values(sketch.entities).find(
+    (e) => e.type === "point",
+  )!.id;
+  fireEvent.click(screen.getByRole("button", { name: "Draw tool: select" }));
+  const circle = window.document.querySelector(`[data-entity-id="${id}"]`)!;
+  const center = window.document.querySelector(`[data-point-id="${point}"]`)!;
+  fireEvent.pointerDown(circle, { button: 0 });
+  fireEvent.pointerDown(center, { button: 0, shiftKey: true });
+  expect(screen.getByLabelText("Sketch selection count")).toHaveTextContent(
+    "2 selected",
+  );
+  expect(circle).toHaveClass("canvas-entity-selected");
+  expect(center).toHaveClass("canvas-entity-selected");
+  expect(
+    screen.getByRole("button", { name: "Edit selected size" }),
+  ).toBeDisabled();
+  fireEvent.pointerDown(center, { button: 0, shiftKey: true });
+  expect(screen.getByLabelText("Selected sketch item")).toHaveValue(id);
+  fireEvent.click(screen.getByRole("button", { name: "Edit selected size" }));
+  const input = screen.getByLabelText("Sketch size expression");
+  fireEvent.keyDown(input, { key: "a", ctrlKey: true });
+  expect(screen.getByLabelText("Sketch selection count")).toHaveTextContent(
+    "1 selected",
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Cancel size edit" }));
+  const canvas = screen.getByRole("group", { name: "Sketch drawing canvas" });
+  const before = useCadStore.getState().history;
+  fireEvent.keyDown(canvas, { key: "a", ctrlKey: true });
+  expect(screen.getByLabelText("Sketch selection count")).toHaveTextContent(
+    "2 selected",
+  );
+  expect(useCadStore.getState().history).toBe(before);
+  fireEvent.keyDown(canvas, { key: "Delete" });
+  expect(
+    useCadStore.getState().history.present.sketches[sketch.id].entities,
+  ).toEqual({});
+  expect(useCadStore.getState().history.past).toHaveLength(
+    before.past.length + 1,
+  );
+  act(() => useCadStore.getState().undo());
+  expect(useCadStore.getState().history.present).toBe(before.present);
+  fireEvent.click(
+    screen.getByRole("button", { name: "Select all sketch geometry" }),
+  );
+  expect(screen.getByLabelText("Sketch selection count")).toHaveTextContent(
+    "2 selected",
+  );
+  act(() => useCadStore.setState({ fileBusy: true }));
+  expect(
+    screen.getByRole("button", { name: "Select all sketch geometry" }),
+  ).toBeDisabled();
+  expect(
+    screen.getByRole("button", { name: "Delete selected sketch item" }),
+  ).toBeDisabled();
+  act(() => useCadStore.setState({ fileBusy: false }));
+});
+
+it("selects circles with a window gesture and cancels captured selection on Escape or document changes", async () => {
+  const { id } = await open(false);
+  fireEvent.click(screen.getByRole("button", { name: "Draw tool: select" }));
+  const canvas = screen.getByRole("group", { name: "Sketch drawing canvas" });
+  vi.spyOn(canvas, "getBoundingClientRect").mockReturnValue({
+    x: 0,
+    y: 0,
+    left: 0,
+    top: 0,
+    right: 600,
+    bottom: 450,
+    width: 600,
+    height: 450,
+    toJSON: () => ({}),
+  });
+  Object.defineProperties(canvas, {
+    setPointerCapture: { value: vi.fn() },
+    hasPointerCapture: { value: () => true },
+    releasePointerCapture: { value: vi.fn() },
+  });
+  const view = canvas.getAttribute("viewBox")!.split(" ").map(Number);
+  const at = (x: number, y: number) => ({
+    pointerId: 1,
+    button: 0,
+    clientX: ((x - view[0]) / view[2]) * 600,
+    clientY: ((-y - view[1]) / view[3]) * 450,
+  });
+  const before = useCadStore.getState().history;
+  fireEvent.pointerDown(canvas, at(-7, -6));
+  fireEvent.pointerMove(canvas, at(7, 6));
+  expect(
+    canvas.querySelector('[data-selection-box="window"]'),
+  ).toBeInTheDocument();
+  fireEvent.keyDown(canvas, { key: "Escape" });
+  expect(canvas.querySelector("[data-selection-box]")).toBeNull();
+  expect(useSketchCanvas.getState().active).toBeDefined();
+  expect(useCadStore.getState().history).toBe(before);
+  fireEvent.pointerDown(canvas, at(-7, -6));
+  fireEvent.pointerMove(canvas, at(7, 6));
+  fireEvent.pointerUp(canvas, at(7, 6));
+  expect(screen.getByLabelText("Sketch selection count")).toHaveTextContent(
+    "1 selected",
+  );
+  expect(screen.getByLabelText("Selected sketch item")).toHaveValue(id);
+  expect(useCadStore.getState().history).toBe(before);
+  fireEvent.pointerDown(canvas, at(-7, -6));
+  fireEvent.pointerMove(canvas, at(7, 6));
+  act(() =>
+    useCadStore
+      .getState()
+      .updateDocument((d) => ({ ...d, name: "Changed during selection" })),
+  );
+  fireEvent.pointerUp(canvas, at(7, 6));
+  expect(canvas.querySelector("[data-selection-box]")).toBeNull();
+  expect(screen.getByLabelText("Sketch selection count")).toHaveTextContent(
+    "0 selected",
+  );
+});
+
+it("keeps dimension-overlay presses separate from box selection", async () => {
+  const { id } = await open();
+  fireEvent.click(screen.getByRole("button", { name: "Draw tool: select" }));
+  fireEvent.pointerDown(
+    window.document.querySelector(`[data-entity-id="${id}"]`)!,
+    { button: 0 },
+  );
+  const selection = useSketchCanvas.getState().selection;
+  const history = useCadStore.getState().history;
+  const label = screen.getByRole("button", { name: /^Edit drawing D/ });
+  const canvas = screen.getByRole("group", { name: "Sketch drawing canvas" });
+  Object.defineProperty(canvas, "getScreenCTM", {
+    value: () => null,
+    configurable: true,
+  });
+  fireEvent.pointerDown(label, {
+    button: 0,
+    pointerId: 42,
+    clientX: 10,
+    clientY: 10,
+  });
+  expect(window.document.querySelector("[data-selection-box]")).toBeNull();
+  expect(useSketchCanvas.getState().selection).toBe(selection);
+  expect(useCadStore.getState().history).toBe(history);
+  fireEvent.pointerCancel(label, { pointerId: 42 });
+});

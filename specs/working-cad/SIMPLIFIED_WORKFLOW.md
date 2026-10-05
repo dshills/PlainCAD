@@ -372,8 +372,9 @@ impact before deletion. Missing downstream profiles remain diagnostic.
 Acceptance is covered by unit/component and native browser checks for precise
 non-template sketches, all origin-plane orientations, dimension errors/recovery,
 undo/redo, save/open and STL. User research is still required to establish that new
-CAD users find the workflow easy. Box selection, additional snap types and new
-sketch camera gestures described earlier remain future work.
+CAD users find the workflow easy. Shift-click, containment/crossing box selection,
+Select All and bulk one-Undo deletion are implemented. Additional snap types and
+new sketch camera gestures described earlier remain future work.
 
 ### Step 3 Add parametric handles and bounded drag and drop
 

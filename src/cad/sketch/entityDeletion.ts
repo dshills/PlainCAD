@@ -14,34 +14,40 @@ function pointReferences(entity: SketchEntity): string[] {
 }
 
 /** Remove attached curves and their unused points without sweeping standalone points. */
-export function planSketchEntityDeletion(
+export function planSketchEntitiesDeletion(
   sketch: Sketch,
-  entityId: string,
+  selectedIds: readonly string[],
   document: Pick<CadDocument, "features">,
 ) {
-  const entity = sketch.entities[entityId];
-  if (!entity)
-    throw new Error("Sketch item was removed. Select a current item.");
-  const entityIds = new Set([entityId]);
-  if (entity.type === "point") {
-    for (const candidate of Object.values(sketch.entities)) {
-      if (pointReferences(candidate).includes(entityId))
-        entityIds.add(candidate.id);
-    }
+  if (!selectedIds.length)
+    throw new Error("Select sketch geometry before deleting.");
+  const entityIds = new Set(selectedIds);
+  for (const id of entityIds) {
+    if (!sketch.entities[id])
+      throw new Error("Sketch item was removed. Select a current item.");
   }
-  const referencesDeleted = (reference: {
-    entityIds: string[];
-    pointIds?: string[];
-  }) =>
-    reference.entityIds.some((id) => entityIds.has(id)) ||
-    reference.pointIds?.some((id) => entityIds.has(id)) === true;
+  const selectedPoints = new Set(
+    selectedIds.filter((id) => sketch.entities[id].type === "point"),
+  );
+  for (const candidate of Object.values(sketch.entities)) {
+    if (pointReferences(candidate).some((id) => selectedPoints.has(id)))
+      entityIds.add(candidate.id);
+  }
+  const referencesDeletedBy =
+    (deleted: ReadonlySet<string>) =>
+    (reference: { entityIds: string[]; pointIds?: string[] }) =>
+      reference.entityIds.some((id) => deleted.has(id)) ||
+      reference.pointIds?.some((id) => deleted.has(id)) === true;
+  // Determine surviving references before adding candidate orphan points.
+  const initiallyDeleted = new Set(entityIds);
+  const referencesInitiallyDeleted = referencesDeletedBy(initiallyDeleted);
   const retainedPointIds = new Set<string>();
   for (const candidate of Object.values(sketch.entities)) {
     if (!entityIds.has(candidate.id))
       pointReferences(candidate).forEach((id) => retainedPointIds.add(id));
   }
   for (const reference of [...sketch.constraints, ...sketch.dimensions]) {
-    if (!referencesDeleted(reference)) {
+    if (!referencesInitiallyDeleted(reference)) {
       [...reference.entityIds, ...(reference.pointIds ?? [])].forEach((id) =>
         retainedPointIds.add(id),
       );
@@ -61,6 +67,7 @@ export function planSketchEntityDeletion(
         entityIds.add(pointId);
     }
   }
+  const referencesDeleted = referencesDeletedBy(entityIds);
   return {
     entityIds,
     constraintIds: new Set(
@@ -72,12 +79,12 @@ export function planSketchEntityDeletion(
   };
 }
 
-export function deleteSketchEntity(
+export function deleteSketchEntities(
   sketch: Sketch,
-  entityId: string,
+  entityIds: readonly string[],
   document: Pick<CadDocument, "features">,
 ): Sketch {
-  const plan = planSketchEntityDeletion(sketch, entityId, document);
+  const plan = planSketchEntitiesDeletion(sketch, entityIds, document);
   return {
     ...sketch,
     entities: Object.fromEntries(
@@ -88,4 +95,19 @@ export function deleteSketchEntity(
     ),
     dimensions: sketch.dimensions.filter((d) => !plan.dimensionIds.has(d.id)),
   };
+}
+
+export function planSketchEntityDeletion(
+  sketch: Sketch,
+  entityId: string,
+  document: Pick<CadDocument, "features">,
+) {
+  return planSketchEntitiesDeletion(sketch, [entityId], document);
+}
+export function deleteSketchEntity(
+  sketch: Sketch,
+  entityId: string,
+  document: Pick<CadDocument, "features">,
+): Sketch {
+  return deleteSketchEntities(sketch, [entityId], document);
 }

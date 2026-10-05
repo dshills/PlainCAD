@@ -10,7 +10,11 @@ import {
   runCommand,
   selectCommandEnablement,
 } from "../commands/commandRegistry";
-import { planSketchEntityDeletion } from "../../cad/sketch/entityDeletion";
+import {
+  canvasBoxEntityIds,
+  type CanvasSelectionBox,
+} from "../../cad/sketch/canvasSelection";
+import { planSketchEntitiesDeletion } from "../../cad/sketch/entityDeletion";
 import { canvasEntitySize } from "../../cad/sketch/canvasDimensions";
 import { useCanvasPointDrag } from "./useCanvasPointDrag";
 import { useCanvasDimensions } from "./useCanvasDimensions";
@@ -28,6 +32,7 @@ import {
   canvasContext,
   commitCanvasGeometry,
   selectCanvasEntity,
+  selectCanvasEntities,
   useSketchCanvas,
   type CanvasSession,
 } from "../commands/sketchCanvasCommand";
@@ -90,7 +95,7 @@ function arcPath(
 type CanvasMode = CanvasTool | "select" | "move" | "translate" | "deform";
 const instructions: Record<CanvasMode, string> = {
   select:
-    "Click a point, line, circle or arc to select it. Delete/Backspace removes the selected item; Undo restores it. Click a dimension to edit its size.",
+    "Click geometry to select it; Shift-click toggles items. Drag left to right to enclose geometry, or right to left to cross it. Shift-drag toggles the box results. Select All or Cmd/Ctrl+A selects the sketch. Delete/Backspace removes the selection in one undo edit. Click a dimension to edit its size.",
   deform:
     "Drag a point to deform a point-and-line sketch through horizontal, vertical and coincident constraints. Fixed/parameter coordinates and supported orthogonal dimensions stay intact. Release validates the solve and profile topology; Escape cancels.",
   translate:
@@ -116,7 +121,8 @@ export function SketchCanvasPanel() {
     !!document.sketches[active.sketchId] &&
     sketchComponentId(document, active.sketchId) === component;
   useEffect(() => {
-    if (active && !current) useSketchCanvas.setState({ active: undefined });
+    if (active && !current)
+      useSketchCanvas.setState({ active: undefined, selection: undefined });
   }, [active, current]);
   return current ? (
     <SketchCanvas
@@ -145,12 +151,48 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     fileBusy = useCadStore((s) => s.fileBusy);
   const history = useCadStore((s) => s.history);
   const selection = useSketchCanvas((s) => s.selection);
-  const selectedItemId =
-    selection?.document === document ? selection.entityId : undefined;
+  const selectedIds = useMemo(
+    () => (selection?.document === document ? selection.entityIds : []),
+    [selection, document],
+  );
+  const selectedItemId = selectedIds.length === 1 ? selectedIds[0] : undefined;
+  const [selectionBox, setSelectionBox] = useState<CanvasSelectionBox>();
+  const boxGesture = useRef<
+    | {
+        pointerId: number;
+        start: CanvasPoint;
+        clientX: number;
+        clientY: number;
+        element: SVGSVGElement;
+        expected: typeof document;
+        toggle: boolean;
+      }
+    | undefined
+  >(undefined);
+  const cancelBox = useCallback(() => {
+    const gesture = boxGesture.current;
+    boxGesture.current = undefined;
+    setSelectionBox(undefined);
+    if (gesture?.element.hasPointerCapture(gesture.pointerId))
+      gesture.element.releasePointerCapture(gesture.pointerId);
+  }, []);
+  useEffect(() => {
+    cancelBox();
+  }, [document, fileBusy, cancelBox]);
+  useEffect(() => {
+    window.addEventListener("blur", cancelBox);
+    return () => {
+      window.removeEventListener("blur", cancelBox);
+      cancelBox();
+    };
+  }, [cancelBox]);
   const subscribedCanDelete = useCadStore(
     (s) => selectCommandEnablement(s).deleteSketchEntity,
   );
-  const canDelete = Boolean(selectedItemId) && subscribedCanDelete;
+  const canDelete = selectedIds.length > 0 && subscribedCanDelete;
+  const canSelectAll = useCadStore(
+    (s) => selectCommandEnablement(s).selectAllSketchEntities,
+  );
   const rebuild = useCadStore((s) => s.rebuild);
   const analysis = useMemo(() => {
     try {
@@ -169,10 +211,10 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     sketch = document.sketches[active.sketchId];
   const deletionPlan = useMemo(
     () =>
-      selectedItemId && sketch?.entities[selectedItemId]
-        ? planSketchEntityDeletion(sketch, selectedItemId, document)
+      selectedIds.length && selectedIds.every((id) => sketch?.entities[id])
+        ? planSketchEntitiesDeletion(sketch, selectedIds, document)
         : undefined,
-    [sketch, selectedItemId, document],
+    [sketch, selectedIds, document],
   );
   useEffect(() => {
     if (selection && selection.document !== document)
@@ -224,6 +266,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
   useEffect(() => {
     const fit = () => {
       if (context) {
+        cancelBox();
         if (primitiveGesture.current) {
           releasePrimitiveGesture();
           setDraft([]);
@@ -236,7 +279,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     };
     window.addEventListener("plaincad:fit-sketch", fit);
     return () => window.removeEventListener("plaincad:fit-sketch", fit);
-  }, [context, drag.cancel, releasePrimitiveGesture]);
+  }, [context, drag.cancel, releasePrimitiveGesture, cancelBox]);
   useEffect(() => {
     if (draftDocument.current !== document) {
       setDraft([]);
@@ -255,6 +298,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     }
   };
   const cancel = () => {
+    cancelBox();
     setDraft([]);
     setCursor(undefined);
     setError(undefined);
@@ -311,20 +355,56 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
       result = arcEndpoint(draft[0], draft[1], result);
     return result;
   };
+  const selectionPointAt = (
+    event: PointerEvent<SVGSVGElement>,
+  ): CanvasPoint | undefined => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    return {
+      x: view.x + ((event.clientX - rect.left) / rect.width) * view.width,
+      y: view.y + (1 - (event.clientY - rect.top) / rect.height) * view.height,
+    };
+  };
   const draw = (event: PointerEvent<SVGSVGElement>) => {
-    if (event.button !== 0 || primitiveGesture.current) return;
+    if (event.button !== 0 || primitiveGesture.current || boxGesture.current)
+      return;
     if (tool === "select") {
       if (fileBusy) return;
+      if (
+        (event.target as Element).closest(
+          ".canvas-dimensions, .canvas-constraints, .canvas-inline-dimension",
+        )
+      )
+        return;
       event.preventDefault();
       const id = (event.target as Element).closest(
         "[data-entity-id], [data-point-id], [data-hit-entity-id]",
       );
-      chooseItem(
+      const entityId =
         id?.getAttribute("data-entity-id") ??
-          id?.getAttribute("data-point-id") ??
-          id?.getAttribute("data-hit-entity-id") ??
-          undefined,
-      );
+        id?.getAttribute("data-point-id") ??
+        id?.getAttribute("data-hit-entity-id") ??
+        undefined;
+      if (entityId) chooseItem(entityId, event.shiftKey);
+      else {
+        const point = selectionPointAt(event);
+        if (!point) return;
+        cancel();
+        dimensions.clearSelection();
+        if (!event.shiftKey) chooseItem();
+        boxGesture.current = {
+          pointerId: event.pointerId,
+          start: point,
+          clientX: event.clientX,
+          clientY: event.clientY,
+          element: event.currentTarget,
+          expected: document,
+          toggle: event.shiftKey,
+        };
+        setSelectionBox({ start: point, end: point });
+        event.currentTarget.focus({ preventScroll: true });
+        event.currentTarget.setPointerCapture(event.pointerId);
+      }
       return;
     }
     const point = pointAt(event);
@@ -379,6 +459,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     }
   };
   const zoom = (factor: number) => {
+    cancelBox();
     if (primitiveGesture.current) cancel();
     drag.cancel();
     setCursor(undefined);
@@ -392,6 +473,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     });
   };
   const pan = (x: number, y: number) => {
+    cancelBox();
     if (primitiveGesture.current) cancel();
     drag.cancel();
     setCursor(undefined);
@@ -460,12 +542,13 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     tool === "select",
     () => useSketchCanvas.setState({ selection: undefined }),
   );
-  const chooseItem = (id?: string) => {
+  const chooseItem = (id?: string, toggle = false) => {
     cancel();
-    if (id) dimensions.selectEntity(id);
+    if (id && !toggle) dimensions.selectEntity(id);
+    else dimensions.clearSelection();
     dimensions.closeInlineEditor();
     try {
-      selectCanvasEntity(active, document, id);
+      selectCanvasEntities(active, document, id ? [id] : [], toggle);
       svgRef.current?.focus({ preventScroll: true });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -481,7 +564,29 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
       setError(e instanceof Error ? e.message : String(e));
     }
   };
+  const selectAll = async () => {
+    cancelBox();
+    cancel();
+    dimensions.clearSelection();
+    try {
+      await runCommand("sketch.entity.selectAll");
+      svgRef.current?.focus({ preventScroll: true });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  };
   const highlightedEntityId = selectedItemId ?? dimensions.selectedEntityId;
+  const highlightedIds = useMemo(
+    () =>
+      new Set(
+        selectedIds.length
+          ? selectedIds
+          : highlightedEntityId
+            ? [highlightedEntityId]
+            : [],
+      ),
+    [selectedIds, highlightedEntityId],
+  );
   const constraints = useCanvasConstraints(
     active,
     context,
@@ -506,6 +611,22 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
           return;
         const target = event.target as HTMLElement;
         if (
+          tool === "select" &&
+          event.key.toLowerCase() === "a" &&
+          (event.metaKey || event.ctrlKey) &&
+          !event.altKey &&
+          !event.shiftKey &&
+          !event.repeat &&
+          event.target === svgRef.current &&
+          !fileBusy &&
+          canSelectAll
+        ) {
+          event.preventDefault();
+          event.stopPropagation();
+          void selectAll();
+          return;
+        }
+        if (
           (event.key === "Delete" || event.key === "Backspace") &&
           !event.repeat &&
           !event.metaKey &&
@@ -527,7 +648,8 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
         ) {
           event.preventDefault();
           event.stopPropagation();
-          if (draft.length || drag.inProgress) cancel();
+          if (boxGesture.current) cancelBox();
+          else if (draft.length || drag.inProgress) cancel();
           else void close();
         }
         if (
@@ -573,6 +695,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
               onClick={() => {
                 cancel();
                 dimensions.closeInlineEditor();
+                cancelBox();
                 useSketchCanvas.setState({ selection: undefined });
                 setTool(kind);
               }}
@@ -631,6 +754,16 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
           </label>
           <button
             type="button"
+            disabled={!canSelectAll}
+            onClick={() => void selectAll()}
+          >
+            Select all sketch geometry
+          </button>
+          <span role="status" aria-label="Sketch selection count">
+            {selectedIds.length} selected
+          </span>
+          <button
+            type="button"
             disabled={!canDelete}
             onClick={() => void deleteItem()}
           >
@@ -656,14 +789,18 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
           >
             Edit selected size
           </button>
-          {deletionPlan ? (
-            <span role="status">
-              Removes {deletionPlan.entityIds.size} geometry item(s),{" "}
-              {deletionPlan.dimensionIds.size} dimension(s),{" "}
-              {deletionPlan.constraintIds.size} constraint(s). Undo restores
-              them.
-            </span>
-          ) : null}
+          <span role="status" style={{ flexBasis: "100%", minHeight: "1.5em" }}>
+            {deletionPlan ? (
+              <>
+                Removes {deletionPlan.entityIds.size} geometry item(s),{" "}
+                {deletionPlan.dimensionIds.size} dimension(s),{" "}
+                {deletionPlan.constraintIds.size} constraint(s). Undo restores
+                them.
+              </>
+            ) : (
+              "Select geometry to see what deletion will remove."
+            )}
+          </span>
         </div>
       ) : null}
       <div className="sketch-workspace-layout">
@@ -761,6 +898,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
               <button
                 disabled={!context}
                 onClick={() => {
+                  cancelBox();
                   if (primitiveGesture.current) cancel();
                   drag.cancel();
                   setCursor(undefined);
@@ -976,6 +1114,17 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
             preserveAspectRatio="none"
             onPointerDown={draw}
             onPointerMove={(event) => {
+              if (boxGesture.current) {
+                if (boxGesture.current.pointerId === event.pointerId) {
+                  const point = selectionPointAt(event);
+                  if (point)
+                    setSelectionBox({
+                      start: boxGesture.current.start,
+                      end: point,
+                    });
+                }
+                return;
+              }
               if (
                 primitiveGesture.current &&
                 primitiveGesture.current.pointerId !== event.pointerId
@@ -986,6 +1135,34 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
               if (isDragTool) drag.move(event, point);
             }}
             onPointerUp={(event) => {
+              const box = boxGesture.current;
+              if (box?.pointerId === event.pointerId) {
+                const end = selectionPointAt(event);
+                cancelBox();
+                if (
+                  end &&
+                  context &&
+                  Math.hypot(
+                    event.clientX - box.clientX,
+                    event.clientY - box.clientY,
+                  ) >= 6
+                ) {
+                  try {
+                    selectCanvasEntities(
+                      active,
+                      box.expected,
+                      canvasBoxEntityIds(context.solved, {
+                        start: box.start,
+                        end,
+                      }),
+                      box.toggle,
+                    );
+                  } catch (e) {
+                    setError(e instanceof Error ? e.message : String(e));
+                  }
+                }
+                return;
+              }
               if (isDragTool) drag.finish(event, pointAt(event));
               const gesture = primitiveGesture.current;
               if (gesture?.pointerId === event.pointerId) {
@@ -1004,11 +1181,15 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
               }
             }}
             onPointerCancel={(event) => {
+              if (boxGesture.current?.pointerId === event.pointerId)
+                cancelBox();
               if (primitiveGesture.current?.pointerId === event.pointerId)
                 cancel();
               else if (!primitiveGesture.current) drag.cancel();
             }}
             onLostPointerCapture={(event) => {
+              if (boxGesture.current?.pointerId === event.pointerId)
+                cancelBox();
               if (primitiveGesture.current?.pointerId === event.pointerId)
                 cancel();
               drag.lostCapture(event);
@@ -1054,9 +1235,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
                     (l.construction
                       ? "canvas-construction"
                       : "canvas-geometry") +
-                    (highlightedEntityId === l.id
-                      ? " canvas-entity-selected"
-                      : "")
+                    (highlightedIds.has(l.id) ? " canvas-entity-selected" : "")
                   }
                   x1={l.start.x}
                   y1={l.start.y}
@@ -1072,9 +1251,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
                     (c.construction
                       ? "canvas-construction"
                       : "canvas-geometry") +
-                    (highlightedEntityId === c.id
-                      ? " canvas-entity-selected"
-                      : "")
+                    (highlightedIds.has(c.id) ? " canvas-entity-selected" : "")
                   }
                   cx={c.center.x}
                   cy={c.center.y}
@@ -1089,9 +1266,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
                     (a.construction
                       ? "canvas-construction"
                       : "canvas-geometry") +
-                    (highlightedEntityId === a.id
-                      ? " canvas-entity-selected"
-                      : "")
+                    (highlightedIds.has(a.id) ? " canvas-entity-selected" : "")
                   }
                   d={arcPath(a.center, a.start, a.end, a.sweep < 0)}
                 />
@@ -1147,12 +1322,34 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
                 <circle
                   key={p.id}
                   data-point-id={p.id}
-                  className={`canvas-point${selectedItemId === p.id ? " canvas-entity-selected" : ""}`}
+                  className={`canvas-point${highlightedIds.has(p.id) ? " canvas-entity-selected" : ""}`}
                   cx={p.x}
                   cy={p.y}
                   r={radius}
                 />
               ))}
+              {selectionBox ? (
+                <rect
+                  data-selection-box={
+                    selectionBox.end.x < selectionBox.start.x
+                      ? "crossing"
+                      : "window"
+                  }
+                  pointerEvents="none"
+                  x={Math.min(selectionBox.start.x, selectionBox.end.x)}
+                  y={Math.min(selectionBox.start.y, selectionBox.end.y)}
+                  width={Math.abs(selectionBox.end.x - selectionBox.start.x)}
+                  height={Math.abs(selectionBox.end.y - selectionBox.start.y)}
+                  fill="var(--accent, #39bde7)"
+                  fillOpacity={0.12}
+                  stroke="var(--accent, #39bde7)"
+                  strokeDasharray={
+                    selectionBox.end.x < selectionBox.start.x
+                      ? `${view.width / 100} ${view.width / 200}`
+                      : undefined
+                  }
+                />
+              ) : null}
               {drag.preview}
               <g className="canvas-preview">
                 {preview.length > 1 && tool === "line" ? (

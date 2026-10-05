@@ -720,7 +720,7 @@ Native acceptance covers mouse drags/cancellation, precise XY/XZ/YZ dimensions,
 BRep validity/volume/orientation, inline edits, undo/redo, save/open and STL on
 Chromium, Firefox and WebKit. The built app covers precise XZ dimensions, native
 volume and STL orientation under production CSP.
-Box selection, new snap types and sketch camera gestures remain planned; existing
+New snap types and sketch camera gestures remain planned; existing
 snap, grid, pan/zoom and advanced editing modes retain their supported limits.
 
 ### Project-file drops
@@ -731,3 +731,17 @@ gets a replacement confirmation with keep/save/open options. Invalid files,
 multiple-file drops, active tasks and stale import/confirmation contexts leave the
 current project intact. Native browser acceptance covers parameter edits, save,
 reopen and STL after a drop. Part append and assembly placement remain unavailable.
+
+
+### Sketch multi-selection and bulk deletion
+
+Shift-click toggles point/line/circle/arc items. Left-to-right box selection keeps
+fully contained curves and standalone points; right-to-left selects crossings.
+Shift-drag toggles box hits. Curve support points are excluded from boxes so
+adjacent curves are not accidentally deleted; direct point selection and Select
+All retain explicit point-deletion behavior. Bulk Delete/Backspace removes the
+selected geometry and dependent dimensions/constraints in one Undo edit. Unused
+endpoints/centers are cleaned; shared points, surviving references and Hole centers
+remain. Busy, stale document/session/component and typing contexts are protected.
+Native browser acceptance verifies whole-shape deletion without leftover dots,
+Undo/Redo, exact solid geometry, save/open and STL.
