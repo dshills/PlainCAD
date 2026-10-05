@@ -1,6 +1,6 @@
 # Working CAD Capability Matrix
 
-Reviewed against source and automated tests on 2026-10-04. This is the current
+Reviewed against source and automated tests on 2026-10-05. This is the current
 implementation status, not a declaration that the working-CAD spec is complete.
 Unit/component tests exercise fallback geometry and jsdom. Chromium acceptance
 coverage now verifies native OpenCascade rectangle extrusion and circular through-cut
@@ -24,7 +24,7 @@ edits, parameter-driven diameter, empty-center failure and save/open/STL recover
 
 - React/Vite/TypeScript UI, Three.js viewer, Zustand document history and undo/redo.
 - Serializable document with stable IDs, deterministic JSON, schema migrations
-  through version 12, and validation before imported state is accepted.
+  through version 13, and validation before imported state is accepted.
 - Import unsafe-key rejection, nesting/node limits, and component/parameter/sketch/entity/
   constraint/feature count limits; unknown and runtime fields stripped by migration.
 - Local project files contain a root component and up to 99 additional internal
@@ -79,7 +79,7 @@ edits, parameter-driven diameter, empty-center failure and save/open/STL recover
 | Revolve | Native analytic closed line/arc/circle profiles with holes; coplanar world X/Y/Z or same-sketch line axes; angles greater than 0 through 360 degrees; cross-axis/zero-volume/invalid output rejected | Native preview-and-Apply creation dialog with explicit profile/axis/angle; inspector; narrow full-Y/XY rectangular fallback for loaded documents without kernel |
 | Revolve cut/join | Native cut on up to 64 explicit saved targets with atomic publication; join merges an ordered explicit scope into one connected solid; boolean validity/volume checks | Creation dialog with explicit native target previews; Inspector with cut/join scope checkboxes and lost-reference removal |
 | Capture intersected targets | Native common-volume checks on current upstream solids and extrude/revolve/hole tools; saved IDs only; preserves an intersected join primary; ignores downstream bodies; empty/failed/stale probes leave the scope intact; face-only joins remain explicit | Shared command and Inspector button; dedicated worker with cancellation/time limit |
-| Hole | Up to 64 explicit saved target IDs and 64 sketch point centers; native aggregate cylindrical tools; every center must cut some target, every target must lose exact volume; atomic output publication; positive blind-depth/through-all; empty/duplicate/lost centers/targets and no-op cuts diagnosed | Native preview-and-Apply creation and editing; fresh upstream choices, separate edited-operation/downstream checks, source/center/target repair, stable IDs and one undo; direct repair inspector |
+| Hole | Up to 64 explicit saved target IDs and 64 sketch point centers; native aggregate cylindrical tools; every center must cut some target, every target must lose exact volume; atomic output publication; positive blind depths or through-all, with positive/negative sketch-normal direction; empty/duplicate/lost centers/targets and no-op cuts diagnosed | Native preview-and-Apply creation and editing; fresh upstream choices, separate edited-operation/downstream checks, source/center/target repair, stable IDs and one undo; direct repair inspector |
 | Fillet/chamfer | Real native geometry on feature-owned cap perimeters, individual line/arc cap edges, or a source line’s two extrusion-direction corners; BRep/solid-count/volume-or-surface-change checks; retained authored edges also work after native booleans; grouped perimeters require every original edge and exclude new Cut/Join edges; lost/trimmed/ambiguous edges fail | Native preview-and-Apply creation dialogs with size/role/source/owner choices; repair inspector |
 | Offset/face sketch planes | Expression-driven origin/face offsets; upstream distance-extrusion caps and straight outer sides; retained native faces after Cut/Join supported at the sketch’s timeline position; removed/split/ambiguous/suppressed/missing faces require repair | Create Sketch with signed expression-driven origin/face offsets; Sketch tools with explicit replacement selection; lost planes fail rebuild |
 | STEP | Optional adapter interface only; no implemented exporter | Hidden |
@@ -113,12 +113,13 @@ edges require explicit reselection. Arbitrary transient edge picks are unavailab
 
 ## Durability and fabrication
 
-- Schema 1–12 checked-in fixtures migrate, rebuild, retain IDs, edit dimensions,
+- Schema 1–13 checked-in fixtures migrate, rebuild, retain IDs, edit dimensions,
   round-trip project files, and recover through the same import codec. Production
   Chromium imports the entire released corpus under CSP and verifies native BRep
   volume/solid count, thickness edits, saved feature/entity/parameter IDs, save/open
   intent and STL signed volume/global bounds. This corpus is a rectangular body
-  with a through-hole; it does not cover every historical feature combination.
+  with a through-hole, including an inward end-cap hole in schema 13; it does not
+  cover every historical feature combination.
 - IndexedDB autosave: 500ms debounce, latest/previous/manual snapshots, five-project
   retention, explicit startup recovery and previous-snapshot fallback. Quota and
   unavailable-storage errors preserve memory and offer manual save/purge.
@@ -347,7 +348,8 @@ until validated support exists.
 The AI drawer can edit a selected unsuppressed Hole, distance Extrude or Revolve
 in the active component. It sends only the feature type/name and named evaluated
 dimensions, not project geometry. Source/profile/axis/operation/target/center and
-termination references are retained; changed fields use literal mm/deg values and
+termination references and Hole drilling direction are retained; changed fields
+use literal mm/deg values and
 override their prior binding. Unchanged bindings and project parameters survive.
 The operation stage and full downstream native rebuild must both pass before Apply.
 Selection/project/session/component changes reject stale proposals; Apply retains
@@ -589,14 +591,14 @@ one undo step; other parts are preserved. Malformed, unsupported, incomplete,
 stale, canceled or failed geometry cannot Apply. Project/component replacement,
 sketch editing and file operations invalidate in-flight proposals.
 
-The selected provider receives only the description and recent AI turns. No
+In **New part** scope, the selected provider receives only the description and recent AI turns. No
 project geometry or runtime resources are sent. Create mode does not edit existing parts,
 create unrestricted profiles, assemblies, loft/sweep/shell/thread geometry, or STEP.
 Deterministic browser tests isolate provider responses while requiring actual
 native BRep geometry, parameter edits, save/open/STL and stale-result rejection;
 live-provider verification is separate from reproducible release checks.
 
-AI task selection also supports existing-component parameter edits. Context is
+**This part** scope supports existing-component parameter edits. Context is
 limited to independent mm/deg parameters used exclusively by the active component;
 transitive sharing, locked/derived/unused parameters and arbitrary feature changes
 are rejected. Before/after values and a full native project preview precede one
@@ -691,9 +693,9 @@ Native browser acceptance covers mouse sketch→extrude→cut→parameter edit�
 in Focused layout; UI checks cover persistence, command access, keyboard focus and
 compact layouts across Light/Dark/Saturn themes. The built app checks the Focused
 example/edit/export path under production CSP. Existing detailed CAD acceptance
-explicitly uses Full workspace. Distance extrusion handles and protected project-file
-drops and contextual AI scopes/local edits are implemented within their documented
-limits. Further operation drops remain planned.
+explicitly uses Full workspace. Distance extrusion handles, project-file drops,
+guided face holes and contextual AI scopes/local edits are implemented within the
+limits in their sections. Broader operation drops remain planned.
 
 ### Direct and precise sketch controls
 
@@ -758,14 +760,41 @@ gestures cancel on Escape, pointer loss, focus loss, resize or unmount. Pending,
 invalid and stale previews cannot Apply. Native tests verify exact volume,
 orientation, one Undo, binding protection, save/open and STL.
 
+### Guided face holes
+
+**Place holes on face** accepts supported retained native distance-extrusion caps
+and straight side faces in the active component. Viewer picking and named face
+buttons lead to a face-local drawing; pointer centers use 0.001 mm precision and typed
+coordinates accept lengths/parameter expressions. Actual coplanar mesh triangles
+reject centers outside the face and inside openings; guided circles must also
+clear boundaries/openings and not overlap one another. Opening and other tessellated
+contours add the native deflection allowance (currently 0.5 mm); outer cap segments
+matching authored straight profile edges retain exact clearance, including small
+and tangent holes. Side-face and other unproven boundaries remain conservative.
+Native preview validates the inward blind/through-all cut on one explicit target, before the point sketch and
+Hole are committed together in one Undo edit. Centers are removable. Cancel and
+stale document/session/component/selection/rebuild/file-job contexts cannot apply.
+Schema 13 persists direction; migration preserves earlier positive-hole geometry.
+Existing Hole editing retains direction, with direct direction repair in Inspector.
+This is a guided face-to-hole task, not free-form operation dropping or assembly
+placement. Native XY/XZ/YZ tests verify exact cut volume, cavity depth/orientation,
+parameter edits, Undo/Redo, save/open and STL; all schema fixtures remain covered.
+
 ### Contextual AI intent routing
 
 Explicit New part / This part / Selected feature chips determine edit scope.
 Thickness intent targets a selected distance Extrude or a unique eligible
-component thickness parameter; ambiguous targets require a user choice. Shared,
-locked and derived values are excluded. Exact mm/deg edits can prepare local
+component thickness parameter; ambiguous targets require a user choice. Component
+parameter edits exclude shared, locked, derived and unused values; selected-feature
+field edits preserve project parameters and unchanged bindings. Exact mm/deg edits
+can prepare local
 native previews without provider availability; numeric refinements send no API
-request. Unsupported/mismatched requests diagnose, while other bounded proposals
+request. Scope/selection changes trigger no provider request. Scope-specific next
+action hints, readable generated-parameter labels, explicit targets and before/after
+values are visible. Simple contradictory thickness/size wording asks for
+clarification; explicit absolute set requests and user-chosen fields remain
+authoritative. Unsupported/mismatched requests diagnose, while other bounded
+proposals
 retain provider validation. Display-only numeric preview context is excluded from
 provider conversation history. IDs, native operation/downstream checks, one Undo,
 stale-frame protection, save/open and STL are verified for Extrude/Hole/Revolve

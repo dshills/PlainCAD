@@ -1,10 +1,10 @@
 # Making PlainCAD simple to use
 
-Status: Step 1 presentation changes implemented; Steps 2–5 remain proposals. Updated October 5, 2026.
+Status: Steps 1–2 implemented. Step 3 distance handles, project-file drops and guided face holes, and Step 4 scope/local edit routing are implemented within the limits below. Repair/fabrication guidance, broader operation drops and usability research remain planned. Updated October 5, 2026.
 
-The screenshots capture the interface before Step 1. The proposed drawing, handle,
-drag-and-drop and AI-routing interactions below remain planned unless explicitly
-listed as existing in the implementation section.
+The screenshots capture the interface before Step 1. The proposal includes future
+interactions; the implementation sections and capability matrix identify the
+currently working drawing, handles, file drops, guided holes and AI routing.
 
 ## 1. The proposed direction
 
@@ -187,14 +187,18 @@ Use lightweight transient feedback while dragging. Rebuild exact native previews
 
 Drag-and-drop is a discoverable shortcut when valid targets light up and a short explanation follows the cursor. Every drop must resolve a target and preview an ordinary document operation. Provide a click/select/place alternative for each action.
 
+Project-file opening is the implemented drop gesture. The guided face-to-hole
+transaction has click/select/place controls today; dragging operation tools and
+other drop rows below remain proposed alternatives.
+
 | Dragged item | Valid destination | Intended result and limits |
 | --- | --- | --- |
 | Rectangle/circle tool | Active sketch canvas | Start a draft shape; finish placement or type dimensions |
 | Draw action | Supported planar face | Start face-based sketch selection; show orientation and offset |
 | Closed sketch/profile | Supported target in an Add/Cut task | Prepare an explicit extrusion with profile, direction and body scope; do not imply arbitrary 3D relocation |
-| Hole tool | Supported face/body | Open a guided points-sketch and Hole draft, with centers and targets explicit; build this compound UI workflow first |
+| Hole tool | Supported face/body | Guided click/select flow exists with explicit centers/target; dragging the tool remains proposed |
 | Round/Bevel tool | Supported feature-owned perimeter | Prepare real Fillet/Chamfer; invalid or arbitrary edges remain unavailable |
-| Existing `.pcaddoc` file | Workspace open zone | Validate then open; handle unsaved work; do not silently merge imported JSON |
+| Existing `.pcaddoc` or `.json` file | Workspace open zone | Implemented: validate then open; explicit keep/save/replace choices; do not merge imported JSON |
 | Built-in example | Start/example zone | Clearly say whether it opens a project or creates a part; retain current replacement semantics until append is implemented |
 | History item | Valid chronology position | Preview/check a supported timeline reorder with dependency validation |
 | Reusable saved part | Library drop zone | Future capability requiring validated append, ID remapping and expression/reference repair |
@@ -209,9 +213,19 @@ Do not advertise free component movement, assembly mates, imported STL editing, 
 
 ### Lead with one prompt and an explicit target
 
-The AI entry should read **Describe or change your part…**. Show scope chips such as **New part**, **Edit Bracket**, or **Edit Extrude 2**. Suggest scope from selection but require an explicit switch when ambiguous. Provider/model preferences belong in AI settings, with the active provider still visible in a compact status line.
+The AI entry uses explicit **New part**, **This part**, and **Selected feature**
+scope chips today. The component/feature name and resolved dimension appear as
+separate target context. Dynamic chip names such as **Edit Bracket** and richer
+selection suggestions remain possible refinements; scope changes stay explicit.
+Provider/model preferences belong in AI settings, with the active provider still
+visible in a compact status line.
 
-Selecting a part and asking “make this thicker” should route to a supported parameter or feature edit only when the target dimension is unambiguous. Otherwise ask “Do you mean the plate thickness or the boss height?” with geometry highlights and selectable answers. Scope routing must be validated locally; prose cannot grant broader modification access.
+Current bounded thickness routing uses a selected distance Extrude's distance or a
+unique eligible active-component thickness parameter. Otherwise it asks the user
+to choose an editable dimension; shared, locked, derived and unused component
+parameters are excluded. A future clarification such as “Do you mean the plate
+thickness or the boss height?” can add geometry highlights. Scope routing remains
+validated locally; prose cannot grant broader modification access.
 
 ### Ask only consequential questions
 
@@ -249,7 +263,12 @@ The current gateway is local development/preview infrastructure. A simple end-us
 6. Apply the validated cut; click thickness to change it later.
 7. Save project or Export STL.
 
-This is the intended future flow. The simplified controls and compound hole-placement interaction still require implementation; current manual commands remain the foundation.
+The drawing controls, typed/draggable distance extrusion and guided face-to-hole
+operation now provide the bounded mechanics of this journey. The **Make solid**
+label, automatic first-part setup and a completely unified task presentation
+remain proposed; use the existing Extrude command for the supported solid preview.
+Guided holes require supported native faces and fully contained, non-overlapping
+circles, with the clearance allowance documented in Step 3.
 
 ### B First part by description
 
@@ -259,7 +278,10 @@ This is the intended future flow. The simplified controls and compound hole-plac
 4. Apply once; see an ordinary part with editable history.
 5. Continue using dimensions, mouse tools, or another supported AI edit.
 
-The existing preview/Apply and local dimensional refinement provide much of this path. Scope routing and the quiet layout are proposed additions.
+The Focused layout, explicit scope chips, bounded intent routing, native
+preview/Apply and local dimensional refinements implement this path within the
+existing recipe limits. Broader conversational interpretation and sketch-intent
+assistance remain planned; provider setup stays in AI settings.
 
 ### C Experienced user refining a part
 
@@ -320,14 +342,14 @@ Preserve current data disclosure: creation sends prompt/recent turns; bounded ed
 
 ## 16. What exists and what needs to be built
 
-| Area | Existing foundation | Proposed work |
+| Area | Implemented foundation | Remaining proposed work |
 | --- | --- | --- |
-| Drawing | Pointer-authored lines/rectangles/circles/arcs, snapping, exact coordinates, bounded move/translate/deform | Visible tools, inline size entry, simpler selection and task presentation |
-| Dimensions | Driving labels and reference measurements, enabled by default | Selected-value prioritization, direct contextual editors and discoverable naming |
-| Features | Native extrude/revolve/Hole, booleans, bounded edge treatments and references | Parametric distance handles and guided surface-to-hole workflow |
-| AI | Three providers, bounded recipes, existing parameter/selected-feature edits, native previews | Intent-based scope chips, simpler settings, targeted questions and contextual help |
-| Organization | Project/components/sketches/bodies, activation and history | Quiet part list, automatic first-part transaction, explicit target context |
-| Drag and drop | Existing file and command infrastructure; validated timeline movement | A shared drop registry, eligible-target highlights and preview transactions |
+| Drawing | Visible tools, pointer-authored lines/rectangles/circles/arcs, inline sizes, multi-selection, one-Undo bulk deletion, existing snapping and bounded movement | Additional snap types, broader constrained dragging and new camera gestures |
+| Dimensions | Driving labels/reference measurements enabled by default, selected-value emphasis and contextual size editors | Durable semantic dimension names and richer visual prioritization |
+| Features | Native extrude/revolve/Hole, distance handles, guided face holes, bounded booleans/edge treatments/references | Broader operation drops and arbitrary direct face editing remain separate work |
+| AI | Three providers, scope chips, bounded thickness routing/clarifications, exact local edits, native previews and scope-specific hints | Geometry-highlighted clarification, richer model-derived help and sketch-intent assistance |
+| Organization | Project/components/sketches/bodies, activation/history, Focused Parts/Details and explicit edit targets | Automatic first-part transaction and further organization simplification |
+| Drag and drop | Protected project-file opening drops; bounded timeline commands; guided face picking | Operation-drop registry, eligible-target highlights and pointer history reordering |
 | Reusable content | Built-in examples and durable projects | Append/import-part design with ID and reference remapping; placement/assemblies deferred |
 | Repair/export | Source-linked diagnostics, reference repair, STL modes and validation | Guided issue cards and a concise export task |
 
@@ -343,7 +365,8 @@ panels, compact single-sheet switching, locally persisted presentation preferenc
 and collapsed AI provider/model settings. Details panels mount on first use and
 retain drafts while hidden. The
 project hierarchy and supported CAD operations are unchanged; the first-part
-transaction and simplified drawing interactions described earlier remain proposals.
+transaction remains proposed. Step 2 below records the delivered drawing controls;
+broader interaction ideas elsewhere in this proposal remain bounded future work.
 
 Acceptance verified by `e2e/focused-workspace.spec.ts` on Chromium, Firefox and
 WebKit: a blank project shows an obvious Draw/Describe/Example entry, no empty diagnostic tables, and no empty timeline command wall. Existing supported commands remain discoverable, correctly enabled and keyboard accessible. Layout preferences remain separate from the document schema and undo history.
@@ -378,7 +401,18 @@ new sketch camera gestures described earlier remain future work.
 
 ### Step 3 Add parametric handles and bounded drag and drop
 
-Start with extrusion distance handles and file-open drops. Then add supported face-to-sketch and guided Hole drops, bounded edge-treatment drops and validated history reordering. Define all alternatives, preview contexts and invalid-target messages before each gesture ships.
+Distance Extrude creation/edit handles and protected project-file opening drops
+are implemented. Guided **Place holes on face** lets users pick a supported native
+face, place or type centers, preview an inward cut, and commit the face sketch and
+Hole together. Pointer placement preserves face proportions and supports exact
+coordinate refinement. Guided circular holes must clear boundaries/openings and
+each other; opening, side-face and other unproven boundaries reserve the native
+0.5 mm deflection allowance. Outer cap segments proven to match authored straight
+edges retain exact clearance. Schema 13 persists inward Hole direction; legacy
+projects retain their positive drilling behavior, with regression fixtures for
+versions 1–13.
+Broader operation drops, edge-treatment drops and pointer history reordering
+remain planned; existing bounded timeline commands remain available.
 
 Project-file drops are implemented: drop one `.pcaddoc` or `.json` file to validate
 and open it. Nonempty projects get explicit keep/save/replace choices; invalid,
@@ -389,7 +423,17 @@ Acceptance: drag and typed input produce equivalent feature data and native geom
 
 ### Step 4 Make AI contextual
 
-Add explicit scope chips, local bounded intent routing, concise clarification choices, a visual change summary and next-action suggestions. Keep existing provider security and native preview gates. Follow with optional sketch-intent assistance only after its context contract and ID-preservation design are ready.
+New part / This part / Selected feature scope chips, bounded thickness intent
+routing, explicit ambiguity choices and local exact numeric edit previews are
+implemented. The before/after summary and native Apply gate remain. Exact supported
+values and numeric refinements need no provider request; other bounded requests
+retain provider security and validation. The drawer shows readable generated
+parameter labels, explicit targets and scope-specific next-action hints. Scope or
+selection changes never call a provider automatically. Simple contradictory size
+wording asks for clarification; explicit absolute set requests and user-chosen
+fields remain authoritative. Richer model-derived suggestions, highlighted
+clarification targets and sketch-intent assistance remain planned until their
+context and ID-preservation contracts are ready.
 
 Acceptance: “make this thicker” edits the intended supported field or asks a clear question; it never silently edits another part or shared value. Local numeric refinements do not generate API calls. Provider failure and absence leave manual workflows usable.
 
@@ -399,7 +443,7 @@ Add geometry-linked repair cards and the simplified export task. Run usability s
 
 Acceptance: users can recover from a gap, a conflicting dimension and a lost face reference; choose/export the intended bodies; and explain whether they saved an editable project or exported a mesh.
 
-For each implementation step, follow the established workflow: focused behavioral and geometry tests, Prism review with Anthropic `claude-sonnet-5-5`, address actionable findings, run the full release gate for code changes, and commit separately. Only Step 1 presentation changes are implemented. Later steps remain planned.
+For each implementation step, follow the established workflow: focused behavioral and geometry tests, Prism review with Anthropic `claude-sonnet-5-5`, address actionable findings, run the full release gate for code changes, and commit separately. The status above describes the implemented subset. Broader drag/drop operations, repair/fabrication guidance, accessibility studies and usability sessions remain planned.
 
 ## 18. How to prove that it is easier
 
@@ -413,7 +457,11 @@ Proposed pilot goals: at least four of five participants per group complete the 
 
 Automated acceptance must cover mouse, click-place and keyboard/form routes; cancellation and one-step undo; driving/reference distinction; invalid and stale native previews; constraints and shared bindings; XY/XZ/YZ orientation; multi-body scope; save/open; STL signed volume/bounds; AI offline/failure; panel focus restoration; and viewport/zoom behavior across themes. Use Chromium, Firefox and WebKit where affected. Keep paid provider tests opt-in and report failures honestly.
 
-Recommended first deliverable: the quieter workspace and focused drawing tools, using existing CAD commands. These reduce daily friction before adding new AI reasoning or unsupported direct modeling. Then build the parametric handles and drop workflows that let users act on the geometry they can see.
+The quieter workspace, focused drawing tools, distance handles, protected file
+drops, guided face holes and bounded contextual AI are now delivered within the
+implementation limits above. Next, validate their usability with people and
+prioritize repair/fabrication guidance and broader supported interactions from
+those observations. Automated geometry checks do not establish ease of use.
 
 ## 19. Project references
 

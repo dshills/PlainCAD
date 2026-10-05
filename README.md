@@ -136,9 +136,9 @@ The AI drawer keeps provider/model administration in **AI settings**, collapsed
 on first use in Focused layout, while showing the current provider. Drawing and
 ordinary CAD commands remain available without an AI service. The first two
 steps of the [simplified workflow proposal](specs/working-cad/SIMPLIFIED_WORKFLOW.md)
-are implemented. Distance extrusion handles and protected project-file drops are
-also available. Contextual AI scopes and local numeric previews are implemented;
-further operation drops remain planned.
+are implemented. Distance extrusion handles, protected project-file drops, guided
+face holes, and contextual AI scopes/local numeric previews are also implemented.
+Broader operation drops and repair/fabrication guidance remain planned.
 
 Drop one `.pcaddoc` or `.json` file anywhere on the workspace to open a project.
 The same bounded validation and migration used by Open runs before replacement.
@@ -148,8 +148,9 @@ or canceled first. File drops open a project; they do not append or position par
 
 ### Describe a Part with AI
 
-Open **AI drawer** at the bottom, choose a provider/model, and describe the part
-and its dimensions in plain text. Click **Generate preview** (or Ctrl/Cmd+Enter),
+Open **AI drawer** at the bottom, choose **New part**, and describe the part
+and its dimensions in plain text. Provider/model preferences live in **AI settings**.
+Click **Generate preview** (or Ctrl/Cmd+Enter),
 inspect the native geometry, then **Apply AI component**. Apply adds one component
 with ordinary editable parameters, sketches and timeline features, in one undo
 step. Existing parts remain in place. Cancel, close, or Escape discards the preview;
@@ -222,8 +223,9 @@ parameters are unavailable. The entire
 project is rebuilt, including dependent face references in other components.
 Choose **Selected feature** for a selected Hole, distance
 Extrude or Revolve in the active component. Diameter/blind depth, extrusion distance
-or revolve angle can change while sketch/profile/axis/operation/target/center and
-termination references stay intact. Changed fields become explicit mm/deg literals,
+or revolve angle can change while sketch/profile/axis/operation/target/center,
+termination references and Hole drilling direction stay intact. Changed fields
+become explicit mm/deg literals,
 overriding their old parameter binding; unchanged bindings and project parameters
 are preserved. Separate native operation and downstream previews must pass before
 Apply; selection changes invalidate a pending proposal. IDs and timeline order
@@ -240,7 +242,7 @@ three recent complete turns within the byte budget. Older turns are omitted as
 needed, with a visible notice. The latest proposal is never silently truncated:
 if it cannot fit, use local dimension edits or **New conversation**. Preview errors
 can be copied into the next description for an explicit repair request; this does
-not call the provider until you choose Generate. Project replacement, provider/task
+not call the provider until you choose Generate. Project replacement, provider/scope
 changes and explicit reset clear the relevant conversation. Chat stays out of saves.
 
 The provider adapters follow [Anthropic structured outputs](https://platform.claude.com/docs/en/build-with-claude/structured-outputs),
@@ -506,7 +508,7 @@ a diagnostic; union requires full checks. These numerical checks are not a proof
 of absence of every near-degenerate or adjacent-face intersection.
 
 Imports check raw UTF-8 bytes before parsing, preflight nesting before the reviver,
-then migrate and validate in a cancellable worker. Checked-in schema 1–12 fixtures
+then migrate and validate in a cancellable worker. Checked-in schema 1–13 fixtures
 verify IDs, rebuilds, edits, save/open, and recovery. The production Chromium suite
 also imports every released fixture under CSP, verifies native BRep volume/solid count,
 edits thickness, saves/reopens with stable IDs, and checks STL volume and global bounds.
@@ -570,8 +572,9 @@ at least one selected body, and every selected body must lose volume. Different
 centers can drill separate bodies; overlapping tools are combined before cutting.
 Any missing reference, unused center, no-op target, invalid geometry, tessellation
 failure or resource failure retains all upstream bodies and blocks STL export.
-Through-all reaches the furthest selected body along the positive sketch normal;
-blind depth is measured from the sketch plane. Schema 11 stores the target array
+Through-all reaches the furthest selected body along the chosen positive or negative
+sketch normal; blind depth is measured from the sketch plane in that direction.
+Schema 11 stores the target array
 and migrates older single-target holes without changing their target IDs.
 
 Use **Capture intersected targets** on a cut, join, or hole to save the current
@@ -621,8 +624,29 @@ lost references remain visible for repair. The edited cut and all downstream
 features must pass separate native previews before **Apply hole edits**. Cancel
 leaves the project untouched; Apply preserves feature/body IDs and timeline order
 in one undo step. Unchanged expressions retain their authored units and parameter
-bindings. The Inspector still offers direct repairs. Holes cut along
-the sketch's positive normal. Empty/lost centers and unchanged cuts fail rebuild.
+bindings. The Inspector offers direct reference repairs and a positive/negative
+sketch-normal direction control. Legacy holes retain positive drilling direction.
+Empty/lost centers and unchanged cuts fail rebuild.
+
+**Place holes on face** starts a guided flow in the active component. Click a
+supported native distance-extrusion cap or retained straight side face in the
+viewer, or choose its named face button. Click the face drawing to place centers
+at 0.001 mm precision, or enter exact X/Y lengths and parameter expressions. Remove
+unwanted centers from the list. Choose diameter and blind depth or Through All,
+inspect the native preview, then **Apply face holes**. The saved face-referenced
+point sketch and inward Hole feature are one Undo edit. The selected body is the
+explicit target; circles must fit within the face, clear existing openings and
+not overlap one another. Invalid placement receives an early diagnostic.
+Selection, component, rebuild, file-job and project-session changes invalidate
+Apply. Cancel leaves the document unchanged. Curved or ambiguous faces and
+removed/split/lost references remain unavailable.
+Clearance against openings and other tessellated boundaries reserves the current
+0.5 mm native deflection allowance. Outer cap segments matching authored straight
+profile edges retain exact clearance, allowing small and tangent holes at those
+straight cap boundaries. Other contours, including side-face boundaries, remain
+conservative. Schema 13 saves Hole direction; versions 1–12 migrate without changing
+their original positive drilling behavior. The schema-13 fixture includes an
+inward through-hole from an extrusion end cap.
 
 The **Dependencies** panel traces the selected parameter, sketch/entity, feature or
 body. **Inputs** and **Affected outputs** show direct and transitive authored
@@ -898,14 +922,21 @@ and stale same-ID project replacement.
 
 The AI drawer shows **New part**, **This part**, and **Selected feature** scope
 chips. A selected distance Extrude routes “make this thicker” to its distance; an
-active part uses a unique eligible thickness parameter or asks you to choose.
-Generated parameter names have readable labels. Independent exclusive parameters
-are eligible; shared, locked and derived values stay protected. Exact supported
+active part uses a unique eligible thickness parameter or asks you to choose an
+editable dimension. Generated parameter names have readable labels without
+renaming saved parameters. This part excludes shared, locked, derived and unused
+parameters. Selected feature changes only its supported fields and can replace a
+field's expression with a literal while leaving project parameters unchanged.
+Exact supported
 requests such as “make this thicker to 12 mm” can prepare a local native preview
-without an AI key or provider request. Simple contradictory size directions ask
-for clarification; explicit absolute values or a user-chosen field remain authoritative.
-Numeric refinements also stay local. Vague
-or multi-field changes use the selected provider only after the target is clear.
+without an AI key or provider request. A simple thicker/thinner instruction that
+conflicts with its numeric value asks for clarification; explicit “set” wording
+or an explicitly chosen field honors the absolute value. Wrong units ask for a
+supported mm/deg value. Numeric refinements also stay local. Other bounded requests
+use the selected provider after you choose Generate preview. Scope and selection
+changes do not call a provider automatically. The drawer shows the target,
+before/after values and scope-specific next-action hints; broader model-derived
+suggestions and sketch-intent assistance remain planned.
 Unsupported requests, wrong dimensions and stale contexts show diagnostics. Review
 the proposed values and actual native geometry before Apply; accepted edits retain
 IDs in one Undo step. Native acceptance covers selected Extrude/Hole/Revolve and

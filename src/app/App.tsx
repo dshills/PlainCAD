@@ -1,3 +1,5 @@
+import { GuidedHolePanel } from "../ui/panels/GuidedHolePanel";
+import { useGuidedHole } from "../ui/commands/guidedHoleCommand";
 import { useShallow } from "zustand/react/shallow";
 import { useWorkspacePresentation } from "../ui/workspace/useWorkspacePresentation";
 import { useWorkspaceState } from "../state/useWorkspaceState";
@@ -71,6 +73,7 @@ const toolbarGroups: ToolbarGroup[] = [
     buttons: [
       { command: "feature.extrude", label: "Extrude", icon: "Ext", title: "Extrude the active sketch profile", ariaLabel: "Extrude selected sketch" },
       { command: "feature.revolve", label: "Revolve", icon: "Rev", title: "Revolve around a coplanar origin axis or sketch line; add a construction line if no axis is usable", ariaLabel: "Revolve selected sketch" },
+      { command: "feature.guidedHole", label: "Face Holes", icon: "FHole", title: "Select a supported planar face and place hole centers visually", ariaLabel: "Place holes on face" },
       { command: "feature.hole", label: "Hole", icon: "Hole", title: "Choose sketch point centers and an explicit target body", ariaLabel: "Hole from selected sketch" },
       { command: "template.createMountingPlate", label: "Mount Plate", icon: "M", title: "Load the mounting plate template", ariaLabel: "Load mounting plate template" },
       { command: "template.createBox", label: "Box", icon: "B", title: "Load the parametric box template", ariaLabel: "Load parametric box template" },
@@ -97,7 +100,7 @@ const toolbarGroups: ToolbarGroup[] = [
 ];
 
 const FOCUSED_ALWAYS = new Set(["history.undo", "history.redo", "view.fit", "sketch.create"]);
-const FOCUSED_WHEN_ENABLED = new Set(["sketch.editCanvas", "feature.extrude", "feature.revolve", "feature.hole"]);
+const FOCUSED_WHEN_ENABLED = new Set(["sketch.editCanvas", "feature.extrude", "feature.revolve", "feature.hole", "feature.guidedHole"]);
 
 export function App() {
   const workspace = useWorkspaceState(useShallow(({ layout, activePanel, pins, toggleParts }) => ({ layout, activePanel, pins, toggleParts })));
@@ -105,6 +108,7 @@ export function App() {
   const { full, hasHistory, partsVisible, historyVisible } =
     useWorkspacePresentation();
   const aiOpen = useAiDrawer((s) => s.open);
+  const guidedHole = useGuidedHole((state) => state.draft);
   const workflow = useProjectWorkflow((s) => s.active);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const sketchActive = useSketchCanvas((state) => state.active);
@@ -303,11 +307,12 @@ export function App() {
         </aside>
         <div className="model-area">
           <ProjectWorkflowPanel />
+          <GuidedHolePanel />
           <section className="viewer-region" aria-label="3D CAD viewer">
             <div className="model-view" hidden={Boolean(sketchActive)}>
               <CadViewer />
             </div>
-            {!full && !hasHistory && !sketchActive && !workflow && !aiOpen ? (
+            {!full && !hasHistory && !sketchActive && !workflow && !guidedHole && !aiOpen ? (
               <ProjectStart context={commandContext} />
             ) : null}
             <SketchCanvasPanel />

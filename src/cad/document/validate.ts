@@ -690,6 +690,7 @@ function validatePersistedFields(document: CadDocument): ValidationIssue[] {
       );
     }
     if (feature.type === "hole") {
+      checkFeature(feature.direction === undefined || feature.direction === "positive" || feature.direction === "negative", "Hole direction must be positive or negative.");
       checkFeature(Array.isArray(feature.centerPointIds) && feature.centerPointIds.length <= MODEL_RESOURCE_LIMITS.maxHoleCenters, `Hole exceeds the ${MODEL_RESOURCE_LIMITS.maxHoleCenters}-center resource limit.`);
       checkFeature(
         strings(feature.centerPointIds) &&

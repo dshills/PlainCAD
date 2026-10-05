@@ -303,6 +303,13 @@ function HoleDialog({ draft }: { draft: HoleDraft }) {
             onChange={(e) => setDiameter(e.target.value)}
           />
         </label>
+        <p className="muted">
+          Drilling direction:{" "}
+          {original?.direction === "negative"
+            ? "into the selected face (negative sketch normal)"
+            : "positive sketch normal"}
+          .
+        </p>
         <label>
           Hole termination
           <select

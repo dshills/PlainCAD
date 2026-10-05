@@ -1,8 +1,9 @@
-import { beginExtrudeCreation, beginExtrudeEditing, editableExtrude } from "./extrudeCommand";
-import { beginModelingCreation, beginModelingEditing, editableModelingFeature } from "./modelingDraftCommand";
+import { beginGuidedHole, cancelGuidedHole, canBeginGuidedHole, useGuidedHole } from "./guidedHoleCommand";
+import { beginExtrudeCreation, beginExtrudeEditing, editableExtrude, useExtrudeDraft } from "./extrudeCommand";
+import { beginModelingCreation, beginModelingEditing, editableModelingFeature, useModelingDraft } from "./modelingDraftCommand";
 import { useViewerState } from "../../state/viewerState";
 import { toggleAiDrawer } from "./aiCommand";
-import { activeComponentId, beginProjectWorkflow, finishSketchCanvas } from "./projectWorkflowCommand";
+import { activeComponentId, beginProjectWorkflow, finishSketchCanvas, useProjectWorkflow } from "./projectWorkflowCommand";
 import { renameComponent, sketchComponentId } from "../../cad/document/components";
 import { MODEL_RESOURCE_LIMITS } from "../../cad/resourceLimits";
 import { beginSketchCanvas, deleteSelectedCanvasEntity, selectedCanvasEntity, selectedCanvasSketch, selectAllCanvasEntities, canSelectAllCanvasEntities, useSketchCanvas } from "./sketchCanvasCommand";
@@ -67,7 +68,7 @@ import {
   detectProfiles,
 } from "../../cad/sketch/profileDetection";
 import { moveTimelineItem, planTimelineMove } from "../../cad/document/timelineEditing";
-import { beginHoleCreation, beginHoleEditing, editableHole, holeCreationContext } from "./holeCommand";
+import { beginHoleCreation, beginHoleEditing, editableHole, holeCreationContext, useHoleDraft } from "./holeCommand";
 import { prepareProjectDrop, replaceWithDroppedProject, saveAndReplaceDroppedProject } from "./projectDropCommand";
 
 export interface CommandContext {
@@ -114,37 +115,43 @@ export interface CommandEnablement {
   moveEarlier: boolean;
   moveLater: boolean;
   createHole: boolean;
+  createGuidedHole: boolean;
+  guidedHoleActive: boolean;
+  outsideGuidedHole: boolean;
   captureTargetScope: boolean;
   sketchCanvas: boolean;
   deleteSketchEntity: boolean;
   selectAllSketchEntities: boolean;
 }
 
-export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useTargetScopeCapture.getState().busy, canvasActive = Boolean(useSketchCanvas.getState().active)): CommandEnablement {
+export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useTargetScopeCapture.getState().busy, canvasActive = Boolean(useSketchCanvas.getState().active), guidedHoleActive = Boolean(useGuidedHole.getState().draft), guidedHoleStartBlocked = Boolean(useExtrudeDraft.getState().draft || useHoleDraft.getState().draft || useModelingDraft.getState().draft || useProjectWorkflow.getState().active)): CommandEnablement {
   return {
-    editProject: !state.fileBusy,
-    newComponent: !state.fileBusy && !canvasActive && Object.keys(state.history.present.components).length < MODEL_RESOURCE_LIMITS.maxComponents,
-    createSketch: !state.fileBusy && !canvasActive,
-    finishSketch: canvasActive,
-    sketchCanvas: !canvasActive && Boolean(selectedCanvasSketch(state)),
-    selectAllSketchEntities: canvasActive && canSelectAllCanvasEntities(state),
-    deleteSketchEntity: canvasActive && Boolean(selectedCanvasEntity(state)),
+    createGuidedHole: !guidedHoleActive && !canvasActive && !guidedHoleStartBlocked && canBeginGuidedHole(state),
+    guidedHoleActive,
+    outsideGuidedHole: !guidedHoleActive,
+    editProject: !state.fileBusy && !guidedHoleActive,
+    newComponent: !guidedHoleActive && !state.fileBusy && !canvasActive && Object.keys(state.history.present.components).length < MODEL_RESOURCE_LIMITS.maxComponents,
+    createSketch: !guidedHoleActive && !state.fileBusy && !canvasActive,
+    finishSketch: !guidedHoleActive && canvasActive,
+    sketchCanvas: !guidedHoleActive && !canvasActive && Boolean(selectedCanvasSketch(state)),
+    selectAllSketchEntities: !guidedHoleActive && canvasActive && canSelectAllCanvasEntities(state),
+    deleteSketchEntity: !guidedHoleActive && canvasActive && Boolean(selectedCanvasEntity(state)),
     document: Boolean(state.history.present),
-    saveNamedView: (state.history.present.viewState?.namedViews?.length ?? 0) < MAX_NAMED_VIEWS,
+    saveNamedView: !guidedHoleActive && (state.history.present.viewState?.namedViews?.length ?? 0) < MAX_NAMED_VIEWS,
     restoreNamedView: Boolean(state.history.present.viewState?.namedViews?.length),
-    undo: state.history.past.length > 0,
-    redo: state.history.future.length > 0,
+    undo: !guidedHoleActive && state.history.past.length > 0,
+    redo: !guidedHoleActive && state.history.future.length > 0,
     exportStl: canExportStl(state) && !state.fileBusy,
     exportSelectedBody: canExportStl(state) && !state.fileBusy && Boolean(selectedExportBody(state)),
-    createExtrude: !canvasActive && canCreateExtrude(state),
-    createRevolve: !canvasActive && Boolean(defaultRevolveAxis(state)),
-    editFeature: !canvasActive && Boolean(editableExtrude(state) || editableModelingFeature(state) || editableHole(state)),
-    selectedFeature: !canvasActive && Boolean(getSelectedFeature(state)),
-    createEdgeTreatment: !canvasActive && Boolean(edgeTreatmentOwner(state)),
-    moveEarlier: !canvasActive && !planTimelineMove(state.history.present, state.selection.selectedIds[0], "earlier").reason,
-    moveLater: !canvasActive && !planTimelineMove(state.history.present, state.selection.selectedIds[0], "later").reason,
-    createHole: !canvasActive && Boolean(holeCreationContext(state)),
-    captureTargetScope: !canvasActive && canCaptureTargetScope(state,scopeCaptureBusy),
+    createExtrude: !guidedHoleActive && !canvasActive && canCreateExtrude(state),
+    createRevolve: !guidedHoleActive && !canvasActive && Boolean(defaultRevolveAxis(state)),
+    editFeature: !guidedHoleActive && !canvasActive && Boolean(editableExtrude(state) || editableModelingFeature(state) || editableHole(state)),
+    selectedFeature: !guidedHoleActive && !canvasActive && Boolean(getSelectedFeature(state)),
+    createEdgeTreatment: !guidedHoleActive && !canvasActive && Boolean(edgeTreatmentOwner(state)),
+    moveEarlier: !guidedHoleActive && !canvasActive && !planTimelineMove(state.history.present, state.selection.selectedIds[0], "earlier").reason,
+    moveLater: !guidedHoleActive && !canvasActive && !planTimelineMove(state.history.present, state.selection.selectedIds[0], "later").reason,
+    createHole: !guidedHoleActive && !canvasActive && Boolean(holeCreationContext(state)),
+    captureTargetScope: !guidedHoleActive && !canvasActive && canCaptureTargetScope(state,scopeCaptureBusy),
   };
 }
 
@@ -163,8 +170,10 @@ export const commands: CadCommand[] = [
   { id: "file.dropProject", internal: true, label: "Open Dropped Project", enablementKey: "editProject", run: ({ file }) => { if (file) return prepareProjectDrop(file); } },
   { id: "file.replaceDroppedProject", internal: true, label: "Replace With Dropped Project", enablementKey: "editProject", run: replaceWithDroppedProject },
   { id: "file.saveAndReplaceDroppedProject", internal: true, label: "Save Current and Open Dropped Project", enablementKey: "editProject", run: saveAndReplaceDroppedProject },
+  { id: "feature.guidedHole", label: "Place Holes on Face", description: "Choose a supported planar face, place hole centers, and preview a native inward cut.", enablementKey: "createGuidedHole", run: beginGuidedHole },
+  { id: "feature.cancelGuidedHole", internal: true, label: "Cancel Guided Holes", alwaysEnabled: true, run: cancelGuidedHole },
   { id: "sketch.entity.delete", internal: true, label: "Delete selected sketch item", enablementKey: "deleteSketchEntity", run: deleteSelectedCanvasEntity },
-  { id: "ai.toggle", label: "Toggle AI Drawer", description: "Describe a part and preview an editable AI component.", alwaysEnabled: true, run: toggleAiDrawer },
+  { id: "ai.toggle", label: "Toggle AI Drawer", description: "Describe a part and preview an editable AI component.", enablementKey: "outsideGuidedHole", run: toggleAiDrawer },
   { id: "feature.edit", label: "Edit Selected Feature", description: "Preview changes to the selected Extrude, Revolve, Fillet, Chamfer or Hole and its downstream geometry.", enablementKey: "editFeature", run: () => { if (editableExtrude(useCadStore.getState())) beginExtrudeEditing(); else if (editableHole(useCadStore.getState())) beginHoleEditing(); else beginModelingEditing(); } },
   {
     id: "file.renameProject", internal: true, label: "Rename Project", enablementKey: "editProject",
@@ -246,14 +255,14 @@ export const commands: CadCommand[] = [
     id: "file.newProject",
     label: "New Project",
     shortcut: "Cmd/Ctrl+N",
-    alwaysEnabled: true,
+    enablementKey: "outsideGuidedHole",
     run: () =>
       useCadStore.getState().setDocument(createEmptyDocument()),
   },
   {
     id: "file.openProject",
     label: "Open Project",
-    alwaysEnabled: true,
+    enablementKey: "outsideGuidedHole",
     run: async (ctx) => {
       if (!ctx.file) {
         ctx.fileInputRef?.current?.click();
@@ -379,7 +388,7 @@ export const commands: CadCommand[] = [
   {
     id: "parameter.add",
     label: "Add Parameter",
-    alwaysEnabled: true,
+    enablementKey: "outsideGuidedHole",
     run: () => useCadStore.getState().addParameter(),
   },
   {
@@ -405,7 +414,7 @@ export const commands: CadCommand[] = [
   {
     id: "sketch.addCenterRectangle",
     label: "Add Center Rectangle",
-    alwaysEnabled: true,
+    enablementKey: "outsideGuidedHole",
     run: () =>
       updateSelectedSketch((sketch) =>
         addCenterRectangle(sketch, "80mm", "50mm"),
@@ -414,7 +423,7 @@ export const commands: CadCommand[] = [
   {
     id: "sketch.addCornerRectangle",
     label: "Add Corner Rectangle",
-    alwaysEnabled: true,
+    enablementKey: "outsideGuidedHole",
     run: () =>
       updateSelectedSketch((sketch) =>
         addCornerRectangle(sketch, "80mm", "50mm"),
@@ -423,7 +432,7 @@ export const commands: CadCommand[] = [
   {
     id: "sketch.addCircle",
     label: "Add Circle",
-    alwaysEnabled: true,
+    enablementKey: "outsideGuidedHole",
     run: () =>
       updateSelectedSketch((sketch) =>
         addCircleAt(sketch, "0mm", "0mm", "10mm"),
@@ -504,13 +513,13 @@ export const commands: CadCommand[] = [
   {
     id: "template.createBox",
     label: "Create Parametric Box",
-    alwaysEnabled: true,
+    enablementKey: "outsideGuidedHole",
     run: () => useCadStore.getState().setDocument(createBoxTemplate()),
   },
   {
     id: "template.createMountingPlate",
     label: "Create Mounting Plate",
-    alwaysEnabled: true,
+    enablementKey: "outsideGuidedHole",
     run: () =>
       useCadStore.getState().setDocument(createMountingPlateTemplate()),
   },

@@ -17,7 +17,21 @@ const migrations = new Map<number, Migration>([
   [9, (document) => ({ ...document, schemaVersion: 10, displayUnits: document.displayUnits ?? { ...document.unitSettings } })],
   [10, migrateV10ToV11],
   [11, migrateV11ToV12],
+  [12, migrateV12ToV13],
 ]);
+
+function migrateV12ToV13(document: CadDocument): CadDocument {
+  return {
+    ...document,
+    schemaVersion: 13,
+    features: document.features.map((feature) => {
+      if (feature.type !== "hole") return feature;
+      // Earlier schemas always drilled positive; unknown legacy fields cannot change that behavior.
+      const { direction: _direction, ...legacy } = feature;
+      return legacy;
+    }),
+  };
+}
 
 export function migrateDocument(input: CadDocument): CadDocument {
   if (!Number.isInteger(input.schemaVersion)) {
@@ -357,6 +371,7 @@ function sanitizeFeature(feature: Feature): Feature | undefined {
     return {
       ...base,
       type: "hole",
+      ...(feature.direction !== undefined ? { direction: feature.direction } : {}),
       ...(feature.targetFeatureId !== undefined ? { targetFeatureId: feature.targetFeatureId } : {}),
       ...(feature.targetBodyId !== undefined ? { targetBodyId: feature.targetBodyId } : {}),
       ...(feature.targetBodyIds !== undefined ? { targetBodyIds: Array.isArray(feature.targetBodyIds) ? [...feature.targetBodyIds] : feature.targetBodyIds } : {}),

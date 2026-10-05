@@ -752,7 +752,11 @@ function rebuildHoleFeature(
   const depths =
     feature.depth === "throughAll"
       ? targets.map((target) =>
-          throughAllDistance(target.body!.mesh!.bounds, planeTransform),
+          throughAllDistance(
+            target.body!.mesh!.bounds,
+            planeTransform,
+            feature.direction ?? "positive",
+          ),
         )
       : [evaluateHoleDepth(feature.depth, parameters)];
   const usableDepths = capture
@@ -775,7 +779,7 @@ function rebuildHoleFeature(
       source: "feature",
       sourceId: feature.id,
       message:
-        "Hole depth must resolve in the positive sketch normal direction.",
+        "Hole depth must resolve along the selected sketch normal direction.",
     });
     return;
   }
@@ -799,7 +803,11 @@ function rebuildHoleFeature(
         point.y,
         diameter.quantity.value / 2,
       );
-      const tool = kernel.extrudeProfile(profile, depth, planeTransform);
+      const tool = kernel.extrudeProfile(
+        profile,
+        depth,
+        extrusionSweep(planeTransform, depth, feature.direction ?? "positive"),
+      );
       shapesToDispose.add(tool);
       tools.push(tool);
     }

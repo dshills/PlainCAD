@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useGuidedHole } from "./guidedHoleCommand";
 import type { CadDocument } from "../../cad/document/schema";
 import type { RebuildResult } from "../../cad/worker/workerProtocol";
 import { useCadStore } from "../../state/useCadStore";
@@ -38,7 +39,8 @@ export function currentAiFrame(frame: AiDraftFrame) {
         state.selection.selectedIds[0].id === frame.featureId &&
         state.selection.selectedIds[0].documentId === frame.document.id)) &&
     !state.fileBusy &&
-    !useSketchCanvas.getState().active
+    !useSketchCanvas.getState().active &&
+    !useGuidedHole.getState().draft
   );
 }
 export function assertAiFeatureOperation(

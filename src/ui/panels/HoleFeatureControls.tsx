@@ -41,6 +41,22 @@ export function HoleFeatureControls({ feature }: { feature: HoleFeature }) {
         />
       </label>
       <label>
+        Hole direction
+        <select
+          aria-label="Hole direction"
+          value={feature.direction ?? "positive"}
+          onChange={(event) =>
+            update({
+              direction:
+                event.target.value === "negative" ? "negative" : "positive",
+            })
+          }
+        >
+          <option value="positive">Positive sketch normal</option>
+          <option value="negative">Negative sketch normal (into face)</option>
+        </select>
+      </label>
+      <label>
         Hole termination
         <select
           value={feature.depth === "throughAll" ? "throughAll" : "distance"}

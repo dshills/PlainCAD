@@ -1,4 +1,4 @@
-export const CURRENT_SCHEMA_VERSION = 12;
+export const CURRENT_SCHEMA_VERSION = 13;
 
 export type UnitSystem = "metric" | "imperial";
 
@@ -203,6 +203,8 @@ export interface RevolveFeature extends FeatureBase {
 
 export interface HoleFeature extends FeatureBase {
   type: "hole";
+  /** Absence preserves legacy drilling along the positive sketch normal. */
+  direction?: "positive" | "negative";
   targetFeatureId?: string;
   targetBodyId?: string;
   /** Explicit scope is authoritative, including an empty scope. Legacy single IDs remain readable. */

@@ -16,6 +16,7 @@ import { useExtrudeDraft } from "./extrudeCommand";
 import { useHoleDraft } from "./holeCommand";
 import { useModelingDraft } from "./modelingDraftCommand";
 import { useProjectWorkflow } from "./projectWorkflowCommand";
+import { useGuidedHole } from "./guidedHoleCommand";
 
 interface PendingProjectDrop {
   document: CadDocument;
@@ -34,7 +35,8 @@ function activeModelingTask() {
     useExtrudeDraft.getState().draft ||
     useHoleDraft.getState().draft ||
     useModelingDraft.getState().draft ||
-    useProjectWorkflow.getState().active,
+    useProjectWorkflow.getState().active ||
+    useGuidedHole.getState().draft,
   );
 }
 export function projectDropBlockedReason(): string | undefined {

@@ -1,3 +1,9 @@
+import {
+  guidedHoleFaces,
+  guidedHoleCurrent,
+  chooseGuidedHoleFace,
+  useGuidedHole,
+} from "../ui/commands/guidedHoleCommand";
 import * as THREE from "three";
 import {
   faceChoiceAt,
@@ -45,6 +51,8 @@ export function installSketchPlanePicking(
     previousActive: unknown,
     pointerDown: { x: number; y: number } | undefined;
   const active = () => {
+    const guided = useGuidedHole.getState().draft;
+    if (guided?.phase === "face" && guidedHoleCurrent(guided)) return guided;
     const workflow = useProjectWorkflow.getState().active;
     return workflow?.kind === "sketch" && workflowCurrent(workflow)
       ? workflow
@@ -52,7 +60,12 @@ export function installSketchPlanePicking(
   };
   const hovered = () => {
     clear(highlight);
-    const choice = active() ? useSketchPlanePicker.getState().hover : undefined;
+    const storedHover = active()
+      ? useSketchPlanePicker.getState().hover
+      : undefined;
+    const choice = storedHover
+      ? choices.find((item) => item.id === storedHover.id)
+      : undefined;
     for (const object of planes.children)
       if (
         object instanceof THREE.Mesh &&
@@ -142,7 +155,11 @@ export function installSketchPlanePicking(
     previousActive = workflow;
     clear(planes);
     clear(highlight);
-    choices = workflow ? currentPlaneChoices(state) : [];
+    choices = workflow
+      ? workflow.kind === "guidedHole"
+        ? guidedHoleFaces(state)
+        : currentPlaneChoices(state)
+      : [];
     if (!workflow) return;
     let span = 80;
     for (const mesh of state.rebuild.result?.meshes ?? [])
@@ -278,14 +295,19 @@ export function installSketchPlanePicking(
     const selected = hit(event);
     if (!selected.choice) {
       useSketchPlanePicker.setState({
-        error: selected.body
-          ? "This face is curved, lost, ambiguous, or not a retained native distance-extrusion face. Choose a highlighted origin plane or supported face."
-          : "Click a visible origin plane or supported planar face.",
+        error:
+          workflow.kind === "guidedHole"
+            ? "Click a supported native planar face in the active component. Curved, lost, hidden, or ambiguous faces are unavailable."
+            : selected.body
+              ? "This face is curved, lost, ambiguous, or not a retained native distance-extrusion face. Choose a highlighted origin plane or supported face."
+              : "Click a visible origin plane or supported planar face.",
       });
       return;
     }
     try {
-      finishProjectWorkflow(workflow, selected.choice.reference);
+      if (workflow.kind === "guidedHole")
+        chooseGuidedHoleFace(selected.choice.id);
+      else finishProjectWorkflow(workflow, selected.choice.reference);
     } catch (error) {
       useSketchPlanePicker.setState({
         error: error instanceof Error ? error.message : String(error),
@@ -295,6 +317,7 @@ export function installSketchPlanePicking(
   const unsubs = [
     useCadStore.subscribe(refresh),
     useProjectWorkflow.subscribe(refresh),
+    useGuidedHole.subscribe(refresh),
     useSketchPlanePicker.subscribe(hovered),
   ];
   renderer.domElement.addEventListener("pointermove", move);

@@ -24,11 +24,23 @@ async function nativeBody(page: Page, thickness: number) {
   await expect(
     page.getByText("Solids", { exact: true }).locator("..").locator("dd"),
   ).toHaveText("1");
-  await expect(
-    page.getByText("Bounds", { exact: true }).locator(".."),
-  ).toContainText(
-    `0.000, 0.000, 0.000 to 20.000, 10.000, ${thickness.toFixed(3)}`,
-  );
+  const bounds = page.getByText("Bounds", { exact: true }).locator("..");
+  const expectedBounds = [0, 0, 0, 20, 10, thickness];
+  // Native booleans can display tiny negative roundoff as -0.000. Compare every
+  // coordinate numerically at the readout's precision; STL below checks 1e-5 mm.
+  await expect
+    .poll(async () => {
+      const values = (await bounds.innerText())
+        .match(/-?\d+(?:\.\d+)?/g)
+        ?.map(Number);
+      if (values?.length !== expectedBounds.length) return Infinity;
+      return Math.max(
+        ...values.map((value, index) =>
+          Math.abs(value - expectedBounds[index]),
+        ),
+      );
+    })
+    .toBeLessThan(0.0005);
 }
 function stlGeometry(bytes: Buffer) {
   const triangles = bytes.readUInt32LE(80);

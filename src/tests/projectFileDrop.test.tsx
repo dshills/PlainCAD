@@ -23,6 +23,7 @@ import {
 } from "../ui/commands/projectDropCommand";
 import { ProjectFileDrop } from "../ui/workspace/ProjectFileDrop";
 import { useSketchCanvas } from "../ui/commands/sketchCanvasCommand";
+import { useGuidedHole } from "../ui/commands/guidedHoleCommand";
 
 function projectFile(text: string, name = "test.pcaddoc") {
   const file = new File([text], name, { type: "application/json" });
@@ -36,11 +37,15 @@ beforeEach(() => {
   useFileJobs.getState().cancel();
   useProjectDrop.setState({ pending: undefined, saving: false });
   useSketchCanvas.setState({ active: undefined, selection: undefined });
+  useGuidedHole.setState({ draft: undefined });
   useCadStore.getState().setDocument(createEmptyDocument());
 });
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  useGuidedHole.setState({ draft: undefined });
+  useSketchCanvas.setState({ active: undefined, selection: undefined });
+  useCadStore.setState(useCadStore.getInitialState(), true);
 });
 
 it("opens validated projects from a blank workspace and keeps unsafe/unsupported files out of state", async () => {
@@ -115,6 +120,63 @@ it("only accepts one file, reports active tasks and prevents the browser navigat
   });
   fireEvent.drop(target, { dataTransfer: { ...transfer, files: [file] } });
   expect(useCadStore.getState().fileError).toMatch(/Finish or cancel/);
+});
+
+it("keeps the project and guided Hole face draft when a project file is dropped", async () => {
+  useCadStore.getState().setDocument(createBoxTemplate());
+  useCadStore.setState({ fileBusy: false });
+  render(
+    <ProjectFileDrop>
+      <button>Workspace</button>
+    </ProjectFileDrop>,
+  );
+  const before = useCadStore.getState();
+  // This regression exercises file protection, not native face discovery. A
+  // runtime-only face-picker draft needs no geometry or mocked kernel handles.
+  useGuidedHole.setState({
+    draft: {
+      kind: "guidedHole",
+      document: before.history.present,
+      result: {
+        documentId: before.history.present.id,
+        success: true,
+        bodies: [],
+        meshes: [],
+        errors: [],
+        warnings: [],
+        durationMs: 0,
+      },
+      session: before.documentSession,
+      componentId: before.activeComponentId,
+      selection: before.selection.selectedIds[0],
+      phase: "face",
+      sketchId: "guided-drop-sketch",
+      featureId: "guided-drop-hole",
+    },
+  });
+  const draft = useGuidedHole.getState().draft;
+  const file = projectFile(serializeProject(createEmptyDocument("Incoming")));
+  const read = vi.spyOn(file, "text");
+  // Set the draft after rendering: the drop handler must read current task state.
+  expect(
+    fireEvent.drop(screen.getByText("Workspace"), {
+      dataTransfer: { types: ["Files"], files: [file] },
+    }),
+  ).toBe(false);
+  await waitFor(() =>
+    expect(useCadStore.getState().fileError).toMatch(
+      /Finish or cancel.*modeling task.*dropped project/i,
+    ),
+  );
+  expect(read).not.toHaveBeenCalled();
+  expect(useCadStore.getState().history).toBe(before.history);
+  expect(useCadStore.getState().documentSession).toBe(before.documentSession);
+  expect(useCadStore.getState().fileBusy).toBe(false);
+  expect(useGuidedHole.getState().draft).toBe(draft);
+  expect(useProjectDrop.getState().pending).toBeUndefined();
+  expect(
+    screen.queryByRole("dialog", { name: "Open dropped project" }),
+  ).not.toBeInTheDocument();
 });
 
 it("rejects a same-ID project replacement during asynchronous import and after validation", async () => {
