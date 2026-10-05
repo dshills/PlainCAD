@@ -60,6 +60,228 @@ async function setup(page: Page) {
   );
   return drawer;
 }
+test("selected-feature AI edits change native Extrude/Hole geometry, preserve IDs and parameters, undo once, and reject a changed selection", async ({
+  page,
+}) => {
+  const drawer = await setup(page);
+  let plan: AiPlan = aiHolePatternPlan;
+  const sent: Array<{
+    editContext?: { feature?: { type: string }; parameters: unknown[] };
+  }> = [];
+  await page.route("**/api/ai/generate", (route) => {
+    sent.push(route.request().postDataJSON());
+    return route.fulfill({ json: { plan } });
+  });
+  await drawer
+    .getByLabel("What would you like to make?")
+    .fill("Four mounting holes in a plate");
+  await drawer.getByRole("button", { name: "Generate preview" }).click();
+  await expect(
+    drawer.getByRole("button", { name: "Apply AI component" }),
+  ).toBeEnabled();
+  await drawer.getByRole("button", { name: "Apply AI component" }).click();
+  await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+  const original = await snapshot(page);
+  for (const [type, name, value, volume] of [
+    ["extrude", "distance", 8, (2400 - 16 * Math.PI) * 8],
+    ["hole", "diameter", 6, (2400 - 36 * Math.PI) * 5],
+  ] as const) {
+    const feature = original.document.features.find((f) => f.type === type)!;
+    await page.evaluate(async (id) => {
+      const path = "/src/state/useCadStore.ts",
+        state = (await import(path)).useCadStore.getState();
+      state.select({
+        kind: "feature",
+        id,
+        documentId: state.history.present.id,
+      });
+    }, feature.id);
+    await drawer.getByLabel("AI task", { exact: true }).selectOption("feature");
+    await drawer
+      .getByLabel("What would you like to make?")
+      .fill(`Change ${name} to ${value}mm`);
+    plan = {
+      name: "Feature edits",
+      summary: "Requested size",
+      warnings: [],
+      steps: [],
+      parameters: [{ name, value, unit: "mm" }],
+    };
+    await drawer.getByRole("button", { name: "Generate preview" }).click();
+    const apply = drawer.getByRole("button", {
+      name: "Apply AI feature edits",
+    });
+    await expect(apply).toBeEnabled();
+    await expect(drawer).toContainText(`${volume.toFixed(3)} mm³`);
+    expect((await snapshot(page)).document).toEqual(original.document);
+    expect(sent.at(-1)?.editContext?.feature?.type).toBe(type);
+    const other = original.document.features.find((f) => f.id !== feature.id)!;
+    await page.evaluate(async (id) => {
+      const path = "/src/state/useCadStore.ts",
+        state = (await import(path)).useCadStore.getState();
+      state.select({
+        kind: "feature",
+        id,
+        documentId: state.history.present.id,
+      });
+    }, other.id);
+    await expect(apply).toBeDisabled();
+    await page.evaluate(async (id) => {
+      const path = "/src/state/useCadStore.ts",
+        state = (await import(path)).useCadStore.getState();
+      state.select({
+        kind: "feature",
+        id,
+        documentId: state.history.present.id,
+      });
+    }, feature.id);
+    await drawer.getByRole("button", { name: "Generate preview" }).click();
+    await expect(apply).toBeEnabled();
+    await apply.click();
+    await expect
+      .poll(
+        async () =>
+          (await snapshot(page)).result?.meshes[0]?.geometryAssertions?.volume,
+      )
+      .toBeCloseTo(volume, 4);
+    const edited = await snapshot(page);
+    expect(edited.past).toBe(original.past + 1);
+    expect(edited.document.parameters).toEqual(original.document.parameters);
+    expect(edited.document.features.map((f) => [f.id, f.timelineStep])).toEqual(
+      original.document.features.map((f) => [f.id, f.timelineStep]),
+    );
+    await page.getByRole("button", { name: "Undo", exact: true }).click();
+    await expect
+      .poll(
+        async () =>
+          (await snapshot(page)).result?.meshes[0]?.geometryAssertions?.volume,
+      )
+      .toBeCloseTo((2400 - 16 * Math.PI) * 5, 4);
+  }
+});
+test("selected Revolve angle edits retain the axis and native geometry through undo, save/open and STL", async ({
+  page,
+}, info) => {
+  const drawer = await setup(page);
+  let plan: AiPlan = {
+    name: "Ring",
+    summary: "A revolved ring",
+    warnings: [],
+    parameters: [],
+    steps: [
+      {
+        type: "sketch",
+        id: "section",
+        name: "Section",
+        plane: "XY",
+        offset: "0mm",
+        profile: {
+          type: "rectangle",
+          x: "2.5mm",
+          y: "5mm",
+          width: "5mm",
+          height: "10mm",
+        },
+      },
+      {
+        type: "revolve",
+        id: "ring",
+        name: "Ring",
+        sketch: "section",
+        axis: "Y",
+        angle: "360deg",
+        operation: "newBody",
+        targets: [],
+      },
+    ],
+  };
+  await page.route("**/api/ai/generate", (route) =>
+    route.fulfill({ json: { plan } }),
+  );
+  await drawer.getByLabel("What would you like to make?").fill("Make a ring");
+  await drawer.getByRole("button", { name: "Generate preview" }).click();
+  await drawer.getByRole("button", { name: "Apply AI component" }).click();
+  await expect
+    .poll(
+      async () =>
+        (await snapshot(page)).result?.meshes[0]?.geometryAssertions?.volume,
+    )
+    .toBeCloseTo(250 * Math.PI, 4);
+  const original = await snapshot(page),
+    feature = original.document.features[0];
+  await page.evaluate(async (id) => {
+    const path = "/src/state/useCadStore.ts",
+      state = (await import(path)).useCadStore.getState();
+    state.select({ kind: "feature", id, documentId: state.history.present.id });
+  }, feature.id);
+  await drawer.getByLabel("AI task", { exact: true }).selectOption("feature");
+  plan = {
+    name: "Quarter ring",
+    summary: "90 degree sweep",
+    warnings: [],
+    steps: [],
+    parameters: [{ name: "angle", value: 90, unit: "deg" }],
+  };
+  await drawer
+    .getByLabel("What would you like to make?")
+    .fill("Set the sweep to 90 degrees");
+  await drawer.getByRole("button", { name: "Generate preview" }).click();
+  const apply = drawer.getByRole("button", { name: "Apply AI feature edits" });
+  await expect(apply).toBeEnabled();
+  await apply.click();
+  const volume = 62.5 * Math.PI;
+  await expect
+    .poll(
+      async () =>
+        (await snapshot(page)).result?.meshes[0]?.geometryAssertions?.volume,
+    )
+    .toBeCloseTo(volume, 4);
+  const edited = await snapshot(page);
+  expect(edited.past).toBe(original.past + 1);
+  expect(edited.document.features[0]).toMatchObject({
+    ...feature,
+    angle: { expression: "90deg", unit: "deg" },
+  });
+  expect(edited.result?.meshes[0].bodyId).toBe(
+    original.result?.meshes[0].bodyId,
+  );
+  await page.getByRole("button", { name: "Undo", exact: true }).click();
+  await expect
+    .poll(
+      async () =>
+        (await snapshot(page)).result?.meshes[0]?.geometryAssertions?.volume,
+    )
+    .toBeCloseTo(250 * Math.PI, 4);
+  await page.getByRole("button", { name: "Redo", exact: true }).click();
+  await expect
+    .poll(
+      async () =>
+        (await snapshot(page)).result?.meshes[0]?.geometryAssertions?.volume,
+    )
+    .toBeCloseTo(volume, 4);
+  const saved = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const path = info.outputPath("edited-ring.pcaddoc");
+  await (await saved).saveAs(path);
+  await page.locator('input[type="file"]').setInputFiles(path);
+  await expect
+    .poll(async () => (await snapshot(page)).session)
+    .toBeGreaterThan(edited.session);
+  await expect
+    .poll(
+      async () =>
+        (await snapshot(page)).result?.meshes[0]?.geometryAssertions?.volume,
+    )
+    .toBeCloseTo(volume, 4);
+  const exported = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export STL", exact: true }).click();
+  const stlPath = info.outputPath("edited-ring.stl");
+  await (await exported).saveAs(stlPath);
+  const bytes = await readFile(stlPath),
+    count = bytes.readUInt32LE(80);
+  expect(count).toBeGreaterThan(0);
+  expect(bytes.length).toBe(84 + count * 50);
+});
 test("all three provider choices create real native previews; Cancel/Apply, parameter edits, one undo, save/open and STL retain editable geometry", async ({
   page,
 }, info) => {

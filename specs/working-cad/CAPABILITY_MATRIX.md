@@ -342,6 +342,18 @@ cloud sync, mobile-first editing, plugins, unrestricted AI generation, and gener
 topological naming remain outside the working-CAD target. STEP can remain hidden
 until validated support exists.
 
+### AI selected-feature dimensions
+
+The AI drawer can edit a selected unsuppressed Hole, distance Extrude or Revolve
+in the active component. It sends only the feature type/name and named evaluated
+dimensions, not project geometry. Source/profile/axis/operation/target/center and
+termination references are retained; changed fields use literal mm/deg values and
+override their prior binding. Unchanged bindings and project parameters survive.
+The operation stage and full downstream native rebuild must both pass before Apply.
+Selection/project/session/component changes reject stale proposals; Apply retains
+IDs/timeline order in one undo step. Arbitrary feature replacement and edits to
+other feature settings remain unavailable through AI.
+
 
 Signed distance owners use the same durable cap/corner roles as positive owners.
 Native Chromium coverage checks negative/symmetric fillet and chamfer geometry on

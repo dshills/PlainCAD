@@ -2,6 +2,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchAiProviders, requestAiPlan } from "../../ai/client";
 import { buildAiPlan } from "../../ai/buildPlan";
 import { aiEditContext, buildAiParameterEdit } from "../../ai/editPlan";
+import {
+  aiFeatureEditContext,
+  buildAiFeatureEdit,
+} from "../../ai/featureEditPlan";
 import { reviseAiParameters } from "../../ai/revisePlan";
 import {
   createAiConversationBudget,
@@ -14,7 +18,6 @@ import {
   type AiProvider,
   type AiProviderStatus,
 } from "../../ai/plan";
-import { previewModeling } from "../../cad/worker/extrudePreviewClient";
 import type { RebuildResult } from "../../cad/worker/workerProtocol";
 import { useCadStore } from "../../state/useCadStore";
 import { ExtrudePreview } from "../../viewer/ExtrudePreview";
@@ -24,6 +27,7 @@ import {
   assertAiGeometry,
   currentAiFrame,
   useAiDrawer,
+  previewAiPlan,
   type AiDraftFrame,
   type AiStaged,
 } from "../commands/aiCommand";
@@ -34,6 +38,7 @@ interface Proposal {
   plan: AiPlan;
   staged: AiStaged;
   result: RebuildResult;
+  operationResult?: RebuildResult;
   geometry: ReturnType<typeof assertAiGeometry>;
 }
 type Message = AiMessage & { summary?: string };
@@ -42,6 +47,11 @@ export function AiDrawer() {
   const document = useCadStore((state) => state.history.present);
   const session = useCadStore((state) => state.documentSession);
   const componentId = useCadStore((state) => state.activeComponentId);
+  const selected = useCadStore((state) => state.selection.selectedIds[0]);
+  const selectedFeatureId =
+    selected?.kind === "feature" && selected.documentId === document.id
+      ? selected.id
+      : undefined;
   const fileBusy = useCadStore((state) => state.fileBusy);
   const kernelReady = useCadStore((state) => state.rebuild.kernelReady);
   const canvasActive = Boolean(useSketchCanvas((state) => state.active));
@@ -49,11 +59,21 @@ export function AiDrawer() {
   const [provider, setProvider] = useState<AiProvider>("anthropic");
   const [model, setModel] = useState("");
   const [prompt, setPrompt] = useState("");
-  const [task, setTask] = useState<"create" | "edit">("create");
+  const [task, setTask] = useState<"create" | "edit" | "feature">("create");
+  const editingFeatureId = task === "feature" ? selectedFeatureId : undefined;
   const editing = useMemo(() => {
-    if (task !== "edit") return {};
+    if (task === "create") return {};
     try {
-      return { context: aiEditContext(document, componentId) };
+      return {
+        context:
+          task === "feature"
+            ? aiFeatureEditContext(
+                document,
+                componentId,
+                editingFeatureId ?? "",
+              )
+            : aiEditContext(document, componentId),
+      };
     } catch (error) {
       return {
         error:
@@ -62,7 +82,7 @@ export function AiDrawer() {
             : "Component parameters are unavailable.",
       };
     }
-  }, [document, componentId, task]);
+  }, [document, componentId, task, editingFeatureId]);
   const [history, setHistory] = useState<Message[]>([]);
   const [reply, setReply] = useState<AiPlan>();
   const [dimensionDrafts, setDimensionDrafts] = useState<
@@ -93,7 +113,7 @@ export function AiDrawer() {
           provider,
           model,
           history,
-          task === "edit" ? editing.context : undefined,
+          task !== "create" ? editing.context : undefined,
         ),
       };
     } catch (failure) {
@@ -130,9 +150,11 @@ export function AiDrawer() {
     !canvasActive &&
     kernelReady &&
     Boolean(prompt.trim()) &&
+    prompt.length <= AI_LIMITS.promptCharacters &&
     /^[A-Za-z0-9._-]{1,100}$/.test(model) &&
     !configError &&
     !conversation.error &&
+    !editing.error &&
     (task === "create" || Boolean(editing.context?.parameters.length)) &&
     providers.some((p) => p.id === provider && p.available);
   const cancel = (message = "Request canceled. The project is unchanged.") => {
@@ -193,25 +215,46 @@ export function AiDrawer() {
   useEffect(() => {
     if (frame.current && !currentAiFrame(frame.current))
       cancel("Project or component changed. Generate a fresh preview.");
-  }, [document, session, componentId, fileBusy, canvasActive]);
+  }, [
+    document,
+    session,
+    componentId,
+    selectedFeatureId,
+    fileBusy,
+    canvasActive,
+  ]);
   useEffect(() => {
     setHistory([]);
     setReply(undefined);
     setError("");
   }, [session]);
   useEffect(() => {
-    if (task === "edit") {
+    if (task !== "create") {
       setHistory([]);
       setReply(undefined);
     }
-  }, [componentId, task]);
+  }, [componentId, task, editingFeatureId]);
+  const requireFeatureId = (base: AiDraftFrame) => {
+    if (!base.featureId)
+      throw new Error("Select a feature before editing dimensions.");
+    return base.featureId;
+  };
   const generate = async () => {
     if (!canGenerate) return;
+    if (task === "feature" && !selectedFeatureId) {
+      setError("Select a feature before generating dimension edits.");
+      return;
+    }
     cancel();
     const abort = new AbortController(),
       timer = window.setTimeout(() => abort.abort(), 120000);
     controller.current = abort;
-    const base = { document, session, componentId };
+    const base: AiDraftFrame = {
+      document,
+      session,
+      componentId,
+      ...(task === "feature" ? { featureId: selectedFeatureId } : {}),
+    };
     frame.current = base;
     setBusy(true);
     setError("");
@@ -225,7 +268,7 @@ export function AiDrawer() {
         description,
         history,
         abort.signal,
-        task === "edit" ? editing.context : undefined,
+        task !== "create" ? editing.context : undefined,
       );
       if (
         abort.signal.aborted ||
@@ -250,18 +293,31 @@ export function AiDrawer() {
         },
       ];
       setHistory(nextHistory.slice(-AI_LIMITS.transcriptMessages));
-      if (!plan.steps.length && (task !== "edit" || !plan.parameters.length)) {
+      if (
+        !plan.steps.length &&
+        (task === "create" || !plan.parameters.length)
+      ) {
         setStatus(
           "More information is needed, or this request is unsupported.",
         );
         return;
       }
       const staged =
-        task === "edit"
-          ? buildAiParameterEdit(document, componentId, plan)
-          : buildAiPlan(document, plan);
+        task === "feature"
+          ? buildAiFeatureEdit(
+              document,
+              componentId,
+              requireFeatureId(base),
+              plan,
+            )
+          : task === "edit"
+            ? buildAiParameterEdit(document, componentId, plan)
+            : buildAiPlan(document, plan);
       setStatus("Checking native geometry…");
-      const result = await previewModeling(staged.document, abort.signal);
+      const { result, operationResult } = await previewAiPlan(
+        staged,
+        abort.signal,
+      );
       if (
         abort.signal.aborted ||
         controller.current !== abort ||
@@ -269,9 +325,16 @@ export function AiDrawer() {
       )
         return;
       const geometry = assertAiGeometry(staged, result);
-      setProposal({ frame: base, plan, staged, result, geometry });
+      setProposal({
+        frame: base,
+        plan,
+        staged,
+        result,
+        operationResult,
+        geometry,
+      });
       setStatus(
-        task === "edit"
+        task !== "create"
           ? "Native preview ready. Apply updates the existing component in one undo step."
           : "Native preview ready. Apply adds one editable component.",
       );
@@ -314,10 +377,20 @@ export function AiDrawer() {
     try {
       const plan = reviseAiParameters(reply, dimensionDrafts);
       const staged =
-        task === "edit"
-          ? buildAiParameterEdit(base.document, base.componentId, plan)
-          : buildAiPlan(base.document, plan);
-      const result = await previewModeling(staged.document, abort.signal);
+        task === "feature"
+          ? buildAiFeatureEdit(
+              base.document,
+              base.componentId,
+              requireFeatureId(base),
+              plan,
+            )
+          : task === "edit"
+            ? buildAiParameterEdit(base.document, base.componentId, plan)
+            : buildAiPlan(base.document, plan);
+      const { result, operationResult } = await previewAiPlan(
+        staged,
+        abort.signal,
+      );
       if (
         abort.signal.aborted ||
         controller.current !== abort ||
@@ -326,7 +399,14 @@ export function AiDrawer() {
         return;
       const geometry = assertAiGeometry(staged, result);
       setReply(plan);
-      setProposal({ frame: base, plan, staged, result, geometry });
+      setProposal({
+        frame: base,
+        plan,
+        staged,
+        result,
+        operationResult,
+        geometry,
+      });
       setHistory((entries) =>
         entries.map((entry, index) =>
           index === entries.length - 1 && entry.role === "assistant"
@@ -359,12 +439,19 @@ export function AiDrawer() {
   const apply = () => {
     if (!proposal || !current) return;
     try {
-      applyAiPlan(proposal.frame, proposal.staged, proposal.result);
+      applyAiPlan(
+        proposal.frame,
+        proposal.staged,
+        proposal.result,
+        proposal.operationResult,
+      );
       setProposal(undefined);
       setStatus(
-        proposal.staged.changes
-          ? "Updated component parameters. Feature and sketch IDs are preserved."
-          : `Added ${proposal.plan.name}. You can edit its parameters, sketches and features.`,
+        proposal.staged.editedFeature
+          ? "Updated selected feature dimensions. IDs and downstream geometry are preserved."
+          : proposal.staged.changes
+            ? "Updated component parameters. Feature and sketch IDs are preserved."
+            : `Added ${proposal.plan.name}. You can edit its parameters, sketches and features.`,
       );
       frame.current = undefined;
     } catch (failure) {
@@ -417,7 +504,7 @@ export function AiDrawer() {
                 disabled={busy}
                 onChange={(event) => {
                   cancel("AI task changed. Generate a fresh preview.");
-                  setTask(event.target.value as "create" | "edit");
+                  setTask(event.target.value as "create" | "edit" | "feature");
                   setHistory([]);
                   setReply(undefined);
                   setError("");
@@ -425,22 +512,40 @@ export function AiDrawer() {
               >
                 <option value="create">Create new component</option>
                 <option value="edit">Edit active component parameters</option>
+                <option value="feature">
+                  Edit selected feature dimensions
+                </option>
               </select>
             </label>
-            {task === "edit" ? (
+            {task !== "create" ? (
               <div>
                 <p>
-                  Editing {document.components[componentId]?.name}. Listed
-                  parameter names, expressions and values will be sent to the
-                  provider. Shared, locked and derived parameters are excluded;
-                  dependent face references are rebuilt throughout the project.
+                  Editing{" "}
+                  {editing.context?.feature?.name ??
+                    document.components[componentId]?.name}
+                  . Listed names, expressions and values will be sent to the
+                  provider.
+                  {task === "edit"
+                    ? " Shared, locked and derived parameters are excluded."
+                    : ""}{" "}
+                  Dependent face references are rebuilt throughout the project.
                 </p>
+                {task === "feature" ? (
+                  <p>
+                    Only selected-feature dimensions are sent. Sketch, profile,
+                    axis, operation, centers and targets stay unchanged. Changed
+                    fields replace their parameter binding with the proposed
+                    literal; project parameters stay intact.
+                  </p>
+                ) : null}
                 {editing.error ? (
                   <p role="alert">{editing.error}</p>
                 ) : editing.context?.parameters.length ? (
                   <details>
                     <summary>
-                      Editable parameters ({editing.context.parameters.length})
+                      Editable{" "}
+                      {task === "feature" ? "dimensions" : "parameters"} (
+                      {editing.context.parameters.length})
                     </summary>
                     <ul>
                       {editing.context.parameters.map((p) => (
@@ -532,9 +637,11 @@ export function AiDrawer() {
             <p className="muted">
               Your description and recent AI conversation go to the selected
               provider.{" "}
-              {task === "edit"
-                ? "Apply updates the listed parameters of the active component."
-                : "Apply adds a new component; current parts stay in place."}
+              {task === "feature"
+                ? "Apply updates the selected feature dimensions."
+                : task === "edit"
+                  ? "Apply updates the listed parameters of the active component."
+                  : "Apply adds a new component; current parts stay in place."}{" "}
               Ctrl/Cmd+Enter generates a preview.
             </p>
             {canvasActive ? (
@@ -570,9 +677,11 @@ export function AiDrawer() {
                 disabled={!proposal || !current || busy || fileBusy}
                 onClick={apply}
               >
-                {task === "edit"
-                  ? "Apply AI parameter edits"
-                  : "Apply AI component"}
+                {task === "feature"
+                  ? "Apply AI feature edits"
+                  : task === "edit"
+                    ? "Apply AI parameter edits"
+                    : "Apply AI component"}
               </button>
               <button
                 type="button"
@@ -603,7 +712,7 @@ export function AiDrawer() {
                       <p style={{ whiteSpace: "pre-wrap" }}>
                         {entry.role === "user"
                           ? entry.content
-                        : (entry.summary || "Proposed component")}
+                          : entry.summary || "Proposed component"}
                       </p>
                     </li>
                   ))}

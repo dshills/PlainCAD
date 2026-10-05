@@ -157,6 +157,10 @@ export function buildAiParameterEdit(
     throw new Error(
       [...issues, ...evaluation.errors].map((e) => e.message).join(" "),
     );
+  return { ...aiComponentOutputs(document, componentId), changes };
+}
+
+export function aiComponentOutputs(document: CadDocument, componentId: string) {
   const live = new Set<string>();
   const featureIds: string[] = [];
   for (const feature of planFeatureGraph(document).orderedFeatures) {
@@ -176,5 +180,5 @@ export function buildAiParameterEdit(
   }
   if (!live.size)
     throw new Error("Choose a component with modeled bodies to edit.");
-  return { document, componentId, featureIds, bodyIds: [...live], changes };
+  return { document, componentId, featureIds, bodyIds: [...live] };
 }

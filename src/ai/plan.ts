@@ -82,13 +82,20 @@ export interface AiProviderStatus {
 }
 export interface AiEditContext {
   componentName: string;
+  feature?: { type: "extrude" | "revolve" | "hole"; name: string };
   parameters: Array<AiParameter & { id: string; expression: string }>;
 }
 
 export function validateAiEditContext(value: unknown): AiEditContext {
   const context = record(
     value,
-    ["componentName", "parameters"],
+    [
+      "componentName",
+      "parameters",
+      ...(typeof value === "object" && value && "feature" in value
+        ? ["feature"]
+        : []),
+    ],
     "edit context",
   );
   const parameters = list(context.parameters, AI_LIMITS.parameters, (value) => {
@@ -121,6 +128,25 @@ export function validateAiEditContext(value: unknown): AiEditContext {
   return {
     componentName: string(context.componentName, "component name"),
     parameters,
+    ...("feature" in context
+      ? {
+          feature: (() => {
+            const f = record(
+              context.feature,
+              ["type", "name"],
+              "selected feature",
+            );
+            return {
+              type: enumeration(
+                f.type,
+                ["extrude", "revolve", "hole"],
+                "feature type",
+              ),
+              name: string(f.name, "feature name"),
+            };
+          })(),
+        }
+      : {}),
   };
 }
 export const AI_LIMITS = {
@@ -248,8 +274,8 @@ export const AI_TRANSPORT_SCHEMA = object({
   name: text,
   summary: text,
   warnings: array(text),
-  parameters:
-    (AI_PLAN_SCHEMA.properties as Record<string, JsonSchema>).parameters,
+  parameters: (AI_PLAN_SCHEMA.properties as Record<string, JsonSchema>)
+    .parameters,
   steps: array({
     type: "string",
     description:

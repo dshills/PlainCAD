@@ -2,11 +2,20 @@ import { create } from "zustand";
 import type { CadDocument } from "../../cad/document/schema";
 import type { RebuildResult } from "../../cad/worker/workerProtocol";
 import { useCadStore } from "../../state/useCadStore";
-import { assertNativeSolidPreview } from "./modelingDraftCommand";
+import {
+  assertNativeSolidPreview,
+  assertNativeModelingPreview,
+} from "./modelingDraftCommand";
 import { useSketchCanvas } from "./sketchCanvasCommand";
 import type { buildAiPlan } from "../../ai/buildPlan";
+import type { AiEditableFeature } from "../../ai/featureEditPlan";
+import { documentAtFeature } from "../../cad/document/featureStage";
+import { previewModeling } from "../../cad/worker/extrudePreviewClient";
+import { assertNativeExtrudePreview } from "./extrudeCommand";
+import { assertNativeHolePreview } from "./holeCommand";
 export type AiStaged = ReturnType<typeof buildAiPlan> & {
   changes?: Array<{ name: string; before: string; after: string }>;
+  editedFeature?: AiEditableFeature;
 };
 
 export const useAiDrawer = create<{ open: boolean }>(() => ({ open: false }));
@@ -16,6 +25,7 @@ export interface AiDraftFrame {
   document: CadDocument;
   session: number;
   componentId: string;
+  featureId?: string;
 }
 export function currentAiFrame(frame: AiDraftFrame) {
   const state = useCadStore.getState();
@@ -23,9 +33,41 @@ export function currentAiFrame(frame: AiDraftFrame) {
     state.history.present === frame.document &&
     state.documentSession === frame.session &&
     state.activeComponentId === frame.componentId &&
+    (!frame.featureId ||
+      (state.selection.selectedIds[0]?.kind === "feature" &&
+        state.selection.selectedIds[0].id === frame.featureId &&
+        state.selection.selectedIds[0].documentId === frame.document.id)) &&
     !state.fileBusy &&
     !useSketchCanvas.getState().active
   );
+}
+export function assertAiFeatureOperation(
+  staged: AiStaged,
+  result: RebuildResult,
+) {
+  const feature = staged.editedFeature;
+  if (!feature) return;
+  if (feature.type === "hole")
+    assertNativeHolePreview(result, staged.document.id, feature);
+  else if (feature.type === "extrude")
+    assertNativeExtrudePreview(result, staged.document.id, feature);
+  else assertNativeModelingPreview(result, staged.document.id, feature);
+}
+export async function previewAiPlan(staged: AiStaged, signal: AbortSignal) {
+  let operationResult: RebuildResult | undefined;
+  // Fail the edited operation before checking downstream features. The preview
+  // client owns one worker at a time and disposes it between these requests.
+  if (staged.editedFeature) {
+    operationResult = await previewModeling(
+      documentAtFeature(staged.document, staged.editedFeature.id, true),
+      signal,
+    );
+    if (signal.aborted) throw new Error("Preview canceled.");
+    assertAiFeatureOperation(staged, operationResult);
+  }
+  const result = await previewModeling(staged.document, signal);
+  if (signal.aborted) throw new Error("Preview canceled.");
+  return { result, operationResult };
 }
 export function assertAiGeometry(staged: AiStaged, result: RebuildResult) {
   assertNativeSolidPreview(result, staged.document.id);
@@ -56,12 +98,20 @@ export function applyAiPlan(
   frame: AiDraftFrame,
   staged: AiStaged,
   result: RebuildResult,
+  operationResult?: RebuildResult,
 ) {
   if (!currentAiFrame(frame))
     throw new Error(
       "Project or component changed. Generate a fresh AI preview.",
     );
   assertAiGeometry(staged, result);
+  if (staged.editedFeature) {
+    if (frame.featureId !== staged.editedFeature.id || !operationResult)
+      throw new Error(
+        "Wait for the selected feature and downstream native previews.",
+      );
+    assertAiFeatureOperation(staged, operationResult);
+  }
   const state = useCadStore.getState();
   state.updateDocument((document) => {
     if (document !== frame.document)

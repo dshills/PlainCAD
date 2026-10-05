@@ -153,14 +153,22 @@ Recipes are bounded to 24 parameters and 32 steps, validated as data, then rebui
 OpenCascade before Apply. Unsupported shapes/operations require clarification;
 failed geometry, malformed responses, missing keys, model access, quota, and
 network errors are shown without changing the document. AI generation does not
-implement unrestricted CAD or replacement of existing features.
+implement unrestricted CAD or arbitrary replacement of existing features.
 For an existing part, choose **AI task → Edit active component parameters**.
 Only independent length/angle parameters used exclusively by the active component
 are listed and sent to the provider. Review the before/after values and native
 preview, then **Apply AI parameter edits**. This preserves component, sketch,
 feature and parameter IDs in one undo step. Shared, locked, derived and unused
-parameters are unavailable; feature replacement remains unsupported. The entire
+parameters are unavailable. The entire
 project is rebuilt, including dependent face references in other components.
+Choose **AI task → Edit selected feature dimensions** for a selected Hole, distance
+Extrude or Revolve in the active component. Diameter/blind depth, extrusion distance
+or revolve angle can change while sketch/profile/axis/operation/target/center and
+termination references stay intact. Changed fields become explicit mm/deg literals,
+overriding their old parameter binding; unchanged bindings and project parameters
+are preserved. Separate native operation and downstream previews must pass before
+Apply; selection changes invalidate a pending proposal. IDs and timeline order
+survive one undoable edit. Other settings remain available through Edit Feature.
 The response's **Proposed dimensions** are editable before Apply. Change numeric
 values in the displayed units, then choose **Preview dimension changes** for a
 fresh native preview without a provider call. Editing invalidates Apply immediately;
