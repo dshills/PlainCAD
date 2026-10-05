@@ -12,6 +12,11 @@ import {
   aiTubePlan,
   aiIslandPocketPlan,
 } from "../src/tests/fixtures/aiCompoundPlans";
+import {
+  aiFaceBossPlan,
+  aiSideBossPlan,
+  aiToFacePillarPlan,
+} from "../src/tests/fixtures/aiFacePlans";
 import type { AiPlan } from "../src/ai/plan";
 import type { CadDocument } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
@@ -66,6 +71,243 @@ async function setup(page: Page) {
   );
   return drawer;
 }
+test("AI cap/straight-side sketches and to-face extrusion produce native geometry, follow upstream edits, and repair lost planes explicitly", async ({
+  page,
+}, info) => {
+  const drawer = await setup(page);
+  let plan: AiPlan = aiFaceBossPlan;
+  await page.route("**/api/ai/generate", (route) =>
+    route.fulfill({ json: { plan } }),
+  );
+  const totalVolume = async () =>
+    (await snapshot(page)).result?.meshes.reduce(
+      (sum, m) => sum + (m.geometryAssertions?.volume ?? 0),
+      0,
+    );
+  for (const [recipe, volume] of [
+    [aiFaceBossPlan, 800 + 12 * Math.PI],
+    [aiSideBossPlan, 824],
+    [aiToFacePillarPlan, 992],
+  ] as const) {
+    plan = recipe;
+    await page
+      .getByRole("button", { name: "New project", exact: true })
+      .click();
+    await drawer
+      .getByLabel("What would you like to make?")
+      .fill(recipe.summary);
+    await drawer.getByRole("button", { name: "Generate preview" }).click();
+    const apply = drawer.getByRole("button", { name: "Apply AI component" });
+    await expect(apply).toBeEnabled();
+    await expect(drawer).toContainText(`${volume.toFixed(3)} mm³`);
+    await apply.click();
+    await expect.poll(totalVolume).toBeCloseTo(volume, 4);
+    const original = await snapshot(page);
+    expect(
+      original.result!.meshes.every(
+        (m) =>
+          m.geometrySource === "opencascade" &&
+          m.geometryAssertions?.valid &&
+          m.geometryAssertions.solidCount === 1,
+      ),
+    ).toBe(true);
+    if (recipe === aiSideBossPlan) {
+      expect(original.result!.meshes[0].bounds.min[1]).toBeCloseTo(-8, 5);
+      expect(original.result!.meshes[0].bounds.max[1]).toBeCloseTo(5, 5);
+      continue;
+    }
+    const parameter =
+      recipe === aiFaceBossPlan ? "baseThickness" : "targetHeight";
+    const input = page.getByLabel(`Parameter ai_1_${parameter} expression`, {
+      exact: true,
+    });
+    await input.fill(recipe === aiFaceBossPlan ? "6mm" : "15mm");
+    await input.press("Enter");
+    const changedVolume =
+      recipe === aiFaceBossPlan ? 1200 + 12 * Math.PI : 1040;
+    await expect.poll(totalVolume).toBeCloseTo(changedVolume, 4);
+    const edited = await snapshot(page);
+    expect(edited.document.features.map((f) => f.id)).toEqual(
+      original.document.features.map((f) => f.id),
+    );
+    expect(edited.result!.meshes.map((m) => m.bodyId)).toEqual(
+      original.result!.meshes.map((m) => m.bodyId),
+    );
+    if (recipe === aiFaceBossPlan) {
+      expect(edited.result!.meshes[0].bounds.max[2]).toBeCloseTo(9, 5);
+      const child = Object.values(edited.document.sketches)[1];
+      await page.evaluate(async (id) => {
+        const storePath = "/src/state/useCadStore.ts",
+          opsPath = "/src/cad/document/CadDocument.ts";
+        const state = (await import(storePath)).useCadStore.getState(),
+          ops = await import(opsPath);
+        state.updateDocument((document: CadDocument) => {
+          const sketch = document.sketches[id];
+          if (
+            sketch.plane.type !== "offset" ||
+            typeof sketch.plane.base === "string"
+          )
+            throw new Error("Expected face plane");
+          return ops.upsertSketch(document, {
+            ...sketch,
+            plane: {
+              ...sketch.plane,
+              base: { ...sketch.plane.base, lost: true },
+            },
+          });
+        });
+      }, child.id);
+      await expect
+        .poll(async () => (await snapshot(page)).status)
+        .toBe("failed");
+      expect(
+        (await snapshot(page)).result?.errors.some(
+          (e) => e.sourceId === child.id && /reference lost/.test(e.message),
+        ),
+      ).toBe(true);
+      await expect(
+        page.getByRole("button", { name: "Export STL", exact: true }),
+      ).toBeDisabled();
+      await page
+        .getByRole("button", { name: "Close AI drawer", exact: true })
+        .click();
+      await page.locator(".sketch-chip").nth(1).click();
+      await page
+        .getByLabel("Sketch plane type", { exact: true })
+        .selectOption("face");
+      await page
+        .getByLabel("Sketch plane reference", { exact: true })
+        .selectOption(`extrude:${edited.document.features[0].id}:endCap`);
+      await page
+        .getByRole("button", { name: "Apply sketch plane", exact: true })
+        .click();
+      await expect.poll(totalVolume).toBeCloseTo(changedVolume, 4);
+      const repaired = await snapshot(page);
+      expect(repaired.document.sketches[child.id].entities).toEqual(
+        child.entities,
+      );
+      expect(repaired.document.features.map((f) => f.id)).toEqual(
+        edited.document.features.map((f) => f.id),
+      );
+      const saved = page.waitForEvent("download");
+      await page
+        .getByRole("button", { name: "Save project", exact: true })
+        .click();
+      const path = info.outputPath("ai-face-boss.pcaddoc");
+      await (await saved).saveAs(path);
+      await page.locator('input[type="file"]').setInputFiles(path);
+      await expect
+        .poll(async () => (await snapshot(page)).session)
+        .toBeGreaterThan(repaired.session);
+      await expect.poll(totalVolume).toBeCloseTo(changedVolume, 4);
+      const exported = page.waitForEvent("download");
+      await page
+        .getByRole("button", { name: "Export STL", exact: true })
+        .click();
+      const stlPath = info.outputPath("ai-face-boss.stl");
+      await (await exported).saveAs(stlPath);
+      expect((await readFile(stlPath)).readUInt32LE(80)).toBeGreaterThan(0);
+      await page
+        .getByRole("button", { name: "Open AI drawer", exact: true })
+        .click();
+    } else {
+      expect(
+        edited.result!.meshes.find(
+          (m) => m.bodyId === `body:${edited.document.features[1].id}`,
+        )?.bounds.max[2],
+      ).toBeCloseTo(15, 5);
+      expect(
+        edited.result!.meshes.find(
+          (m) => m.bodyId === `body:${edited.document.features[1].id}`,
+        )?.kernelOperation,
+      ).toBe("toFace");
+      const saved = page.waitForEvent("download");
+      await page
+        .getByRole("button", { name: "Save project", exact: true })
+        .click();
+      const path = info.outputPath("ai-to-face.pcaddoc");
+      await (await saved).saveAs(path);
+      await page.locator('input[type="file"]').setInputFiles(path);
+      await expect
+        .poll(async () => (await snapshot(page)).session)
+        .toBeGreaterThan(edited.session);
+      await expect.poll(totalVolume).toBeCloseTo(changedVolume, 4);
+      const exported = page.waitForEvent("download");
+      await page
+        .getByRole("button", { name: "Export STL", exact: true })
+        .click();
+      const options = page.getByRole("dialog", { name: "STL export options" });
+      await options
+        .getByRole("button", { name: "Clear body selection", exact: true })
+        .click();
+      await options.getByLabel("Export body Pillar", { exact: true }).check();
+      await options
+        .getByRole("button", { name: "Generate STL", exact: true })
+        .click();
+      const stlPath = info.outputPath("ai-to-face.stl");
+      await (await exported).saveAs(stlPath);
+      const bytes = await readFile(stlPath),
+        z: number[] = [];
+      for (let i = 0; i < bytes.readUInt32LE(80); i++)
+        for (let j = 0; j < 3; j++)
+          z.push(bytes.readFloatLE(84 + 50 * i + 12 + 12 * j + 8));
+      expect(Math.min(...z)).toBeCloseTo(0, 5);
+      expect(Math.max(...z)).toBeCloseTo(15, 5);
+    }
+  }
+  const before = await snapshot(page);
+  plan = structuredClone(aiToFacePillarPlan);
+  const section = plan.steps[2];
+  if (section.type !== "sketch" || section.profile.type !== "rectangle")
+    throw new Error("Expected pillar section");
+  section.profile.width = "30mm";
+  await drawer
+    .getByLabel("What would you like to make?")
+    .fill("An oversized pillar that does not fit its target face");
+  await drawer.getByRole("button", { name: "Generate preview" }).click();
+  await expect(drawer.getByRole("alert")).toContainText(
+    "Extrude profile extends outside the finite target face or crosses a face hole.",
+  );
+  await expect(
+    drawer.getByRole("button", { name: "Apply AI component" }),
+  ).toBeDisabled();
+  expect((await snapshot(page)).document).toEqual(before.document);
+  plan = structuredClone(aiToFacePillarPlan);
+  const ceiling = plan.steps[0];
+  if (ceiling.type !== "sketch" || ceiling.profile.type !== "rectangle")
+    throw new Error("Expected ceiling section");
+  ceiling.profile = {
+    type: "compound",
+    outer: ceiling.profile,
+    holes: [{ type: "circle", x: "0mm", y: "0mm", radius: "3mm" }],
+  };
+  await drawer
+    .getByLabel("What would you like to make?")
+    .fill("A pillar aimed at a hole in the target face");
+  await drawer.getByRole("button", { name: "Generate preview" }).click();
+  await expect(drawer.getByRole("alert")).toContainText(
+    "Extrude profile extends outside the finite target face or crosses a face hole.",
+  );
+  await expect(
+    drawer.getByRole("button", { name: "Apply AI component" }),
+  ).toBeDisabled();
+  expect((await snapshot(page)).document).toEqual(before.document);
+  plan = structuredClone(aiToFacePillarPlan);
+  const behind = plan.steps[0];
+  if (behind.type !== "sketch") throw new Error("Expected ceiling section");
+  behind.offset = "-12mm";
+  await drawer
+    .getByLabel("What would you like to make?")
+    .fill("A target behind the positive extrusion");
+  await drawer.getByRole("button", { name: "Generate preview" }).click();
+  await expect(drawer.getByRole("alert")).toContainText(
+    "Extrude to face requires the entire profile to lie before the target in the positive extrusion direction.",
+  );
+  await expect(
+    drawer.getByRole("button", { name: "Apply AI component" }),
+  ).toBeDisabled();
+  expect((await snapshot(page)).document).toEqual(before.document);
+});
 test("AI compound profiles create exact native sleeves, hollow sections and island pockets, with stable edits/save/open/STL and rejected outside openings", async ({
   page,
 }, info) => {

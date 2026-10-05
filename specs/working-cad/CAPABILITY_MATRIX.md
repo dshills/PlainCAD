@@ -579,7 +579,8 @@ Static deployment reports a missing AI service without changing ordinary CAD.
 
 AI recipes support rectangle/circle/polygon/line-arc wire and flat compound profiles, plus point
 sketches for native Hole patterns (up to 64 centers), signed origin offsets,
-distance/through-all extrudes, coplanar origin-axis revolves, explicit Cut/Join
+distance/through-all/positive-to-face extrudes, recipe-owned unmodified cap/straight-side
+planes, coplanar origin-axis revolves, explicit Cut/Join
 targets, and supported entire extrusion-cap fillets/chamfers. At most 24 numeric
 parameters and 32 chronological steps are accepted. Recipes are validated as data,
 compiled through immutable document helpers and native-rebuilt before Apply.
@@ -636,3 +637,16 @@ fail with diagnostics. Native sleeve, rectangular spacer and island-pocket volum
 YZ orientation, parameter edits, stable profiles, save/open and positive STL volume
 are covered. Circular outers are limited to circular openings. Per-loop automatic
 rectangle/circle intent remains durable; cross-loop indexed intent is unavailable.
+
+### AI face planes and to-face termination
+
+AI sketches can reference earlier, live, unmodified distance New Body extrusion
+start/end caps and indexed straight outer sides in their own recipe, with signed
+normal offsets. Positive To Face extrusion uses the same supported stable face IDs
+and validates finite target coverage and holes through the native kernel. Native
+cap-boss and straight-side joins, to-face volume/orientation, upstream edits,
+explicit lost-plane repair preserving geometry/IDs, save/open/STL, oversized targets
+and missing material under target holes are covered. Curved and inner-loop sides,
+modified/revolve/modifier owners, forward references, arbitrary existing-project
+face picks and negative/symmetric To Face are diagnosed or unavailable. References
+remain ordinary durable plane/topology data and use existing manual repair controls.

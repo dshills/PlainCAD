@@ -21,6 +21,7 @@ import { solveSketch } from "../cad/sketch/SketchSolver";
 import { detectProfiles } from "../cad/sketch/profileDetection";
 import { assertProjectJsonShape } from "../persistence/importSafety";
 import { validateAiPlan } from "./plan";
+import { resolveAiFaceReference, aiExtrudeTermination } from "./faceReference";
 import {
   compileAiSketchProfile,
   assertAiCompoundProfile,
@@ -108,6 +109,17 @@ export function buildAiPlan(base: CadDocument, input: unknown) {
   >();
   const features = new Map<string, Feature>();
   const liveBodies = new Set<string>();
+  const boundaries = new Map<string, string[]>();
+  const resolveFace = (
+    reference: Parameters<typeof resolveAiFaceReference>[4],
+  ) =>
+    resolveAiFaceReference(
+      document,
+      features,
+      boundaries,
+      liveBodies,
+      reference,
+    );
   const featureIds: string[] = [];
   for (const step of plan.steps) {
     if (step.type === "sketch") {
@@ -115,7 +127,8 @@ export function buildAiPlan(base: CadDocument, input: unknown) {
       const pointIds: string[] = [];
       let sketch = createSketchOnPlane(step.name, {
         type: "offset",
-        base: step.plane,
+        base:
+          typeof step.plane === "string" ? step.plane : resolveFace(step.plane),
         offset: expr(step.offset, "length"),
       });
       sketch = { ...sketch, componentId: added.component.id };
@@ -138,6 +151,7 @@ export function buildAiPlan(base: CadDocument, input: unknown) {
         );
       if (p.type === "compound")
         assertAiCompoundProfile(compiled.boundaries, profiles.profiles[0]);
+      boundaries.set(sketch.id, compiled.boundaries[0] ?? []);
       document = upsertSketch(document, sketch);
       sketches.set(step.id, {
         sketch,
@@ -241,7 +255,7 @@ export function buildAiPlan(base: CadDocument, input: unknown) {
               // is required by the recipe schema (normally 1mm) and remains valid
               // durable data rather than accepting unchecked text.
               distance: expr(step.distance, "length", true),
-              termination: { type: step.termination },
+              termination: aiExtrudeTermination(step, resolveFace),
             }
           : {
               ...scope,

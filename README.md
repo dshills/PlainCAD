@@ -140,8 +140,8 @@ provider. It does not send project files, meshes, API keys, or other components.
 Chat, drafts and provider choices are temporary; only applied CAD intent is saved.
 Generation requires an available native kernel and finished sketch editing.
 
-Recipes support rectangle/circle/polygon/line-arc wire and flat compound sketches on origin planes with
-offsets, parameterized distance/through-all extrudes, coplanar origin-axis revolves,
+Recipes support rectangle/circle/polygon/line-arc wire and flat compound sketches on origin or supported upstream extrusion face planes with
+offsets, parameterized distance/through-all and positive to-face extrudes, coplanar origin-axis revolves,
 explicit Cut/Join scopes, and feature-owned whole-cap Fillet/Chamfer. Recipes can
 also use point sketches and native Hole features with up to 64 explicit
 centers for mounting patterns. Polygon/wire profiles have at most 32 vertices,
@@ -164,6 +164,14 @@ support circular openings; rectangle/polygon/wire outers also support closed lin
 and arc openings. The recipe allows at most 64 total sketch points and no recursive
 compound profiles or explicit indexed intent across their loops.
 
+
+AI face planes use earlier unmodified distance-extrusion cap roles or straight outer
+side edges from the same recipe. Signed offsets are supported. Positive To Face
+extrusion requires a supported upstream plane and validates the whole section
+against finite face coverage, including holes. References follow parameter edits;
+lost owners fail with source-linked diagnostics and can be repaired in the sketch
+plane controls or ordinary feature controls. Curved/inner-loop sides, modified
+owners, existing-project face picks, and negative/symmetric To Face remain unavailable.
 
 Recipes are bounded to 24 parameters and 32 steps, validated as data, then rebuilt with native
 OpenCascade before Apply. Unsupported shapes/operations require clarification;

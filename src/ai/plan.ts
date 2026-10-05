@@ -57,12 +57,15 @@ const dimensionTypes = [
   "distance",
   "angle",
 ] as const;
+export type AiFaceReference =
+  | { owner: string; role: "startCap" | "endCap" }
+  | { owner: string; role: "side"; edge: number };
 export type AiStep =
   | {
       type: "sketch";
       id: string;
       name: string;
-      plane: "XY" | "XZ" | "YZ";
+      plane: "XY" | "XZ" | "YZ" | AiFaceReference;
       offset: string;
       profile: AiProfile;
       intent?: AiSketchIntent;
@@ -74,7 +77,8 @@ export type AiStep =
       sketch: string;
       operation: "newBody" | "cut" | "join";
       distance: string;
-      termination: "distance" | "throughAll";
+      termination: "distance" | "throughAll" | "toFace";
+      face?: AiFaceReference;
       direction: "positive" | "negative" | "symmetric";
       targets: string[];
     }
@@ -229,6 +233,12 @@ const operation = {
   targets: array(text),
 };
 const pointSchema = object({ x: text, y: text });
+const faceReferenceSchema: JsonSchema = {
+  anyOf: [
+    object({ owner: text, role: choice("startCap", "endCap") }),
+    object({ owner: text, role: choice("side"), edge: { type: "integer" } }),
+  ],
+};
 const loopProfileSchema: JsonSchema = {
   anyOf: [
     object({
@@ -280,7 +290,7 @@ export const AI_PLAN_SCHEMA = object({
         {
           ...base,
           type: choice("sketch"),
-          plane: choice("XY", "XZ", "YZ"),
+          plane: { anyOf: [choice("XY", "XZ", "YZ"), faceReferenceSchema] },
           offset: text,
           intent: object({
             constraints: array(
@@ -313,14 +323,18 @@ export const AI_PLAN_SCHEMA = object({
         },
         ["intent"],
       ),
-      object({
-        ...base,
-        type: choice("extrude"),
-        ...operation,
-        distance: text,
-        termination: choice("distance", "throughAll"),
-        direction: choice("positive", "negative", "symmetric"),
-      }),
+      object(
+        {
+          ...base,
+          type: choice("extrude"),
+          ...operation,
+          distance: text,
+          termination: choice("distance", "throughAll", "toFace"),
+          face: faceReferenceSchema,
+          direction: choice("positive", "negative", "symmetric"),
+        },
+        ["face"],
+      ),
       object({
         ...base,
         type: choice("revolve"),
@@ -544,6 +558,30 @@ function aiProfile(value: unknown, compoundAllowed = true): AiProfile {
     : { type, ...coords, radius: expression(p.radius) };
 }
 
+function aiFaceReference(value: unknown): AiFaceReference {
+  const role = enumeration(
+    (value as { role?: unknown } | null)?.role,
+    ["startCap", "endCap", "side"],
+    "face role",
+  );
+  const f = record(
+    value,
+    ["owner", "role", ...(role === "side" ? ["edge"] : [])],
+    "face reference",
+  );
+  const owner = identifier(f.owner);
+  if (role !== "side") return { owner, role };
+  if (
+    typeof f.edge !== "number" ||
+    !Number.isInteger(f.edge) ||
+    f.edge < 0 ||
+    f.edge >= AI_LIMITS.profileVertices
+  )
+    throw new Error(
+      `AI side-face edge index must be an integer from 0 to ${AI_LIMITS.profileVertices - 1}.`,
+    );
+  return { owner, role, edge: f.edge };
+}
 function aiSketchIntent(value: unknown): AiSketchIntent {
   const intent = record(value, ["constraints", "dimensions"], "sketch intent");
   const indices = (value: unknown) => {
@@ -646,6 +684,7 @@ export function validateAiPlan(value: unknown): AiPlan {
               "distance",
               "termination",
               "direction",
+              ...(Object.hasOwn(item as object, "face") ? ["face"] : []),
             ]
           : type === "hole"
             ? [
@@ -665,7 +704,10 @@ export function validateAiPlan(value: unknown): AiPlan {
       return {
         ...common,
         type,
-        plane: enumeration(s.plane, ["XY", "XZ", "YZ"], "plane"),
+        plane:
+          typeof s.plane === "string"
+            ? enumeration(s.plane, ["XY", "XZ", "YZ"] as const, "plane")
+            : aiFaceReference(s.plane),
         offset: expression(s.offset),
         profile: aiProfile(s.profile),
         ...("intent" in s ? { intent: aiSketchIntent(s.intent) } : {}),
@@ -742,22 +784,35 @@ export function validateAiPlan(value: unknown): AiPlan {
     if (type === "extrude") {
       const termination = enumeration(
         s.termination,
-        ["distance", "throughAll"],
+        ["distance", "throughAll", "toFace"],
         "termination",
       );
       if (termination === "throughAll" && scope.operation === "newBody")
         throw new Error("AI Through All requires a Cut or Join target.");
+      const direction = enumeration(
+        s.direction,
+        ["positive", "negative", "symmetric"],
+        "direction",
+      );
+      if (
+        termination === "toFace" &&
+        (!Object.hasOwn(s, "face") || direction !== "positive")
+      )
+        throw new Error(
+          "AI To Face requires an explicit earlier face and positive direction.",
+        );
+      if (termination !== "toFace" && Object.hasOwn(s, "face"))
+        throw new Error(
+          "AI face termination reference is only valid for To Face.",
+        );
       return {
         ...common,
         ...scope,
         type,
+        ...(termination === "toFace" ? { face: aiFaceReference(s.face) } : {}),
         distance: expression(s.distance),
         termination,
-        direction: enumeration(
-          s.direction,
-          ["positive", "negative", "symmetric"],
-          "direction",
-        ),
+        direction,
       };
     }
     return {
