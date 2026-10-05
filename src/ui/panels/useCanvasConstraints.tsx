@@ -26,6 +26,8 @@ export function useCanvasConstraints(
   cancelDrawing: () => void,
   view: CanvasLabelView,
   reserved: CanvasLabelBox[],
+  focused = false,
+  selectedEntityId?: string,
 ) {
   const [show, setShow] = useState(true),
     [selectedId, setSelectedId] = useState(""),
@@ -33,6 +35,9 @@ export function useCanvasConstraints(
     [pointIds, setPointIds] = useState<string[]>([]),
     [page, setPage] = useState(0),
     [error, setError] = useState<string>();
+  const [showAll, setShowAll] = useState(false),
+    [detailsOpen, setDetailsOpen] = useState(!focused);
+  useEffect(() => setDetailsOpen(!focused), [focused]);
   const sketch = context?.sketch,
     selected = sketch?.constraints.find((c) => c.id === selectedId);
   const storedReferences = selected
@@ -60,17 +65,39 @@ export function useCanvasConstraints(
       [context, span],
     ),
     annotation = annotations.find((a) => a.id === selectedId);
-  const anchored = annotations.filter((a) => a.position);
+  const relevant = useMemo(() => {
+    const constraints = new Map(
+      context?.sketch.constraints.map((c) => [c.id, c]),
+    );
+    return annotations.filter(
+      (a) =>
+        !focused ||
+        showAll ||
+        a.state !== "satisfied" ||
+        a.id === selectedId ||
+        constraints.get(a.id)?.entityIds.includes(selectedEntityId ?? ""),
+    );
+  }, [
+    annotations,
+    focused,
+    showAll,
+    selectedId,
+    selectedEntityId,
+    context?.sketch.constraints,
+  ]);
+  const anchored = relevant.filter((a) => a.position);
+  // Keep stored placements when density filtering hides markers. Only rendered
+  // markers receive handlers; the document's import limits bound this ID set.
   const labelDrag = useCanvasLabelDrag(
     context?.document,
     view,
-    anchored.slice(0, MARKER_LIMIT).map((a) => a.id),
+    annotations.filter((a) => a.position).map((a) => a.id),
   );
   const placements = useMemo(
     () =>
       layoutCanvasLabels(
         show
-          ? annotations
+          ? relevant
               .filter((a) => a.position)
               .slice(0, MARKER_LIMIT)
               .map((a) => ({
@@ -87,7 +114,7 @@ export function useCanvasConstraints(
         Object.values(context?.solved.points ?? {}),
       ),
     [
-      annotations,
+      relevant,
       show,
       span,
       view,
@@ -105,6 +132,7 @@ export function useCanvasConstraints(
     cancelDrawing();
     setError(undefined);
     setSelectedId(id);
+    setDetailsOpen(true);
   };
   const apply = (remove = false) => {
     if (!context || !selected) return;
@@ -182,106 +210,122 @@ export function useCanvasConstraints(
       className="canvas-constraint-controls"
     >
       <h3>Drawing constraints</h3>
-      <label>
-        <input
-          type="checkbox"
-          checked={show}
-          onChange={(e) => {
-            labelDrag.cancel();
-            setShow(e.target.checked);
-          }}
-        />{" "}
-        Show constraint markers
-      </label>
-      <p>
-        C labels locate referenced geometry, rather than tangency contact
-        points. Select a marker or list entry to inspect and repair its ordered
-        references. Drag a marker to position its label, or focus it and use
-        arrow keys (Shift for larger steps). Home restores automatic placement;
-        Escape cancels a drag. Positions last only in this open canvas,
-        including while markers are hidden, and never change geometry or saved
-        intent. Create constraints in Sketch tools.
-      </p>
-      <button
-        type="button"
-        disabled={!Object.keys(labelDrag.positions).length}
-        onClick={labelDrag.reset}
+      {focused ? (
+        <label>
+          <input
+            type="checkbox"
+            checked={showAll}
+            onChange={(e) => setShowAll(e.target.checked)}
+          />
+          Show all constraints
+        </label>
+      ) : null}
+      <details
+        open={detailsOpen}
+        onToggle={(e) => setDetailsOpen(e.currentTarget.open)}
       >
-        Reset constraint label placement
-      </button>
-      <ul className="canvas-constraint-list">
-        {annotations
-          .slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE)
-          .map((a) => (
-            <li key={a.id}>
-              <button
-                aria-label={`Inspect canvas constraint ${a.label}`}
-                onClick={() => select(a.id)}
-              >
-                {a.label}
-              </button>
-            </li>
-          ))}
-      </ul>
-      {annotations.length > PAGE_SIZE ? (
-        <div className="canvas-toolbar">
-          <button
-            disabled={currentPage === 0}
-            onClick={() => setPage(currentPage - 1)}
-          >
-            Previous constraints
-          </button>
-          <span>
-            Constraints {currentPage * PAGE_SIZE + 1}–
-            {Math.min(annotations.length, (currentPage + 1) * PAGE_SIZE)} of{" "}
-            {annotations.length}
-          </span>
-          <button
-            disabled={(currentPage + 1) * PAGE_SIZE >= annotations.length}
-            onClick={() => setPage(currentPage + 1)}
-          >
-            Next constraints
-          </button>
-        </div>
-      ) : null}
-      {anchored.length > MARKER_LIMIT ? (
+        <summary>Inspect and repair constraints ({annotations.length})</summary>
+        <label>
+          <input
+            type="checkbox"
+            checked={show}
+            onChange={(e) => {
+              labelDrag.cancel();
+              setShow(e.target.checked);
+            }}
+          />{" "}
+          Show constraint markers
+        </label>
         <p>
-          Canvas shows the first {MARKER_LIMIT} anchored markers. All
-          constraints remain available in the list.
+          C labels locate referenced geometry, rather than tangency contact
+          points. Select a marker or list entry to inspect and repair its
+          ordered references. Drag a marker to position its label, or focus it
+          and use arrow keys (Shift for larger steps). Home restores automatic
+          placement; Escape cancels a drag. Positions last only in this open
+          canvas, including while markers are hidden, and never change geometry
+          or saved intent. Create constraints in Sketch tools.
         </p>
-      ) : null}
-      {show && crowded ? (
-        <p role="status">
-          {crowded} constraint labels remain crowded in this view. Zoom in or
-          hide drawing dimensions.
-        </p>
-      ) : null}
-      {selected ? (
-        <div aria-label="Selected canvas constraint">
+        <button
+          type="button"
+          disabled={!Object.keys(labelDrag.positions).length}
+          onClick={labelDrag.reset}
+        >
+          Reset constraint label placement
+        </button>
+        <ul className="canvas-constraint-list">
+          {annotations
+            .slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE)
+            .map((a) => (
+              <li key={a.id}>
+                <button
+                  aria-label={`Inspect canvas constraint ${a.label}`}
+                  onClick={() => select(a.id)}
+                >
+                  {a.label}
+                </button>
+              </li>
+            ))}
+        </ul>
+        {annotations.length > PAGE_SIZE ? (
+          <div className="canvas-toolbar">
+            <button
+              disabled={currentPage === 0}
+              onClick={() => setPage(currentPage - 1)}
+            >
+              Previous constraints
+            </button>
+            <span>
+              Constraints {currentPage * PAGE_SIZE + 1}–
+              {Math.min(annotations.length, (currentPage + 1) * PAGE_SIZE)} of{" "}
+              {annotations.length}
+            </span>
+            <button
+              disabled={(currentPage + 1) * PAGE_SIZE >= annotations.length}
+              onClick={() => setPage(currentPage + 1)}
+            >
+              Next constraints
+            </button>
+          </div>
+        ) : null}
+        {anchored.length > MARKER_LIMIT ? (
+          <p>
+            Canvas shows the first {MARKER_LIMIT} anchored markers. All
+            constraints remain available in the list.
+          </p>
+        ) : null}
+        {show && crowded ? (
           <p role="status">
-            {annotation?.label}: {annotation?.title}
+            {crowded} constraint labels remain crowded in this view. Zoom in or
+            hide drawing dimensions.
           </p>
-          <p>
-            Constraint ID: {selected.id}. Type: {selected.type}. Reference order
-            matters for symmetry: reflected point, matching point, axis start,
-            axis end.
-          </p>
-          <p>{CONSTRAINT_REFERENCE_HINTS[selected.type]}</p>
-          {references(false)}
-          {references(true)}
-          <button disabled={!context} onClick={() => apply()}>
-            Apply constraint references
-          </button>
-          <button disabled={!context} onClick={() => apply(true)}>
-            Delete canvas constraint
-          </button>
-          <p>
-            Applying references preserves the constraint ID and type. Invalid or
-            conflicting intent remains repairable with solver diagnostics.
-          </p>
-        </div>
-      ) : null}
-      {error ? <p role="alert">{error}</p> : null}
+        ) : null}
+        {selected ? (
+          <div aria-label="Selected canvas constraint">
+            <p role="status">
+              {annotation?.label}: {annotation?.title}
+            </p>
+            <p>
+              Constraint ID: {selected.id}. Type: {selected.type}. Reference
+              order matters for symmetry: reflected point, matching point, axis
+              start, axis end.
+            </p>
+            <p>{CONSTRAINT_REFERENCE_HINTS[selected.type]}</p>
+            {references(false)}
+            {references(true)}
+            <button disabled={!context} onClick={() => apply()}>
+              Apply constraint references
+            </button>
+            <button disabled={!context} onClick={() => apply(true)}>
+              Delete canvas constraint
+            </button>
+            <p>
+              Applying references preserves the constraint ID and type. Invalid
+              or conflicting intent remains repairable with solver diagnostics.
+            </p>
+          </div>
+        ) : null}
+        {error ? <p role="alert">{error}</p> : null}
+      </details>
     </section>
   );
   const overlay = show ? (

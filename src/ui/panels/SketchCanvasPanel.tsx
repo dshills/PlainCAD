@@ -1,10 +1,23 @@
+import { useWorkspaceState } from "../../state/useWorkspaceState";
+import { evaluateParameters } from "../../cad/parameters/expressionEvaluator";
+import {
+  sizedCanvasPoints,
+  type CanvasSizeInput,
+} from "../../cad/sketch/sizedCanvasGeometry";
 import { activeComponentId } from "../commands/projectWorkflowCommand";
 import { sketchComponentId } from "../../cad/document/components";
 import { runCommand } from "../commands/commandRegistry";
 import { useCanvasPointDrag } from "./useCanvasPointDrag";
 import { useCanvasDimensions } from "./useCanvasDimensions";
 import { useCanvasConstraints } from "./useCanvasConstraints";
-import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent,
+} from "react";
 import { useCadStore } from "../../state/useCadStore";
 import {
   canvasContext,
@@ -68,8 +81,10 @@ function arcPath(
     : (b - a + Math.PI * 2) % (Math.PI * 2);
   return `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${sweep > Math.PI ? 1 : 0} ${clockwise ? 0 : 1} ${end.x} ${end.y}`;
 }
-type CanvasMode = CanvasTool | "move" | "translate" | "deform";
+type CanvasMode = CanvasTool | "select" | "move" | "translate" | "deform";
 const instructions: Record<CanvasMode, string> = {
+  select:
+    "Click a line, circle, arc or dimension to inspect its size. Selecting does not edit geometry.",
   deform:
     "Drag a point to deform a point-and-line sketch through horizontal, vertical and coincident constraints. Fixed/parameter coordinates and supported orthogonal dimensions stay intact. Release validates the solve and profile topology; Escape cancels.",
   translate:
@@ -77,8 +92,10 @@ const instructions: Record<CanvasMode, string> = {
   move: "Drag a free numeric point; release to save one edit. Escape cancels. Parameter-bound, constrained and arc points use geometry/dimension controls.",
   point: "Click to place a point.",
   line: "Click endpoints. Lines continue from the last point; snap to the first point to close a loop.",
-  rectangle: "Click two opposite corners.",
-  circle: "Click the center, then a radius point.",
+  rectangle:
+    "Click opposite corners or drag corner to corner. Type width/height to make the draft exact; Tab moves between sizes and Enter accepts.",
+  circle:
+    "Click the center and radius point, or drag from the center. Type a diameter to make the draft exact.",
   arc: "Click center, start, then end. A free endpoint is projected onto the radius.",
 };
 export function SketchCanvasPanel() {
@@ -103,6 +120,21 @@ export function SketchCanvasPanel() {
   ) : null;
 }
 function SketchCanvas({ active }: { active: CanvasSession }) {
+  const focused = useWorkspaceState((s) => s.layout === "focused");
+  const [sizes, setSizes] = useState<CanvasSizeInput>({});
+  const [precisionOpen, setPrecisionOpen] = useState(!focused);
+  useEffect(() => setPrecisionOpen(!focused), [focused]);
+  const primitiveGesture = useRef<
+    | { pointerId: number; x: number; y: number; element: SVGSVGElement }
+    | undefined
+  >(undefined);
+  const releasePrimitiveGesture = useCallback(() => {
+    const gesture = primitiveGesture.current;
+    primitiveGesture.current = undefined;
+    if (gesture?.element.hasPointerCapture(gesture.pointerId))
+      gesture.element.releasePointerCapture(gesture.pointerId);
+  }, []);
+  useEffect(() => releasePrimitiveGesture, [releasePrimitiveGesture]);
   const document = useCadStore((s) => s.history.present),
     fileBusy = useCadStore((s) => s.fileBusy);
   const history = useCadStore((s) => s.history);
@@ -131,13 +163,13 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
   useEffect(() => {
     const previous = window.document.activeElement as HTMLElement | null;
     const workspace = workspaceRef.current;
-    svgRef.current?.focus();
+    svgRef.current?.focus({ preventScroll: true });
     return () => {
-      const focused = window.document.activeElement;
+      const activeNow = window.document.activeElement;
       if (
         previous?.isConnected &&
-        (focused === window.document.body ||
-          workspace?.contains(focused)) &&
+        (activeNow === window.document.body ||
+          workspace?.contains(activeNow)) &&
         !window.document.querySelector("dialog[open]")
       )
         previous.focus();
@@ -168,6 +200,11 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
   useEffect(() => {
     const fit = () => {
       if (context) {
+        if (primitiveGesture.current) {
+          releasePrimitiveGesture();
+          setDraft([]);
+          setSizes({});
+        }
         drag.cancel();
         setCursor(undefined);
         setView(fitSketch(context.solved));
@@ -175,15 +212,17 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     };
     window.addEventListener("plaincad:fit-sketch", fit);
     return () => window.removeEventListener("plaincad:fit-sketch", fit);
-  }, [context, drag.cancel]);
+  }, [context, drag.cancel, releasePrimitiveGesture]);
   useEffect(() => {
     if (draftDocument.current !== document) {
       setDraft([]);
+      setSizes({});
+      releasePrimitiveGesture();
       setCursor(undefined);
       drag.cancel();
       draftDocument.current = document;
     }
-  }, [document, drag.cancel]);
+  }, [document, drag.cancel, releasePrimitiveGesture]);
   const close = async () => {
     try {
       await runCommand("sketch.finish");
@@ -195,8 +234,22 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     setDraft([]);
     setCursor(undefined);
     setError(undefined);
+    setSizes({});
+    releasePrimitiveGesture();
     drag.cancel();
   };
+  useEffect(() => {
+    const interrupt = () => {
+      if (primitiveGesture.current) {
+        releasePrimitiveGesture();
+        setDraft([]);
+        setSizes({});
+        setCursor(undefined);
+      }
+    };
+    window.addEventListener("blur", interrupt);
+    return () => window.removeEventListener("blur", interrupt);
+  }, [releasePrimitiveGesture]);
   const gridStep = Number(grid),
     validGrid =
       Number.isFinite(gridStep) && gridStep >= 0.000001 && gridStep <= 1e6;
@@ -235,7 +288,15 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     return result;
   };
   const draw = (event: PointerEvent<SVGSVGElement>) => {
-    if (event.button !== 0) return;
+    if (event.button !== 0 || primitiveGesture.current) return;
+    if (tool === "select") {
+      event.preventDefault();
+      const id = (event.target as Element)
+        .closest("[data-entity-id]")
+        ?.getAttribute("data-entity-id");
+      if (id) dimensions.selectEntity(id);
+      return;
+    }
     const point = pointAt(event);
     if (isDragTool) {
       if (!disabled) drag.begin(event, point);
@@ -243,11 +304,20 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     }
     if (!point) return;
     event.preventDefault();
-    event.currentTarget.focus();
+    event.currentTarget.focus({ preventScroll: true });
+    if ((tool === "rectangle" || tool === "circle") && !draft.length) {
+      primitiveGesture.current = {
+        pointerId: event.pointerId,
+        x: event.clientX,
+        y: event.clientY,
+        element: event.currentTarget,
+      };
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
     place(point);
   };
   const place = (point: CanvasPoint) => {
-    if (disabled) return;
+    if (disabled || tool === "select") return;
     if (isDragTool) {
       drag.keyboardMove(point);
       return;
@@ -267,9 +337,11 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
         points,
         construction,
         clockwise,
+        sizes,
       );
       draftDocument.current = useCadStore.getState().history.present;
       setDraft(tool === "line" && result.endpoint ? [result.endpoint] : []);
+      setSizes({});
       setCursor(undefined);
       setError(undefined);
     } catch (e) {
@@ -277,6 +349,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     }
   };
   const zoom = (factor: number) => {
+    if (primitiveGesture.current) cancel();
     drag.cancel();
     setCursor(undefined);
     setError(undefined);
@@ -289,6 +362,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     });
   };
   const pan = (x: number, y: number) => {
+    if (primitiveGesture.current) cancel();
     drag.cancel();
     setCursor(undefined);
     setError(undefined);
@@ -310,7 +384,41 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
       (_, i) => Math.ceil(start / displayGrid) * displayGrid + i * displayGrid,
     );
   };
-  const preview = draft.length && cursor ? [...draft, cursor] : draft;
+  const parameters = useMemo(
+    () => evaluateParameters(document.parameters).values,
+    [document.parameters],
+  );
+  const previewAnalysis = useMemo(() => {
+    const rawPreview = draft.length && cursor ? [...draft, cursor] : draft;
+    if (!context || tool === "select" || isDragTool)
+      return { points: rawPreview };
+    try {
+      return {
+        points: sizedCanvasPoints(
+          tool,
+          rawPreview,
+          sizes,
+          parameters,
+          document.unitSettings.length,
+        ),
+      };
+    } catch (e) {
+      return {
+        points: rawPreview,
+        error: e instanceof Error ? e.message : String(e),
+      };
+    }
+  }, [
+    context,
+    tool,
+    draft,
+    cursor,
+    sizes,
+    parameters,
+    document.unitSettings.length,
+    isDragTool,
+  ]);
+  const preview = previewAnalysis.points;
   const radius = view.width * 0.005;
   const dimensions = useCanvasDimensions(
     active,
@@ -318,6 +426,8 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     view.width,
     cancel,
     view,
+    focused,
+    tool === "select",
   );
   const constraints = useCanvasConstraints(
     active,
@@ -326,6 +436,8 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     cancel,
     view,
     dimensions.labelBoxes,
+    focused,
+    dimensions.selectedEntityId,
   );
   if (!sketch) return null;
   return (
@@ -378,190 +490,262 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
           Finish Sketch
         </button>
       </header>
+      <div
+        className="sketch-direct-tools"
+        role="toolbar"
+        aria-label="Drawing tools"
+      >
+        {(["select", "line", "rectangle", "circle", "arc"] as const).map(
+          (kind) => (
+            <button
+              key={kind}
+              type="button"
+              aria-label={`Draw tool: ${kind}`}
+              aria-pressed={tool === kind}
+              onClick={() => {
+                cancel();
+                dimensions.closeInlineEditor();
+                setTool(kind);
+              }}
+            >
+              {kind[0].toUpperCase() + kind.slice(1)}
+            </button>
+          ),
+        )}
+        <label>
+          <input
+            type="checkbox"
+            checked={construction}
+            onChange={(e) => {
+              cancel();
+              setConstruction(e.target.checked);
+            }}
+          />
+          Construction
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={snap}
+            onChange={(e) => {
+              cancel();
+              setSnap(e.target.checked);
+            }}
+          />
+          Snap
+        </label>
+      </div>
       <div className="sketch-workspace-layout">
         <div
           className="sketch-workspace-controls"
           role="toolbar"
           aria-label="Sketch drawing controls"
         >
-          <p>
-            Local X points right; local Y points up. Coordinates and snapping
-            are in millimeters.
+          <h3>Sketch details</h3>
+          <p role="status">
+            {context?.solved.status ?? "unavailable"} ·{" "}
+            {context?.solved.degreesOfFreedom ?? "—"} degrees of freedom
           </p>
-          <div className="canvas-toolbar">
-            <label>
-              Canvas tool{" "}
-              <select
-                aria-label="Canvas tool"
-                value={tool}
-                onChange={(e) => {
-                  cancel();
-                  setTool(e.target.value as CanvasMode);
-                }}
-              >
-                {Object.keys(instructions).map((kind) => (
-                  <option key={kind}>{kind}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={construction}
-                onChange={(e) => {
-                  cancel();
-                  setConstruction(e.target.checked);
-                }}
-              />
-              Canvas construction geometry
-            </label>
-            {tool === "arc" ? (
+          <p id="canvas-instructions">{instructions[tool]}</p>
+          <details
+            open={precisionOpen}
+            onToggle={(e) => setPrecisionOpen(e.currentTarget.open)}
+          >
+            <summary>Precision and advanced tools</summary>
+            <p>
+              Local X points right; local Y points up. Coordinates and snapping
+              are in millimeters.
+            </p>
+            <div className="canvas-toolbar">
+              <label>
+                Canvas tool{" "}
+                <select
+                  aria-label="Canvas tool"
+                  value={tool}
+                  onChange={(e) => {
+                    cancel();
+                    dimensions.closeInlineEditor();
+                    setTool(e.target.value as CanvasMode);
+                  }}
+                >
+                  {Object.keys(instructions).map((kind) => (
+                    <option key={kind}>{kind}</option>
+                  ))}
+                </select>
+              </label>
               <label>
                 <input
                   type="checkbox"
-                  checked={clockwise}
+                  checked={construction}
                   onChange={(e) => {
                     cancel();
-                    setClockwise(e.target.checked);
+                    setConstruction(e.target.checked);
                   }}
                 />
-                Canvas clockwise arc
+                Canvas construction geometry
               </label>
-            ) : null}
-            <label>
-              <input
-                type="checkbox"
-                checked={snap}
-                onChange={(e) => {
-                  cancel();
-                  setSnap(e.target.checked);
+              {tool === "arc" ? (
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={clockwise}
+                    onChange={(e) => {
+                      cancel();
+                      setClockwise(e.target.checked);
+                    }}
+                  />
+                  Canvas clockwise arc
+                </label>
+              ) : null}
+              <label>
+                <input
+                  type="checkbox"
+                  checked={snap}
+                  onChange={(e) => {
+                    cancel();
+                    setSnap(e.target.checked);
+                  }}
+                />
+                Snap to grid
+              </label>
+              <label>
+                Grid step (mm)
+                <input
+                  aria-label="Canvas grid step"
+                  type="number"
+                  min="0.000001"
+                  max="1000000"
+                  value={grid}
+                  onChange={(e) => {
+                    cancel();
+                    setGrid(e.target.value);
+                  }}
+                />
+              </label>
+            </div>
+            <div className="canvas-toolbar">
+              <button onClick={() => zoom(0.5)}>Zoom in</button>
+              <button onClick={() => zoom(2)}>Zoom out</button>
+              <button
+                disabled={!context}
+                onClick={() => {
+                  if (primitiveGesture.current) cancel();
+                  drag.cancel();
+                  setCursor(undefined);
+                  if (context) setView(fitSketch(context.solved));
                 }}
-              />
-              Snap to grid
-            </label>
-            <label>
-              Grid step (mm)
-              <input
-                aria-label="Canvas grid step"
-                type="number"
-                min="0.000001"
-                max="1000000"
-                value={grid}
-                onChange={(e) => {
+              >
+                Fit sketch
+              </button>
+              <button
+                aria-label="Pan canvas left"
+                onClick={() => pan(-0.25, 0)}
+              >
+                ←
+              </button>
+              <button
+                aria-label="Pan canvas right"
+                onClick={() => pan(0.25, 0)}
+              >
+                →
+              </button>
+              <button aria-label="Pan canvas up" onClick={() => pan(0, 0.25)}>
+                ↑
+              </button>
+              <button
+                aria-label="Pan canvas down"
+                onClick={() => pan(0, -0.25)}
+              >
+                ↓
+              </button>
+              <button
+                disabled={!history.past.length || fileBusy}
+                onClick={() => {
                   cancel();
-                  setGrid(e.target.value);
+                  useCadStore.getState().undo();
                 }}
-              />
-            </label>
-          </div>
-          <div className="canvas-toolbar">
-            <button onClick={() => zoom(0.5)}>Zoom in</button>
-            <button onClick={() => zoom(2)}>Zoom out</button>
-            <button
-              disabled={!context}
-              onClick={() => {
-                drag.cancel();
-                setCursor(undefined);
-                if (context) setView(fitSketch(context.solved));
-              }}
-            >
-              Fit sketch
-            </button>
-            <button aria-label="Pan canvas left" onClick={() => pan(-0.25, 0)}>
-              ←
-            </button>
-            <button aria-label="Pan canvas right" onClick={() => pan(0.25, 0)}>
-              →
-            </button>
-            <button aria-label="Pan canvas up" onClick={() => pan(0, 0.25)}>
-              ↑
-            </button>
-            <button aria-label="Pan canvas down" onClick={() => pan(0, -0.25)}>
-              ↓
-            </button>
-            <button
-              disabled={!history.past.length || fileBusy}
-              onClick={() => {
-                cancel();
-                useCadStore.getState().undo();
-              }}
-            >
-              Undo canvas edit
-            </button>
-            <button
-              disabled={!history.future.length || fileBusy}
-              onClick={() => {
-                cancel();
-                useCadStore.getState().redo();
-              }}
-            >
-              Redo canvas edit
-            </button>
-            <button
-              disabled={!draft.length && !drag.inProgress}
-              onClick={cancel}
-            >
-              Cancel drawing
-            </button>
-          </div>
-          <div className="canvas-toolbar">
-            {isDragTool ? drag.controls : null}
-            <label>
-              Local X (mm)
-              <input
-                aria-label="Canvas coordinate X"
-                type="number"
-                value={keyboardX}
-                onChange={(e) => setKeyboardX(e.target.value)}
-              />
-            </label>
-            <label>
-              Local Y (mm)
-              <input
-                aria-label="Canvas coordinate Y"
-                type="number"
-                value={keyboardY}
-                onChange={(e) => setKeyboardY(e.target.value)}
-              />
-            </label>
-            <button
-              disabled={
-                disabled ||
-                (isDragTool && (!drag.pointId || !!drag.reason)) ||
-                keyboardX.trim() === "" ||
-                keyboardY.trim() === "" ||
-                !Number.isFinite(Number(keyboardX)) ||
-                !Number.isFinite(Number(keyboardY))
-              }
-              onClick={() => {
-                if (!context) return;
-                let point = snapCanvasPoint(
-                  { x: Number(keyboardX), y: Number(keyboardY) },
-                  context.solved,
-                  1e-8,
-                  0,
-                );
-                if (tool === "arc" && draft.length === 2)
-                  point = arcEndpoint(draft[0], draft[1], point);
-                place(point);
-              }}
-            >
-              {tool === "translate"
-                ? "Translate group to coordinate"
-                : tool === "deform"
-                  ? "Deform sketch to coordinate"
-                  : tool === "move"
-                    ? "Move point to coordinate"
-                    : "Place coordinate"}
-            </button>
-          </div>
+              >
+                Undo canvas edit
+              </button>
+              <button
+                disabled={!history.future.length || fileBusy}
+                onClick={() => {
+                  cancel();
+                  useCadStore.getState().redo();
+                }}
+              >
+                Redo canvas edit
+              </button>
+              <button
+                disabled={!draft.length && !drag.inProgress}
+                onClick={cancel}
+              >
+                Cancel drawing
+              </button>
+            </div>
+            <div className="canvas-toolbar">
+              {isDragTool ? drag.controls : null}
+              <label>
+                Local X (mm)
+                <input
+                  aria-label="Canvas coordinate X"
+                  type="number"
+                  value={keyboardX}
+                  onChange={(e) => setKeyboardX(e.target.value)}
+                />
+              </label>
+              <label>
+                Local Y (mm)
+                <input
+                  aria-label="Canvas coordinate Y"
+                  type="number"
+                  value={keyboardY}
+                  onChange={(e) => setKeyboardY(e.target.value)}
+                />
+              </label>
+              <button
+                disabled={
+                  disabled ||
+                  tool === "select" ||
+                  (isDragTool && (!drag.pointId || !!drag.reason)) ||
+                  keyboardX.trim() === "" ||
+                  keyboardY.trim() === "" ||
+                  !Number.isFinite(Number(keyboardX)) ||
+                  !Number.isFinite(Number(keyboardY))
+                }
+                onClick={() => {
+                  if (!context) return;
+                  let point = snapCanvasPoint(
+                    { x: Number(keyboardX), y: Number(keyboardY) },
+                    context.solved,
+                    1e-8,
+                    0,
+                  );
+                  if (tool === "arc" && draft.length === 2)
+                    point = arcEndpoint(draft[0], draft[1], point);
+                  place(point);
+                }}
+              >
+                {tool === "translate"
+                  ? "Translate group to coordinate"
+                  : tool === "deform"
+                    ? "Deform sketch to coordinate"
+                    : tool === "move"
+                      ? "Move point to coordinate"
+                      : "Place coordinate"}
+              </button>
+            </div>
+          </details>
           {dimensions.controls}
           {constraints.controls}
-          <p id="canvas-instructions">
-            {instructions[tool]} Existing points snap within 8 screen pixels.
-            Keyboard users can place exact coordinates using the fields above.
-            Escape cancels a draft, then closes.
-          </p>
+          <details open={!focused}>
+            <summary>Drawing help</summary>
+            <p>
+              Existing points snap within 8 screen pixels. Keyboard users can
+              place exact coordinates using the fields above. Escape cancels a
+              draft, then closes.
+            </p>
+          </details>
           {analysis.error ||
           error ||
           (isDragTool && (drag.error || drag.reason)) ||
@@ -577,6 +761,77 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
           ) : null}
         </div>
         <div className="sketch-workspace-drawing">
+          {draft.length === 1 && (tool === "rectangle" || tool === "circle") ? (
+            <form
+              className="canvas-draft-size"
+              aria-label="Draft shape size"
+              style={{
+                left: `min(${Math.max(2, Math.min(45, ((draft[0].x - view.x) / view.width) * 100 + 4))}%, max(2%, calc(100% - 370px)))`,
+                top: `min(${Math.max(2, Math.min(65, ((view.y + view.height - draft[0].y) / view.height) * 100 + 4))}%, max(2%, calc(100% - 220px)))`,
+              }}
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!previewAnalysis.error)
+                  place(cursor ?? { x: draft[0].x + 1, y: draft[0].y + 1 });
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  cancel();
+                  svgRef.current?.focus({ preventScroll: true });
+                }
+              }}
+            >
+              <strong>
+                {tool === "rectangle" ? "Rectangle size" : "Circle diameter"}
+              </strong>
+              {(tool === "rectangle"
+                ? (["width", "height"] as const)
+                : (["diameter"] as const)
+              ).map((name) => (
+                <label key={name}>
+                  {name} ({document.unitSettings.length})
+                  <input
+                    aria-label={`Draft ${name}`}
+                    value={sizes[name] ?? ""}
+                    placeholder="Pointer size"
+                    maxLength={2000}
+                    onChange={(e) =>
+                      setSizes((s) => ({ ...s, [name]: e.target.value }))
+                    }
+                  />
+                </label>
+              ))}
+              <span>
+                {preview.length === 2
+                  ? tool === "rectangle"
+                    ? `${Math.abs(preview[1].x - preview[0].x).toFixed(3)} × ${Math.abs(preview[1].y - preview[0].y).toFixed(3)} mm`
+                    : `Ø ${(distance2d(preview[0], preview[1]) * 2).toFixed(3)} mm`
+                  : "Move the pointer or enter sizes."}
+              </span>
+              <button
+                type="submit"
+                disabled={
+                  disabled ||
+                  Boolean(previewAnalysis.error) ||
+                  (!cursor &&
+                    (tool === "rectangle"
+                      ? !sizes.width?.trim() || !sizes.height?.trim()
+                      : !sizes.diameter?.trim()))
+                }
+              >
+                Accept shape
+              </button>
+              <button type="button" onClick={cancel}>
+                Cancel shape
+              </button>
+              {previewAnalysis.error ? (
+                <p role="alert">{previewAnalysis.error}</p>
+              ) : null}
+            </form>
+          ) : null}
+          {dimensions.inlineEditor}
           <svg
             ref={svgRef}
             className="sketch-canvas"
@@ -589,16 +844,46 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
             preserveAspectRatio="none"
             onPointerDown={draw}
             onPointerMove={(event) => {
+              if (
+                primitiveGesture.current &&
+                primitiveGesture.current.pointerId !== event.pointerId
+              )
+                return;
               const point = pointAt(event);
               setCursor(point);
               if (isDragTool) drag.move(event, point);
             }}
             onPointerUp={(event) => {
               if (isDragTool) drag.finish(event, pointAt(event));
+              const gesture = primitiveGesture.current;
+              if (gesture?.pointerId === event.pointerId) {
+                primitiveGesture.current = undefined;
+                if (
+                  Math.hypot(
+                    event.clientX - gesture.x,
+                    event.clientY - gesture.y,
+                  ) >= 6
+                ) {
+                  const point = pointAt(event);
+                  if (point) place(point);
+                }
+                if (event.currentTarget.hasPointerCapture(event.pointerId))
+                  event.currentTarget.releasePointerCapture(event.pointerId);
+              }
             }}
-            onPointerCancel={() => drag.cancel()}
-            onLostPointerCapture={drag.lostCapture}
-            onPointerLeave={() => setCursor(undefined)}
+            onPointerCancel={(event) => {
+              if (primitiveGesture.current?.pointerId === event.pointerId)
+                cancel();
+              else if (!primitiveGesture.current) drag.cancel();
+            }}
+            onLostPointerCapture={(event) => {
+              if (primitiveGesture.current?.pointerId === event.pointerId)
+                cancel();
+              drag.lostCapture(event);
+            }}
+            onPointerLeave={() => {
+              if (!draft.length) setCursor(undefined);
+            }}
           >
             <g
               transform="scale(1,-1)"
@@ -632,8 +917,14 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
               {context?.solved.lines.map((l) => (
                 <line
                   key={l.id}
+                  data-entity-id={l.id}
                   className={
-                    l.construction ? "canvas-construction" : "canvas-geometry"
+                    (l.construction
+                      ? "canvas-construction"
+                      : "canvas-geometry") +
+                    (dimensions.selectedEntityId === l.id
+                      ? " canvas-entity-selected"
+                      : "")
                   }
                   x1={l.start.x}
                   y1={l.start.y}
@@ -644,8 +935,14 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
               {context?.solved.circles.map((c) => (
                 <circle
                   key={c.id}
+                  data-entity-id={c.id}
                   className={
-                    c.construction ? "canvas-construction" : "canvas-geometry"
+                    (c.construction
+                      ? "canvas-construction"
+                      : "canvas-geometry") +
+                    (dimensions.selectedEntityId === c.id
+                      ? " canvas-entity-selected"
+                      : "")
                   }
                   cx={c.center.x}
                   cy={c.center.y}
@@ -655,8 +952,14 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
               {context?.solved.arcs.map((a) => (
                 <path
                   key={a.id}
+                  data-entity-id={a.id}
                   className={
-                    a.construction ? "canvas-construction" : "canvas-geometry"
+                    (a.construction
+                      ? "canvas-construction"
+                      : "canvas-geometry") +
+                    (dimensions.selectedEntityId === a.id
+                      ? " canvas-entity-selected"
+                      : "")
                   }
                   d={arcPath(a.center, a.start, a.end, a.sweep < 0)}
                 />
@@ -724,8 +1027,8 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
               : "Ready to draw."}
           </p>
           <p>
-            Use Sketch tools for exact coordinate expressions and driving
-            dimensions. The 3D viewer uses this sketch’s resolved plane.
+            Use Precision for coordinates and Dimension tools for expressions.
+            The 3D viewer uses this sketch’s resolved plane.
           </p>
         </div>
       </div>

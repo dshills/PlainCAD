@@ -57,7 +57,7 @@ async function sketch(page: Page, tool: string, points: number[][]) {
     .click();
   await page
     .getByRole("region", { name: "Create Sketch", exact: true })
-    .getByRole("button", { name: "Sketch on XZ plane", exact: true })
+    .getByRole("button", { name: "Sketch on Front (XZ) plane", exact: true })
     .click();
   await page.getByLabel("Canvas tool", { exact: true }).selectOption(tool);
   for (const [x, y] of points) await coordinate(page, x, y);

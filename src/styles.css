@@ -1051,3 +1051,32 @@ summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .workspace-controls { gap: 0.35rem; }
   .workspace-target { width: 100%; }
 }
+
+/* Direct sketch tools and precise, unsaved size drafts. */
+.sketch-direct-tools { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.sketch-direct-tools button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+.sketch-direct-tools label { display: inline-flex; align-items: center; gap: 4px; }
+.sketch-workspace-drawing { position: relative; }
+.canvas-draft-size, .canvas-inline-dimension { box-sizing: border-box; padding: 10px; border: 1px solid var(--accent); border-radius: 6px; background: var(--panel); color: var(--text); box-shadow: 0 4px 16px #0002; z-index: 3; }
+.canvas-draft-size { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; position: absolute; width: min(360px, 90%); }
+.canvas-draft-size label { width: 135px; }
+.canvas-draft-size input { width: 100%; }
+.canvas-inline-dimension { position: absolute; width: min(250px, 90%); }
+.canvas-inline-dimension label { display: block; margin: 6px 0; }
+.canvas-inline-dimension input { width: 100%; }
+.canvas-inline-dimension button { margin: 3px; }
+.canvas-entity-selected { stroke: var(--accent); stroke-width: 0.65; }
+.canvas-dimension-muted { opacity: 0.55; }
+.sketch-workspace-controls > details, .canvas-dimension-controls > details, .canvas-constraint-controls > details { margin: 8px 0; }
+.focused-workspace .sketch-workspace-layout { grid-template-columns: minmax(0, 1fr) 260px; }
+.focused-workspace .sketch-workspace-controls { grid-column: 2; grid-row: 1; }
+.plane-choices button { display: flex; align-items: center; gap: 10px; text-align: left; }
+.plane-choices small { display: block; font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+.plane-choice-preview { width: 60px; height: 45px; flex-shrink: 0; fill: color-mix(in srgb, var(--accent) 20%, transparent); stroke: var(--accent); stroke-width: 2; }
+.plane-choice-normal { fill: none; }
+@media (max-width: 1100px) {
+  .focused-workspace .sketch-workspace-layout { grid-template-columns: 1fr; }
+  .focused-workspace .sketch-workspace-controls { grid-column: 1; grid-row: 2; }
+}
+
+.focused-workspace .sketch-workspace-drawing { width: 100%; max-width: 80vh; justify-self: center; }

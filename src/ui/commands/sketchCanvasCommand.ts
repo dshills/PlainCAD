@@ -1,4 +1,8 @@
 import {
+  addSizedCanvasGeometry,
+  type CanvasSizeInput,
+} from "../../cad/sketch/sizedCanvasGeometry";
+import {
   deformedCanvasSketch,
   validateCanvasDeformation,
 } from "../../cad/sketch/canvasDeformation";
@@ -20,7 +24,6 @@ import { evaluateParameters } from "../../cad/parameters/expressionEvaluator";
 import { resolveDocumentPlanes } from "../../cad/sketch/planes";
 import { solveSketch } from "../../cad/sketch/SketchSolver";
 import {
-  addCanvasGeometry,
   type CanvasPoint,
   type CanvasTool,
 } from "../../cad/sketch/canvasGeometry";
@@ -124,18 +127,22 @@ export function commitCanvasGeometry(
   points: CanvasPoint[],
   construction: boolean,
   clockwise: boolean,
+  sizes: CanvasSizeInput = {},
 ) {
   const state = useCadStore.getState();
   if (state.history.present !== expected)
     throw new Error("Project changed during drawing. Cancel and draw again.");
   const context = canvasContext(active, state),
-    result = addCanvasGeometry(
+    result = addSizedCanvasGeometry(
       context.sketch,
       context.solved,
       tool,
       points,
       construction,
       clockwise,
+      sizes,
+      evaluateParameters(context.document.parameters).values,
+      context.document.unitSettings.length,
     );
   if (result.sketch === context.sketch) return result;
   const next = upsertSketch(context.document, result.sketch);

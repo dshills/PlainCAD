@@ -2,13 +2,22 @@ import { test, expect, type Page } from "@playwright/test";
 import { applyExtrusion } from "./extrudeWorkflow";
 import type { CadDocument } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
+const PLANE_LABEL = {
+  XY: "Top (XY)",
+  XZ: "Front (XZ)",
+  YZ: "Side (YZ)",
+} as const;
 async function state(
   page: Page,
 ): Promise<{ document: CadDocument; result: RebuildResult; session: number }> {
   return page.evaluate(async () => {
     const path = "/src/state/useCadStore.ts";
     const state = (await import(path)).useCadStore.getState();
-    return { document: state.history.present, result: state.rebuild.result, session: state.documentSession };
+    return {
+      document: state.history.present,
+      result: state.rebuild.result,
+      session: state.documentSession,
+    };
   });
 }
 async function coordinate(page: Page, x: number, y: number) {
@@ -55,7 +64,10 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
       .fill("3deg");
     const before = (await state(page)).document;
     await picker
-      .getByRole("button", { name: `Sketch on ${plane} plane`, exact: true })
+      .getByRole("button", {
+        name: `Sketch on ${PLANE_LABEL[plane]} plane`,
+        exact: true,
+      })
       .click();
     await expect(picker.getByRole("alert")).toBeVisible();
     expect((await state(page)).document).toEqual(before);
@@ -63,7 +75,10 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
       .getByLabel("Sketch plane offset", { exact: true })
       .fill("lift");
     await picker
-      .getByRole("button", { name: `Sketch on ${plane} plane`, exact: true })
+      .getByRole("button", {
+        name: `Sketch on ${PLANE_LABEL[plane]} plane`,
+        exact: true,
+      })
       .click();
     await expect(
       page.getByRole("region", { name: "Sketch canvas", exact: true }),
@@ -132,7 +147,9 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     await (await download).saveAs(path);
     const session = (await state(page)).session;
     await page.locator('input[type="file"]').setInputFiles(path);
-    await expect.poll(async () => (await state(page)).session).toBeGreaterThan(session);
+    await expect
+      .poll(async () => (await state(page)).session)
+      .toBeGreaterThan(session);
     await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
     await check(5);
     const sketch = Object.values((await state(page)).document.sketches)[0];
@@ -148,40 +165,69 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
   });
 }
 
-test("Create Sketch offset from a native end cap follows owner distance edits", async ({ page }) => {
+test("Create Sketch offset from a native end cap follows owner distance edits", async ({
+  page,
+}) => {
   await page.goto("/");
   await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
-  await page.getByRole("button", { name: "Create XY sketch", exact: true }).click();
-  await page.getByRole("button", { name: "Add center rectangle", exact: true }).click();
-  await page.getByRole("button", { name: "Extrude selected sketch", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Create XY sketch", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Add center rectangle", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Extrude selected sketch", exact: true })
+    .click();
   await applyExtrusion(page);
   await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
-  await page.getByRole("button", { name: "Create sketch", exact: true }).click();
-  const picker = page.getByRole("region", { name: "Create Sketch", exact: true });
+  await page
+    .getByRole("button", { name: "Create sketch", exact: true })
+    .click();
+  const picker = page.getByRole("region", {
+    name: "Create Sketch",
+    exact: true,
+  });
   await picker.getByLabel("Use offset sketch plane", { exact: true }).check();
   await picker.getByLabel("Sketch plane offset", { exact: true }).fill("2mm");
-  await picker.getByRole("button", { name: "Sketch on Extrude 1 — end cap", exact: true }).click();
+  await picker
+    .getByRole("button", { name: "Sketch on Extrude 1 — end cap", exact: true })
+    .click();
   await page.getByLabel("Canvas tool", { exact: true }).selectOption("circle");
   await coordinate(page, 0, 0);
   await coordinate(page, 3, 0);
-  await page.getByRole("button", { name: "Finish Sketch", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Finish Sketch", exact: true })
+    .click();
   await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
-  await page.getByRole("button", { name: "Extrude selected sketch", exact: true }).click();
-  await page.getByRole("dialog", { name: "Extrude", exact: true }).getByLabel("Extrude distance", { exact: true }).fill("5mm");
+  await page
+    .getByRole("button", { name: "Extrude selected sketch", exact: true })
+    .click();
+  await page
+    .getByRole("dialog", { name: "Extrude", exact: true })
+    .getByLabel("Extrude distance", { exact: true })
+    .fill("5mm");
   await applyExtrusion(page);
   await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
   let snapshot = await state(page);
   const childId = `body:${snapshot.document.features[1].id}`;
-  let mesh = snapshot.result.meshes.find(mesh => mesh.bodyId === childId)!;
+  let mesh = snapshot.result.meshes.find((mesh) => mesh.bodyId === childId)!;
   expect(mesh.geometryAssertions!.volume).toBeCloseTo(45 * Math.PI, 7);
   expect(mesh.bounds.min[2]).toBeCloseTo(12, 6);
   expect(mesh.bounds.max[2]).toBeCloseTo(17, 6);
   await page.locator(".feature-chip").filter({ hasText: "Extrude 1" }).click();
   await page.getByLabel("Distance", { exact: true }).fill("14mm");
   await page.getByLabel("Distance", { exact: true }).press("Enter");
-  await expect.poll(async () => (await state(page)).result?.meshes.find(mesh => mesh.bodyId === childId)?.bounds.min[2]).toBeCloseTo(16, 6);
+  await expect
+    .poll(
+      async () =>
+        (await state(page)).result?.meshes.find(
+          (mesh) => mesh.bodyId === childId,
+        )?.bounds.min[2],
+    )
+    .toBeCloseTo(16, 6);
   snapshot = await state(page);
-  mesh = snapshot.result.meshes.find(mesh => mesh.bodyId === childId)!;
+  mesh = snapshot.result.meshes.find((mesh) => mesh.bodyId === childId)!;
   expect(mesh.geometrySource).toBe("opencascade");
   expect(mesh.geometryAssertions!.volume).toBeCloseTo(45 * Math.PI, 7);
   expect(mesh.bounds.max[2]).toBeCloseTo(21, 6);

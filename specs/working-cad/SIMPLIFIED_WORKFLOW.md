@@ -352,9 +352,21 @@ edit, save/open and STL export without switching to Full workspace.
 
 ### Step 2 Make sketching direct and precise
 
-Replace the core tool dropdown with drawing tools; add rectangle/circle inline dimensions, selection-driven dimension editing, understandable plane names and a focused sketch inspector. Improve dimension/constraint density without turning dimensions off by default.
+Implemented October 5, 2026: visible drawing tools, rectangle/circle mouse drag and
+click workflows, inline width/height/diameter entry using project units or length
+expressions, selection-driven size inspection/editing, Top/Front/Side plane choices
+with axis/normal hints, and a compact Focused sketch inspector. Sized primitives
+and driving dimensions form one undo edit; rectangle constraints preserve shape
+on later size edits. Dimensions remain enabled by default. Focused layout dims
+unselected dimension labels and reduces satisfied constraint markers to selected
+geometry; errors and unavailable values remain visible. Advanced controls and full
+lists stay available through disclosures and expanded in Full workspace.
 
-Acceptance: a new user can draw and dimension a non-template shape using the canvas and short task panel; the keyboard/form route creates equivalent intent. Native geometry, plane orientation, dimension conflicts, undo and save/open remain correct.
+Acceptance is covered by unit/component and native browser checks for precise
+non-template sketches, all origin-plane orientations, dimension errors/recovery,
+undo/redo, save/open and STL. User research is still required to establish that new
+CAD users find the workflow easy. Box selection, additional snap types and new
+sketch camera gestures described earlier remain future work.
 
 ### Step 3 Add parametric handles and bounded drag and drop
 

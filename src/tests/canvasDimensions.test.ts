@@ -407,3 +407,15 @@ describe("graphical sketch dimensions", () => {
     ).toEqual([]);
   });
 });
+
+it("keeps reference-size expressions precise and consistent with authored units", () => {
+  expect(dimensionModule.canvasSizeExpression(Infinity, "mm")).toBeUndefined();
+  expect(dimensionModule.canvasSizeExpression(-1, "mm")).toBeUndefined();
+  expect(dimensionModule.canvasSizeExpression(1e30, "mm")).toBeUndefined();
+  expect(dimensionModule.canvasSizeExpression(25.4, "in")).toBe("1in");
+  expect(dimensionModule.canvasSizeExpression(12.7, "in")).toBe("0.5in");
+  expect(dimensionModule.canvasSizeExpression(20, "mm")).toBe("20mm");
+  expect(dimensionModule.canvasSizeExpression(0.0000001, "mm")).toBe(
+    "0.0000001mm",
+  );
+});

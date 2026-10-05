@@ -46,10 +46,14 @@ test("sketch mode stays in the workspace and preserves the 3D camera and rendere
     .click();
   await page.getByLabel("Sketch drawing canvas", { exact: true }).focus();
   await page.keyboard.press("f");
-  await expect(sketch.getByRole("status")).toContainText("1 draft point");
+  await expect(
+    sketch.getByRole("status").filter({ hasText: /draft point|Ready to draw/ }),
+  ).toContainText("1 draft point");
   await page.keyboard.press("Escape");
   await expect(sketch).toBeVisible();
-  await expect(sketch.getByRole("status")).toHaveText("Ready to draw.");
+  await expect(
+    sketch.getByRole("status").filter({ hasText: /draft point|Ready to draw/ }),
+  ).toHaveText("Ready to draw.");
   await page.getByLabel("Sketch drawing canvas", { exact: true }).focus();
   await page.keyboard.press("f");
   await page.screenshot({ path: info.outputPath("sketch-workspace.png") });

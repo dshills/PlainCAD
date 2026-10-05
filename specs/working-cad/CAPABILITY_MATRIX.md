@@ -691,6 +691,26 @@ Native browser acceptance covers mouse sketch→extrude→cut→parameter edit�
 in Focused layout; UI checks cover persistence, command access, keyboard focus and
 compact layouts across Light/Dark/Saturn themes. The built app checks the Focused
 example/edit/export path under production CSP. Existing detailed CAD acceptance
-explicitly uses Full workspace. These changes do not implement inline drawing
-size inputs, parametric drag handles, operation drops, new AI scope routing, or
-new geometry capabilities.
+explicitly uses Full workspace. Parametric drag handles, operation drops and new
+AI scope routing remain planned.
+
+### Direct and precise sketch controls
+
+Visible Select/Line/Rectangle/Circle/Arc tools support existing click drawing plus
+rectangle/circle mouse drags. Inline width/height/diameter drafts accept project-unit
+bare numbers, explicit lengths and parameter expressions. A sized primitive and
+its driving dimensions commit as one immutable history edit; sized rectangles
+retain horizontal/vertical constraints. Selection inspects solved line/curve
+measurements; reference sizes become driving only on explicit apply. Existing D
+labels edit their dimension IDs and preserve expressions/units. Stale inline edits
+are rejected. Dimensions remain on by default; Focused layout mutes unselected
+labels and shows relevant or failing constraint markers, with all controls/lists
+available through disclosures. Failed/pending dimensions remain unavailable and
+repairable. Top/Front/Side plane buttons show axes/normals and retain native plane
+hover previews. Precision and advanced controls remain expanded in Full workspace.
+Native acceptance covers mouse drags/cancellation, precise XY/XZ/YZ dimensions,
+BRep validity/volume/orientation, inline edits, undo/redo, save/open and STL on
+Chromium, Firefox and WebKit. The built app covers precise XZ dimensions, native
+volume and STL orientation under production CSP.
+Box selection, new snap types and sketch camera gestures remain planned; existing
+snap, grid, pan/zoom and advanced editing modes retain their supported limits.

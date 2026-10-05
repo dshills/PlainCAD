@@ -1,3 +1,4 @@
+import { normalizeQuantity } from "../parameters/units";
 import { MIN_ENTITY_SIZE } from "./tolerances";
 import type { Sketch, SketchDimension, UnitSettings } from "../document/schema";
 import type { ResolvedSketch } from "./SketchSolver";
@@ -21,6 +22,7 @@ export interface CanvasDimensionInput {
   type: SketchDimension["type"];
   refs: string[];
   expression: string;
+  authoredUnit?: string;
 }
 export const CANVAS_DIMENSION_TYPES: SketchDimension["type"][] = [
   "length",
@@ -31,6 +33,23 @@ export const CANVAS_DIMENSION_TYPES: SketchDimension["type"][] = [
   "distance",
   "angle",
 ];
+/** Reference selection measures solved geometry in internal millimeters. */
+export function canvasEntitySize(solved: ResolvedSketch, id: string) {
+  const line = solved.lines.find((entity) => entity.id === id);
+  if (line)
+    return { type: "length" as const, value: distance2d(line.start, line.end) };
+  const curve = [...solved.circles, ...solved.arcs].find(
+    (entity) => entity.id === id,
+  );
+  return curve ? { type: "radius" as const, value: curve.radius } : undefined;
+}
+/** Keep measured intent precise while displaying the same authored unit as the size field. */
+export function canvasSizeExpression(mm: number, unit: UnitSettings["length"]) {
+  if (!Number.isFinite(mm) || mm < 0 || mm > 1e8) return undefined;
+  const decimal = (mm / normalizeQuantity(1, unit).value).toFixed(12);
+  const value = decimal.replace(/0+$/, "").replace(/\.$/, "");
+  return `${value || "0"}${unit}`;
+}
 export function pointDimension(type: SketchDimension["type"]) {
   return (
     type === "horizontalDistance" ||
@@ -53,6 +72,8 @@ export function withCanvasDimension(
       throw new Error("Dimension reference lost. Select a current dimension.");
     if (
       existing.expression.expression === input.expression &&
+      (input.authoredUnit === undefined ||
+        existing.expression.authoredUnit === input.authoredUnit) &&
       sketch.solveMode !== "validate"
     )
       return sketch;
@@ -63,7 +84,13 @@ export function withCanvasDimension(
         d.id === input.id
           ? {
               ...d,
-              expression: { ...d.expression, expression: input.expression },
+              expression: {
+                ...d.expression,
+                expression: input.expression,
+                ...(input.authoredUnit
+                  ? { authoredUnit: input.authoredUnit }
+                  : {}),
+              },
             }
           : d,
       ),
@@ -99,6 +126,7 @@ export function withCanvasDimension(
         expression: {
           expression: input.expression,
           unit: type === "angle" ? "deg" : "mm",
+          ...(input.authoredUnit ? { authoredUnit: input.authoredUnit } : {}),
         },
       },
     ],

@@ -134,9 +134,9 @@ If browser storage is blocked, preferences work for the session with a visible n
 
 The AI drawer keeps provider/model administration in **AI settings**, collapsed
 on first use in Focused layout, while showing the current provider. Drawing and
-ordinary CAD commands remain available without an AI service. This is the first
-step of the [simplified workflow proposal](specs/working-cad/SIMPLIFIED_WORKFLOW.md);
-inline drawing sizes, extrusion drag handles and operation drops remain planned.
+ordinary CAD commands remain available without an AI service. The first two
+steps of the [simplified workflow proposal](specs/working-cad/SIMPLIFIED_WORKFLOW.md)
+are implemented. Extrusion drag handles and operation drops remain planned.
 
 ### Describe a Part with AI
 
@@ -355,10 +355,25 @@ rebuild until their expressions are repaired; reused names cannot retarget them.
 
 ### Work With Sketches
 
-1. Activate a component, choose **Create Sketch**, and choose an origin plane.
-   The canvas opens immediately. The XY/XZ/YZ ribbon shortcuts also create sketches
+1. Activate a component, choose **Create Sketch**, and choose **Top (XY)**,
+   **Front (XZ)** or **Side (YZ)**. The picker shows local axes and the extrusion
+   normal; hovering previews the actual plane in the viewer. The canvas opens
+   immediately. The XY/XZ/YZ ribbon shortcuts also create sketches
    in the active component; use **Edit Sketch** to open their canvas.
-2. Use Edit Sketch Canvas to draw points, connected lines, rectangles, circles and
+2. Use the visible **Select / Line / Rectangle / Circle / Arc** buttons. Drag a
+   rectangle corner to corner or a circle from center to radius; two clicks also
+   work. After the first click, enter **Width / Height** or **Diameter** beside
+   the draft and press Enter (Tab moves between fields). Bare numbers use project
+   length units; explicit units and length parameter expressions also work. Sized
+   shapes add driving dimensions in one undoable edit. Sized rectangles retain
+   horizontal/vertical constraints so later dimension edits keep them rectangular.
+   Choose **Select**, then click geometry or a dimension label to inspect or edit
+   its size. A reference measurement changes geometry only after **Make driving
+   dimension**; D labels edit existing intent. Escape cancels the size editor.
+   **Precision and advanced tools** exposes exact coordinates, Point/Move/Translate/
+   Deform, grid spacing, pan/zoom and undo. **Dimension tools and display** exposes
+   other dimension types and display settings. Full workspace keeps these controls
+   expanded. The canvas supports points, connected lines, rectangles, circles and
    center/start/end arcs in a plane-local view. The canvas previews unfinished
    gestures, snaps to existing solved points and an optional millimeter grid, and
    saves complete primitives as undoable edits. Escape cancels a draft before closing.

@@ -311,7 +311,9 @@ describe("component project ownership", () => {
     const chooser = screen.getByRole("region", { name: "Create Sketch" });
     expect(chooser).toHaveTextContent("Bracket");
     fireEvent.click(
-      within(chooser).getByRole("button", { name: "Sketch on XZ plane" }),
+      within(chooser).getByRole("button", {
+        name: "Sketch on Front (XZ) plane",
+      }),
     );
     const canvas = screen.getByRole("region", { name: "Sketch canvas" });
     expect(canvas).toHaveTextContent("XZ");

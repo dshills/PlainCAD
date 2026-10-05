@@ -55,11 +55,11 @@ test("focused mouse sketch, native extrude/cut, parameter edit, save/open and ST
   ).toBeHidden();
   await page.getByRole("button", { name: "Draw a shape", exact: true }).click();
   await page
-    .getByRole("button", { name: "Sketch on XY plane", exact: true })
+    .getByRole("button", { name: "Sketch on Top (XY) plane", exact: true })
     .click();
   await page
-    .getByLabel("Canvas tool", { exact: true })
-    .selectOption("rectangle");
+    .getByRole("button", { name: "Draw tool: rectangle", exact: true })
+    .click();
   await clickLocal(page, -10, -5);
   await clickLocal(page, 10, 5);
   await page
@@ -78,9 +78,11 @@ test("focused mouse sketch, native extrude/cut, parameter edit, save/open and ST
     .getByRole("button", { name: "Create sketch", exact: true })
     .click();
   await page
-    .getByRole("button", { name: "Sketch on XY plane", exact: true })
+    .getByRole("button", { name: "Sketch on Top (XY) plane", exact: true })
     .click();
-  await page.getByLabel("Canvas tool", { exact: true }).selectOption("circle");
+  await page
+    .getByRole("button", { name: "Draw tool: circle", exact: true })
+    .click();
   await clickLocal(page, 0, 0);
   await clickLocal(page, 2, 0);
   await page
@@ -278,4 +280,288 @@ test("compact focused layout keeps the start canvas and one details sheet usable
     await page.getByLabel("Task panel").selectOption("auto");
     await page.screenshot({ path: info.outputPath(`focused-${theme}.jpg`) });
   }
+});
+
+for (const plane of ["XY", "XZ", "YZ"] as const) {
+  test(`focused precise sketch sizes on ${plane} drive native geometry, inline edits, undo and saved STL`, async ({
+    page,
+  }, info) => {
+    await page.goto("/");
+    await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+    await page
+      .getByRole("button", { name: "Draw a shape", exact: true })
+      .click();
+    const name = { XY: "Top", XZ: "Front", YZ: "Side" }[plane];
+    await page
+      .getByRole("button", {
+        name: `Sketch on ${name} (${plane}) plane`,
+        exact: true,
+      })
+      .click();
+    await expect(page.getByLabel("Canvas tool", { exact: true })).toBeHidden();
+    await page
+      .getByRole("button", { name: "Draw tool: rectangle", exact: true })
+      .click();
+    await clickLocal(page, 0, 0);
+    await page.getByLabel("Draft width", { exact: true }).fill("2cm");
+    await page.getByLabel("Draft height", { exact: true }).fill("12");
+    await page.getByLabel("Draft height", { exact: true }).press("Enter");
+    await expect(
+      page.getByRole("form", { name: "Draft shape size" }),
+    ).toBeHidden();
+    const drawn = await aiSnapshot(page);
+    const sketchId = Object.keys(drawn.document.sketches)[0];
+    const sketch = drawn.document.sketches[sketchId];
+    expect(sketch.dimensions).toHaveLength(2);
+    expect(sketch.constraints).toHaveLength(4);
+    await page
+      .getByRole("button", { name: "Finish Sketch", exact: true })
+      .click();
+    await page
+      .getByRole("button", { name: "Extrude selected sketch", exact: true })
+      .click();
+    await page.getByLabel("Extrude distance", { exact: true }).fill("5mm");
+    await applyExtrusion(page);
+    await volume(page, 1200);
+    const bounds = (await aiSnapshot(page)).result!.meshes[0].bounds;
+    const expected = {
+      XY: [
+        [0, 0, 0],
+        [20, 12, 5],
+      ],
+      XZ: [
+        [0, -5, 0],
+        [20, 0, 12],
+      ],
+      YZ: [
+        [0, 0, 0],
+        [5, 20, 12],
+      ],
+    }[plane];
+    [bounds.min, bounds.max].forEach((b, i) =>
+      b.forEach((v, axis) => expect(v).toBeCloseTo(expected[i][axis], 5)),
+    );
+    // Reopen the sketch through its history entry, then change the existing width label.
+    await page.getByRole("button", { name: /^History \(/ }).click();
+    await page
+      .getByRole("list", { name: "Sketch and feature history" })
+      .getByRole("button")
+      .filter({ has: page.getByText(sketch.name, { exact: true }) })
+      .click();
+    await page
+      .getByRole("button", { name: "Edit sketch canvas", exact: true })
+      .click();
+    const label = page.locator(
+      `g[data-dimension-id="${sketch.dimensions[0].id}"]`,
+    );
+    await label.focus();
+    await label.press("Enter");
+    await expect(
+      page.getByLabel("Sketch size expression", { exact: true }),
+    ).toBeFocused();
+    await page.getByLabel("Sketch size expression", { exact: true }).fill("30");
+    await page
+      .getByLabel("Sketch size expression", { exact: true })
+      .press("Enter");
+    await expect(
+      page.getByRole("group", { name: "Sketch drawing canvas", exact: true }),
+    ).toBeFocused();
+    await volume(page, 1800);
+    const edited = await aiSnapshot(page);
+    expect(edited.document.sketches[sketchId].dimensions[0].id).toBe(
+      sketch.dimensions[0].id,
+    );
+    await page
+      .getByRole("button", { name: "Finish Sketch", exact: true })
+      .click();
+    await page.getByRole("button", { name: "Undo", exact: true }).click();
+    await volume(page, 1200);
+    await page.getByRole("button", { name: "Redo", exact: true }).click();
+    await volume(page, 1800);
+    await assertAiAcceptanceViewer(page, 1);
+    const save = page.waitForEvent("download");
+    await page
+      .getByRole("button", { name: "Save project", exact: true })
+      .click();
+    const file = info.outputPath(`precise-${plane}.pcaddoc`);
+    await (await save).saveAs(file);
+    await page.locator('input[type="file"]').setInputFiles(file);
+    await volume(page, 1800);
+    expect((await aiSnapshot(page)).document.sketches[sketchId]).toEqual(
+      edited.document.sketches[sketchId],
+    );
+    const download = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Export STL", exact: true }).click();
+    const stl = info.outputPath(`precise-${plane}.stl`);
+    await (await download).saveAs(stl);
+    expect(stlSignedVolume(await readFile(stl))).toBeCloseTo(1800, 2);
+  });
+}
+
+test("focused mouse drags, cancellation and circle size edits preserve analytic geometry and expose dimension failures", async ({
+  page,
+}, info) => {
+  await page.goto("/");
+  await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+  await page.getByRole("button", { name: "Draw a shape", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Sketch on Top (XY) plane", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Draw tool: rectangle", exact: true })
+    .click();
+  const svg = page.getByRole("group", {
+    name: "Sketch drawing canvas",
+    exact: true,
+  });
+  async function screenPoint(x: number, y: number) {
+    const b = (await svg.boundingBox())!,
+      v = (await svg.getAttribute("viewBox"))!.split(/\s+/).map(Number);
+    return {
+      x: b.x + ((x - v[0]) / v[2]) * b.width,
+      y: b.y + ((-y - v[1]) / v[3]) * b.height,
+    };
+  }
+  const a = await screenPoint(0, 0),
+    b = await screenPoint(20, 12);
+  await page.mouse.move(a.x, a.y);
+  await page.mouse.down();
+  await page.mouse.move(b.x, b.y, { steps: 6 });
+  // An unrelated pointer release must not steal the active mouse capture.
+  await svg.dispatchEvent("pointerup", {
+    pointerId: 999,
+    clientX: a.x,
+    clientY: a.y,
+  });
+  await page.mouse.up();
+  await expect
+    .poll(
+      async () =>
+        Object.values(
+          Object.values((await aiSnapshot(page)).document.sketches)[0].entities,
+        ).filter((e) => e.type === "line").length,
+    )
+    .toBe(4);
+  const before = await aiSnapshot(page);
+  await page.mouse.move(a.x, a.y);
+  await page.mouse.down();
+  await page.mouse.move(b.x + 100, b.y);
+  await page.keyboard.press("Escape");
+  await page.mouse.up();
+  expect((await aiSnapshot(page)).document).toEqual(before.document);
+  expect((await aiSnapshot(page)).past).toBe(before.past);
+  await page
+    .getByRole("button", { name: "Draw tool: circle", exact: true })
+    .click();
+  await clickLocal(page, 10, 6);
+  await page.getByLabel("Draft diameter", { exact: true }).fill("4mm");
+  await page.getByLabel("Draft diameter", { exact: true }).press("Enter");
+  await expect(
+    page.getByRole("form", { name: "Draft shape size" }),
+  ).toBeHidden();
+  const sketch = Object.values((await aiSnapshot(page)).document.sketches)[0];
+  const circleDimension = sketch.dimensions[0];
+  const label = page.locator(`g[data-dimension-id="${circleDimension.id}"]`);
+  await label.focus();
+  await label.press("Enter");
+  await page
+    .getByLabel("Sketch size expression", { exact: true })
+    .fill("missing");
+  await page
+    .getByLabel("Sketch size expression", { exact: true })
+    .press("Enter");
+  await expect(page.locator(".rebuild-pill")).toHaveText("failed");
+  await expect(label).toHaveAccessibleName(/unavailable/);
+  await expect(page.getByLabel("Canvas tool", { exact: true })).toBeHidden();
+  expect(
+    await page.getByRole("alert").filter({ hasText: "missing" }).count(),
+  ).toBeGreaterThan(0);
+  await label.focus();
+  await label.press("Enter");
+  await page.getByLabel("Sketch size expression", { exact: true }).fill("6mm");
+  await page
+    .getByLabel("Sketch size expression", { exact: true })
+    .press("Enter");
+  await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+  // Circle drag follows the same primitive path; construction must stay out of the solid profile.
+  await page
+    .getByRole("button", { name: "Draw tool: circle", exact: true })
+    .click();
+  await page
+    .getByRole("checkbox", { name: "Construction", exact: true })
+    .check();
+  const center = await screenPoint(50, 30),
+    radius = await screenPoint(54, 30);
+  await page.mouse.move(center.x, center.y);
+  await page.mouse.down();
+  await page.mouse.move(radius.x, radius.y, { steps: 6 });
+  await page.mouse.up();
+  await expect(async () => {
+    const state = await aiSnapshot(page);
+    expect(state.status).toBe("succeeded");
+    expect(
+      state.result?.solvedSketches?.[sketch.id].circles.find(
+        (c) => c.construction,
+      )?.radius,
+    ).toBeCloseTo(4, 7);
+  }).toPass();
+  const beforeBlur = await aiSnapshot(page);
+  await page.mouse.move(center.x, center.y);
+  await page.mouse.down();
+  await page.mouse.move(radius.x + 50, radius.y);
+  await page.evaluate(() => window.dispatchEvent(new Event("blur")));
+  await page.mouse.up();
+  expect((await aiSnapshot(page)).document).toEqual(beforeBlur.document);
+  expect((await aiSnapshot(page)).past).toBe(beforeBlur.past);
+  await page.screenshot({ path: info.outputPath("direct-sketch.jpg") });
+  await page
+    .getByRole("button", { name: "Finish Sketch", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Extrude selected sketch", exact: true })
+    .click();
+  await page.getByLabel("Extrude distance", { exact: true }).fill("5mm");
+  await applyExtrusion(page);
+  await volume(page, (240 - 9 * Math.PI) * 5);
+});
+
+test("compact sketch size drafts and selected dimensions remain usable across themes", async ({
+  page,
+}, info) => {
+  await page.setViewportSize({ width: 760, height: 900 });
+  await page.goto("/");
+  await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+  await page.getByRole("button", { name: "Draw a shape", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Sketch on Top (XY) plane", exact: true })
+    .click();
+  for (const theme of ["light", "dark", "saturn"]) {
+    await page.getByText("Settings", { exact: true }).click();
+    await page.getByLabel("UI theme", { exact: true }).selectOption(theme);
+    await page.getByText("Settings", { exact: true }).click();
+    await page
+      .getByRole("button", { name: "Draw tool: rectangle", exact: true })
+      .click();
+    await clickLocal(page, 50, 50);
+    const form = page.getByRole("form", { name: "Draft shape size" });
+    await page.getByLabel("Draft width", { exact: true }).fill("20mm");
+    await page.getByLabel("Draft height", { exact: true }).fill("12mm");
+    await page
+      .getByRole("button", { name: "Accept shape", exact: true })
+      .scrollIntoViewIfNeeded();
+    const bounds = (await form.boundingBox())!;
+    expect(bounds.x).toBeGreaterThanOrEqual(0);
+    expect(bounds.x + bounds.width).toBeLessThanOrEqual(760);
+    await page.screenshot({
+      path: info.outputPath(`sketch-draft-${theme}.jpg`),
+    });
+    await page
+      .getByRole("button", { name: "Cancel shape", exact: true })
+      .click();
+  }
+  expect(
+    Object.values(
+      Object.values((await aiSnapshot(page)).document.sketches)[0].entities,
+    ),
+  ).toHaveLength(0);
 });
