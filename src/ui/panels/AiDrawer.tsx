@@ -4,6 +4,11 @@ import { buildAiPlan } from "../../ai/buildPlan";
 import { aiEditContext, buildAiParameterEdit } from "../../ai/editPlan";
 import { reviseAiParameters } from "../../ai/revisePlan";
 import {
+  createAiConversationBudget,
+  prepareAiRepairPrompt,
+  type AiMessage,
+} from "../../ai/conversation";
+import {
   AI_LIMITS,
   type AiPlan,
   type AiProvider,
@@ -31,7 +36,7 @@ interface Proposal {
   result: RebuildResult;
   geometry: ReturnType<typeof assertAiGeometry>;
 }
-type Message = { role: "user" | "assistant"; content: string };
+type Message = AiMessage & { summary?: string };
 export function AiDrawer() {
   const open = useAiDrawer((state) => state.open);
   const document = useCadStore((state) => state.history.present);
@@ -81,6 +86,40 @@ export function AiDrawer() {
   const toggle = useRef<HTMLButtonElement>(null);
   const frame = useRef<AiDraftFrame>(undefined);
   const preference = useRef({ provider, model });
+  const conversationBudget = useMemo(() => {
+    try {
+      return {
+        prepare: createAiConversationBudget(
+          provider,
+          model,
+          history,
+          task === "edit" ? editing.context : undefined,
+        ),
+      };
+    } catch (failure) {
+      return {
+        error:
+          failure instanceof Error
+            ? failure.message
+            : "Conversation context is unavailable.",
+      };
+    }
+  }, [provider, model, history, task, editing.context]);
+  const conversation = useMemo(() => {
+    try {
+      return {
+        prepared: conversationBudget.prepare?.(prompt),
+        error: conversationBudget.error,
+      };
+    } catch (failure) {
+      return {
+        error:
+          failure instanceof Error
+            ? failure.message
+            : "Conversation context is unavailable.",
+      };
+    }
+  }, [conversationBudget, prompt]);
   useEffect(() => {
     preference.current = { provider, model };
   }, [provider, model]);
@@ -93,6 +132,7 @@ export function AiDrawer() {
     Boolean(prompt.trim()) &&
     /^[A-Za-z0-9._-]{1,100}$/.test(model) &&
     !configError &&
+    !conversation.error &&
     (task === "create" || Boolean(editing.context?.parameters.length)) &&
     providers.some((p) => p.id === provider && p.available);
   const cancel = (message = "Request canceled. The project is unchanged.") => {
@@ -183,7 +223,7 @@ export function AiDrawer() {
         provider,
         model,
         description,
-        history.slice(-AI_LIMITS.history),
+        history,
         abort.signal,
         task === "edit" ? editing.context : undefined,
       );
@@ -203,9 +243,13 @@ export function AiDrawer() {
       const nextHistory: Message[] = [
         ...history,
         { role: "user", content: description },
-        { role: "assistant", content: JSON.stringify(plan) },
+        {
+          role: "assistant",
+          content: JSON.stringify(plan),
+          summary: [plan.summary, ...plan.warnings].join("\n"),
+        },
       ];
-      setHistory(nextHistory.slice(-AI_LIMITS.history));
+      setHistory(nextHistory.slice(-AI_LIMITS.transcriptMessages));
       if (!plan.steps.length && (task !== "edit" || !plan.parameters.length)) {
         setStatus(
           "More information is needed, or this request is unsupported.",
@@ -286,7 +330,11 @@ export function AiDrawer() {
       setHistory((entries) =>
         entries.map((entry, index) =>
           index === entries.length - 1 && entry.role === "assistant"
-            ? { ...entry, content: JSON.stringify(plan) }
+            ? {
+                ...entry,
+                content: JSON.stringify(plan),
+                summary: [plan.summary, ...plan.warnings].join("\n"),
+              }
             : entry,
         ),
       );
@@ -494,6 +542,14 @@ export function AiDrawer() {
                 Finish sketch editing to generate an AI component.
               </p>
             ) : null}
+            <p role="status" aria-label="AI conversation context">
+              {prompt.length > AI_LIMITS.promptCharacters
+                ? `Shorten the description to ${AI_LIMITS.promptCharacters} characters before generating.`
+                : (conversation.error ??
+                  (conversation.prepared?.omittedTurns
+                    ? `${conversation.prepared.omittedTurns} older ${conversation.prepared.omittedTurns === 1 ? "turn" : "turns"} omitted from the next request; the latest complete proposal is retained.`
+                    : `The latest complete proposal and up to ${AI_LIMITS.history / 2} recent turns accompany follow-ups.`))}
+            </p>
             <div className="ai-actions">
               <button
                 type="button"
@@ -535,6 +591,30 @@ export function AiDrawer() {
             </div>
           </div>
           <div className="ai-result">
+            {history.length ? (
+              <details open className="ai-conversation">
+                <summary>Conversation ({history.length / 2} turns)</summary>
+                <ol aria-label="AI conversation">
+                  {history.map((entry, index) => (
+                    <li key={index}>
+                      <strong>
+                        {entry.role === "user" ? "You" : "Assistant"}
+                      </strong>
+                      <p style={{ whiteSpace: "pre-wrap" }}>
+                        {entry.role === "user"
+                          ? entry.content
+                        : (entry.summary || "Proposed component")}
+                      </p>
+                    </li>
+                  ))}
+                </ol>
+                <p className="muted">
+                  Up to {AI_LIMITS.transcriptMessages / 2} turns stay in this
+                  session. New conversation clears them; chat is never saved in
+                  a project.
+                </p>
+              </details>
+            ) : null}
             <p role="status" aria-label="AI modeling status">
               {status}
             </p>
@@ -549,6 +629,24 @@ export function AiDrawer() {
               </p>
             ) : null}
             {error ? <p role="alert">{error}</p> : null}
+            {error &&
+            reply &&
+            !busy &&
+            replyFrame &&
+            currentAiFrame(replyFrame) ? (
+              <button
+                type="button"
+                onClick={() => {
+                  const repair = prepareAiRepairPrompt(prompt, error);
+                  cancel(repair.notice);
+                  setPrompt(repair.text);
+                  setError("");
+                  input.current?.focus();
+                }}
+              >
+                Use preview diagnostic in next description
+              </button>
+            ) : null}
             {reply ? (
               <>
                 <strong>{reply.name}</strong>

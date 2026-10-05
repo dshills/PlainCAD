@@ -133,7 +133,8 @@ export const AI_LIMITS = {
   holeCenters: 64,
   targets: 8,
   history: 6,
-  historyEntryCharacters: 12000,
+  transcriptMessages: 32,
+  historyEntryCharacters: 32000,
 } as const;
 
 type JsonSchema = Record<string, unknown>;

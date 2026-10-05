@@ -10,6 +10,7 @@ import {
   type AiProviderStatus,
 } from "../src/ai/plan";
 import { parseProjectJson } from "../src/persistence/importSafety";
+import { validateAiHistory } from "../src/ai/conversation";
 
 export type AiEnvironment = Record<string, string | undefined>;
 /** Only curated diagnostics may cross the credential-bearing server boundary. */
@@ -92,11 +93,12 @@ export function validateAiRequest(value: unknown): AiRequest {
         "AI conversation exceeds its supported limits. Start a new conversation.",
       );
   }
+  const history = validateAiHistory(request.history);
   return {
     provider: request.provider!,
     model: request.model,
     prompt: request.prompt.trim(),
-    history: request.history,
+    history,
     ...(request.editContext !== undefined
       ? { editContext: validateAiEditContext(request.editContext) }
       : {}),

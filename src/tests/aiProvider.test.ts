@@ -142,6 +142,21 @@ it("rejects arbitrary providers/model paths, long prompts, conversation injectio
     }),
   ).toThrow(/invalid/);
 });
+it("accepts only complete user/assistant turns at the server boundary", () => {
+  const history = [
+    { role: "user", content: "Request" },
+    { role: "assistant", content: "Proposal" },
+  ];
+  expect(validateAiRequest({ ...request, history }).history).toEqual(history);
+  for (const invalid of [
+    history.slice(1),
+    [...history].reverse(),
+    [history[0], { role: "assistant", content: " " }],
+  ])
+    expect(() => validateAiRequest({ ...request, history: invalid })).toThrow(
+      /conversation/,
+    );
+});
 it("never forwards raw upstream errors, including echoed credentials", async () => {
   const fetcher = vi
     .fn()

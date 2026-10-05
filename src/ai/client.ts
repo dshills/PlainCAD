@@ -8,6 +8,7 @@ import {
   type AiEditContext,
 } from "./plan";
 import { parseProjectJson } from "../persistence/importSafety";
+import { prepareAiConversation } from "./conversation";
 
 async function requestJson(
   path: string,
@@ -110,19 +111,13 @@ export async function requestAiPlan(
     throw new Error(
       `Describe your part in 1–${AI_LIMITS.promptCharacters} characters.`,
     );
-  if (
-    history.length > AI_LIMITS.history ||
-    history.some(
-      (entry) => entry.content.length > AI_LIMITS.historyEntryCharacters,
-    )
-  )
-    throw new Error("AI conversation is too long. Start a new conversation.");
-  const value = await requestJson("/api/ai/generate", signal, {
+  const prepared = prepareAiConversation(
     provider,
     model,
     prompt,
     history,
-    ...(editContext ? { editContext } : {}),
-  });
+    editContext,
+  );
+  const value = await requestJson("/api/ai/generate", signal, prepared.body);
   return validateAiPlan(value.plan);
 }

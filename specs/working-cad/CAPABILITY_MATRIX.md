@@ -585,3 +585,8 @@ AI polygon/wire profiles use at most 32 shared vertices with explicit outgoing
 line/arc edges; points-only sketches support native Hole features with up to 64
 indexed centers and explicit live body targets. Arc radius/winding, closed profile,
 pattern participation and exact native geometry are validated before Apply.
+The drawer displays up to 16 local conversation turns with summaries/assumptions.
+Provider context is bounded to three complete recent turns and 32000 UTF-8 request
+bytes, dropping only whole older turns with a visible notice. An oversized latest
+proposal blocks follow-up with local-edit/reset guidance. Preview diagnostics can
+be included in a reviewed next description; no automatic retries incur provider calls.

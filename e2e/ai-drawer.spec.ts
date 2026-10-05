@@ -315,6 +315,62 @@ test("AI polygons, analytic arcs and indexed Hole patterns produce exact native 
   await (await stl).saveAs(stlPath);
   expect((await readFile(stlPath)).readUInt32LE(80)).toBeGreaterThan(0);
 });
+test("clarifications and assumptions stay visible; follow-ups send complete recent proposals and reset clears only chat", async ({
+  page,
+}) => {
+  const drawer = await setup(page),
+    before = await snapshot(page);
+  const sent: Array<{ history: Array<{ role: string; content: string }> }> = [];
+  await page.route("**/api/ai/generate", (route) => {
+    sent.push(route.request().postDataJSON());
+    return route.fulfill({
+      json: {
+        plan:
+          sent.length === 1
+            ? {
+                name: "Clarification",
+                summary: "What plate thickness do you need?",
+                warnings: ["Hole diameter is still unspecified."],
+                parameters: [],
+                steps: [],
+              }
+            : aiPlatePlan,
+      },
+    });
+  });
+  const description = drawer.getByLabel("What would you like to make?");
+  await description.fill("Make a plate");
+  await drawer.getByRole("button", { name: "Generate preview" }).click();
+  const transcript = drawer.getByRole("list", { name: "AI conversation" });
+  await expect(transcript).toContainText("What plate thickness do you need?");
+  await expect(transcript).toContainText("Hole diameter is still unspecified.");
+  await expect(
+    drawer.getByRole("button", { name: "Apply AI component" }),
+  ).toBeDisabled();
+  for (let turn = 1; turn <= 4; turn++) {
+    await description.fill(`Use 5mm thickness and 4mm hole, request ${turn}`);
+    await drawer.getByRole("button", { name: "Generate preview" }).click();
+    await expect(transcript.locator("li")).toHaveCount(2 * (turn + 1));
+    await expect(
+      drawer.getByRole("button", { name: "Apply AI component" }),
+    ).toBeEnabled();
+  }
+  expect(sent[1].history.map((message) => message.role)).toEqual([
+    "user",
+    "assistant",
+  ]);
+  expect(JSON.parse(sent[1].history[1].content).steps).toEqual([]);
+  expect(sent[4].history).toHaveLength(6);
+  expect(JSON.parse(sent[4].history.at(-1)!.content)).toEqual(aiPlatePlan);
+  await expect(transcript.locator("li")).toHaveCount(10);
+  await expect(
+    drawer.getByRole("status", { name: "AI conversation context" }),
+  ).toContainText("2 older turns omitted");
+  expect((await snapshot(page)).document).toEqual(before.document);
+  await drawer.getByRole("button", { name: "New conversation" }).click();
+  await expect(transcript).toHaveCount(0);
+  expect((await snapshot(page)).document).toEqual(before.document);
+});
 test("proposal dimension edits invalidate Apply, reject invalid values and re-preview native geometry without another provider call", async ({
   page,
 }) => {
@@ -354,6 +410,13 @@ test("proposal dimension edits invalidate Apply, reject invalid values and re-pr
     .click();
   await expect(drawer.getByRole("alert")).toContainText("positive length");
   await expect(apply).toBeDisabled();
+  await drawer
+    .getByRole("button", { name: "Use preview diagnostic in next description" })
+    .click();
+  await expect(drawer.getByLabel("What would you like to make?")).toHaveValue(
+    /positive length/,
+  );
+  expect(calls).toBe(1);
   await thickness.fill("8");
   await drawer
     .getByRole("button", { name: "Preview dimension changes" })

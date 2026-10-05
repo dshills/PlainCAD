@@ -167,6 +167,14 @@ fresh native preview without a provider call. Editing invalidates Apply immediat
 failed, stale and canceled previews cannot modify the project. This also works for
 existing-component parameter proposals; after applying or changing projects,
 generate a fresh proposal.
+The drawer shows a local conversation transcript, including clarifications and
+assumptions. Up to 16 turns remain in the session; the next request sends at most
+three recent complete turns within the byte budget. Older turns are omitted as
+needed, with a visible notice. The latest proposal is never silently truncated:
+if it cannot fit, use local dimension edits or **New conversation**. Preview errors
+can be copied into the next description for an explicit repair request; this does
+not call the provider until you choose Generate. Project replacement, provider/task
+changes and explicit reset clear the relevant conversation. Chat stays out of saves.
 
 The provider adapters follow [Anthropic structured outputs](https://platform.claude.com/docs/en/build-with-claude/structured-outputs),
 [OpenAI structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs),
