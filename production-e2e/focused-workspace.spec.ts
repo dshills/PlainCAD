@@ -1,8 +1,11 @@
+import { focusedWorkspaceStorageState } from "../e2e/workspaceStorage";
 import { applyExtrusion } from "../e2e/extrudeWorkflow";
 import { test, expect } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { stlSignedVolume } from "../e2e/aiAcceptanceHelpers";
-test.use({ storageState: { cookies: [], origins: [] } });
+test.use({
+  storageState: focusedWorkspaceStorageState("http://127.0.0.1:5280"),
+});
 test("built focused workspace starts quietly and edits/exports a native example under CSP", async ({
   page,
 }, info) => {

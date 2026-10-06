@@ -141,7 +141,7 @@ export function SketchCanvasPanel() {
   ) : null;
 }
 function SketchCanvas({ active }: { active: CanvasSession }) {
-  const focused = useWorkspaceState((s) => s.layout === "focused");
+  const focused = useWorkspaceState((s) => s.layout !== "full");
   const [sizes, setSizes] = useState<CanvasSizeInput>({});
   const [precisionOpen, setPrecisionOpen] = useState(!focused);
   useEffect(() => setPrecisionOpen(!focused), [focused]);

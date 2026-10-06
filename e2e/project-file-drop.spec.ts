@@ -58,7 +58,10 @@ test("project drops validate, preserve current work until confirmed, and retain 
   await drop(page, JSON.stringify(document), "box.pcaddoc");
   await nativeVolume(page, 80000);
   expect((await aiSnapshot(page)).document.id).toBe(document.id);
-  await page.getByLabel("Task panel").selectOption("parameters");
+  await page
+    .getByRole("group", { name: "Project dock tabs" })
+    .getByRole("button", { name: "Parameters", exact: true })
+    .click();
   const depth = page.getByLabel("Parameter depth expression", { exact: true });
   await depth.fill("8mm");
   await depth.press("Enter");
@@ -101,6 +104,7 @@ test("project drops validate, preserve current work until confirmed, and retain 
   // Reopen the portable copy preserved by the confirmation action.
   await page.locator('input[type="file"]').setInputFiles(path);
   await nativeVolume(page, 32000);
+  await page.locator(".file-menu > summary").click();
   const exportEvent = page.waitForEvent("download");
   await page.getByRole("button", { name: "Export STL", exact: true }).click();
   const stl = info.outputPath("dropped-box.stl");

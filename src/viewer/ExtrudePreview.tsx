@@ -8,9 +8,15 @@ import {
   extrusionHandleEndpoint,
   type DistanceAxis,
 } from "./extrudeDistanceHandle";
+import { useThemeState } from "../state/useThemeState";
+import { viewerThemeColors } from "../ui/themes/themes";
+import { useWorkspaceState } from "../state/useWorkspaceState";
+import { ArrowsOutLineVerticalIcon } from "@phosphor-icons/react/dist/csr/ArrowsOutLineVertical";
 import type { RenderMesh } from "../cad/kernel/KernelAdapter";
 
 interface PreviewRuntime {
+  scene: THREE.Scene;
+  grid: THREE.GridHelper;
   group: THREE.Group;
   camera: THREE.PerspectiveCamera;
   controls: OrbitControls;
@@ -50,6 +56,8 @@ export function ExtrudePreview({
   label?: string;
   distanceHandle?: ExtrudeDistanceHandle;
 }) {
+  const theme = useThemeState((state) => state.theme);
+  const workbench = useWorkspaceState((state) => state.layout === "workbench");
   const host = useRef<HTMLDivElement>(null);
   const runtime = useRef<PreviewRuntime>(undefined);
   const [error, setError] = useState("");
@@ -107,6 +115,10 @@ export function ExtrudePreview({
       group = new THREE.Group();
     scene.background = new THREE.Color("#091c27");
     scene.add(group);
+    const grid = new THREE.GridHelper(200, 20, 0x7f918b, 0xc1cbc7);
+    grid.rotation.x = Math.PI / 2;
+    grid.visible = false;
+    scene.add(grid);
     const camera = new THREE.PerspectiveCamera(40, 1, 0.01, 1000);
     camera.up.set(0, 0, 1);
     camera.position.set(2, -2, 2);
@@ -182,7 +194,15 @@ export function ExtrudePreview({
       camera.updateProjectionMatrix();
       render();
     };
-    runtime.current = { group, camera, controls, render, fitted: false };
+    runtime.current = {
+      scene,
+      grid,
+      group,
+      camera,
+      controls,
+      render,
+      fitted: false,
+    };
     const observer = new ResizeObserver(resize);
     observer.observe(element);
     resize();
@@ -192,6 +212,11 @@ export function ExtrudePreview({
       observer.disconnect();
       controls.dispose();
       clearMeshes(group);
+      grid.geometry.dispose();
+      const gridMaterials = Array.isArray(grid.material)
+        ? grid.material
+        : [grid.material];
+      gridMaterials.forEach((material) => material.dispose());
       renderer.dispose();
       renderer.forceContextLoss();
       renderer.domElement.remove();
@@ -274,14 +299,44 @@ export function ExtrudePreview({
       window.removeEventListener("keydown", escape, true);
     };
   }, []);
+  useEffect(() => {
+    const state = runtime.current;
+    if (!state) return;
+    state.scene.background = new THREE.Color(
+      viewerThemeColors[theme].background,
+    );
+    state.grid.visible = workbench;
+    const gridMaterials = Array.isArray(state.grid.material)
+      ? state.grid.material
+      : [state.grid.material];
+    gridMaterials.forEach((material) => {
+      material.opacity = 0.35;
+      material.transparent = true;
+    });
+    state.group.traverse((object) => {
+      if (
+        object instanceof THREE.Mesh &&
+        object.material instanceof THREE.MeshStandardMaterial
+      )
+        object.material.color.set(
+          workbench && theme === "light" ? "#d4ad62" : "#39c8e7",
+        );
+      if (
+        object instanceof THREE.LineSegments &&
+        object.material instanceof THREE.LineBasicMaterial
+      )
+        object.material.color.set(theme === "light" ? "#725327" : "#082732");
+    });
+    state.render();
+  }, [theme, workbench, meshes]);
   const handleUnavailable =
     distanceHandle?.disabledReason ??
     (!dragging && projection?.parallel
       ? "Orbit the preview to see the extrusion axis before dragging."
       : undefined);
   return (
-    <div>
-      <div style={{ position: "relative" }}>
+    <div className="native-preview">
+      <div className="native-preview-frame" style={{ position: "relative" }}>
         <div
           ref={host}
           className="extrude-preview"
@@ -429,7 +484,7 @@ export function ExtrudePreview({
                 }
               }}
             >
-              ↕
+              <ArrowsOutLineVerticalIcon size={20} aria-hidden={true} />
             </button>
           </>
         ) : null}

@@ -1,3 +1,5 @@
+import { useHoleDraft } from "../commands/holeCommand";
+import { useGuidedHole } from "../commands/guidedHoleCommand";
 import { useOperationDrop } from "../commands/operationDropCommand";
 import { useExtrudeDraft } from "../commands/extrudeCommand";
 import { useModelingDraft } from "../commands/modelingDraftCommand";
@@ -57,7 +59,7 @@ interface Proposal {
   geometry: ReturnType<typeof assertAiGeometry>;
 }
 type Message = AiMessage & { summary?: string; display?: string };
-export function AiDrawer() {
+export function AiDrawer({ embedded = false }: { embedded?: boolean }) {
   // Layout seeds the initial disclosure; later layout changes preserve the user’s choice.
   const [settingsOpen, setSettingsOpen] = useState(
     () => useWorkspaceState.getState().layout === "full",
@@ -80,13 +82,19 @@ export function AiDrawer() {
     useOperationDrop((state) => state.frame),
   );
   const operationExtrudeActive = Boolean(
-    useExtrudeDraft((state) => state.draft?.targetSnapshot),
+    useExtrudeDraft((state) => state.draft),
   );
   const operationModelingActive = Boolean(
-    useModelingDraft((state) => state.draft?.targetSnapshot),
+    useModelingDraft((state) => state.draft),
   );
+  const holeActive = Boolean(useHoleDraft((state) => state.draft));
+  const guidedHoleActive = Boolean(useGuidedHole((state) => state.draft));
   const operationActive =
-    operationPickerActive || operationExtrudeActive || operationModelingActive;
+    operationPickerActive ||
+    operationExtrudeActive ||
+    operationModelingActive ||
+    holeActive ||
+    guidedHoleActive;
 
   const [providers, setProviders] = useState<AiProviderStatus[]>([]);
   const [provider, setProvider] = useState<AiProvider>("anthropic");
@@ -554,12 +562,12 @@ export function AiDrawer() {
   };
   const canPreviewDimensions = Boolean(
     reply?.parameters.length &&
-    replyFrame &&
-    currentAiFrame(replyFrame) &&
-    !busy &&
-    kernelReady &&
-    !fileBusy &&
-    !canvasActive,
+      replyFrame &&
+      currentAiFrame(replyFrame) &&
+      !busy &&
+      kernelReady &&
+      !fileBusy &&
+      !canvasActive,
   );
   const previewDimensions = async () => {
     if (!canPreviewDimensions || !reply || !replyFrame) return;
@@ -659,12 +667,21 @@ export function AiDrawer() {
     }
   };
   const selectedProvider = providers.find((p) => p.id === provider);
+  function changeScope(scope: AiScope) {
+    cancel("Scope changed. Generate a fresh preview.");
+    setTask(scope);
+    setHistory([]);
+    setReply(undefined);
+    setError("");
+    setChosenTarget(undefined);
+    setClarifying(false);
+  }
   return (
     <section
       className={`ai-drawer${open ? " open" : ""}`}
       aria-label="AI modeling assistant"
     >
-      <div className="ai-drawer-header">
+      <div className="ai-drawer-header" hidden={embedded}>
         <button
           ref={toggle}
           type="button"
@@ -688,41 +705,124 @@ export function AiDrawer() {
               event.preventDefault();
               event.stopPropagation();
               void runCommand("ai.toggle");
-              toggle.current?.focus();
+              if (embedded)
+                window.document.getElementById("workbench-ai-toggle")?.focus();
+              else toggle.current?.focus();
             }
           }}
         >
           <div className="ai-composer">
-            <fieldset className="ai-scope" aria-label="AI scope">
-              <legend>What do you want to work on?</legend>
-              <div className="ai-actions">
-                {(
-                  [
-                    ["create", "New part"],
-                    ["edit", "This part"],
-                    ["feature", "Selected feature"],
-                  ] as const
-                ).map(([scope, label]) => (
-                  <button
-                    key={scope}
-                    type="button"
-                    aria-pressed={task === scope}
+            <div className="ai-prompt-entry">
+              <fieldset className="ai-scope" aria-label="AI scope">
+                <legend>What do you want to work on?</legend>
+                {embedded ? (
+                  <select
+                    aria-label="AI scope"
+                    value={task}
                     disabled={busy}
-                    onClick={() => {
-                      cancel("Scope changed. Generate a fresh preview.");
-                      setTask(scope);
-                      setHistory([]);
-                      setReply(undefined);
-                      setError("");
-                      setChosenTarget(undefined);
-                      setClarifying(false);
-                    }}
+                    onChange={(event) =>
+                      changeScope(event.target.value as AiScope)
+                    }
                   >
-                    {label}
-                  </button>
-                ))}
+                    <option value="create">New part</option>
+                    <option value="edit">This part</option>
+                    <option value="feature">Selected feature</option>
+                  </select>
+                ) : (
+                  <div className="ai-actions">
+                    {(
+                      [
+                        ["create", "New part"],
+                        ["edit", "This part"],
+                        ["feature", "Selected feature"],
+                      ] as const
+                    ).map(([scope, label]) => (
+                      <button
+                        key={scope}
+                        type="button"
+                        aria-pressed={task === scope}
+                        disabled={busy}
+                        onClick={() => changeScope(scope)}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </fieldset>
+
+              <label htmlFor="ai-description">
+                What would you like to make?
+              </label>
+              <textarea
+                ref={input}
+                id="ai-description"
+                rows={embedded ? 2 : 3}
+                maxLength={AI_LIMITS.promptCharacters}
+                placeholder="A 60 × 40 × 5 mm plate with four 4 mm mounting holes, 6 mm from each corner…"
+                value={prompt}
+                disabled={busy}
+                onChange={(event) => {
+                  if (proposal)
+                    cancel("Description changed. Generate a fresh preview.");
+                  setPrompt(event.target.value);
+                  setChosenTarget(undefined);
+                  setClarifying(false);
+                }}
+                onKeyDown={(event) => {
+                  if (
+                    event.key === "Enter" &&
+                    (event.ctrlKey || event.metaKey)
+                  ) {
+                    event.preventDefault();
+                    void generate();
+                  }
+                }}
+              />
+              <div className="ai-actions">
+                <button
+                  type="button"
+                  disabled={!canGenerate}
+                  onClick={() => void generate()}
+                >
+                  Generate preview
+                </button>
+                <button
+                  type="button"
+                  disabled={!busy && !proposal}
+                  onClick={() => cancel()}
+                >
+                  Cancel AI proposal
+                </button>
+                <button
+                  type="button"
+                  disabled={!proposal || !current || busy || fileBusy}
+                  onClick={apply}
+                >
+                  {task === "feature"
+                    ? "Apply AI feature edits"
+                    : task === "edit"
+                      ? "Apply AI parameter edits"
+                      : "Apply AI component"}
+                </button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => {
+                    cancel("Conversation cleared. Describe a new part.");
+                    setHistory([]);
+                    setReply(undefined);
+                    setPrompt("");
+                    setChosenTarget(undefined);
+                    setClarifying(false);
+                    setError("");
+                    input.current?.focus();
+                  }}
+                >
+                  New conversation
+                </button>
               </div>
-            </fieldset>
+            </div>
             {intent.target ? (
               <p role="status" aria-label="AI edit target">
                 Target:{" "}
@@ -937,29 +1037,6 @@ export function AiDrawer() {
                 </button>
               </div>
             </details>
-            <label htmlFor="ai-description">What would you like to make?</label>
-            <textarea
-              ref={input}
-              id="ai-description"
-              rows={3}
-              maxLength={AI_LIMITS.promptCharacters}
-              placeholder="A 60 × 40 × 5 mm plate with four 4 mm mounting holes, 6 mm from each corner…"
-              value={prompt}
-              disabled={busy}
-              onChange={(event) => {
-                if (proposal)
-                  cancel("Description changed. Generate a fresh preview.");
-                setPrompt(event.target.value);
-                setChosenTarget(undefined);
-                setClarifying(false);
-              }}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
-                  event.preventDefault();
-                  void generate();
-                }
-              }}
-            />
             <p className="muted" role="note" aria-label="AI next action">
               {task === "create"
                 ? "Next: describe a part, review its dimensions and native preview, then Apply."
@@ -1000,49 +1077,6 @@ export function AiDrawer() {
                     ? `${conversation.prepared.omittedTurns} older ${conversation.prepared.omittedTurns === 1 ? "turn" : "turns"} omitted from the next request; the latest complete proposal is retained.`
                     : `The latest complete proposal and up to ${AI_LIMITS.history / 2} recent turns accompany follow-ups.`))}
             </p>
-            <div className="ai-actions">
-              <button
-                type="button"
-                disabled={!canGenerate}
-                onClick={() => void generate()}
-              >
-                Generate preview
-              </button>
-              <button
-                type="button"
-                disabled={!busy && !proposal}
-                onClick={() => cancel()}
-              >
-                Cancel AI proposal
-              </button>
-              <button
-                type="button"
-                disabled={!proposal || !current || busy || fileBusy}
-                onClick={apply}
-              >
-                {task === "feature"
-                  ? "Apply AI feature edits"
-                  : task === "edit"
-                    ? "Apply AI parameter edits"
-                    : "Apply AI component"}
-              </button>
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => {
-                  cancel("Conversation cleared. Describe a new part.");
-                  setHistory([]);
-                  setReply(undefined);
-                  setPrompt("");
-                  setChosenTarget(undefined);
-                  setClarifying(false);
-                  setError("");
-                  input.current?.focus();
-                }}
-              >
-                New conversation
-              </button>
-            </div>
           </div>
           <div className="ai-result">
             {history.length ? (

@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useWorkbenchState } from "./useWorkbenchState";
 
 export const WORKSPACE_STORAGE_KEY = "plaincad.workspace.v1";
 export const WORKSPACE_PANELS = [
@@ -14,15 +15,17 @@ export const WORKSPACE_PANELS = [
 ] as const;
 export type WorkspacePanel = (typeof WORKSPACE_PANELS)[number];
 export type TaskPanel =
-  Exclude<WorkspacePanel, "parts" | "history"> | "auto" | "none";
+  | Exclude<WorkspacePanel, "parts" | "history">
+  | "auto"
+  | "none";
 export interface WorkspacePreferences {
-  layout: "focused" | "full";
+  layout: "workbench" | "focused" | "full";
   pins: WorkspacePanel[];
   partsOpen: boolean;
   historyOpen: boolean;
 }
 const defaults = (): WorkspacePreferences => ({
-  layout: "focused",
+  layout: "workbench",
   pins: [],
   partsOpen: false,
   historyOpen: false,
@@ -38,7 +41,9 @@ export function readWorkspacePreferences(): WorkspacePreferences {
     const pins = Array.isArray(data.pins) ? data.pins : [];
     if (
       data.version !== 1 ||
-      (data.layout !== "focused" && data.layout !== "full")
+      (data.layout !== "workbench" &&
+        data.layout !== "focused" &&
+        data.layout !== "full")
     )
       return defaults();
     return {
@@ -92,7 +97,8 @@ export const useWorkspaceState = create<WorkspaceState>((set, get) => {
     sheet: preferences.partsOpen ? "parts" : undefined,
     activePanel: "auto",
     setLayout: (layout) => {
-      if (layout === "focused" || layout === "full") update({ layout });
+      if (layout === "workbench" || layout === "focused" || layout === "full")
+        update({ layout });
     },
     togglePin: (panel) => {
       if (WORKSPACE_PANELS.includes(panel))
@@ -112,11 +118,20 @@ export const useWorkspaceState = create<WorkspaceState>((set, get) => {
         activePanel === "auto" ||
         activePanel === "none" ||
         WORKSPACE_PANELS.includes(activePanel)
-      )
+      ) {
+        if (get().layout === "workbench") {
+          if (activePanel === "parameters")
+            useWorkbenchState.getState().showLeft("parameters");
+          else if (activePanel === "issues")
+            useWorkbenchState.getState().showBottom("issues");
+          else if (activePanel !== "none" && activePanel !== "auto")
+            useWorkbenchState.getState().showRight("properties");
+        }
         set({
           activePanel,
           sheet: activePanel === "none" ? undefined : "details",
         });
+      }
     },
   };
 });

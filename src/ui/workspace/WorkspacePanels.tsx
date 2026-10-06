@@ -1,5 +1,6 @@
 import { useShallow } from "zustand/react/shallow";
-import { useEffect, useState } from "react";
+import { WorkbenchDetailsDock } from "./WorkbenchDetailsDock";
+import { RetainedPanel } from "./RetainedPanel";
 import {
   useWorkspacePresentation,
   getWorkspacePresentation,
@@ -72,6 +73,14 @@ export function PinPanel({
   );
 }
 export function WorkspacePanels() {
+  const layout = useWorkspaceState((state) => state.layout);
+  return layout === "workbench" ? (
+    <WorkbenchDetailsDock />
+  ) : (
+    <LegacyWorkspacePanels />
+  );
+}
+function LegacyWorkspacePanels() {
   const { layout, pins } = useWorkspaceState(
     useShallow(({ layout, pins }) => ({ layout, pins })),
   );
@@ -159,20 +168,4 @@ export function WorkspacePanels() {
       ))}
     </aside>
   );
-}
-
-// Defer subscriptions and derived calculations until a panel is requested. Once
-// visited, keep its local form drafts intact through hiding and layout switches.
-function RetainedPanel({
-  visible,
-  children,
-}: {
-  visible: boolean;
-  children: ReactNode;
-}) {
-  const [visited, setVisited] = useState(visible);
-  useEffect(() => {
-    if (visible) setVisited(true);
-  }, [visible]);
-  return visible || visited ? children : null;
 }

@@ -17,6 +17,8 @@
     "test:ai:live": "playwright test -c playwright.ai-live.config.ts"
   },
   "dependencies": {
+    "@fontsource/inter": "^5.2.8",
+    "@phosphor-icons/react": "^2.1.10",
     "opencascade.js": "^1.1.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

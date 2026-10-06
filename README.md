@@ -113,16 +113,27 @@ The production build currently emits a Vite chunk-size warning because OpenCasca
 
 ### Choose your workspace
 
-PlainCAD opens in **Focused** layout: a canvas with **Draw a shape**, **Describe a
-part with AI**, **Start from example**, and **Open an existing project** choices.
-Use **Parts** to open the project browser, **History** to expand existing steps,
-and **Details** to select one contextual inspector, parameter, measurement, view,
-dependency, help or issue panel. Empty history and diagnostic panels stay hidden.
-Model issues remain accessible from the workspace bar; **All tools** opens the
-searchable command palette with the same command enablement as the ribbon.
+PlainCAD opens in **Docked Workbench**: Project/Parameters on the left, one
+Task/Properties panel on the right, and History/AI/Issues at the bottom. **Draw**,
+**Solid** and **Inspect** switch the context toolbar. **File** holds open, export
+and example commands; **Search commands** opens the complete command palette.
+The location bar keeps the active component visible. Close a dock to gain canvas
+space and reopen it with **Project** or **Details**. Drag a dock boundary, or focus
+it and use arrow keys, to resize. Sizes are bounded and saved only in this browser.
+
+Feature tasks put a real native preview in the center and controls on the right.
+Set a thickness or drag its distance handle, review the geometry, then **Apply**.
+Background commands and AI wait until you Apply or Cancel. Sketch mode uses one
+right-hand sketch control area; drawing dimensions remain editable on the canvas.
+Advanced controls stay behind disclosures. Bottom tabs show one surface at a time.
+
+**Settings → Workspace** also offers **Minimal workspace**, preserving the previous
+Focused layout and its deliberate Parts/History/Details disclosures. Existing
+saved minimal/full choices are honored. See [the design system](DESIGN_SYSTEM.md)
+for the spatial contract, shared components, theme rules and current limitations.
 
 Choose **Full workspace** for the complete ribbon, browser, history and inspection
-panels. **Pin** keeps an individual panel available in Focused layout. At compact
+panels. **Pin** keeps an individual panel available in Minimal workspace. At compact
 widths, choosing Parts or Details switches the active sheet, including when panels
 are pinned. Workspace layout, pins and Parts/History expansion are local browser
 preferences, separate from CAD files and undo history; the active task is transient.
@@ -202,7 +213,6 @@ and cannot overlap, touch or create nested islands. Circular outer loops current
 support circular openings; rectangle/polygon/wire outers also support closed line
 and arc openings. The recipe allows at most 64 total sketch points and no recursive
 compound profiles or explicit indexed intent across their loops.
-
 
 AI face planes use earlier unmodified distance-extrusion cap roles or straight outer
 side edges from the same recipe. Signed offsets are supported. Positive To Face
@@ -357,7 +367,6 @@ explicit-unit behavior until edited. Computed readouts use the current evaluated
 quantities; unavailable or pending results never display the persisted value cache.
 Display units affect readouts and measurements, and are saved undoable preferences.
 The parameter inspector also edits descriptions and groups (up to 80 characters).
-
 
 Schema 8 persists parameter token bindings by stable ID. Renaming a parameter
 updates dependent display expressions while preserving design intent, including
@@ -860,13 +869,11 @@ Deferred until after MVP:
 Production build headers, CSP, cache/MIME requirements, and the built-app browser
 check are documented in [deployment/README.md](deployment/README.md).
 
-
 The Inspector exposes line/arc endpoints and circle/arc centers. Inspect a linked
 point to edit its coordinates, or choose another point in the same sketch to repair
 the reference. Arc direction is editable with undo/redo. Well-typed lost point
 references survive project open for explicit repair; malformed IDs remain rejected.
 Invalid references or inconsistent arc geometry block rebuilding and STL export.
-
 
 The Chromium suite includes a six-operation native chain: extrusion, cap fillet,
 cap chamfer, through-hole, through-pocket, and connected boss join. It checks exact
@@ -874,7 +881,6 @@ BRep volume after every operation and depth/radius edits, stable body identity a
 bounds, undo/redo, blocked downstream operations after a middle-feature failure,
 suppression/repair, save/open, and STL volume/winding. This is one bounded XY part;
 it does not establish arbitrary topology naming or every complex model workload.
-
 
 The release gate records controlled native performance reports for both Vite
 development and the production build under CSP. The shared rectangle/through-cut

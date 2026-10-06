@@ -1,10 +1,13 @@
+import { focusedWorkspaceStorageState } from "./workspaceStorage";
 import type { ResolvedSketch } from "../src/cad/sketch/SketchSolver";
 import { test, expect, type Page } from "@playwright/test";
 import type { CadDocument, Sketch } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
 import { applyExtrusion } from "./extrudeWorkflow";
 
-test.use({ storageState: { cookies: [], origins: [] } });
+test.use({
+  storageState: focusedWorkspaceStorageState("http://127.0.0.1:5279"),
+});
 interface Snapshot {
   document: CadDocument;
   status: string;
@@ -221,12 +224,10 @@ test("Focused duplicate-constraint card selects exact references, consumes focus
     const path = "/src/state/useCadStore.ts",
       store = (await import(path)).useCadStore;
     const previousResult = store.getState().rebuild.result;
-    store
-      .getState()
-      .updateDocument((document: CadDocument) => ({
-        ...document,
-        name: "Same document edited after repair focus",
-      }));
+    store.getState().updateDocument((document: CadDocument) => ({
+      ...document,
+      name: "Same document edited after repair focus",
+    }));
     return {
       queued: store.getState().rebuild.status,
       oldResultRetained: store.getState().rebuild.result === previousResult,

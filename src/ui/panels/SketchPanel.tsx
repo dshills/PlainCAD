@@ -1,9 +1,13 @@
+import { CaretDownIcon, CaretRightIcon } from "../design-system/Icons";
 import { useViewerState } from "../../state/viewerState";
 import { useCommandEnablement } from "../commands/useCommandEnablement";
 import { CommitInput } from "./CommitInput";
 import { runCommand } from "../commands/commandRegistry";
 import { activeComponentId } from "../commands/projectWorkflowCommand";
-import { sketchComponentId } from "../../cad/document/components";
+import {
+  bodyComponentId,
+  sketchComponentId,
+} from "../../cad/document/components";
 import { SketchTools } from "./SketchTools";
 import { BodyPanel } from "./BodyPanel";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
@@ -14,10 +18,13 @@ import { solveSketch } from "../../cad/sketch/SketchSolver";
 import { detectProfiles } from "../../cad/sketch/profileDetection";
 import { sketchPlaneLabel } from "../../cad/sketch/planes";
 
-export function SketchPanel() {
+export function SketchPanel({ compact = false }: { compact?: boolean }) {
+  const [search, setSearch] = useState("");
+  const filter = compact ? search.trim().toLocaleLowerCase() : "";
+  const bodies = useCadStore((state) => state.rebuild.result?.bodies);
   const document = useCadStore((state) => state.history.present);
   const componentId = useCadStore(activeComponentId);
-  const session = useCadStore(state => state.documentSession);
+  const session = useCadStore((state) => state.documentSession);
   const view = useViewerState();
   const hiddenSketches = view.session === session ? view.hiddenSketchIds : [];
   const hidden = view.session === session ? view.hiddenComponentIds : [];
@@ -53,44 +60,63 @@ export function SketchPanel() {
     }
   }, [activeSketch, evaluatedParameters.values]);
   return (
-    <section className="panel browser-panel">
+    <section
+      className={`panel browser-panel${compact ? " compact-browser" : ""}`}
+    >
       <h2>Browser</h2>
+      {compact ? (
+        <label className="project-search">
+          <span className="sr-only">Search project</span>
+          <input
+            type="search"
+            aria-label="Search project"
+            placeholder="Search project…"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+        </label>
+      ) : null}
       <div className="panel-list">
         <div className="browser-root">
           <strong>{document.name}</strong>
           <span className="muted">{document.units} local project</span>
         </div>
-        <label className="component-name">
-          Project name
-          <CommitInput
-            value={document.name}
-            onCommit={(name) =>
-              void runCommand("file.renameProject", { projectName: name })
-            }
-          />
-        </label>
-        <p className="workflow-hint">
-          Activate a component → Create Sketch → Finish Sketch → Extrude.
-        </p>
-        <div className="workflow-actions">
-          <button
-            disabled={!enablement.newComponent}
-            onClick={() => void runCommand("component.create")}
-          >
-            New Component
+        <details className="project-settings" open={!compact}>
+          <summary>Project settings</summary>
+          <label className="component-name">
+            Project name
+            <CommitInput
+              value={document.name}
+              onCommit={(name) =>
+                void runCommand("file.renameProject", { projectName: name })
+              }
+            />
+          </label>
+          <p className="workflow-hint">
+            Activate a component → Create Sketch → Finish Sketch → Extrude.
+          </p>
+          <div className="workflow-actions">
+            <button
+              disabled={!enablement.newComponent}
+              onClick={() => void runCommand("component.create")}
+            >
+              New Component
+            </button>
+            <button
+              disabled={!enablement.createSketch}
+              onClick={() => void runCommand("sketch.create")}
+            >
+              Create Sketch
+            </button>
+          </div>
+          <p className="muted">
+            Active: <strong>{document.components[componentId]?.name}</strong>
+          </p>
+          {/* View commands are always available for a loaded document, including sketch mode. */}
+          <button onClick={() => void runCommand("view.showAllComponents")}>
+            Show all components
           </button>
-          <button
-            disabled={!enablement.createSketch}
-            onClick={() => void runCommand("sketch.create")}
-          >
-            Create Sketch
-          </button>
-        </div>
-        <p className="muted">
-          Active: <strong>{document.components[componentId]?.name}</strong>
-        </p>
-        {/* View commands are always available for a loaded document, including sketch mode. */}
-        <button onClick={() => void runCommand("view.showAllComponents")}>Show all components</button>
+        </details>
         <div className="component-tree">
           {Object.values(document.components)
             .sort((a, b) =>
@@ -109,13 +135,36 @@ export function SketchPanel() {
               return (
                 <ComponentFolder
                   key={component.id}
+                  hidden={
+                    Boolean(filter) &&
+                    ![
+                      component.name,
+                      ...owned.map((sketch) => sketch.name),
+                      ...(bodies
+                        ?.filter(
+                          (body) =>
+                            bodyComponentId(document, body.id) === component.id,
+                        )
+                        .map((body) => body.name) ?? []),
+                    ].some((name) => name.toLocaleLowerCase().includes(filter))
+                  }
                   name={component.name}
                   active={active}
-                  root={component.id === document.rootComponentId}
+                  root={!compact && component.id === document.rootComponentId}
                   canActivate={enablement.editProject}
                   visible={!hidden.includes(component.id)}
-                  onVisibility={() => void runCommand("component.toggleVisibility", { componentId: component.id, documentSession: session })}
-                  onIsolate={() => void runCommand("component.isolate", { componentId: component.id, documentSession: session })}
+                  onVisibility={() =>
+                    void runCommand("component.toggleVisibility", {
+                      componentId: component.id,
+                      documentSession: session,
+                    })
+                  }
+                  onIsolate={() =>
+                    void runCommand("component.isolate", {
+                      componentId: component.id,
+                      documentSession: session,
+                    })
+                  }
                   onActivate={() =>
                     void runCommand("component.activate", {
                       componentId: component.id,
@@ -123,24 +172,31 @@ export function SketchPanel() {
                   }
                 >
                   {active ? (
-                    <label className="component-name">
-                      Component name
-                      <CommitInput
-                        value={component.name}
-                        onCommit={(name) =>
-                          void runCommand("component.rename", {
-                            componentId: component.id,
-                            componentName: name,
-                          })
-                        }
-                      />
-                    </label>
+                    <details open={!compact}>
+                      <summary>Component settings</summary>
+                      <label className="component-name">
+                        Component name
+                        <CommitInput
+                          value={component.name}
+                          onCommit={(name) =>
+                            void runCommand("component.rename", {
+                              componentId: component.id,
+                              componentName: name,
+                            })
+                          }
+                        />
+                      </label>
+                    </details>
                   ) : null}
                   <div className="browser-folder">
                     <span className="folder-label">Origin</span>
                     <span className="muted">XY, XZ, YZ · project origin</span>
                   </div>
-                  <BodyPanel componentId={component.id} controls={active} />
+                  <BodyPanel
+                    componentId={component.id}
+                    controls={active}
+                    compact={compact}
+                  />
                   <div className="browser-folder">
                     <span className="folder-label">Sketches</span>
                     <span className="muted">{owned.length} sketches</span>
@@ -176,14 +232,22 @@ export function SketchPanel() {
                         <input
                           type="checkbox"
                           aria-label={`Show sketch ${sketch.name} in 3D`}
-                          checked={!hidden.includes(component.id) && !hiddenSketches.includes(sketch.id)}
+                          checked={
+                            !hidden.includes(component.id) &&
+                            !hiddenSketches.includes(sketch.id)
+                          }
                           disabled={hidden.includes(component.id)}
-                          title={hidden.includes(component.id)
-                            ? "Show the component to change sketch visibility."
-                            : "3D overlay visibility; Edit Sketch keeps the canvas visible."}
-                          onChange={() => void runCommand("sketch.toggleVisibility", {
-                            sketchId: sketch.id, documentSession: session,
-                          })}
+                          title={
+                            hidden.includes(component.id)
+                              ? "Show the component to change sketch visibility."
+                              : "3D overlay visibility; Edit Sketch keeps the canvas visible."
+                          }
+                          onChange={() =>
+                            void runCommand("sketch.toggleVisibility", {
+                              sketchId: sketch.id,
+                              documentSession: session,
+                            })
+                          }
                         />
                         3D
                       </label>
@@ -198,7 +262,10 @@ export function SketchPanel() {
         </div>
         {selection?.kind === "sketch" ? (
           <div className="workflow-actions">
-            <button disabled={!enablement.sketchCanvas} onClick={() => void runCommand("sketch.editCanvas")}>
+            <button
+              disabled={!enablement.sketchCanvas}
+              onClick={() => void runCommand("sketch.editCanvas")}
+            >
               Edit Sketch
             </button>
             <button
@@ -211,8 +278,9 @@ export function SketchPanel() {
         ) : null}
       </div>
       {activeSketch ? (
-        <div className="sketch-detail">
-          <details open>
+        <details className="sketch-detail" open={!compact}>
+          <summary>Sketch details</summary>
+          <details open={!compact}>
             <summary>Sketch Properties</summary>
             <SketchTools
               key={activeSketch.id}
@@ -249,13 +317,14 @@ export function SketchPanel() {
               {error}
             </div>
           ))}
-        </div>
+        </details>
       ) : null}
     </section>
   );
 }
 
 function ComponentFolder({
+  hidden = false,
   name,
   active,
   root,
@@ -266,6 +335,7 @@ function ComponentFolder({
   onIsolate,
   children,
 }: {
+  hidden?: boolean;
   name: string;
   active: boolean;
   root: boolean;
@@ -281,15 +351,20 @@ function ComponentFolder({
     if (active) setExpanded(true);
   }, [active]);
   return (
-    <div className={`component-node ${active ? "active" : ""}`}>
+    <div className={`component-node ${active ? "active" : ""}`} hidden={hidden}>
       <div className="component-heading">
         <button
           className="component-disclosure"
+          title={name}
           aria-label={`${expanded ? "Collapse" : "Expand"} component ${name}`}
           aria-expanded={expanded}
           onClick={() => setExpanded(!expanded)}
         >
-          <span aria-hidden="true">{expanded ? "▾" : "▸"}</span>{" "}
+          {expanded ? (
+            <CaretDownIcon size={14} aria-hidden={true} />
+          ) : (
+            <CaretRightIcon size={14} aria-hidden={true} />
+          )}{" "}
           <strong>{name}</strong>
           {root ? " · Root" : ""}
         </button>
@@ -303,8 +378,18 @@ function ComponentFolder({
         </button>
       </div>
       <div className="component-view-actions">
-        <label><input type="checkbox" aria-label={`Show component ${name}`} checked={visible} onChange={onVisibility} /> Visible</label>
-        <button aria-label={`Isolate component ${name}`} onClick={onIsolate}>Isolate</button>
+        <label>
+          <input
+            type="checkbox"
+            aria-label={`Show component ${name}`}
+            checked={visible}
+            onChange={onVisibility}
+          />{" "}
+          Visible
+        </label>
+        <button aria-label={`Isolate component ${name}`} onClick={onIsolate}>
+          Isolate
+        </button>
       </div>
       {expanded ? children : null}
     </div>

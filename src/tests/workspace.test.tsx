@@ -38,6 +38,7 @@ beforeEach(async () => {
   });
   useWorkspaceState.setState({
     ...readWorkspacePreferences(),
+    layout: "focused",
     activePanel: "auto",
     sheet: undefined,
     persistenceError: undefined,
@@ -155,7 +156,7 @@ it("validates local preferences and keeps runtime task selection outside saved p
     "x".repeat(8193),
   ]) {
     storage.setItem(WORKSPACE_STORAGE_KEY, value);
-    expect(readWorkspacePreferences().layout).toBe("focused");
+    expect(readWorkspacePreferences().layout).toBe("workbench");
   }
 });
 it("remains usable with blocked storage and clears the notice after a successful write", () => {

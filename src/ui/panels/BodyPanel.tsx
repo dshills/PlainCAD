@@ -9,9 +9,11 @@ import {
 export function BodyPanel({
   componentId,
   controls = true,
+  compact = false,
 }: {
   componentId?: string;
   controls?: boolean;
+  compact?: boolean;
 }) {
   const session = useCadStore((s) => s.documentSession);
   const document = useCadStore((s) => s.history.present);
@@ -79,8 +81,11 @@ export function BodyPanel({
         );
       })}
       {bodies.length && controls ? (
-        <>
-          <button onClick={() => void runCommand("view.showAllBodies")}>Show all bodies</button>
+        <details className="body-actions" open={!compact}>
+          <summary>Body actions</summary>
+          <button onClick={() => void runCommand("view.showAllBodies")}>
+            Show all bodies
+          </button>
           <button
             disabled={!exportSelected}
             onClick={() => void runCommand("file.exportSelectedBody")}
@@ -92,7 +97,7 @@ export function BodyPanel({
               Last available preview; export requires a successful rebuild.
             </p>
           ) : null}
-        </>
+        </details>
       ) : null}
     </>
   );

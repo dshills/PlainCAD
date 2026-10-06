@@ -11,7 +11,11 @@ import { ProjectFileDrop } from "../ui/workspace/ProjectFileDrop";
 import { useAiDrawer } from "../ui/commands/aiCommand";
 import { useProjectWorkflow } from "../ui/commands/projectWorkflowCommand";
 import { ModelingCreationPanel } from "../ui/panels/ModelingCreationPanel";
-import { AiDrawer } from "../ui/panels/AiDrawer";
+import { WorkbenchBottomDock } from "../ui/workspace/WorkbenchBottomDock";
+import { WorkbenchHeader } from "../ui/workspace/WorkbenchHeader";
+import { WorkbenchProjectDock } from "../ui/workspace/WorkbenchProjectDock";
+import { useWorkbenchState } from "../state/useWorkbenchState";
+import type { CSSProperties } from "react";
 import { useSketchCanvas } from "../ui/commands/sketchCanvasCommand";
 import { ExtrudeCreationPanel } from "../ui/panels/ExtrudeCreationPanel";
 import { ProjectWorkflowPanel } from "../ui/panels/ProjectWorkflowPanel";
@@ -50,62 +54,264 @@ const toolbarGroups: ToolbarGroup[] = [
   {
     label: "File",
     buttons: [
-      { command: "file.openProject", label: "Open", icon: "O", title: "Open a .pcaddoc or JSON project file", ariaLabel: "Open project" },
-      { command: "file.newProject", label: "New", icon: "N", title: "Create a blank local project", ariaLabel: "New project" },
-      { command: "file.saveOrExport", label: "Save or export…", icon: "File", title: "Save an editable project or choose bodies to export for printing", ariaLabel: "Save or export" },
-      { command: "file.saveProject", label: "Save", icon: "S", title: "Download this project as a .pcaddoc file", ariaLabel: "Save project" },
-      { command: "file.exportStl", label: "STL", icon: "STL", title: "Export the current rebuilt model as STL", ariaLabel: "Export STL" },
+      {
+        command: "file.openProject",
+        label: "Open",
+        icon: "O",
+        title: "Open a .pcaddoc or JSON project file",
+        ariaLabel: "Open project",
+      },
+      {
+        command: "file.newProject",
+        label: "New",
+        icon: "N",
+        title: "Create a blank local project",
+        ariaLabel: "New project",
+      },
+      {
+        command: "file.saveOrExport",
+        label: "Save or export…",
+        icon: "File",
+        title:
+          "Save an editable project or choose bodies to export for printing",
+        ariaLabel: "Save or export",
+      },
+      {
+        command: "file.saveProject",
+        label: "Save",
+        icon: "S",
+        title: "Download this project as a .pcaddoc file",
+        ariaLabel: "Save project",
+      },
+      {
+        command: "file.exportStl",
+        label: "STL",
+        icon: "STL",
+        title: "Export the current rebuilt model as STL",
+        ariaLabel: "Export STL",
+      },
     ],
   },
   {
     label: "Sketch",
     buttons: [
-      { command: "component.create", label: "Component", icon: "+", title: "Create and activate a component", ariaLabel: "New component" },
-      { command: "sketch.create", label: "Create Sketch", icon: "+Sketch", title: "Choose a plane and draw in the active component", ariaLabel: "Create sketch" },
-      { command: "sketch.editCanvas", label: "Canvas", icon: "Draw", title: "Draw in the selected sketch plane", ariaLabel: "Edit sketch canvas" },
-      { command: "sketch.createXY", label: "XY", icon: "XY", title: "Create an XY sketch", ariaLabel: "Create XY sketch" },
-      { command: "sketch.createXZ", label: "XZ", icon: "XZ", title: "Create an XZ sketch", ariaLabel: "Create XZ sketch" },
-      { command: "sketch.createYZ", label: "YZ", icon: "YZ", title: "Create a YZ sketch", ariaLabel: "Create YZ sketch" },
-      { command: "sketch.addCenterRectangle", label: "Rectangle", icon: "Rect", title: "Add a center rectangle to the active sketch", ariaLabel: "Add center rectangle" },
-      { command: "sketch.addCircle", label: "Circle", icon: "Circ", title: "Add a circle to the active sketch", ariaLabel: "Add circle" },
+      {
+        command: "component.create",
+        label: "Component",
+        icon: "+",
+        title: "Create and activate a component",
+        ariaLabel: "New component",
+      },
+      {
+        command: "sketch.create",
+        label: "Create Sketch",
+        icon: "+Sketch",
+        title: "Choose a plane and draw in the active component",
+        ariaLabel: "Create sketch",
+      },
+      {
+        command: "sketch.editCanvas",
+        label: "Canvas",
+        icon: "Draw",
+        title: "Draw in the selected sketch plane",
+        ariaLabel: "Edit sketch canvas",
+      },
+      {
+        command: "sketch.createXY",
+        label: "XY",
+        icon: "XY",
+        title: "Create an XY sketch",
+        ariaLabel: "Create XY sketch",
+      },
+      {
+        command: "sketch.createXZ",
+        label: "XZ",
+        icon: "XZ",
+        title: "Create an XZ sketch",
+        ariaLabel: "Create XZ sketch",
+      },
+      {
+        command: "sketch.createYZ",
+        label: "YZ",
+        icon: "YZ",
+        title: "Create a YZ sketch",
+        ariaLabel: "Create YZ sketch",
+      },
+      {
+        command: "sketch.addCenterRectangle",
+        label: "Rectangle",
+        icon: "Rect",
+        title: "Add a center rectangle to the active sketch",
+        ariaLabel: "Add center rectangle",
+      },
+      {
+        command: "sketch.addCircle",
+        label: "Circle",
+        icon: "Circ",
+        title: "Add a circle to the active sketch",
+        ariaLabel: "Add circle",
+      },
     ],
   },
   {
     label: "Create",
     buttons: [
-      { command: "feature.extrude", label: "Extrude", icon: "Ext", title: "Extrude the active sketch profile", ariaLabel: "Extrude selected sketch" },
-      { command: "feature.revolve", label: "Revolve", icon: "Rev", title: "Revolve around a coplanar origin axis or sketch line; add a construction line if no axis is usable", ariaLabel: "Revolve selected sketch" },
-      { command: "feature.guidedHole", label: "Face Holes", icon: "FHole", title: "Select a supported planar face and place hole centers visually", ariaLabel: "Place holes on face" },
-      { command: "feature.hole", label: "Hole", icon: "Hole", title: "Choose sketch point centers and an explicit target body", ariaLabel: "Hole from selected sketch" },
-      { command: "template.createMountingPlate", label: "Mount Plate", icon: "M", title: "Load the mounting plate template", ariaLabel: "Load mounting plate template" },
-      { command: "template.createBox", label: "Box", icon: "B", title: "Load the parametric box template", ariaLabel: "Load parametric box template" },
+      {
+        command: "feature.extrude",
+        label: "Extrude",
+        icon: "Ext",
+        title: "Extrude the active sketch profile",
+        ariaLabel: "Extrude selected sketch",
+      },
+      {
+        command: "feature.revolve",
+        label: "Revolve",
+        icon: "Rev",
+        title:
+          "Revolve around a coplanar origin axis or sketch line; add a construction line if no axis is usable",
+        ariaLabel: "Revolve selected sketch",
+      },
+      {
+        command: "feature.guidedHole",
+        label: "Face Holes",
+        icon: "FHole",
+        title: "Select a supported planar face and place hole centers visually",
+        ariaLabel: "Place holes on face",
+      },
+      {
+        command: "feature.hole",
+        label: "Hole",
+        icon: "Hole",
+        title: "Choose sketch point centers and an explicit target body",
+        ariaLabel: "Hole from selected sketch",
+      },
+      {
+        command: "template.createMountingPlate",
+        label: "Mount Plate",
+        icon: "M",
+        title: "Load the mounting plate template",
+        ariaLabel: "Load mounting plate template",
+      },
+      {
+        command: "template.createBox",
+        label: "Box",
+        icon: "B",
+        title: "Load the parametric box template",
+        ariaLabel: "Load parametric box template",
+      },
     ],
   },
   {
     label: "Modify",
     buttons: [
-      { command: "feature.fillet", label: "Fillet", icon: "Fil", title: "Round feature-owned extrusion edges", ariaLabel: "Fillet extrusion edges" },
-      { command: "feature.chamfer", label: "Chamfer", icon: "Cha", title: "Bevel feature-owned extrusion edges", ariaLabel: "Chamfer extrusion edges" },
-      { command: "feature.suppress", label: "Suppress", icon: "Sup", title: "Suppress or unsuppress the selected feature", ariaLabel: "Suppress or unsuppress feature" },
-      { command: "feature.delete", label: "Delete", icon: "Del", title: "Delete the selected feature", ariaLabel: "Delete selected feature" },
+      {
+        command: "feature.fillet",
+        label: "Fillet",
+        icon: "Fil",
+        title: "Round feature-owned extrusion edges",
+        ariaLabel: "Fillet extrusion edges",
+      },
+      {
+        command: "feature.chamfer",
+        label: "Chamfer",
+        icon: "Cha",
+        title: "Bevel feature-owned extrusion edges",
+        ariaLabel: "Chamfer extrusion edges",
+      },
+      {
+        command: "feature.suppress",
+        label: "Suppress",
+        icon: "Sup",
+        title: "Suppress or unsuppress the selected feature",
+        ariaLabel: "Suppress or unsuppress feature",
+      },
+      {
+        command: "feature.delete",
+        label: "Delete",
+        icon: "Del",
+        title: "Delete the selected feature",
+        ariaLabel: "Delete selected feature",
+      },
     ],
   },
   {
     label: "View",
     buttons: [
-      { command: "history.undo", label: "Undo", icon: "Undo", title: "Undo the last document edit", ariaLabel: "Undo" },
-      { command: "history.redo", label: "Redo", icon: "Redo", title: "Redo the last undone edit", ariaLabel: "Redo" },
-      { command: "view.fit", label: "Fit", icon: "Fit", title: "Fit the model in the viewer", ariaLabel: "Fit view" },
-      { command: "view.resetCamera", label: "Reset", icon: "Reset", title: "Reset the viewer camera", ariaLabel: "Reset camera" },
+      {
+        command: "history.undo",
+        label: "Undo",
+        icon: "Undo",
+        title: "Undo the last document edit",
+        ariaLabel: "Undo",
+      },
+      {
+        command: "history.redo",
+        label: "Redo",
+        icon: "Redo",
+        title: "Redo the last undone edit",
+        ariaLabel: "Redo",
+      },
+      {
+        command: "view.fit",
+        label: "Fit",
+        icon: "Fit",
+        title: "Fit the model in the viewer",
+        ariaLabel: "Fit view",
+      },
+      {
+        command: "view.resetCamera",
+        label: "Reset",
+        icon: "Reset",
+        title: "Reset the viewer camera",
+        ariaLabel: "Reset camera",
+      },
     ],
   },
 ];
 
-const FOCUSED_ALWAYS = new Set(["history.undo", "history.redo", "view.fit", "sketch.create"]);
-const FOCUSED_WHEN_ENABLED = new Set(["sketch.editCanvas", "feature.extrude", "feature.revolve", "feature.hole", "feature.guidedHole"]);
+const FOCUSED_ALWAYS = new Set([
+  "history.undo",
+  "history.redo",
+  "view.fit",
+  "sketch.create",
+]);
+const FOCUSED_WHEN_ENABLED = new Set([
+  "sketch.editCanvas",
+  "feature.extrude",
+  "feature.revolve",
+  "feature.hole",
+  "feature.guidedHole",
+]);
 
 export function App() {
-  const workspace = useWorkspaceState(useShallow(({ layout, activePanel, pins, toggleParts }) => ({ layout, activePanel, pins, toggleParts })));
+  const workspace = useWorkspaceState(
+    useShallow(({ layout, activePanel, pins, toggleParts }) => ({
+      layout,
+      activePanel,
+      pins,
+      toggleParts,
+    })),
+  );
+  const workbench = workspace.layout === "workbench";
+  const dock = useWorkbenchState(
+    useShallow(
+      ({
+        leftOpen,
+        rightOpen,
+        leftWidth,
+        rightWidth,
+        bottomHeight,
+        bottomOpen,
+      }) => ({
+        leftOpen,
+        rightOpen,
+        leftWidth,
+        rightWidth,
+        bottomHeight,
+        bottomOpen,
+      }),
+    ),
+  );
   const setPaletteOpen = useCadStore((s) => s.setPaletteOpen);
   const { full, hasHistory, partsVisible, historyVisible } =
     useWorkspacePresentation();
@@ -126,7 +332,13 @@ export function App() {
   const toolbarEnablement = useCommandEnablement();
 
   useEffect(() => {
-    window.dispatchEvent(new Event("resize"));
+    const notify = () => window.dispatchEvent(new Event("resize"));
+    if (typeof window.requestAnimationFrame !== "function") {
+      notify();
+      return;
+    }
+    const frame = window.requestAnimationFrame(notify);
+    return () => window.cancelAnimationFrame(frame);
   }, [
     sketchActive,
     workspace.layout,
@@ -134,6 +346,13 @@ export function App() {
     historyVisible,
     workspace.activePanel,
     workspace.pins,
+    dock.leftOpen,
+    dock.rightOpen,
+    dock.leftWidth,
+    dock.rightWidth,
+    dock.bottomHeight,
+    dock.bottomOpen,
+    aiOpen,
   ]);
 
   useEffect(() => {
@@ -176,85 +395,102 @@ export function App() {
 
   const shell = (
     <div
-      className={`app-shell ${full ? "full-workspace" : "focused-workspace"}`}
+      className={`app-shell ${workbench ? "docked-workbench" : full ? "full-workspace" : "focused-workspace"}`}
+      style={
+        workbench
+          ? ({
+              "--left-width": `${dock.leftWidth}px`,
+              "--right-width": `${dock.rightWidth}px`,
+              "--bottom-height": `${dock.bottomHeight}px`,
+            } as CSSProperties)
+          : undefined
+      }
     >
-      <header className="top-toolbar">
-        <div className="brand">
-          <span className="brand-mark">P</span>
-          <div>
-            <strong>PlainCAD</strong>
-            <span>{documentName}</span>
+      {workbench ? (
+        <WorkbenchHeader context={commandContext} />
+      ) : (
+        <header className="top-toolbar">
+          <div className="brand">
+            <span className="brand-mark">P</span>
+            <div>
+              <strong>PlainCAD</strong>
+              <span>{documentName}</span>
+            </div>
           </div>
-        </div>
-        <nav className="ribbon" aria-label="Main CAD commands">
-          {toolbarGroups.map((group) => {
-            const buttons = group.buttons.filter(
-              (button) =>
-                full ||
-                group.label === "File" ||
-                FOCUSED_ALWAYS.has(button.command) ||
-                (FOCUSED_WHEN_ENABLED.has(button.command) &&
-                  isCommandEnabledForSnapshot(
-                    button.command,
-                    toolbarEnablement,
-                  )),
-            );
-            if (!buttons.length) return null;
-            return (
-              <section
-                className="ribbon-group"
-                aria-label={group.label}
-                key={group.label}
-              >
-                <div className="ribbon-buttons">
-                  {buttons.map((button) => (
-                    <button
-                      className="ribbon-button"
-                      key={button.command}
-                      title={button.title}
-                      aria-label={button.ariaLabel}
-                      onClick={() => runCommand(button.command, commandContext)}
-                      disabled={
-                        !isCommandEnabledForSnapshot(
-                          button.command,
-                          toolbarEnablement,
-                        )
-                      }
-                    >
-                      <span className="ribbon-icon" aria-hidden="true">
-                        {button.icon}
-                      </span>
-                      <span>{button.label}</span>
-                    </button>
-                  ))}
-                </div>
-                <span className="ribbon-label">{group.label}</span>
-              </section>
-            );
-          })}
-        </nav>
-        <button
-          type="button"
-          className="all-tools-button"
-          title="Search all CAD commands (Ctrl/Cmd+K)"
-          onClick={(event) => {
-            // WebKit does not focus buttons on mouse click; capture a stable modal return target.
-            event.currentTarget.focus();
-            setPaletteOpen(true);
-          }}
-        >
-          All tools
-        </button>
-        {full ? (
-          <ThemeSelector />
-        ) : (
-          <details className="appearance-settings">
-            <summary>Settings</summary>
+          <nav className="ribbon" aria-label="Main CAD commands">
+            {toolbarGroups.map((group) => {
+              const buttons = group.buttons.filter(
+                (button) =>
+                  full ||
+                  group.label === "File" ||
+                  FOCUSED_ALWAYS.has(button.command) ||
+                  (FOCUSED_WHEN_ENABLED.has(button.command) &&
+                    isCommandEnabledForSnapshot(
+                      button.command,
+                      toolbarEnablement,
+                    )),
+              );
+              if (!buttons.length) return null;
+              return (
+                <section
+                  className="ribbon-group"
+                  aria-label={group.label}
+                  key={group.label}
+                >
+                  <div className="ribbon-buttons">
+                    {buttons.map((button) => (
+                      <button
+                        className="ribbon-button"
+                        key={button.command}
+                        title={button.title}
+                        aria-label={button.ariaLabel}
+                        onClick={() =>
+                          runCommand(button.command, commandContext)
+                        }
+                        disabled={
+                          !isCommandEnabledForSnapshot(
+                            button.command,
+                            toolbarEnablement,
+                          )
+                        }
+                      >
+                        <span className="ribbon-icon" aria-hidden="true">
+                          {button.icon}
+                        </span>
+                        <span>{button.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <span className="ribbon-label">{group.label}</span>
+                </section>
+              );
+            })}
+          </nav>
+          <button
+            type="button"
+            className="all-tools-button"
+            title="Search all CAD commands (Ctrl/Cmd+K)"
+            onClick={(event) => {
+              // WebKit does not focus buttons on mouse click; capture a stable modal return target.
+              event.currentTarget.focus();
+              setPaletteOpen(true);
+            }}
+          >
+            All tools
+          </button>
+          {full ? (
             <ThemeSelector />
-          </details>
-        )}
-        <div className={`rebuild-pill ${rebuild.status}`}>{rebuild.status}</div>
-      </header>
+          ) : (
+            <details className="appearance-settings">
+              <summary>Settings</summary>
+              <ThemeSelector />
+            </details>
+          )}
+          <div className={`rebuild-pill ${rebuild.status}`}>
+            {rebuild.status}
+          </div>
+        </header>
+      )}
       {rebuild.status === "loadingKernel" ? (
         <div className="kernel-banner" role="status">
           <strong>Loading CAD kernel...</strong>
@@ -266,7 +502,11 @@ export function App() {
       ) : null}
       {fileError ? (
         <div className="kernel-banner error" role="alert">
-          <strong>File error</strong>
+          <strong>
+            {fileError.startsWith("Command failed:")
+              ? "Command error"
+              : "File error"}
+          </strong>
           <span>{fileError}</span>
           <button type="button" onClick={() => setFileError(undefined)}>
             Dismiss
@@ -280,33 +520,37 @@ export function App() {
       <ModelingCreationPanel />
       <WorkspaceControls />
       <main
-        className={`workspace ${full ? "" : "workspace-focused"} ${partsVisible ? "parts-open" : ""}`}
+        className={`workspace ${workbench ? "workbench-workspace" : full ? "" : "workspace-focused"} ${partsVisible ? "parts-open" : ""}`}
       >
-        <aside
-          id="workspace-parts"
-          className="left-panel"
-          aria-label="Parts browser"
-          hidden={!partsVisible}
-        >
-          <div className="workspace-panel-header">
-            <PinPanel panel="parts" label="Parts" />
-            {!full && (
-              <button
-                type="button"
-                onClick={() => {
-                  workspace.toggleParts();
-                  window.document
-                    .getElementById("workspace-parts-toggle")
-                    ?.focus();
-                }}
-                disabled={workspace.pins.includes("parts")}
-              >
-                Close Parts
-              </button>
-            )}
-          </div>
-          <SketchPanel />
-        </aside>
+        {workbench ? (
+          <WorkbenchProjectDock />
+        ) : (
+          <aside
+            id="workspace-parts"
+            className="left-panel"
+            aria-label="Parts browser"
+            hidden={!partsVisible}
+          >
+            <div className="workspace-panel-header">
+              <PinPanel panel="parts" label="Parts" />
+              {!full && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    workspace.toggleParts();
+                    window.document
+                      .getElementById("workspace-parts-toggle")
+                      ?.focus();
+                  }}
+                  disabled={workspace.pins.includes("parts")}
+                >
+                  Close Parts
+                </button>
+              )}
+            </div>
+            <SketchPanel />
+          </aside>
+        )}
         <div className="model-area">
           <ProjectWorkflowPanel />
           <GuidedHolePanel />
@@ -315,23 +559,30 @@ export function App() {
             <div className="model-view" hidden={Boolean(sketchActive)}>
               <CadViewer />
             </div>
-            {!full && !hasHistory && !sketchActive && !workflow && !guidedHole && !aiOpen ? (
+            {!full &&
+            !hasHistory &&
+            !sketchActive &&
+            !workflow &&
+            !guidedHole &&
+            !aiOpen ? (
               <ProjectStart context={commandContext} />
             ) : null}
             <SketchCanvasPanel />
           </section>
-          <div
-            id="workspace-history"
-            className="workspace-history"
-            hidden={!historyVisible}
-          >
-            <PinPanel panel="history" label="History" />
-            <FeatureTimeline commandContext={commandContext} />
-          </div>
+          {!workbench ? (
+            <div
+              id="workspace-history"
+              className="workspace-history"
+              hidden={!historyVisible}
+            >
+              <PinPanel panel="history" label="History" />
+              <FeatureTimeline commandContext={commandContext} />
+            </div>
+          ) : null}
         </div>
         <WorkspacePanels />
       </main>
-      <AiDrawer />
+      <WorkbenchBottomDock context={commandContext} enabled={workbench} />
       <CommandPalette context={commandContext} />
       <input
         ref={fileInputRef}

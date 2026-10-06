@@ -1,0 +1,22 @@
+// Import individual icons so the development server does not parse the full catalog.
+export { CubeIcon } from "@phosphor-icons/react/dist/csr/Cube";
+export { PencilSimpleIcon } from "@phosphor-icons/react/dist/csr/PencilSimple";
+export { ArrowUUpLeftIcon } from "@phosphor-icons/react/dist/csr/ArrowUUpLeft";
+export { ArrowUUpRightIcon } from "@phosphor-icons/react/dist/csr/ArrowUUpRight";
+export { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
+export { FloppyDiskIcon } from "@phosphor-icons/react/dist/csr/FloppyDisk";
+export { GearSixIcon } from "@phosphor-icons/react/dist/csr/GearSix";
+export { CaretDownIcon } from "@phosphor-icons/react/dist/csr/CaretDown";
+export { CaretRightIcon } from "@phosphor-icons/react/dist/csr/CaretRight";
+export { XIcon } from "@phosphor-icons/react/dist/csr/X";
+export { SparkleIcon } from "@phosphor-icons/react/dist/csr/Sparkle";
+export { ClockCounterClockwiseIcon } from "@phosphor-icons/react/dist/csr/ClockCounterClockwise";
+export { WarningCircleIcon } from "@phosphor-icons/react/dist/csr/WarningCircle";
+export { ArrowsOutSimpleIcon } from "@phosphor-icons/react/dist/csr/ArrowsOutSimple";
+export { CylinderIcon } from "@phosphor-icons/react/dist/csr/Cylinder";
+export { SquareIcon } from "@phosphor-icons/react/dist/csr/Square";
+export { CircleIcon } from "@phosphor-icons/react/dist/csr/Circle";
+export { FolderOpenIcon } from "@phosphor-icons/react/dist/csr/FolderOpen";
+export { SlidersHorizontalIcon } from "@phosphor-icons/react/dist/csr/SlidersHorizontal";
+export { RulerIcon } from "@phosphor-icons/react/dist/csr/Ruler";
+export { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";

@@ -132,7 +132,7 @@ test("box and Shift selection delete whole shapes once, preserve native geometry
   await applyExtrusion(page);
   await nativeVolume(page, 1200);
   const solid = await aiSnapshot(page);
-  const history = page.getByRole("button", { name: /^History \(/ });
+  const history = page.getByRole("button", { name: "History", exact: true });
   if ((await history.getAttribute("aria-expanded")) !== "true")
     await history.click();
   await page
@@ -178,6 +178,7 @@ test("box and Shift selection delete whole shapes once, preserve native geometry
   await page.locator('input[type="file"]').setInputFiles(project);
   await nativeVolume(page, 1200);
   const exportStl = page.waitForEvent("download");
+  await page.locator(".file-menu > summary").click();
   await page.getByRole("button", { name: "Export STL", exact: true }).click();
   const stl = info.outputPath("selection-restored.stl");
   await (await exportStl).saveAs(stl);

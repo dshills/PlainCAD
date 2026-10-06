@@ -1,3 +1,4 @@
+import { focusedWorkspaceStorageState } from "./workspaceStorage";
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import {
@@ -6,8 +7,10 @@ import {
   assertAiAcceptanceViewer,
 } from "./aiAcceptanceHelpers";
 import { applyExtrusion } from "./extrudeWorkflow";
-// Exercise actual first-use preferences, independently of the legacy full-workspace suite.
-test.use({ storageState: { cookies: [], origins: [] } });
+// Keep minimal-workspace compatibility coverage separate from the new default workbench suite.
+test.use({
+  storageState: focusedWorkspaceStorageState("http://127.0.0.1:5279"),
+});
 async function volume(page: Page, expected: number) {
   await expect(async () => {
     const state = await aiSnapshot(page);

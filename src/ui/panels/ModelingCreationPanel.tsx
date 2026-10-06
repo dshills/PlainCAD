@@ -182,7 +182,10 @@ function ModelingDialog({ draft }: { draft: ModelingDraft }) {
               meshes={shown?.result?.meshes ?? EMPTY_MESHES}
               label={`Native ${feature.type} geometry preview`}
             />
-            <p role="status">
+            <p
+              role="status"
+              className={shown?.result ? "preview-ready" : "preview-pending"}
+            >
               {!current
                 ? `Project or component changed. Close and reopen ${title}.`
                 : base.error
@@ -341,7 +344,9 @@ function RevolveDraftControls({
               ...(feature.targetBodyIds ?? []),
             ]),
           ].map((id) => {
-            const body = context?.bodies.find((candidate) => candidate.id === id) ?? {
+            const body = context?.bodies.find(
+              (candidate) => candidate.id === id,
+            ) ?? {
               id,
               name: `Lost target ${id}`,
             };

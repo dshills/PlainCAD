@@ -8,6 +8,7 @@ import { bindDocumentExpressions } from "../../cad/parameters/expressionBindings
 import { useFeatureDraftContext } from "./useFeatureDraftContext";
 import { documentAtFeature } from "../../cad/document/featureStage";
 import { useEffect, useMemo, useState } from "react";
+import { useWorkspaceState } from "../../state/useWorkspaceState";
 import { ModalDialog } from "../ModalDialog";
 import { useCadStore } from "../../state/useCadStore";
 import { upsertFeature } from "../../cad/document/CadDocument";
@@ -35,6 +36,7 @@ export function ExtrudeCreationPanel() {
   ) : null;
 }
 function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
+  const workbench = useWorkspaceState((state) => state.layout === "workbench");
   const document = useCadStore((state) => state.history.present),
     session = useCadStore((state) => state.documentSession),
     component = useCadStore((state) => state.activeComponentId),
@@ -74,6 +76,12 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
             "")
         : "",
     );
+  const [advancedOpen, setAdvancedOpen] = useState(
+    !workbench || termination !== "distance",
+  );
+  useEffect(() => {
+    if (!workbench || termination !== "distance") setAdvancedOpen(true);
+  }, [workbench, termination]);
   const targetFace = context?.faces.find((face) => face.id === faceId);
   const staged = useMemo(
     () =>
@@ -277,8 +285,25 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
         </p>
         <div className="extrude-dialog-layout">
           <div>
+            {workbench ? (
+              <p className="modeling-step-hint">
+                <strong>
+                  {termination === "distance"
+                    ? "Set thickness"
+                    : termination === "toFace"
+                      ? "Choose an end face"
+                      : hasTargets
+                        ? "Review through-all feature"
+                        : "Choose target bodies"}
+                </strong>
+                <br />
+                {termination === "distance"
+                  ? "Enter a length or drag the arrow. Review the native preview, then Apply."
+                  : "Set the termination in Advanced options. Review the native preview, then Apply."}
+              </p>
+            ) : null}
             <label>
-              Extrude profile
+              {workbench ? "Choose shape" : "Extrude profile"}
               <select
                 aria-label="Extrude profile"
                 value={profileId}
@@ -299,50 +324,11 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
                 ))}
               </select>
             </label>
-            <label>
-              Extrude termination
-              <select
-                aria-label="Extrude termination"
-                value={termination}
-                onChange={(event) =>
-                  setTermination(
-                    event.target.value as "distance" | "throughAll" | "toFace",
-                  )
-                }
-              >
-                <option value="distance">Distance</option>
-                <option value="throughAll" disabled={operation === "newBody"}>
-                  Through All (Cut or Join)
-                </option>
-                <option
-                  value="toFace"
-                  disabled={direction !== "positive" || !context?.faces.length}
-                >
-                  To Face (positive only)
-                </option>
-              </select>
-            </label>
-            {termination === "toFace" ? (
-              <label>
-                Extrude target face
-                <select
-                  aria-label="Extrude target face"
-                  value={faceId}
-                  onChange={(event) => setFaceId(event.target.value)}
-                >
-                  <option value="">Choose a covering planar face</option>
-                  {context?.faces.map((face) => (
-                    <option key={face.id} value={face.id}>
-                      {face.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            ) : null}
             {termination === "distance" ? (
               <label>
-                Extrude distance
+                {workbench ? "Thickness" : "Extrude distance"}
                 <input
+                  aria-label="Extrude distance"
                   value={distance}
                   onChange={(event) => setDistance(event.target.value)}
                 />
@@ -355,7 +341,7 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
               </p>
             )}
             <label>
-              Extrude direction
+              {workbench ? "Direction" : "Extrude direction"}
               <select
                 aria-label="Extrude direction"
                 value={direction}
@@ -375,7 +361,7 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
               </select>
             </label>
             <label>
-              Extrude operation
+              {workbench ? "Operation" : "Extrude operation"}
               <select
                 aria-label="Extrude operation"
                 value={operation}
@@ -427,21 +413,76 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
                 })}
               </fieldset>
             ) : null}
-            <p className="muted">
-              Distance accepts lengths and project parameter expressions. Drag
-              the arrow to change distance; drag the preview background to
-              orbit.{" "}
-              {draft.editing
-                ? "Apply replaces this feature in one history edit after validating downstream geometry."
-                : "Apply adds one feature to the timeline."}
-            </p>
+            <details
+              className="ds-advanced"
+              open={advancedOpen}
+              onToggle={(event) => setAdvancedOpen(event.currentTarget.open)}
+            >
+              <summary>Advanced options</summary>
+              <label>
+                Extrude termination
+                <select
+                  aria-label="Extrude termination"
+                  value={termination}
+                  onChange={(event) =>
+                    setTermination(
+                      event.target.value as
+                        | "distance"
+                        | "throughAll"
+                        | "toFace",
+                    )
+                  }
+                >
+                  <option value="distance">Distance</option>
+                  <option value="throughAll" disabled={operation === "newBody"}>
+                    Through All (Cut or Join)
+                  </option>
+                  <option
+                    value="toFace"
+                    disabled={
+                      direction !== "positive" || !context?.faces.length
+                    }
+                  >
+                    To Face (positive only)
+                  </option>
+                </select>
+              </label>
+              {termination === "toFace" ? (
+                <label>
+                  Extrude target face
+                  <select
+                    aria-label="Extrude target face"
+                    value={faceId}
+                    onChange={(event) => setFaceId(event.target.value)}
+                  >
+                    <option value="">Choose a covering planar face</option>
+                    {context?.faces.map((face) => (
+                      <option key={face.id} value={face.id}>
+                        {face.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : null}
+              <p className="muted">
+                Distance accepts lengths and project parameter expressions. Drag
+                the arrow to change distance; drag the preview background to
+                orbit.{" "}
+                {draft.editing
+                  ? "Apply replaces this feature in one history edit after validating downstream geometry."
+                  : "Apply adds one feature to the timeline."}
+              </p>
+            </details>
           </div>
           <div>
             <ExtrudePreview
               meshes={shown?.result?.meshes ?? EMPTY_PREVIEW_MESHES}
               distanceHandle={handle}
             />
-            <p role="status">
+            <p
+              role="status"
+              className={shown?.result ? "preview-ready" : "preview-pending"}
+            >
               {!current
                 ? "Project or component changed. Close and reopen Extrude."
                 : base.error

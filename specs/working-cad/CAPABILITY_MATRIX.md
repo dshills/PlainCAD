@@ -20,6 +20,26 @@ Additional Chromium workflows verify negative/symmetric extents and STL winding
 on XY/XZ/YZ, directional through-all cuts, and explicit hole creation, blind-depth
 edits, parameter-driven diameter, empty-center failure and save/open/STL recovery.
 
+## Docked workbench UI
+
+The default layout has Project/Parameters tabs on the left, one Task/Properties
+panel on the right, and mutually exclusive History/AI/Issues below. Its context
+toolbar shows Draw, Solid or Inspect. Native Extrude/Revolve/Hole/Fillet/Chamfer
+previews occupy the center with Apply/Cancel controls in the right task area;
+background commands remain inert while a native modal task is pending. Sketch
+controls replace the ordinary right dock. Docks close/reopen and resize by pointer
+or keyboard; bounded preferences are browser-local and excluded from CAD files.
+Search filters component/sketch/current-body names. Light, Dark and Saturn share
+locations and behavior. Minimal and Full layouts remain compatible options.
+
+`e2e/workbench.spec.ts` verifies real mouse geometry, graphic dimensions, distance
+handle edits, stale/invalid preview gating, exact native volume and positive XY
+orientation, portable save/open and positive STL volume (curved tessellation within
+0.01% of native volume), plus retained form drafts, search, themes and compact dock
+visibility. This layout does not add free-floating/redockable windows, arbitrary
+solid dimension handles, unrestricted topology picking or new kernel capabilities.
+See `DESIGN_SYSTEM.md` and `design-qa.md` for design rules and comparison evidence.
+
 ## Implemented foundations
 
 - React/Vite/TypeScript UI, Three.js viewer, Zustand document history and undo/redo.

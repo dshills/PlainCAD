@@ -1,3 +1,4 @@
+import { WorkbenchBreadcrumb } from "./WorkbenchBreadcrumb";
 import { useShallow } from "zustand/react/shallow";
 import { useWorkspacePresentation } from "./useWorkspacePresentation";
 import { useWorkspaceState } from "../../state/useWorkspaceState";
@@ -6,6 +7,14 @@ import { TASK_PANELS } from "./WorkspacePanels";
 import { activeComponentId } from "../commands/projectWorkflowCommand";
 
 export function WorkspaceControls() {
+  const layout = useWorkspaceState((state) => state.layout);
+  return layout === "workbench" ? (
+    <WorkbenchBreadcrumb />
+  ) : (
+    <LegacyWorkspaceControls />
+  );
+}
+function LegacyWorkspaceControls() {
   const workspace = useWorkspaceState(
     useShallow(
       ({
@@ -44,11 +53,16 @@ export function WorkspaceControls() {
           value={workspace.layout}
           onChange={(e) => {
             const value = e.target.value;
-            if (value === "focused" || value === "full")
+            if (
+              value === "workbench" ||
+              value === "focused" ||
+              value === "full"
+            )
               workspace.setLayout(value);
           }}
         >
-          <option value="focused">Focused</option>
+          <option value="workbench">Docked workbench</option>
+          <option value="focused">Minimal workspace</option>
           <option value="full">Full workspace</option>
         </select>
       </label>

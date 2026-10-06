@@ -1,10 +1,22 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { useWorkspaceState } from "../state/useWorkspaceState";
 
 function sameModalTabStop(active: Element | null, stop?: HTMLElement) {
-  return active === stop || (
-    active instanceof HTMLInputElement && stop instanceof HTMLInputElement &&
-    active.type === "radio" && stop.type === "radio" && Boolean(active.name) &&
-    active.name === stop.name && active.form === stop.form
+  return (
+    active === stop ||
+    (active instanceof HTMLInputElement &&
+      stop instanceof HTMLInputElement &&
+      active.type === "radio" &&
+      stop.type === "radio" &&
+      Boolean(active.name) &&
+      active.name === stop.name &&
+      active.form === stop.form)
   );
 }
 
@@ -22,7 +34,11 @@ function modalTabStops(dialog: HTMLDialogElement, backward: boolean) {
   // A named radio group contributes only its checked (or first enabled) radio
   // to native Tab order. Counting every radio misses the Shift+Tab boundary.
   return controls.filter((node) => {
-    if (!(node instanceof HTMLInputElement) || node.type !== "radio" || !node.name)
+    if (
+      !(node instanceof HTMLInputElement) ||
+      node.type !== "radio" ||
+      !node.name
+    )
       return true;
     const group = controls.filter(
       (candidate): candidate is HTMLInputElement =>
@@ -31,7 +47,11 @@ function modalTabStops(dialog: HTMLDialogElement, backward: boolean) {
         candidate.name === node.name &&
         candidate.form === node.form,
     );
-    return node === (group.find((candidate) => candidate.checked) ?? group[backward ? group.length - 1 : 0]);
+    return (
+      node ===
+      (group.find((candidate) => candidate.checked) ??
+        group[backward ? group.length - 1 : 0])
+    );
   });
 }
 
@@ -50,6 +70,33 @@ export function ModalDialog({
   dismissOnBackdrop?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const workbench = useWorkspaceState((state) => state.layout === "workbench");
+  const docked = workbench && className.split(" ").includes("model-dialog");
+  useLayoutEffect(() => {
+    if (!docked) return;
+    const region = document.querySelector<HTMLElement>(".viewer-region");
+    const dialog = ref.current;
+    if (!region || !dialog) return;
+    const position = () => {
+      const rect = region.getBoundingClientRect();
+      dialog.style.setProperty("--task-top", `${rect.top}px`);
+      dialog.style.setProperty("--task-left", `${rect.left}px`);
+      dialog.style.setProperty("--task-height", `${rect.height}px`);
+    };
+    position();
+    const observer =
+      typeof ResizeObserver === "undefined"
+        ? undefined
+        : new ResizeObserver(position);
+    observer?.observe(region);
+    window.addEventListener("resize", position);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", position);
+      for (const property of ["--task-top", "--task-left", "--task-height"])
+        dialog.style.removeProperty(property);
+    };
+  }, [docked]);
   // Capture before descendant autoFocus runs during the commit.
   const [previous] = useState(
     () => document.activeElement as HTMLElement | null,
@@ -67,7 +114,7 @@ export function ModalDialog({
   return (
     <dialog
       ref={ref}
-      className={className}
+      className={`${className}${docked ? " docked-model-dialog" : ""}`}
       aria-label={label}
       tabIndex={-1}
       onClick={(event) => {

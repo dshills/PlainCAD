@@ -158,7 +158,7 @@ function HoleDialog({ draft }: { draft: HoleDraft }) {
   const shown = current && preview?.staged === staged ? preview : undefined;
   return (
     <ModalDialog
-      className="file-dialog model-dialog"
+      className="file-dialog model-dialog extrude-dialog"
       label={draft.editing ? "Edit Hole" : "Create hole"}
       onDismiss={close}
     >
@@ -179,182 +179,198 @@ function HoleDialog({ draft }: { draft: HoleDraft }) {
         }}
       >
         <h2>{draft.editing ? "Edit Hole" : "Create hole"}</h2>
-        {draft.editing ? (
-          <label>
-            Hole source sketch
-            <select
-              aria-label="Hole source sketch"
-              value={sketchId}
-              onChange={(e) => {
-                setSketchId(e.target.value);
-                setCenters([]);
-              }}
+        <div className="extrude-dialog-layout">
+          <div>
+            {draft.editing ? (
+              <label>
+                Hole source sketch
+                <select
+                  aria-label="Hole source sketch"
+                  value={sketchId}
+                  onChange={(e) => {
+                    setSketchId(e.target.value);
+                    setCenters([]);
+                  }}
+                >
+                  {!base.document.sketches[sketchId] ? (
+                    <option value={sketchId}>Lost sketch {sketchId}</option>
+                  ) : null}
+                  {Object.values(base.document.sketches)
+                    .filter(
+                      (sketch) =>
+                        sketchComponentId(base.document, sketch.id) ===
+                        draft.componentId,
+                    )
+                    .map((sketch) => (
+                      <option key={sketch.id} value={sketch.id}>
+                        {sketch.name}
+                      </option>
+                    ))}
+                </select>
+              </label>
+            ) : null}
+            <p>
+              Source sketch:{" "}
+              {currentDocument.sketches[sketchId]?.name ?? "Lost sketch"}. Holes
+              cut along its positive normal.
+            </p>
+            {!context ? (
+              <p role="status">
+                Wait for a successful native rebuild, or close and repair the
+                sketch/body first.
+              </p>
+            ) : null}
+            <label>
+              Hole name
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoFocus
+              />
+            </label>
+            <fieldset>
+              <legend>Hole target scope</legend>
+              {[
+                ...new Set([
+                  ...(context?.bodies.map((b) => b.id) ?? []),
+                  ...targets,
+                ]),
+              ].map((id) => {
+                const bodyName =
+                  context?.bodies.find((b) => b.id === id)?.name ??
+                  `Lost target ${id}`;
+                return (
+                  <label key={id}>
+                    <input
+                      type="checkbox"
+                      aria-label={`Include hole target ${bodyName}`}
+                      checked={targets.includes(id)}
+                      onChange={(e) =>
+                        setTargets(
+                          e.target.checked
+                            ? [...targets, id]
+                            : targets.filter((target) => target !== id),
+                        )
+                      }
+                    />
+                    {bodyName}
+                  </label>
+                );
+              })}
+              <p className="muted">
+                Choose every body to drill. Each center must cut at least one
+                selected body. Every selected body must lose volume; failures
+                retain all upstream bodies.
+              </p>
+            </fieldset>
+            <fieldset>
+              <legend>
+                Hole centers (choose up to{" "}
+                {MODEL_RESOURCE_LIMITS.maxHoleCenters})
+              </legend>
+              {[
+                ...new Set([
+                  ...(context?.points.map((point) => point.id) ?? []),
+                  ...centers,
+                ]),
+              ].map((id) => {
+                const solved = context?.solved.points[id];
+                const label = solved
+                  ? `Hole center at ${solved.x.toFixed(3)}, ${solved.y.toFixed(3)} mm`
+                  : `Lost hole center ${id}`;
+                return (
+                  <label key={id}>
+                    <input
+                      type="checkbox"
+                      aria-label={label}
+                      checked={centers.includes(id)}
+                      onChange={(e) =>
+                        setCenters(
+                          e.target.checked
+                            ? [...centers, id]
+                            : centers.filter((center) => center !== id),
+                        )
+                      }
+                    />
+                    {solved
+                      ? `${solved.x.toFixed(3)}, ${solved.y.toFixed(3)} mm`
+                      : label}
+                  </label>
+                );
+              })}
+            </fieldset>
+            <label>
+              Hole diameter
+              <input
+                value={diameter}
+                onChange={(e) => setDiameter(e.target.value)}
+              />
+            </label>
+            <p className="muted">
+              Drilling direction:{" "}
+              {original?.direction === "negative"
+                ? "into the selected face (negative sketch normal)"
+                : "positive sketch normal"}
+              .
+            </p>
+            <label>
+              Hole termination
+              <select
+                aria-label="Hole termination"
+                value={throughAll ? "throughAll" : "distance"}
+                onChange={(e) => setThroughAll(e.target.value === "throughAll")}
+              >
+                <option value="throughAll">Through all</option>
+                <option value="distance">Blind depth</option>
+              </select>
+            </label>
+            {!throughAll ? (
+              <label>
+                Hole depth
+                <input
+                  value={depth}
+                  onChange={(e) => setDepth(e.target.value)}
+                />
+              </label>
+            ) : null}
+          </div>
+          <div>
+            <ExtrudePreview
+              meshes={shown?.result?.meshes ?? EMPTY_MESHES}
+              label="Native hole geometry preview"
+            />
+            <p
+              role="status"
+              className={shown?.result ? "preview-ready" : "preview-pending"}
+              aria-label="Hole preview status"
             >
-              {!base.document.sketches[sketchId] ? (
-                <option value={sketchId}>Lost sketch {sketchId}</option>
-              ) : null}
-              {Object.values(base.document.sketches)
-                .filter(
-                  (sketch) =>
-                    sketchComponentId(base.document, sketch.id) ===
-                    draft.componentId,
-                )
-                .map((sketch) => (
-                  <option key={sketch.id} value={sketch.id}>
-                    {sketch.name}
-                  </option>
-                ))}
-            </select>
-          </label>
-        ) : null}
-        <p>
-          Source sketch:{" "}
-          {currentDocument.sketches[sketchId]?.name ?? "Lost sketch"}. Holes cut
-          along its positive normal.
-        </p>
-        {!context ? (
-          <p role="status">
-            Wait for a successful native rebuild, or close and repair the
-            sketch/body first.
-          </p>
-        ) : null}
-        <label>
-          Hole name
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            autoFocus
-          />
-        </label>
-        <fieldset>
-          <legend>Hole target scope</legend>
-          {[
-            ...new Set([
-              ...(context?.bodies.map((b) => b.id) ?? []),
-              ...targets,
-            ]),
-          ].map((id) => {
-            const bodyName =
-              context?.bodies.find((b) => b.id === id)?.name ??
-              `Lost target ${id}`;
-            return (
-              <label key={id}>
-                <input
-                  type="checkbox"
-                  aria-label={`Include hole target ${bodyName}`}
-                  checked={targets.includes(id)}
-                  onChange={(e) =>
-                    setTargets(
-                      e.target.checked
-                        ? [...targets, id]
-                        : targets.filter((target) => target !== id),
-                    )
-                  }
-                />
-                {bodyName}
-              </label>
-            );
-          })}
-          <p className="muted">
-            Choose every body to drill. Each center must cut at least one
-            selected body. Every selected body must lose volume; failures retain
-            all upstream bodies.
-          </p>
-        </fieldset>
-        <fieldset>
-          <legend>
-            Hole centers (choose up to {MODEL_RESOURCE_LIMITS.maxHoleCenters})
-          </legend>
-          {[
-            ...new Set([
-              ...(context?.points.map((point) => point.id) ?? []),
-              ...centers,
-            ]),
-          ].map((id) => {
-            const solved = context?.solved.points[id];
-            const label = solved
-              ? `Hole center at ${solved.x.toFixed(3)}, ${solved.y.toFixed(3)} mm`
-              : `Lost hole center ${id}`;
-            return (
-              <label key={id}>
-                <input
-                  type="checkbox"
-                  aria-label={label}
-                  checked={centers.includes(id)}
-                  onChange={(e) =>
-                    setCenters(
-                      e.target.checked
-                        ? [...centers, id]
-                        : centers.filter((center) => center !== id),
-                    )
-                  }
-                />
-                {solved
-                  ? `${solved.x.toFixed(3)}, ${solved.y.toFixed(3)} mm`
-                  : label}
-              </label>
-            );
-          })}
-        </fieldset>
-        <label>
-          Hole diameter
-          <input
-            value={diameter}
-            onChange={(e) => setDiameter(e.target.value)}
-          />
-        </label>
-        <p className="muted">
-          Drilling direction:{" "}
-          {original?.direction === "negative"
-            ? "into the selected face (negative sketch normal)"
-            : "positive sketch normal"}
-          .
-        </p>
-        <label>
-          Hole termination
-          <select
-            aria-label="Hole termination"
-            value={throughAll ? "throughAll" : "distance"}
-            onChange={(e) => setThroughAll(e.target.value === "throughAll")}
-          >
-            <option value="throughAll">Through all</option>
-            <option value="distance">Blind depth</option>
-          </select>
-        </label>
-        {!throughAll ? (
-          <label>
-            Hole depth
-            <input value={depth} onChange={(e) => setDepth(e.target.value)} />
-          </label>
-        ) : null}
-        <ExtrudePreview
-          meshes={shown?.result?.meshes ?? EMPTY_MESHES}
-          label="Native hole geometry preview"
-        />
-        <p role="status" aria-label="Hole preview status">
-          {!current
-            ? "Project or component changed. Close and reopen Hole."
-            : base.error
-              ? base.error
-              : !base.ready
-                ? "Checking native geometry before this Hole…"
-                : !staged.ok
-                  ? staged.reason
-                  : shown?.error
-                    ? "Preview failed"
-                    : shown?.result
-                      ? `Native preview ready · ${shown.result.meshes.reduce((sum, mesh) => sum + mesh.geometryAssertions!.volume, 0).toFixed(3)} mm³`
-                      : "Building native preview…"}
-        </p>
-        {error || shown?.error ? (
-          <p role="alert">{error || shown?.error}</p>
-        ) : null}
-        <button type="submit" disabled={!shown?.result}>
-          {draft.editing ? "Apply hole edits" : "Create hole feature"}
-        </button>
-        <button type="button" onClick={close}>
-          Cancel hole
-        </button>
+              {!current
+                ? "Project or component changed. Close and reopen Hole."
+                : base.error
+                  ? base.error
+                  : !base.ready
+                    ? "Checking native geometry before this Hole…"
+                    : !staged.ok
+                      ? staged.reason
+                      : shown?.error
+                        ? "Preview failed"
+                        : shown?.result
+                          ? `Native preview ready · ${shown.result.meshes.reduce((sum, mesh) => sum + mesh.geometryAssertions!.volume, 0).toFixed(3)} mm³`
+                          : "Building native preview…"}
+            </p>
+            {error || shown?.error ? (
+              <p role="alert">{error || shown?.error}</p>
+            ) : null}
+          </div>
+        </div>
+        <div className="dialog-actions">
+          <button type="submit" disabled={!shown?.result}>
+            {draft.editing ? "Apply hole edits" : "Create hole feature"}
+          </button>
+          <button type="button" onClick={close}>
+            Cancel hole
+          </button>
+        </div>
       </form>
     </ModalDialog>
   );
