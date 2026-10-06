@@ -1,0 +1,21 @@
+.viewer-canvas:has(> .solid-dimensions) { position: relative; }
+.solid-dimensions {
+  position: absolute;
+  z-index: 3;
+  width: min(230px, calc(100% - 8px));
+  max-height: calc(100% - 8px);
+  overflow: auto;
+  padding: 8px;
+  display: grid;
+  gap: 5px;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 3px 12px #0002;
+  cursor: default;
+}
+.solid-dimensions[hidden] { display: none; }
+.solid-dimensions-heading, .solid-dimensions-hint { font-size: 11px; overflow-wrap: anywhere; }
+.solid-dimensions button { display: grid; grid-template-columns: 1fr auto; gap: 3px 10px; margin: 0; width: 100%; text-align: left; }
+.solid-dimensions small { grid-column: 1 / -1; overflow-wrap: anywhere; }

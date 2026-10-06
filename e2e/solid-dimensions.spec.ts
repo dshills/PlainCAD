@@ -1,0 +1,68 @@
+import { expect, test } from "@playwright/test";
+import { readFile } from "node:fs/promises";
+import { aiSnapshot, stlSignedVolume } from "./aiAcceptanceHelpers";
+
+test.use({ storageState: { cookies: [], origins: [] } });
+
+test("solid driving labels edit authored formulas through native preview, Cancel and one Undo", async ({ page }, info) => {
+  await page.goto("/");
+  await page.locator(".file-menu > summary").click();
+  await page.getByRole("button", { name: "Load parametric box template", exact: true }).click();
+  await expect(async () => {
+    const state = await aiSnapshot(page);
+    expect(state.status).toBe("succeeded");
+    expect(state.result?.meshes[0]).toMatchObject({ geometrySource: "opencascade", geometryAssertions: { valid: true, solidCount: 1 } });
+    expect(state.result?.meshes[0].geometryAssertions?.volume).toBeCloseTo(80000, 5);
+  }).toPass();
+  await page.locator(".body-row").getByRole("button").first().click();
+  const label = page.getByRole("button", { name: "Edit solid thickness for Box Extrude", exact: true });
+  await expect(label).toContainText("20 mm");
+  await expect(label).toContainText("Formula: depth");
+  await expect(label).toHaveAttribute("title", /Affects Box Extrude/);
+  const before = await aiSnapshot(page);
+  await label.press("Enter");
+  const dialog = page.getByRole("dialog", { name: "Edit Extrude", exact: true });
+  await expect(dialog.getByLabel("Extrude distance")).toHaveValue("depth");
+  await dialog.getByLabel("Extrude distance").fill("depth + 5mm");
+  await expect(dialog.getByRole("status")).toContainText("Native preview ready");
+  expect((await aiSnapshot(page)).document.features).toEqual(before.document.features);
+  await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
+  expect((await aiSnapshot(page)).past).toBe(before.past);
+  await label.click();
+  await dialog.getByLabel("Extrude distance").fill("unknown_parameter");
+  await expect(dialog.getByRole("button", { name: "Apply extrusion" })).toBeDisabled();
+  await dialog.getByLabel("Extrude distance").fill("depth + 5mm");
+  await expect(dialog.getByRole("status")).toContainText("Native preview ready");
+  await dialog.getByRole("button", { name: "Apply extrusion", exact: true }).click();
+  await expect(dialog).toBeHidden();
+  await expect(async () => {
+    const state = await aiSnapshot(page);
+    expect(state.status).toBe("succeeded");
+    expect(state.result?.meshes[0].geometryAssertions?.volume).toBeCloseTo(100000, 5);
+    expect(state.result?.meshes[0].bounds.max[2]).toBeCloseTo(25, 5);
+    expect(state.past).toBe(before.past + 1);
+    const feature = state.document.features[0];
+    if (feature.type !== "extrude") throw new Error("Expected extrusion");
+    expect(feature.distance.expression).toBe("depth + 5mm");
+    expect(feature.distance.parameterRefs?.depth).toBe(state.document.parameters.depth.id);
+    expect(state.document.parameters.depth.expression).toBe("20mm");
+  }).toPass({ timeout: 30000 });
+  await page.getByRole("button", { name: "Undo", exact: true }).click();
+  await expect(async () => expect((await aiSnapshot(page)).result?.meshes[0].geometryAssertions?.volume).toBeCloseTo(80000, 5)).toPass();
+  await page.getByRole("button", { name: "Redo", exact: true }).click();
+  await expect(async () => expect((await aiSnapshot(page)).result?.meshes[0].geometryAssertions?.volume).toBeCloseTo(100000, 5)).toPass();
+  const saving = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const path = info.outputPath("solid-dimension.pcaddoc");
+  await (await saving).saveAs(path);
+  const saved = JSON.parse(await readFile(path, "utf8"));
+  expect(JSON.stringify(saved)).not.toContain("anchor");
+  await page.locator('input[type="file"]').setInputFiles(path);
+  await expect(async () => expect((await aiSnapshot(page)).result?.meshes[0].geometryAssertions?.volume).toBeCloseTo(100000, 5)).toPass();
+  await page.locator(".file-menu > summary").click();
+  const exporting = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export STL", exact: true }).click();
+  const stl = info.outputPath("solid-dimension.stl");
+  await (await exporting).saveAs(stl);
+  expect(stlSignedVolume(await readFile(stl))).toBeCloseTo(100000, 2);
+});

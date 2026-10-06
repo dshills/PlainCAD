@@ -25,6 +25,8 @@ import { sampleArc } from "../cad/sketch/profileDetection";
 import { solveSketch } from "../cad/sketch/SketchSolver";
 import { resolveDocumentPlanes, transformPoint } from "../cad/sketch/planes";
 import { currentGeometryHighlight, useGeometryHighlight } from "../state/useGeometryHighlight";
+import { solidDimensions } from "../cad/inspection/solidDimensions";
+import { SolidDimensionOverlay, type DimensionProjection } from "./SolidDimensionOverlay";
 
 interface ViewerRuntime {
   background: THREE.Color;
@@ -90,6 +92,20 @@ export function CadViewer() {
   const selectedBodyId = useCadStore((state) => {
     const selection = state.selection.selectedIds[0];
     return selection?.kind === "body" ? selection.id : undefined;
+  });
+  const selection = useCadStore((state) => state.selection.selectedIds[0]);
+  const dimensions = useMemo(() =>
+    !fileBusy && rebuild.status === "succeeded" && rebuild.result
+      ? solidDimensions(document, rebuild.result, selection, componentId, hidden)
+      : [], [fileBusy, rebuild.status, rebuild.result, document, selection, componentId, hidden]);
+  const dimensionProjector = useRef((point: [number, number, number]): DimensionProjection | undefined => {
+    const runtime = runtimeRef.current, host = hostRef.current;
+    if (!runtime || !host) return;
+    if (clippingRef.current && clippingRef.current.distanceToPoint(new THREE.Vector3(...point)) < 0) return;
+    runtime.camera.updateMatrixWorld();
+    const projected = new THREE.Vector3(...point).project(runtime.camera);
+    return { x: (projected.x + 1) * host.clientWidth / 2, y: (1 - projected.y) * host.clientHeight / 2,
+      depth: projected.z, width: host.clientWidth, height: host.clientHeight };
   });
 
   useEffect(() => {
@@ -366,7 +382,7 @@ export function CadViewer() {
     if (runtime) applySelection(runtime.modelGroup, selectedBodyId, highlightedBodyIdsRef.current);
   }, [selectedBodyId, currentHighlight]);
 
-  return <div ref={hostRef} className="viewer-canvas" />;
+  return <div ref={hostRef} className="viewer-canvas"><SolidDimensionOverlay dimensions={dimensions} project={dimensionProjector.current} /></div>;
 }
 
 function applyClipping(group: THREE.Group, plane: THREE.Plane | undefined) {
