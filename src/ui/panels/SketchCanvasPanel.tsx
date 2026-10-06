@@ -1,4 +1,5 @@
 import { ContextualSketchConstraints } from "./ContextualSketchConstraints";
+import { registerPngCapture, sketchPng } from "../../persistence/pngCapture";
 import { SketchTrimExtendPanel } from "./SketchTrimExtendPanel";
 import { SketchReplicationPanel } from "./SketchReplicationPanel";
 import { SketchOffsetPanel } from "./SketchOffsetPanel";
@@ -414,6 +415,13 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     !Object.values(sizes).some((size) => size?.trim())
       ? cursor?.snap
       : undefined;
+  useLayoutEffect(() => registerPngCapture("sketch", (request) => {
+    if (request.document !== document || request.session !== active.session || request.sketchId !== active.sketchId || !svgRef.current || !context)
+      throw new Error("Sketch view is updating. Reopen the current sketch before exporting PNG.");
+    if (disabled || draft.length || drag.inProgress || panGesture.current || boxGesture.current)
+      throw new Error("Finish or cancel the sketch edit and resolve sketch errors before exporting PNG.");
+    return sketchPng(svgRef.current);
+  }));
   useEffect(() => {
     if (disabled) setCursor(undefined);
   }, [disabled]);
@@ -865,6 +873,9 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
             {sketch.name} — {sketchPlaneLabel(sketch.plane)}
           </h2>
         </div>
+        <button type="button" className="ds-command" disabled={disabled || Boolean(draft.length) || drag.inProgress || panning || Boolean(selectionBox) || !selectCommandEnablement(useCadStore.getState()).exportSketchPng} onClick={() => { void runCommand("file.exportSketchPng"); }}>
+          Download sketch PNG
+        </button>
         <button className="finish-sketch" onClick={close}>
           Finish Sketch
         </button>

@@ -8,6 +8,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { registerViewerDiagnostics } from "./viewerDiagnostics";
 import { registerCameraController } from "./cameraController";
+import { copyCanvasPng, registerPngCapture } from "../persistence/pngCapture";
 import { DEFAULT_CAMERA_POSE, cameraClipRange, VIEW_DIRECTIONS, validCameraPose, sectionPlane } from "../cad/inspection/cameraViews";
 import { useSectionState } from "../state/sectionState";
 import type { CameraPose } from "../cad/document/schema";
@@ -59,6 +60,8 @@ export function CadViewer() {
   const hostRef = useRef<HTMLDivElement>(null);
   const runtimeRef = useRef<ViewerRuntime | undefined>(undefined);
   const meshesRef = useRef<RenderMesh[]>([]);
+  const renderedMeshesRef = useRef<RenderMesh[]>([]);
+  const renderedDocumentRef = useRef<CadDocument | undefined>(undefined);
   const selectedBodyIdRef = useRef<string | undefined>(undefined);
   const highlightedBodyIdsRef = useRef<readonly string[]>([]);
   const cameraIntentRef = useRef<{ session: number; preservePose: boolean } | undefined>(undefined);
@@ -171,6 +174,49 @@ export function CadViewer() {
     };
     const operationPicking = installOperationDropPicking(scene, renderer.domElement, camera, () => clippingRef.current);
     runtimeRef.current = { background, grid, camera, controls, applyPose, modelGroup, sketchGroup, measurementGroup, operationPicking, sketchResources: createSketchOverlayResources() };
+    const unregisterPng = registerPngCapture("viewer", (request) => {
+      if (request.document !== renderedDocumentRef.current || request.result?.meshes !== renderedMeshesRef.current || request.session !== useCadStore.getState().documentSession)
+        throw new Error("The drawing view is updating. Wait for the current model, then export PNG again.");
+      if (!host.clientWidth || !host.clientHeight)
+        throw new Error("Open the 3D view before exporting its PNG.");
+      if (renderer.getContext().isContextLost())
+        throw new Error("3D rendering was interrupted. Reload the project before exporting PNG.");
+      const selectedMesh = request.bodyId ? request.result.meshes.find((mesh) => mesh.bodyId === request.bodyId) : undefined;
+      if (request.bodyId && !selectedMesh) throw new Error("Selected body is no longer available. Select a rebuilt body again.");
+      if (!request.bodyId && !modelGroup.children.some((object) => object.visible))
+        throw new Error("All bodies are hidden. Show a body before exporting the project view.");
+      const visibility = [...scene.children, ...modelGroup.children].map((object) => ({ object, visible: object.visible }));
+      try {
+        let exportCamera = camera;
+        if (selectedMesh) {
+          for (const child of scene.children) child.visible = child === modelGroup || child instanceof THREE.Light;
+          for (const child of modelGroup.children) child.visible = child.userData.bodyId === request.bodyId;
+          applySelection(modelGroup, undefined, []);
+          applyClipping(modelGroup, undefined);
+          exportCamera = camera.clone();
+          const bounds = selectedMesh.bounds;
+          const center = new THREE.Vector3(...bounds.min).add(new THREE.Vector3(...bounds.max)).multiplyScalar(0.5);
+          const span = new THREE.Vector3(...bounds.max).sub(new THREE.Vector3(...bounds.min)).length();
+          const direction = camera.position.clone().sub(controls.target).normalize();
+          const angle = Math.atan(Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * Math.min(1, camera.aspect));
+          const distance = Math.max(span, 1) / (2 * Math.sin(angle)) * 1.2;
+          exportCamera.position.copy(center).addScaledVector(direction, distance);
+          exportCamera.lookAt(center);
+          Object.assign(exportCamera, cameraClipRange(distance, span));
+          exportCamera.updateProjectionMatrix();
+        }
+        // Copy immediately after rendering: WebGL's default buffer is transient.
+        renderer.render(scene, exportCamera);
+        return copyCanvasPng(renderer.domElement);
+      } finally {
+        for (const saved of visibility) saved.object.visible = saved.visible;
+        if (selectedMesh) {
+          applySelection(modelGroup, selectedBodyIdRef.current, highlightedBodyIdsRef.current);
+          applyClipping(modelGroup, clippingRef.current);
+        }
+        renderer.render(scene, camera);
+      }
+    });
     const unregisterCamera = registerCameraController({
       read: () => ({ cameraPosition: camera.position.toArray(), cameraTarget: controls.target.toArray(), cameraUp: camera.up.toArray() }),
       apply: applyPose,
@@ -265,6 +311,7 @@ export function CadViewer() {
       operationPicking.dispose();
       unregisterDiagnostics?.();
       unregisterCamera();
+      unregisterPng();
       cancelAnimationFrame(raf);
       resizeObserver?.disconnect();
       window.removeEventListener("resize", resize);
@@ -310,12 +357,14 @@ export function CadViewer() {
     const runtime = runtimeRef.current;
     if (!runtime) return;
     updateMeshes(runtime.modelGroup, meshes);
+    renderedMeshesRef.current = meshes;
     applyClipping(runtime.modelGroup, clippingRef.current);
     applySelection(runtime.modelGroup, selectedBodyIdRef.current, highlightedBodyIdsRef.current);
   }, [meshes]);
 
   useEffect(() => {
     const runtime = runtimeRef.current;
+    renderedDocumentRef.current = document;
     if (runtime)
       updateSketchOverlay(
         runtime.sketchGroup,

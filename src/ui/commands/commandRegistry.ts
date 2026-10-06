@@ -12,6 +12,7 @@ import { beginGuidedHole, cancelGuidedHole, canBeginGuidedHole, useGuidedHole } 
 import { beginExtrudeCreation, beginExtrudeEditing, editableExtrude, useExtrudeDraft } from "./extrudeCommand";
 import { beginModelingCreation, beginModelingEditing, editableModelingFeature, useModelingDraft } from "./modelingDraftCommand";
 import { useViewerState } from "../../state/viewerState";
+import { exportPng } from "../../persistence/exportPng";
 import { toggleAiDrawer, beginPartDescription } from "./aiCommand";
 import { activeComponentId, beginPartDrawing, beginProjectWorkflow, finishSketchCanvas, useProjectWorkflow } from "./projectWorkflowCommand";
 import { renameComponent, sketchComponentId } from "../../cad/document/components";
@@ -132,6 +133,9 @@ export interface CommandEnablement {
   saveOrExport: boolean;
   exportStl: boolean;
   exportSelectedBody: boolean;
+  exportProjectPng: boolean;
+  exportBodyPng: boolean;
+  exportSketchPng: boolean;
   saveNamedView: boolean;
   restoreNamedView: boolean;
   createExtrude: boolean;
@@ -187,6 +191,9 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
     redo: !targetPickerActive && state.history.future.length > 0,
     exportStl: canExportStl(state) && !state.fileBusy && !operationBusy && !refinementBusy,
     exportSelectedBody: canExportStl(state) && !state.fileBusy && !operationBusy && !refinementBusy && Boolean(selectedExportBody(state)),
+    exportProjectPng: canExportStl(state) && !state.fileBusy && !targetPickerActive && !guidedHoleStartBlocked && !canvasActive && !scopeCaptureBusy,
+    exportBodyPng: canExportStl(state) && !state.fileBusy && !targetPickerActive && !guidedHoleStartBlocked && !canvasActive && !scopeCaptureBusy && Boolean(selectedExportBody(state)),
+    exportSketchPng: canvasActive && !state.fileBusy && !targetPickerActive && !guidedHoleStartBlocked && !scopeCaptureBusy,
     createExtrude: !canvasActive && ((!targetPickerActive && canCreateExtrude(state)) || handoffReady),
     createRevolve: !targetPickerActive && !canvasActive && Boolean(defaultRevolveAxis(state)),
     editFeature: !targetPickerActive && !canvasActive && Boolean(editableExtrude(state) || editableModelingFeature(state) || editableHole(state)),
@@ -210,6 +217,9 @@ export function isCommandEnabledForSnapshot(
 }
 
 export const commands: CadCommand[] = [
+  { id: "file.exportProjectPng", label: "Download project view PNG", description: "Capture the current 3D camera, visible bodies, sketches and section view.", enablementKey: "exportProjectPng", run: () => exportPng("project") },
+  { id: "file.exportBodyPng", label: "Download selected part PNG", description: "Select a body, then download a fitted image of that body alone.", enablementKey: "exportBodyPng", run: () => exportPng("body") },
+  { id: "file.exportSketchPng", label: "Download sketch PNG", description: "Open a sketch, then capture the drawing with its visible dimensions and constraints.", enablementKey: "exportSketchPng", run: () => exportPng("sketch") },
   { id: "sketch.facePocket", label: "Draw on face", enablementKey: "createFacePocket", run: () => beginFacePocket() },
   { id: "sketch.removeMaterial", label: "Remove material", enablementKey: "removeSketchMaterial", run: () => removeSketchMaterial() },
   { id: "sketch.trim", label: "Trim sketch curves", enablementKey: "trimSketch", run: () => openSketchTrimExtend("trim") },

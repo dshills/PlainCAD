@@ -29,6 +29,7 @@ with **File → Open**, or drop the project file onto the workspace.
 - Docked Workbench, Minimal and Full layouts, and Light, Dark, and Saturn Command themes.
 - Body visibility, named camera views, section previews, sketch measurements, and linked diagnostics.
 - Editable `.pcaddoc`/JSON files, autosave/recovery, and validated single- or multi-body STL export.
+- PNG downloads of the current 3D view, an isolated selected body, or a sketch with its visible dimensions.
 - AI part creation, bounded existing-part edits/additions, and conversational sketch refinement.
 
 Supported geometry is bounded. The [capability matrix](specs/working-cad/CAPABILITY_MATRIX.md)
@@ -263,7 +264,7 @@ See [AI feature additions](specs/working-cad/AI_FEATURE_ADDITIONS.md) and the
 [capability matrix's AI sections](specs/working-cad/CAPABILITY_MATRIX.md#ai-component-generation)
 for per-mode limits.
 
-## Save, Recovery, and STL
+## Save, Recovery, STL, and Images
 
 **Save** downloads one deterministic `.pcaddoc` with durable CAD intent. **Export
 Project JSON** creates a `.json` copy. **Open** or a single project-file drop uses
@@ -289,6 +290,17 @@ manifoldness, winding, shell/native volume, and bounded intersections. Combined
 modes require acknowledgement of applicable warnings. Expensive checks may be
 skipped outside union with a diagnostic. These checks cover supported meshes and
 numerical tolerances; changed or stale results cannot be downloaded.
+
+Use **File → Download project view PNG** for the current 3D camera, visible bodies,
+sketch overlays, and section preview. Select a body, then choose **Download selected
+part PNG** for a fitted image of that body alone, without selection highlights or
+section clipping. Open a sketch and choose **Download sketch PNG** in File or the
+sketch header to include its visible dimensions and constraint annotations.
+Images use the current theme, omit application controls and 3D dimension buttons,
+and are capped at 4096 pixels per side. Sketch drawings render at twice their
+display size; 3D captures use the viewer's display resolution. Project/part images
+require a successful current native rebuild; sketch images require a valid solved
+drawing. Downloads do not change the project, camera, visibility, or Undo history.
 
 Project files contain components, parameters/bindings, sketches, planes, timeline
 features, saved unit preferences, and explicit named camera poses. Kernel handles,

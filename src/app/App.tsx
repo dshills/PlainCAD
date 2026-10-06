@@ -94,6 +94,9 @@ const toolbarGroups: ToolbarGroup[] = [
         title: "Export the current rebuilt model as STL",
         ariaLabel: "Export STL",
       },
+      { command: "file.exportProjectPng", label: "Project PNG", icon: "PNG", title: "Download the current 3D view", ariaLabel: "Download project view PNG" },
+      { command: "file.exportBodyPng", label: "Part PNG", icon: "PNG", title: "Select a body to download its image alone", ariaLabel: "Download selected part PNG" },
+      { command: "file.exportSketchPng", label: "Sketch PNG", icon: "PNG", title: "Open a sketch to download its drawing", ariaLabel: "Download sketch PNG" },
     ],
   },
   {

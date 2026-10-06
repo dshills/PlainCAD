@@ -101,6 +101,9 @@ export function WorkbenchHeader({ context }: { context: CommandContext }) {
                 label="Export STL"
                 context={context}
               />
+              <CommandButton command="file.exportProjectPng" label="Download project view PNG" context={context} />
+              <CommandButton command="file.exportBodyPng" label="Download selected part PNG" context={context} />
+              <CommandButton command="file.exportSketchPng" label="Download sketch PNG" context={context} />
               <hr />
               <CommandButton
                 command="component.create"

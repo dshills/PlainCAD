@@ -983,3 +983,23 @@ source result. Competing modeling, guided save/export, STL and repair tasks are 
 the operation is applied or canceled. Unsupported picks give a diagnostic. Native
 acceptance covers actual profile drag and cap picking on XY/XZ/YZ, changed BRep
 volume, undo/redo, parameter edits, save/open and positive signed STL volume.
+
+## PNG image downloads
+
+File and command search offer the current 3D project view, a selected body alone,
+and the open sketch drawing. The sketch header also offers PNG download. Project
+images preserve current camera/visibility/section previews and Three.js sketch
+overlays. Body images fit the selected native body, including hidden bodies, and
+omit other bodies, grid, sketches, measurement overlays, highlights and clipping;
+live view state is restored immediately. Sketch images rasterize the actual SVG
+with computed theme styles and visible dimensions/constraints, excluding pointer
+feedback. Application chrome and HTML 3D dimension controls are excluded.
+
+Images are bounded to 4096 pixels per side. Viewer exports require a current
+successful native rebuild; sketch exports require a current valid solved drawing
+without an unfinished gesture. Asynchronous downloads reject document/session or
+3D result changes and honor cancellation. Native Chromium acceptance validates
+geometry, PNG decoding/nonblank pixels, dimension visibility, hidden-body export,
+and unchanged camera/visibility/clipping/history. The built-app CSP suite exercises
+all three scopes without widening its image policy. Unit tests cover stale/canceled
+jobs, encoding failure, command availability, session replacement and size limits.
