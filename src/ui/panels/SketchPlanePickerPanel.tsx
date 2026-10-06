@@ -73,8 +73,14 @@ export function SketchPlanePickerPanel() {
       <h2>Choose a sketch plane</h2>
       <p>
         Component:{" "}
-        <strong>{document.components[active.componentId].name}</strong>
+        <strong>{active.partName ?? document.components[active.componentId].name}</strong>
       </p>
+      {active.partName ? (
+        <p className="muted">
+          Your part and its first sketch are created together when you choose a plane.
+          Cancel leaves the project unchanged.
+        </p>
+      ) : null}
       <p>
         Click a colored origin plane or a supported planar face in the viewer.
         Hover highlights the choice. These buttons also support keyboard

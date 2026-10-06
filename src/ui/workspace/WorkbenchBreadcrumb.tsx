@@ -1,6 +1,7 @@
 import { useShallow } from "zustand/react/shallow";
 import { useCadStore } from "../../state/useCadStore";
 import { useWorkbenchState } from "../../state/useWorkbenchState";
+import { useSketchCanvas } from "../commands/sketchCanvasCommand";
 import { activeComponentId } from "../commands/projectWorkflowCommand";
 import {
   CaretRightIcon,
@@ -10,6 +11,8 @@ import {
 export function WorkbenchBreadcrumb() {
   const cadDocument = useCadStore((state) => state.history.present);
   const component = useCadStore(activeComponentId);
+  const canvas = useSketchCanvas((state) => state.active);
+  const session = useCadStore((state) => state.documentSession);
   const selection = useCadStore((state) => state.selection.selectedIds[0]);
   const dock = useWorkbenchState(
     useShallow((state) => ({
@@ -20,7 +23,9 @@ export function WorkbenchBreadcrumb() {
     })),
   );
   const sketch =
-    selection?.kind === "sketch"
+    canvas?.documentId === cadDocument.id && canvas.session === session
+      ? cadDocument.sketches[canvas.sketchId]
+      : selection?.kind === "sketch"
       ? cadDocument.sketches[selection.id]
       : undefined;
   return (

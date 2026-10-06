@@ -8,6 +8,7 @@ import { sketchPlaneTransform } from "../../cad/sketch/planes";
 import type { SketchPlaneReference, FacePlaneReference } from "../../cad/document/schema";
 import { create } from "zustand";
 import { useCadStore, type CadStore } from "../../state/useCadStore";
+import { createPartSketch } from "../../cad/document/partCreation";
 import { addComponent } from "../../cad/document/components";
 import { upsertSketch } from "../../cad/document/CadDocument";
 import { createSketchOnPlane } from "../../cad/sketch/SketchModel";
@@ -18,8 +19,12 @@ interface WorkflowSession {
   documentId: string;
   componentId: string;
   kind: "component" | "sketch";
+  partName?: string;
 }
-export const useProjectWorkflow = create<{ active?: WorkflowSession }>(
+export const useProjectWorkflow = create<{
+  active?: WorkflowSession;
+  startName?: { name: string; documentId: string; session: number };
+}>(
   () => ({}),
 );
 export function activeComponentId(state: CadStore): string {
@@ -41,12 +46,23 @@ export function beginProjectWorkflow(kind: WorkflowSession["kind"]) {
     },
   });
 }
+export function beginPartDrawing(name: string) {
+  const trimmed = name.trim();
+  if (!trimmed || trimmed.length > 120)
+    throw new Error("Part name must contain 1–120 characters.");
+  if (useCadStore.getState().fileBusy) return;
+  beginProjectWorkflow("sketch");
+  useProjectWorkflow.setState((state) => ({
+    active: state.active ? { ...state.active, partName: trimmed } : undefined,
+  }));
+}
 export function workflowCurrent(
   active: WorkflowSession,
   state = useCadStore.getState(),
 ): boolean {
   return (
     !state.fileBusy &&
+    useProjectWorkflow.getState().active === active &&
     active.session === state.documentSession &&
     active.documentId === state.history.present.id &&
     active.componentId === activeComponentId(state)
@@ -97,7 +113,10 @@ export function finishProjectWorkflow(
       // Resolve with the selected native face's measured basis, preserving its normal.
       transform = sketchPlaneTransform(reference, evaluation.values, new Map([[choice.id, choice.transform]]));
     }
-    const sketch = {
+    const initialPart = active.partName
+      ? createPartSketch(state.history.present, active.partName, reference)
+      : undefined;
+    const sketch = initialPart?.sketch ?? {
       ...createSketchOnPlane(
         `Sketch ${Object.keys(state.history.present.sketches).length + 1}`,
         reference,
@@ -106,11 +125,21 @@ export function finishProjectWorkflow(
     };
     const before = state.history.present;
     // Store edits bind offset parameter tokens to stable IDs before publication.
-    state.updateDocument((document) => upsertSketch(document, sketch));
-    if (useCadStore.getState().history.present === before)
+    state.updateDocument((document) => {
+      if (document !== before) return document;
+      return initialPart?.document ?? upsertSketch(document, sketch);
+    });
+    const published = useCadStore.getState().history.present;
+    if (
+      published === before ||
+      !Object.hasOwn(published.sketches, sketch.id) ||
+      published.sketches[sketch.id].componentId !== sketch.componentId ||
+      (initialPart && !Object.hasOwn(published.components, initialPart.component.id))
+    )
       throw new Error(
-        "Sketch could not be created. Check project diagnostics.",
+        "Sketch could not be created. Check project diagnostics or start drawing again.",
       );
+    if (initialPart) state.activateComponent(initialPart.component.id);
     state.select({ kind: "sketch", id: sketch.id, documentId: before.id });
     alignToSketchPlane({ ...choice, transform });
     beginSketchCanvas();

@@ -4,8 +4,8 @@ import { beginGuidedHole, cancelGuidedHole, canBeginGuidedHole, useGuidedHole } 
 import { beginExtrudeCreation, beginExtrudeEditing, editableExtrude, useExtrudeDraft } from "./extrudeCommand";
 import { beginModelingCreation, beginModelingEditing, editableModelingFeature, useModelingDraft } from "./modelingDraftCommand";
 import { useViewerState } from "../../state/viewerState";
-import { toggleAiDrawer } from "./aiCommand";
-import { activeComponentId, beginProjectWorkflow, finishSketchCanvas, useProjectWorkflow } from "./projectWorkflowCommand";
+import { toggleAiDrawer, beginPartDescription } from "./aiCommand";
+import { activeComponentId, beginPartDrawing, beginProjectWorkflow, finishSketchCanvas, useProjectWorkflow } from "./projectWorkflowCommand";
 import { renameComponent, sketchComponentId } from "../../cad/document/components";
 import { MODEL_RESOURCE_LIMITS } from "../../cad/resourceLimits";
 import { beginSketchCanvas, deleteSelectedCanvasEntity, selectedCanvasEntity, selectedCanvasSketch, selectAllCanvasEntities, canSelectAllCanvasEntities, useSketchCanvas } from "./sketchCanvasCommand";
@@ -184,7 +184,9 @@ export function isCommandEnabledForSnapshot(
 }
 
 export const commands: CadCommand[] = [
-  { id: "feature.operationTargets", label: "Choose Operation Target", description: "Drag or choose Extrude, Round or Bevel on explicit supported geometry; inspect the native preview before Apply.", enablementKey: "createOperationDrop", run: ({ operation }) => beginOperationDrop(operation) },
+  { id: "project.startDrawing", internal: true, label: "Draw a named part", enablementKey: "newComponent", run: ({ componentName }) => beginPartDrawing(componentName ?? "Part 1") },
+  { id: "project.startDescribing", internal: true, label: "Describe a named part", enablementKey: "newComponent", run: ({ componentName }) => beginPartDescription(componentName ?? "Part 1") },
+  { id: "feature.operationTargets", label: "Choose Operation Target", description: "Drag or choose Extrude, Fillet or Chamfer on explicit supported geometry; inspect the native preview before Apply.", enablementKey: "createOperationDrop", run: ({ operation }) => beginOperationDrop(operation) },
   { id: "feature.operationTarget", internal: true, label: "Preview Operation on Target", enablementKey: "operationTarget", run: ({ operationFrame, operationTargetId }) => chooseOperationDropTarget(operationFrame, operationTargetId) },
   { id: "feature.cancelOperationDrop", internal: true, label: "Cancel Operation Targets", alwaysEnabled: true, run: cancelOperationDrop },
 

@@ -20,9 +20,27 @@ export type AiStaged = ReturnType<typeof buildAiPlan> & {
   editedFeature?: AiEditableFeature;
 };
 
-export const useAiDrawer = create<{ open: boolean }>(() => ({ open: false }));
+export const useAiDrawer = create<{
+  open: boolean;
+  namedPart?: { name: string; document: CadDocument; session: number };
+}>(() => ({ open: false }));
+export function beginPartDescription(name: string) {
+  const trimmed = name.trim();
+  if (!trimmed || trimmed.length > 120)
+    throw new Error("Part name must contain 1–120 characters.");
+  const state = useCadStore.getState();
+  if (state.fileBusy) return;
+  useAiDrawer.setState({
+    open: true,
+    namedPart: {
+      name: trimmed,
+      document: state.history.present,
+      session: state.documentSession,
+    },
+  });
+}
 export const toggleAiDrawer = () =>
-  useAiDrawer.setState((state) => ({ open: !state.open }));
+  useAiDrawer.setState((state) => ({ open: !state.open, namedPart: undefined }));
 export interface AiDraftFrame {
   document: CadDocument;
   session: number;

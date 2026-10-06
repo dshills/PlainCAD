@@ -4,7 +4,7 @@ import { useOperationDrop } from "../commands/operationDropCommand";
 import { useExtrudeDraft } from "../commands/extrudeCommand";
 import { useModelingDraft } from "../commands/modelingDraftCommand";
 import { useWorkspaceState } from "../../state/useWorkspaceState";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fetchAiProviders, requestAiPlan } from "../../ai/client";
 import { buildAiPlan } from "../../ai/buildPlan";
 import { aiEditContext, buildAiParameterEdit } from "../../ai/editPlan";
@@ -65,6 +65,7 @@ export function AiDrawer({ embedded = false }: { embedded?: boolean }) {
     () => useWorkspaceState.getState().layout === "full",
   );
   const open = useAiDrawer((state) => state.open);
+  const namedPart = useAiDrawer((state) => state.namedPart);
   const document = useCadStore((state) => state.history.present);
   const session = useCadStore((state) => state.documentSession);
   const componentId = useCadStore((state) => state.activeComponentId);
@@ -311,6 +312,29 @@ export function AiDrawer({ embedded = false }: { embedded?: boolean }) {
   useEffect(() => {
     preference.current = { provider, model };
   }, [provider, model]);
+  const cancel = useCallback((message = "Request canceled. The project is unchanged.") => {
+    controller.current?.abort();
+    controller.current = undefined;
+    frame.current = undefined;
+    setBusy(false);
+    setProposal(undefined);
+    setStatus(message);
+  }, []);
+  useEffect(() => {
+    if (!namedPart) return;
+    if (!open || namedPart.document !== document || namedPart.session !== session) {
+      useAiDrawer.setState({ namedPart: undefined });
+      return;
+    }
+    cancel("Describe your named part, then review its native preview before Apply.");
+    setTask("create");
+    setPrompt(`Make a part named "${namedPart.name}". `);
+    setHistory([]);
+    setReply(undefined);
+    setError("");
+    setChosenTarget(undefined);
+    setClarifying(false);
+  }, [namedPart, open, document, session, cancel]);
   const current = proposal && currentAiFrame(proposal.frame);
   const canGenerate =
     !busy &&
@@ -327,14 +351,6 @@ export function AiDrawer({ embedded = false }: { embedded?: boolean }) {
         providers.some((p) => p.id === provider && p.available))) &&
     !editing.error &&
     (task === "create" || Boolean(editing.context?.parameters.length));
-  const cancel = (message = "Request canceled. The project is unchanged.") => {
-    controller.current?.abort();
-    controller.current = undefined;
-    frame.current = undefined;
-    setBusy(false);
-    setProposal(undefined);
-    setStatus(message);
-  };
   useEffect(() => {
     if (!open) {
       if (controller.current || frame.current)
@@ -463,7 +479,7 @@ export function AiDrawer({ embedded = false }: { embedded?: boolean }) {
     );
     const description = prompt.trim();
     try {
-      const plan =
+      const generated =
         intent.localPlan ??
         (await requestAiPlan(
           provider,
@@ -479,6 +495,12 @@ export function AiDrawer({ embedded = false }: { embedded?: boolean }) {
         !currentAiFrame(base)
       )
         return;
+      const plan =
+        task === "create" &&
+        namedPart?.document === document &&
+        namedPart.session === session
+          ? { ...generated, name: namedPart.name }
+          : generated;
       assertAiIntentPlan(intent, plan);
       setReply(plan);
       setReplyFrame(base);
@@ -670,6 +692,7 @@ export function AiDrawer({ embedded = false }: { embedded?: boolean }) {
   function changeScope(scope: AiScope) {
     cancel("Scope changed. Generate a fresh preview.");
     setTask(scope);
+    useAiDrawer.setState({ namedPart: undefined });
     setHistory([]);
     setReply(undefined);
     setError("");
@@ -751,6 +774,11 @@ export function AiDrawer({ embedded = false }: { embedded?: boolean }) {
                 )}
               </fieldset>
 
+              {namedPart ? (
+                <p>
+                  New part: <strong>{namedPart.name}</strong>. Nothing is added until Apply.
+                </p>
+              ) : null}
               <label htmlFor="ai-description">
                 What would you like to make?
               </label>
@@ -810,6 +838,7 @@ export function AiDrawer({ embedded = false }: { embedded?: boolean }) {
                   disabled={busy}
                   onClick={() => {
                     cancel("Conversation cleared. Describe a new part.");
+                    useAiDrawer.setState({ namedPart: undefined });
                     setHistory([]);
                     setReply(undefined);
                     setPrompt("");

@@ -1,0 +1,10 @@
+.project-start .project-start-name {
+  display: grid;
+  gap: 6px;
+  margin-block: 16px;
+  font-weight: 600;
+}
+.project-start .project-start-name input {
+  width: 100%;
+  min-width: 0;
+}
