@@ -1,3 +1,6 @@
+import { SketchTrimExtendPanel } from "./SketchTrimExtendPanel";
+import { useContextualConstraintDraft } from "../commands/contextualConstraintCommand";
+import { setSketchTrimExtendPick, useSketchTrimExtend } from "../commands/sketchTrimExtendCommand";
 import { useSketchRefinement } from "../commands/sketchRefinementCommand";
 import { useWorkspaceState } from "../../state/useWorkspaceState";
 import { evaluateParameters } from "../../cad/parameters/expressionEvaluator";
@@ -145,6 +148,8 @@ export function SketchCanvasPanel() {
 }
 function SketchCanvas({ active }: { active: CanvasSession }) {
   const refinementBusy = useSketchRefinement((s) => Boolean(s.frame));
+  const contextualBusy = useContextualConstraintDraft((s) => Boolean(s.frame));
+  const trimFrame = useSketchTrimExtend((s) => s.frame);
   const focused = useWorkspaceState((s) => s.layout !== "full");
   const [sizes, setSizes] = useState<CanvasSizeInput>({});
   const [precisionOpen, setPrecisionOpen] = useState(!focused);
@@ -391,7 +396,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
   const disabled =
     !context ||
     fileBusy ||
-    refinementBusy ||
+    refinementBusy || contextualBusy || Boolean(trimFrame) ||
     (snap && !validGrid) ||
     context.solved.errors.some((e) => e.severity === "error");
   const snapFeedback =
@@ -509,6 +514,14 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     }
     if (event.button !== 0 || primitiveGesture.current || boxGesture.current)
       return;
+    if (trimFrame) {
+      const point = selectionPointAt(event);
+      if (point) {
+        event.preventDefault();
+        try { setSketchTrimExtendPick(point); } catch (failure) { setError(failure instanceof Error ? failure.message : "Sketch pick failed."); }
+      }
+      return;
+    }
     if (tool === "select") {
       if (fileBusy) return;
       if (
@@ -876,6 +889,8 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
             </button>
           ),
         )}
+        <button type="button" aria-label="Trim sketch lines" disabled={!selectCommandEnablement(useCadStore.getState()).trimSketch} onClick={() => { cancel(); void runCommand("sketch.trim"); }}>Trim</button>
+        <button type="button" aria-label="Extend sketch lines" disabled={!selectCommandEnablement(useCadStore.getState()).trimSketch} onClick={() => { cancel(); void runCommand("sketch.extend"); }}>Extend</button>
         <label>
           <input
             type="checkbox"
@@ -1209,6 +1224,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
             </div>
           ) : null}
           {dimensions.controls}
+          {trimFrame ? <SketchTrimExtendPanel key={trimFrame.active.sketchId} /> : null}
           {constraints.controls}
           <details open={!focused}>
             <summary>Drawing help</summary>

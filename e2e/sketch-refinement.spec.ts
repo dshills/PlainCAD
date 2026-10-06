@@ -28,6 +28,7 @@ test("local sketch refinement previews native downstream geometry, Cancel, one U
     const storePath = "/src/state/useCadStore.ts";
     const commands = await import(commandPath), plans = await import(planPath), store = (await import(storePath)).useCadStore;
     const frame = commands.captureSketchRefinementFrame();
+    commands.useSketchRefinement.setState({ frame });
     const plan = plans.buildSketchRefinement(frame.document, frame.active.sketchId, [], "make this rectangle 60 x 40 mm");
     const other = plans.buildSketchRefinement(frame.document, frame.active.sketchId, [], "make this rectangle 30 x 20 mm");
     const preview = await commands.previewSketchRefinement(plan, new AbortController().signal);
@@ -35,6 +36,7 @@ test("local sketch refinement previews native downstream geometry, Cancel, one U
     let diagnostic = "";
     try { commands.applySketchRefinement(frame, other, preview.result); }
     catch (failure) { diagnostic = failure instanceof Error ? failure.message : String(failure); }
+    commands.useSketchRefinement.setState({ frame: undefined });
     return { diagnostic, unchanged: store.getState().history.present === before, source: preview.result.meshes[0].geometrySource, volume: preview.volume };
   });
   expect(mixedNativeProof).toMatchObject({ diagnostic: "Refinement result does not match this proposal. Generate a fresh preview.", unchanged: true, source: "opencascade" });

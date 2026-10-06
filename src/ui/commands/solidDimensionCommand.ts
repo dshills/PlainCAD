@@ -1,4 +1,4 @@
-import { useSolidDimensionEdit, useSketchRefinement } from "./interactionDraftState";
+import { interactionDraftBusy, useSolidDimensionEdit } from "./interactionDraftState";
 export { useSolidDimensionEdit } from "./interactionDraftState";
 import { useViewerState } from "../../state/viewerState";
 import type { SolidDimension } from "../../cad/inspection/solidDimensions";
@@ -28,7 +28,7 @@ export interface SolidDimensionEditFrame {
 }
 export function solidDimensionEditingAvailable(state: CadStore = useCadStore.getState()) {
   return !state.fileBusy && state.rebuild.kernelReady && state.rebuild.status === "succeeded" &&
-    !useSolidDimensionEdit.getState().frame && !useSketchCanvas.getState().active && !useSketchRefinement.getState().frame &&
+    !interactionDraftBusy() && !useSketchCanvas.getState().active &&
     !operationDraftBusy() && !useGuidedHole.getState().draft && !useExtrudeDraft.getState().draft &&
     !useHoleDraft.getState().draft && !useModelingDraft.getState().draft && !useProjectWorkflow.getState().active && !useFileJobs.getState().exportOpen;
 }
@@ -46,8 +46,9 @@ export function currentSolidDimensionFrame(frame: SolidDimensionEditFrame) {
   return useSolidDimensionEdit.getState().frame === frame && state.history.present === frame.document &&
     state.documentSession === frame.session && state.activeComponentId === frame.componentId && !state.fileBusy &&
     state.rebuild.status === "succeeded" && state.rebuild.result === frame.result &&
-    !useSketchCanvas.getState().active && !useSketchRefinement.getState().frame && !operationDraftBusy() &&
-    !useGuidedHole.getState().draft && !useExtrudeDraft.getState().draft && !useHoleDraft.getState().draft && !useModelingDraft.getState().draft;
+    !useSketchCanvas.getState().active && !interactionDraftBusy("solidDimension") && !operationDraftBusy() &&
+    !useGuidedHole.getState().draft && !useExtrudeDraft.getState().draft && !useHoleDraft.getState().draft && !useModelingDraft.getState().draft &&
+    !useProjectWorkflow.getState().active && !useFileJobs.getState().exportOpen;
 }
 export function cancelSolidDimensionEdit() { useSolidDimensionEdit.setState({ frame: undefined }); }
 export interface SolidDimensionPreview { document: CadDocument; result: RebuildResult; frame: SolidDimensionEditFrame; target: SolidDimensionTarget; expression: string }

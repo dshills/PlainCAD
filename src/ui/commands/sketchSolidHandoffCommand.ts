@@ -1,6 +1,9 @@
+import { stableBodyIdForFeature } from "../../cad/features/featureGraph";
+import { useFacePocketIntent } from "./facePocketIntentState";
+import { beginExtrudeCreation, useExtrudeDraft } from "./extrudeCommand";
 import { create } from "zustand";
 import type { CadDocument } from "../../cad/document/schema";
-import { sketchComponentId } from "../../cad/document/components";
+import { bodyComponentId, sketchComponentId } from "../../cad/document/components";
 import { useCadStore, type CadStore } from "../../state/useCadStore";
 import {
   beginOperationDrop,
@@ -17,6 +20,7 @@ export interface SketchSolidHandoff {
   session: number;
   componentId: string;
   sketchId: string;
+  pocketIntent?: boolean;
 }
 type HandoffContext = Pick<CadStore, "fileBusy" | "history" | "documentSession" | "activeComponentId">;
 export const useSketchSolidHandoff = create<{
@@ -31,11 +35,13 @@ export function beginSketchSolidHandoff(sketchId: string) {
   if (state.fileBusy || !state.history.present.sketches[sketchId] ||
       sketchComponentId(state.history.present, sketchId) !== state.activeComponentId) return;
   cancelSketchSolidHandoff();
+  const intent = useFacePocketIntent.getState().source;
   useSketchSolidHandoff.setState({ source: {
     document: state.history.present,
     session: state.documentSession,
     componentId: state.activeComponentId,
     sketchId,
+    pocketIntent: Boolean(intent && intent.sketchId === sketchId && intent.documentId === state.history.present.id && intent.session === state.documentSession && intent.componentId === state.activeComponentId),
   }, selectedTargetId: undefined, error: undefined });
 }
 
@@ -107,5 +113,46 @@ export function cancelSketchSolidHandoff() {
   const frame = useOperationDrop.getState().frame;
   if (source && frame?.handoffSketchId === source.sketchId && frame.document === source.document &&
       frame.session === source.session && frame.componentId === source.componentId) cancelOperationDrop();
+  useSketchSolidHandoff.setState({ source: undefined, selectedTargetId: undefined, error: undefined });
+}
+
+/** Only the exact currently retained face and its active native body can own a pocket. */
+export function sketchPocketTarget(state: CadStore = useCadStore.getState()) {
+  const source = useSketchSolidHandoff.getState().source;
+  if (!source || !sketchSolidHandoffCurrent(source, state)) return;
+  const plane = source.document.sketches[source.sketchId]?.plane;
+  if (plane?.type !== "face" || plane.lost) return;
+  const result = state.rebuild.result;
+  if (state.rebuild.status !== "succeeded" || !result?.success || result.documentId !== source.document.id) return;
+  const bodyId = stableBodyIdForFeature(plane.featureId);
+  const face = result?.availableFaces?.find((item) => item.id === plane.stableFaceId && item.featureId === plane.featureId);
+  const body = result?.bodies.find((item) => item.id === bodyId);
+  const mesh = result?.meshes.find((item) => item.bodyId === bodyId);
+  if (bodyComponentId(source.document, bodyId) !== source.componentId || !face || !body || mesh?.geometrySource !== "opencascade" || !mesh.geometryAssertions?.valid ||
+      mesh.geometryAssertions.solidCount !== 1 || !(mesh.geometryAssertions.volume > 0)) return;
+  return { bodyId, name: body.name, faceId: face.id, baseVolume: mesh.geometryAssertions.volume };
+}
+export function canRemoveSketchMaterial(state: CadStore = useCadStore.getState()) {
+  return canMakeSketchSolid(state) && Boolean(sketchPocketTarget(state));
+}
+export function removeSketchMaterial() {
+  const pocket = sketchPocketTarget();
+  if (!pocket || !canRemoveSketchMaterial())
+    throw new Error("Choose a current closed region on a retained supported face before removing material from its body.");
+  const { source, selectedTargetId } = useSketchSolidHandoff.getState();
+  const frame = useOperationDrop.getState().frame;
+  if (!source || !frame || !operationDropCurrent(frame))
+    throw new Error("The sketch or native geometry changed. Finish the face sketch again.");
+  const target = operationDropTargets("extrude", useCadStore.getState(), source.sketchId).find((item) => item.id === selectedTargetId);
+  if (!target || target.kind !== "profile") throw new Error("Choose a highlighted closed region from this face sketch.");
+  const previousDraft = useExtrudeDraft.getState().draft;
+  beginExtrudeCreation(target.sketchId, { profileId: target.profileId, snapshot: frame.result, pocket });
+  const draft = useExtrudeDraft.getState().draft;
+  if (!draft || draft.document !== source.document || draft.targetSnapshot !== frame.result ||
+      draft.sketchId !== source.sketchId || draft.feature.profileId !== target.profileId || draft.pocket !== pocket) {
+    if (draft && draft !== previousDraft) useExtrudeDraft.setState({ draft: undefined });
+    throw new Error("The pocket preview could not start. Finish the face sketch again.");
+  }
+  cancelOperationDrop();
   useSketchSolidHandoff.setState({ source: undefined, selectedTargetId: undefined, error: undefined });
 }

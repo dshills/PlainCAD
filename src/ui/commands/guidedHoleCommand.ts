@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { interactionDraftBusy } from "./interactionDraftState";
 import { useCadStore, type CadStore } from "../../state/useCadStore";
 import type {
   CadDocument,
@@ -70,7 +71,7 @@ export function guidedHoleCurrent(
     state.history.present === draft.document &&
     state.documentSession === draft.session &&
     state.activeComponentId === draft.componentId &&
-    !state.fileBusy &&
+    !state.fileBusy && !interactionDraftBusy() &&
     state.rebuild.status === "succeeded" &&
     state.rebuild.result === draft.result &&
     selected?.id === draft.selection?.id &&
@@ -105,6 +106,7 @@ export function guidedHoleFaces(state: CadStore = useCadStore.getState()) {
 export function canBeginGuidedHole(state: CadStore = useCadStore.getState()) {
   return (
     !useGuidedHole.getState().draft &&
+    !interactionDraftBusy() &&
     !useSketchCanvas.getState().active &&
     !useProjectWorkflow.getState().active &&
     !useExtrudeDraft.getState().draft &&

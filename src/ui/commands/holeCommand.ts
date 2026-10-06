@@ -9,6 +9,7 @@ import {
   sketchComponentId,
 } from "../../cad/document/components";
 import { create } from "zustand";
+import { interactionDraftBusy } from "./interactionDraftState";
 import type { CadStore } from "../../state/useCadStore";
 import { useCadStore } from "../../state/useCadStore";
 import { createId } from "../../cad/document/ids";
@@ -70,6 +71,7 @@ export function editableHole(state: CadStore) {
 }
 
 export function beginHoleEditing() {
+  if (interactionDraftBusy()) throw new Error("Finish the current edit or face-picking task before editing Hole.");
   const state = useCadStore.getState(),
     feature = editableHole(state);
   if (!feature) return;
@@ -146,6 +148,7 @@ export function holeCreationContext(state: CadStore, sketchId?: string) {
 }
 
 export function beginHoleCreation() {
+  if (interactionDraftBusy()) throw new Error("Finish the current edit or face-picking task before opening Hole.");
   const state = useCadStore.getState(),
     context = holeCreationContext(state);
   if (!context) return;
@@ -186,7 +189,7 @@ export function isCurrentHoleDraft(
     state.history.present === draft.document &&
     state.documentSession === draft.session &&
     state.activeComponentId === draft.componentId &&
-    !state.fileBusy
+    !state.fileBusy && !interactionDraftBusy()
   );
 }
 export function stageHole(

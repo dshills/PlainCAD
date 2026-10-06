@@ -1,6 +1,9 @@
+import { canBeginFacePocket, useFacePocket } from "./facePocketCommand";
+import { openSketchTrimExtend, useSketchTrimExtend } from "./sketchTrimExtendCommand";
+import { useContextualConstraintDraft } from "./contextualConstraintCommand";
 import { beginSolidDimensionEdit, solidDimensionEditingAvailable, useSolidDimensionEdit } from "./solidDimensionCommand";
 import type { SolidDimension } from "../../cad/inspection/solidDimensions";
-import { canMakeSketchSolid, makeSketchSolid, chooseSketchSolidRegion, cancelSketchSolidHandoff, useSketchSolidHandoff } from "./sketchSolidHandoffCommand";
+import { canMakeSketchSolid, makeSketchSolid, canRemoveSketchMaterial, chooseSketchSolidRegion, cancelSketchSolidHandoff, useSketchSolidHandoff } from "./sketchSolidHandoffCommand";
 import { useSketchRefinement } from "./sketchRefinementCommand";
 import { beginOperationDrop, chooseOperationDropTarget, cancelOperationDrop, canBeginOperationDrop, operationDraftBusy, useOperationDrop, type DropOperation, type OperationDropFrame } from "./operationDropCommand";
 import { beginSaveOrExport, canBeginSaveOrExport, saveOrExportBlocked } from "./guidedExportCommand";
@@ -108,6 +111,9 @@ export interface CadCommand {
 }
 
 export interface CommandEnablement {
+  createFacePocket: boolean;
+  removeSketchMaterial: boolean;
+  trimSketch: boolean;
   editSolidDimension: boolean;
   makeSketchSolid: boolean;
   createOperationDrop: boolean;
@@ -143,11 +149,15 @@ export interface CommandEnablement {
 }
 
 export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useTargetScopeCapture.getState().busy, canvasActive = Boolean(useSketchCanvas.getState().active), guidedHoleActive = Boolean(useGuidedHole.getState().draft), guidedHoleStartBlocked = Boolean(useExtrudeDraft.getState().draft || useHoleDraft.getState().draft || useModelingDraft.getState().draft || useProjectWorkflow.getState().active), exportDialogOpen = useFileJobs.getState().exportOpen, operationBusy = operationDraftBusy(), operationFrameActive = Boolean(useOperationDrop.getState().frame)): CommandEnablement {
-  const refinementBusy = Boolean(useSketchRefinement.getState().frame || useSolidDimensionEdit.getState().frame);
-  const handoffReady = !refinementBusy && !guidedHoleActive && !exportDialogOpen && !guidedHoleStartBlocked && !state.fileBusy && canMakeSketchSolid(state);
-  const targetPickerActive = guidedHoleActive || operationBusy || exportDialogOpen || refinementBusy;
+  const refinementBusy = Boolean(useSketchRefinement.getState().frame || useSolidDimensionEdit.getState().frame || useContextualConstraintDraft.getState().frame || useSketchTrimExtend.getState().frame);
+  const facePickerActive = Boolean(useFacePocket.getState().frame);
+  const handoffReady = !facePickerActive && !refinementBusy && !guidedHoleActive && !exportDialogOpen && !guidedHoleStartBlocked && !state.fileBusy && canMakeSketchSolid(state);
+  const targetPickerActive = facePickerActive || guidedHoleActive || operationBusy || exportDialogOpen || refinementBusy;
   return {
-    editSolidDimension: solidDimensionEditingAvailable(state),
+    createFacePocket: !targetPickerActive && !canvasActive && !guidedHoleStartBlocked && !scopeCaptureBusy && canBeginFacePocket(state),
+    removeSketchMaterial: handoffReady && canRemoveSketchMaterial(state),
+    trimSketch: !targetPickerActive && canvasActive && !guidedHoleStartBlocked && !state.fileBusy,
+    editSolidDimension: !facePickerActive && solidDimensionEditingAvailable(state),
     makeSketchSolid: handoffReady,
     saveOrExport: canBeginSaveOrExport(state, saveOrExportBlocked(canvasActive, guidedHoleActive, guidedHoleStartBlocked || operationBusy || refinementBusy, exportDialogOpen, scopeCaptureBusy)),
     repairModel: !scopeCaptureBusy && !targetPickerActive && !guidedHoleStartBlocked && !state.fileBusy,
@@ -195,6 +205,8 @@ export function isCommandEnabledForSnapshot(
 }
 
 export const commands: CadCommand[] = [
+  { id: "sketch.trim", label: "Trim sketch lines", enablementKey: "trimSketch", run: () => openSketchTrimExtend("trim") },
+  { id: "sketch.extend", label: "Extend sketch lines", enablementKey: "trimSketch", run: () => openSketchTrimExtend("extend") },
   { id: "project.startDrawing", internal: true, label: "Draw a named part", enablementKey: "newComponent", run: ({ componentName }) => beginPartDrawing(componentName ?? "Part 1") },
   { id: "project.startDescribing", internal: true, label: "Describe a named part", enablementKey: "newComponent", run: ({ componentName }) => beginPartDescription(componentName ?? "Part 1") },
   { id: "feature.editSolidDimension", internal: true, label: "Edit Solid Driving Dimension", enablementKey: "editSolidDimension", run: ({ dimension }) => beginSolidDimensionEdit(dimension) },

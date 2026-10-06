@@ -1,3 +1,5 @@
+import { useFacePocketIntent } from "./facePocketIntentState";
+import { interactionDraftBusy } from "./interactionDraftState";
 import { createId } from "../../cad/document/ids";
 import { featureComponentId } from "../../cad/document/components";
 import { stableBodyIdForFeature } from "../../cad/features/featureGraph";
@@ -19,6 +21,8 @@ import { evaluateParameters } from "../../cad/parameters/expressionEvaluator";
 import type { RebuildResult } from "../../cad/worker/workerProtocol";
 
 export interface ExtrudeDraft {
+  /** Guided pocket intent is transient and locks the chosen profile, body and inward direction. */
+  pocket?: { bodyId: string; faceId: string; baseVolume: number };
   /** Operation drops remain bound to their captured native target result. */
   targetSnapshot?: RebuildResult;
   editing?: boolean;
@@ -77,7 +81,8 @@ export function extrudeContext(state: CadStore, sketchId: string) {
   return { sketch, profiles, bodies, faces };
 }
 
-export function beginExtrudeCreation(sketchId: string, target?: { profileId: string; snapshot: RebuildResult }) {
+export function beginExtrudeCreation(sketchId: string, target?: { profileId: string; snapshot: RebuildResult; pocket?: ExtrudeDraft["pocket"] }) {
+  if (interactionDraftBusy()) throw new Error("Finish the current edit or face-picking task before opening Extrude.");
   const state = useCadStore.getState(),
     context = extrudeContext(state, sketchId);
   if (!context || (target && !context.profiles.some((profile) => profile.id === target.profileId))) return;
@@ -88,18 +93,20 @@ export function beginExtrudeCreation(sketchId: string, target?: { profileId: str
       componentId: state.activeComponentId,
       sketchId,
       ...(target ? { targetSnapshot: target.snapshot } : {}),
+      ...(target?.pocket ? { pocket: target.pocket } : {}),
       feature: createExtrudeFeature({
-        name: `Extrude ${state.history.present.features.length + 1}`,
+        name: `${target?.pocket ? "Pocket" : "Extrude"} ${state.history.present.features.length + 1}`,
         componentId: state.activeComponentId,
         sketchId,
         profileId: target?.profileId ?? context.profiles[0].id,
-        operation: "newBody",
+        operation: target?.pocket ? "cut" : "newBody",
+        targetBodyIds: target?.pocket ? [target.pocket.bodyId] : undefined,
         distance: {
-          expression: "10mm",
+          expression: target?.pocket ? "2mm" : "10mm",
           unit: "mm",
           authoredUnit: state.history.present.unitSettings.length,
         },
-        direction: "positive",
+        direction: target?.pocket ? "negative" : "positive",
       }),
     },
   });
@@ -133,6 +140,7 @@ export function editableExtrude(state: CadStore) {
     : undefined;
 }
 export function beginExtrudeEditing() {
+  if (interactionDraftBusy()) throw new Error("Finish the current edit or face-picking task before editing Extrude.");
   const state = useCadStore.getState(),
     feature = editableExtrude(state);
   if (!feature) return;
@@ -157,7 +165,7 @@ export function isCurrentExtrudeDraft(
     state.documentSession === draft.session &&
     state.history.present === draft.document &&
     state.activeComponentId === draft.componentId &&
-    !state.fileBusy &&
+    !state.fileBusy && !interactionDraftBusy() &&
     (!draft.targetSnapshot || (state.rebuild.status === "succeeded" && state.rebuild.result === draft.targetSnapshot))
   );
 }
@@ -240,6 +248,7 @@ export function commitExtrude(
     assertNativeExtrudePreview(operationResult, staged.id, feature);
     assertNativeExtrudePreview(result, staged.id);
   } else assertNativeExtrudePreview(result, staged.id, feature);
+  if (draft.pocket) assertNativePocketPreview(draft, result, feature);
   state.updateDocument((document) =>
     document === draft.document ? upsertFeature(document, feature) : document,
   );
@@ -254,4 +263,21 @@ export function commitExtrude(
     );
   state.select({ kind: "feature", id: feature.id, documentId: staged.id });
   useExtrudeDraft.setState({ draft: undefined });
+  if (useFacePocketIntent.getState().source?.sketchId === draft.sketchId)
+    useFacePocketIntent.setState({ source: undefined });
+}
+
+export function assertNativePocketPreview(draft: ExtrudeDraft, result: RebuildResult, feature: ExtrudeFeature) {
+  const pocket = draft.pocket;
+  if (!pocket) return;
+  if (feature.operation !== "cut" || feature.direction !== "negative" ||
+      feature.sketchId !== draft.sketchId || feature.profileId !== draft.feature.profileId ||
+      feature.targetBodyIds?.length !== 1 || feature.targetBodyIds[0] !== pocket.bodyId)
+    throw new Error("Remove material must keep the chosen region, face body and inward direction. Cancel to start another operation.");
+  const mesh = result.meshes.find((item) => item.bodyId === pocket.bodyId);
+  const proof = mesh?.geometryAssertions;
+  if (mesh?.geometrySource !== "opencascade" || mesh.kernelOperation !== "cut" || !proof?.valid ||
+      proof.solidCount !== 1 || !(proof.volume > 0) ||
+      !(proof.volume < pocket.baseVolume - Math.max(1e-7, pocket.baseVolume * 1e-9)))
+    throw new Error("The pocket must remove measurable material and leave one valid native solid. Move the region onto the face or reduce the depth.");
 }

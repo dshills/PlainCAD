@@ -1,4 +1,4 @@
-import { useSolidDimensionEdit } from "./solidDimensionCommand";
+import { interactionDraftBusy } from "./interactionDraftState";
 import { create } from "zustand";
 import { operationDraftBusy } from "./operationDropCommand";
 import { useGuidedHole } from "./guidedHoleCommand";
@@ -8,14 +8,15 @@ import { useCadStore } from "../../state/useCadStore";
 import {
   assertNativeSolidPreview,
   assertNativeModelingPreview,
+  useModelingDraft,
 } from "./modelingDraftCommand";
 import { useSketchCanvas } from "./sketchCanvasCommand";
 import type { buildAiPlan } from "../../ai/buildPlan";
 import type { AiEditableFeature } from "../../ai/featureEditPlan";
 import { documentAtFeature } from "../../cad/document/featureStage";
 import { previewModeling } from "../../cad/worker/extrudePreviewClient";
-import { assertNativeExtrudePreview } from "./extrudeCommand";
-import { assertNativeHolePreview } from "./holeCommand";
+import { assertNativeExtrudePreview, useExtrudeDraft } from "./extrudeCommand";
+import { assertNativeHolePreview, useHoleDraft } from "./holeCommand";
 export type AiStaged = ReturnType<typeof buildAiPlan> & {
   changes?: Array<{ name: string; before: string; after: string }>;
   editedFeature?: AiEditableFeature;
@@ -48,6 +49,10 @@ export interface AiDraftFrame {
   componentId: string;
   featureId?: string;
 }
+function competingAiTask() {
+  return interactionDraftBusy() || useSketchCanvas.getState().active || operationDraftBusy() || useGuidedHole.getState().draft ||
+    useExtrudeDraft.getState().draft || useModelingDraft.getState().draft || useHoleDraft.getState().draft;
+}
 export function currentAiFrame(frame: AiDraftFrame) {
   const state = useCadStore.getState();
   return (
@@ -59,10 +64,7 @@ export function currentAiFrame(frame: AiDraftFrame) {
         state.selection.selectedIds[0].id === frame.featureId &&
         state.selection.selectedIds[0].documentId === frame.document.id)) &&
     !state.fileBusy &&
-    !useSketchCanvas.getState().active &&
-    !useSolidDimensionEdit.getState().frame &&
-    !useGuidedHole.getState().draft &&
-    !operationDraftBusy()
+    !competingAiTask()
   );
 }
 export function assertAiFeatureOperation(
@@ -78,6 +80,8 @@ export function assertAiFeatureOperation(
   else assertNativeModelingPreview(result, staged.document.id, feature);
 }
 export async function previewAiPlan(staged: AiStaged, signal: AbortSignal) {
+  if (competingAiTask())
+    throw new Error("Finish the competing task before previewing an AI modeling proposal.");
   let operationResult: RebuildResult | undefined;
   // Fail the edited operation before checking downstream features. The preview
   // client owns one worker at a time and disposes it between these requests.
@@ -91,6 +95,8 @@ export async function previewAiPlan(staged: AiStaged, signal: AbortSignal) {
   }
   const result = await previewModeling(staged.document, signal);
   if (signal.aborted) throw new Error("Preview canceled.");
+  if (competingAiTask())
+    throw new Error("Another task started. Generate a fresh AI modeling preview.");
   return { result, operationResult };
 }
 export function assertAiGeometry(staged: AiStaged, result: RebuildResult) {

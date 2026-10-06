@@ -1,3 +1,6 @@
+import { useFacePocket } from "./facePocketCommand";
+import { useSketchTrimExtend } from "./sketchTrimExtendCommand";
+import { useContextualConstraintDraft } from "./contextualConstraintCommand";
 import { useSolidDimensionEdit } from "./solidDimensionCommand";
 import { useSketchSolidHandoff } from "./sketchSolidHandoffCommand";
 import { useSketchRefinement } from "./sketchRefinementCommand";
@@ -15,6 +18,9 @@ import { selectCommandEnablement } from "./commandRegistry";
 import { useTargetScopeCapture } from "./targetScopeCaptureCommand";
 
 export function useCommandEnablement() {
+  useFacePocket((state) => state.frame);
+  useSketchTrimExtend((state) => state.frame);
+  useContextualConstraintDraft((state) => state.frame);
   // These transient stores trigger recomputation; the selector reads their current snapshots.
   useSketchSolidHandoff((state) => state.selectedTargetId);
   useSketchSolidHandoff((state) => state.source);

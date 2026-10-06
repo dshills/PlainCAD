@@ -1,5 +1,5 @@
 import { previewModeling } from "../../cad/worker/extrudePreviewClient";
-import { useSolidDimensionEdit, useSketchRefinement } from "./interactionDraftState";
+import { interactionDraftBusy, useSketchRefinement } from "./interactionDraftState";
 export { useSketchRefinement } from "./interactionDraftState";
 import type { CadDocument } from "../../cad/document/schema";
 import type { RebuildResult } from "../../cad/worker/workerProtocol";
@@ -8,7 +8,11 @@ import { useCadStore } from "../../state/useCadStore";
 import { selectedCanvasEntities, useSketchCanvas, type CanvasSession } from "./sketchCanvasCommand";
 import { operationDraftBusy } from "./operationDropCommand";
 import { useGuidedHole } from "./guidedHoleCommand";
-import { assertNativeSolidPreview } from "./modelingDraftCommand";
+import { assertNativeSolidPreview, useModelingDraft } from "./modelingDraftCommand";
+import { useExtrudeDraft } from "./extrudeCommand";
+import { useHoleDraft } from "./holeCommand";
+import { useFileJobs } from "../../persistence/fileJobs";
+import { useProjectWorkflow } from "./projectWorkflowCommand";
 
 export interface SketchRefinementFrame {
   document: CadDocument;
@@ -17,9 +21,14 @@ export interface SketchRefinementFrame {
   active: CanvasSession;
   selectedIds: string[];
 }
+function competingRefinementTask() {
+  return Boolean(interactionDraftBusy("sketchRefinement") || operationDraftBusy() || useGuidedHole.getState().draft ||
+    useExtrudeDraft.getState().draft || useModelingDraft.getState().draft || useHoleDraft.getState().draft ||
+    useFileJobs.getState().exportOpen || useProjectWorkflow.getState().active);
+}
 export function captureSketchRefinementFrame(): SketchRefinementFrame {
   const state = useCadStore.getState(), active = useSketchCanvas.getState().active;
-  if (!active || state.fileBusy || useSolidDimensionEdit.getState().frame || operationDraftBusy() || useGuidedHole.getState().draft)
+  if (!active || state.fileBusy || competingRefinementTask())
     throw new Error("Finish the current operation and open a sketch to refine it.");
   const frame = { document: state.history.present, session: state.documentSession, componentId: state.activeComponentId,
     active, selectedIds: selectedCanvasEntities()?.entityIds ?? [] };
@@ -32,7 +41,7 @@ export function currentSketchRefinementFrame(frame: SketchRefinementFrame) {
     state.activeComponentId === frame.componentId && useSketchCanvas.getState().active === frame.active &&
     frame.active.documentId === frame.document.id && frame.active.session === frame.session &&
     (frame.document.sketches[frame.active.sketchId]?.componentId ?? frame.document.rootComponentId) === frame.componentId &&
-    JSON.stringify(selection) === JSON.stringify(frame.selectedIds) && !state.fileBusy && !useSolidDimensionEdit.getState().frame && !operationDraftBusy() && !useGuidedHole.getState().draft;
+    JSON.stringify(selection) === JSON.stringify(frame.selectedIds) && !state.fileBusy && !competingRefinementTask();
 }
 export function assertSketchRefinementPreview(plan: SketchRefinement, result: RebuildResult) {
   if (result.documentId !== plan.document.id || !result.success)
@@ -49,14 +58,18 @@ export function assertSketchRefinementPreview(plan: SketchRefinement, result: Re
 // Document IDs are stable across edits and are insufficient to identify revisions.
 const validatedPreviews = new WeakMap<RebuildResult, SketchRefinement>();
 export async function previewSketchRefinement(plan: SketchRefinement, signal: AbortSignal) {
+  if (competingRefinementTask())
+    throw new Error("Finish the competing task before previewing sketch refinement.");
   const result = await previewModeling(plan.document, signal);
   if (signal.aborted) throw new Error("Refinement preview canceled.");
+  if (competingRefinementTask())
+    throw new Error("Another task started. Preview the sketch refinement again.");
   const geometry = assertSketchRefinementPreview(plan, result);
   validatedPreviews.set(result, plan);
   return { result, ...geometry };
 }
 export function applySketchRefinement(frame: SketchRefinementFrame, plan: SketchRefinement, result: RebuildResult) {
-  if (!currentSketchRefinementFrame(frame)) throw new Error("Project, sketch or selection changed. Generate a fresh refinement preview.");
+  if (!currentSketchRefinementFrame(frame) || useSketchRefinement.getState().frame !== frame) throw new Error("Project, sketch, selection or task changed. Generate a fresh refinement preview.");
   if (plan.base !== frame.document || plan.sketchId !== frame.active.sketchId || plan.document.id !== frame.document.id)
     throw new Error("Refinement belongs to another project or sketch revision. Generate a fresh preview.");
   if (validatedPreviews.get(result) !== plan)

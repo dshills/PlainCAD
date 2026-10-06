@@ -73,6 +73,7 @@ it("accepts a bare sketch solve without claiming native solid geometry, applies 
   useCadStore.getState().setDocument(document);
   useSketchCanvas.setState({ active: { sketchId: sketch.id, documentId: document.id, session: useCadStore.getState().documentSession } });
   const frame = captureSketchRefinementFrame();
+  useSketchRefinement.setState({ frame });
   const plan = buildSketchRefinement(frame.document, sketch.id, [], "make this rectangle 60 x 40 mm");
   const { result } = await previewSketchRefinement(plan, new AbortController().signal);
   expect(assertSketchRefinementPreview(plan, result)).toMatchObject({ native: false, volume: 0, solved: { id: sketch.id } });
@@ -145,6 +146,7 @@ it("rejects old-base plans, cross-plan results and unproven same-ID geometry wit
   useCadStore.getState().setDocument(document);
   useSketchCanvas.setState({ active: { sketchId: sketch.id, documentId: document.id, session: useCadStore.getState().documentSession } });
   const frame = captureSketchRefinementFrame();
+  useSketchRefinement.setState({ frame });
   const plan = buildSketchRefinement(frame.document, sketch.id, [], "make this rectangle 60 x 40 mm");
   const other = buildSketchRefinement(frame.document, sketch.id, [], "make this rectangle 30 x 20 mm");
   const { result } = await previewSketchRefinement(plan, new AbortController().signal);
@@ -153,6 +155,7 @@ it("rejects old-base plans, cross-plan results and unproven same-ID geometry wit
   expect(useCadStore.getState().history.past).toHaveLength(0);
   useCadStore.getState().updateDocument((current) => ({ ...current, name: "Unrelated newer edit" }));
   const current = captureSketchRefinementFrame();
+  useSketchRefinement.setState({ frame: current });
   expect(() => applySketchRefinement(current, plan, result)).toThrow("another project or sketch revision");
   const wrongSketch = { ...plan, base: current.document, sketchId: "removed_sketch" };
   expect(() => applySketchRefinement(current, wrongSketch, result)).toThrow("another project or sketch revision");

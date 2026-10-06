@@ -1,4 +1,5 @@
 import { createId } from "../../cad/document/ids";
+import { interactionDraftBusy } from "./interactionDraftState";
 import { featureComponentId } from "../../cad/document/components";
 import { create } from "zustand";
 import type {
@@ -26,6 +27,7 @@ export interface ModelingDraft {
 }
 export const useModelingDraft = create<{ draft?: ModelingDraft }>(() => ({}));
 export function beginModelingCreation(feature: ModelingDraftFeature, targetSnapshot?: RebuildResult) {
+  if (interactionDraftBusy()) throw new Error("Finish the current edit or face-picking task before opening a modeling operation.");
   const state = useCadStore.getState();
   if (state.fileBusy) return;
   useModelingDraft.setState({
@@ -72,6 +74,7 @@ export function editableModelingFeature(state: CadStore) {
     : undefined;
 }
 export function beginModelingEditing() {
+  if (interactionDraftBusy()) throw new Error("Finish the current edit or face-picking task before editing a modeling operation.");
   const state = useCadStore.getState(),
     feature = editableModelingFeature(state);
   if (!feature) return;
@@ -95,7 +98,7 @@ export function isCurrentModelingDraft(
     state.documentSession === draft.session &&
     state.history.present === draft.document &&
     state.activeComponentId === draft.componentId &&
-    !state.fileBusy &&
+    !state.fileBusy && !interactionDraftBusy() &&
     (!draft.targetSnapshot || (state.rebuild.status === "succeeded" && state.rebuild.result === draft.targetSnapshot))
   );
 }
