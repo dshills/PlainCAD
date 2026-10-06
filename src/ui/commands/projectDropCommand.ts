@@ -1,3 +1,4 @@
+import { operationDraftBusy } from "./operationDropCommand";
 import { create } from "zustand";
 import { createEmptyDocument } from "../../cad/document/CadDocument";
 import type { CadDocument } from "../../cad/document/schema";
@@ -31,6 +32,7 @@ export const useProjectDrop = create<{
 
 function activeModelingTask() {
   return Boolean(
+    operationDraftBusy() ||
     useSketchCanvas.getState().active ||
     useExtrudeDraft.getState().draft ||
     useHoleDraft.getState().draft ||

@@ -19,6 +19,8 @@ import { evaluateParameters } from "../../cad/parameters/expressionEvaluator";
 import type { RebuildResult } from "../../cad/worker/workerProtocol";
 
 export interface ExtrudeDraft {
+  /** Operation drops remain bound to their captured native target result. */
+  targetSnapshot?: RebuildResult;
   editing?: boolean;
   editId?: string;
   document: CadDocument;
@@ -75,21 +77,22 @@ export function extrudeContext(state: CadStore, sketchId: string) {
   return { sketch, profiles, bodies, faces };
 }
 
-export function beginExtrudeCreation(sketchId: string) {
+export function beginExtrudeCreation(sketchId: string, target?: { profileId: string; snapshot: RebuildResult }) {
   const state = useCadStore.getState(),
     context = extrudeContext(state, sketchId);
-  if (!context) return;
+  if (!context || (target && !context.profiles.some((profile) => profile.id === target.profileId))) return;
   useExtrudeDraft.setState({
     draft: {
       document: state.history.present,
       session: state.documentSession,
       componentId: state.activeComponentId,
       sketchId,
+      ...(target ? { targetSnapshot: target.snapshot } : {}),
       feature: createExtrudeFeature({
         name: `Extrude ${state.history.present.features.length + 1}`,
         componentId: state.activeComponentId,
         sketchId,
-        profileId: context.profiles[0].id,
+        profileId: target?.profileId ?? context.profiles[0].id,
         operation: "newBody",
         distance: {
           expression: "10mm",
@@ -154,7 +157,8 @@ export function isCurrentExtrudeDraft(
     state.documentSession === draft.session &&
     state.history.present === draft.document &&
     state.activeComponentId === draft.componentId &&
-    !state.fileBusy
+    !state.fileBusy &&
+    (!draft.targetSnapshot || (state.rebuild.status === "succeeded" && state.rebuild.result === draft.targetSnapshot))
   );
 }
 

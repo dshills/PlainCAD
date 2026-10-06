@@ -15,6 +15,8 @@ import { useCadStore, type CadStore } from "../../state/useCadStore";
 export type ModelingDraftFeature =
   RevolveFeature | FilletFeature | ChamferFeature;
 export interface ModelingDraft {
+  /** Operation drops remain bound to their captured native target result. */
+  targetSnapshot?: RebuildResult;
   editing?: boolean;
   editId?: string;
   document: CadDocument;
@@ -23,7 +25,7 @@ export interface ModelingDraft {
   feature: ModelingDraftFeature;
 }
 export const useModelingDraft = create<{ draft?: ModelingDraft }>(() => ({}));
-export function beginModelingCreation(feature: ModelingDraftFeature) {
+export function beginModelingCreation(feature: ModelingDraftFeature, targetSnapshot?: RebuildResult) {
   const state = useCadStore.getState();
   if (state.fileBusy) return;
   useModelingDraft.setState({
@@ -32,6 +34,7 @@ export function beginModelingCreation(feature: ModelingDraftFeature) {
       session: state.documentSession,
       componentId: state.activeComponentId,
       feature,
+      ...(targetSnapshot ? { targetSnapshot } : {}),
     },
   });
 }
@@ -92,7 +95,8 @@ export function isCurrentModelingDraft(
     state.documentSession === draft.session &&
     state.history.present === draft.document &&
     state.activeComponentId === draft.componentId &&
-    !state.fileBusy
+    !state.fileBusy &&
+    (!draft.targetSnapshot || (state.rebuild.status === "succeeded" && state.rebuild.result === draft.targetSnapshot))
   );
 }
 export function assertNativeSolidPreview(

@@ -1,0 +1,44 @@
+.operation-drop-panel {
+  position: absolute;
+  z-index: 4;
+  top: 10px;
+  left: 10px;
+  width: min(290px, calc(100% - 20px));
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px;
+  box-shadow: 0 3px 12px #0002;
+}
+.operation-drop-panel [role="toolbar"] {
+  display: flex;
+  gap: 6px;
+}
+.operation-drop-panel [role="toolbar"] button {
+  cursor: grab;
+}
+.operation-drop-panel p {
+  margin: 8px 0;
+  font-size: 0.82rem;
+}
+.operation-target-list {
+  max-height: 180px;
+  overflow-y: auto;
+  display: grid;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.operation-target-list button {
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.operation-target-list button[data-hovered="true"] {
+  outline: 2px solid var(--accent);
+  background: var(--selected-bg);
+}
+
+.operation-drop-panel .operation-target-feedback {
+  /* Hover updates must not move a target between pointerdown and click. */
+  min-height: 4.5em;
+}

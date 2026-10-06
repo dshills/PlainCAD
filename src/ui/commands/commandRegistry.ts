@@ -1,3 +1,4 @@
+import { beginOperationDrop, chooseOperationDropTarget, cancelOperationDrop, canBeginOperationDrop, operationDraftBusy, useOperationDrop, type DropOperation, type OperationDropFrame } from "./operationDropCommand";
 import { beginSaveOrExport, canBeginSaveOrExport, saveOrExportBlocked } from "./guidedExportCommand";
 import { beginGuidedHole, cancelGuidedHole, canBeginGuidedHole, useGuidedHole } from "./guidedHoleCommand";
 import { beginExtrudeCreation, beginExtrudeEditing, editableExtrude, useExtrudeDraft } from "./extrudeCommand";
@@ -74,6 +75,9 @@ import { prepareProjectDrop, replaceWithDroppedProject, saveAndReplaceDroppedPro
 import { focusRepairIssue, addRepairClosingEdge, type RepairContext } from "./repairCommand";
 
 export interface CommandContext {
+  operation?: DropOperation;
+  operationFrame?: OperationDropFrame;
+  operationTargetId?: string;
   repair?: RepairContext;
   sketchId?: string;
   componentId?: string;
@@ -99,6 +103,8 @@ export interface CadCommand {
 }
 
 export interface CommandEnablement {
+  createOperationDrop: boolean;
+  operationTarget: boolean;
   repairModel: boolean;
   document: boolean;
   editProject: boolean;
@@ -129,36 +135,41 @@ export interface CommandEnablement {
   selectAllSketchEntities: boolean;
 }
 
-export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useTargetScopeCapture.getState().busy, canvasActive = Boolean(useSketchCanvas.getState().active), guidedHoleActive = Boolean(useGuidedHole.getState().draft), guidedHoleStartBlocked = Boolean(useExtrudeDraft.getState().draft || useHoleDraft.getState().draft || useModelingDraft.getState().draft || useProjectWorkflow.getState().active), exportDialogOpen = useFileJobs.getState().exportOpen): CommandEnablement {
+export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useTargetScopeCapture.getState().busy, canvasActive = Boolean(useSketchCanvas.getState().active), guidedHoleActive = Boolean(useGuidedHole.getState().draft), guidedHoleStartBlocked = Boolean(useExtrudeDraft.getState().draft || useHoleDraft.getState().draft || useModelingDraft.getState().draft || useProjectWorkflow.getState().active), exportDialogOpen = useFileJobs.getState().exportOpen, operationBusy = operationDraftBusy(), operationFrameActive = Boolean(useOperationDrop.getState().frame)): CommandEnablement {
+  const targetPickerActive = guidedHoleActive || operationBusy || exportDialogOpen;
   return {
-    saveOrExport: canBeginSaveOrExport(state, saveOrExportBlocked(canvasActive, guidedHoleActive, guidedHoleStartBlocked, exportDialogOpen, scopeCaptureBusy)),
-    repairModel: !scopeCaptureBusy && !guidedHoleActive && !guidedHoleStartBlocked && !exportDialogOpen && !state.fileBusy,
-    createGuidedHole: !guidedHoleActive && !canvasActive && !guidedHoleStartBlocked && canBeginGuidedHole(state),
+    saveOrExport: canBeginSaveOrExport(state, saveOrExportBlocked(canvasActive, guidedHoleActive, guidedHoleStartBlocked || operationBusy, exportDialogOpen, scopeCaptureBusy)),
+    repairModel: !scopeCaptureBusy && !targetPickerActive && !guidedHoleStartBlocked && !state.fileBusy,
+    // The active token stays draggable in its panel; starting another picker is blocked.
+    createOperationDrop: !targetPickerActive && !canvasActive && !guidedHoleStartBlocked && canBeginOperationDrop(state),
+    operationTarget: operationFrameActive,
+    createGuidedHole: !targetPickerActive && !canvasActive && !guidedHoleStartBlocked && canBeginGuidedHole(state),
     guidedHoleActive,
-    outsideGuidedHole: !guidedHoleActive,
-    editProject: !state.fileBusy && !guidedHoleActive,
-    newComponent: !guidedHoleActive && !state.fileBusy && !canvasActive && Object.keys(state.history.present.components).length < MODEL_RESOURCE_LIMITS.maxComponents,
-    createSketch: !guidedHoleActive && !state.fileBusy && !canvasActive,
-    finishSketch: !guidedHoleActive && canvasActive,
-    sketchCanvas: !guidedHoleActive && !canvasActive && Boolean(selectedCanvasSketch(state)),
-    selectAllSketchEntities: !guidedHoleActive && canvasActive && canSelectAllCanvasEntities(state),
-    deleteSketchEntity: !guidedHoleActive && canvasActive && Boolean(selectedCanvasEntity(state)),
+    // Preserve the shared legacy command key while blocking all transient target tasks.
+    outsideGuidedHole: !targetPickerActive,
+    editProject: !state.fileBusy && !targetPickerActive,
+    newComponent: !targetPickerActive && !state.fileBusy && !canvasActive && Object.keys(state.history.present.components).length < MODEL_RESOURCE_LIMITS.maxComponents,
+    createSketch: !targetPickerActive && !state.fileBusy && !canvasActive,
+    finishSketch: !targetPickerActive && canvasActive,
+    sketchCanvas: !targetPickerActive && !canvasActive && Boolean(selectedCanvasSketch(state)),
+    selectAllSketchEntities: !targetPickerActive && canvasActive && canSelectAllCanvasEntities(state),
+    deleteSketchEntity: !targetPickerActive && canvasActive && Boolean(selectedCanvasEntity(state)),
     document: Boolean(state.history.present),
-    saveNamedView: !guidedHoleActive && (state.history.present.viewState?.namedViews?.length ?? 0) < MAX_NAMED_VIEWS,
+    saveNamedView: !targetPickerActive && (state.history.present.viewState?.namedViews?.length ?? 0) < MAX_NAMED_VIEWS,
     restoreNamedView: Boolean(state.history.present.viewState?.namedViews?.length),
-    undo: !guidedHoleActive && state.history.past.length > 0,
-    redo: !guidedHoleActive && state.history.future.length > 0,
-    exportStl: canExportStl(state) && !state.fileBusy,
-    exportSelectedBody: canExportStl(state) && !state.fileBusy && Boolean(selectedExportBody(state)),
-    createExtrude: !guidedHoleActive && !canvasActive && canCreateExtrude(state),
-    createRevolve: !guidedHoleActive && !canvasActive && Boolean(defaultRevolveAxis(state)),
-    editFeature: !guidedHoleActive && !canvasActive && Boolean(editableExtrude(state) || editableModelingFeature(state) || editableHole(state)),
-    selectedFeature: !guidedHoleActive && !canvasActive && Boolean(getSelectedFeature(state)),
-    createEdgeTreatment: !guidedHoleActive && !canvasActive && Boolean(edgeTreatmentOwner(state)),
-    moveEarlier: !guidedHoleActive && !canvasActive && !planTimelineMove(state.history.present, state.selection.selectedIds[0], "earlier").reason,
-    moveLater: !guidedHoleActive && !canvasActive && !planTimelineMove(state.history.present, state.selection.selectedIds[0], "later").reason,
-    createHole: !guidedHoleActive && !canvasActive && Boolean(holeCreationContext(state)),
-    captureTargetScope: !guidedHoleActive && !canvasActive && canCaptureTargetScope(state,scopeCaptureBusy),
+    undo: !targetPickerActive && state.history.past.length > 0,
+    redo: !targetPickerActive && state.history.future.length > 0,
+    exportStl: canExportStl(state) && !state.fileBusy && !operationBusy,
+    exportSelectedBody: canExportStl(state) && !state.fileBusy && !operationBusy && Boolean(selectedExportBody(state)),
+    createExtrude: !targetPickerActive && !canvasActive && canCreateExtrude(state),
+    createRevolve: !targetPickerActive && !canvasActive && Boolean(defaultRevolveAxis(state)),
+    editFeature: !targetPickerActive && !canvasActive && Boolean(editableExtrude(state) || editableModelingFeature(state) || editableHole(state)),
+    selectedFeature: !targetPickerActive && !canvasActive && Boolean(getSelectedFeature(state)),
+    createEdgeTreatment: !targetPickerActive && !canvasActive && Boolean(edgeTreatmentOwner(state)),
+    moveEarlier: !targetPickerActive && !canvasActive && !planTimelineMove(state.history.present, state.selection.selectedIds[0], "earlier").reason,
+    moveLater: !targetPickerActive && !canvasActive && !planTimelineMove(state.history.present, state.selection.selectedIds[0], "later").reason,
+    createHole: !targetPickerActive && !canvasActive && Boolean(holeCreationContext(state)),
+    captureTargetScope: !targetPickerActive && !canvasActive && canCaptureTargetScope(state,scopeCaptureBusy),
   };
 }
 
@@ -173,6 +184,10 @@ export function isCommandEnabledForSnapshot(
 }
 
 export const commands: CadCommand[] = [
+  { id: "feature.operationTargets", label: "Choose Operation Target", description: "Drag or choose Extrude, Round or Bevel on explicit supported geometry; inspect the native preview before Apply.", enablementKey: "createOperationDrop", run: ({ operation }) => beginOperationDrop(operation) },
+  { id: "feature.operationTarget", internal: true, label: "Preview Operation on Target", enablementKey: "operationTarget", run: ({ operationFrame, operationTargetId }) => chooseOperationDropTarget(operationFrame, operationTargetId) },
+  { id: "feature.cancelOperationDrop", internal: true, label: "Cancel Operation Targets", alwaysEnabled: true, run: cancelOperationDrop },
+
   { id: "file.saveOrExport", label: "Save or Export…", description: "Save an editable project or choose bodies to export for printing.", enablementKey: "saveOrExport", run: beginSaveOrExport },
   { id: "repair.focus", internal: true, label: "Show and repair model issue", enablementKey: "repairModel", run: ({ repair }) => { if (repair) focusRepairIssue(repair); } },
   { id: "repair.closeOutline", internal: true, label: "Add missing closing edge", enablementKey: "repairModel", run: ({ repair }) => { if (repair) addRepairClosingEdge(repair); } },

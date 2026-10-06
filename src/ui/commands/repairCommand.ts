@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { operationDraftBusy } from "./operationDropCommand";
 import type { CadDocument, SelectionRef } from "../../cad/document/schema";
 import type { RebuildError, RebuildResult, RebuildWarning } from "../../cad/worker/workerProtocol";
 import { useCadStore } from "../../state/useCadStore";
@@ -37,7 +38,7 @@ export const useRepairFocus = create<{ focus?: {
 } }>(() => ({}));
 
 export function repairAvailable(state = useCadStore.getState()) {
-  return !state.fileBusy && !useFileJobs.getState().exportOpen && !useTargetScopeCapture.getState().busy &&
+  return !operationDraftBusy() && !state.fileBusy && !useFileJobs.getState().exportOpen && !useTargetScopeCapture.getState().busy &&
     !useExtrudeDraft.getState().draft && !useHoleDraft.getState().draft &&
     !useModelingDraft.getState().draft && !useGuidedHole.getState().draft &&
     !useProjectWorkflow.getState().active;

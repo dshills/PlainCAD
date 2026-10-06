@@ -988,3 +988,25 @@ changing authored expressions. Typed coordinates, point moves, translation and
 solver deformation retain their existing behavior. Tangency and intersection
 snapping are not implemented. Native acceptance verifies precise pointer placement,
 preview cancellation, rebuild geometry, save/open and STL export.
+
+### Drag operations onto supported geometry
+
+Extrude, Round and Bevel tokens accept drag, viewer clicks or keyboard target cards
+through one command workflow. Turquoise overlays identify eligible geometry;
+yellow hover feedback stays in fixed space so target cards do not move during a
+pointer gesture. Choose a target, inspect the native preview, then explicitly Apply.
+Cancel changes no project data; Apply retains one Undo step.
+
+Extrude accepts current closed sketch regions in the visible active component.
+Round/Bevel drop targets are limited to untouched native distance/new-body Extrude
+owners and their original start/end cap-perimeter groups. Each target includes all
+original perimeter edges; arbitrary individual edges, boolean-created topology and
+modified owners are unavailable in this picker. Ambiguous or detailed targets can
+be selected by their exact card. At most 128 targets are offered; viewer overlays
+pre-bound sampled vertices to 8192 per target and 65536 total.
+
+Picking and Apply bind the exact document, project session, component and native
+source result. Competing modeling, guided save/export, STL and repair tasks are blocked until
+the operation is applied or canceled. Unsupported picks give a diagnostic. Native
+acceptance covers actual profile drag and cap picking on XY/XZ/YZ, changed BRep
+volume, undo/redo, parameter edits, save/open and positive signed STL volume.

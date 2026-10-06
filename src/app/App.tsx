@@ -1,3 +1,4 @@
+import { OperationDropPanel } from "../ui/panels/OperationDropPanel";
 import { GuidedHolePanel } from "../ui/panels/GuidedHolePanel";
 import { useGuidedHole } from "../ui/commands/guidedHoleCommand";
 import { useShallow } from "zustand/react/shallow";
@@ -310,6 +311,7 @@ export function App() {
           <ProjectWorkflowPanel />
           <GuidedHolePanel />
           <section className="viewer-region" aria-label="3D CAD viewer">
+            {!sketchActive ? <OperationDropPanel /> : null}
             <div className="model-view" hidden={Boolean(sketchActive)}>
               <CadViewer />
             </div>

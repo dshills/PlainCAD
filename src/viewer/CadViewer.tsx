@@ -1,3 +1,4 @@
+import { installOperationDropPicking, type OperationDropPickingHandle } from "./operationDropPicking";
 import { installSketchPlanePicking } from "./sketchPlanePicking";
 import type { RebuildResult } from "../cad/worker/workerProtocol";
 import { useThemeState } from "../state/useThemeState";
@@ -34,6 +35,7 @@ interface ViewerRuntime {
   modelGroup: THREE.Group;
   sketchGroup: THREE.Group;
   measurementGroup: THREE.Group;
+  operationPicking: OperationDropPickingHandle;
   sketchResources: SketchOverlayResources;
 }
 
@@ -151,7 +153,8 @@ export function CadViewer() {
       if (runtimeRef.current) runtimeRef.current.controls = controls;
       return true;
     };
-    runtimeRef.current = { background, grid, camera, controls, applyPose, modelGroup, sketchGroup, measurementGroup, sketchResources: createSketchOverlayResources() };
+    const operationPicking = installOperationDropPicking(scene, renderer.domElement, camera, () => clippingRef.current);
+    runtimeRef.current = { background, grid, camera, controls, applyPose, modelGroup, sketchGroup, measurementGroup, operationPicking, sketchResources: createSketchOverlayResources() };
     const unregisterCamera = registerCameraController({
       read: () => ({ cameraPosition: camera.position.toArray(), cameraTarget: controls.target.toArray(), cameraUp: camera.up.toArray() }),
       apply: applyPose,
@@ -169,6 +172,7 @@ export function CadViewer() {
     const unregisterDiagnostics = import.meta.env.DEV ? registerViewerDiagnostics(() => ({
       resources: { geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, programs: renderer.info.programs?.length ?? 0 },
       cameraUp: camera.up.toArray(),
+      operationTargets: operationPicking.inspect(),
       background: background.getHexString(),
       cameraPosition: camera.position.toArray(),
       sectionPlane: clippingRef.current ? { normal: clippingRef.current.normal.toArray(), constant: clippingRef.current.constant } : undefined,
@@ -242,6 +246,7 @@ export function CadViewer() {
 
     return () => {
       uninstallPlanePicking();
+      operationPicking.dispose();
       unregisterDiagnostics?.();
       unregisterCamera();
       cancelAnimationFrame(raf);
@@ -349,6 +354,9 @@ export function CadViewer() {
     const spec = axis ? sectionPlane(axis, section.offset, section.positive) : undefined;
     clippingRef.current = spec ? new THREE.Plane(new THREE.Vector3(...spec.normal), spec.constant) : undefined;
     for (const group of [runtime.modelGroup, runtime.sketchGroup, runtime.measurementGroup]) applyClipping(group, clippingRef.current);
+    // The picker must read the newly installed plane, after this effect updates
+    // clippingRef; a synchronous section-store subscription reads the old plane.
+    runtime.operationPicking.refresh();
   }, [session, section.session, section.axis, section.offset, section.positive]);
 
   useEffect(() => {

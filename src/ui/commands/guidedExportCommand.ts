@@ -1,3 +1,4 @@
+import { operationDraftBusy } from "./operationDropCommand";
 import { useTargetScopeCapture } from "./targetScopeCaptureCommand";
 import { create } from "zustand";
 import type { CadDocument } from "../../cad/document/schema";
@@ -40,7 +41,7 @@ function currentSaveOrExportBlocked() {
       useProjectWorkflow.getState().active ||
       useExtrudeDraft.getState().draft ||
       useHoleDraft.getState().draft ||
-      useModelingDraft.getState().draft,
+      useModelingDraft.getState().draft || operationDraftBusy(),
     ),
     useFileJobs.getState().exportOpen,
     useTargetScopeCapture.getState().busy,

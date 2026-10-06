@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { operationDraftBusy } from "./operationDropCommand";
 import { useGuidedHole } from "./guidedHoleCommand";
 import type { CadDocument } from "../../cad/document/schema";
 import type { RebuildResult } from "../../cad/worker/workerProtocol";
@@ -40,7 +41,8 @@ export function currentAiFrame(frame: AiDraftFrame) {
         state.selection.selectedIds[0].documentId === frame.document.id)) &&
     !state.fileBusy &&
     !useSketchCanvas.getState().active &&
-    !useGuidedHole.getState().draft
+    !useGuidedHole.getState().draft &&
+    !operationDraftBusy()
   );
 }
 export function assertAiFeatureOperation(
