@@ -6,6 +6,7 @@ import type { SketchTrimExtendFrame } from "./sketchTrimExtendCommand";
 import type { FacePocketFrame } from "./facePocketCommand";
 import type { CanvasPoint } from "../../cad/sketch/canvasGeometry";
 import type { TrimExtendMode } from "../../cad/sketch/trimExtend";
+import { useSketchReplication } from "./sketchReplicationState";
 
 /** Runtime-only edit ownership; leaf stores prevent command-module initialization cycles. */
 export const useSolidDimensionEdit = create<{ frame?: SolidDimensionEditFrame }>(() => ({}));
@@ -14,7 +15,7 @@ export const useContextualConstraintDraft = create<{ frame?: ContextualConstrain
 export const useSketchTrimExtend = create<{ frame?: SketchTrimExtendFrame; mode: TrimExtendMode; pick?: CanvasPoint }>(() => ({ mode: "trim" }));
 export const useFacePocket = create<{ frame?: FacePocketFrame }>(() => ({}));
 
-export type InteractionDraftOwner = "solidDimension" | "sketchRefinement" | "constraint" | "trimExtend" | "facePocket";
+export type InteractionDraftOwner = "solidDimension" | "sketchRefinement" | "constraint" | "trimExtend" | "facePocket" | "replication";
 /** Each draft can inspect competing owners without counting its own frame. */
 export function interactionDraftBusy(owner?: InteractionDraftOwner) {
   return Boolean(
@@ -22,6 +23,7 @@ export function interactionDraftBusy(owner?: InteractionDraftOwner) {
     (owner !== "sketchRefinement" && useSketchRefinement.getState().frame) ||
     (owner !== "constraint" && useContextualConstraintDraft.getState().frame) ||
     (owner !== "trimExtend" && useSketchTrimExtend.getState().frame) ||
-    (owner !== "facePocket" && useFacePocket.getState().frame),
+    (owner !== "facePocket" && useFacePocket.getState().frame) ||
+    (owner !== "replication" && useSketchReplication.getState().frame),
   );
 }

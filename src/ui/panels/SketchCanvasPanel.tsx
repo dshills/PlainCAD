@@ -1,5 +1,7 @@
 import { ContextualSketchConstraints } from "./ContextualSketchConstraints";
 import { SketchTrimExtendPanel } from "./SketchTrimExtendPanel";
+import { SketchReplicationPanel } from "./SketchReplicationPanel";
+import { useSketchReplication } from "../commands/sketchReplicationState";
 import { useContextualConstraintDraft } from "../commands/contextualConstraintCommand";
 import { setSketchTrimExtendPick, useSketchTrimExtend } from "../commands/sketchTrimExtendCommand";
 import { useSketchRefinement } from "../commands/sketchRefinementCommand";
@@ -151,6 +153,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
   const refinementBusy = useSketchRefinement((s) => Boolean(s.frame));
   const contextualBusy = useContextualConstraintDraft((s) => Boolean(s.frame));
   const trimFrame = useSketchTrimExtend((s) => s.frame);
+  const replicationFrame = useSketchReplication((s) => s.frame);
   const focused = useWorkspaceState((s) => s.layout !== "full");
   const [sizes, setSizes] = useState<CanvasSizeInput>({});
   const [precisionOpen, setPrecisionOpen] = useState(!focused);
@@ -397,7 +400,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
   const disabled =
     !context ||
     fileBusy ||
-    refinementBusy || contextualBusy || Boolean(trimFrame) ||
+    refinementBusy || contextualBusy || Boolean(trimFrame) || Boolean(replicationFrame) ||
     (snap && !validGrid) ||
     context.solved.errors.some((e) => e.severity === "error");
   const snapFeedback =
@@ -892,6 +895,8 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
         )}
         <button type="button" aria-label="Trim sketch lines" disabled={!selectCommandEnablement(useCadStore.getState()).trimSketch} onClick={() => { cancel(); void runCommand("sketch.trim"); }}>Trim</button>
         <button type="button" aria-label="Extend sketch lines" disabled={!selectCommandEnablement(useCadStore.getState()).trimSketch} onClick={() => { cancel(); void runCommand("sketch.extend"); }}>Extend</button>
+        <button type="button" aria-label="Mirror selected sketch geometry" disabled={!selectCommandEnablement(useCadStore.getState()).replicateSketch} onClick={() => { cancel(); void runCommand("sketch.mirror"); }}>Mirror</button>
+        <button type="button" aria-label="Linear pattern selected sketch geometry" disabled={!selectCommandEnablement(useCadStore.getState()).replicateSketch} onClick={() => { cancel(); void runCommand("sketch.linearPattern"); }}>Pattern</button>
         <label>
           <input
             type="checkbox"
@@ -1227,6 +1232,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
           {dimensions.controls}
           <ContextualSketchConstraints />
           {trimFrame ? <SketchTrimExtendPanel key={trimFrame.active.sketchId} /> : null}
+          {replicationFrame ? <SketchReplicationPanel /> : null}
           {constraints.controls}
           <details open={!focused}>
             <summary>Drawing help</summary>

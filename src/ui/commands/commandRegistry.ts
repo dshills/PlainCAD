@@ -1,10 +1,10 @@
 import { beginFacePocket, canBeginFacePocket, cancelFacePocket, useFacePocket } from "./facePocketCommand";
-import { openSketchTrimExtend, useSketchTrimExtend } from "./sketchTrimExtendCommand";
-import { useContextualConstraintDraft } from "./contextualConstraintCommand";
-import { beginSolidDimensionEdit, solidDimensionEditingAvailable, useSolidDimensionEdit } from "./solidDimensionCommand";
+import { interactionDraftBusy } from "./interactionDraftState";
+import { openSketchReplication, canOpenSketchReplication } from "./sketchReplicationCommand";
+import { openSketchTrimExtend } from "./sketchTrimExtendCommand";
+import { beginSolidDimensionEdit, solidDimensionEditingAvailable } from "./solidDimensionCommand";
 import type { SolidDimension } from "../../cad/inspection/solidDimensions";
 import { canMakeSketchSolid, makeSketchSolid, canRemoveSketchMaterial, removeSketchMaterial, chooseSketchSolidRegion, cancelSketchSolidHandoff, useSketchSolidHandoff } from "./sketchSolidHandoffCommand";
-import { useSketchRefinement } from "./sketchRefinementCommand";
 import { beginOperationDrop, chooseOperationDropTarget, cancelOperationDrop, canBeginOperationDrop, operationDraftBusy, useOperationDrop, type DropOperation, type OperationDropFrame } from "./operationDropCommand";
 import { beginSaveOrExport, canBeginSaveOrExport, saveOrExportBlocked } from "./guidedExportCommand";
 import { beginGuidedHole, cancelGuidedHole, canBeginGuidedHole, useGuidedHole } from "./guidedHoleCommand";
@@ -114,6 +114,7 @@ export interface CommandEnablement {
   createFacePocket: boolean;
   removeSketchMaterial: boolean;
   trimSketch: boolean;
+  replicateSketch: boolean;
   editSolidDimension: boolean;
   makeSketchSolid: boolean;
   createOperationDrop: boolean;
@@ -149,7 +150,7 @@ export interface CommandEnablement {
 }
 
 export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useTargetScopeCapture.getState().busy, canvasActive = Boolean(useSketchCanvas.getState().active), guidedHoleActive = Boolean(useGuidedHole.getState().draft), guidedHoleStartBlocked = Boolean(useExtrudeDraft.getState().draft || useHoleDraft.getState().draft || useModelingDraft.getState().draft || useProjectWorkflow.getState().active), exportDialogOpen = useFileJobs.getState().exportOpen, operationBusy = operationDraftBusy(), operationFrameActive = Boolean(useOperationDrop.getState().frame)): CommandEnablement {
-  const refinementBusy = Boolean(useSketchRefinement.getState().frame || useSolidDimensionEdit.getState().frame || useContextualConstraintDraft.getState().frame || useSketchTrimExtend.getState().frame);
+  const refinementBusy = interactionDraftBusy();
   const facePickerActive = Boolean(useFacePocket.getState().frame);
   const handoffReady = !facePickerActive && !refinementBusy && !guidedHoleActive && !exportDialogOpen && !guidedHoleStartBlocked && !state.fileBusy && canMakeSketchSolid(state);
   const targetPickerActive = facePickerActive || guidedHoleActive || operationBusy || exportDialogOpen || refinementBusy;
@@ -157,6 +158,7 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
     createFacePocket: !targetPickerActive && !canvasActive && !guidedHoleStartBlocked && !scopeCaptureBusy && canBeginFacePocket(state),
     removeSketchMaterial: handoffReady && canRemoveSketchMaterial(state),
     trimSketch: !targetPickerActive && canvasActive && !guidedHoleStartBlocked && !state.fileBusy,
+    replicateSketch: !targetPickerActive && !guidedHoleStartBlocked && !state.fileBusy && canOpenSketchReplication(),
     editSolidDimension: !facePickerActive && solidDimensionEditingAvailable(state),
     makeSketchSolid: handoffReady,
     saveOrExport: canBeginSaveOrExport(state, saveOrExportBlocked(canvasActive, guidedHoleActive, guidedHoleStartBlocked || operationBusy || refinementBusy, exportDialogOpen, scopeCaptureBusy)),
@@ -209,6 +211,8 @@ export const commands: CadCommand[] = [
   { id: "sketch.removeMaterial", label: "Remove material", enablementKey: "removeSketchMaterial", run: () => removeSketchMaterial() },
   { id: "sketch.trim", label: "Trim sketch curves", enablementKey: "trimSketch", run: () => openSketchTrimExtend("trim") },
   { id: "sketch.extend", label: "Extend sketch curves", enablementKey: "trimSketch", run: () => openSketchTrimExtend("extend") },
+  { id: "sketch.mirror", label: "Mirror selected sketch geometry", enablementKey: "replicateSketch", run: () => openSketchReplication("mirror") },
+  { id: "sketch.linearPattern", label: "Linear pattern selected sketch geometry", enablementKey: "replicateSketch", run: () => openSketchReplication("linear") },
   { id: "sketch.cancelFacePocket", label: "Cancel face selection", alwaysEnabled: true, internal: true, run: () => cancelFacePocket() },
   { id: "project.startDrawing", internal: true, label: "Draw a named part", enablementKey: "newComponent", run: ({ componentName }) => beginPartDrawing(componentName ?? "Part 1") },
   { id: "project.startDescribing", internal: true, label: "Describe a named part", enablementKey: "newComponent", run: ({ componentName }) => beginPartDescription(componentName ?? "Part 1") },
