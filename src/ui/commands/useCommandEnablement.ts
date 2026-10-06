@@ -1,5 +1,6 @@
 import { useFacePocket } from "./facePocketCommand";
 import { useSketchReplication } from "./sketchReplicationState";
+import { useSketchOffset } from "./sketchOffsetState";
 import { useSketchTrimExtend } from "./sketchTrimExtendCommand";
 import { useContextualConstraintDraft } from "./contextualConstraintCommand";
 import { useSolidDimensionEdit } from "./solidDimensionCommand";
@@ -21,6 +22,7 @@ import { useTargetScopeCapture } from "./targetScopeCaptureCommand";
 export function useCommandEnablement() {
   useSketchCanvas((state) => state.selection);
   useSketchReplication((state) => state.frame);
+  useSketchOffset((state) => state.frame);
   useFacePocket((state) => state.frame);
   useSketchTrimExtend((state) => state.frame);
   useContextualConstraintDraft((state) => state.frame);

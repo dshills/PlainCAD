@@ -1,6 +1,7 @@
 import { beginFacePocket, canBeginFacePocket, cancelFacePocket, useFacePocket } from "./facePocketCommand";
 import { interactionDraftBusy } from "./interactionDraftState";
 import { openSketchReplication, canOpenSketchReplication } from "./sketchReplicationCommand";
+import { openSketchOffset, canOpenSketchOffset } from "./sketchOffsetCommand";
 import { openSketchTrimExtend } from "./sketchTrimExtendCommand";
 import { beginSolidDimensionEdit, solidDimensionEditingAvailable } from "./solidDimensionCommand";
 import type { SolidDimension } from "../../cad/inspection/solidDimensions";
@@ -115,6 +116,7 @@ export interface CommandEnablement {
   removeSketchMaterial: boolean;
   trimSketch: boolean;
   replicateSketch: boolean;
+  offsetSketch: boolean;
   editSolidDimension: boolean;
   makeSketchSolid: boolean;
   createOperationDrop: boolean;
@@ -159,6 +161,7 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
     removeSketchMaterial: handoffReady && canRemoveSketchMaterial(state),
     trimSketch: !targetPickerActive && canvasActive && !guidedHoleStartBlocked && !state.fileBusy,
     replicateSketch: !targetPickerActive && !guidedHoleStartBlocked && !state.fileBusy && canOpenSketchReplication(),
+    offsetSketch: !targetPickerActive && !guidedHoleStartBlocked && !state.fileBusy && canOpenSketchOffset(),
     editSolidDimension: !facePickerActive && solidDimensionEditingAvailable(state),
     makeSketchSolid: handoffReady,
     saveOrExport: canBeginSaveOrExport(state, saveOrExportBlocked(canvasActive, guidedHoleActive, guidedHoleStartBlocked || operationBusy || refinementBusy, exportDialogOpen, scopeCaptureBusy)),
@@ -213,6 +216,7 @@ export const commands: CadCommand[] = [
   { id: "sketch.extend", label: "Extend sketch curves", enablementKey: "trimSketch", run: () => openSketchTrimExtend("extend") },
   { id: "sketch.mirror", label: "Mirror selected sketch geometry", enablementKey: "replicateSketch", run: () => openSketchReplication("mirror") },
   { id: "sketch.linearPattern", label: "Linear pattern selected sketch geometry", enablementKey: "replicateSketch", run: () => openSketchReplication("linear") },
+  { id: "sketch.offsetOutline", label: "Offset sketch outline", enablementKey: "offsetSketch", run: () => openSketchOffset() },
   { id: "sketch.cancelFacePocket", label: "Cancel face selection", alwaysEnabled: true, internal: true, run: () => cancelFacePocket() },
   { id: "project.startDrawing", internal: true, label: "Draw a named part", enablementKey: "newComponent", run: ({ componentName }) => beginPartDrawing(componentName ?? "Part 1") },
   { id: "project.startDescribing", internal: true, label: "Describe a named part", enablementKey: "newComponent", run: ({ componentName }) => beginPartDescription(componentName ?? "Part 1") },
