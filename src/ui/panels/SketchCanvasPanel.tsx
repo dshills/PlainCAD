@@ -1,3 +1,4 @@
+import { ContextualSketchConstraints } from "./ContextualSketchConstraints";
 import { SketchTrimExtendPanel } from "./SketchTrimExtendPanel";
 import { useContextualConstraintDraft } from "../commands/contextualConstraintCommand";
 import { setSketchTrimExtendPick, useSketchTrimExtend } from "../commands/sketchTrimExtendCommand";
@@ -1224,6 +1225,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
             </div>
           ) : null}
           {dimensions.controls}
+          <ContextualSketchConstraints />
           {trimFrame ? <SketchTrimExtendPanel key={trimFrame.active.sketchId} /> : null}
           {constraints.controls}
           <details open={!focused}>
