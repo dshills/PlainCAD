@@ -1,5 +1,5 @@
 import { ShapeUtils, Vector2 } from "three";
-import type { CadDocument } from "../document/schema";
+import type { CadDocument, Sketch } from "../document/schema";
 import type { RebuildResult } from "../worker/workerProtocol";
 import { loopPoints } from "../kernel/profileMesh";
 import { transformPoint, type Point3 } from "../sketch/planes";
@@ -8,11 +8,14 @@ import {
   evaluateParameters,
 } from "../parameters/expressionEvaluator";
 import { extrusionSweep } from "./extrusionSweep";
+import { sampleArc, type SketchProfile } from "../sketch/profileDetection";
 
 export const OPERATION_OVERLAY_VERTEX_BUDGET = 8192;
 export interface OperationTargetGeometry {
   loops: Point3[][];
   filled: boolean;
+  /** Individual line/arc overlays are open paths, unlike complete perimeters. */
+  closed?: boolean;
   indices?: number[];
 }
 function localProfileLoops(
@@ -117,4 +120,45 @@ export function capOperationGeometry(
       ),
     ),
   };
+}
+
+function resolveExtrudeCapProfile(ownerId: string, document: CadDocument, result: RebuildResult) {
+  const owner = document.features.find((feature) => feature.id === ownerId);
+  if (owner?.type !== "extrude") return undefined;
+  const sketch = document.sketches[owner.sketchId];
+  const profile = result.profiles?.[owner.sketchId]?.find((item) => item.id === owner.profileId || item.alternateIds?.includes(owner.profileId));
+  return profile && sketch ? { owner, sketch, profile } : undefined;
+}
+function completeCapBoundaryIds(sketch: Sketch, profile: SketchProfile) {
+  return [...new Set([profile.outerLoop, ...profile.innerLoops].flatMap((loop) => {
+    if (loop.type === "circle") return loop.entityIds.filter((id) => sketch.entities[id]?.type === "circle");
+    return (loop.segments ?? []).flatMap((segment) => {
+      const source = sketch.entities[segment.id];
+      return source?.type === segment.type ? [segment.id] : [];
+    });
+  }))];
+}
+/** Only a complete authored boundary maps to an individual durable cap edge. */
+export function capEdgeSourceIds(ownerId: string, document: CadDocument, result: RebuildResult) {
+  const resolved = resolveExtrudeCapProfile(ownerId, document, result);
+  return resolved ? completeCapBoundaryIds(resolved.sketch, resolved.profile) : [];
+}
+
+export function individualCapOperationGeometry(ownerId: string, end: boolean, sourceEntityId: string,
+  document: CadDocument, result: RebuildResult, maxVertices = OPERATION_OVERLAY_VERTEX_BUDGET): OperationTargetGeometry {
+  const resolved = resolveExtrudeCapProfile(ownerId, document, result);
+  if (!resolved) throw new Error("The authored cap edge owner, sketch or closed profile is unavailable. Rebuild or repair its profile reference.");
+  const { owner, sketch, profile } = resolved;
+  if (!completeCapBoundaryIds(sketch, profile).includes(sourceEntityId))
+    throw new Error("This edge is split, changed or not a complete authored cap boundary. Choose a supported edge.");
+  const loop = [profile.outerLoop, ...profile.innerLoops].find((item) => item.entityIds.includes(sourceEntityId));
+  if (!loop) throw new Error("The authored edge boundary is unavailable. Rebuild or choose a supported edge.");
+  const segment = loop.segments?.find((item) => item.id === sourceEntityId);
+  const local = loop.type === "circle" ? loopPoints(loop, profile) : segment?.type === "arc" ? sampleArc(segment) : segment ? [segment.start, segment.end] : [];
+  if (!local.length || local.length > maxVertices) throw new Error("This edge exceeds the viewer overlay budget. Use its explicit card.");
+  const transform = result.sketchPlanes?.[owner.sketchId];
+  const distance = evaluateExpressionRef(owner.distance, { parameters: evaluateParameters(document.parameters).values });
+  if (!transform || distance.error || distance.quantity?.dimension !== "length") throw new Error("The native edge placement is unavailable.");
+  const sweep = extrusionSweep(transform, distance.quantity.value, owner.direction);
+  return { filled: false, closed: loop.type === "circle", loops: [local.map((point) => transformPoint(sweep, point.x, point.y, end ? distance.quantity!.value : 0))] };
 }

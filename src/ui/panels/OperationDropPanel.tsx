@@ -173,8 +173,8 @@ export function OperationDropPanel() {
           </p>
           {frame.operation !== "extrude" ? (
             <p className="muted">
-              Untouched distance-extrusion cap groups only. Each target includes
-              all original perimeter edges.
+              Click an individual highlighted cap edge, or choose an entire
+              perimeter below. Only untouched distance-extrusion owners are offered.
             </p>
           ) : null}
           <p

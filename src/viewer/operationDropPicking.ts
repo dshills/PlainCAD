@@ -7,7 +7,9 @@ import { useSketchSolidHandoff } from "../ui/commands/sketchSolidHandoffCommand"
 import {
   OPERATION_OVERLAY_VERTEX_BUDGET,
   capOperationGeometry,
+  individualCapOperationGeometry,
   profileOperationGeometry,
+  type OperationTargetGeometry,
 } from "../cad/features/operationTargetGeometry";
 import {
   OPERATION_DRAG_TYPE,
@@ -44,6 +46,8 @@ export function installOperationDropPicking(
   const ray = new THREE.Raycaster(),
     pointer = new THREE.Vector2();
   const paths = new Map<string, THREE.Vector3[][]>();
+  const closedPaths = new Map<string, boolean>();
+  const individualTargetIds = new Set<string>();
   const screenA = new THREE.Vector3(),
     screenB = new THREE.Vector3(),
     worldPoint = new THREE.Vector3();
@@ -74,6 +78,8 @@ export function installOperationDropPicking(
       }
     group.clear();
     paths.clear();
+    closedPaths.clear();
+    individualTargetIds.clear();
     targets = [];
   };
   const color = () => {
@@ -114,6 +120,7 @@ export function installOperationDropPicking(
     clear();
     if (!frame) return;
     targets = operationDropTargets(frame.operation, useCadStore.getState(), frame.handoffSketchId);
+    for (const target of targets) if (target.kind === "edge" && target.sourceEntityId !== undefined) individualTargetIds.add(target.id);
     let vertices = 0;
     for (const target of targets) {
       const remaining = Math.min(
@@ -122,21 +129,14 @@ export function installOperationDropPicking(
       );
       if (remaining <= 0) break;
       try {
-        const placement =
-          target.kind === "profile"
-            ? profileOperationGeometry(
-                target.sketchId,
-                target.profileId,
-                frame.result,
-                remaining,
-              )
-            : capOperationGeometry(
-                target.ownerId,
-                target.role === "endCapPerimeter",
-                frame.document,
-                frame.result,
-                remaining,
-              );
+        let placement: OperationTargetGeometry;
+        if (target.kind === "profile") {
+          placement = profileOperationGeometry(target.sketchId, target.profileId, frame.result, remaining);
+        } else if (target.sourceEntityId !== undefined) {
+          placement = individualCapOperationGeometry(target.ownerId, target.role === "endCapPerimeter", target.sourceEntityId, frame.document, frame.result, remaining);
+        } else {
+          placement = capOperationGeometry(target.ownerId, target.role === "endCapPerimeter", frame.document, frame.result, remaining);
+        }
         const count = placement.loops.reduce(
           (sum, loop) => sum + loop.length,
           0,
@@ -153,6 +153,7 @@ export function installOperationDropPicking(
           loop.map((p) => new THREE.Vector3(p.x, p.y, p.z)),
         );
         paths.set(target.id, loops);
+        closedPaths.set(target.id, placement.closed !== false);
         const positions = loops.flat().flatMap((p) => p.toArray());
         const geometry = new THREE.BufferGeometry();
         const materialOptions = {
@@ -182,7 +183,7 @@ export function installOperationDropPicking(
             "position",
             new THREE.Float32BufferAttribute(
               loops.flatMap((loop) =>
-                loop.flatMap((point, index) => [
+                loop.flatMap((point, index) => placement.closed === false && index === loop.length - 1 ? [] : [
                   ...point.toArray(),
                   ...loop[(index + 1) % loop.length].toArray(),
                 ]),
@@ -248,6 +249,7 @@ export function installOperationDropPicking(
       let closest = Infinity;
       for (const loop of loops)
         for (let index = 0; index < loop.length; index++) {
+          if (closedPaths.get(id) === false && index === loop.length - 1) continue;
           const a = loop[index],
             b = loop[(index + 1) % loop.length];
           if (
@@ -285,15 +287,19 @@ export function installOperationDropPicking(
         }
       if (closest <= 8) candidates.push({ id, distance: closest });
     }
-    candidates.sort(
+    // Individual authored edges take precedence over their coincident whole-cap
+    // card. Ambiguous adjacent individual edges still require an explicit choice.
+    const individual = candidates.filter((candidate) => individualTargetIds.has(candidate.id));
+    const eligible = individual.length ? individual : candidates;
+    eligible.sort(
       (a, b) => a.distance - b.distance || a.id.localeCompare(b.id),
     );
-    if (candidates[1] && candidates[1].distance - candidates[0].distance < 1)
+    if (eligible[1] && eligible[1].distance - eligible[0].distance < 1)
       return {
         error:
-          "The cap groups overlap at this point. Choose the exact perimeter card.",
+          "Supported edges overlap at this point. Choose the exact edge or perimeter card.",
       };
-    return { id: candidates[0]?.id };
+    return { id: eligible[0]?.id };
   };
   const perform = (event: { clientX: number; clientY: number }) => {
     const frame = useOperationDrop.getState().frame;

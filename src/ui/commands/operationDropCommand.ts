@@ -25,12 +25,14 @@ import { useGuidedHole } from "./guidedHoleCommand";
 import { useSketchCanvas } from "./sketchCanvasCommand";
 import { useProjectWorkflow } from "./projectWorkflowCommand";
 import { useTargetScopeCapture } from "./targetScopeCaptureCommand";
+import { capEdgeSourceIds } from "../../cad/features/operationTargetGeometry";
+import { interactionDraftBusy } from "./interactionDraftState";
 
 export const OPERATION_DRAG_TYPE = "application/x-plaincad-operation";
 export const SUPPORTED_OPERATION_DROPS = [
   { id: "extrude", label: "Extrude", target: "closed profile" },
-  { id: "fillet", label: "Fillet", target: "original cap perimeter" },
-  { id: "chamfer", label: "Chamfer", target: "original cap perimeter" },
+  { id: "fillet", label: "Fillet", target: "authored cap edge or perimeter" },
+  { id: "chamfer", label: "Chamfer", target: "authored cap edge or perimeter" },
 ] as const;
 export type DropOperation = (typeof SUPPORTED_OPERATION_DROPS)[number]["id"];
 export type OperationTarget =
@@ -48,6 +50,7 @@ export type OperationTarget =
       ownerId: string;
       bodyId: string;
       role: SupportedEdgeRole;
+      sourceEntityId?: string;
     };
 export type OperationDropContext = Pick<
   CadStore,
@@ -70,6 +73,7 @@ export const useOperationDrop = create<{
 }>(() => ({}));
 function competingDraft() {
   return Boolean(
+    interactionDraftBusy() ||
     useFileJobs.getState().exportOpen ||
     useExtrudeDraft.getState().draft ||
     useModelingDraft.getState().draft ||
@@ -109,6 +113,7 @@ export function operationDropTargets(
   if (currentView && view.hiddenComponentIds.includes(state.activeComponentId))
     return [];
   const targets: OperationTarget[] = [];
+  const individualTargets: OperationTarget[] = [];
   if (operation === "extrude") {
     for (const sketch of Object.values(document.sketches)) {
       if (
@@ -159,16 +164,13 @@ export function operationDropTargets(
         !mesh.geometryAssertions?.valid
       )
         continue;
-      for (const [role, face, label] of [
+      const roles = ([
         ["endCapPerimeter", "endCap", "end cap perimeter"],
         ["startCapPerimeter", "startCap", "start cap perimeter"],
-      ] as const) {
-        if (
-          !result.availableFaces?.some(
-            (f) => f.id === `extrude:${owner.id}:${face}`,
-          )
-        )
-          continue;
+      ] as const).filter(([, face]) => result.availableFaces?.some((f) => f.id === `extrude:${owner.id}:${face}`));
+      if (!roles.length) continue;
+      const sourceIds = individualTargets.length < 128 ? capEdgeSourceIds(owner.id, document, result) : [];
+      for (const [role, , label] of roles) {
         targets.push({
           id: `edge:${owner.id}:${role}`,
           kind: "edge",
@@ -178,10 +180,18 @@ export function operationDropTargets(
           role,
         });
         if (targets.length === 128) return targets;
+        for (const [index, sourceEntityId] of sourceIds.entries()) {
+          if (individualTargets.length === 128) break;
+          individualTargets.push({ id: `edge:${owner.id}:${role}:${sourceEntityId}`, kind: "edge",
+            label: `${owner.name} — ${label.replace(" perimeter", "")} edge ${index + 1} (${document.sketches[owner.sketchId]?.entities[sourceEntityId]?.type ?? "curve"})`,
+            ownerId: owner.id, bodyId, role, sourceEntityId });
+        }
       }
     }
   }
-  return targets.slice(0, 128);
+  // Preserve access to every eligible owner's cap cards before filling the
+  // remaining bounded target budget with individual authored edges.
+  return [...targets, ...individualTargets].slice(0, 128);
 }
 export function canBeginOperationDrop(
   state: OperationDropContext = useCadStore.getState(),
@@ -289,7 +299,7 @@ export function chooseOperationDropTarget(
       id: createId("feature"),
       name: `${frame.operation === "fillet" ? "Fillet" : "Chamfer"} ${frame.document.features.length + 1}`,
       componentId: frame.componentId,
-      targetEdgeRefs: [createExtrudeEdgeRef(target.ownerId, target.role)],
+      targetEdgeRefs: [createExtrudeEdgeRef(target.ownerId, target.role, target.sourceEntityId)],
       createdAt: new Date().toISOString(),
     };
     beginModelingCreation(

@@ -18,7 +18,9 @@ async function ready(page: Page, volume?: number) {
         valid: true,
         solidCount: 1,
       });
-      expect(mesh.geometryAssertions!.volume).toBeCloseTo(volume, 6);
+      // Relative 1e-7 matches native acceptance elsewhere and allows only
+      // 0.000134 mm³ at the largest authored-edge fixture volume (1340 mm³).
+      expect(Math.abs(mesh.geometryAssertions!.volume / volume - 1), `Native BRep volume ${mesh.geometryAssertions!.volume}; expected ${volume}`).toBeLessThan(1e-7);
     }
   }).toPass({ timeout: 30000 });
 }
@@ -330,3 +332,40 @@ test("section changes refresh operation overlays before pointer input", async ({
   await page.getByRole("button", { name: "Cancel operation targets", exact: true }).click();
   await expect.poll(targets).toEqual([]);
 });
+
+for (const plane of ["XY", "XZ", "YZ"] as const) {
+  test(`${plane} viewer selects one authored cap edge and preserves exact chamfer geometry through history, parameter edit and STL`, async ({ page }, info) => {
+    const [, sketchId] = await fixture(page, plane);
+    const profile = await viewportLocal(page, sketchId, 41, 0);
+    await page.getByRole("button", { name: "Use Extrude on geometry", exact: true }).dragTo(profile.canvas, { targetPosition: profile.local });
+    await page.getByLabel("Extrude distance", { exact: true }).fill("height");
+    await applyExtrusion(page); await ready(page, 960);
+    const before = await aiSnapshot(page);
+    await page.getByRole("button", { name: "Use Chamfer on geometry", exact: true }).click();
+    const edge = await viewportLocal(page, sketchId, 47, 0, 10);
+    await page.mouse.click(edge.screen.x, edge.screen.y);
+    const dialog = page.getByRole("dialog", { name: "Chamfer", exact: true });
+    await expect(dialog.getByRole("status")).toContainText("Native preview ready", { timeout: 30000 });
+    await dialog.getByRole("button", { name: "Apply chamfer", exact: true }).click(); await ready(page, 956);
+    const applied = await aiSnapshot(page), treatment = applied.document.features.at(-1);
+    expect(treatment?.type).toBe("chamfer");
+    if (treatment?.type !== "chamfer") throw new Error("Expected chamfer");
+    expect(treatment.targetEdgeRefs[0].sourceEntityId).toBeTruthy();
+    expect(treatment.targetEdgeRefs[0].role).toBe("endCapPerimeter");
+    expect(applied.past).toBe(before.past + 1);
+    await page.getByRole("button", { name: "Undo", exact: true }).click(); await ready(page, 960);
+    await page.getByRole("button", { name: "Redo", exact: true }).click(); await ready(page, 956);
+    const height = page.getByRole("textbox", { name: "Parameter height expression", exact: true });
+    await height.fill("14mm"); await height.press("Enter"); await ready(page, 1340);
+    const saving = page.waitForEvent("download"); await page.getByRole("button", { name: "Save project", exact: true }).click();
+    const projectPath = info.outputPath(`${plane}-individual-edge.pcaddoc`); await (await saving).saveAs(projectPath);
+    await page.locator('input[type="file"]').setInputFiles(projectPath); await ready(page, 1340);
+    expect((await aiSnapshot(page)).document.features.at(-1)).toEqual(treatment);
+    const exporting = page.waitForEvent("download"); await page.getByRole("button", { name: "Export STL", exact: true }).click();
+    const stlPath = info.outputPath(`${plane}-individual-edge.stl`); await (await exporting).saveAs(stlPath);
+    // Float32 vertices permit 0.0134 mm³ error here, well below a missing
+    // individual edge treatment's 2 mm³ minimum volume change.
+    const exportedVolume = stlSignedVolume(await readFile(stlPath));
+    expect(Math.abs(exportedVolume / 1340 - 1), `STL volume ${exportedVolume}; expected 1340`).toBeLessThan(1e-5);
+  });
+}

@@ -19,14 +19,16 @@ import {
   upsertParameter,
   upsertSketch,
 } from "../cad/document/CadDocument";
-import { createXySketch } from "../cad/sketch/SketchModel";
+import { createXySketch, addPoint, addLine } from "../cad/sketch/SketchModel";
 import { addCanvasGeometry } from "../cad/sketch/canvasGeometry";
 import { solveSketch } from "../cad/sketch/SketchSolver";
 import { detectProfiles } from "../cad/sketch/profileDetection";
+import { evaluateExpressionRef, evaluateParameters } from "../cad/parameters/expressionEvaluator";
 import { rebuildDocument } from "../cad/features/rebuildGraph";
 import {
   profileOperationGeometry,
   capOperationGeometry,
+  individualCapOperationGeometry,
 } from "../cad/features/operationTargetGeometry";
 import { useCadStore } from "../state/useCadStore";
 import { useViewerState } from "../state/viewerState";
@@ -177,7 +179,7 @@ it("offers only explicit visible active-component profiles and untouched native 
   const { feature, second } = await fixture();
   expect(operationDropTargets("extrude")).toHaveLength(2);
   expect(
-    operationDropTargets("fillet").map((t) => t.kind === "edge" && t.role),
+    operationDropTargets("fillet").filter((t) => t.kind === "edge" && !t.sourceEntityId).map((t) => t.kind === "edge" && t.role),
   ).toEqual(["endCapPerimeter", "startCapPerimeter"]);
   const state = useCadStore.getState();
   useViewerState
@@ -248,7 +250,8 @@ it.each(["fillet", "chamfer"] as const)(
     const { result } = await fixture();
     beginOperationDrop(operation);
     const frame = useOperationDrop.getState().frame!,
-      target = operationDropTargets(operation)[0];
+      target = operationDropTargets(operation).find((candidate) => candidate.kind === "edge" && candidate.sourceEntityId === undefined && candidate.role === "endCapPerimeter");
+    if (!target) throw new Error("Fixture must expose the whole end-cap perimeter target.");
     runCommand("feature.operationTarget", {
       operationFrame: frame,
       operationTargetId: target.id,
@@ -278,6 +281,74 @@ it.each(["fillet", "chamfer"] as const)(
     expect(useCadStore.getState().history.present).toBe(before.present);
   },
 );
+it.each(["fillet", "chamfer"] as const)("targets one authored edge for %s with exact changed native volume", async (operation) => {
+  const { feature, result } = await fixture();
+  const targets = operationDropTargets(operation).filter((target) => target.kind === "edge" && target.sourceEntityId);
+  expect(targets).toHaveLength(8);
+  const target = targets[0];
+  if (target.kind !== "edge" || !target.sourceEntityId) throw new Error("Expected one edge");
+  const geometry = individualCapOperationGeometry(feature.id, true, target.sourceEntityId, useCadStore.getState().history.present, result);
+  expect(geometry.closed).toBe(false);
+  expect(geometry.loops[0]).toHaveLength(2);
+  const length = Math.hypot(geometry.loops[0][1].x - geometry.loops[0][0].x, geometry.loops[0][1].y - geometry.loops[0][0].y);
+  beginOperationDrop(operation);
+  chooseOperationDropTarget(useOperationDrop.getState().frame, target.id);
+  const draft = useModelingDraft.getState().draft!;
+  if (draft.feature.type === "revolve") throw new Error("Unexpected revolve");
+  expect(draft.feature.targetEdgeRefs[0].sourceEntityId).toBe(target.sourceEntityId);
+  const staged = upsertFeature(draft.document, draft.feature);
+  const preview = rebuildDocument(staged);
+  expect(preview.success).toBe(true);
+  expect(preview.meshes[0].geometryAssertions).toMatchObject({ valid: true, solidCount: 1 });
+  const size = evaluateExpressionRef(draft.feature.type === "fillet" ? draft.feature.radius : draft.feature.distance, { parameters: evaluateParameters(draft.document.parameters).values });
+  if (size.error || size.quantity?.dimension !== "length") throw new Error("Fixture treatment size must resolve to a length.");
+  const baseline = result.meshes[0].geometryAssertions!.volume;
+  const removed = length * size.quantity.value ** 2 * (operation === "fillet" ? 1 - Math.PI / 4 : 0.5);
+  const expected = baseline - removed, actual = preview.meshes[0].geometryAssertions!.volume;
+  expect(actual).toBeLessThan(baseline - removed * 0.99);
+  expect(Math.abs(actual / expected - 1), `Native ${operation} volume ${actual}; expected ${expected}`).toBeLessThan(1e-7);
+  commitModelingDraft(draft, staged, preview);
+  useCadStore.getState().undo();
+  expect(useCadStore.getState().history.present).toBe(draft.document);
+});
+it("reports missing cap profiles and boundary loops without throwing lookup TypeErrors", async () => {
+  const { feature, result } = await fixture();
+  const target = operationDropTargets("fillet").find((candidate) => candidate.kind === "edge" && candidate.sourceEntityId !== undefined);
+  if (target?.kind !== "edge" || target.sourceEntityId === undefined) throw new Error("Expected an authored edge target.");
+  const document = useCadStore.getState().history.present;
+  const lostProfile = { ...result, profiles: { ...result.profiles, [feature.sketchId]: [] } };
+  expect(() => individualCapOperationGeometry(feature.id, true, target.sourceEntityId!, document, lostProfile)).toThrow("closed profile is unavailable");
+  const profiles = result.profiles![feature.sketchId].map((profile) => ({ ...profile, outerLoop: { ...profile.outerLoop, entityIds: [] } }));
+  const lostLoop = { ...result, profiles: { ...result.profiles, [feature.sketchId]: profiles } };
+  expect(() => individualCapOperationGeometry(feature.id, true, target.sourceEntityId!, document, lostLoop)).toThrow("edge boundary is unavailable");
+});
+it("reserves whole-cap targets for later owners when individual edges fill the target budget", async () => {
+  await fixture();
+  let sketch = createXySketch("Detailed polygon");
+  const points: string[] = [];
+  for (let index = 0; index < 64; index++) {
+    const angle = index * Math.PI / 32;
+    const point = addPoint(sketch, `${(100 + 10 * Math.cos(angle)).toFixed(10)}mm`, `${(10 * Math.sin(angle)).toFixed(10)}mm`);
+    sketch = point.sketch; points.push(point.pointId);
+  }
+  for (const [index, pointId] of points.entries()) sketch = addLine(sketch, pointId, points[(index + 1) % points.length]).sketch;
+  const profile = detectProfiles(solveSketch(sketch, {})).profiles[0];
+  const detailed = createExtrudeFeature({ name: "Detailed", sketchId: sketch.id, profileId: profile.id, operation: "newBody", distance: { expression: "height", unit: "mm" }, direction: "positive" });
+  let document = upsertFeature(upsertSketch(useCadStore.getState().history.present, sketch), detailed);
+  const laterSketch = Object.values(document.sketches).find((candidate) => candidate.name === "Loose shape")!;
+  const later = createExtrudeFeature({ name: "Later owner", sketchId: laterSketch.id, profileId: detectProfiles(solveSketch(laterSketch, {})).profiles[0].id, operation: "newBody", distance: { expression: "height", unit: "mm" }, direction: "positive" });
+  document = upsertFeature(document, later);
+  useCadStore.getState().setDocument(document);
+  const state = useCadStore.getState(), result = await rebuildDocument(state.history.present);
+  expect(result.success).toBe(true);
+  useCadStore.setState({ rebuild: { ...state.rebuild, result, status: "succeeded", kernelReady: true } });
+  const targets = operationDropTargets("fillet");
+  expect(targets).toHaveLength(128);
+  const caps = targets.filter((target) => target.kind === "edge" && target.sourceEntityId === undefined);
+  for (const ownerId of [detailed.id, later.id]) {
+    expect(caps.filter((target) => target.kind === "edge" && target.ownerId === ownerId).map((target) => target.kind === "edge" ? target.role : "").sort()).toEqual(["endCapPerimeter", "startCapPerimeter"]);
+  }
+});
 it("rejects stale identity/session/component/result targets and refuses competing draft/file-dialog starts", async () => {
   await fixture();
   const before = useCadStore.getState();
@@ -464,32 +535,35 @@ it("bounds overlay allocation before triangulation and disposes its transient sc
     camera,
     () => new THREE.Plane(new THREE.Vector3(0, 0, 1), clipConstant),
   );
+  const profileCount = operationDropTargets("extrude").length;
+  const edgeCount = operationDropTargets("fillet").length;
+  const expectedDisposals = profileCount * 2 + edgeCount;
   try {
     expect(scene.children[0].children).toHaveLength(0);
     beginOperationDrop("extrude");
-    expect(scene.children[0].children).toHaveLength(2);
+    expect(scene.children[0].children).toHaveLength(profileCount);
     useCadStore.setState({ paletteOpen: true });
     expect(disposed).not.toHaveBeenCalled();
     // Simulate the host replacing its clipping ref after a section update.
     // No store/pointer event should be needed to update displayed materials.
     clipConstant = 1;
     picker.refresh();
-    expect(picker.inspect()).toHaveLength(2);
+    expect(picker.inspect()).toHaveLength(profileCount);
     expect(picker.inspect().every((target) => target.clippingPlanes.length === 1 && target.clippingPlanes[0].constant === 1)).toBe(true);
     useCadStore.setState({ paletteOpen: false });
-    expect(disposed).toHaveBeenCalledTimes(2);
+    expect(disposed).toHaveBeenCalledTimes(profileCount);
     cancelOperationDrop();
     expect(scene.children[0].children).toHaveLength(0);
-    expect(disposed).toHaveBeenCalledTimes(4);
+    expect(disposed).toHaveBeenCalledTimes(profileCount * 2);
     beginOperationDrop("fillet");
-    expect(scene.children[0].children).toHaveLength(2);
+    expect(scene.children[0].children).toHaveLength(edgeCount);
     picker.dispose();
     expect(scene.children).toHaveLength(0);
-    expect(disposed).toHaveBeenCalledTimes(6);
+    expect(disposed).toHaveBeenCalledTimes(expectedDisposals);
     picker.refresh();
     picker.dispose();
     expect(picker.inspect()).toEqual([]);
-    expect(disposed).toHaveBeenCalledTimes(6);
+    expect(disposed).toHaveBeenCalledTimes(expectedDisposals);
   } finally {
     picker.dispose();
     disposed.mockRestore();
