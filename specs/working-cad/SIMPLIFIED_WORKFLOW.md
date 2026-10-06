@@ -1,6 +1,11 @@
 # Making PlainCAD simple to use
 
-Status: Steps 1–2 implemented, with bounded midpoint/center/alignment drawing snaps added. Step 3 distance handles, project-file drops, guided face holes and eligible Extrude/Round/Bevel operation placement; Step 4 bounded AI routing, local previews and candidate-solid highlights; and Step 5 guided repair/save/export tasks are implemented within the limits below. Human usability research, comprehensive accessibility validation and broader arbitrary interactions remain planned. Updated October 6, 2026.
+The default Docked Workbench now adds readiness-aware tasks, named first-part
+Draw/Describe creation, shared native modeling task controls and authored solid
+driving dimension labels. Production Workbench acceptance covers all five native
+editors. See [validation and the unperformed human pilot](WORKBENCH_VALIDATION.md).
+
+Status: Steps 1–2 implemented, with bounded midpoint/center/alignment drawing snaps added. Step 3 distance handles, project-file drops, guided face holes and eligible Extrude/Fillet/Chamfer operation placement; Step 4 bounded AI routing, local previews and candidate-solid highlights; and Step 5 guided repair/save/export tasks are implemented within the limits below. Human usability research, comprehensive accessibility validation and broader arbitrary interactions remain planned. Updated October 6, 2026.
 
 The screenshots capture the interface before Step 1. The proposal includes future
 interactions; the implementation sections and capability matrix identify the
@@ -187,7 +192,7 @@ Use lightweight transient feedback while dragging. Rebuild exact native previews
 
 Drag-and-drop is a discoverable shortcut when valid targets light up and a short explanation follows the cursor. Every drop must resolve a target and preview an ordinary document operation. Provide a click/select/place alternative for each action.
 
-Project-file opening and bounded Extrude/Round/Bevel operation placement are implemented drop gestures. Operation tokens support drag, viewer clicks and exact keyboard target cards. Eligible targets receive turquoise overlays and fixed-position yellow hover feedback; choosing a target opens the ordinary native preview/Apply workflow. The guided face-to-hole transaction retains click/select/place controls. Other rows below remain proposed unless explicitly marked implemented.
+Project-file opening and bounded Extrude/Fillet/Chamfer operation placement are implemented drop gestures. Operation tokens support drag, viewer clicks and exact keyboard target cards. Eligible targets receive turquoise overlays and fixed-position yellow hover feedback; choosing a target opens the ordinary native preview/Apply workflow. The guided face-to-hole transaction retains click/select/place controls. Other rows below remain proposed unless explicitly marked implemented.
 
 | Dragged item | Valid destination | Intended result and limits |
 | --- | --- | --- |
@@ -342,10 +347,10 @@ Preserve current data disclosure: creation sends prompt/recent turns; bounded ed
 | --- | --- | --- |
 | Drawing | Visible pointer tools and inline sizes; multi-selection/one-Undo deletion; labeled point/midpoint/center/alignment snaps; bounded movement | Tangent/intersection snaps, automatic persistent relations, broader constrained dragging and new camera gestures |
 | Dimensions | Driving labels/reference measurements enabled by default, selected-value emphasis and contextual size editors | Durable semantic dimension names and richer visual prioritization |
-| Features | Native modeling, distance handles, guided face holes and eligible Extrude/Round/Bevel placement with native Apply | Broader operation destinations and arbitrary direct face editing |
+| Features | Native modeling, distance handles, guided face holes and eligible Extrude/Fillet/Chamfer placement with native Apply | Broader operation destinations and arbitrary direct face editing |
 | AI | Three providers, scope chips, bounded intent/choices, candidate-solid highlights, local numeric previews and explicit native Apply | Richer semantic/model-derived help, exact dimension face/edge overlays and sketch-intent assistance |
-| Organization | Project/components/sketches/bodies, activation/history, Focused Parts/Details and explicit edit targets | Automatic first-part transaction and further organization simplification |
-| Drag and drop | Protected project-file opening; eligible Extrude/Round/Bevel tokens with overlays and click/keyboard alternatives; guided face picking | Draw/Hole tool drops, arbitrary edge destinations and pointer history reordering |
+| Organization | Project/components/sketches/bodies, activation/history, named atomic first-part Draw/Describe, Docked Workbench and explicit edit targets | Further organization simplification |
+| Drag and drop | Protected project-file opening; eligible Extrude/Fillet/Chamfer tokens with overlays and click/keyboard alternatives; guided face picking | Draw/Hole tool drops, arbitrary edge destinations and pointer history reordering |
 | Reusable content | Built-in examples and durable projects | Append/import-part design with ID and reference remapping; placement/assemblies deferred |
 | Repair/export | Source-linked issue cards, bounded closing-edge proposals, explicit reference repair, guided Save/export and validated STL modes | Broader automatic repair and measured usability/accessibility validation |
 
@@ -406,7 +411,7 @@ each other; opening, side-face and other unproven boundaries reserve the native
 edges retain exact clearance. Schema 13 persists inward Hole direction; legacy
 projects retain their positive drilling behavior, with regression fixtures for
 versions 1–13.
-Eligible Extrude, Round and Bevel tokens now support drag, viewer clicks and exact keyboard target cards. Extrude targets current closed regions in the visible active component; Round/Bevel targets untouched native distance/new-body Extrude owners' original cap-perimeter groups. Arbitrary individual edges, modified owners and boolean-created topology are unavailable in this picker. Turquoise target and fixed-space yellow hover feedback lead to an ordinary native preview/Apply transaction with one Undo. Picking and Apply bind the exact document/session/component/native result, and competing tasks must finish first. Broader operation destinations and pointer history reordering remain planned; existing timeline commands remain available.
+Eligible Extrude, Fillet and Chamfer tokens now support drag, viewer clicks and exact keyboard target cards. Extrude targets current closed regions in the visible active component; Round/Bevel targets untouched native distance/new-body Extrude owners' original cap-perimeter groups. Arbitrary individual edges, modified owners and boolean-created topology are unavailable in this picker. Turquoise target and fixed-space yellow hover feedback lead to an ordinary native preview/Apply transaction with one Undo. Picking and Apply bind the exact document/session/component/native result, and competing tasks must finish first. Broader operation destinations and pointer history reordering remain planned; existing timeline commands remain available.
 
 Project-file drops are implemented: drop one `.pcaddoc` or `.json` file to validate
 and open it. Nonempty projects get explicit keep/save/replace choices; invalid,

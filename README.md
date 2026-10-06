@@ -127,6 +127,27 @@ Background commands and AI wait until you Apply or Cancel. Sketch mode uses one
 right-hand sketch control area; drawing dimensions remain editable on the canvas.
 Advanced controls stay behind disclosures. Bottom tabs show one surface at a time.
 
+On an empty project, enter **Part name** and choose **Draw a shape** or
+**Describe a part with AI**. Draw creates the named component and Sketch 1 together
+after plane confirmation, in one Undo step; Cancel keeps the name and edits
+nothing. Describe prepares a named New part proposal and commits only on native
+preview Apply. Naming drafts reset when a project is opened or replaced.
+
+The Task dock now reads current sketch/model readiness and links repairs to their
+sources. All five native modeling dialogs share Selection, Settings, Advanced
+options and Cancel/Apply. Selecting a native body or feature displays its authored
+driving dimensions beside the solid. Click a value to edit its existing expression
+through the native preview task; formulas are preserved on opening. These labels
+do not infer editable bounding-box sizes or arbitrary face dimensions. See
+[first-part creation](specs/working-cad/FIRST_PART.md),
+[modeling tasks](specs/working-cad/MODELING_TASKS.md), and
+[solid dimension limits](specs/working-cad/SOLID_DIMENSIONS.md).
+
+The [Workbench validation protocol](specs/working-cad/WORKBENCH_VALIDATION.md)
+adds production CSP coverage for all five native editors and a prepared human
+usability pilot. Human sessions and comprehensive accessibility auditing have
+not been conducted.
+
 **Settings → Workspace** also offers **Minimal workspace**, preserving the previous
 Focused layout and its deliberate Parts/History/Details disclosures. Existing
 saved minimal/full choices are honored. See [the design system](DESIGN_SYSTEM.md)
@@ -149,7 +170,7 @@ ordinary CAD commands remain available without an AI service. The first two
 steps of the [simplified workflow proposal](specs/working-cad/SIMPLIFIED_WORKFLOW.md)
 are implemented. Distance extrusion handles, protected project-file drops, guided
 face holes, and contextual AI scopes/local numeric previews are also implemented.
-Guided repair, Save/export, clearer pointer snaps, eligible Extrude/Round/Bevel
+Guided repair, Save/export, clearer pointer snaps, eligible Extrude/Fillet/Chamfer
 placement and AI candidate-solid clarification are implemented within the limits
 below. Broader arbitrary interaction and human usability/accessibility research
 remain planned.
@@ -1009,14 +1030,14 @@ preview cancellation, rebuild geometry, save/open and STL export.
 
 ### Drag operations onto supported geometry
 
-Extrude, Round and Bevel tokens accept drag, viewer clicks or keyboard target cards
+Extrude, Fillet and Chamfer tokens accept drag, viewer clicks or keyboard target cards
 through one command workflow. Turquoise overlays identify eligible geometry;
 yellow hover feedback stays in fixed space so target cards do not move during a
 pointer gesture. Choose a target, inspect the native preview, then explicitly Apply.
 Cancel changes no project data; Apply retains one Undo step.
 
 Extrude accepts current closed sketch regions in the visible active component.
-Round/Bevel drop targets are limited to untouched native distance/new-body Extrude
+Fillet/Chamfer drop targets are limited to untouched native distance/new-body Extrude
 owners and their original start/end cap-perimeter groups. Each target includes all
 original perimeter edges; arbitrary individual edges, boolean-created topology and
 modified owners are unavailable in this picker. Ambiguous or detailed targets can

@@ -1,5 +1,26 @@
 # Working CAD Capability Matrix
 
+## Docked Workbench workflow improvements
+
+- Task guidance uses current worker sketch profiles/diagnostics and distinguishes
+  empty/open/closed/broken sketches, failed rebuilds and native/fallback solids.
+  Disabled actions show prerequisites; diagnostics retain explicit source repair.
+- Empty-project Draw creates a named component and its first sketch atomically
+  after plane confirmation. Describe names a transient AI proposal; only validated
+  Apply publishes it. Cancel edits nothing and retains the starter name in session.
+- Extrude/Revolve/Hole/Fillet/Chamfer use shared Selection/Settings, native status,
+  Advanced options and Cancel/Apply controls. Recognized legacy profile aliases
+  remain valid and retain their authored IDs; lost profiles require explicit repair.
+- Solid labels expose authored feature fields, evaluated values, formulas and
+  affected features, opening the ordinary native editor. No arbitrary BRep or
+  bounding-box dimension editing is inferred. See [supported fields and limits](SOLID_DIMENSIONS.md).
+- Default Workbench production acceptance covers all five native editors through
+  save/open/STL under CSP plus keyboard docks, themes and compact navigation.
+  A [human usability pilot protocol](WORKBENCH_VALIDATION.md) is prepared; human
+  sessions and comprehensive accessibility audits remain unperformed.
+
+## Review scope
+
 Reviewed against source and automated tests on 2026-10-06. This is the current
 implementation status, not a declaration that the working-CAD spec is complete.
 Unit/component tests exercise fallback geometry and jsdom. Chromium acceptance
@@ -886,14 +907,14 @@ preview cancellation, rebuild geometry, save/open and STL export.
 
 ### Drag operations onto supported geometry
 
-Extrude, Round and Bevel tokens accept drag, viewer clicks or keyboard target cards
+Extrude, Fillet and Chamfer tokens accept drag, viewer clicks or keyboard target cards
 through one command workflow. Turquoise overlays identify eligible geometry;
 yellow hover feedback stays in fixed space so target cards do not move during a
 pointer gesture. Choose a target, inspect the native preview, then explicitly Apply.
 Cancel changes no project data; Apply retains one Undo step.
 
 Extrude accepts current closed sketch regions in the visible active component.
-Round/Bevel drop targets are limited to untouched native distance/new-body Extrude
+Fillet/Chamfer drop targets are limited to untouched native distance/new-body Extrude
 owners and their original start/end cap-perimeter groups. Each target includes all
 original perimeter edges; arbitrary individual edges, boolean-created topology and
 modified owners are unavailable in this picker. Ambiguous or detailed targets can

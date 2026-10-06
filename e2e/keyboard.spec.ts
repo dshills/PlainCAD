@@ -109,6 +109,18 @@ test("keyboard palette traps/restores focus, runs available commands and isolate
   await expect(
     dialog.locator('button[data-command="feature.edit"]'),
   ).toBeDisabled();
+  // The broad query also finds the available operation-target picker through
+  // its Fillet description. Exercise Enter with only the disabled command.
+  await expect(
+    dialog.locator('button[data-command="feature.operationTargets"]'),
+  ).toBeEnabled();
+  await filter.fill("Fillet Extrusion Edges");
+  await expect(
+    dialog.locator('button[data-command="feature.fillet"]'),
+  ).toBeDisabled();
+  await expect(
+    dialog.locator('button[data-command="feature.operationTargets"]'),
+  ).toHaveCount(0);
   await filter.press("Enter");
   await expect(dialog).toBeVisible();
   await filter.fill("Export STL");
