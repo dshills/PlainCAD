@@ -24,12 +24,12 @@ async function volume(page: Page, bodyName: string) {
   return measured;
 }
 
-const operations: Array<{ type: WorkbenchOperation; dimension: string; feature: string; field: string; value: string; expected?: number }> = [
-  { type: "Extrude", dimension: "thickness", feature: "Base", field: "Extrude distance", value: "10mm", expected: 3840 },
-  { type: "Revolve", dimension: "angle", feature: "Sweep", field: "Revolve angle", value: "180deg", expected: 125 * Math.PI },
-  { type: "Hole", dimension: "diameter", feature: "Drill", field: "Hole diameter", value: "4mm", expected: (24 * 16 - 4 * Math.PI) * 8 },
-  { type: "Fillet", dimension: "radius", feature: "Round", field: "Fillet radius", value: "2mm" },
-  { type: "Chamfer", dimension: "bevel size", feature: "Bevel", field: "Chamfer distance", value: "2mm" },
+const operations: Array<{ type: WorkbenchOperation; dimension: string; feature: string; value: string; expected?: number }> = [
+  { type: "Extrude", dimension: "thickness", feature: "Base", value: "10mm", expected: 3840 },
+  { type: "Revolve", dimension: "angle", feature: "Sweep", value: "180deg", expected: 125 * Math.PI },
+  { type: "Hole", dimension: "diameter", feature: "Drill", value: "4mm", expected: (24 * 16 - 4 * Math.PI) * 8 },
+  { type: "Fillet", dimension: "radius", feature: "Round", value: "2mm" },
+  { type: "Chamfer", dimension: "bevel size", feature: "Bevel", value: "2mm" },
 ];
 for (const operation of operations) {
   test(`default workbench edits ${operation.type} via a solid dimension and saves/reopens/exports real geometry under CSP`, async ({ page }, info) => {
@@ -48,15 +48,11 @@ for (const operation of operations) {
     expect(before).toBeGreaterThan(0);
     const label = page.getByRole("button", { name: `Edit solid ${operation.dimension} for ${operation.feature}`, exact: true });
     await label.press("Enter");
-    const dialog = page.getByRole("dialog", { name: `Edit ${operation.type}`, exact: true });
-    await expect(dialog.getByRole("heading", { name: "Selection", exact: true })).toBeVisible();
-    await expect(dialog.getByRole("heading", { name: "Settings", exact: true })).toBeVisible();
-    await dialog.getByLabel(operation.field, { exact: true }).fill(operation.value);
-    await expect(operation.type === "Hole"
-      ? dialog.getByRole("status", { name: "Hole preview status" })
-      : dialog.getByRole("status")).toContainText("Native preview ready");
+    const dialog = page.getByRole("dialog", { name: `Edit solid ${operation.dimension}`, exact: true });
+    await dialog.getByLabel("Dimension expression", { exact: true }).fill(operation.value);
+    await expect(dialog.getByRole("status")).toContainText("Native preview ready");
     await dialog.getByRole("button", {
-      name: operation.type === "Hole" ? "Cancel hole" : "Cancel",
+      name: "Cancel",
       exact: true,
     }).click();
     await expect(dialog).toBeHidden();
@@ -64,8 +60,8 @@ for (const operation of operations) {
       expect(Math.abs(await volume(page, bodyName) - before)).toBeLessThan(0.0011);
     }).toPass({ timeout: 30000 });
     await label.click();
-    await dialog.getByLabel(operation.field, { exact: true }).fill(operation.value);
-    const apply = dialog.getByRole("button", { name: `Apply ${operation.type === "Extrude" ? "extrusion" : operation.type.toLowerCase()}`, exact: true });
+    await dialog.getByLabel("Dimension expression", { exact: true }).fill(operation.value);
+    const apply = dialog.getByRole("button", { name: "Apply dimension", exact: true });
     await expect(apply).toBeEnabled();
     await apply.click();
     await expect(dialog).toBeHidden();
@@ -120,9 +116,9 @@ test("default workbench keyboard dock controls and compact navigation work in al
   await page.setViewportSize({ width: 900, height: 740 });
   await page.getByRole("button", { name: "Parts", exact: true }).click();
   await page.getByRole("button", { name: "Parts", exact: true }).click();
+  await page.getByRole("button", { name: "Parts", exact: true }).click();
   await expect(page.getByRole("complementary", { name: "Parts browser" })).toBeVisible();
   await expect(page.getByRole("complementary", { name: "Workspace details" })).toBeHidden();
-  await page.getByRole("button", { name: "Toggle task dock" }).click();
   await page.getByRole("button", { name: "Toggle task dock" }).click();
   await expect(page.getByRole("complementary", { name: "Workspace details" })).toBeVisible();
   await expect(page.getByRole("complementary", { name: "Parts browser" })).toBeHidden();

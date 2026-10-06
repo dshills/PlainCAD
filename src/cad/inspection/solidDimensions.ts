@@ -1,3 +1,4 @@
+import type { SolidDimensionField } from "./solidDimensionEdit";
 import type { CadDocument, ExpressionRef, Feature, SelectionRef } from "../document/schema";
 import { featureComponentId } from "../document/components";
 import { buildDependencyGraph, dependencyKey } from "../document/dependencyGraph";
@@ -9,6 +10,7 @@ export interface SolidDimension {
   id: string;
   featureId: string;
   featureName: string;
+  field: SolidDimensionField;
   fieldLabel: string;
   label: string;
   value: number;
@@ -20,20 +22,20 @@ export interface SolidDimension {
   anchor: [number, number, number];
 }
 
-function fields(feature: Feature): Array<{ label: string; fieldLabel: string; ref: ExpressionRef }> {
+function fields(feature: Feature): Array<{ field: SolidDimensionField; label: string; fieldLabel: string; ref: ExpressionRef }> {
   if (feature.type === "extrude")
     return !feature.termination || feature.termination.type === "distance"
-      ? [{ label: "Thickness", fieldLabel: "Extrude distance", ref: feature.termination?.distance ?? feature.distance }]
+      ? [{ field: "distance", label: "Thickness", fieldLabel: "Extrude distance", ref: feature.termination?.distance ?? feature.distance }]
       : [];
   if (feature.type === "revolve")
-    return [{ label: "Angle", fieldLabel: "Revolve angle", ref: feature.angle }];
+    return [{ field: "angle", label: "Angle", fieldLabel: "Revolve angle", ref: feature.angle }];
   if (feature.type === "fillet")
-    return [{ label: "Radius", fieldLabel: "Fillet radius", ref: feature.radius }];
+    return [{ field: "radius", label: "Radius", fieldLabel: "Fillet radius", ref: feature.radius }];
   if (feature.type === "chamfer")
-    return [{ label: "Bevel size", fieldLabel: "Chamfer distance", ref: feature.distance }];
+    return [{ field: "distance", label: "Bevel size", fieldLabel: "Chamfer distance", ref: feature.distance }];
   return [
-    { label: "Diameter", fieldLabel: "Hole diameter", ref: feature.diameter },
-    ...(feature.depth === "throughAll" ? [] : [{ label: "Depth", fieldLabel: "Hole depth", ref: feature.depth }]),
+    { field: "diameter", label: "Diameter", fieldLabel: "Hole diameter", ref: feature.diameter },
+    ...(feature.depth === "throughAll" ? [] : [{ field: "depth" as const, label: "Depth", fieldLabel: "Hole depth", ref: feature.depth }]),
   ];
 }
 
@@ -76,7 +78,7 @@ export function solidDimensions(
   const affectedFeatures = document.features.filter((item) =>
     !item.suppressed && visited.has(dependencyKey("feature", item.id)),
   ).map((item) => item.name);
-  return fields(feature).flatMap(({ label, fieldLabel, ref }) => {
+  return fields(feature).flatMap(({ field, label, fieldLabel, ref }) => {
     const evaluated = evaluateExpressionRef(ref, { parameters: evaluation.values });
     const angular = feature.type === "revolve";
     if (evaluated.error || evaluated.quantity?.dimension !== (angular ? "angle" : "length")) return [];
@@ -84,7 +86,7 @@ export function solidDimensions(
     if (!Number.isFinite(value) || value <= 0) return [];
     return [{
       id: `${feature.id}:${fieldLabel}`, featureId: feature.id, featureName: feature.name,
-      fieldLabel, label, value, unit: angular ? "deg" as const : "mm" as const,
+      field, fieldLabel, label, value, unit: angular ? "deg" as const : "mm" as const,
       expression: ref.expression, bound: parameterTokens(ref.expression).length > 0,
       affectedFeatures, bodyIds: meshes.map((mesh) => mesh.bodyId), anchor,
     }];

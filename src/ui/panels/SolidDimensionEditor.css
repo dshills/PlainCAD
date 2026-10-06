@@ -1,0 +1,12 @@
+.solid-dimension-editor { position: fixed; margin: 0; left: var(--dimension-left, calc(50% - 190px)); top: var(--dimension-top, 15vh); width: min(380px, calc(100vw - 16px)); max-height: calc(100dvh - var(--dimension-top, 15vh) - 8px); padding: 16px; overflow: auto; color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 12px 40px #0005; }
+.solid-dimension-editor-content { display: grid; gap: 10px; }
+.solid-dimension-editor h2, .solid-dimension-editor p { margin: 0; overflow-wrap: anywhere; }
+.solid-dimension-editor h2 { font-size: 16px; }
+.solid-dimension-editor label { display: grid; gap: 4px; }
+.solid-dimension-editor input, .solid-dimension-editor select { width: 100%; min-width: 0; }
+.solid-dimension-editor .dimension-impact { max-height: 72px; overflow: auto; font-size: 12px; }
+.solid-dimension-editor .extrude-preview { height: 170px; min-height: 170px; }
+.solid-dimension-editor .native-preview { margin: 0; }
+.dimension-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.dimension-details { justify-self: start; }
+.solid-dimension-editor::backdrop { background: #0002; }

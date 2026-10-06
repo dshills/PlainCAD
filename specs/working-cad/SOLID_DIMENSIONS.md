@@ -7,11 +7,13 @@ Selecting a body resolves its latest authored writer, not every upstream feature
 use History to inspect an earlier operation.
 
 Labels show evaluated mm/deg values, the formula when parameter-bound, and affected
-downstream feature names. Click or focus and press Enter to open the ordinary
-native feature task. The existing expression is preserved on opening; edit it,
-review the native preview, then Apply. Editing a formula or deliberately replacing
-it changes the feature field; it does not silently change a shared parameter.
-Cancel leaves history unchanged; Apply is one undoable feature edit.
+downstream feature names. Click or focus and press Enter to open the compact
+native value editor. The existing expression is preserved on opening. For a bound
+formula, explicitly choose a referenced editable parameter (including shared uses)
+or replacement of this feature formula. Review the operation and full downstream
+native previews, then Apply. Cancel preserves history; Apply is one undoable edit.
+Edit feature details opens the full operation task for advanced settings. See
+[inline edit semantics and limits](INLINE_SOLID_DIMENSIONS.md).
 
 These are authored feature values, not inferred bounding-box dimensions, arbitrary
 face offsets or measured edge lengths. To Face/Through All do not gain a fictitious

@@ -19,10 +19,7 @@ export function SolidDimensionOverlay({ dimensions, project }: {
   })));
   const enablement = useCommandEnablement();
   const target = dimensions[0];
-  const state = useCadStore.getState();
-  const canEdit = Boolean(target && enablement.editProject && selectCommandEnablement({
-    ...state, selection: { ...state.selection, selectedIds: [{ kind: "feature", id: target.featureId, documentId: base.document.id }] },
-  }).editFeature);
+  const canEdit = Boolean(target && enablement.editSolidDimension);
   useEffect(() => {
     if (!dimensions.length) return;
     let frame = 0;
@@ -65,16 +62,13 @@ export function SolidDimensionOverlay({ dimensions, project }: {
         <button key={dimension.id} type="button"
           disabled={!canEdit}
           aria-label={`Edit solid ${dimension.label.toLowerCase()} for ${dimension.featureName}`}
-          title={`${dimension.fieldLabel}: ${dimension.expression}. Affects ${dimension.affectedFeatures.join(", ")}. Open the native feature preview to edit; Apply commits the change.`}
+          title={`${dimension.fieldLabel}: ${dimension.expression}. Affects ${dimension.affectedFeatures.join(", ")}. Choose the feature formula or a referenced parameter, then inspect native geometry before Apply.`}
           onClick={async () => {
             const state = useCadStore.getState();
             if (state.history.present !== base.document || state.documentSession !== base.session || state.activeComponentId !== base.component) return;
-            const selection = { kind: "feature" as const, id: dimension.featureId, documentId: base.document.id };
-            // Recheck shared command enablement before changing selection. No history mutation happens here.
-            if (!selectCommandEnablement({ ...state, selection: { ...state.selection, selectedIds: [selection] } }).editFeature) return;
-            state.select(selection);
+            if (!selectCommandEnablement(state).editSolidDimension) return;
             try {
-              await runCommand("feature.edit");
+              await runCommand("feature.editSolidDimension", { dimension });
             } catch (error) {
               useCadStore.getState().setFileError(`Could not edit dimension: ${error instanceof Error ? error.message : String(error)}`);
             }

@@ -1,3 +1,4 @@
+import { SolidDimensionEditor } from "../ui/panels/SolidDimensionEditor";
 import { SketchSolidHandoffPanel } from "../ui/panels/SketchSolidHandoffPanel";
 import { OperationDropPanel } from "../ui/panels/OperationDropPanel";
 import { GuidedHolePanel } from "../ui/panels/GuidedHolePanel";
@@ -517,6 +518,7 @@ export function App() {
       <RecoveryPanel />
       <FabricationPanel />
       <HoleCreationPanel />
+      <SolidDimensionEditor />
       <ExtrudeCreationPanel />
       <ModelingCreationPanel />
       <WorkspaceControls />
