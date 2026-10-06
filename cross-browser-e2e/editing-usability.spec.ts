@@ -68,6 +68,19 @@ test("compact editing has reachable named controls, keyboard relation cancellati
     await expect(trimPanel.getByRole("button", { name: "Apply trim", exact: true })).toBeDisabled();
     await previewTrim.press("Escape");
     await expect(trimPanel).toHaveCount(0); await expect(trim).toBeFocused();
+    for (const [commandName, panelName, cancelName] of [
+      ["Mirror selected sketch geometry", "Mirror sketch geometry", "Cancel copies"],
+      ["Linear pattern selected sketch geometry", "Linear sketch pattern", "Cancel copies"],
+      ["Offset sketch outline", "Offset sketch outline", "Cancel outline offset"],
+    ]) {
+      const command = page.getByRole("button", { name: commandName, exact: true });
+      await reachable(command); await expect(command).toBeEnabled(); await command.press("Enter");
+      const task = page.getByRole("region", { name: panelName, exact: true });
+      const cancel = task.getByRole("button", { name: cancelName, exact: true });
+      await reachable(cancel); await cancel.press("Escape");
+      await expect(task).toHaveCount(0); await expect(command).toBeFocused();
+    }
+
   }
   expect(errors).toEqual([]);
   await info.attach("responsive-scope", { body: "685×740 compact viewport and 683×450 reduced layout space. Neither is an actual browser or OS zoom test. Keyboard-assisted named-control activation; no screen-reader speech inspection.", contentType: "text/plain" });
@@ -120,4 +133,40 @@ test("keyboard face cards expose target/direction and compact dimension dialog e
   await expect(label).toBeFocused();
   expect(errors).toEqual([]);
   await info.attach("keyboard-scope", { body: "Named public controls, role/status/alert semantics, native dialog focus containment and return. This checks DOM behavior, not assistive-technology announcement quality or conformance of the whole app.", contentType: "text/plain" });
+});
+
+test("AI mode descriptions and consent controls remain reachable in compact production layout", async ({ page }, info) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.route("**/api/ai/status", (route) => route.fulfill({ json: { providers: ["anthropic", "openai", "google"].map((id) => ({ id, label: id, available: true, model: "test-model" })) } }));
+  await fixture(page);
+  await page.getByRole("button", { name: "Open AI drawer", exact: true }).press("Enter");
+  const featureMode = page.getByRole("button", { name: "Add features to this part", exact: true });
+  await reachable(featureMode); await featureMode.press("Enter");
+  const panel = page.getByLabel("AI feature additions", { exact: true });
+  await panel.getByRole("combobox", { name: "Feature target face", exact: true }).selectOption({ label: "Base — end cap" });
+  await panel.getByRole("combobox", { name: "Feature AI provider", exact: true }).selectOption("anthropic");
+  const request = panel.getByRole("textbox", { name: "Feature request", exact: true });
+  await request.fill("Add a shallow pocket after I provide dimensions");
+  for (const size of [{ width: 685, height: 740 }, { width: 683, height: 450 }]) {
+    await page.setViewportSize(size);
+    await reachable(panel.getByRole("combobox", { name: "Feature target face", exact: true }));
+    await reachable(panel.getByRole("combobox", { name: "Feature AI provider", exact: true }));
+    await reachable(panel.getByRole("checkbox"));
+    await reachable(request);
+    await reachable(panel.getByRole("button", { name: "Cancel AI feature proposal", exact: true }));
+    await expect(panel.getByRole("button", { name: "Generate AI feature preview", exact: true })).toBeDisabled();
+    await panel.getByRole("checkbox").check();
+    await expect(panel.getByRole("checkbox")).toBeChecked();
+    const ordinaryMode = page.getByRole("button", { name: "Describe or edit a part", exact: true });
+    await reachable(ordinaryMode); await ordinaryMode.press("Enter");
+    await expect(panel).toBeHidden();
+    await reachable(featureMode); await featureMode.press("Enter");
+    await expect(request).toHaveValue("Add a shallow pocket after I provide dimensions");
+    await expect(panel.getByRole("checkbox")).not.toBeChecked();
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(size.width);
+  }
+  expect(errors).toEqual([]);
+  await info.attach("compact-ai-controls", { body: await page.screenshot(), contentType: "image/png" });
+  await info.attach("ai-reflow-scope", { body: "Controlled provider status only; no provider request or AI geometry is claimed. Named controls, preserved mode descriptions and consent defaults at compact and reduced layout sizes.", contentType: "text/plain" });
 });

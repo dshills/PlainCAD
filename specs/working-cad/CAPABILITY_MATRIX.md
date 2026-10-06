@@ -35,8 +35,9 @@
   diagnostic. Apply follows solver/profile validation and native downstream geometry
   when solids exist. See [refinement limits](SKETCH_REFINEMENT.md).
 
-- Finite-line Trim/Extend stages a solved/native downstream preview and one undoable
-  Apply. Protected endpoint intent and unsupported curves are diagnosed. See
+- Analytic line/arc/circle Trim and line/arc Extend stage a solved/native downstream
+  preview and one undoable Apply. Circles have no Extend endpoint. Protected intent,
+  actual overlapping spans and no-op/tangent edits are diagnosed. See
   [trim/extend limits](SKETCH_TRIM_EXTEND.md).
 - Selected-geometry relations offer matching Horizontal/Vertical, Coincident,
   Parallel/Perpendicular and Tangent actions with conflict/local-freedom diagnostics,
@@ -55,6 +56,21 @@
   named public controls, keyboard cancellation/focus and validation semantics.
   These do not establish whole-app conformance, screen-reader speech, actual
   browser/OS zoom or human usability. See [audit scope](EDITING_USABILITY_AUDIT.md).
+
+- Mirror and linear pattern create independent ordinary primitives with new IDs,
+  remapped supported internal constraints/dimensions and shared parameter bindings.
+  Cross-selection intent and ambiguous profile repair are diagnosed. They are not
+  associative pattern features. See [copy limits](SKETCH_MIRROR_PATTERNS.md).
+- Outline Offset creates convex authored-line or analytic-circle copies. Polygon
+  distance uses literal lengths and solved snapshots; circles can retain matching
+  source/distance expressions. Concave, mixed-arc, open or collapsed outlines
+  diagnose. Existing holes require explicit outer-only scope. See
+  [offset limits](SKETCH_OUTLINE_OFFSET.md).
+- AI feature additions append bounded holes, pockets and supported cap treatments
+  on one explicit current face/body, after consent, operation-by-operation native
+  validation, full native preview and one Apply. Existing parameters/features are
+  preserved. No general direct modeling or arbitrary topology is inferred. See
+  [AI addition limits](AI_FEATURE_ADDITIONS.md).
 
 ## Review scope
 
@@ -158,7 +174,7 @@ See `DESIGN_SYSTEM.md` and `design-qa.md` for design rules and comparison eviden
 | Revolve cut/join | Native cut on up to 64 explicit saved targets with atomic publication; join merges an ordered explicit scope into one connected solid; boolean validity/volume checks | Creation dialog with explicit native target previews; Inspector with cut/join scope checkboxes and lost-reference removal |
 | Capture intersected targets | Native common-volume checks on current upstream solids and extrude/revolve/hole tools; saved IDs only; preserves an intersected join primary; ignores downstream bodies; empty/failed/stale probes leave the scope intact; face-only joins remain explicit | Shared command and Inspector button; dedicated worker with cancellation/time limit |
 | Hole | Up to 64 explicit saved target IDs and 64 sketch point centers; native aggregate cylindrical tools; every center must cut some target, every target must lose exact volume; atomic output publication; positive blind depths or through-all, with positive/negative sketch-normal direction; empty/duplicate/lost centers/targets and no-op cuts diagnosed | Native preview-and-Apply creation and editing; fresh upstream choices, separate edited-operation/downstream checks, source/center/target repair, stable IDs and one undo; direct repair inspector |
-| Fillet/chamfer | Real native geometry on feature-owned cap perimeters, individual line/arc cap edges, or a source line’s two extrusion-direction corners; BRep/solid-count/volume-or-surface-change checks; retained authored edges also work after native booleans; grouped perimeters require every original edge and exclude new Cut/Join edges; lost/trimmed/ambiguous edges fail | Native preview-and-Apply creation dialogs with size/role/source/owner choices; repair inspector |
+| Fillet/chamfer | Real native geometry on feature-owned cap perimeters, individual complete line/arc/circle cap edges, or a source line’s two extrusion-direction corners; BRep/solid-count/volume-or-surface-change checks; retained authored edges also work after native booleans; grouped perimeters require every original edge and exclude new Cut/Join edges; lost/trimmed/ambiguous edges fail | Native preview-and-Apply creation dialogs with size/role/source/owner choices; repair inspector |
 | Offset/face sketch planes | Expression-driven origin/face offsets; upstream distance-extrusion caps and straight outer sides; retained native faces after Cut/Join supported at the sketch’s timeline position; removed/split/ambiguous/suppressed/missing faces require repair | Create Sketch with signed expression-driven origin/face offsets; Sketch tools with explicit replacement selection; lost planes fail rebuild |
 | STEP | Optional adapter interface only; no implemented exporter | Hidden |
 
@@ -167,9 +183,11 @@ Downstream modifiers on a failed body are blocked. Suppression permits recovery.
 Native modeling results include runtime-only validity, exact volume/surface area, and solid-count
 assertions; these are never saved in project JSON. Splitting a body by a cut may yield
 multiple valid solids in one stable target-body compound. Empty cuts fail explicitly.
-Edge references do not survive boolean modifications; treatment chains may select
-remaining cap perimeters or unchanged source edges, while changed/missing individual
-edges require explicit reselection. Arbitrary transient edge picks are unavailable.
+Only retained authored edges/cap perimeters can survive supported boolean
+modifications. Treatment chains may select remaining cap perimeters or unchanged
+source edges; changed, trimmed or missing boundaries require explicit reselection.
+The operation-token picker remains limited to untouched owners and complete
+authored cap boundaries. Arbitrary transient BRep edge picks are unavailable.
 
 ## Measurement and inspection
 
@@ -952,9 +970,11 @@ Cancel changes no project data; Apply retains one Undo step.
 
 Extrude accepts current closed sketch regions in the visible active component.
 Fillet/Chamfer drop targets are limited to untouched native distance/new-body Extrude
-owners and their original start/end cap-perimeter groups. Each target includes all
-original perimeter edges; arbitrary individual edges, boolean-created topology and
-modified owners are unavailable in this picker. Ambiguous or detailed targets can
+owners and their original start/end cap-perimeter groups or individual complete
+authored line/arc/circle cap edges. Individual viewer picks take precedence over
+the coincident whole-cap group; an exact keyboard card resolves ambiguous picks.
+Split authored edges, boolean-created topology, vertical side edges and modified
+owners are unavailable in this picker. Ambiguous or detailed targets can
 be selected by their exact card. At most 128 targets are offered; viewer overlays
 pre-bound sampled vertices to 8192 per target and 65536 total.
 

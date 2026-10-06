@@ -1055,9 +1055,11 @@ Cancel changes no project data; Apply retains one Undo step.
 
 Extrude accepts current closed sketch regions in the visible active component.
 Fillet/Chamfer drop targets are limited to untouched native distance/new-body Extrude
-owners and their original start/end cap-perimeter groups. Each target includes all
-original perimeter edges; arbitrary individual edges, boolean-created topology and
-modified owners are unavailable in this picker. Ambiguous or detailed targets can
+owners and their original start/end cap-perimeter groups or individual complete
+authored line/arc/circle cap edges. Individual viewer picks take precedence over
+the coincident whole-cap group; an exact keyboard card resolves ambiguous picks.
+Split authored edges, boolean-created topology, vertical side edges and modified
+owners are unavailable in this picker. Ambiguous or detailed targets can
 be selected by their exact card. At most 128 targets are offered; viewer overlays
 pre-bound sampled vertices to 8192 per target and 65536 total.
 
@@ -1069,13 +1071,13 @@ volume, undo/redo, parameter edits, save/open and positive signed STL volume.
 
 ### Trim, extend and contextual sketch relations
 
-In an open sketch, choose **Trim** or **Extend**, select a line, and click the
+In an open sketch, choose **Trim** or **Extend**, select a line, arc or circle, and click the
 interval/end to edit (or enter local pick coordinates). Preview solves the staged
 sketch and checks downstream native solids; Apply creates one undoable edit.
-Cancel changes nothing. Trim removes one interval between finite line boundaries;
-Extend moves the nearer endpoint to the nearest finite boundary. Curves,
-constrained/dimensioned/parameter-bound endpoints and unsafe shared endpoints get
-an explicit diagnostic. See [supported trim/extend cases](specs/working-cad/SKETCH_TRIM_EXTEND.md).
+Cancel changes nothing. Trim uses finite analytic line/arc/circle contacts and
+turns a trimmed circle into the retained arc. Extend supports lines and arcs; a
+circle has no endpoints. Overlapping curve spans, protected constraints/dimensions,
+parameter bindings and unsafe shared endpoints get an explicit diagnostic. See [supported trim/extend cases](specs/working-cad/SKETCH_TRIM_EXTEND.md).
 
 Select geometry to show matching **Constrain selected geometry** actions:
 Horizontal/Vertical for lines, Parallel/Perpendicular for two lines, Coincident
@@ -1106,7 +1108,7 @@ dimensions, constraints, referenced parameters and recent conversation; bodies,
 meshes and the project file are excluded.
 
 AI proposes bounded rectangle sizes, dimension/parameter edits, matching relations
-and finite-line trim/extend actions. Missing information produces a clarification
+and finite analytic curve trim/extend actions. Missing information produces a clarification
 without an Apply action. Bindings are preserved by default. Replacing a dimension
 formula or changing one editable referenced shared parameter requires an explicit
 policy choice, with shared effects shown before Apply. Every proposal uses the
@@ -1122,3 +1124,36 @@ keyboard cancellation, validation messages and dialog focus. See the
 [editing usability audit](specs/working-cad/EDITING_USABILITY_AUDIT.md).
 Human walkthroughs, screen-reader speech and actual browser/OS zoom checks are
 still pending.
+
+
+### Mirror, linear pattern and outline offset
+
+In an open sketch, select geometry and choose **Mirror** or **Linear pattern**.
+Mirror chooses a line or construction line as its axis. Linear pattern chooses a
+normalized direction, spacing expression and 2–16 total instances including the
+original. Copies preserve supported internal dimensions, constraints and shared
+parameter bindings; crossing or incompatible intent gets a diagnostic. Preview
+checks the sketch and any downstream native solids, then Apply adds one Undo.
+These are independently editable copies rather than persistent pattern features.
+See [copy behavior and limits](specs/working-cad/SKETCH_MIRROR_PATTERNS.md).
+
+**Offset** chooses a closed outline, distance and inward/outward direction.
+Analytic circles and convex line polygons are supported. Circle copies can retain
+matching source and distance parameter expressions; polygon copies use a literal
+length distance and a solved snapshot. Concave, mixed-arc, open and collapsed
+outlines produce a diagnostic. Existing holes require explicit **Outer boundary
+only**. Copies remain ordinary sketch entities. Finish Sketch and extrude the ring
+region to make a wall. See [offset limits](specs/working-cad/SKETCH_OUTLINE_OFFSET.md).
+
+### Ask AI to add features to a part
+
+Open the bottom AI drawer and choose **Add features to this part**. Choose a
+supported current planar extrusion face, inspect the bounded context, and allow
+sharing it with Anthropic, OpenAI or Google. Describe face-local holes, a rectangular
+or circular pocket, or supported cap-edge fillets/chamfers. Missing coordinates or
+sizes produce a clarification. Every proposed operation and the complete part
+must pass private native previews before **Apply AI feature plan** commits one Undo.
+Existing features, IDs and parameter bindings are preserved; new expressions may
+use explicitly shared project parameters. Switching AI modes keeps descriptions
+and conversations, cancels previews and requires fresh sharing consent.
+See [supported AI additions and limits](specs/working-cad/AI_FEATURE_ADDITIONS.md).

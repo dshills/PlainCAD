@@ -526,6 +526,8 @@
 .workbench-bottom .ai-drawer {
   border: 0;
 }
+.workbench-bottom .ai-mode-shell { height: 100%; overflow: auto; }
+.workbench-bottom .ai-mode-shell > .ai-drawer { overflow: auto; }
 .workbench-bottom .ai-drawer-content {
   max-height: none;
   padding: 16px;

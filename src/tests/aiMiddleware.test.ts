@@ -225,3 +225,18 @@ it("shares busy and cancellation controls between full-part AI and sketch AI", a
   await vi.waitFor(() => expect(signal?.aborted).toBe(true));
   expect(fetcher).toHaveBeenCalledTimes(1);
 });
+
+it("routes bounded feature additions through the same origin, size and server-only credential protections", async () => {
+  const proposal = { summary: "Add one hole", warnings: [], actions: [JSON.stringify({ kind: "holes", centers: [{ x: "10mm", y: "10mm" }], diameter: "3mm", depth: "throughAll" })] };
+  const fetcher = vi.fn().mockResolvedValue(new Response(JSON.stringify({ stop_reason: "end_turn", content: [{ type: "text", text: JSON.stringify(proposal) }] })));
+  const url = await server(fetcher);
+  const body = { ...input, featureContext: { componentName: "Plate", face: { id: "extrude:plate:endCap", label: "Plate end cap", bodyId: "body:plate", bounds: { minX: 0, minY: 0, maxX: 40, maxY: 30 } }, edges: [], parameters: [] } };
+  const foreign = await fetch(`${url}/api/ai/features`, { method: "POST", headers: { "Content-Type": "application/json", Origin: "https://foreign.example" }, body: JSON.stringify(body) });
+  expect(foreign.status).toBe(403); expect(fetcher).not.toHaveBeenCalled();
+  const response = await fetch(`${url}/api/ai/features`, { method: "POST", headers: { "Content-Type": "application/json", Origin: url }, body: JSON.stringify(body) });
+  expect(response.status).toBe(200);
+  const returned = await response.text();
+  expect(returned).toContain('"kind":"holes"'); expect(returned).not.toContain("server-only-secret");
+  const invalid = await fetch(`${url}/api/ai/features`, { method: "POST", headers: { "Content-Type": "application/json", Origin: url }, body: JSON.stringify({ ...body, featureContext: { ...body.featureContext, mesh: [] } }) });
+  expect(invalid.status).toBe(400); expect(fetcher).toHaveBeenCalledTimes(1);
+});

@@ -51,6 +51,7 @@ import {
   type AiStaged,
 } from "../commands/aiCommand";
 import { runCommand } from "../commands/commandRegistry";
+import { AiFeatureAdditionPanel } from "./AiFeatureAdditionPanel";
 
 interface Proposal {
   frame: AiDraftFrame;
@@ -62,11 +63,28 @@ interface Proposal {
 }
 type Message = AiMessage & { summary?: string; display?: string };
 export function AiDrawer({ embedded = false }: { embedded?: boolean }) {
+  const open = useAiDrawer((state) => state.open), canvas = useSketchCanvas((state) => state.active);
+  const [mode, setMode] = useState<"ordinary" | "features">("ordinary");
+  const featureActive = Boolean(open && !canvas && mode === "features");
+  return <div className="ai-mode-shell">
+    {open && !canvas ? <div role="group" aria-label="AI modeling mode" className="ai-actions" title="Descriptions and conversations are kept when switching modes. Pending previews are canceled.">
+      <button type="button" aria-pressed={mode === "ordinary"} onClick={() => setMode("ordinary")}>Describe or edit a part</button>
+      <button type="button" aria-pressed={mode === "features"} onClick={() => setMode("features")}>Add features to this part</button>
+    </div> : null}
+    <section hidden={!featureActive} className="ai-drawer open" aria-label="AI modeling assistant">
+      {!embedded ? <button type="button" onClick={() => void runCommand("ai.toggle")}>Close AI drawer</button> : null}
+      <AiFeatureAdditionPanel active={featureActive} />
+    </section>
+    <div hidden={featureActive} className="ai-mode-pane"><StandardAiDrawer embedded={embedded} active={!featureActive} /></div>
+  </div>;
+}
+function StandardAiDrawer({ embedded = false, active = true }: { embedded?: boolean; active?: boolean }) {
   // Layout seeds the initial disclosure; later layout changes preserve the user’s choice.
   const [settingsOpen, setSettingsOpen] = useState(
     () => useWorkspaceState.getState().layout === "full",
   );
-  const open = useAiDrawer((state) => state.open);
+  const drawerOpen = useAiDrawer((state) => state.open);
+  const open = drawerOpen && active;
   const namedPart = useAiDrawer((state) => state.namedPart);
   const document = useCadStore((state) => state.history.present);
   const session = useCadStore((state) => state.documentSession);

@@ -985,6 +985,9 @@ button:disabled:not(.ribbon-button) { opacity: 0.6; }
 .component-view-actions label, .timeline-filter { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
 
 .ai-drawer { flex: 0 0 auto; border-top: 1px solid var(--border); background: var(--panel); color: var(--text); }
+.ai-mode-shell { min-height: 0; display: flex; flex-direction: column; }
+.ai-mode-shell > .ai-actions { flex: 0 0 auto; padding: 0.35rem 0.75rem; }
+.ai-mode-shell > .ai-drawer { min-height: 0; flex: 1 1 auto; }
 .ai-drawer-header { display: flex; align-items: center; gap: 1rem; padding: 0.35rem 0.75rem; background: var(--toolbar); }
 .ai-drawer-header > span { color: var(--muted); font-size: 0.8rem; }
 .ai-drawer-content { display: grid; grid-template-columns: minmax(320px, 1fr) minmax(300px, 1fr); gap: 1rem; padding: 0.75rem; max-height: 36vh; overflow: auto; }
@@ -1090,3 +1093,6 @@ summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   background: var(--accent);
   color: var(--on-accent);
 }
+
+.ai-mode-pane:not([hidden]) { display: contents; }
+.ai-mode-shell > [hidden] { display: none; }

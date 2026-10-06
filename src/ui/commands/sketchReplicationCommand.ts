@@ -14,6 +14,7 @@ import { useFileJobs } from "../../persistence/fileJobs";
 import { useProjectWorkflow } from "./projectWorkflowCommand";
 import { useSketchReplication } from "./sketchReplicationState";
 import { useSketchOffset } from "./sketchOffsetState";
+import { useAiFeatureAddition } from "./aiFeatureAdditionState";
 export { useSketchReplication } from "./sketchReplicationState";
 
 export interface SketchReplicationFrame { document: CadDocument; session: number; componentId: string; active: CanvasSession; selectedIds: string[]; }
@@ -41,7 +42,7 @@ export function cancelSketchReplication() { useSketchReplication.setState({ fram
 /** A competing owner closes the proposal immediately, even without a document edit. */
 export function subscribeSketchReplicationEnvironment(onChange: () => void) {
   const stores = [useSolidDimensionEdit, useSketchRefinement, useContextualConstraintDraft, useSketchTrimExtend, useFacePocket,
-    useSketchOffset, useOperationDrop, useGuidedHole, useExtrudeDraft, useModelingDraft, useHoleDraft, useFileJobs, useProjectWorkflow];
+    useSketchOffset, useAiFeatureAddition, useOperationDrop, useGuidedHole, useExtrudeDraft, useModelingDraft, useHoleDraft, useFileJobs, useProjectWorkflow];
   const unsubscribe = stores.map((store) => store.subscribe(onChange));
   return () => unsubscribe.forEach((stop) => stop());
 }
