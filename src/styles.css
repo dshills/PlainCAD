@@ -1009,6 +1009,8 @@ button:disabled:not(.ribbon-button) { opacity: 0.6; }
 .workspace [hidden] { display: none !important; }
 .workspace-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; padding: 0.4rem 0.75rem; border-bottom: 1px solid var(--border); background: var(--toolbar); font-size: 0.8rem; }
 .workspace-controls label { display: flex; align-items: center; gap: 0.4rem; }
+/* Diagnostic arrival must not move the drawing under the pointer. */
+.workspace-controls > .error-text { margin-top: 0; font: inherit; }
 .workspace-target { margin-left: auto; overflow-wrap: anywhere; }
 .workspace-focused { display: flex; position: relative; }
 .workspace-focused > .left-panel { flex: 0 0 280px; width: 280px; }

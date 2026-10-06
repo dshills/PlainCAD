@@ -1,0 +1,42 @@
+.file-goal-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.file-goal-options label {
+  display: block;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.file-goal-options label:has(input:checked) {
+  border-color: var(--accent);
+}
+.file-goal-options small {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-muted);
+}
+.export-workflow-summary {
+  padding: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+.export-advanced {
+  margin: 10px 0;
+}
+.export-advanced > summary {
+  cursor: pointer;
+}
+.export-diagnostic {
+  padding: 10px;
+  border: 1px solid var(--border);
+  margin: 8px 0;
+}
+@media (max-width: 560px) {
+  .file-goal-options {
+    grid-template-columns: 1fr;
+  }
+}

@@ -122,6 +122,31 @@ test("keyboard palette traps/restores focus, runs available commands and isolate
     )
     .toBe(true);
   await trapped(page, exportDialog);
+  // Radio groups contribute one native tab stop, even when an earlier radio
+  // exists in DOM order. Both save and STL goals must wrap focus inside the modal.
+  for (const name of ["Save editable project (.pcaddoc)", "Export for printing (.stl)"]) {
+    const goal = exportDialog.getByRole("radio", { name, exact: false });
+    await goal.check();
+    await goal.focus();
+    await page.keyboard.press("Shift+Tab");
+    await expect(exportDialog.getByRole("button", { name: /Close/ })).toBeFocused();
+    await page.keyboard.press("Tab");
+    await expect(goal).toBeFocused();
+  }
+  // Native groups can also start unchecked. Either radio remains at the same
+  // group boundary; restore the normal goal through its control after the probe.
+  const goals = exportDialog.getByRole("radio");
+  await goals.evaluateAll((nodes) => nodes.forEach((node) => {
+    (node as HTMLInputElement).checked = false;
+  }));
+  for (const index of [0, 1]) {
+    await goals.nth(index).focus();
+    await page.keyboard.press("Shift+Tab");
+    await expect(exportDialog.getByRole("button", { name: /Close/ })).toBeFocused();
+    await page.keyboard.press("Tab");
+    await expect(goals.first()).toBeFocused();
+  }
+  await exportDialog.getByRole("radio", { name: "Export for printing (.stl)", exact: false }).check();
   await page.keyboard.press("Control+k");
   await expect(dialog).toHaveCount(0);
   await page.keyboard.press("Escape");

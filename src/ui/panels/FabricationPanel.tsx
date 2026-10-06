@@ -4,33 +4,27 @@ import {
   useFileJobs,
   runFabrication,
   downloadPrepared,
+  type FileJobState,
 } from "../../persistence/fileJobs";
 import { useCadStore } from "../../state/useCadStore";
-import { useViewerState } from "../../state/viewerState";
-import { canExportStl } from "../commands/commandRegistry";
+import { hiddenViewerBodies, useViewerState } from "../../state/viewerState";
+import { canExportStl, runCommand } from "../commands/commandRegistry";
+import {
+  guidedExportCurrent,
+  useGuidedExport,
+  type GuidedExportTask,
+} from "../commands/guidedExportCommand";
+import { bodyComponentId } from "../../cad/document/components";
+import { exportDiagnostic } from "../../fabrication/exportDiagnostic";
 import type { StlMode } from "../../fabrication/exportPlan";
+import "./FabricationPanel.css";
+
 export function FabricationPanel() {
-  const state = useFileJobs();
-  const session = useCadStore((s) => s.documentSession);
-  const result = useCadStore((s) => s.rebuild.result);
-  const available = useCadStore((s) => canExportStl(s));
-  const view = useViewerState();
-  const sameProject = state.exportSession === session;
-  const bodies = sameProject ? (result?.bodies ?? []) : [];
-  const selected = state.exportBodyIds ?? [];
-  const lost = sameProject
-    ? selected.filter((id) => !bodies.some((body) => body.id === id))
-    : [];
-  const clearPrepared = () =>
-    useFileJobs.setState({ prepared: undefined, preparedFor: undefined });
-  const setBodies = (ids: string[]) => {
-    clearPrepared();
-    useFileJobs.setState({ exportBodyIds: ids });
-  };
-  const close = () => {
-    state.cancel();
-    useFileJobs.setState({ exportOpen: false });
-  };
+  const jobs = useFileJobs();
+  const task = useGuidedExport((state) => state.task);
+  const session = useCadStore((state) => state.documentSession);
+  const result = useCadStore((state) => state.rebuild.result);
+  const available = useCadStore((state) => canExportStl(state));
   useEffect(() => {
     const prepared = useFileJobs.getState().preparedFor;
     if (
@@ -45,136 +39,396 @@ export function FabricationPanel() {
       useFileJobs.setState({ prepared: undefined, preparedFor: undefined });
     }
   }, [session, result, available]);
-  const [mode, setMode] = useState<StlMode>("separate"),
-    [full, setFull] = useState(true);
-  useEffect(() => {
-    if (state.exportOpen && !useFileJobs.getState().prepared) {
-      setMode("separate");
-      setFull(true);
-    }
-  }, [state.exportOpen]);
   return (
     <>
-      {state.busy ? (
+      {jobs.busy ? (
         <div className="kernel-banner" role="status">
-          <span>{state.message}</span>
-          <button onClick={state.cancel}>Cancel file operation</button>
+          <span>{jobs.message}</span>
+          <button onClick={jobs.cancel}>Cancel file operation</button>
         </div>
       ) : null}
-      {state.exportOpen ? (
-        <ModalDialog
-          className="file-dialog"
-          label="STL export options"
-          onDismiss={close}
-        >
-          <h2>Export STL</h2>
-          <p>Coordinates remain in millimeters in the global model frame.</p>
-          <fieldset disabled={state.busy || !sameProject}>
-            <legend>Export bodies ({selected.length} selected)</legend>
-            <p>Visibility does not change export selection.</p>
-            <div className="export-bodies">
-              {bodies.map((body) => (
-                <label key={body.id}>
-                  <input
-                    type="checkbox"
-                    aria-label={`Export body ${body.name}`}
-                    checked={selected.includes(body.id)}
-                    onChange={(event) =>
-                      setBodies(
-                        event.target.checked
-                          ? [...selected, body.id]
-                          : selected.filter((id) => id !== body.id),
-                      )
-                    }
-                  />
-                  {body.name}
-                </label>
-              ))}
+      {jobs.exportOpen ? (
+        <ExportDialog
+          key={task?.id ?? `stl:${jobs.exportSession}`}
+          jobs={jobs}
+          task={task}
+        />
+      ) : null}
+    </>
+  );
+}
+function ExportDialog({
+  jobs,
+  task,
+}: {
+  jobs: FileJobState;
+  task?: GuidedExportTask;
+}) {
+  const cadDocument = useCadStore((state) => state.history.present),
+    session = useCadStore((state) => state.documentSession),
+    result = useCadStore((state) => state.rebuild.result),
+    available = useCadStore((state) => canExportStl(state)),
+    selection = useCadStore((state) => state.selection.selectedIds[0]),
+    fileError = useCadStore((state) => state.fileError);
+  const [goal, setGoal] = useState<"project" | "stl">(task ? "project" : "stl"),
+    [mode, setMode] = useState<StlMode>("separate"),
+    [full, setFull] = useState(true),
+    [advanced, setAdvanced] = useState(!task),
+    [saving, setSaving] = useState(false);
+  const sameProject = jobs.exportSession === session,
+    changed = Boolean(task && !guidedExportCurrent(task)),
+    bodies = sameProject ? (result?.bodies ?? []) : [],
+    selected = jobs.exportBodyIds ?? [],
+    lost = sameProject
+      ? selected.filter((id) => !bodies.some((body) => body.id === id))
+      : [],
+    selectedBody =
+      selection?.kind === "body" &&
+      selection.documentId === cadDocument.id &&
+      bodies.some((body) => body.id === selection.id)
+        ? selection.id
+        : undefined,
+    selectedMeshes = sameProject
+      ? result?.meshes.filter((mesh) => selected.includes(mesh.bodyId)) ?? []
+      : [],
+    triangleCount = selectedMeshes.reduce(
+      (sum, mesh) => sum + mesh.indices.length / 3,
+      0,
+    ),
+    busy = jobs.busy || saving,
+    diagnostic = fileError
+      ? exportDiagnostic(fileError, cadDocument, result)
+      : undefined,
+    diagnosticFeatureId = diagnostic?.featureId;
+  const clearPrepared = () =>
+    useFileJobs.setState({ prepared: undefined, preparedFor: undefined });
+  const setBodies = (ids: string[]) => {
+    clearPrepared();
+    useFileJobs.setState({ exportBodyIds: ids });
+  };
+  const close = () => {
+    if (saving) return;
+    jobs.cancel();
+    useFileJobs.setState({ exportOpen: false });
+  };
+  const chooseGoal = (next: "project" | "stl") => {
+    clearPrepared();
+    useCadStore.getState().setFileError(undefined);
+    setGoal(next);
+  };
+  const saveProject = async () => {
+    if (busy || !sameProject || changed) return;
+    // Use the same save command as the quick toolbar action. A replacement
+    // while its recovery marker is being written cannot be reported as saved.
+    const before = useCadStore.getState(),
+      savedDocument = before.history.present,
+      savedSession = before.documentSession;
+    setSaving(true);
+    before.setFileError(undefined);
+    try {
+      await runCommand("file.saveProject");
+      const current = useCadStore.getState();
+      if (
+        current.history.present !== savedDocument ||
+        current.documentSession !== savedSession
+      )
+        current.setFileError(
+          "Project changed while saving. Save the current editable project again.",
+        );
+      else if (!current.fileError) useFileJobs.setState({ exportOpen: false });
+    } catch (error) {
+      before.setFileError(
+        error instanceof Error
+          ? error.message
+          : "Editable project could not be saved.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+  return (
+    <ModalDialog
+      className="file-dialog"
+      label={task ? "Save or export" : "STL export options"}
+      onDismiss={close}
+    >
+      <h2>{task ? "Save or export" : "Export STL"}</h2>
+      <fieldset disabled={busy}>
+        <legend>What do you need?</legend>
+        <div className="file-goal-options">
+          <label>
+            <input
+              type="radio"
+              name="file-goal"
+              value="project"
+              checked={goal === "project"}
+              onChange={() => chooseGoal("project")}
+            />{" "}
+            Save editable project (.pcaddoc)
+            <small>
+              Keep sketches, dimensions, parameters and feature history.
+            </small>
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="file-goal"
+              value="stl"
+              checked={goal === "stl"}
+              onChange={() => chooseGoal("stl")}
+            />{" "}
+            Export for printing (.stl)
+            <small>A mesh for slicers and fabrication tools.</small>
+          </label>
+        </div>
+      </fieldset>
+      {!sameProject ? (
+        <p role="alert">Project replaced. Close and reopen this file task.</p>
+      ) : changed ? (
+        <p role="alert">
+          Project changed. Close and reopen Save or export to use the current
+          model.
+        </p>
+      ) : null}
+      {goal === "project" ? (
+        <>
+          <p>
+            Save <strong>{cadDocument.name}</strong> as a .pcaddoc file. Open it
+            in PlainCAD to continue editing. Saving does not require successful
+            geometry.
+          </p>
+          {fileError ? (
+            <div
+              className="export-diagnostic"
+              role="group"
+              aria-label="Save diagnostic"
+            >
+              <p>{fileError}</p>
+              <p>
+                Keep this project open and try saving again after resolving the
+                error.
+              </p>
             </div>
-            <button onClick={() => setBodies(bodies.map((body) => body.id))}>
+          ) : null}
+          <button
+            type="button"
+            disabled={busy || !sameProject || changed}
+            onClick={() => void saveProject()}
+          >
+            Save editable project
+          </button>
+        </>
+      ) : (
+        <>
+          <p>
+            STL keeps the shape, but does not keep editable sketches or
+            parameters. Coordinates remain in millimeters in the global model
+            frame.
+          </p>
+          <fieldset disabled={busy || !sameProject || changed}>
+            <legend>Export bodies ({selected.length} selected)</legend>
+            <p>
+              Only marked bodies will be exported. Visibility does not change
+              export selection.
+            </p>
+            <div className="export-bodies">
+              {bodies.map((body) => {
+                const componentId = bodyComponentId(cadDocument, body.id),
+                  componentName = componentId
+                    ? cadDocument.components[componentId]?.name
+                    : undefined;
+                return (
+                  <label key={body.id}>
+                    <input
+                      type="checkbox"
+                      aria-label={`Export body ${body.name}`}
+                      checked={selected.includes(body.id)}
+                      onChange={(event) =>
+                        setBodies(
+                          event.target.checked
+                            ? [...selected, body.id]
+                            : selected.filter((id) => id !== body.id),
+                        )
+                      }
+                    />
+                    {body.name}
+                    {componentName ? <small> · {componentName}</small> : null}
+                  </label>
+                );
+              })}
+            </div>
+            <button
+              type="button"
+              onClick={() => setBodies(bodies.map((body) => body.id))}
+            >
               Select all bodies
             </button>
             <button
-              onClick={() =>
+              type="button"
+              disabled={!selectedBody}
+              onClick={() => selectedBody && setBodies([selectedBody])}
+            >
+              Use selected body
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const hidden = hiddenViewerBodies(
+                  cadDocument,
+                  bodies.map((body) => body.id),
+                  session,
+                  useViewerState.getState(),
+                );
                 setBodies(
                   bodies
-                    .filter(
-                      (body) =>
-                        view.session !== session ||
-                        !view.hiddenBodyIds.includes(body.id),
-                    )
+                    .filter((body) => !hidden.includes(body.id))
                     .map((body) => body.id),
-                )
-              }
+                );
+              }}
             >
               Select visible bodies
             </button>
-            <button onClick={() => setBodies([])}>Clear body selection</button>
+            <button type="button" onClick={() => setBodies([])}>
+              Clear body selection
+            </button>
           </fieldset>
-          {!sameProject ? (
-            <p role="alert">Project replaced. Close and reopen STL export.</p>
-          ) : null}
           {lost.length ? (
             <p role="alert">
               {lost.length} selected bodies are no longer available. Select
               export bodies again.
             </p>
           ) : null}
-          <label>
-            STL mode
-            <select
-              aria-label="STL mode"
-              value={mode}
-              disabled={state.busy}
-              onChange={(e) => {
-                setMode(e.target.value as StlMode);
-                useFileJobs.setState({
-                  prepared: undefined,
-                  preparedFor: undefined,
-                });
-              }}
+          {!available ? (
+            <p>
+              STL needs a successful rebuild of the current model. Repair its
+              diagnostics or wait for rebuilding to finish, then reopen this
+              task.
+            </p>
+          ) : null}
+          <div
+            className="export-workflow-summary"
+            role="group"
+            aria-label="STL output summary"
+          >
+            <strong>
+              {selected.length} {selected.length === 1 ? "body" : "bodies"}{" "}
+              selected · {triangleCount.toLocaleString()} input triangles
+            </strong>
+            <p>{describeStlOutput(mode, selected.length)}</p>
+          </div>
+          <details
+            className="export-advanced"
+            open={advanced}
+            onToggle={(event) => setAdvanced(event.currentTarget.open)}
+          >
+            <summary>Advanced STL options</summary>
+            <label>
+              STL mode
+              <select
+                aria-label="STL mode"
+                value={mode}
+                disabled={busy || !sameProject || changed}
+                onChange={(event) => {
+                  setMode(event.target.value as StlMode);
+                  clearPrepared();
+                }}
+              >
+                <option value="separate">Separate files (ZIP)</option>
+                <option value="shells">Single file with separate shells</option>
+                <option value="merged">Native union</option>
+              </select>
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={full || mode === "merged"}
+                disabled={busy || mode === "merged" || !sameProject || changed}
+                onChange={(event) => {
+                  setFull(event.target.checked);
+                  clearPrepared();
+                }}
+              />
+              Check self-intersections and body overlaps
+            </label>
+            <p>
+              Topology, winding, and float32 coordinates are always checked.
+              Union is best-effort; failures preserve your model.
+            </p>
+          </details>
+          {diagnostic ? (
+            <div
+              className="export-diagnostic"
+              role="group"
+              aria-label="Export diagnostic"
+              aria-live="polite"
             >
-              <option value="separate">Separate files (ZIP)</option>
-              <option value="shells">Single file with separate shells</option>
-              <option value="merged">Native union</option>
-            </select>
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={full || mode === "merged"}
-              disabled={state.busy || mode === "merged"}
-              onChange={(e) => {
-                setFull(e.target.checked);
-                useFileJobs.setState({
-                  prepared: undefined,
-                  preparedFor: undefined,
-                });
-              }}
-            />
-            Check self-intersections and body overlaps
-          </label>
-          <p>
-            Topology, winding, and float32 coordinates are always checked. Union
-            is best-effort; failures preserve your model.
-          </p>
-          {state.prepared ? (
+              <p>
+                {diagnostic.bodyName ? `${diagnostic.bodyName}: ` : ""}
+                {diagnostic.message}
+              </p>
+              <p>{diagnostic.advice}</p>
+              {diagnosticFeatureId ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    close();
+                    useCadStore.getState().select({
+                      kind: "feature",
+                      id: diagnosticFeatureId,
+                      documentId: cadDocument.id,
+                    });
+                  }}
+                >
+                  Inspect {diagnostic.featureName}
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+          {jobs.prepared ? (
             <>
+              <p>
+                {jobs.prepared.triangleCount.toLocaleString()} triangles
+                validated. Review these warnings before downloading:
+              </p>
               <ul>
-                {state.prepared.warnings.map((warning) => (
+                {jobs.prepared.warnings.map((warning) => (
                   <li key={warning}>{warning}</li>
                 ))}
               </ul>
-              <button onClick={() => downloadPrepared(state.prepared!)}>
+              <button
+                type="button"
+                disabled={
+                  busy ||
+                  !sameProject ||
+                  changed ||
+                  !available ||
+                  lost.length > 0
+                }
+                onClick={() => downloadPrepared(jobs.prepared!)}
+              >
                 Download with warnings
               </button>
+              {mode !== "separate" ? (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => {
+                    setMode("separate");
+                    clearPrepared();
+                  }}
+                >
+                  Use separate files instead
+                </button>
+              ) : null}
             </>
           ) : (
             <button
+              type="button"
               disabled={
-                state.busy ||
+                busy ||
                 !available ||
                 !sameProject ||
+                changed ||
                 !selected.length ||
                 lost.length > 0
               }
@@ -183,16 +437,29 @@ export function FabricationPanel() {
                   mode,
                   full || mode === "merged",
                   selected,
-                  state.exportSession,
+                  jobs.exportSession,
                 )
               }
             >
               Generate STL
             </button>
           )}
-          <button onClick={close}>Close export</button>
-        </ModalDialog>
-      ) : null}
-    </>
+        </>
+      )}
+      <button type="button" disabled={saving} onClick={close}>
+        Close export
+      </button>
+    </ModalDialog>
   );
+}
+
+function describeStlOutput(mode: StlMode, count: number) {
+  if (count === 0) return "Select at least one body to export.";
+  if (mode === "separate")
+    return count > 1
+      ? "Download a ZIP with one STL per selected body. Each part keeps its world position."
+      : "Download one STL for the marked body.";
+  if (mode === "shells")
+    return "Download one STL containing the marked bodies as separate shells. Overlaps require review.";
+  return "Attempt a native union of the marked bodies, then download one validated STL. Separate bodies may remain disconnected.";
 }

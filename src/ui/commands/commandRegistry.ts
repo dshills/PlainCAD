@@ -1,3 +1,4 @@
+import { beginSaveOrExport, canBeginSaveOrExport, saveOrExportBlocked } from "./guidedExportCommand";
 import { beginGuidedHole, cancelGuidedHole, canBeginGuidedHole, useGuidedHole } from "./guidedHoleCommand";
 import { beginExtrudeCreation, beginExtrudeEditing, editableExtrude, useExtrudeDraft } from "./extrudeCommand";
 import { beginModelingCreation, beginModelingEditing, editableModelingFeature, useModelingDraft } from "./modelingDraftCommand";
@@ -106,6 +107,7 @@ export interface CommandEnablement {
   finishSketch: boolean;
   undo: boolean;
   redo: boolean;
+  saveOrExport: boolean;
   exportStl: boolean;
   exportSelectedBody: boolean;
   saveNamedView: boolean;
@@ -129,6 +131,7 @@ export interface CommandEnablement {
 
 export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useTargetScopeCapture.getState().busy, canvasActive = Boolean(useSketchCanvas.getState().active), guidedHoleActive = Boolean(useGuidedHole.getState().draft), guidedHoleStartBlocked = Boolean(useExtrudeDraft.getState().draft || useHoleDraft.getState().draft || useModelingDraft.getState().draft || useProjectWorkflow.getState().active), exportDialogOpen = useFileJobs.getState().exportOpen): CommandEnablement {
   return {
+    saveOrExport: canBeginSaveOrExport(state, saveOrExportBlocked(canvasActive, guidedHoleActive, guidedHoleStartBlocked, exportDialogOpen, scopeCaptureBusy)),
     repairModel: !scopeCaptureBusy && !guidedHoleActive && !guidedHoleStartBlocked && !exportDialogOpen && !state.fileBusy,
     createGuidedHole: !guidedHoleActive && !canvasActive && !guidedHoleStartBlocked && canBeginGuidedHole(state),
     guidedHoleActive,
@@ -170,6 +173,7 @@ export function isCommandEnabledForSnapshot(
 }
 
 export const commands: CadCommand[] = [
+  { id: "file.saveOrExport", label: "Save or Export…", description: "Save an editable project or choose bodies to export for printing.", enablementKey: "saveOrExport", run: beginSaveOrExport },
   { id: "repair.focus", internal: true, label: "Show and repair model issue", enablementKey: "repairModel", run: ({ repair }) => { if (repair) focusRepairIssue(repair); } },
   { id: "repair.closeOutline", internal: true, label: "Add missing closing edge", enablementKey: "repairModel", run: ({ repair }) => { if (repair) addRepairClosingEdge(repair); } },
   { id: "sketch.entity.selectAll", internal: true, label: "Select all sketch geometry", enablementKey: "selectAllSketchEntities", run: selectAllCanvasEntities },

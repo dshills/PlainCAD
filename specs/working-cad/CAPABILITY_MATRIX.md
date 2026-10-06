@@ -817,3 +817,21 @@ chains/loops, circles, solver failures and invalid closing geometry require manu
 repair. Cards bind the exact document/session/result and reject stale or competing
 tasks. Native Chromium coverage proves endpoint highlighting, conflict-dimension
 selection/deletion, Undo/Redo, real solid volume, save/open and positive STL volume.
+
+### Guided save/export task
+
+**File → Save or export…** distinguishes editable project saving from printable
+STL, defaulting to the editable project. Saving retains design intent and does not
+require successful geometry. STL still requires a successful current rebuild and
+bounded mesh validation. Its explicit body/component checklist defaults to all
+bodies independently of visibility; selected/visible shortcuts change that checklist
+explicitly. Counts and one-STL versus separate-file ZIP output are explained.
+
+Advanced STL options retain separate files/shells/native union and all existing
+topology, winding, resource and float32 validation. Original failure messages remain
+visible with bounded repair advice and source-feature navigation when identifiable.
+Exact document/session snapshots reject edited or replaced guided tasks; file and
+modeling tasks, including scope capture, must finish first. Native acceptance proves
+body subset/global placement, exact volume, parameter edits, save/open, separate
+ZIP output and stale-task rejection. No new file formats or saved export settings
+are introduced.

@@ -957,3 +957,18 @@ preserves existing points and design intent and validates the solved closed
 profile before one undoable edit. Branches, separate loops/chains, circles, solver
 errors and invalid closing edges require manual repair. Cards from pending or
 replaced rebuilds cannot edit the document, and competing tasks must finish first.
+
+### Guided saving and printing
+
+Use **File → Save or export…** to choose an editable `.pcaddoc` project or a
+printable STL. Editable saving keeps sketches, dimensions, parameters and feature
+history, and is available even when geometry has diagnostics. STL lists marked
+bodies and their components, selected body/triangle counts, and whether the output
+will be one STL or a ZIP with one STL per body.
+
+All bodies are marked by default, including hidden bodies. **Select visible bodies**
+explicitly applies body/component visibility. **Advanced STL options** exposes
+separate files, separate shells and native union, with the existing mesh checks.
+Failures keep their original diagnostic, explain repair options, and can open an
+identified source feature. Changed/replaced projects require reopening the guided
+task. Quick Save and STL commands remain available.

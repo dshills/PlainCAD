@@ -51,6 +51,7 @@ const toolbarGroups: ToolbarGroup[] = [
     buttons: [
       { command: "file.openProject", label: "Open", icon: "O", title: "Open a .pcaddoc or JSON project file", ariaLabel: "Open project" },
       { command: "file.newProject", label: "New", icon: "N", title: "Create a blank local project", ariaLabel: "New project" },
+      { command: "file.saveOrExport", label: "Save or export…", icon: "File", title: "Save an editable project or choose bodies to export for printing", ariaLabel: "Save or export" },
       { command: "file.saveProject", label: "Save", icon: "S", title: "Download this project as a .pcaddoc file", ariaLabel: "Save project" },
       { command: "file.exportStl", label: "STL", icon: "STL", title: "Export the current rebuilt model as STL", ariaLabel: "Export STL" },
     ],
