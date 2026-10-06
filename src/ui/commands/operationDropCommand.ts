@@ -54,6 +54,8 @@ export type OperationDropContext = Pick<
   "fileBusy" | "history" | "rebuild" | "documentSession" | "activeComponentId"
 >;
 export interface OperationDropFrame {
+  /** Finish Sketch restricts the region chooser to its captured sketch. */
+  handoffSketchId?: string;
   id: string;
   operation: DropOperation;
   document: CadDocument;
@@ -97,6 +99,7 @@ function nativeContext(state: OperationDropContext) {
 export function operationDropTargets(
   operation: DropOperation,
   state: OperationDropContext = useCadStore.getState(),
+  sketchId?: string,
 ): OperationTarget[] {
   if (!nativeContext(state)) return [];
   const document = state.history.present,
@@ -109,6 +112,7 @@ export function operationDropTargets(
   if (operation === "extrude") {
     for (const sketch of Object.values(document.sketches)) {
       if (
+        (sketchId !== undefined && sketch.id !== sketchId) ||
         sketchComponentId(document, sketch.id) !== state.activeComponentId ||
         (currentView && view.hiddenSketchIds.includes(sketch.id)) ||
         !result.sketchPlanes?.[sketch.id] ||
@@ -194,7 +198,7 @@ export function canBeginOperationDrop(
         ))
   );
 }
-export function beginOperationDrop(operation?: DropOperation) {
+export function beginOperationDrop(operation?: DropOperation, handoffSketchId?: string) {
   const state = useCadStore.getState();
   const selected =
     operation ??
@@ -204,6 +208,8 @@ export function beginOperationDrop(operation?: DropOperation) {
   if (
     !selected ||
     !SUPPORTED_OPERATION_DROPS.some((op) => op.id === selected) ||
+    (handoffSketchId !== undefined &&
+      (selected !== "extrude" || !operationDropTargets(selected, state, handoffSketchId).length)) ||
     !canBeginOperationDrop(state, selected)
   )
     throw new Error(
@@ -213,6 +219,7 @@ export function beginOperationDrop(operation?: DropOperation) {
     frame: {
       id: createId("operation"),
       operation: selected,
+      ...(handoffSketchId ? { handoffSketchId } : {}),
       document: state.history.present,
       result: state.rebuild.result!,
       session: state.documentSession,
@@ -261,7 +268,7 @@ export function chooseOperationDropTarget(
     throw new Error(
       "Project, component or modeling task changed. Cancel and choose the operation target again.",
     );
-  const target = operationDropTargets(frame.operation).find(
+  const target = operationDropTargets(frame.operation, useCadStore.getState(), frame.handoffSketchId).find(
     (target) => target.id === targetId,
   );
   if (!target)

@@ -3,6 +3,7 @@ import { useCadStore } from "../state/useCadStore";
 import { useViewerState } from "../state/viewerState";
 import { useFileJobs } from "../persistence/fileJobs";
 import { runCommand } from "../ui/commands/commandRegistry";
+import { useSketchSolidHandoff } from "../ui/commands/sketchSolidHandoffCommand";
 import {
   OPERATION_OVERLAY_VERTEX_BUDGET,
   capOperationGeometry,
@@ -76,7 +77,9 @@ export function installOperationDropPicking(
     targets = [];
   };
   const color = () => {
-    const id = active() ? useOperationDrop.getState().hoverId : undefined;
+    const frame = active();
+    const id = frame ? useOperationDrop.getState().hoverId ??
+      (frame.handoffSketchId ? useSketchSolidHandoff.getState().selectedTargetId : undefined) : undefined;
     for (const object of group.children) {
       if (
         (object instanceof THREE.Mesh ||
@@ -110,7 +113,7 @@ export function installOperationDropPicking(
     previousClip = clipKey;
     clear();
     if (!frame) return;
-    targets = operationDropTargets(frame.operation);
+    targets = operationDropTargets(frame.operation, useCadStore.getState(), frame.handoffSketchId);
     let vertices = 0;
     for (const target of targets) {
       const remaining = Math.min(
@@ -305,7 +308,7 @@ export function installOperationDropPicking(
           target.error ??
             "Drop or click a highlighted closed profile or original cap perimeter. Arbitrary faces and edges are unsupported; choose a target card for an overlapping or detailed target.",
         );
-      runCommand("feature.operationTarget", {
+      runCommand(frame.handoffSketchId ? "sketch.solidRegion" : "feature.operationTarget", {
         operationFrame: frame,
         operationTargetId: target.id,
       });
@@ -393,6 +396,7 @@ export function installOperationDropPicking(
     useOperationDrop.subscribe(refresh),
     useViewerState.subscribe(refresh),
     useFileJobs.subscribe(refresh),
+    useSketchSolidHandoff.subscribe(refresh),
   ];
   canvas.addEventListener("pointermove", move);
   canvas.addEventListener("pointerleave", leave);

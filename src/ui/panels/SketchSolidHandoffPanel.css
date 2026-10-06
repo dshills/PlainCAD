@@ -1,0 +1,22 @@
+.sketch-solid-handoff {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 5;
+  width: min(310px, calc(100% - 20px));
+  max-height: calc(100% - 20px);
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 3px 12px #0002;
+}
+.sketch-solid-handoff h2 { font-size: 1rem; margin: 0 0 8px; }
+.sketch-solid-handoff p { font-size: 0.82rem; line-height: 1.4; }
+.sketch-solid-regions { display: grid; gap: 4px; max-height: 150px; overflow: auto; }
+.sketch-solid-regions button { text-align: left; overflow-wrap: anywhere; }
+.sketch-solid-regions button[aria-pressed="true"] { background: var(--selected-bg); outline: 2px solid var(--accent); }
+.sketch-solid-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.sketch-solid-actions button:last-child { margin-left: auto; }

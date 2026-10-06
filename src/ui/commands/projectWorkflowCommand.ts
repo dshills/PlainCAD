@@ -13,6 +13,8 @@ import { addComponent } from "../../cad/document/components";
 import { upsertSketch } from "../../cad/document/CadDocument";
 import { createSketchOnPlane } from "../../cad/sketch/SketchModel";
 import { beginSketchCanvas, useSketchCanvas } from "./sketchCanvasCommand";
+import { beginSketchSolidHandoff } from "./sketchSolidHandoffCommand";
+import { useWorkspaceState } from "../../state/useWorkspaceState";
 
 interface WorkflowSession {
   session: number;
@@ -156,10 +158,17 @@ export function finishSketchCanvas() {
     active.session === state.documentSession &&
     active.documentId === state.history.present.id &&
     state.history.present.sketches[active.sketchId]
-  )
+  ) {
     state.select({
       kind: "sketch",
       id: active.sketchId,
       documentId: active.documentId,
     });
+    // The automatic first-solid handoff belongs to the guided Workbench. Editing
+    // a consumed sketch rebuilds its existing features and leaves Undo/Save free.
+    if (useWorkspaceState.getState().layout === "workbench" &&
+        !state.history.present.features.some((feature) => !feature.suppressed &&
+          "sketchId" in feature && feature.sketchId === active.sketchId))
+      beginSketchSolidHandoff(active.sketchId);
+  }
 }

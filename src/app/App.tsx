@@ -1,3 +1,4 @@
+import { SketchSolidHandoffPanel } from "../ui/panels/SketchSolidHandoffPanel";
 import { OperationDropPanel } from "../ui/panels/OperationDropPanel";
 import { GuidedHolePanel } from "../ui/panels/GuidedHolePanel";
 import { useGuidedHole } from "../ui/commands/guidedHoleCommand";
@@ -555,7 +556,7 @@ export function App() {
           <ProjectWorkflowPanel />
           <GuidedHolePanel />
           <section className="viewer-region" aria-label="3D CAD viewer">
-            {!sketchActive ? <OperationDropPanel /> : null}
+            {!sketchActive ? <><SketchSolidHandoffPanel /><OperationDropPanel /></> : null}
             <div className="model-view" hidden={Boolean(sketchActive)}>
               <CadViewer />
             </div>

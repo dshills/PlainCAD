@@ -1,3 +1,4 @@
+import { useSketchSolidHandoff } from "./sketchSolidHandoffCommand";
 import { useFileJobs } from "../../persistence/fileJobs";
 import { useOperationDrop } from "./operationDropCommand";
 import { useExtrudeDraft } from "./extrudeCommand";
@@ -12,6 +13,9 @@ import { selectCommandEnablement } from "./commandRegistry";
 import { useTargetScopeCapture } from "./targetScopeCaptureCommand";
 
 export function useCommandEnablement() {
+  // These transient stores trigger recomputation; the selector reads their current snapshots.
+  useSketchSolidHandoff((state) => state.selectedTargetId);
+  useSketchSolidHandoff((state) => state.source);
   const fileDialogOpen = useFileJobs((state) => state.exportOpen);
   const operationFrame = useOperationDrop((state) => state.frame);
   const canvasActive = useSketchCanvas((state) => state.active);

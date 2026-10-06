@@ -1,3 +1,4 @@
+import { canMakeSketchSolid, makeSketchSolid, chooseSketchSolidRegion, cancelSketchSolidHandoff, useSketchSolidHandoff } from "./sketchSolidHandoffCommand";
 import { beginOperationDrop, chooseOperationDropTarget, cancelOperationDrop, canBeginOperationDrop, operationDraftBusy, useOperationDrop, type DropOperation, type OperationDropFrame } from "./operationDropCommand";
 import { beginSaveOrExport, canBeginSaveOrExport, saveOrExportBlocked } from "./guidedExportCommand";
 import { beginGuidedHole, cancelGuidedHole, canBeginGuidedHole, useGuidedHole } from "./guidedHoleCommand";
@@ -103,6 +104,7 @@ export interface CadCommand {
 }
 
 export interface CommandEnablement {
+  makeSketchSolid: boolean;
   createOperationDrop: boolean;
   operationTarget: boolean;
   repairModel: boolean;
@@ -136,9 +138,12 @@ export interface CommandEnablement {
 }
 
 export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useTargetScopeCapture.getState().busy, canvasActive = Boolean(useSketchCanvas.getState().active), guidedHoleActive = Boolean(useGuidedHole.getState().draft), guidedHoleStartBlocked = Boolean(useExtrudeDraft.getState().draft || useHoleDraft.getState().draft || useModelingDraft.getState().draft || useProjectWorkflow.getState().active), exportDialogOpen = useFileJobs.getState().exportOpen, operationBusy = operationDraftBusy(), operationFrameActive = Boolean(useOperationDrop.getState().frame)): CommandEnablement {
-  const targetPickerActive = guidedHoleActive || operationBusy || exportDialogOpen;
+  const refinementBusy = false;
+  const handoffReady = !refinementBusy && !guidedHoleActive && !exportDialogOpen && !guidedHoleStartBlocked && !state.fileBusy && canMakeSketchSolid(state);
+  const targetPickerActive = guidedHoleActive || operationBusy || exportDialogOpen || refinementBusy;
   return {
-    saveOrExport: canBeginSaveOrExport(state, saveOrExportBlocked(canvasActive, guidedHoleActive, guidedHoleStartBlocked || operationBusy, exportDialogOpen, scopeCaptureBusy)),
+    makeSketchSolid: handoffReady,
+    saveOrExport: canBeginSaveOrExport(state, saveOrExportBlocked(canvasActive, guidedHoleActive, guidedHoleStartBlocked || operationBusy || refinementBusy, exportDialogOpen, scopeCaptureBusy)),
     repairModel: !scopeCaptureBusy && !targetPickerActive && !guidedHoleStartBlocked && !state.fileBusy,
     // The active token stays draggable in its panel; starting another picker is blocked.
     createOperationDrop: !targetPickerActive && !canvasActive && !guidedHoleStartBlocked && canBeginOperationDrop(state),
@@ -159,9 +164,9 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
     restoreNamedView: Boolean(state.history.present.viewState?.namedViews?.length),
     undo: !targetPickerActive && state.history.past.length > 0,
     redo: !targetPickerActive && state.history.future.length > 0,
-    exportStl: canExportStl(state) && !state.fileBusy && !operationBusy,
-    exportSelectedBody: canExportStl(state) && !state.fileBusy && !operationBusy && Boolean(selectedExportBody(state)),
-    createExtrude: !targetPickerActive && !canvasActive && canCreateExtrude(state),
+    exportStl: canExportStl(state) && !state.fileBusy && !operationBusy && !refinementBusy,
+    exportSelectedBody: canExportStl(state) && !state.fileBusy && !operationBusy && !refinementBusy && Boolean(selectedExportBody(state)),
+    createExtrude: !canvasActive && ((!targetPickerActive && canCreateExtrude(state)) || handoffReady),
     createRevolve: !targetPickerActive && !canvasActive && Boolean(defaultRevolveAxis(state)),
     editFeature: !targetPickerActive && !canvasActive && Boolean(editableExtrude(state) || editableModelingFeature(state) || editableHole(state)),
     selectedFeature: !targetPickerActive && !canvasActive && Boolean(getSelectedFeature(state)),
@@ -186,6 +191,9 @@ export function isCommandEnabledForSnapshot(
 export const commands: CadCommand[] = [
   { id: "project.startDrawing", internal: true, label: "Draw a named part", enablementKey: "newComponent", run: ({ componentName }) => beginPartDrawing(componentName ?? "Part 1") },
   { id: "project.startDescribing", internal: true, label: "Describe a named part", enablementKey: "newComponent", run: ({ componentName }) => beginPartDescription(componentName ?? "Part 1") },
+  { id: "sketch.solidRegion", internal: true, label: "Choose Sketch Region", enablementKey: "operationTarget", run: ({ operationFrame, operationTargetId }) => chooseSketchSolidRegion(operationFrame, operationTargetId) },
+  { id: "sketch.makeSolid", label: "Make Sketch Solid", enablementKey: "makeSketchSolid", run: makeSketchSolid },
+  { id: "sketch.cancelSolidHandoff", internal: true, label: "Cancel Sketch Solid", alwaysEnabled: true, run: cancelSketchSolidHandoff },
   { id: "feature.operationTargets", label: "Choose Operation Target", description: "Drag or choose Extrude, Fillet or Chamfer on explicit supported geometry; inspect the native preview before Apply.", enablementKey: "createOperationDrop", run: ({ operation }) => beginOperationDrop(operation) },
   { id: "feature.operationTarget", internal: true, label: "Preview Operation on Target", enablementKey: "operationTarget", run: ({ operationFrame, operationTargetId }) => chooseOperationDropTarget(operationFrame, operationTargetId) },
   { id: "feature.cancelOperationDrop", internal: true, label: "Cancel Operation Targets", alwaysEnabled: true, run: cancelOperationDrop },
@@ -470,6 +478,8 @@ export const commands: CadCommand[] = [
     label: "Extrude Selected Sketch",
     enablementKey: "createExtrude",
     run: () => {
+      if (canMakeSketchSolid()) { makeSketchSolid(); return; }
+      if (useSketchSolidHandoff.getState().source) cancelSketchSolidHandoff();
       const match = findActiveSketchWithProfile();
       if (match) beginExtrudeCreation(match.sketch.id);
     },

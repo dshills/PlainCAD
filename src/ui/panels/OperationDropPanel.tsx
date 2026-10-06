@@ -15,8 +15,10 @@ import {
   useOperationDrop,
 } from "../commands/operationDropCommand";
 import "./OperationDropPanel.css";
+import { sketchSolidHandoffCurrent, useSketchSolidHandoff } from "../commands/sketchSolidHandoffCommand";
 
 export function OperationDropPanel() {
+  const handoff = useSketchSolidHandoff((state) => state.source);
   const fileDialogOpen = useFileJobs((state) => state.exportOpen);
   const state = useCadStore(
     useShallow((state) => ({
@@ -74,7 +76,7 @@ export function OperationDropPanel() {
         : {}),
     });
   }, [frame, current, hoverId, targets]);
-  if (!frame && !error && !choices.some((choice) => choice.targets.length))
+  if ((handoff && sketchSolidHandoffCurrent(handoff, state)) || (!frame && !error && !choices.some((choice) => choice.targets.length)))
     return null;
   const start = (
     operation: (typeof SUPPORTED_OPERATION_DROPS)[number]["id"],

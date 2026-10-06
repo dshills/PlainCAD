@@ -1,3 +1,4 @@
+import { sketchSolidHandoffCurrent, useSketchSolidHandoff } from "../commands/sketchSolidHandoffCommand";
 import { useShallow } from "zustand/react/shallow";
 import { useWorkbenchState } from "../../state/useWorkbenchState";
 import { useWorkspaceState } from "../../state/useWorkspaceState";
@@ -133,6 +134,7 @@ export function WorkbenchDetailsDock() {
   );
 }
 export function TaskGuide() {
+  const handoff = useSketchSolidHandoff((state) => state.source);
   const state = useCadStore(useShallow((store) => ({
     history: store.history,
     selection: store.selection,
@@ -158,6 +160,14 @@ export function TaskGuide() {
     { command: "feature.delete", label: "Delete selected feature" },
     { command: "feature.suppress", label: "Suppress or unsuppress feature" },
   ];
+  if (handoff && sketchSolidHandoffCurrent(handoff, state)) return (
+    <section className="task-guide panel" aria-label="Next modeling action" data-readiness="sketch-handoff">
+      <span className="ds-eyebrow">YOUR NEXT STEP</span>
+      <h2>Finish your sketch task</h2>
+      <p>Use the sketch task in the canvas to choose a highlighted closed region, then Make solid to preview its thickness.</p>
+      <p>Its Edit sketch and Cancel actions return control without creating a feature. Apply in the preview creates the solid.</p>
+    </section>
+  );
   return (
     <section className="task-guide panel" aria-label="Next modeling action" data-readiness={guide.state}>
       <span className="ds-eyebrow">YOUR NEXT STEP</span>
