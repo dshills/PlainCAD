@@ -11,6 +11,9 @@ import { CommandButton } from "../design-system/CommandButton";
 import { CubeIcon, PencilSimpleIcon, XIcon } from "../design-system/Icons";
 import { RetainedPanel } from "./RetainedPanel";
 import { DockResize } from "./DockResize";
+import { useCommandEnablement } from "../commands/useCommandEnablement";
+import { nextModelingAction, modelingPrerequisite } from "./modelingReadiness";
+import { toggleAiDrawer, useAiDrawer } from "../commands/aiCommand";
 
 export function WorkbenchDetailsDock() {
   const dock = useWorkbenchState(
@@ -129,71 +132,79 @@ export function WorkbenchDetailsDock() {
     </aside>
   );
 }
-function TaskGuide() {
-  const sketching = Boolean(useSketchCanvas((state) => state.active));
-  const selected = useCadStore((state) => state.selection.selectedIds[0]);
-  const feature = selected?.kind === "feature";
-  const sketch = selected?.kind === "sketch";
-  const title = sketching
-    ? "Draw your shape"
-    : feature
-      ? "Refine this feature"
-      : sketch
-        ? "Make it solid"
-        : "Choose what to work on";
+export function TaskGuide() {
+  const state = useCadStore(useShallow((store) => ({
+    history: store.history,
+    selection: store.selection,
+    rebuild: store.rebuild,
+    activeComponentId: store.activeComponentId,
+    fileBusy: store.fileBusy,
+    documentSession: store.documentSession,
+  })));
+  const enabled = useCommandEnablement();
+  const guide = nextModelingAction(state);
+  const prerequisite = guide.command
+    ? modelingPrerequisite(guide.command, state, enabled)
+    : undefined;
+  const repair = guide.issue && state.rebuild.result ? {
+    document: state.history.present,
+    result: state.rebuild.result,
+    session: state.documentSession,
+    issueId: guide.issue.id,
+  } : undefined;
+  const more = [
+    { command: "component.create", label: "New component" },
+    { command: "feature.hole", label: "Hole from selected sketch" },
+    { command: "feature.delete", label: "Delete selected feature" },
+    { command: "feature.suppress", label: "Suppress or unsuppress feature" },
+  ];
   return (
-    <section className="task-guide panel" aria-label="Next modeling action">
+    <section className="task-guide panel" aria-label="Next modeling action" data-readiness={guide.state}>
       <span className="ds-eyebrow">YOUR NEXT STEP</span>
-      <h2>{title}</h2>
-      <p>
-        {sketching
-          ? "Draw with the mouse. Click a dimension to set its exact size. Finish Sketch when the shape is ready."
-          : feature
-            ? "Edit this feature to see a native preview before applying the change."
-            : sketch
-              ? "Turn a closed sketch into a solid. Set a thickness or drag the distance handle, then Apply."
-              : "Select a sketch or body on the canvas or in Project. Start a new sketch to draw something new."}
-      </p>
+      <h2>{guide.title}</h2>
+      <p>{guide.description}</p>
+      {guide.note ? <p className="muted">{guide.note}</p> : null}
       <div className="task-guide-actions">
-        {feature ? (
-          <CommandButton command="feature.edit" label="Edit feature" primary />
-        ) : (
+        {guide.command && guide.label ? (
           <CommandButton
-            command={sketch ? "feature.extrude" : "sketch.create"}
-            label={sketch ? "Extrude sketch" : "Create sketch"}
-            icon={sketch ? CubeIcon : PencilSimpleIcon}
+            command={guide.command}
+            label={guide.label}
+            title={prerequisite ?? guide.label}
+            icon={guide.command === "feature.extrude" ? CubeIcon : guide.command.startsWith("sketch.") ? PencilSimpleIcon : undefined}
+            context={repair ? { repair } : undefined}
             primary
           />
-        )}
-        {sketch ? (
-          <CommandButton
-            command="sketch.editCanvas"
-            label="Edit sketch"
-            accessibleLabel="Edit sketch canvas"
-          />
+        ) : null}
+        {guide.state === "ready-sketch" ? (
+          <CommandButton command="sketch.editCanvas" label="Edit sketch" accessibleLabel="Edit sketch canvas" />
+        ) : null}
+        {guide.state === "empty-sketch" || guide.state === "open-sketch" ? (
+          <CommandButton command="feature.extrude" label="Extrude sketch" title={modelingPrerequisite("feature.extrude", state, enabled)} />
+        ) : null}
+        {guide.state === "broken-sketch" || guide.state === "failed-model" || guide.state === "open-sketch" || (guide.state === "ready-solid" && !guide.command) ? (
+          <button type="button" className="ds-command" onClick={() => {
+            if (useAiDrawer.getState().open) toggleAiDrawer();
+            useWorkspaceState.getState().setPanel("issues");
+          }}>Open Issues</button>
         ) : null}
       </div>
+      {prerequisite ? <p className="muted">{prerequisite}</p> : null}
+      {guide.state === "empty-sketch" || guide.state === "open-sketch" ? (
+        <p className="muted">{modelingPrerequisite("feature.extrude", state, enabled)}</p>
+      ) : null}
       <details className="ds-advanced">
         <summary>More options</summary>
-        <CommandButton command="component.create" label="New component" />
-        <CommandButton
-          command="feature.hole"
-          label="Hole from selected sketch"
-        />
-        <CommandButton
-          command="feature.delete"
-          label="Delete selected feature"
-        />
-        <CommandButton
-          command="feature.suppress"
-          label="Suppress or unsuppress feature"
-        />
+        {more.map(({ command, label }) => {
+          const reason = modelingPrerequisite(command, state, enabled);
+          return <div key={command}>
+            <CommandButton command={command} label={label} title={reason ?? label} />
+            {reason ? <p className="muted">{reason}</p> : null}
+          </div>;
+        })}
       </details>
       <div className="task-guide-note">
         <strong>Prefer to describe it?</strong>
-        <p>
-          Open AI below. Review its geometry and dimensions before applying.
-        </p>
+        <p>Open AI below. Review its geometry and dimensions before applying.</p>
       </div>
     </section>
   );
