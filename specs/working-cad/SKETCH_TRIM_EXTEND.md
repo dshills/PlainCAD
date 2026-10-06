@@ -1,43 +1,62 @@
-# Sketch line Trim and Extend
+# Analytic sketch Trim and Extend
 
-Open a sketch, select a line, then choose **Trim** or **Extend**. The task also
-provides a line selector. Click the drawing or enter pick X/Y in millimeters.
-The pick is projected onto the selected line; the preview makes the proposed
-change visible before Apply.
-**Preview** solves an immutable candidate; **Apply** adds one Undo step. Cancel,
-Escape, a changed pick, or a changed project/sketch invalidates the candidate.
+Open a sketch, select a curve, then choose **Trim** or **Extend**. The task also
+provides a curve selector. Click the drawing or enter pick X/Y in millimeters.
+Picks project onto a line or radially onto a circular support; the center of an
+arc/circle cannot determine a radial pick. **Preview** solves an immutable
+candidate. **Apply** adds one Undo step. Cancel, Escape, changing inputs or
+changing the source document/sketch invalidates the candidate.
 
-Trim removes the interval containing the pick, between finite line intersections
-or an endpoint and an intersection. Picking exactly on an intersection is
-ambiguous and produces a diagnostic. A line without an interior intersection is
-not implicitly deleted: use Delete for whole-line removal. An internal trim
-retains the original line ID on the first surviving fragment and adds one new ID
-for the second. Retained endpoint IDs stay stable; superseded unused endpoints
-are cleaned without removing standalone points or feature centers.
+Trim supports lines, arcs and circles. Contacts are calculated analytically
+between finite lines, finite arcs and circles, including construction geometry.
+A line/arc loses the picked interval between contacts or between its endpoint and
+a contact. An interior interval can leave two fragments. A circle requires two
+crossing contacts: its picked cyclic interval is removed and the complementary
+segment becomes an arc. The retained first fragment keeps the source entity ID;
+circle conversion keeps its center ID and construction state. Existing unchanged
+endpoints keep their IDs. New endpoints can join existing boundary endpoints,
+but never silently attach to centers or unrelated standalone points.
 
-Extend uses the side of the pick nearest an endpoint, then the nearest intersection
-of that endpoint's support line with another finite authored line. The boundary
-line is never extended implicitly. Construction lines can be boundaries.
-An endpoint that already meets a finite boundary is diagnosed rather than
-silently skipped in favor of a farther boundary.
+Extend supports lines and arcs. Pick nearer the endpoint to extend. The nearest
+finite boundary along that endpoint's continuation is selected. Arc continuation
+follows its clockwise/counterclockwise circular support, with no full-turn arc or
+circle conversion. Boundaries are never implicitly extended. Disjoint arcs on the same circular
+support can provide finite endpoint contacts; overlapping spans are diagnosed.
+Disjoint collinear lines are not crossing boundaries, and a chosen line extension
+that would overlap one is rejected. A circle has no
+endpoints and produces an explicit Extend diagnostic. An endpoint already meeting
+a boundary, shared authored endpoints, or equal endpoint distances require an
+explicit choice or reference repair.
 
-This implementation deliberately supports **lines only**, with a 512-entity
-limit. Arcs/circles are neither editable targets nor trimming/extension boundaries.
-Duplicate/overlapping lines, midpoint endpoint ambiguity, unsupported curves,
-missing boundaries, invalid coordinates, and lost feature profiles produce clear
-diagnostics. Constraints and dimensions affecting the target or its endpoints,
-parameter-bound target endpoints, and referenced revolve axes require explicit
-editing first. Extending an endpoint shared with another curve also requires
-explicit repair/separation rather than silently disconnecting authored topology.
-No design-intent constraint or dimension is silently discarded.
+Supported sketches contain at most 512 entities. Tangencies and near-tangent
+contacts within sketch tolerance, overlapping coincident circular spans, overlapping
+collinear line spans, absent crossings, picks exactly on contacts, tiny retained
+fragments and unsupported full-turn extensions produce diagnostics. A whole curve
+without a usable interior trim interval is not implicitly deleted: use Delete.
 
-Every downstream feature profile must still resolve. A sketch-only preview is
-reported as a sketch solve; when downstream features exist, Apply additionally
-requires a successful OpenCascade preview with native geometry assertions. A
-worker-issued result is bound to its exact candidate, and source object identity,
+Constraints/dimensions affecting the target or its points, parameter-bound point
+coordinates, a parameter-bound circle radius and referenced revolve axes require
+explicit editing first. No design intent is silently deleted. Circle conversion
+changes the profile type, so an existing circle feature profile is diagnosed as
+lost rather than rebound to the arc. Every existing extrusion/revolve profile
+reference must remain resolvable. Superseded unused target endpoints are cleaned;
+standalone points and feature centers remain.
+
+A sketch-only preview reports a sketch solve. When downstream features exist,
+Apply requires a successful OpenCascade preview with native geometry assertions.
+Worker-issued results are bound to the exact candidate. Source object identity,
 document session, component and sketch session are checked again at Apply.
 
 Pure entry point: `buildSketchTrimExtend(document, sketchId, lineId, mode, pick)`.
-Command entry points: `openSketchTrimExtend`, `setSketchTrimExtendPick`,
-`previewSketchTrimExtend`, `applySketchTrimExtend`, `cancelSketchTrimExtend`.
-Runtime ownership is `useSketchTrimExtend.frame`; it is never serialized.
+The legacy `lineId` argument/plan field identifies a line, arc or circle; AI actions
+continue to pass their target `id`. Shared analytic helpers are in
+`trimExtendIntersections.ts`. Command entry points remain `openSketchTrimExtend`,
+`setSketchTrimExtendPick`, `previewSketchTrimExtend`, `applySketchTrimExtend`, and
+`cancelSketchTrimExtend`. Runtime task ownership is never serialized.
+
+Focused tests cover circle conversion, cyclic seam selection, signed arc trimming
+and extension, finite curve filtering, protected references and save/load. Native
+acceptance cases cover a trimmed XY semicircle and extended YZ quarter-circle,
+checking exact OpenCascade BRep volume, bounds/orientation, Undo/Redo, save/open
+and STL tessellation volume. Exact solid geometry distinguishes analytic arcs from
+endpoint chords; STL is checked within 0.5% because it is a tessellated export.

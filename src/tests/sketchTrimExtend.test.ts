@@ -55,10 +55,13 @@ it("does not silently attach an intersection endpoint to an unrelated circle cen
   const withCircle = addCircleAt(sketch, "10mm", "0mm", "1mm");
   const circle = Object.values(withCircle.entities).find((e) => e.type === "circle")!;
   if (circle.type !== "circle") throw new Error("Fixture circle unavailable");
-  const plan = buildSketchTrimExtend(upsertSketch(document, withCircle), sketch.id, lineId, "trim", { x: 5, y: 0 });
+  const plan = buildSketchTrimExtend(upsertSketch(document, withCircle), sketch.id, lineId, "trim", { x: 10.5, y: 0 });
   const edited = plan.document.sketches[sketch.id].entities[lineId];
   expect(edited.type).toBe("line");
-  if (edited.type === "line") expect(edited.startPointId).not.toBe(circle.centerPointId);
+  if (edited.type === "line") {
+    expect(edited.endPointId).not.toBe(circle.centerPointId);
+    expect(solveSketch(plan.document.sketches[sketch.id], {}).points[edited.endPointId].x).toBeCloseTo(10, 7);
+  }
   expect(plan.document.sketches[sketch.id].entities[circle.centerPointId]).toBe(withCircle.entities[circle.centerPointId]);
 });
 it("extends only the chosen endpoint to the nearest finite boundary and protects shared connections", () => {
@@ -77,17 +80,17 @@ it("extends only the chosen endpoint to the nearest finite boundary and protects
   const behind = buildSketchTrimExtend(upsertSketch(document, line(far.sketch, [-10, -2], [-10, 2]).sketch), far.sketch.id, initial.lineId, "extend", { x: 0, y: 0 });
   expect(solveSketch(behind.document.sketches[far.sketch.id], {}).lines.find((l) => l.id === initial.lineId)!.start.x).toBeCloseTo(-10);
 });
-it("does not infer intersections with infinite boundary supports, curves or overlapping lines", () => {
+it("does not infer intersections with infinite boundary supports, overlaps or endpoint-less circle extensions", () => {
   const target = line(createXySketch(), [0, 0], [5, 0]);
   const miss = line(target.sketch, [10, 2], [10, 3]);
   const document = upsertSketch(createEmptyDocument(), miss.sketch);
-  expect(() => buildSketchTrimExtend(document, miss.sketch.id, target.lineId, "extend", { x: 4, y: 0 })).toThrow("No finite line boundary");
+  expect(() => buildSketchTrimExtend(document, miss.sketch.id, target.lineId, "extend", { x: 4, y: 0 })).toThrow("No finite line, arc or circle boundary");
   expect(() => buildSketchTrimExtend(document, miss.sketch.id, target.lineId, "trim", { x: 2, y: 0 })).toThrow("Use Delete");
   const overlap = line(miss.sketch, [2, 0], [3, 0]);
   expect(() => buildSketchTrimExtend(upsertSketch(document, overlap.sketch), overlap.sketch.id, target.lineId, "trim", { x: 2.5, y: 0 })).toThrow("overlaps");
   const circle = addCircleAt(miss.sketch, "2mm", "0mm", "1mm");
   const circleId = Object.values(circle.entities).find((e) => e.type === "circle")!.id;
-  expect(() => buildSketchTrimExtend(upsertSketch(document, circle), circle.id, circleId, "trim", { x: 2, y: 0 })).toThrow("not supported");
+  expect(() => buildSketchTrimExtend(upsertSketch(document, circle), circle.id, circleId, "extend", { x: 3, y: 0 })).toThrow("no endpoints");
   const touching = line(miss.sketch, [5, -1], [5, 1]), farther = line(touching.sketch, [10, -1], [10, 1]);
   expect(() => buildSketchTrimExtend(upsertSketch(document, farther.sketch), farther.sketch.id, target.lineId, "extend", { x: 4, y: 0 })).toThrow("already meets");
 });

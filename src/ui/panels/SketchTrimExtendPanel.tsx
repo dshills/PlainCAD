@@ -25,7 +25,7 @@ export function SketchTrimExtendPanel() {
   const [x, setX] = useState(""), [y, setY] = useState("");
   const [proposal, setProposal] = useState<Proposal>();
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
-  const [status, setStatus] = useState("Choose a line, then click the segment to trim or the endpoint side to extend.");
+  const [status, setStatus] = useState("Choose a curve, then click the segment to trim or the endpoint side to extend.");
   const restoreFocus = (applied = false) => window.requestAnimationFrame(() => {
     const label = applied ? "Draw tool: select" : mode === "trim" ? "Trim sketch lines" : "Extend sketch lines";
     window.document.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`)?.focus();
@@ -36,7 +36,7 @@ export function SketchTrimExtendPanel() {
     invalidate(); setError(""); setLineId(frame?.lineId ?? "");
     const currentPick = useSketchTrimExtend.getState().pick;
     setX(currentPick ? String(currentPick.x) : ""); setY(currentPick ? String(currentPick.y) : "");
-    setStatus("Choose a line, then click the segment to trim or the endpoint side to extend.");
+    setStatus("Choose a curve, then click the segment to trim or the endpoint side to extend.");
   }, [frame, mode]);
   useEffect(() => {
     if (pick) { invalidate(); setX(String(pick.x)); setY(String(pick.y)); setStatus("Pick updated. Preview before applying."); }
@@ -75,12 +75,12 @@ export function SketchTrimExtendPanel() {
   return <section className="sketch-trim-extend" aria-label={mode === "trim" ? "Trim sketch lines" : "Extend sketch lines"} onKeyDown={(event) => {
     if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); invalidate(); cancelSketchTrimExtend(); restoreFocus(); }
   }}>
-    <h3>{mode === "trim" ? "Trim a line segment" : "Extend a line"}</h3>
-    <p>{mode === "trim" ? "Choose a line and click between its intersections with other lines." : "Choose a line and click nearer the endpoint to extend to the nearest line boundary."}</p>
-    <p>The pick is projected onto the chosen line. Review the proposed result before Apply.</p>
-    <label>Line to edit<select value={lineId} onChange={(event) => { invalidate(); setError(""); setLineId(event.target.value); }}>
-      <option value="">Choose a line</option>
-      {Object.values(sketch.entities).filter((entity) => entity.type === "line").map((line, index) => <option key={line.id} value={line.id}>Line {index + 1}{line.construction ? " (construction)" : ""}</option>)}
+    <h3>{mode === "trim" ? "Trim a curve segment" : "Extend a line or arc"}</h3>
+    <p>{mode === "trim" ? "Choose a line, arc or circle, then click between its finite crossing contacts." : "Choose a line or arc and click nearer the endpoint to extend to the nearest finite boundary."}</p>
+    <p>The pick is projected onto the line or radially onto the curve. Review the proposed result before Apply.</p>
+    <label>Curve to edit<select aria-label="Line to edit" value={lineId} onChange={(event) => { invalidate(); setError(""); setLineId(event.target.value); }}>
+      <option value="">Choose a curve</option>
+      {Object.values(sketch.entities).filter((entity) => entity.type !== "point").map((curve, index) => <option key={curve.id} value={curve.id}>{curve.type[0].toUpperCase() + curve.type.slice(1)} {index + 1}{curve.construction ? " (construction)" : ""}</option>)}
     </select></label>
     <div className="sketch-trim-extend-pick">
       <label>Pick X (mm)<input type="number" value={x} onChange={(event) => { invalidate(); setX(event.target.value); }} /></label>
@@ -98,7 +98,7 @@ export function SketchTrimExtendPanel() {
     {proposal ? <><ul aria-label="Proposed trim extend changes">{proposal.plan.changes.map((change) => <li key={change}>{change}</li>)}</ul>
       <SketchRefinementPreview solved={proposal.solved} />
       {proposal.result.meshes.length ? <ExtrudePreview meshes={proposal.result.meshes} label="Native trim extend preview" /> : null}</> : null}
-    <p>Lines only. Constraints, driving dimensions and parameter bindings are protected; unsupported edits explain what to change first.</p>
+    <p>Finite line, arc and circle boundaries. Circles can be trimmed into arcs; circles have no endpoints to extend. Tangencies, coincident supports and protected design intent produce diagnostics.</p>
     {pick ? <button type="button" onClick={() => setSketchTrimExtendPick({ ...pick })}>Use canvas pick again</button> : null}
   </section>;
 }

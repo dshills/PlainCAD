@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { createEmptyDocument, upsertSketch } from "../cad/document/CadDocument";
-import { addLine, addPoint, createXySketch } from "../cad/sketch/SketchModel";
+import { addCircleAt, addLine, addPoint, createXySketch } from "../cad/sketch/SketchModel";
 import { rebuildDocument } from "../cad/features/rebuildGraph";
 import { useCadStore } from "../state/useCadStore";
 import { useSketchCanvas } from "../ui/commands/sketchCanvasCommand";
@@ -65,5 +65,42 @@ it("drops an outstanding preview on a same-ID project replacement", async () => 
   act(() => useCadStore.getState().setDocument({ ...useCadStore.getState().history.present }));
   await act(async () => resolve?.(result));
   expect(useSketchTrimExtend.getState().frame).toBeUndefined();
+  expect(useCadStore.getState().history.past).toHaveLength(0);
+});
+
+it("offers a circle target, previews a retained arc and cancels without editing the source", async () => {
+  act(() => {
+    const initial = addCircleAt(createXySketch(), "0mm", "0mm", "10mm");
+    const circleId = Object.values(initial.entities).find((e) => e.type === "circle")!.id;
+    const start = addPoint(initial, "-10mm", "0mm"), end = addPoint(start.sketch, "10mm", "0mm"), diameter = addLine(end.sketch, start.pointId, end.pointId);
+    useCadStore.getState().setDocument(upsertSketch(createEmptyDocument(), diameter.sketch));
+    const state = useCadStore.getState();
+    useSketchCanvas.setState({ active: { documentId: state.history.present.id, session: state.documentSession, sketchId: diameter.sketch.id }, selection: { document: state.history.present, entityIds: [circleId] } });
+    openSketchTrimExtend("trim");
+  });
+  render(<SketchTrimExtendPanel />);
+  expect(screen.getByLabelText("Line to edit").querySelector("option:checked")).toHaveTextContent("Circle");
+  act(() => setSketchTrimExtendPick({ x: 0, y: 10 }));
+  const original = useCadStore.getState().history.present;
+  fireEvent.click(screen.getByRole("button", { name: "Preview trim" }));
+  await waitFor(() => expect(screen.getByRole("button", { name: "Apply trim" })).toBeEnabled());
+  expect(screen.getByRole("list", { name: "Proposed trim extend changes" })).toHaveTextContent("Convert the remaining circle segment to an arc");
+  expect(useCadStore.getState().history.present).toBe(original);
+  fireEvent.click(screen.getByRole("button", { name: "Cancel trim" }));
+  expect(useCadStore.getState().history.past).toHaveLength(0);
+});
+it("explains that circles cannot extend without a worker call or document edit", () => {
+  act(() => {
+    const sketch = addCircleAt(createXySketch(), "0mm", "0mm", "10mm"), circleId = Object.values(sketch.entities).find((e) => e.type === "circle")!.id;
+    useCadStore.getState().setDocument(upsertSketch(createEmptyDocument(), sketch));
+    const state = useCadStore.getState();
+    useSketchCanvas.setState({ active: { documentId: state.history.present.id, session: state.documentSession, sketchId: sketch.id }, selection: { document: state.history.present, entityIds: [circleId] } });
+    openSketchTrimExtend("extend");
+  });
+  render(<SketchTrimExtendPanel />);
+  act(() => setSketchTrimExtendPick({ x: 0, y: 10 }));
+  fireEvent.click(screen.getByRole("button", { name: "Preview extend" }));
+  expect(screen.getByRole("alert")).toHaveTextContent("no endpoints to extend");
+  expect(mocks.preview).not.toHaveBeenCalled();
   expect(useCadStore.getState().history.past).toHaveLength(0);
 });

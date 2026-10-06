@@ -207,8 +207,8 @@ export function isCommandEnabledForSnapshot(
 export const commands: CadCommand[] = [
   { id: "sketch.facePocket", label: "Draw on face", enablementKey: "createFacePocket", run: () => beginFacePocket() },
   { id: "sketch.removeMaterial", label: "Remove material", enablementKey: "removeSketchMaterial", run: () => removeSketchMaterial() },
-  { id: "sketch.trim", label: "Trim sketch lines", enablementKey: "trimSketch", run: () => openSketchTrimExtend("trim") },
-  { id: "sketch.extend", label: "Extend sketch lines", enablementKey: "trimSketch", run: () => openSketchTrimExtend("extend") },
+  { id: "sketch.trim", label: "Trim sketch curves", enablementKey: "trimSketch", run: () => openSketchTrimExtend("trim") },
+  { id: "sketch.extend", label: "Extend sketch curves", enablementKey: "trimSketch", run: () => openSketchTrimExtend("extend") },
   { id: "sketch.cancelFacePocket", label: "Cancel face selection", alwaysEnabled: true, internal: true, run: () => cancelFacePocket() },
   { id: "project.startDrawing", internal: true, label: "Draw a named part", enablementKey: "newComponent", run: ({ componentName }) => beginPartDrawing(componentName ?? "Part 1") },
   { id: "project.startDescribing", internal: true, label: "Describe a named part", enablementKey: "newComponent", run: ({ componentName }) => beginPartDescription(componentName ?? "Part 1") },

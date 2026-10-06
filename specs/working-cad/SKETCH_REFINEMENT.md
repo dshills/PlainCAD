@@ -67,7 +67,8 @@ items. A smaller sketch or local tools is required when these limits are exceede
 
 Data-only actions resize a supported rectangle, edit a listed dimension, edit one
 explicitly chosen editable referenced parameter, add a matching relation, or use
-the finite-line Trim/Extend planner. Each runs the existing immutable local helper;
+the finite analytic curve Trim/Extend planner (lines/arcs/circles for Trim;
+lines/arcs for Extend). Each runs the existing immutable local helper;
 existing design intent is never automatically deleted to satisfy a request.
 Default Preserve policy refuses bound formula replacement and parameter writes.
 Replace explicitly permits listed dimension formula replacement; parameter:ID
