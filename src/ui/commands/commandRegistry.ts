@@ -1,9 +1,9 @@
-import { canBeginFacePocket, useFacePocket } from "./facePocketCommand";
+import { beginFacePocket, canBeginFacePocket, cancelFacePocket, useFacePocket } from "./facePocketCommand";
 import { openSketchTrimExtend, useSketchTrimExtend } from "./sketchTrimExtendCommand";
 import { useContextualConstraintDraft } from "./contextualConstraintCommand";
 import { beginSolidDimensionEdit, solidDimensionEditingAvailable, useSolidDimensionEdit } from "./solidDimensionCommand";
 import type { SolidDimension } from "../../cad/inspection/solidDimensions";
-import { canMakeSketchSolid, makeSketchSolid, canRemoveSketchMaterial, chooseSketchSolidRegion, cancelSketchSolidHandoff, useSketchSolidHandoff } from "./sketchSolidHandoffCommand";
+import { canMakeSketchSolid, makeSketchSolid, canRemoveSketchMaterial, removeSketchMaterial, chooseSketchSolidRegion, cancelSketchSolidHandoff, useSketchSolidHandoff } from "./sketchSolidHandoffCommand";
 import { useSketchRefinement } from "./sketchRefinementCommand";
 import { beginOperationDrop, chooseOperationDropTarget, cancelOperationDrop, canBeginOperationDrop, operationDraftBusy, useOperationDrop, type DropOperation, type OperationDropFrame } from "./operationDropCommand";
 import { beginSaveOrExport, canBeginSaveOrExport, saveOrExportBlocked } from "./guidedExportCommand";
@@ -205,8 +205,11 @@ export function isCommandEnabledForSnapshot(
 }
 
 export const commands: CadCommand[] = [
+  { id: "sketch.facePocket", label: "Draw on face", enablementKey: "createFacePocket", run: () => beginFacePocket() },
+  { id: "sketch.removeMaterial", label: "Remove material", enablementKey: "removeSketchMaterial", run: () => removeSketchMaterial() },
   { id: "sketch.trim", label: "Trim sketch lines", enablementKey: "trimSketch", run: () => openSketchTrimExtend("trim") },
   { id: "sketch.extend", label: "Extend sketch lines", enablementKey: "trimSketch", run: () => openSketchTrimExtend("extend") },
+  { id: "sketch.cancelFacePocket", label: "Cancel face selection", alwaysEnabled: true, internal: true, run: () => cancelFacePocket() },
   { id: "project.startDrawing", internal: true, label: "Draw a named part", enablementKey: "newComponent", run: ({ componentName }) => beginPartDrawing(componentName ?? "Part 1") },
   { id: "project.startDescribing", internal: true, label: "Describe a named part", enablementKey: "newComponent", run: ({ componentName }) => beginPartDescription(componentName ?? "Part 1") },
   { id: "feature.editSolidDimension", internal: true, label: "Edit Solid Driving Dimension", enablementKey: "editSolidDimension", run: ({ dimension }) => beginSolidDimensionEdit(dimension) },

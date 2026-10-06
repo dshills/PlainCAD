@@ -18,6 +18,7 @@ import { previewExtrusion } from "../../cad/worker/extrudePreviewClient";
 import { ExtrudePreview } from "../../viewer/ExtrudePreview";
 import {
   assertNativeExtrudePreview,
+  assertNativePocketPreview,
   commitExtrude,
   isCurrentExtrudeDraft,
   useExtrudeDraft,
@@ -185,6 +186,7 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
             throw new Error("Extrusion draft was lost.");
           if (!draft.editing)
             assertNativeExtrudePreview(result, staged.id, feature);
+          assertNativePocketPreview(draft, result, feature);
           setPreview({ staged, result, operationResult });
         })
         .catch((error) => {
@@ -264,7 +266,7 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
   const close = () => useExtrudeDraft.setState({ draft: undefined });
   return (
     <ModalDialog
-      label={draft.editing ? "Edit Extrude" : "Extrude"}
+      label={draft.pocket ? "Remove material" : draft.editing ? "Edit Extrude" : "Extrude"}
       className="file-dialog model-dialog extrude-dialog"
       onDismiss={close}
     >
@@ -281,7 +283,8 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
           }
         }}
       >
-        <h2>{draft.editing ? "Edit Extrude" : "Extrude"}</h2>
+        <h2>{draft.pocket ? "Remove material" : draft.editing ? "Edit Extrude" : "Extrude"}</h2>
+        {draft.pocket ? <p>Target: <strong>{draft.targetSnapshot?.bodies.find((body) => body.id === draft.pocket?.bodyId)?.name ?? draft.pocket.bodyId}</strong> · Inward, opposite the face normal. The native preview must reduce this body's volume.</p> : null}
         <p>
           {context?.sketch.name} ·{" "}
           {draft.document.components[draft.componentId]?.name}
@@ -306,6 +309,7 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
               {workbench ? "Choose shape" : "Extrude profile"}
               <select
                 aria-label="Extrude profile"
+                disabled={Boolean(draft.pocket)}
                 value={profileId}
                 onChange={(event) => setProfile(event.target.value)}
               >
@@ -325,7 +329,7 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
             <ModelingTaskStep number={2}>Settings</ModelingTaskStep>
             {termination === "distance" ? (
               <label>
-                {workbench ? "Thickness" : "Extrude distance"}
+                {draft.pocket ? "Pocket depth" : workbench ? "Thickness" : "Extrude distance"}
                 <input
                   aria-label="Extrude distance"
                   value={distance}
@@ -343,6 +347,7 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
               {workbench ? "Direction" : "Extrude direction"}
               <select
                 aria-label="Extrude direction"
+                disabled={Boolean(draft.pocket)}
                 value={direction}
                 onChange={(event) =>
                   setDirection(
@@ -363,6 +368,7 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
               {workbench ? "Operation" : "Extrude operation"}
               <select
                 aria-label="Extrude operation"
+                disabled={Boolean(draft.pocket)}
                 value={operation}
                 onChange={(event) => {
                   const next = event.target
@@ -397,6 +403,7 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
                     <label key={body.id}>
                       <input
                         type="checkbox"
+                        disabled={Boolean(draft.pocket)}
                         checked={targets.includes(body.id)}
                         onChange={(event) =>
                           setTargets(
@@ -506,7 +513,7 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
           </div>
         </div>
         <ModelingTaskActions
-          applyLabel="Apply extrusion"
+          applyLabel={draft.pocket ? "Apply pocket" : "Apply extrusion"}
           disabled={!shown?.result || dragging}
           onCancel={close}
         />

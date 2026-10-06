@@ -11,6 +11,8 @@ import {
   refreshSketchSolidHandoff,
   sketchSolidHandoffCurrent,
   useSketchSolidHandoff,
+  sketchPocketTarget,
+  canRemoveSketchMaterial,
 } from "../commands/sketchSolidHandoffCommand";
 import { useExtrudeDraft } from "../commands/extrudeCommand";
 import { useModelingDraft } from "../commands/modelingDraftCommand";
@@ -50,6 +52,8 @@ export function SketchSolidHandoffPanel() {
   if (!source || !current) return null;
   const nativeTargets = operationDropTargets("extrude", state, source.sketchId);
   const currentFrame = frame?.handoffSketchId === source.sketchId && operationDropCurrent(frame, state) ? frame : undefined;
+  const pocket = sketchPocketTarget();
+  const faceSketch = Boolean(source.pocketIntent);
   const selected = nativeTargets.find((target) => target.id === selectedTargetId);
   const readiness = nextModelingAction({ ...state, selection: { selectedIds: [{ kind: "sketch", id: source.sketchId, documentId: source.document.id }] } });
   const perform = async (command: string, targetId?: string) => {
@@ -66,8 +70,9 @@ export function SketchSolidHandoffPanel() {
       ? "OpenCascade is required to check these regions and make a native solid. Inspect Issues if the kernel could not load."
       : readiness.description;
   return <section className="sketch-solid-handoff" aria-label="Make solid from finished sketch">
-    <h2>{source.document.sketches[source.sketchId].name}: make it solid</h2>
-    <p role="status">{description}</p>
+    <h2>{source.document.sketches[source.sketchId].name}: {faceSketch ? "remove material" : "make it solid"}</h2>
+    {(faceSketch || pocket) && pocket ? <p>Target: <strong>{pocket.name}</strong> · Cut direction: inward, opposite the face normal. Only this body is affected.</p> : faceSketch ? <p role="alert">The face or its body is no longer supported. Repair the face reference before removing material.</p> : null}
+    <p role="status">{faceSketch && nativeTargets.length && currentFrame ? "Choose a closed region. Remove material opens a depth preview; Apply cuts the selected face body." : description}</p>
     {nativeTargets.length ? <div className="sketch-solid-regions" role="group" aria-label="Closed sketch regions">
       {nativeTargets.map((target) => <button key={target.id} type="button"
         aria-pressed={target.id === selected?.id} disabled={!currentFrame}
@@ -78,6 +83,7 @@ export function SketchSolidHandoffPanel() {
         onBlur={() => useOperationDrop.setState({ hoverId: selected?.id })}>{target.label}</button>)}
     </div> : null}
     {nativeTargets.length > 1 && !selected ? <p>Choose one region before continuing. Separate regions create separate features.</p> : null}
+    {faceSketch ? <p className="muted">For a separate additive solid instead, choose Make solid. It opens a New Body preview and does not remove material.</p> : null}
     {readiness.note ? <p className="muted">{readiness.note}</p> : null}
     {error || pickingError ? <p role="alert">{error || pickingError}</p> : null}
     <div className="sketch-solid-actions">
@@ -97,6 +103,7 @@ export function SketchSolidHandoffPanel() {
           useCadStore.getState().setFileError(`Could not reopen sketch: ${failure instanceof Error ? failure.message : String(failure)}`);
         }
       }}>Edit sketch</button>
+      {faceSketch || pocket ? <button type="button" disabled={!canRemoveSketchMaterial()} onClick={() => void perform("sketch.removeMaterial")}>Remove material</button> : null}
       <button type="button" disabled={!enablement.makeSketchSolid} onClick={() => void perform("sketch.makeSolid")}>Make solid</button>
     </div>
   </section>;

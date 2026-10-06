@@ -1,3 +1,5 @@
+import { FacePocketPanel } from "../ui/panels/FacePocketPanel";
+import { cancelFacePocket, useFacePocket } from "../ui/commands/facePocketCommand";
 import { SolidDimensionEditor } from "../ui/panels/SolidDimensionEditor";
 import { SketchSolidHandoffPanel } from "../ui/panels/SketchSolidHandoffPanel";
 import { OperationDropPanel } from "../ui/panels/OperationDropPanel";
@@ -117,6 +119,13 @@ const toolbarGroups: ToolbarGroup[] = [
         icon: "Draw",
         title: "Draw in the selected sketch plane",
         ariaLabel: "Edit sketch canvas",
+      },
+      {
+        command: "sketch.facePocket",
+        label: "Draw on face",
+        icon: "Face",
+        title: "Choose a supported planar face and draw a pocket sketch",
+        ariaLabel: "Draw on face",
       },
       {
         command: "sketch.createXY",
@@ -388,6 +397,7 @@ export function App() {
         void runCommand("view.fit", commandContext);
       }
       if (!isTyping && event.key === "Escape") {
+        if (useFacePocket.getState().frame) { cancelFacePocket(); return; }
         select(undefined);
       }
     };
@@ -520,6 +530,7 @@ export function App() {
       <HoleCreationPanel />
       <SolidDimensionEditor />
       <ExtrudeCreationPanel />
+      <FacePocketPanel />
       <ModelingCreationPanel />
       <WorkspaceControls />
       <main

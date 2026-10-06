@@ -26,6 +26,7 @@ type Mode = "draw" | "solid" | "inspect";
 const groups = {
   draw: [
     ["sketch.create", "Create sketch", "Create sketch", PencilSimpleIcon],
+    ["sketch.facePocket", "Draw on face", "Draw on face", PencilSimpleIcon],
     [
       "sketch.editCanvas",
       "Edit sketch",
