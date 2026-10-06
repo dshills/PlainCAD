@@ -1,1159 +1,406 @@
 # PlainCAD
 
-PlainCAD is a browser-first, local-first parametric CAD MVP for simple mechanical parts. It keeps the durable source of truth in a serializable project document, rebuilds runtime geometry through a worker-backed CAD kernel boundary, previews meshes with Three.js, and exports project JSON plus STL.
+Browser-first, local-first parametric CAD for mechanical parts. Draw sketches,
+create native solids, edit dimensions, and save an editable project or export STL.
+Optional AI assistance supports Anthropic, OpenAI, and Google.
 
-The MVP is intentionally narrow: make parameters, sketches, rebuilds, inspection, save/load, and STL export reliable before adding broad CAD features.
+PlainCAD uses React 19, TypeScript, Vite, Zustand, Three.js, and OpenCascade.js.
+CAD runs locally in the browser through a geometry worker. An optional local Node
+gateway handles AI requests and keeps provider credentials out of the browser.
 
 ## Features
 
-- Single active part document.
-- Named parameters with units and expressions.
-- XY/XZ/YZ sketches with points, lines, arcs, circles, construction geometry, and driving dimensions.
-- Closed line/arc/circle profiles with holes and stable entity-based identities.
-- Bounded straight-line region partitioning at T-junctions and divider crossings;
-  source entities remain intact and topology changes require explicit profile repair.
-- Extrude features for simple solid generation.
-- Mounting plate and parametric box templates.
-- 3D viewer with orbit, pan, zoom, fit, reset, selection, and inspection.
-- Project import/export as `.pcaddoc` or JSON.
-- Mesh-based STL export after successful rebuilds.
-- Command palette with `Cmd/Ctrl+K`.
-- Light, Dark, and Saturn Command UI themes with a local browser preference.
-- Collapsible AI drawer with Anthropic, OpenAI and Google AI providers, native
-  preview and editable component creation.
-- Rebuild, file, import, and export errors shown in the UI.
+- One local project file containing components, sketches, parameters, and a feature timeline.
+- Mouse drawing, box/Shift selection, whole-shape deletion, and dimensions shown by default.
+- Points, lines, circles, arcs, construction geometry, supported constraints, and driving dimensions.
+- XY/XZ/YZ, offset, and supported feature-owned face sketch planes.
+- Native Extrude, Revolve, Cut/Join, Hole, Fillet, and Chamfer with preview, Apply, and Cancel.
+- Sketch Trim/Extend, Mirror, linear patterns, and bounded outline Offset.
+- Guided face holes and pockets, extrusion distance handles, and supported operation drag-and-drop.
+- Unit-aware parameter expressions, stable bindings, undo/redo, timeline ordering, and explicit reference repair.
+- Docked Workbench, Minimal and Full layouts, and Light, Dark, and Saturn Command themes.
+- Body visibility, named camera views, section previews, sketch measurements, and linked diagnostics.
+- Editable `.pcaddoc`/JSON files, autosave/recovery, and validated single- or multi-body STL export.
+- AI part creation, bounded existing-part edits/additions, and conversational sketch refinement.
 
-## Prerequisites
-
-- Node.js `^20.19.0` or `>=22.12.0`.
-- npm, included with Node.js.
-- A modern desktop browser with WebAssembly and WebGL support.
-
-The Node.js version range matches the Vite engine requirement used by this project.
+Supported geometry is bounded. The [capability matrix](specs/working-cad/CAPABILITY_MATRIX.md)
+records working behavior and limits; the [roadmap](specs/working-cad/PLAN.md) records
+planned work. Unsupported or invalid operations produce diagnostics. Native
+booleans and edge treatments must change actual geometry before they succeed.
 
 ## Quick Start
 
+Requirements: Node.js `^20.19.0` or `>=22.12.0`, npm, and a modern desktop browser
+with WebAssembly and WebGL support.
+
 ```sh
-npm install
+git clone https://github.com/dshills/PlainCAD.git
+cd PlainCAD
+npm ci
 npm run dev
 ```
 
-Vite uses `http://localhost:5278/`. Open that URL in a browser.
-
-If port `5278` is already in use, Vite reports an error. Start on another port:
-
-```sh
-npm run dev -- --host 127.0.0.1 --port 5279
-```
-
-## Available Scripts
+Open <http://localhost:5278>. Vite uses a strict port and reports a collision
+instead of silently choosing another port. To override it:
 
 ```sh
-npm run dev
+npm run dev -- --host 127.0.0.1 --port 5288
 ```
 
-Starts the Vite development server.
+Keep port 5279 free for the development browser tests.
 
-```sh
-npm run lint
-```
-
-Runs the TypeScript project check with `tsc -b --noEmit`.
-
-```sh
-npm test
-```
-
-Runs the Vitest test suite once.
-
-```sh
-npm run test:watch
-```
-
-Runs Vitest in watch mode.
+To build and serve the production app locally:
 
 ```sh
 npm run build
+npm run preview
 ```
 
-Runs TypeScript checks and creates a production build in `dist/`.
+Preview uses strict port 5280. Static deployment, CSP, worker, and WebAssembly
+hosting requirements are documented in [deployment/README.md](deployment/README.md).
+
+## Project → Component → Sketch
+
+A **project** is one local CAD file. A **component** organizes a part's sketches,
+bodies, and features. A **sketch** contains editable geometry and design intent on
+a plane. Parameters and timeline ordering belong to the whole project.
+
+Components currently share the project origin. Modeling targets stay within their
+component; supported face-plane references can use another component's upstream
+geometry. Nested assemblies, placement transforms, joints, and linked designs
+remain planned.
+
+### Make your first part
+
+1. On the empty project, enter **Part name** and choose **Draw a shape**.
+2. Confirm a plane. PlainCAD creates the component and its first sketch together.
+3. Choose **Rectangle**, **Circle**, or another drawing tool. Click or drag to draw;
+   enter precise sizes or edit the drawing's dimension labels.
+4. Choose **Finish Sketch**, select a highlighted closed region, then **Make solid**.
+5. Inspect the Extrude preview, choose thickness and direction, then **Apply extrusion**.
+6. Add holes or a pocket on a supported face, or create another sketch and cut/join it.
+7. Edit a driving dimension or parameter, inspect the rebuilt geometry, then use
+   **File → Save or export…** to download an editable project or printable STL.
+
+For another part, choose **New Component**, activate it, and **Create Sketch**.
+Selecting a sketch, body, or timeline feature activates its owner. Double-click a
+sketch to edit it. **Mount Plate** and **Box** provide editable examples.
+
+Feature tasks publish edits only after Apply. Cancel discards the preview; Apply
+creates an undoable edit. New settings, project replacement, or a stale native
+result invalidate Apply. Finish or cancel an active task before starting another.
+
+### Workspace and themes
+
+The default **Docked Workbench** places Project/Parameters on the left,
+Task/Properties on the right, and History/AI/Issues at the bottom. **Draw**, **Solid**,
+and **Inspect** change the context toolbar. **Project** and **Details** reopen docks;
+drag their boundaries or use focused arrow-key controls to resize them.
+
+**Settings → Workspace** also offers Minimal and Full layouts. Minimal keeps
+Parts/History/Details behind disclosures; Full exposes the complete ribbon and
+panels. Open the command palette with `Cmd/Ctrl+K` to find commands and see why
+an unavailable action is disabled.
+
+Choose Light, Dark, or Saturn Command with **Theme**. Saturn Command uses dark
+instrument panels, cyan readouts, monospaced labels, and illuminated controls.
+Layout, theme, visibility, and isolation are browser/session preferences rather
+than CAD geometry. Named camera poses are saved explicitly in the project.
+
+### Draw and dimension
+
+Use points, lines, rectangles, circles, arcs, and construction geometry in the
+plane-local canvas. Dimensions are on by default. Sized rectangles/circles create
+driving dimensions; click an existing D label to edit its expression. Constraints
+and diagnostics remain available through sketch controls.
+
+Shift-click toggles selection. Box-select left-to-right for containment or
+right-to-left for crossings. Delete/Backspace or the visible delete control removes
+selected geometry and dependent intent in one Undo edit. Unused endpoints/centers
+are cleaned up; shared points and surviving references remain.
+
+Space-drag or middle-drag pans the sketch. Geometry snaps offer points, midpoints,
+centers, alignment, and bounded intersection/tangent suggestions. Alt temporarily
+bypasses snapping. Snaps do not automatically create constraints. Move, Translate,
+and Deform provide supported edits with preview and cancellation.
+
+**Trim** supports finite line/arc/circle intersections; trimming a circle produces
+an arc. **Extend** supports lines and arcs; circles have no endpoints to extend.
+Ambiguous overlaps and edits that would break protected intent are diagnosed.
+**Mirror** copies selected geometry around a line/construction-line axis.
+**Pattern** makes 2–16 total instances with a direction and spacing expression.
+Copies preserve supported internal constraints, dimensions, and parameter bindings,
+but are independently editable rather than associative pattern features.
+
+**Offset** supports analytic circles and convex straight-line outlines. Circle
+copies can retain supported expressions; polygon copies use a literal length and
+a solved snapshot. Concave, mixed-arc, open, or collapsed outlines are diagnosed.
+Existing openings require explicit **Outer boundary only**. These are ordinary
+sketch copies rather than associative offset features.
+
+### Edit parameters
+
+Open **Parameters**, edit a name or expression, and press Enter or leave the
+input to commit; Escape cancels the draft. With `width` defined, expressions can
+reuse it:
+
+```text
+100mm
+width - 20mm
+width / 2
+```
+
+**Unit defaults** sets length/angle units for new or edited bare numbers. Each
+expression retains its authored units, so changing defaults does not resize
+existing geometry. Explicit units override defaults; mixed sums need compatible
+units, such as `width + 10mm`. Scalar parameters support counts and ratios.
+Parameter renames retain stable bindings; missing bindings require explicit repair.
+
+### Navigate and inspect
+
+Drag to orbit, right-drag or middle-drag to pan, and scroll to zoom in the 3D
+viewer. Press **F** or choose **Fit** to frame visible bodies. The **Views** panel
+offers Top, Front, Right, and Isometric views, plus saved named camera poses.
+Body/component visibility and isolation change the view, not the export scope.
+
+Use **Measure** for distances between solved sketch points or analytic line/arc/
+circle measurements; choose display units without resizing geometry. Measurements
+use authored sketch entities rather than arbitrary BRep surface picks. A section
+preview clips along global X/Y/Z with an offset and retained side; it is an uncapped
+visual view and leaves saved geometry and STL complete. Pending or failed rebuilds
+hide stale measurements.
+
+### Model and edit solids
+
+| Operation | Supported workflow and main limits |
+| --- | --- |
+| Extrude | Closed line/arc/circle regions with holes; positive/negative/symmetric distance, New Body/Cut/Join, and through-all. Symmetric distance is the total span. |
+| To Face | Positive extrusion to an upstream unmodified feature-owned planar cap/straight side; the full end section must fit the finite face, including openings. |
+| Revolve | Closed analytic regions around a coplanar world X/Y/Z or same-sketch line axis; angles greater than 0 through 360 degrees; New Body/Cut/Join. Crossing the axis is rejected. |
+| Cut/Join | Explicit saved upstream target IDs. Cuts must remove material from every target; joins must add material and produce one connected solid. Capture intersected targets is an explicit action. |
+| Hole | Up to 64 explicit centers and target bodies, blind or through-all, in either sketch-normal direction. Every center must cut a target and every target must lose volume. |
+| Fillet/Chamfer | Supported authored extrusion cap perimeters, complete line/arc/circle cap edges, and source-line side corners. Retained authored edges can work after supported booleans; lost/trimmed edges require repair. |
+
+Create/Edit Feature uses native preview and separate downstream checks where
+applicable. Select an authored solid dimension to edit its expression; for a bound
+field, explicitly choose a shared parameter or replace only that feature's formula.
+Formula-bound extrusion values keep their bindings and disable distance dragging
+until an explicit replacement is chosen.
+
+**Place holes on face** and **Draw here → Remove material** guide inward holes and
+pockets on supported retained planar extrusion faces. Placement must clear the
+actual face boundary and existing openings. Sampled curved boundaries use a
+conservative clearance allowance. Extrude/Fillet/Chamfer operation tokens also
+support drag, click, and keyboard target cards. The edge token picker is limited
+to untouched distance/New Body Extrude caps and complete authored cap edges;
+arbitrary BRep edges, vertical sides, and boolean-created topology are unavailable.
+
+Use source-linked Issues and the Inspector to repair references. Timeline moves
+preserve IDs and reject dependency violations. Failed operations retain upstream
+previews while blocking dependent modeling and STL until repaired or suppressed.
+
+## AI Assistance
+
+AI is optional; ordinary drawing, modeling, and file commands work without a
+provider. Open the bottom **AI drawer**. Review native geometry before applying
+any proposal; clarifications and failed previews do not edit the document.
+
+| Mode/scope | What it can do |
+| --- | --- |
+| New part | Create an editable component from bounded parametric recipes, including supported analytic profiles, openings, extrudes, revolves, holes, and cap treatments. |
+| This part | Change eligible independent length/angle parameters used exclusively by the active component. Shared, locked, derived, and unused values are excluded. |
+| Selected feature | Change supported Hole dimensions, distance Extrude thickness, or Revolve angle while preserving the feature's other settings. Changed fields explicitly replace their old binding. |
+| Sketch editing | Local numeric/relation edits, or consent-based provider proposals for bounded dimensions, parameters, relations, and analytic Trim/Extend actions. |
+| Add features to this part | Add up to four bounded hole, rectangular/circular pocket, or listed cap-edge Fillet/Chamfer operations on one explicit supported native face/body. |
+
+Existing-part feature additions preserve existing IDs, parameters, and features.
+Each proposed operation and the complete project must pass private native checks
+before **Apply AI feature plan** creates one Undo edit. Mode changes preserve
+descriptions/conversations, cancel pending previews, and reset feature-addition
+sharing consent. New-part generation and feature-field edits retain their own
+bounded scope and invalidation rules.
+
+### Configure providers
 
 ```sh
-npm run release:check
+cp .env.example .env.local
 ```
 
-Runs TypeScript checks, unit/component tests, the production build, and Chromium
-browser acceptance tests. Install the test browser once with
-`npx playwright install chromium`. Use this before commits or release handoff.
+Fill the desired keys in the ignored `.env.local` and restart the server. Never
+prefix API keys with `VITE_`, put them in project files, or commit them.
+
+| Provider | Key | Model override |
+| --- | --- | --- |
+| Anthropic | `ANTHROPIC_API_KEY` | `ANTHROPIC_MODEL` |
+| OpenAI | `OPENAI_API_KEY` | `OPENAI_MODEL` |
+| Google | `GOOGLE_API_KEY` or `GEMINI_API_KEY` | `GOOGLE_MODEL` or `GEMINI_MODEL` |
+
+Configured defaults live in [.env.example](.env.example) and
+[the gateway configuration](server/aiProvider.ts). Use a model override above or
+choose a model identifier in AI settings. Provider access and availability depend
+on your account.
+
+The gateway works with development and local Vite preview, accepts only loopback
+same-origin requests, and keeps credentials on the Node server. Static-only hosting
+has no AI endpoint. Shared/public AI requires a separate authenticated service.
+
+Requests send your description and bounded recent conversation. Existing-part
+parameter/feature modes also send their eligible edit context. Sketch and
+feature-addition modes require explicit sharing consent and disclose the bounded
+context: solved sketch intent or face bounds/IDs, eligible cap-edge choices, and
+listed parameter names/expressions/values. Full project JSON and full meshes are
+not sent. Chat and unapplied proposals stay out of project files. Provider requests
+are bounded and use validated data, rather than generated executable CAD code.
+See [AI feature additions](specs/working-cad/AI_FEATURE_ADDITIONS.md) and the
+[capability matrix's AI sections](specs/working-cad/CAPABILITY_MATRIX.md#ai-component-generation)
+for per-mode limits.
+
+## Save, Recovery, and STL
+
+**Save** downloads one deterministic `.pcaddoc` with durable CAD intent. **Export
+Project JSON** creates a `.json` copy. **Open** or a single project-file drop uses
+bounded validation and supported migrations before replacement. Nonempty projects
+get keep/save/replace choices when dropping a file.
+
+Edited projects autosave to IndexedDB after 500 ms idle. Recovery retains up to
+five projects with latest, previous, and last manually saved snapshots; startup
+recovery is explicit. Storage/quota errors leave the in-memory project intact.
+Download project files regularly: termination can lose edits before a completed
+storage transaction. Current schema is 13, with checked-in schema 1–13 regression
+fixtures and migrations.
+
+**File → Save or export…** separates editable projects from printable STL. STL
+requires a successful current rebuild with exportable geometry. Select bodies
+explicitly; visibility does not silently change the export scope. Multi-body
+export defaults to separate STL files in a ZIP. One STL with separate shells and
+best-effort native union are also available. Exports retain global millimeter
+coordinates. Disjoint unions remain separate solids and are reported.
+
+The cancellable export worker validates coordinates, indices, degeneracy,
+manifoldness, winding, shell/native volume, and bounded intersections. Combined
+modes require acknowledgement of applicable warnings. Expensive checks may be
+skipped outside union with a diagnostic. These checks cover supported meshes and
+numerical tolerances; changed or stale results cannot be downloaded.
+
+Project files contain components, parameters/bindings, sketches, planes, timeline
+features, saved unit preferences, and explicit named camera poses. Kernel handles,
+Three.js objects, meshes, rebuild results, transient camera/selection, and AI chat
+remain runtime data.
+
+### Resource limits
+
+| Resource | Default limit |
+| --- | --- |
+| Project import | 5 MiB UTF-8 JSON, depth 64, 500,000 JSON nodes |
+| Components / parameters / sketches / features | 100 / 500 / 100 / 1,000 |
+| Sketch entities | 750 per sketch; 10,000 total |
+| Constraints and dimensions, combined | 512 per sketch; 20,000 total |
+| Feature dependency depth / bodies | 100 / 64 |
+| Centers per Hole feature | 64 |
+| Tessellation per body | 100,000 triangles; 300,000 vertices |
+| Total tessellation / export intersection tests | 250,000 triangles / 2,000,000 tests |
+
+## Development and Validation
+
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Vite development server, strict port 5278. |
+| `npm run lint` | TypeScript application and browser-test checks; not an ESLint/style check. |
+| `npm test` / `npm run test:watch` | Vitest unit/component tests, once or in watch mode. |
+| `npm run build` | TypeScript checks and production output in `dist/`. |
+| `npm run preview` | Local production preview, strict port 5280. |
+| `npm run release:check` | Type checking, unit/component tests, build, development Chromium acceptance, and built-app production CSP acceptance. |
+| `npm run test:browser` | Native development Chromium suite, strict port 5279. |
+| `npm run test:production` | Built-app Chromium CSP suite, strict port 5280; build first. |
+| `npm run test:cross-browser` | Build plus production Chromium/Firefox/WebKit workflow and compact-layout checks, strict port 5281. |
+| `npm run test:ai:browser` | Controlled AI corpus and Focused workflows on all three engines, development server on strict port 5281. |
+| `npm run test:ai:live` | Opt-in live provider checks, strict port 5291. |
+
+Install Chromium before the release gate:
 
 ```sh
 npx playwright install chromium
-npm run test:browser
+npm run release:check
 ```
 
-Runs Playwright against a dedicated Vite server on `127.0.0.1:5279`; leave that
-port free. Your normal development server remains on port 5278. Tests start from
-an empty document and use the UI to create a rectangle, extrude it, cut a circular
-through-hole, edit thickness, save/reopen the project, and download STL on XY,
-XZ, and YZ planes. They require real OpenCascade extrusion/boolean meshes and
-check signed volume, outward STL normals, world coordinates, Z-up camera/grid,
-and rendered mesh/sketch alignment. A controlled-delivery test holds a real
-worker response to verify newer edits, request IDs, and epochs reject stale results;
-it also verifies a failed old worker reinitializes before rebuilding the latest edit.
-
-Browser screenshots and downloaded project/STL files are written to ignored
-`test-results/`; failures also retain Playwright traces. Run
-`npx playwright show-trace <trace.zip>` to inspect a failure. CI installs Chromium
-with OS dependencies and runs the same release gate. These tests cover the stated
-rectangle/through-hole workflow, not general CAD completeness or other browsers.
-
-The production build currently emits a Vite chunk-size warning because OpenCascade WebAssembly and related viewer code are large. The warning is expected for the current MVP and does not fail the build.
-
-## Using the App
-
-### Choose your workspace
-
-PlainCAD opens in **Docked Workbench**: Project/Parameters on the left, one
-Task/Properties panel on the right, and History/AI/Issues at the bottom. **Draw**,
-**Solid** and **Inspect** switch the context toolbar. **File** holds open, export
-and example commands; **Search commands** opens the complete command palette.
-The location bar keeps the active component visible. Close a dock to gain canvas
-space and reopen it with **Project** or **Details**. Drag a dock boundary, or focus
-it and use arrow keys, to resize. Sizes are bounded and saved only in this browser.
-
-Feature tasks put a real native preview in the center and controls on the right.
-Set a thickness or drag its distance handle, review the geometry, then **Apply**.
-Background commands and AI wait until you Apply or Cancel. Sketch mode uses one
-right-hand sketch control area; drawing dimensions remain editable on the canvas.
-Advanced controls stay behind disclosures. Bottom tabs show one surface at a time.
-
-On an empty project, enter **Part name** and choose **Draw a shape** or
-**Describe a part with AI**. Draw creates the named component and Sketch 1 together
-after plane confirmation, in one Undo step; Cancel keeps the name and edits
-nothing. Describe prepares a named New part proposal and commits only on native
-preview Apply. Naming drafts reset when a project is opened or replaced.
-
-The Task dock now reads current sketch/model readiness and links repairs to their
-sources. All five native modeling dialogs share Selection, Settings, Advanced
-options and Cancel/Apply. Selecting a native body or feature displays its authored
-driving dimensions beside the solid. Click a value to edit its existing expression
-through a compact native preview editor. For a bound field, explicitly choose a
-referenced parameter (including its shared uses) or replace only that feature
-formula; opening and Cancel preserve formulas and history. These labels
-do not infer editable bounding-box sizes or arbitrary face dimensions. See
-[first-part creation](specs/working-cad/FIRST_PART.md),
-[modeling tasks](specs/working-cad/MODELING_TASKS.md),
-[solid dimension limits](specs/working-cad/SOLID_DIMENSIONS.md), and
-[inline dimension editing](specs/working-cad/INLINE_SOLID_DIMENSIONS.md).
-
-Finish an unmodeled sketch in Workbench to choose a highlighted closed region
-and **Make solid**. Multiple regions require an explicit choice; the native
-Extrude preview still needs Apply. Space-drag/middle-drag pans a sketch,
-Move/Translate/Deform are visible tools, and Alt temporarily bypasses snaps.
-Intersection and external-anchor tangent snaps are bounded suggestions, not
-automatic constraints. The AI drawer also offers local rectangle sizing and
-selected-line horizontal/vertical refinement with review, preview and one-step
-Apply. See [sketch handoff](specs/working-cad/SKETCH_SOLID_HANDOFF.md),
-[mouse tools](specs/working-cad/SKETCH_MOUSE.md), and
-[local sketch refinement](specs/working-cad/SKETCH_REFINEMENT.md).
-
-The [Workbench validation protocol](specs/working-cad/WORKBENCH_VALIDATION.md)
-adds production CSP coverage for all five native editors and a prepared human
-usability pilot. Human sessions and comprehensive accessibility auditing have
-not been conducted. [Cross-engine usability checks](specs/working-cad/WORKBENCH_USABILITY_CHECKS.md)
-cover the native first-part workflow, compact dock controls and measured contrast
-for selected controls. Run `npm run test:cross-browser` to build and test Chromium,
-Firefox and WebKit; an independent CI job runs this matrix.
-
-**Settings → Workspace** also offers **Minimal workspace**, preserving the previous
-Focused layout and its deliberate Parts/History/Details disclosures. Existing
-saved minimal/full choices are honored. See [the design system](DESIGN_SYSTEM.md)
-for the spatial contract, shared components, theme rules and current limitations.
-
-Choose **Full workspace** for the complete ribbon, browser, history and inspection
-panels. **Pin** keeps an individual panel available in Minimal workspace. At compact
-widths, choosing Parts or Details switches the active sheet, including when panels
-are pinned. Workspace layout, pins and Parts/History expansion are local browser
-preferences, separate from CAD files and undo history; the active task is transient.
-Open tabs retain their own layout until reload; the most recently saved preferences
-are used when opening another tab.
-Details panels mount when first opened and remain mounted when hidden, preserving
-form drafts while deferring unused panel work.
-If browser storage is blocked, preferences work for the session with a visible notice.
-
-The AI drawer keeps provider/model administration in **AI settings**, collapsed
-on first use in Focused layout, while showing the current provider. Drawing and
-ordinary CAD commands remain available without an AI service. The first two
-steps of the [simplified workflow proposal](specs/working-cad/SIMPLIFIED_WORKFLOW.md)
-are implemented. Distance extrusion handles, protected project-file drops, guided
-face holes, and contextual AI scopes/local numeric previews are also implemented.
-Guided repair, Save/export, clearer pointer snaps, eligible Extrude/Fillet/Chamfer
-placement and AI candidate-solid clarification are implemented within the limits
-below. Broader arbitrary interaction and human usability/accessibility research
-remain planned.
-
-Drop one `.pcaddoc` or `.json` file anywhere on the workspace to open a project.
-The same bounded validation and migration used by Open runs before replacement.
-For a nonempty project, choose **Keep current project**, **Save current and open**,
-or **Replace without saving**. Active modeling tasks and dialogs must be finished
-or canceled first. File drops open a project; they do not append or position parts.
-
-### Describe a Part with AI
-
-Open **AI drawer** at the bottom, choose **New part**, and describe the part
-and its dimensions in plain text. Provider/model preferences live in **AI settings**.
-Click **Generate preview** (or Ctrl/Cmd+Enter),
-inspect the native geometry, then **Apply AI component**. Apply adds one component
-with ordinary editable parameters, sketches and timeline features, in one undo
-step. Existing parts remain in place. Cancel, close, or Escape discards the preview;
-project/component changes invalidate pending responses. Follow-up descriptions
-revise the full proposal before applying. **New conversation** clears local chat.
-
-Set server environment variables or copy `.env.example` to the ignored
-`.env.local`, fill the desired keys, and restart `npm run dev`. Supported keys are
-`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, and `GOOGLE_API_KEY` (or `GEMINI_API_KEY`).
-Optional `ANTHROPIC_MODEL`, `OPENAI_MODEL`, and `GOOGLE_MODEL`/`GEMINI_MODEL`
-override defaults; the drawer also accepts a model identifier. Never prefix keys
-with `VITE_`. Keys stay on the Node server and are never included in browser
-bundles or project files. No provider SDK dependency is required.
-
-The same local gateway works with `npm run preview` after building. It accepts
-only loopback, same-origin requests, even when Vite binds to all interfaces.
-Static-only deployment has no AI endpoint and reports that limitation; ordinary
-CAD continues to work. Deploying shared/public AI access requires a separate
-authenticated service. The browser CSP continues to allow only same-origin fetch.
-
-AI sends your description and up to three recent conversation turns to the chosen
-provider. It does not send project files, meshes, API keys, or other components.
-Chat, drafts and provider choices are temporary; only applied CAD intent is saved.
-Generation requires an available native kernel and finished sketch editing.
-
-Recipes support rectangle/circle/polygon/line-arc wire and flat compound sketches on origin or supported upstream extrusion face planes with
-offsets, parameterized distance/through-all and positive to-face extrudes, coplanar origin-axis revolves,
-explicit Cut/Join scopes, and feature-owned whole-cap Fillet/Chamfer. Recipes can
-also use point sketches and native Hole features with up to 64 explicit
-centers for mounting patterns. Polygon/wire profiles have at most 32 vertices,
-close through shared vertex IDs, and reject degenerate, self-crossing or inconsistent
-arcs. Points sketches cannot be extruded. Hole centers/targets must all participate
-in a real native cut; invalid patterns do not Apply. These remain ordinary editable
-sketch entities and Hole timeline features after saving.
-AI rectangle sketches include driving width/height dimensions, horizontal/vertical
-constraints and a fixed construction center; circles include a driving radius and
-fixed center. Open the generated sketch drawing to edit its D labels. Polygon,
-line/arc wire and points recipes can supply bounded indexed constraints and driving
-dimensions. Conflicting, redundant or missing design-intent references reject the
-proposal before Apply. Construction anchors do not become solid boundaries.
-
-AI compound profiles can contain one outer closed loop and up to eight separate
-inner openings in a single sketch. Sleeves, hollow rectangular sections and pocket
-cuts around an island use real native geometry. Openings must be strictly contained
-and cannot overlap, touch or create nested islands. Circular outer loops currently
-support circular openings; rectangle/polygon/wire outers also support closed line
-and arc openings. The recipe allows at most 64 total sketch points and no recursive
-compound profiles or explicit indexed intent across their loops.
-
-AI face planes use earlier unmodified distance-extrusion cap roles or straight outer
-side edges from the same recipe. Signed offsets are supported. Positive To Face
-extrusion requires a supported upstream plane and validates the whole section
-against finite face coverage, including holes. References follow parameter edits;
-lost owners fail with source-linked diagnostics and can be repaired in the sketch
-plane controls or ordinary feature controls. Curved/inner-loop sides, modified
-owners, existing-project face picks, and negative/symmetric To Face remain unavailable.
-
-Recipes are bounded to 24 parameters and 32 steps, validated as data, then rebuilt with native
-OpenCascade before Apply. Unsupported shapes/operations require clarification;
-failed geometry, malformed responses, missing keys, model access, quota, and
-network errors are shown without changing the document. AI generation does not
-implement unrestricted CAD or arbitrary replacement of existing features.
-For an existing part, choose **This part**.
-Only independent length/angle parameters used exclusively by the active component
-are listed and sent to the provider. Review the before/after values and native
-preview, then **Apply AI parameter edits**. This preserves component, sketch,
-feature and parameter IDs in one undo step. Shared, locked, derived and unused
-parameters are unavailable. The entire
-project is rebuilt, including dependent face references in other components.
-Choose **Selected feature** for a selected Hole, distance
-Extrude or Revolve in the active component. Diameter/blind depth, extrusion distance
-or revolve angle can change while sketch/profile/axis/operation/target/center,
-termination references and Hole drilling direction stay intact. Changed fields
-become explicit mm/deg literals,
-overriding their old parameter binding; unchanged bindings and project parameters
-are preserved. Separate native operation and downstream previews must pass before
-Apply; selection changes invalidate a pending proposal. IDs and timeline order
-survive one undoable edit. Other settings remain available through Edit Feature.
-The response's **Proposed dimensions** are editable before Apply. Change numeric
-values in the displayed units, then choose **Preview dimension changes** for a
-fresh native preview without a provider call. Editing invalidates Apply immediately;
-failed, stale and canceled previews cannot modify the project. This also works for
-existing-component parameter proposals; after applying or changing projects,
-generate a fresh proposal.
-The drawer shows a local conversation transcript, including clarifications and
-assumptions. Up to 16 turns remain in the session; the next request sends at most
-three recent complete turns within the byte budget. Older turns are omitted as
-needed, with a visible notice. The latest proposal is never silently truncated:
-if it cannot fit, use local dimension edits or **New conversation**. Preview errors
-can be copied into the next description for an explicit repair request; this does
-not call the provider until you choose Generate. Project replacement, provider/scope
-changes and explicit reset clear the relevant conversation. Chat stays out of saves.
-
-The provider adapters follow [Anthropic structured outputs](https://platform.claude.com/docs/en/build-with-claude/structured-outputs),
-[OpenAI structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs),
-and [Google Generate Content structured outputs](https://ai.google.dev/gemini-api/docs/generate-content/structured-output).
-
-The AI acceptance corpus contains nine mechanical parts: a four-hole mounting plate,
-driven triangular prism, analytic semicircle, hollow sleeve, rectangular spacer,
-island pocket, cap boss, straight-side tab and to-face pillar. Its oracles verify
-native BRep validity, solid count, exact volume, coordinate orientation and rendered
-WebGL meshes. Chromium release checks include the corpus; a separate CI job runs
-it and the Focused-workspace acceptance cases on Firefox and WebKit. The mounting-plate case also covers parameter
-editing, undo, save/open and positive STL volume in each engine.
+For the additional three-engine suites:
 
 ```sh
 npx playwright install chromium firefox webkit
+npm run test:cross-browser
 npm run test:ai:browser
 ```
 
-The cross-browser server uses strict port 5281. Live provider checks are separate,
-use strict port 5291 and make at most six ordinary AI gateway requests: a one-sketch
-sleeve and a face-mounted boss through each configured Anthropic/OpenAI/Google model.
-They require existing server-side environment keys, use no retries or automatic
-repairs, and validate generated native geometry, orientation and rendering. Missing
-provider keys are reported as skipped tests. Without the opt-in flag, all live
-tests skip and no provider generation requests are sent.
+Run focused tests with `npm test -- src/tests/document.test.ts`. Test suites own
+their server ports and do not reuse an already-running server. Stop `npm run preview`
+on 5280 before `test:production` or `release:check`; the two suites on 5281 must run
+separately. Screenshots/downloads/traces go to ignored `test-results/`;
+use `npx playwright show-trace <trace.zip>` for a retained failure trace.
+
+Native browser acceptance checks BRep validity, solid count, exact volume,
+orientation, parameter edits, undo/redo, save/open, STL, and stale-result rejection
+across supported workflows. jsdom and fallback meshes alone do not establish
+native modeling. Cross-engine checks cover their named workflows; human usability,
+complete accessibility, screen-reader speech, and actual browser/OS zoom evaluation
+remain pending. Controlled performance reports are described in
+[PERFORMANCE.md](specs/working-cad/PERFORMANCE.md).
+
+CI runs the release gate plus separate AI and Workbench cross-engine jobs. Live
+provider generation stays outside ordinary release checks and CI. To opt in:
 
 ```sh
 PLAINCAD_LIVE_AI=1 npm run test:ai:live
 ```
 
-Live tests incur the configured providers' API charges and are excluded from normal
-release checks and CI. Traces, screenshots and downloads are under ignored
-`test-results/ai-cross-browser/` and `test-results/ai-live/`.
-
-### Choose a Theme
-
-Use **Theme** in the top toolbar to choose Light, Dark, or Saturn Command. The
-selection applies to panels, controls, dialogs, sketch drawings, and the 3D viewer.
-It is saved in this browser separately from projects; switching themes preserves
-geometry, camera position, undo history, and saved model colors. If browser storage
-is unavailable, the choice still works for the current session.
-
-Saturn Command uses an instrument-console style: near-black
-panels, cyan borders/readouts, monospaced labels, illuminated square controls,
-and green/amber/red status accents. It keeps the CAD layout and real command
-behavior while applying the console styling to panels, dialogs and drawing views.
-
-### Create a Model
-
-1. Start the dev server and open the local URL.
-2. Choose **New** for a blank local project, then **New Component** and name the part.
-3. Choose **Create Sketch**, click a colored XY/XZ/YZ plane or a supported native planar face in the viewer, and draw in sketch mode in the main workspace. Drawing controls appear beside the canvas; **Finish Sketch** returns to the 3D model.
-4. Choose **Finish Sketch**, then **Extrude**. Select a profile, distance, direction, and New Body/Cut/Join operation; inspect the native geometry preview, then choose **Apply extrusion**. Cut and Join require explicit target bodies in the active component and offer **Through All** termination in positive, negative or symmetric directions. Positive extrusion also offers **To Face** with an explicit upstream unmodified planar face; the preview checks finite face coverage and holes. Cancel leaves the project unchanged.
-5. The Browser groups each component’s origin, sketches and bodies. Activate a
-   component before adding another sketch; selecting a sketch, body or timeline
-   feature activates its owner. Double-click a sketch to edit its canvas.
-6. Save downloads one `.pcaddoc` containing the project’s components and geometry
-   instructions. Open restores them; older projects migrate into a root component.
-   Active component is a temporary editing context, so opening starts at the root.
-7. **Mount Plate** and **Box** remain available as examples. The rebuild status pill
-   shows the current rebuild state.
-
-Components currently organize internal parts at the shared project origin. Modeling
-sources and cut/join/hole/edge-treatment targets stay within their component. Explicit
-face-plane references may refer to another component’s supported upstream geometry.
-There are no nested assemblies, component placement transforms, joints or external
-linked designs. Parameters and the timeline belong to the whole project. Components
-can be renamed in the Browser; component creation and renaming support undo/redo.
-Use each component’s **Visible** checkbox or **Isolate** to focus the 3D view, and
-**Show all components** to restore bodies and sketch overlays. Each sketch’s
-**3D** checkbox hides only that sketch overlay; **Edit Sketch** still shows its full
-canvas. **Show all bodies** restores bodies/components while preserving individual
-sketch hiding. Timeline chips show
-component ownership; **Active component only** filters the display while timeline
-moves still use the full project order. Visibility, isolation and filtering are
-temporary view preferences and reset on New/Open; they do not change geometry,
-history, saved project data, or the explicit STL export scope.
-
-### Edit Parameters
-
-1. Use the Parameters panel on the right.
-2. Edit parameter names or expressions.
-3. Press `Enter` or blur the input to commit the edit.
-4. Press `Escape` while editing to cancel the draft value.
-
-Inspector fields show an uncommitted-change indicator and accessible commit/cancel
-guidance while their value differs from the document. Drafts do not rebuild or
-autosave; undo and other external value changes replace them without a blur overwrite.
-
-Examples of parameter expressions:
-
-```text
-100mm
-plate_width - 20mm
-hole_diameter / 2
-```
-
-The app reports expression, unit, sketch, feature, import, and export errors in user-facing language.
-
-Schema 10 saves authoring defaults, display units and parameter groups. Open **Unit
-defaults** in Parameters to choose length/angle defaults for new or edited bare-number
-expressions. Each expression captures its units: changing defaults does not resize
-existing geometry, and parameter renames preserve them. Explicit units override the
-default; scalar multipliers remain scalar and dimensional ratios remain dimensionless.
-Choose **Scalar (no units)** in a parameter's inspector for counts/ratios. Mixed sums
-such as `width + 10` still need `width + 10mm`. Older expressions retain their strict
-explicit-unit behavior until edited. Computed readouts use the current evaluated
-quantities; unavailable or pending results never display the persisted value cache.
-Display units affect readouts and measurements, and are saved undoable preferences.
-The parameter inspector also edits descriptions and groups (up to 80 characters).
-
-Schema 8 persists parameter token bindings by stable ID. Renaming a parameter
-updates dependent display expressions while preserving design intent, including
-sketch coordinates, dimensions, plane offsets, and feature sizes. Unit literals
-and function names are unchanged. Older files bind their existing symbols during
-migration/import. Missing ID bindings remain editable and saveable but block
-rebuild until their expressions are repaired; reused names cannot retarget them.
-
-### Work With Sketches
-
-1. Activate a component, choose **Create Sketch**, and choose **Top (XY)**,
-   **Front (XZ)** or **Side (YZ)**. The picker shows local axes and the extrusion
-   normal; hovering previews the actual plane in the viewer. The canvas opens
-   immediately. The XY/XZ/YZ ribbon shortcuts also create sketches
-   in the active component; use **Edit Sketch** to open their canvas.
-2. Use the visible **Select / Line / Rectangle / Circle / Arc** buttons. Drag a
-   rectangle corner to corner or a circle from center to radius; two clicks also
-   work. After the first click, enter **Width / Height** or **Diameter** beside
-   the draft and press Enter (Tab moves between fields). Bare numbers use project
-   length units; explicit units and length parameter expressions also work. Sized
-   shapes add driving dimensions in one undoable edit. Sized rectangles retain
-   horizontal/vertical constraints so later dimension edits keep them rectangular.
-   Choose **Select**, click geometry, then **Edit selected size**, or click a
-   dimension label to inspect or edit its size. A reference measurement changes
-   geometry only after **Make driving dimension**; D labels edit existing intent.
-   Escape cancels the size editor.
-   **Precision and advanced tools** exposes exact coordinates, Point/Move/Translate/
-   Deform, grid spacing, pan/zoom and undo. **Dimension tools and display** exposes
-   other dimension types and display settings. Full workspace keeps these controls
-   expanded. The canvas supports points, connected lines, rectangles, circles and
-   center/start/end arcs in a plane-local view. The canvas previews unfinished
-   gestures, snaps to existing solved points and an optional millimeter grid, and
-   saves complete primitives as undoable edits. Escape cancels a draft before closing.
-   Zoom, pan, Fit, keyboard coordinate entry and construction geometry controls are available.
-   Click a point, line, circle or arc; Shift-click toggles more items. Drag a
-   selection box from left to right for fully contained curves/standalone points,
-   or from right to left for crossing selection. Shift-drag toggles the box hits.
-   **Select all sketch geometry** includes every point and curve. Box selection omits
-   support points of curves so adjoining curves outside the box remain intact.
-   Choose **Delete selected sketch item** for the whole selection,
-   or press Delete/Backspace with the canvas focused. The **Sketch item** list also
-   selects geometry that cannot currently render. Deleting a point removes attached
-   curves. Deleting geometry also removes its unused endpoints and centers, while
-   preserving shared points, surviving dimension/constraint references and hole centers.
-   Related dimensions and constraints
-   are removed in the same undoable edit, with counts shown before deletion. Undo
-   restores IDs and intent. Downstream features keep their profile references and
-   report missing profiles instead of silently switching geometry. Typing in a field
-   never triggers geometry deletion.
-   Drawing dimensions show solved lengths/radii in display units. Add a driving
-   length, radius/diameter, point distance or line angle in the canvas dimension
-   controls; click a D label to edit its expression. Pending or failed solves show
-   unavailable values. Adding a canvas dimension explicitly enables driving mode
-   for legacy sketches. Undo/redo and save/open preserve dimension IDs and intent.
-   Choose the move tool to drag free numeric points, or move a selected point with
-   exact coordinate entry. The preview stays transient until release; Escape,
-   pointer cancellation and project edits discard it. Moves preserve shared IDs.
-   Parameter-bound, constrained, driving distance/angle and arc points require
-   expression or constraint edits; a clear diagnostic explains the restriction.
-   Moves onto another point are rejected; movement never merges point IDs.
-   Choose translate to move a connected group of lines, circles, arcs and related
-   construction geometry rigidly, retaining dimensions, constraints and profile IDs.
-   Pointer and exact-coordinate moves preview the whole group and commit once.
-   Groups are limited to 80 points; fixed geometry or parameter-bound coordinates
-   block translation. Parameter-driven lengths and radii remain supported. Solver
-   deformation, new point collisions and changes to valid profile topology reject
-   the move with a diagnostic. General constraint-driven deformation is unavailable.
-   The **deform** tool changes linked X/Y coordinates in point-and-line sketches
-   with horizontal, vertical, coincident and fixed constraints. Orthogonal point
-   distances and lengths on horizontal/vertical-constrained lines retain their
-   dimensions. Fixed and parameter-bound axes block incompatible moves. Drag a
-   point or use Deform sketch to coordinate; release validates the solve and
-   profile topology before one undoable edit. Escape cancels. This is bounded to
-   80 points and rejects curves, nonlinear constraints, general distance/angle
-   dimensions, new coincidences, reversed edges and topology changes. Use existing
-   geometry/dimension controls for those cases.
-   C markers show the current constraint status and locate referenced geometry.
-   Select a marker or constraint list entry to inspect, repair ordered references,
-   or remove intent through undoable edits. Lost references stay in the list;
-   pending solves hide markers. Create new constraints in Sketch tools.
-   Dimension and constraint labels use automatic bounded placement to avoid one
-   another and point handles. Leaders follow their original geometry and allow
-   drawing gestures to pass through. Layout stays transient during zoom/pan and
-   does not edit the document. Each family shows at most 128 labels; all intent
-   remains in its selection/list controls. Crowded views report when placement
-   cannot separate labels. Dimension and constraint labels can be dragged or moved
-   with arrow keys (Shift for larger steps). Home or the respective Reset label
-   placement button restores automatic layout. Enable Position reference labels
-   to move reference measurements; they otherwise allow drawing clicks through.
-   Escape cancels a drag. Placement lasts only in the open canvas and does not
-   alter geometry or project JSON. Hide references or zoom in when crowded;
-   guaranteed collision-free placement remains unavailable.
-   Use the rectangle/circle helpers or Sketch tools to add points, lines, circles,
-   and center/start/end arcs. Construction curves appear dashed and are excluded
-   from solid profiles.
-   Straight dividers through circles and mixed arc/line profiles create selectable
-   curved regions. End a divider on a boundary or connect it into a closed line
-   network. Open tails, interior tangent contacts and authored self-intersections
-   report diagnostics; ordinary shared arc-endpoint joins remain supported.
-   Fragments keep analytic kernel arcs and authored entity IDs. Radius and winding
-   edits retain region IDs while topology is unchanged; removing a divider requires
-   explicit feature-profile repair. Crossing circles produce crescent and lens
-   regions with analytic boundaries; tangencies and duplicate circles remain
-   diagnostic. Circle/arc crossings also form selectable analytic regions; contacts
-   outside the authored arc sweep are ignored. Partial arc dividers may end on a
-   circle boundary. Arc/arc crossings also create selectable regions in closed
-   networks, including arc-only loops. Coincident sweeps, interior tangencies and
-   authored self-crossings require sketch repair; ordinary shared endpoints retain
-   their legacy profile IDs.
-3. Add constraints and driving dimensions in Sketch tools; dimension expressions
-   can reference parameters. Coordinate expressions supply initial geometry;
-   fixed constraints lock coordinates when that is the intended design intent.
-4. Inspect solve status, remaining degrees of freedom, and source-linked errors.
-   Conflicts, redundant intent, degeneracy, and non-convergence block modeling.
-   Reset sketch solve restores the authored seed instead of the previous solution.
-5. Choose an origin plane, a supported upstream extrusion cap/straight side face,
-   or an expression-driven offset of either. If a reference is lost, explicitly
-   select a replacement plane and apply it; geometry and IDs are preserved.
-
-Schema 7 introduces driving solves for new sketches. Older projects retain their
-validation-only dimensions until you choose Enable driving dimensions. The solver
-uses a local Jacobian-rank DOF heuristic and bounded iteration/time budgets; it
-is intended for small sketches. See the capability matrix for precise limits.
-
-### Autosave and Fabrication
-
-Edited projects autosave to IndexedDB after a 500ms idle period. Recovery keeps up
-to five projects, with the latest snapshot, previous snapshot, and last downloaded
-save for each. On startup, explicitly recover unsaved work or start without it.
-Corrupt latest snapshots can be replaced by the previous snapshot. Storage/quota
-failures preserve the in-memory project and offer manual download or clearing old
-recovery data. Browser termination can still lose edits made before the last completed
-IndexedDB transaction; autosave does not replace manual project files.
-
-STL defaults to separate files in a ZIP for multiple bodies. Choose one STL with
-separate shells or a best-effort native union in the export dialog. All modes keep
-global coordinates in millimeters. Connected unions remove overlap; disjoint unions
-remain separate solids and report that fact. Warnings require an explicit download
-choice for combined modes. Changes after validation invalidate a pending download.
-Choose explicit bodies in the export dialog, or select a body in Browser and use
-`Export selected body`. Native union uses only those selected bodies. Visibility
-is independent: `Select visible bodies` explicitly copies visible bodies into
-the export selection. Empty or lost selections block export.
-
-Export runs in a cancellable worker with a 60-second limit. It checks finite float32
-coordinates, indices, degeneracy, welded edge/vertex manifoldness, winding, shell
-volume and native-volume agreement. A 1e-7mm seam weld closes duplicated native face
-vertices. Bounded non-adjacent triangle checks detect intersections and body
-containment/contact. Expensive checks can be skipped for separate/shell modes, with
-a diagnostic; union requires full checks. These numerical checks are not a proof
-of absence of every near-degenerate or adjacent-face intersection.
-
-Imports check raw UTF-8 bytes before parsing, preflight nesting before the reviver,
-then migrate and validate in a cancellable worker. Checked-in schema 1–13 fixtures
-verify IDs, rebuilds, edits, save/open, and recovery. The production Chromium suite
-also imports every released fixture under CSP, verifies native BRep volume/solid count,
-edits thickness, saves/reopens with stable IDs, and checks STL volume and global bounds.
-These fixtures cover a rectangular body with a through-hole, not every historical
-modeling workload. Default limits: 5 MiB JSON,
-depth 64, 500 parameters, 100 sketches, 750 entities/512 constraints and dimensions
-per sketch, 10,000 total entities, 20,000 total constraints/dimensions, 1,000 features,
-100 feature dependency steps, 64 bodies, 100,000 triangles/300,000 vertices per body,
-250,000 total triangles, and 2,000,000 intersection tests per export. Resource errors
-fail clearly; native triangle budgets are checked before tessellation buffers grow.
-Each hole feature is limited to 64 explicit centers.
-
-### Work With Features
-
-1. Select a sketch with a detected profile.
-2. Click `Extrude` in the Feature Timeline. Choose the profile and settings in the dialog, inspect the OpenCascade preview, then click **Apply extrusion**.
-3. Select a feature to inspect or rename it.
-4. Use `Suppress` or `Delete` on selected features.
-
-Use `Move earlier` / `Move later` on a selected sketch or feature to reorder it
-across independent timeline items. The same checks apply in the command palette.
-Moves preserve IDs and creation timestamps and reject dependency violations for
-sketches, body owners, face planes, termination faces, and edge owners. Modifiers
-on the same body keep their existing order. Disabled moves show the reason;
-accepted edits rebuild normally and support undo/redo and save/open.
-
-The Inspector offers explicit source sketch, profile and upstream target-body
-replacement for extrusion/revolve features, and source/target repair for holes.
-Broken references remain saved and structurally valid damaged projects can open
-or recover for repair. Profiles wait for current worker analysis; target choices
-come from durable upstream body owners. Nothing is rebound automatically.
-
-The Inspector supports positive, negative and symmetric distance extrudes, cuts
-and joins with explicit saved body scopes,
-through-all, and termination on an upstream finite planar face. To-face termination
-supports sloped planes and verifies that the entire end cap fits inside the selected
-face, including its holes. To-face remains positive-only. Through-all supports
-all three directions; symmetric distance is the total span split equally across
-the sketch plane.
-
-Extrude and revolve cuts can target up to 64 upstream bodies. Use **Cut target
-scope** checkboxes to include or remove bodies; the **Target body** selector replaces
-the scope with one body. The saved stable-ID set never includes new bodies silently.
-Every selected body must lose volume. If any target is lost, disjoint, empty, invalid,
-or exceeds resource limits, the entire cut fails and retains upstream previews.
-Lost scope entries can be unchecked for explicit repair. Through-all extrude tools
-cover the furthest selected target along the chosen direction.
-
-Use **Join target scope** to merge up to 64 selected bodies with an extrude or
-revolve tool. The final union must be one connected solid and the tool must add
-volume beyond the union of targets. The first selected target retains its stable
-ID and name; the other selected bodies are absorbed only when the whole operation
-succeeds. Saved order chooses that surviving identity, while intermediate unions
-may be disconnected before the tool bridges them. Downstream references to
-absorbed bodies require explicit repair to the surviving body. Suppressing the
-join restores the original bodies.
-
-Hole features accept up to 64 explicit targets and 64 centers. Use **Hole target
-scope** in the creation dialog or Inspector. Each center must remove volume from
-at least one selected body, and every selected body must lose volume. Different
-centers can drill separate bodies; overlapping tools are combined before cutting.
-Any missing reference, unused center, no-op target, invalid geometry, tessellation
-failure or resource failure retains all upstream bodies and blocks STL export.
-Through-all reaches the furthest selected body along the chosen positive or negative
-sketch normal; blind depth is measured from the sketch plane in that direction.
-Schema 11 stores the target array
-and migrates older single-target holes without changing their target IDs.
-
-Use **Capture intersected targets** on a cut, join, or hole to save the current
-native body/tool intersections as explicit target IDs. Capture probes only the
-feature's upstream history and never changes the scope during later rebuilds.
-Use it when first choosing the operation or explicitly retargeting a feature.
-It preserves a join's current primary ID if that body still intersects. Bodies
-added upstream later remain excluded until selected or explicitly recaptured.
-Capture uses positive common solid volume; face-only joins require manual target
-selection. Document edits or replacement cancel in-flight probes, and an empty,
-failed or stale probe retains the previous scope. The operation's usual modeling
-validation still applies after capture.
-
-Use `Revolve` for a closed profile around a coplanar origin axis or a stable line
-in its sketch. The Inspector edits the axis, 0–360 degree angle (exclusive of 0),
-and new-body/cut/join operation. Profiles crossing the axis fail with a diagnostic.
-
-Select a supported positive, negative, or symmetric distance extrusion and use
-`Fillet` or `Chamfer`. The Inspector
-edits size expressions and selects an entire cap perimeter, a cap edge derived from
-a line/arc, or the two side corners at a source line's endpoints. Native operations
-validate BRep geometry, solid count, and exact volume/surface-area changes. Invalid sizes,
-no-op cuts/joins, disconnected joins, and lost references fail rebuild and block STL
-export; suppress or repair the feature to recover. Failed modifiers block subsequent
-operations on the same body while retaining upstream previews.
-
-Feature-owned sketch face references originate from positive, negative, or symmetric distance new-body
-extrusions. Retained caps and straight sides after Cut/Join are checked against the
-actual native solid at the sketch’s timeline position. Removed or split/ambiguous
-faces require repair; a later modifier does not invalidate an earlier sketch.
-Caps follow the shifted start/end of the sweep with outward normals; straight-side
-planes share that shifted origin. Cap/side references are explicit roles, with
-reselection for repair.
-
-Retained authored cap edges and side corners support native fillet/chamfer after
-booleans. An entire perimeter requires every original edge to survive; new hole or
-Join edges are excluded, and trimmed/missing edges fail explicitly. Arbitrary new
-boolean faces/edges remain unsupported. To-face termination still requires an
-unmodified upstream owner.
-
-Hole features use transformed cylindrical tools. Select a sketch or point and use `Hole` to choose
-explicit centers and native target bodies. The modal validates positive length
-expressions before creating a feature. **Edit Feature** also opens an existing Hole
-with its diameter, blind-depth/through-all termination, centers, source sketch and
-target scope. Choices come from a fresh native rebuild immediately before the Hole;
-lost references remain visible for repair. The edited cut and all downstream
-features must pass separate native previews before **Apply hole edits**. Cancel
-leaves the project untouched; Apply preserves feature/body IDs and timeline order
-in one undo step. Unchanged expressions retain their authored units and parameter
-bindings. The Inspector offers direct reference repairs and a positive/negative
-sketch-normal direction control. Legacy holes retain positive drilling direction.
-Empty/lost centers and unchanged cuts fail rebuild.
-
-**Place holes on face** starts a guided flow in the active component. Click a
-supported native distance-extrusion cap or retained straight side face in the
-viewer, or choose its named face button. Click the face drawing to place centers
-at 0.001 mm precision, or enter exact X/Y lengths and parameter expressions. Remove
-unwanted centers from the list. Choose diameter and blind depth or Through All,
-inspect the native preview, then **Apply face holes**. The saved face-referenced
-point sketch and inward Hole feature are one Undo edit. The selected body is the
-explicit target; circles must fit within the face, clear existing openings and
-not overlap one another. Invalid placement receives an early diagnostic.
-Selection, component, rebuild, file-job and project-session changes invalidate
-Apply. Cancel leaves the document unchanged. Curved or ambiguous faces and
-removed/split/lost references remain unavailable.
-Clearance against openings and other tessellated boundaries reserves the current
-0.5 mm native deflection allowance. Outer cap segments matching authored straight
-profile edges retain exact clearance, allowing small and tangent holes at those
-straight cap boundaries. Other contours, including side-face boundaries, remain
-conservative. Schema 13 saves Hole direction; versions 1–12 migrate without changing
-their original positive drilling behavior. The schema-13 fixture includes an
-inward through-hole from an extrusion end cap.
-
-The **Dependencies** panel traces the selected parameter, sketch/entity, feature or
-body. **Inputs** and **Affected outputs** show direct and transitive authored
-references with shortest-path distances. Each entry describes one link along that
-path; click an existing item to inspect it.
-Body selection traces its latest unsuppressed writer. Target chains include
-preceding modifiers, and suppressed/downstream owners have explicit labels.
-Missing references remain visible with disabled navigation. Cycles returning to
-the selection are diagnosed without recursive traversal. Lists show 50 items at a
-time; **Show more** expands them. This is structural inspection; the Rebuild panel
-reports whether the geometry and references are valid.
-
-See `specs/working-cad/CAPABILITY_MATRIX.md` for current capability limits. Schema
-support alone does not imply a working modeling operation.
-
-### Navigate the Viewer
-
-- Orbit: drag in the viewer.
-- Pan: right-drag or middle-drag.
-- Zoom: scroll over the viewer.
-- Fit: press `F` or click `Fit` to frame visible bodies.
-- Reset camera: click `Reset`.
-- Views panel: Top (+Y screen-up), Front (looking +Y), Right (looking -X),
-  and Isometric. Fit preserves the current view direction.
-- Save named camera views with a name; restore or delete them after save/open.
-  Named camera poses are durable and undoable, with at most 20 per project.
-- Section preview: choose global X/Y/Z, an offset in millimeters, and the retained
-  side. Clipping affects bodies, sketch overlays, measurement lines, and picking;
-  it has no caps and does not change geometry, measurements, or STL export.
-  New/open projects clear clipping.
-- Clear selection: press `Escape`.
-- Browser lists actual rebuilt bodies with visibility checkboxes and `Show all bodies`.
-  Hidden bodies cannot be picked. Visibility persists during edits and undo/redo
-  in the current project session, and resets on new/open/recovery. These runtime
-  preferences are not saved in project JSON.
-
-The Measure panel reads the current worker's solved sketch geometry. Choose two
-sketch points (including points on different planes) for world-space distance and
-X/Y/Z delta, or a line, circle, or arc for analytic length, radius and diameter.
-Choose mm/cm/m/in/ft without changing the model. A magenta world-space line shows
-the point pair. Pending or failed rebuilds hide measurements and overlays;
-removed references remain explicit until reselected. Measurements are transient
-and refer to authored sketch entities; arbitrary BRep edge/face measurements are
-not available.
-
-### Command Palette
-
-Open the command palette with:
-
-```text
-Cmd+K on macOS
-Ctrl+K on Windows/Linux
-```
-
-Type to filter commands. Disabled commands are shown as unavailable when the current document or rebuild state does not allow them.
-
-## Save, Load, and Export
-
-### Save a Project
-
-Click `Save` to download a `.pcaddoc` project file. The file is deterministic JSON and contains the parametric document model only.
-
-### Open a Project
-
-Click `Open` and select a `.pcaddoc` or compatible JSON project file. Imported projects are parsed, validated, migrated when supported, loaded into the store, and rebuilt.
-
-### Export JSON
-
-Use the command palette command `Export Project JSON` if you need a `.json` copy instead of `.pcaddoc`.
-
-### Export STL
-
-Click `STL` after the model has rebuilt successfully. STL export is disabled when:
-
-- the kernel is not ready,
-- the latest rebuild failed,
-- the rebuild result does not match the current document,
-- or there are no rebuilt meshes.
-
-## Project File Model
-
-Project files store durable CAD intent:
-
-- schema version,
-- document metadata,
-- parameters,
-- sketches,
-- feature timeline.
-
-Project files do not store runtime-only data:
-
-- Three.js objects,
-- OpenCascade runtime objects,
-- transient meshes,
-- viewer camera state,
-- rebuild worker state.
-
-This keeps `.pcaddoc` files stable and portable.
-
-## Repository Structure
-
-```text
-src/
-  app/                 React app shell
-  cad/
-    document/          Durable CAD document schema and operations
-    features/          Feature graph rebuild logic
-    kernel/            OpenCascade/kernel adapter boundary and STL export
-    parameters/        Units and expression evaluation
-    sketch/            Sketch helpers, solving, and profile detection
-    worker/            Geometry worker protocol
-  persistence/         Project import/export helpers
-  state/               Zustand CAD store and selectors
-  templates/           Built-in mounting plate and box templates
-  tests/               Vitest and React Testing Library coverage
-  ui/                  Panels and command palette
-  viewer/              Three.js viewer
-specs/initial/         Original spec, implementation plan, and release notes
-```
-
-## Testing Strategy
-
-The test suite focuses on pure CAD logic and critical UI workflows:
-
-- document validation,
-- parameter expression evaluation,
-- unit handling,
-- sketch helper creation,
-- profile detection,
-- feature graph rebuild behavior,
-- mounting plate workflow validation,
-- project save/load round trips,
-- STL export smoke coverage,
-- command enablement,
-- inspector routing,
-- release hardening workflows.
-
-Run the full release gate with:
-
-```sh
-npm run release:check
-```
-
-## Troubleshooting
-
-### Port Already In Use
-
-Start Vite on a different port:
-
-```sh
-npm run dev -- --host 127.0.0.1 --port 5279
-```
-
-### OpenCascade or WebAssembly Load Issues
-
-Use a modern desktop browser and load the app from the Vite dev server rather than opening `index.html` directly from disk. The kernel and worker assets are served by Vite.
-
-### STL Button Is Disabled
-
-Wait for the rebuild status to show `succeeded`. If errors are present, fix the parameter, sketch, or feature error first. STL export requires at least one rebuilt mesh.
-
-### Project Import Fails
-
-The app validates imported files. Common causes are invalid JSON, unsupported schema versions, or missing required document fields. The file error banner and Rebuild panel show user-facing messages.
-
-### Build Chunk Warning
-
-The production build warns that some chunks exceed 500 kB. This is currently expected because OpenCascade/WebAssembly and CAD viewer code are large. The build still succeeds.
-
-## MVP Scope
-
-Implemented in the initial MVP:
-
-- parameters,
-- XY sketches,
-- simple profile detection,
-- extrude,
-- worker-backed rebuild,
-- viewer,
-- import/export,
-- STL export,
-- usability and release hardening.
-
-Deferred until after MVP:
-
-- assemblies,
-- mates and joints,
-- CAM/toolpaths,
-- simulation,
-- sheet metal,
-- loft/sweep/surface modeling,
-- robust topological naming,
-- full sketch constraint solving,
-- multi-user collaboration,
-- plugin system,
-- cloud sync,
-- desktop packaging.
-
-## Reference Docs
-
-- `specs/initial/SPEC.md`: original product and technical specification.
-- `specs/initial/PLAN.md`: phased implementation plan.
-- `specs/initial/RELEASE_HARDENING.md`: release hardening checklist.
-- `specs/initial/MVP_COMPLETION.md`: MVP completion review.
-- `specs/working-cad/SPEC.md`: next-stage specification for a working parametric CAD system.
-- [Simplifying the PlainCAD workflow](specs/working-cad/SIMPLIFIED_WORKFLOW.md): proposed adaptive UI, mouse drawing, drag-and-drop, AI assistance and implementation priorities.
-
-Production build headers, CSP, cache/MIME requirements, and the built-app browser
-check are documented in [deployment/README.md](deployment/README.md).
-
-The Inspector exposes line/arc endpoints and circle/arc centers. Inspect a linked
-point to edit its coordinates, or choose another point in the same sketch to repair
-the reference. Arc direction is editable with undo/redo. Well-typed lost point
-references survive project open for explicit repair; malformed IDs remain rejected.
-Invalid references or inconsistent arc geometry block rebuilding and STL export.
-
-The Chromium suite includes a six-operation native chain: extrusion, cap fillet,
-cap chamfer, through-hole, through-pocket, and connected boss join. It checks exact
-BRep volume after every operation and depth/radius edits, stable body identity and
-bounds, undo/redo, blocked downstream operations after a middle-feature failure,
-suppression/repair, save/open, and STL volume/winding. This is one bounded XY part;
-it does not establish arbitrary topology naming or every complex model workload.
-
-The release gate records controlled native performance reports for both Vite
-development and the production build under CSP. The shared rectangle/through-cut
-workload verifies current geometry across twenty measured edits and ten STL
-exports. Production reports UI edit/export timings; detailed phase and resource
-counters remain development-only. See [measurement scope and commands](specs/working-cad/PERFORMANCE.md).
-
-Extrusion creation previews run in an isolated, cancellable native worker with a
-30-second time limit. Revolve creation uses the same isolated preview with explicit profile, coplanar origin/sketch-line axis, angle, New Body/Cut/Join operation and target bodies. Fillet and Chamfer use the same preview workflow with size, extrusion owner, edge role and source edge settings. Apply adds one timeline feature only after native geometry checks; Cancel leaves history unchanged. Changing settings discards the previous preview immediately;
-project edits, replacement, or component changes invalidate Apply. Preview geometry
-and its camera are temporary and excluded from project saves, undo history,
-autosave, and STL export. Apply records one feature edit and schedules the normal
-project rebuild. The dialog supports distance termination and one selected profile;
-through-all and supported to-face termination remain available in the Inspector.
-
-Sketch mode keeps the Browser, parameter controls and timeline visible while the
-main model area becomes a plane-local drawing canvas. Finish Sketch returns to
-the mounted 3D viewer; completed sketch edits remain undoable. Escape cancels a
-pending primitive or drag, then finishes the sketch when no draft remains. F fits
-the sketch when drawing has focus. Creation of another sketch/component and solid
-modeling commands wait until Finish Sketch. Selecting another component closes
-the current sketch mode and discards only incomplete drawing gestures.
-
-Create Sketch keeps the 3D viewer interactive while selecting a plane. Hovering a
-colored origin plane or an eligible native face highlights it; clicking creates
-one sketch in the active component and aligns the camera to its local axes. The
-chooser also offers keyboard-accessible plane/face buttons. Faces require a
-native-validated distance-extrusion owner, including retained faces after Cut/Join.
-Curved, lost, split/ambiguous and
-fallback faces give a diagnostic without creating a sketch. Face references use
-the existing stable feature-owned roles and follow supported owner edits.
-
-### Extrusion distance handles
-
-Distance Extrude creation and Edit Feature previews have an arrow handle. Drag
-along the shown sketch-normal axis, or focus the handle and use arrow keys (1 mm,
-Shift for 10 mm); the typed distance stays synchronized. Positive/negative arrows
-control their corresponding extent; symmetric distance is the total span. Drag
-updates use explicit mm values at 0.001 mm precision. Parameter/formula-bound
-expressions disable the handle with an explanation; typed edits remain available.
-Through All and To Face retain their existing controls. Cancel, Escape, pointer
-capture loss, focus loss and resizing discard an unfinished gesture. Apply waits
-for the latest valid native preview; one Apply is one Undo edit. Native XY/XZ/YZ
-acceptance checks exact volume/orientation, existing-feature edits, save/open/STL
-and stale same-ID project replacement.
-
-### Contextual AI scope and local edits
-
-The AI drawer shows **New part**, **This part**, and **Selected feature** scope
-chips. A selected distance Extrude routes “make this thicker” to its distance; an
-active part uses a unique eligible thickness parameter or asks you to choose an
-editable dimension. Generated parameter names have readable labels without
-renaming saved parameters. This part excludes shared, locked, derived and unused
-parameters. Selected feature changes only its supported fields and can replace a
-field's expression with a literal while leaving project parameters unchanged.
-Exact supported
-requests such as “make this thicker to 12 mm” can prepare a local native preview
-without an AI key or provider request. A simple thicker/thinner instruction that
-conflicts with its numeric value asks for clarification; explicit “set” wording
-or an explicitly chosen field honors the absolute value. Wrong units ask for a
-supported mm/deg value. Numeric refinements also stay local. Other bounded requests
-use the selected provider after you choose Generate preview. Scope and selection
-changes do not call a provider automatically. The drawer shows the target,
-before/after values and scope-specific next-action hints. Ambiguous eligible
-dimensions offer **Show geometry** and an explicit **Change** action. Showing a
-candidate traces authored dependencies to its related current solid(s) and names
-an unambiguous authoring sketch; it does not select or edit the model. Distinct
-parameters may affect the same solid, and a feature's fields share its related
-solid. Choose by name/value and inspect the exact native preview before Apply.
-Highlights clear on scope, prompt, selection, project/session/component, rebuild
-and busy-state changes. Missing geometry leaves the bounded dimension choice and
-native preview route available with a diagnostic. Highlighting, choosing and local
-numeric refinement make no provider request. Broader model-derived suggestions and unrestricted sketch synthesis remain planned.
-Bounded conversational sketch edits are described below.
-Unsupported requests, wrong dimensions and stale contexts show diagnostics. Review
-the proposed values and actual native geometry before Apply; accepted edits retain
-IDs in one Undo step. Native acceptance covers selected Extrude/Hole/Revolve and
-component parameters, cancellation, stale replies, save/open and STL.
-
-### Guided model repair
-
-Model issues now show source-linked repair cards. **Show and repair** opens the
-relevant parameter/feature controls, or the sketch drawing with the reported
-constraint or driving dimension selected. Existing upstream target bodies can be
-highlighted without editing the project. A missing or changed face still requires
-an explicit supported replacement in the source controls.
-
-For one unbranched open outline with 2–256 non-construction line/arc segments,
-the card can show its two endpoints and a dashed proposed straight closing edge.
-**Add missing closing edge** is available only after showing that proposal; it
-preserves existing points and design intent and validates the solved closed
-profile before one undoable edit. Branches, separate loops/chains, circles, solver
-errors and invalid closing edges require manual repair. Cards from pending or
-replaced rebuilds cannot edit the document, and competing tasks must finish first.
-
-### Guided saving and printing
-
-Use **File → Save or export…** to choose an editable `.pcaddoc` project or a
-printable STL. Editable saving keeps sketches, dimensions, parameters and feature
-history, and is available even when geometry has diagnostics. STL lists marked
-bodies and their components, selected body/triangle counts, and whether the output
-will be one STL or a ZIP with one STL per body.
-
-All bodies are marked by default, including hidden bodies. **Select visible bodies**
-explicitly applies body/component visibility. **Advanced STL options** exposes
-separate files, separate shells and native union, with the existing mesh checks.
-Failures keep their original diagnostic, explain repair options, and can open an
-identified source feature. Changed/replaced projects require reopening the guided
-task. Quick Save and STL commands remain available.
-
-### Pointer precision snapping
-
-Mouse drawing can snap to existing points, line midpoints, true arc-sweep
-midpoints, and circle/arc centers, with labeled markers and horizontal/vertical
-alignment guides. Existing points take priority. Proximity uses screen-space
-pixels on both axes and follows the sketch view, including nonuniform scaling.
-Use **Geometry snaps** to disable midpoint/center/alignment inference. Existing
-points, including stored circle/arc center points, still snap when inference is
-disabled. **Snap** controls the existing grid behavior.
-
-Snapping places pointer-drawn geometry without adding automatic constraints or
-changing authored expressions. Typed coordinates, point moves, translation and
-solver deformation retain their existing behavior. Tangency and intersection
-snapping are not implemented. Native acceptance verifies precise pointer placement,
-preview cancellation, rebuild geometry, save/open and STL export.
-
-### Drag operations onto supported geometry
-
-Extrude, Fillet and Chamfer tokens accept drag, viewer clicks or keyboard target cards
-through one command workflow. Turquoise overlays identify eligible geometry;
-yellow hover feedback stays in fixed space so target cards do not move during a
-pointer gesture. Choose a target, inspect the native preview, then explicitly Apply.
-Cancel changes no project data; Apply retains one Undo step.
-
-Extrude accepts current closed sketch regions in the visible active component.
-Fillet/Chamfer drop targets are limited to untouched native distance/new-body Extrude
-owners and their original start/end cap-perimeter groups or individual complete
-authored line/arc/circle cap edges. Individual viewer picks take precedence over
-the coincident whole-cap group; an exact keyboard card resolves ambiguous picks.
-Split authored edges, boolean-created topology, vertical side edges and modified
-owners are unavailable in this picker. Ambiguous or detailed targets can
-be selected by their exact card. At most 128 targets are offered; viewer overlays
-pre-bound sampled vertices to 8192 per target and 65536 total.
-
-Picking and Apply bind the exact document, project session, component and native
-source result. Competing modeling, guided save/export, STL and repair tasks are blocked until
-the operation is applied or canceled. Unsupported picks give a diagnostic. Native
-acceptance covers actual profile drag and cap picking on XY/XZ/YZ, changed BRep
-volume, undo/redo, parameter edits, save/open and positive signed STL volume.
-
-### Trim, extend and contextual sketch relations
-
-In an open sketch, choose **Trim** or **Extend**, select a line, arc or circle, and click the
-interval/end to edit (or enter local pick coordinates). Preview solves the staged
-sketch and checks downstream native solids; Apply creates one undoable edit.
-Cancel changes nothing. Trim uses finite analytic line/arc/circle contacts and
-turns a trimmed circle into the retained arc. Extend supports lines and arcs; a
-circle has no endpoints. Overlapping curve spans, protected constraints/dimensions,
-parameter bindings and unsafe shared endpoints get an explicit diagnostic. See [supported trim/extend cases](specs/working-cad/SKETCH_TRIM_EXTEND.md).
-
-Select geometry to show matching **Constrain selected geometry** actions:
-Horizontal/Vertical for lines, Parallel/Perpendicular for two lines, Coincident
-for two points, and Tangent for a supported curve pair. Preview preserves existing
-intent, explains conflicts and local remaining freedom, and requires explicit
-Apply. Selection or document changes invalidate the proposal. See
-[relation limits](specs/working-cad/CONTEXTUAL_SKETCH_CONSTRAINTS.md).
-
-### Draw a pocket on a face
-
-Choose **Draw → Draw on face**, pick a highlighted supported planar extrusion
-face (or its keyboard card), then **Draw here**. Draw a closed region and finish
-the sketch. **Remove material** opens an inward cut preview with the source body
-and direction fixed. Apply requires valid native geometry and reduced exact volume.
-The additive **Make solid** option remains available. Caps and straight sides of
-retained distance extrusions are supported. Curved, ambiguous, lost or modified
-references that fail native validation get a diagnostic. See
-[face pocket limits](specs/working-cad/FACE_POCKET.md).
-
-### Conversational sketch editing
-
-Open the AI drawer while sketching. **Local edits** remains the default and sends
-no provider request. Select **Conversational AI provider** to use the local
-Anthropic, OpenAI or Google adapter. Inspect the bounded sketch context and
-explicitly allow sending it to the selected provider. Credentials stay on the
-local server. The request contains one sketch's solved entities, selection,
-dimensions, constraints, referenced parameters and recent conversation; bodies,
-meshes and the project file are excluded.
-
-AI proposes bounded rectangle sizes, dimension/parameter edits, matching relations
-and finite analytic curve trim/extend actions. Missing information produces a clarification
-without an Apply action. Bindings are preserved by default. Replacing a dimension
-formula or changing one editable referenced shared parameter requires an explicit
-policy choice, with shared effects shown before Apply. Every proposal uses the
-same local planners and native downstream preview as the manual tools; unsupported
-or conflicting requests get diagnostics. Apply is one Undo step. Cancel, a changed
-selection/project, provider switching or revoked sharing permission discards the
-old proposal. The complete request is capped at 32 KB, with at most eight actions,
-128 entities, 64 dimensions/constraints and 24 referenced parameters; larger
-sketches use local tools. Conversation is session-only.
-
-Automated editing checks cover compact/reduced viewports, named controls,
-keyboard cancellation, validation messages and dialog focus. See the
-[editing usability audit](specs/working-cad/EDITING_USABILITY_AUDIT.md).
-Human walkthroughs, screen-reader speech and actual browser/OS zoom checks are
-still pending.
-
-
-### Mirror, linear pattern and outline offset
-
-In an open sketch, select geometry and choose **Mirror** or **Linear pattern**.
-Mirror chooses a line or construction line as its axis. Linear pattern chooses a
-normalized direction, spacing expression and 2–16 total instances including the
-original. Copies preserve supported internal dimensions, constraints and shared
-parameter bindings; crossing or incompatible intent gets a diagnostic. Preview
-checks the sketch and any downstream native solids, then Apply adds one Undo.
-These are independently editable copies rather than persistent pattern features.
-See [copy behavior and limits](specs/working-cad/SKETCH_MIRROR_PATTERNS.md).
-
-**Offset** chooses a closed outline, distance and inward/outward direction.
-Analytic circles and convex line polygons are supported. Circle copies can retain
-matching source and distance parameter expressions; polygon copies use a literal
-length distance and a solved snapshot. Concave, mixed-arc, open and collapsed
-outlines produce a diagnostic. Existing holes require explicit **Outer boundary
-only**. Copies remain ordinary sketch entities. Finish Sketch and extrude the ring
-region to make a wall. See [offset limits](specs/working-cad/SKETCH_OUTLINE_OFFSET.md).
-
-### Ask AI to add features to a part
-
-Open the bottom AI drawer and choose **Add features to this part**. Choose a
-supported current planar extrusion face, inspect the bounded context, and allow
-sharing it with Anthropic, OpenAI or Google. Describe face-local holes, a rectangular
-or circular pocket, or supported cap-edge fillets/chamfers. Missing coordinates or
-sizes produce a clarification. Every proposed operation and the complete part
-must pass private native previews before **Apply AI feature plan** commits one Undo.
-Existing features, IDs and parameter bindings are preserved; new expressions may
-use explicitly shared project parameters. Switching AI modes keeps descriptions
-and conversations, cancels previews and requires fresh sharing consent.
-See [supported AI additions and limits](specs/working-cad/AI_FEATURE_ADDITIONS.md).
+This makes at most six requests for the checked-in sleeve and face-boss prompts,
+with no automatic retries. Missing keys skip their provider; without the opt-in
+flag, generation tests skip. Live calls incur provider charges and responses are
+nondeterministic. See [review and validation evidence](specs/working-cad/NEXT_FIVE_REVIEW.md)
+for the latest feature batch's reproducible checks and separate live smoke results.
+
+## Repository Map
+
+| Path | Purpose |
+| --- | --- |
+| `src/app/`, `src/ui/` | App shell, design system, panels, commands, and interaction tasks. |
+| `src/cad/document/`, `src/state/` | Durable schema, validation/migrations, immutable history, and rebuild scheduling. |
+| `src/cad/parameters/`, `src/cad/sketch/` | Units/expressions, sketch solving, profiles, and editing planners. |
+| `src/cad/features/`, `src/cad/kernel/`, `src/cad/worker/` | Dependencies, OpenCascade, tessellation/STL, and worker lifecycle. |
+| `src/viewer/`, `src/templates/` | Three.js rendering and editable example models. |
+| `src/persistence/` | Import safety, deterministic project files, and recovery. |
+| `src/ai/`, `server/` | Bounded AI plans and local provider gateway. |
+| `src/tests/`, `e2e/`, `production-e2e/`, `cross-browser-e2e/`, `live-e2e/` | Unit, native browser, production, cross-engine, and live acceptance. |
+
+See [AGENTS.md](AGENTS.md) for architectural rules and the contributor review,
+validation, and commit workflow.
+
+## Limits and Troubleshooting
+
+Assemblies/joints, CAM, simulation, sheet metal, loft/sweep/shell/thread modeling,
+STEP export, general surface modeling, and arbitrary topological naming remain
+unavailable. Existing constraints, face/edge references, and AI recipes have the
+supported scopes documented in the capability matrix. Native failures report
+the source and preserve upstream previews for repair.
+
+- **Port collision:** stop the conflicting server or choose a different explicit port.
+- **Kernel/WebAssembly load failure:** check browser console, network requests,
+  and deployment worker/WASM MIME and security headers. Modeling tasks require native geometry.
+- **STL unavailable:** finish/cancel tasks, wait for the current rebuild, then repair
+  or suppress failing features and select exportable bodies.
+- **Import failure:** inspect the visible error for malformed/unsupported data or
+  resource limits. The current project remains intact after a failed import.
+- **AI unavailable:** configure server-side keys, restart Vite, and check the chosen
+  model's account access. Static hosting has no local gateway.
+- **Large build chunks:** the CAD kernel/viewer bundle can trigger Vite's chunk-size
+  warning; that warning alone does not fail the build.
+
+## Further Reading
+
+- [Capability matrix](specs/working-cad/CAPABILITY_MATRIX.md), [working-CAD specification](specs/working-cad/SPEC.md), and [roadmap](specs/working-cad/PLAN.md).
+- [Design system](DESIGN_SYSTEM.md), [first-part workflow](specs/working-cad/FIRST_PART.md), and [simplified workflow proposal](specs/working-cad/SIMPLIFIED_WORKFLOW.md).
+- [Sketch handoff](specs/working-cad/SKETCH_SOLID_HANDOFF.md), [mouse tools](specs/working-cad/SKETCH_MOUSE.md), and [sketch refinement](specs/working-cad/SKETCH_REFINEMENT.md).
+- [Trim/Extend](specs/working-cad/SKETCH_TRIM_EXTEND.md), [contextual constraints](specs/working-cad/CONTEXTUAL_SKETCH_CONSTRAINTS.md), [Mirror/Pattern](specs/working-cad/SKETCH_MIRROR_PATTERNS.md), and [Offset](specs/working-cad/SKETCH_OUTLINE_OFFSET.md).
+- [Modeling tasks](specs/working-cad/MODELING_TASKS.md), [face pockets](specs/working-cad/FACE_POCKET.md), [solid dimensions](specs/working-cad/SOLID_DIMENSIONS.md), [inline editing](specs/working-cad/INLINE_SOLID_DIMENSIONS.md), and [individual cap-edge picking](specs/working-cad/INDIVIDUAL_CAP_EDGE_PICKING.md).
+- [AI feature additions](specs/working-cad/AI_FEATURE_ADDITIONS.md), [readiness guidance](specs/working-cad/READINESS_GUIDANCE.md), and [latest batch review](specs/working-cad/NEXT_FIVE_REVIEW.md).
+- [Workbench validation](specs/working-cad/WORKBENCH_VALIDATION.md), [cross-engine usability checks](specs/working-cad/WORKBENCH_USABILITY_CHECKS.md), and [editing usability audit](specs/working-cad/EDITING_USABILITY_AUDIT.md).
+- [Original MVP specification](specs/initial/SPEC.md), [completion review](specs/initial/MVP_COMPLETION.md), and [deployment guide](deployment/README.md).
