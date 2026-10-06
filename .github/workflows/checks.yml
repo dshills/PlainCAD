@@ -15,7 +15,7 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -49,4 +49,23 @@ jobs:
         with:
           name: ai-cross-browser-results
           path: test-results/ai-cross-browser/
+          retention-days: 7
+
+  workbench-cross-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium firefox webkit
+      - run: npm run test:cross-browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: workbench-cross-browser-results
+          path: test-results/cross-browser/
           retention-days: 7

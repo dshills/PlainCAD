@@ -3,10 +3,11 @@ import { useSyncExternalStore } from "react";
 import { useWorkspaceState } from "../../state/useWorkspaceState";
 import { useCadStore, type CadStore } from "../../state/useCadStore";
 import { useSketchCanvas } from "../commands/sketchCanvasCommand";
-const query = "(max-width: 1060px)";
+import { COMPACT_QUERY, compactSnapshot } from "../../state/workbenchViewport";
+export { compactSnapshot } from "../../state/workbenchViewport";
 function subscribe(listener: () => void) {
   if (typeof window.matchMedia !== "function") return () => {};
-  const media = window.matchMedia(query);
+  const media = window.matchMedia(COMPACT_QUERY);
   if (typeof media.addEventListener === "function") {
     media.addEventListener("change", listener);
     return () => media.removeEventListener("change", listener);
@@ -14,8 +15,6 @@ function subscribe(listener: () => void) {
   media.addListener(listener);
   return () => media.removeListener(listener);
 }
-export const compactSnapshot = () =>
-  typeof window.matchMedia === "function" && window.matchMedia(query).matches;
 const selectHasHistory = (s: CadStore) =>
   s.history.present.features.length > 0 ||
   Object.keys(s.history.present.sketches).length > 0;

@@ -227,12 +227,10 @@ test("docks keep uncommitted parameter drafts, searchable project items, one det
   await page.locator(".workbench-settings > summary").click();
   await page.setViewportSize({ width: 900, height: 740 });
   await page.getByRole("button", { name: "Parts", exact: true }).click();
-  await page.getByRole("button", { name: "Parts", exact: true }).click();
   await expect(project).toBeVisible();
   await expect(
     page.getByRole("complementary", { name: "Workspace details" }),
   ).toBeHidden();
-  await page.getByRole("button", { name: "Toggle task dock" }).click();
   await page.getByRole("button", { name: "Toggle task dock" }).click();
   await expect(
     page.getByRole("complementary", { name: "Workspace details" }),

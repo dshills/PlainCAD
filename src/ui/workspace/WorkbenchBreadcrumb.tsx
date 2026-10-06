@@ -3,12 +3,14 @@ import { useCadStore } from "../../state/useCadStore";
 import { useWorkbenchState } from "../../state/useWorkbenchState";
 import { useSketchCanvas } from "../commands/sketchCanvasCommand";
 import { activeComponentId } from "../commands/projectWorkflowCommand";
+import { useCompactWorkbench } from "./useCompactWorkbench";
 import {
   CaretRightIcon,
   FolderOpenIcon,
   SlidersHorizontalIcon,
 } from "../design-system/Icons";
 export function WorkbenchBreadcrumb() {
+  const compact = useCompactWorkbench();
   const cadDocument = useCadStore((state) => state.history.present);
   const component = useCadStore(activeComponentId);
   const canvas = useSketchCanvas((state) => state.active);
@@ -18,10 +20,13 @@ export function WorkbenchBreadcrumb() {
     useShallow((state) => ({
       leftOpen: state.leftOpen,
       rightOpen: state.rightOpen,
+      mobileDock: state.mobileDock,
       configure: state.configure,
       persistenceError: state.persistenceError,
     })),
   );
+  const leftVisible = compact ? dock.mobileDock === "left" : dock.leftOpen;
+  const rightVisible = compact ? dock.mobileDock === "right" : dock.rightOpen;
   const sketch =
     canvas?.documentId === cadDocument.id && canvas.session === session
       ? cadDocument.sketches[canvas.sketchId]
@@ -35,11 +40,11 @@ export function WorkbenchBreadcrumb() {
         id="workspace-parts-toggle"
         className="ds-command"
         aria-label="Parts"
-        aria-expanded={dock.leftOpen}
+        aria-expanded={leftVisible}
         aria-controls="workbench-project"
         onClick={() => {
-          dock.configure({ leftOpen: !dock.leftOpen });
-          useWorkbenchState.setState({ mobileDock: "left" });
+          if (compact) useWorkbenchState.setState({ mobileDock: leftVisible ? "none" : "left" });
+          else dock.configure({ leftOpen: !leftVisible });
         }}
       >
         <FolderOpenIcon size={18} aria-hidden={true} />
@@ -64,11 +69,11 @@ export function WorkbenchBreadcrumb() {
         className="ds-command"
         id="workspace-details-toggle"
         aria-label="Toggle task dock"
-        aria-expanded={dock.rightOpen}
+        aria-expanded={rightVisible}
         aria-controls="workbench-details"
         onClick={() => {
-          dock.configure({ rightOpen: !dock.rightOpen });
-          useWorkbenchState.setState({ mobileDock: "right" });
+          if (compact) useWorkbenchState.setState({ mobileDock: rightVisible ? "none" : "right" });
+          else dock.configure({ rightOpen: !rightVisible });
         }}
       >
         <SlidersHorizontalIcon size={18} aria-hidden={true} />

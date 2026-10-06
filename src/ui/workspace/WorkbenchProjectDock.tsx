@@ -4,14 +4,16 @@ import { ParameterPanel } from "../panels/ParameterPanel";
 import { XIcon } from "../design-system/Icons";
 import { RetainedPanel } from "./RetainedPanel";
 import { DockResize } from "./DockResize";
+import { useCompactWorkbench } from "./useCompactWorkbench";
 export function WorkbenchProjectDock() {
+  const compact = useCompactWorkbench();
   const dock = useWorkbenchState();
   return (
     <aside
       id="workbench-project"
       aria-label="Parts browser"
       className={`workbench-dock workbench-left ${dock.mobileDock === "left" ? "mobile-current" : ""}`}
-      hidden={!dock.leftOpen}
+      hidden={compact ? dock.mobileDock !== "left" : !dock.leftOpen}
     >
       <div className="dock-header">
         <div role="group" aria-label="Project dock tabs">
@@ -35,7 +37,8 @@ export function WorkbenchProjectDock() {
           className="dock-close"
           aria-label="Close Parts"
           onClick={() => {
-            dock.configure({ leftOpen: false });
+            if (compact) useWorkbenchState.setState({ mobileDock: "none" });
+            else dock.configure({ leftOpen: false });
             window.document.getElementById("workspace-parts-toggle")?.focus();
           }}
         >

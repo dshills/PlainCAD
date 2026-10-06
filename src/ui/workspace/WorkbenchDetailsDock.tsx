@@ -1,4 +1,3 @@
-import { sketchSolidHandoffCurrent, useSketchSolidHandoff } from "../commands/sketchSolidHandoffCommand";
 import { useShallow } from "zustand/react/shallow";
 import { useWorkbenchState } from "../../state/useWorkbenchState";
 import { useWorkspaceState } from "../../state/useWorkspaceState";
@@ -15,8 +14,11 @@ import { DockResize } from "./DockResize";
 import { useCommandEnablement } from "../commands/useCommandEnablement";
 import { nextModelingAction, modelingPrerequisite } from "./modelingReadiness";
 import { toggleAiDrawer, useAiDrawer } from "../commands/aiCommand";
+import { sketchSolidHandoffCurrent, useSketchSolidHandoff } from "../commands/sketchSolidHandoffCommand";
+import { useCompactWorkbench } from "./useCompactWorkbench";
 
 export function WorkbenchDetailsDock() {
+  const compact = useCompactWorkbench();
   const dock = useWorkbenchState(
     useShallow((state) => ({
       rightOpen: state.rightOpen,
@@ -37,7 +39,7 @@ export function WorkbenchDetailsDock() {
       id="workbench-details"
       className={`workbench-dock workbench-right ${dock.mobileDock === "right" ? "mobile-current" : ""}`}
       aria-label="Workspace details"
-      hidden={!dock.rightOpen || sketching}
+      hidden={sketching || (compact ? dock.mobileDock !== "right" : !dock.rightOpen)}
     >
       <div className="dock-header">
         <div role="group" aria-label="Task dock tabs">
@@ -61,7 +63,8 @@ export function WorkbenchDetailsDock() {
           className="dock-close"
           aria-label="Close Details"
           onClick={() => {
-            dock.configure({ rightOpen: false });
+            if (compact) useWorkbenchState.setState({ mobileDock: "none" });
+            else dock.configure({ rightOpen: false });
             window.document.getElementById("workspace-details-toggle")?.focus();
           }}
         >

@@ -137,16 +137,33 @@ The Task dock now reads current sketch/model readiness and links repairs to thei
 sources. All five native modeling dialogs share Selection, Settings, Advanced
 options and Cancel/Apply. Selecting a native body or feature displays its authored
 driving dimensions beside the solid. Click a value to edit its existing expression
-through the native preview task; formulas are preserved on opening. These labels
+through a compact native preview editor. For a bound field, explicitly choose a
+referenced parameter (including its shared uses) or replace only that feature
+formula; opening and Cancel preserve formulas and history. These labels
 do not infer editable bounding-box sizes or arbitrary face dimensions. See
 [first-part creation](specs/working-cad/FIRST_PART.md),
-[modeling tasks](specs/working-cad/MODELING_TASKS.md), and
-[solid dimension limits](specs/working-cad/SOLID_DIMENSIONS.md).
+[modeling tasks](specs/working-cad/MODELING_TASKS.md),
+[solid dimension limits](specs/working-cad/SOLID_DIMENSIONS.md), and
+[inline dimension editing](specs/working-cad/INLINE_SOLID_DIMENSIONS.md).
+
+Finish an unmodeled sketch in Workbench to choose a highlighted closed region
+and **Make solid**. Multiple regions require an explicit choice; the native
+Extrude preview still needs Apply. Space-drag/middle-drag pans a sketch,
+Move/Translate/Deform are visible tools, and Alt temporarily bypasses snaps.
+Intersection and external-anchor tangent snaps are bounded suggestions, not
+automatic constraints. The AI drawer also offers local rectangle sizing and
+selected-line horizontal/vertical refinement with review, preview and one-step
+Apply. See [sketch handoff](specs/working-cad/SKETCH_SOLID_HANDOFF.md),
+[mouse tools](specs/working-cad/SKETCH_MOUSE.md), and
+[local sketch refinement](specs/working-cad/SKETCH_REFINEMENT.md).
 
 The [Workbench validation protocol](specs/working-cad/WORKBENCH_VALIDATION.md)
 adds production CSP coverage for all five native editors and a prepared human
 usability pilot. Human sessions and comprehensive accessibility auditing have
-not been conducted.
+not been conducted. [Cross-engine usability checks](specs/working-cad/WORKBENCH_USABILITY_CHECKS.md)
+cover the native first-part workflow, compact dock controls and measured contrast
+for selected controls. Run `npm run test:cross-browser` to build and test Chromium,
+Firefox and WebKit; an independent CI job runs this matrix.
 
 **Settings → Workspace** also offers **Minimal workspace**, preserving the previous
 Focused layout and its deliberate Parts/History/Details disclosures. Existing

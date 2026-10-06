@@ -16,6 +16,8 @@
     "deployment",
     "playwright.ai.config.ts",
     "playwright.ai-live.config.ts",
-    "live-e2e"
+    "live-e2e",
+    "playwright.cross-browser.config.ts",
+    "cross-browser-e2e"
   ]
 }

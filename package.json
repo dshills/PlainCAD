@@ -14,7 +14,8 @@
     "preview": "vite preview",
     "test:production": "playwright test -c playwright.production.config.ts",
     "test:ai:browser": "playwright test -c playwright.ai.config.ts",
-    "test:ai:live": "playwright test -c playwright.ai-live.config.ts"
+    "test:ai:live": "playwright test -c playwright.ai-live.config.ts",
+    "test:cross-browser": "npm run build && playwright test -c playwright.cross-browser.config.ts"
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",

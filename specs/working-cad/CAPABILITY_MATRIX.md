@@ -12,12 +12,28 @@
   Advanced options and Cancel/Apply controls. Recognized legacy profile aliases
   remain valid and retain their authored IDs; lost profiles require explicit repair.
 - Solid labels expose authored feature fields, evaluated values, formulas and
-  affected features, opening the ordinary native editor. No arbitrary BRep or
-  bounding-box dimension editing is inferred. See [supported fields and limits](SOLID_DIMENSIONS.md).
+  affected features, opening a compact native editor with explicit shared-parameter
+  versus feature-formula edits. Native operation and downstream preview must pass
+  before Apply; stale snapshots and worker responses cannot publish changes. No arbitrary BRep or
+  bounding-box dimension editing is inferred. See [supported fields and limits](SOLID_DIMENSIONS.md) and
+  [inline edit semantics](INLINE_SOLID_DIMENSIONS.md).
 - Default Workbench production acceptance covers all five native editors through
   save/open/STL under CSP plus keyboard docks, themes and compact navigation.
   A [human usability pilot protocol](WORKBENCH_VALIDATION.md) is prepared; human
   sessions and comprehensive accessibility audits remain unperformed.
+
+- Finishing a new unmodeled sketch in Workbench opens a source-scoped closed-region
+  chooser; clicking a highlighted region selects it, Make solid opens Extrude,
+  and Apply creates geometry. Existing modeled sketches and Full layout retain
+  ordinary Finish behavior. See [handoff limits](SKETCH_SOLID_HANDOFF.md).
+- Sketch mouse tools support view-only Space/middle panning, visible Move/Translate/
+  Deform, finite analytic intersections and external-anchor tangents; Alt bypasses
+  snapping. Curve candidate work is bounded and snaps add no implicit constraints.
+  See [mouse limits](SKETCH_MOUSE.md).
+- Local AI refinement supports exact rectangle sizing and selected horizontal/
+  vertical lines. Ambiguous, conflicting and parameter-bound geometry gets a clear
+  diagnostic. Apply follows solver/profile validation and native downstream geometry
+  when solids exist. See [refinement limits](SKETCH_REFINEMENT.md).
 
 ## Review scope
 

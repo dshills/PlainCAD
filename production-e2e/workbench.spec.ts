@@ -115,8 +115,6 @@ test("default workbench keyboard dock controls and compact navigation work in al
   await expect.poll(async () => Number(await resize.getAttribute("aria-valuenow"))).toBeGreaterThan(initialWidth);
   await page.setViewportSize({ width: 900, height: 740 });
   await page.getByRole("button", { name: "Parts", exact: true }).click();
-  await page.getByRole("button", { name: "Parts", exact: true }).click();
-  await page.getByRole("button", { name: "Parts", exact: true }).click();
   await expect(page.getByRole("complementary", { name: "Parts browser" })).toBeVisible();
   await expect(page.getByRole("complementary", { name: "Workspace details" })).toBeHidden();
   await page.getByRole("button", { name: "Toggle task dock" }).click();

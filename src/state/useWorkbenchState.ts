@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { compactSnapshot } from "./workbenchViewport";
 
 export const WORKBENCH_STORAGE_KEY = "plaincad.workbench.v1";
 export type WorkbenchLeftTab = "project" | "parameters";
@@ -55,7 +56,7 @@ interface WorkbenchState extends WorkbenchPreferences {
   rightTab: "task" | "properties";
   bottomTab: WorkbenchBottomTab;
   bottomOpen: boolean;
-  mobileDock: "left" | "right";
+  mobileDock: "left" | "right" | "none";
   persistenceError?: string;
   configure(change: Partial<WorkbenchPreferences>): void;
   showLeft(tab: WorkbenchLeftTab): void;
@@ -68,7 +69,9 @@ export const useWorkbenchState = create<WorkbenchState>((set, get) => ({
   rightTab: "task",
   bottomTab: "history",
   bottomOpen: false,
-  mobileDock: "left",
+  // Desktop visibility stays persisted; compact screens start with a clear
+  // canvas until the user deliberately opens a dock.
+  mobileDock: "none",
   configure: (change) => {
     const state = get();
     const preferences: WorkbenchPreferences = {
@@ -101,12 +104,14 @@ export const useWorkbenchState = create<WorkbenchState>((set, get) => ({
     set({ ...preferences, persistenceError });
   },
   showLeft: (leftTab) => {
-    get().configure({ leftTab, leftOpen: true });
-    set({ mobileDock: "left" });
+    const compact = compactSnapshot();
+    get().configure({ leftTab, ...(!compact ? { leftOpen: true } : {}) });
+    if (compact) set({ mobileDock: "left" });
   },
   showRight: (rightTab) => {
-    get().configure({ rightOpen: true });
-    set({ rightTab, mobileDock: "right" });
+    const compact = compactSnapshot();
+    if (!compact) get().configure({ rightOpen: true });
+    set({ rightTab, ...(compact ? { mobileDock: "right" as const } : {}) });
   },
   showBottom: (bottomTab) => set({ bottomTab, bottomOpen: true }),
 }));
