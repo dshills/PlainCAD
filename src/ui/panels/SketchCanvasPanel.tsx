@@ -1,3 +1,4 @@
+import { useSketchRefinement } from "../commands/sketchRefinementCommand";
 import { useWorkspaceState } from "../../state/useWorkspaceState";
 import { evaluateParameters } from "../../cad/parameters/expressionEvaluator";
 import {
@@ -143,7 +144,7 @@ export function SketchCanvasPanel() {
   ) : null;
 }
 function SketchCanvas({ active }: { active: CanvasSession }) {
-  const refinementBusy = false;
+  const refinementBusy = useSketchRefinement((s) => Boolean(s.frame));
   const focused = useWorkspaceState((s) => s.layout !== "full");
   const [sizes, setSizes] = useState<CanvasSizeInput>({});
   const [precisionOpen, setPrecisionOpen] = useState(!focused);

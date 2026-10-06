@@ -1,3 +1,5 @@
+import { useSolidDimensionEdit } from "../commands/solidDimensionCommand";
+import { SketchRefinementPanel } from "./SketchRefinementPanel";
 import { useHoleDraft } from "../commands/holeCommand";
 import { useGuidedHole } from "../commands/guidedHoleCommand";
 import { useOperationDrop } from "../commands/operationDropCommand";
@@ -90,7 +92,9 @@ export function AiDrawer({ embedded = false }: { embedded?: boolean }) {
   );
   const holeActive = Boolean(useHoleDraft((state) => state.draft));
   const guidedHoleActive = Boolean(useGuidedHole((state) => state.draft));
+  const solidDimensionActive = Boolean(useSolidDimensionEdit((state) => state.frame));
   const operationActive =
+    solidDimensionActive ||
     operationPickerActive ||
     operationExtrudeActive ||
     operationModelingActive ||
@@ -716,7 +720,8 @@ export function AiDrawer({ embedded = false }: { embedded?: boolean }) {
         </button>
         <span>Describe a part</span>
       </div>
-      {open ? (
+      {open && canvasActive ? <div id="ai-drawer-content"><SketchRefinementPanel /></div> : null}
+      {open && !canvasActive ? (
         <div
           id="ai-drawer-content"
           className="ai-drawer-content"

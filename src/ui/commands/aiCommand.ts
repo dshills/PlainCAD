@@ -1,3 +1,4 @@
+import { useSolidDimensionEdit } from "./solidDimensionCommand";
 import { create } from "zustand";
 import { operationDraftBusy } from "./operationDropCommand";
 import { useGuidedHole } from "./guidedHoleCommand";
@@ -59,6 +60,7 @@ export function currentAiFrame(frame: AiDraftFrame) {
         state.selection.selectedIds[0].documentId === frame.document.id)) &&
     !state.fileBusy &&
     !useSketchCanvas.getState().active &&
+    !useSolidDimensionEdit.getState().frame &&
     !useGuidedHole.getState().draft &&
     !operationDraftBusy()
   );

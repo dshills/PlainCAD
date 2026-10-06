@@ -1,6 +1,7 @@
 import { beginSolidDimensionEdit, solidDimensionEditingAvailable, useSolidDimensionEdit } from "./solidDimensionCommand";
 import type { SolidDimension } from "../../cad/inspection/solidDimensions";
 import { canMakeSketchSolid, makeSketchSolid, chooseSketchSolidRegion, cancelSketchSolidHandoff, useSketchSolidHandoff } from "./sketchSolidHandoffCommand";
+import { useSketchRefinement } from "./sketchRefinementCommand";
 import { beginOperationDrop, chooseOperationDropTarget, cancelOperationDrop, canBeginOperationDrop, operationDraftBusy, useOperationDrop, type DropOperation, type OperationDropFrame } from "./operationDropCommand";
 import { beginSaveOrExport, canBeginSaveOrExport, saveOrExportBlocked } from "./guidedExportCommand";
 import { beginGuidedHole, cancelGuidedHole, canBeginGuidedHole, useGuidedHole } from "./guidedHoleCommand";
@@ -142,7 +143,7 @@ export interface CommandEnablement {
 }
 
 export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useTargetScopeCapture.getState().busy, canvasActive = Boolean(useSketchCanvas.getState().active), guidedHoleActive = Boolean(useGuidedHole.getState().draft), guidedHoleStartBlocked = Boolean(useExtrudeDraft.getState().draft || useHoleDraft.getState().draft || useModelingDraft.getState().draft || useProjectWorkflow.getState().active), exportDialogOpen = useFileJobs.getState().exportOpen, operationBusy = operationDraftBusy(), operationFrameActive = Boolean(useOperationDrop.getState().frame)): CommandEnablement {
-  const refinementBusy = Boolean(useSolidDimensionEdit.getState().frame);
+  const refinementBusy = Boolean(useSketchRefinement.getState().frame || useSolidDimensionEdit.getState().frame);
   const handoffReady = !refinementBusy && !guidedHoleActive && !exportDialogOpen && !guidedHoleStartBlocked && !state.fileBusy && canMakeSketchSolid(state);
   const targetPickerActive = guidedHoleActive || operationBusy || exportDialogOpen || refinementBusy;
   return {

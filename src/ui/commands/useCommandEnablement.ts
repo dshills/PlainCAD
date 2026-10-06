@@ -1,5 +1,6 @@
 import { useSolidDimensionEdit } from "./solidDimensionCommand";
 import { useSketchSolidHandoff } from "./sketchSolidHandoffCommand";
+import { useSketchRefinement } from "./sketchRefinementCommand";
 import { useFileJobs } from "../../persistence/fileJobs";
 import { useOperationDrop } from "./operationDropCommand";
 import { useExtrudeDraft } from "./extrudeCommand";
@@ -17,6 +18,7 @@ export function useCommandEnablement() {
   // These transient stores trigger recomputation; the selector reads their current snapshots.
   useSketchSolidHandoff((state) => state.selectedTargetId);
   useSketchSolidHandoff((state) => state.source);
+  useSketchRefinement((state) => state.frame);
   useSolidDimensionEdit((state) => state.frame);
   const fileDialogOpen = useFileJobs((state) => state.exportOpen);
   const operationFrame = useOperationDrop((state) => state.frame);

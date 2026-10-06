@@ -8,6 +8,7 @@ import { addCanvasGeometry } from "../cad/sketch/canvasGeometry";
 import { useCadStore } from "../state/useCadStore";
 import { beginSketchCanvas, useSketchCanvas } from "../ui/commands/sketchCanvasCommand";
 import { SketchCanvasPanel } from "../ui/panels/SketchCanvasPanel";
+import { useSketchRefinement } from "../ui/commands/sketchRefinementCommand";
 
 function open() {
   const empty = createXySketch();
@@ -36,6 +37,7 @@ function pointer(svg: HTMLElement, type: string, x: number, y: number, button = 
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  useSketchRefinement.setState({ frame: undefined });
   useSketchCanvas.setState({ active: undefined });
   useCadStore.getState().setDocument(createEmptyDocument());
 });
