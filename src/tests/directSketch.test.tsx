@@ -460,3 +460,108 @@ it("keeps dimension-overlay presses separate from box selection", async () => {
   expect(useCadStore.getState().history).toBe(history);
   fireEvent.pointerCancel(label, { pointerId: 42 });
 });
+
+it("shows transient center snap feedback without editing history, and clears it when drafting becomes unavailable", async () => {
+  await open(false);
+  const canvas = screen.getByRole("group", { name: "Sketch drawing canvas" });
+  vi.spyOn(canvas, "getBoundingClientRect").mockReturnValue({
+    x: 0,
+    y: 0,
+    left: 0,
+    top: 0,
+    right: 600,
+    bottom: 300,
+    width: 600,
+    height: 300,
+    toJSON: () => ({}),
+  });
+  const view = canvas.getAttribute("viewBox")!.split(" ").map(Number);
+  const before = useCadStore.getState().history;
+  // viewBox already uses SVG Y: local +0.1 maps to SVG -0.1.
+  fireEvent.pointerMove(canvas, {
+    clientX: ((0.2 - view[0]) / view[2]) * 600,
+    clientY: ((-0.1 - view[1]) / view[3]) * 300,
+  });
+  expect(screen.getByRole("img", { name: "Center snap" })).toBeVisible();
+  expect(useCadStore.getState().history).toBe(before);
+  act(() => useCadStore.setState({ fileBusy: true }));
+  expect(screen.queryByRole("img", { name: "Center snap" })).toBeNull();
+  expect(useCadStore.getState().history).toBe(before);
+  act(() => useCadStore.setState({ fileBusy: false }));
+  fireEvent.click(screen.getByRole("button", { name: "Draw tool: select" }));
+  fireEvent.pointerMove(canvas, { clientX: 300, clientY: 150 });
+  expect(canvas.querySelector("[data-snap-kind]")).toBeNull();
+});
+
+it.each(["line", "circle", "rectangle"] as const)(
+  "draws a small %s in the empty 200-unit viewport with geometry inference enabled",
+  async (tool) => {
+    const sketch = createXySketch();
+    const document = upsertSketch(createEmptyDocument(), sketch);
+    useCadStore.getState().setDocument(document);
+    await waitFor(() =>
+      expect(useCadStore.getState().rebuild.status).toBe("succeeded"),
+    );
+    useCadStore.getState().select({
+      kind: "sketch",
+      id: sketch.id,
+      documentId: document.id,
+    });
+    beginSketchCanvas();
+    render(<SketchCanvasPanel />);
+    fireEvent.click(screen.getByRole("button", { name: `Draw tool: ${tool}` }));
+    const canvas = screen.getByRole("group", { name: "Sketch drawing canvas" });
+    vi.spyOn(canvas, "getBoundingClientRect").mockReturnValue({
+      x: 0,
+      y: 0,
+      left: 0,
+      top: 0,
+      right: 500,
+      bottom: 300,
+      width: 500,
+      height: 300,
+      toJSON: () => ({}),
+    });
+    Object.defineProperties(canvas, {
+      setPointerCapture: { value: vi.fn() },
+      hasPointerCapture: { value: () => true },
+      releasePointerCapture: { value: vi.fn() },
+    });
+    const view = canvas.getAttribute("viewBox")!.split(" ").map(Number);
+    expect(view[2]).toBe(200);
+    const click = (x: number, y: number) => {
+      const event = {
+        button: 0,
+        pointerId: 51,
+        clientX: ((x - view[0]) / view[2]) * 500,
+        clientY: ((-y - view[1]) / view[3]) * 300,
+      };
+      fireEvent.pointerDown(canvas, event);
+      fireEvent.pointerUp(canvas, event);
+    };
+    const before = useCadStore.getState().history.past.length;
+    click(0, 0);
+    click(2, tool === "rectangle" ? 2 : 0);
+    const solved = solveSketch(
+      useCadStore.getState().history.present.sketches[sketch.id],
+      {},
+    );
+    if (tool === "circle") expect(solved.circles[0].radius).toBeCloseTo(2);
+    else if (tool === "line")
+      expect(solved.lines[0]).toMatchObject({
+        start: { x: 0, y: 0 },
+        end: { x: 2, y: 0 },
+      });
+    else {
+      expect(solved.lines).toHaveLength(4);
+      expect(
+        Math.max(...Object.values(solved.points).map((p) => p.x)),
+      ).toBeCloseTo(2);
+      expect(
+        Math.max(...Object.values(solved.points).map((p) => p.y)),
+      ).toBeCloseTo(2);
+    }
+    expect(useCadStore.getState().history.past.length).toBe(before + 1);
+    expect(screen.queryByRole("alert")).toBeNull();
+  },
+);

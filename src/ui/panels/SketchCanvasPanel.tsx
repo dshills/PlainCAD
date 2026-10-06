@@ -45,9 +45,17 @@ import {
   type CanvasPoint,
   type CanvasTool,
 } from "../../cad/sketch/canvasGeometry";
+import {
+  canvasSnapTargets,
+  snapCanvasWithFeedback,
+  type CanvasSnapFeedback,
+} from "../../cad/sketch/canvasSnapping";
 import type { ResolvedSketch } from "../../cad/sketch/SketchSolver";
 import { sketchPlaneLabel } from "../../cad/sketch/planes";
 
+interface CanvasCursor extends CanvasPoint {
+  snap?: CanvasSnapFeedback;
+}
 interface CanvasView {
   x: number;
   y: number;
@@ -223,7 +231,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
   }, [document, selection]);
   const [tool, setTool] = useState<CanvasMode>("line"),
     [draft, setDraft] = useState<CanvasPoint[]>([]),
-    [cursor, setCursor] = useState<CanvasPoint>();
+    [cursor, setCursor] = useState<CanvasCursor>();
   const draftDocument = useRef(document);
   const svgRef = useRef<SVGSVGElement>(null);
   const workspaceRef = useRef<HTMLElement>(null);
@@ -245,6 +253,11 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
   const [view, setView] = useState(() =>
     context ? fitSketch(context.solved) : INITIAL_VIEW,
   );
+  const snapTargets = useMemo(
+    () => (context ? canvasSnapTargets(context.solved) : undefined),
+    [context?.solved],
+  );
+  const [geometrySnaps, setGeometrySnaps] = useState(true);
   const [snap, setSnap] = useState(true),
     [grid, setGrid] = useState("1"),
     [construction, setConstruction] = useState(false),
@@ -327,33 +340,65 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     fileBusy ||
     (snap && !validGrid) ||
     context.solved.errors.some((e) => e.severity === "error");
+  const snapFeedback =
+    !disabled &&
+    !isDragTool &&
+    tool !== "select" &&
+    !Object.values(sizes).some((size) => size?.trim())
+      ? cursor?.snap
+      : undefined;
+  useEffect(() => {
+    if (disabled) setCursor(undefined);
+  }, [disabled]);
   const pointAt = (
     event: PointerEvent<SVGSVGElement>,
-  ): CanvasPoint | undefined => {
-    if (disabled || !context) return;
+  ): CanvasCursor | undefined => {
+    if (disabled || !context || tool === "select") return;
     const rect = event.currentTarget.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
     const point = {
       x: view.x + ((event.clientX - rect.left) / rect.width) * view.width,
       y: view.y + (1 - (event.clientY - rect.top) / rect.height) * view.height,
     };
-    let result = snapCanvasPoint(
-      point,
-      isDragTool && drag.inProgress
-        ? {
-            ...context.solved,
-            points: Object.fromEntries(
-              Object.entries(context.solved.points).filter(
-                ([id]) => !drag.movingPointIds.has(id),
-              ),
-            ),
-          }
-        : context.solved,
-      (view.width / rect.width) * 8,
-      snap ? gridStep : 0,
-    );
-    if (tool === "arc" && draft.length === 2)
-      result = arcEndpoint(draft[0], draft[1], result);
+    const inference =
+      !isDragTool && snapTargets
+        ? snapCanvasWithFeedback(point, snapTargets, {
+            pixelsPerUnit: {
+              x: rect.width / view.width,
+              y: rect.height / view.height,
+            },
+            tolerancePx: 8,
+            grid: snap ? gridStep : 0,
+            geometry: geometrySnaps,
+            view,
+            anchor: draft.at(-1),
+            anchorShape: tool === "rectangle" ? "rectangle" : undefined,
+          })
+        : undefined;
+    let result: CanvasCursor = inference
+      ? { ...inference.point, snap: inference.feedback }
+      : snapCanvasPoint(
+          point,
+          isDragTool && drag.inProgress
+            ? {
+                ...context.solved,
+                points: Object.fromEntries(
+                  Object.entries(context.solved.points).filter(
+                    ([id]) => !drag.movingPointIds.has(id),
+                  ),
+                ),
+              }
+            : context.solved,
+          (view.width / rect.width) * 8,
+          snap ? gridStep : 0,
+        );
+    if (tool === "arc" && draft.length === 2) {
+      const projected = arcEndpoint(draft[0], draft[1], result);
+      result = {
+        ...projected,
+        snap: distance2d(projected, result) < 1e-8 ? result.snap : undefined,
+      };
+    }
     return result;
   };
   const selectionPointAt = (
@@ -727,6 +772,17 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
           />
           Snap
         </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={geometrySnaps}
+            onChange={(e) => {
+              cancel();
+              setGeometrySnaps(e.target.checked);
+            }}
+          />
+          Geometry snaps
+        </label>
       </div>
       {tool === "select" ? (
         <div
@@ -1012,9 +1068,12 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
           <details open={!focused}>
             <summary>Drawing help</summary>
             <p>
-              Existing points snap within 8 screen pixels. Keyboard users can
-              place exact coordinates using the fields above. Escape cancels a
-              draft, then closes.
+              Existing points take priority, followed by line/arc midpoints and
+              circle/arc centers within 8 screen pixels. Geometry snaps also
+              align horizontally or vertically with visible geometry and the
+              last draft point. Guides only place coordinates; they add no
+              constraints. Grid snapping fills unsnapped axes. Keyboard fields
+              place exact coordinates. Escape cancels a draft, then closes.
             </p>
           </details>
           {analysis.error ||
@@ -1388,6 +1447,34 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
                   <circle cx={cursor.x} cy={cursor.y} r={radius * 1.5} />
                 ) : null}
               </g>
+              {cursor && snapFeedback ? (
+                <g
+                  data-snap-kind={snapFeedback.kind}
+                  role="img"
+                  aria-label={`${snapFeedback.label} snap`}
+                  pointerEvents="none"
+                  stroke="var(--canvas-driving)"
+                >
+                  {snapFeedback.guides.map((guide, index) => (
+                    <line
+                      key={index}
+                      x1={guide.start.x}
+                      y1={guide.start.y}
+                      x2={guide.end.x}
+                      y2={guide.end.y}
+                      strokeDasharray="4 4"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  ))}
+                  <rect
+                    x={cursor.x - view.width / 140}
+                    y={cursor.y - view.height / 105}
+                    width={view.width / 70}
+                    height={view.height / 52.5}
+                    vectorEffect="non-scaling-stroke"
+                  />
+                </g>
+              ) : null}
             </g>
             <g transform="scale(1,-1)"><RepairSketchOverlay solved={context?.solved} span={view.width} /></g>
             {dimensions.overlay}
@@ -1395,7 +1482,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
           </svg>
           <p role="status">
             {cursor
-              ? `X ${cursor.x.toFixed(3)} mm, Y ${cursor.y.toFixed(3)} mm${cursor.pointId ? " — existing point" : ""}. `
+              ? `X ${cursor.x.toFixed(3)} mm, Y ${cursor.y.toFixed(3)} mm${snapFeedback ? ` — ${snapFeedback.label.toLowerCase()} snap` : cursor.pointId ? " — existing point" : ""}. `
               : ""}
             {drag.inProgress
               ? `${tool === "translate" ? "Group translation" : tool === "deform" ? "Sketch deformation" : "Point move"} preview; release to save, Escape to cancel. `

@@ -835,3 +835,19 @@ modeling tasks, including scope capture, must finish first. Native acceptance pr
 body subset/global placement, exact volume, parameter edits, save/open, separate
 ZIP output and stale-task rejection. No new file formats or saved export settings
 are introduced.
+
+### Pointer precision snapping
+
+Mouse drawing can snap to existing points, line midpoints, true arc-sweep
+midpoints, and circle/arc centers, with labeled markers and horizontal/vertical
+alignment guides. Existing points take priority. Proximity uses screen-space
+pixels on both axes and follows the sketch view, including nonuniform scaling.
+Use **Geometry snaps** to disable midpoint/center/alignment inference. Existing
+points, including stored circle/arc center points, still snap when inference is
+disabled. **Snap** controls the existing grid behavior.
+
+Snapping places pointer-drawn geometry without adding automatic constraints or
+changing authored expressions. Typed coordinates, point moves, translation and
+solver deformation retain their existing behavior. Tangency and intersection
+snapping are not implemented. Native acceptance verifies precise pointer placement,
+preview cancellation, rebuild geometry, save/open and STL export.
