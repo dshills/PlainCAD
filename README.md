@@ -991,8 +991,8 @@ solid. Choose by name/value and inspect the exact native preview before Apply.
 Highlights clear on scope, prompt, selection, project/session/component, rebuild
 and busy-state changes. Missing geometry leaves the bounded dimension choice and
 native preview route available with a diagnostic. Highlighting, choosing and local
-numeric refinement make no provider request. Broader model-derived suggestions
-and sketch-intent assistance remain planned.
+numeric refinement make no provider request. Broader model-derived suggestions and unrestricted sketch synthesis remain planned.
+Bounded conversational sketch edits are described below.
 Unsupported requests, wrong dimensions and stale contexts show diagnostics. Review
 the proposed values and actual native geometry before Apply; accepted edits retain
 IDs in one Undo step. Native acceptance covers selected Extrude/Hole/Revolve and
@@ -1066,3 +1066,59 @@ source result. Competing modeling, guided save/export, STL and repair tasks are 
 the operation is applied or canceled. Unsupported picks give a diagnostic. Native
 acceptance covers actual profile drag and cap picking on XY/XZ/YZ, changed BRep
 volume, undo/redo, parameter edits, save/open and positive signed STL volume.
+
+### Trim, extend and contextual sketch relations
+
+In an open sketch, choose **Trim** or **Extend**, select a line, and click the
+interval/end to edit (or enter local pick coordinates). Preview solves the staged
+sketch and checks downstream native solids; Apply creates one undoable edit.
+Cancel changes nothing. Trim removes one interval between finite line boundaries;
+Extend moves the nearer endpoint to the nearest finite boundary. Curves,
+constrained/dimensioned/parameter-bound endpoints and unsafe shared endpoints get
+an explicit diagnostic. See [supported trim/extend cases](specs/working-cad/SKETCH_TRIM_EXTEND.md).
+
+Select geometry to show matching **Constrain selected geometry** actions:
+Horizontal/Vertical for lines, Parallel/Perpendicular for two lines, Coincident
+for two points, and Tangent for a supported curve pair. Preview preserves existing
+intent, explains conflicts and local remaining freedom, and requires explicit
+Apply. Selection or document changes invalidate the proposal. See
+[relation limits](specs/working-cad/CONTEXTUAL_SKETCH_CONSTRAINTS.md).
+
+### Draw a pocket on a face
+
+Choose **Draw → Draw on face**, pick a highlighted supported planar extrusion
+face (or its keyboard card), then **Draw here**. Draw a closed region and finish
+the sketch. **Remove material** opens an inward cut preview with the source body
+and direction fixed. Apply requires valid native geometry and reduced exact volume.
+The additive **Make solid** option remains available. Caps and straight sides of
+retained distance extrusions are supported. Curved, ambiguous, lost or modified
+references that fail native validation get a diagnostic. See
+[face pocket limits](specs/working-cad/FACE_POCKET.md).
+
+### Conversational sketch editing
+
+Open the AI drawer while sketching. **Local edits** remains the default and sends
+no provider request. Select **Conversational AI provider** to use the local
+Anthropic, OpenAI or Google adapter. Inspect the bounded sketch context and
+explicitly allow sending it to the selected provider. Credentials stay on the
+local server. The request contains one sketch's solved entities, selection,
+dimensions, constraints, referenced parameters and recent conversation; bodies,
+meshes and the project file are excluded.
+
+AI proposes bounded rectangle sizes, dimension/parameter edits, matching relations
+and finite-line trim/extend actions. Missing information produces a clarification
+without an Apply action. Bindings are preserved by default. Replacing a dimension
+formula or changing one editable referenced shared parameter requires an explicit
+policy choice, with shared effects shown before Apply. Every proposal uses the
+same local planners and native downstream preview as the manual tools; unsupported
+or conflicting requests get diagnostics. Apply is one Undo step. Cancel, a changed
+selection/project, provider switching or revoked sharing permission discards the
+old proposal. The complete request is capped at 32 KB, with at most eight actions,
+128 entities, 64 dimensions/constraints and 24 referenced parameters; larger
+sketches use local tools. Conversation is session-only.
+
+Automated editing checks cover compact/reduced viewports, named controls,
+keyboard cancellation, validation messages and dialog focus. See the
+[editing usability audit](specs/working-cad/EDITING_USABILITY_AUDIT.md).
+Human walkthroughs, screen-reader speech and actual browser/OS zoom checks are
+still pending.

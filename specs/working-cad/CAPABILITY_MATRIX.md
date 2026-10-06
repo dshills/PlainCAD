@@ -25,7 +25,7 @@
 - Finishing a new unmodeled sketch in Workbench opens a source-scoped closed-region
   chooser; clicking a highlighted region selects it, Make solid opens Extrude,
   and Apply creates geometry. Existing modeled sketches and Full layout retain
-  ordinary Finish behavior. See [handoff limits](SKETCH_SOLID_HANDOFF.md).
+  ordinary Finish behavior unless a guided face-pocket sketch is active. See [handoff limits](SKETCH_SOLID_HANDOFF.md).
 - Sketch mouse tools support view-only Space/middle panning, visible Move/Translate/
   Deform, finite analytic intersections and external-anchor tangents; Alt bypasses
   snapping. Curve candidate work is bounded and snaps add no implicit constraints.
@@ -34,6 +34,27 @@
   vertical lines. Ambiguous, conflicting and parameter-bound geometry gets a clear
   diagnostic. Apply follows solver/profile validation and native downstream geometry
   when solids exist. See [refinement limits](SKETCH_REFINEMENT.md).
+
+- Finite-line Trim/Extend stages a solved/native downstream preview and one undoable
+  Apply. Protected endpoint intent and unsupported curves are diagnosed. See
+  [trim/extend limits](SKETCH_TRIM_EXTEND.md).
+- Selected-geometry relations offer matching Horizontal/Vertical, Coincident,
+  Parallel/Perpendicular and Tangent actions with conflict/local-freedom diagnostics,
+  native downstream proof and stale-selection rejection. See
+  [contextual relation limits](CONTEXTUAL_SKETCH_CONSTRAINTS.md).
+- Draw on face → Draw here → Finish → Remove material guides cap/straight-side
+  pockets with explicit inward target locking and changed exact native volume.
+  Curved/lost faces and modified references that fail native validation remain
+  unavailable. See [pocket limits](FACE_POCKET.md).
+- Opt-in conversational sketch edits use Anthropic/OpenAI/Google structured data,
+  explicit binding policies and bounded context, then the same local planners and
+  native downstream preview. Local refinement remains the default. Provider
+  suggestions cannot publish scripts or arbitrary documents. See
+  [conversational editing limits](SKETCH_REFINEMENT.md).
+- Automated editing accessibility checks cover compact/reduced layout space,
+  named public controls, keyboard cancellation/focus and validation semantics.
+  These do not establish whole-app conformance, screen-reader speech, actual
+  browser/OS zoom or human usability. See [audit scope](EDITING_USABILITY_AUDIT.md).
 
 ## Review scope
 

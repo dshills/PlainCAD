@@ -40,12 +40,26 @@ function DimensionTask({ frame, feature }: { frame: SolidDimensionEditFrame; fea
       }
     };
     position();
+    // ResizeObserver notifications run during layout. Defer positioning writes
+    // to the next frame so resizing the dialog cannot reenter that delivery loop.
+    let pendingFrame: number | undefined;
+    const schedulePosition = () => {
+      if (pendingFrame !== undefined) return;
+      pendingFrame = window.requestAnimationFrame(() => {
+        pendingFrame = undefined;
+        position();
+      });
+    };
     const dialog = content.current?.closest("dialog");
-    const observer = typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(position);
+    const observer = typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(schedulePosition);
     if (dialog) observer?.observe(dialog);
     if (content.current) observer?.observe(content.current);
-    window.addEventListener("resize", position);
-    return () => { observer?.disconnect(); window.removeEventListener("resize", position); };
+    window.addEventListener("resize", schedulePosition);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", schedulePosition);
+      if (pendingFrame !== undefined) window.cancelAnimationFrame(pendingFrame);
+    };
   }, []);
   useEffect(() => {
     const controller = new AbortController(), request = ++generation.current;
