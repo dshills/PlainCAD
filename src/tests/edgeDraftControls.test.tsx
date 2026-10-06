@@ -53,7 +53,7 @@ it("edits one explicit edge reference without dropping others and preserves its 
   fireEvent.change(screen.getByLabelText("Edge reference"), {
     target: { value: "1" },
   });
-  fireEvent.change(screen.getByLabelText("Edge role"), {
+  fireEvent.change(screen.getByLabelText("Edges to change"), {
     target: { value: "startCapPerimeter" },
   });
   const changed = onChange.mock.calls[0][0] as FilletFeature;
@@ -83,7 +83,7 @@ it("edits one explicit edge reference without dropping others and preserves its 
       onChange={onChange}
     />,
   );
-  fireEvent.change(screen.getByLabelText("Edge role"), {
+  fireEvent.change(screen.getByLabelText("Edges to change"), {
     target: { value: "startCapPerimeter" },
   });
   expect(onChange.mock.calls[1][0].targetEdgeRefs).toHaveLength(1);
@@ -118,6 +118,6 @@ it("keeps source controls unavailable when the owner only has fallback geometry"
       onChange={vi.fn()}
     />,
   );
-  expect(screen.getByLabelText("Edge role")).toBeDisabled();
+  expect(screen.getByLabelText("Edges to change")).toBeDisabled();
   expect(screen.getByLabelText("Source edge")).toBeDisabled();
 });

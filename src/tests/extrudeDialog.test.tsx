@@ -14,6 +14,7 @@ import { rebuildDocument } from "../cad/features/rebuildGraph";
 import { useCadStore } from "../state/useCadStore";
 import {
   beginExtrudeCreation,
+  beginExtrudeEditing,
   useExtrudeDraft,
   assertNativeExtrudePreview,
 } from "../ui/commands/extrudeCommand";
@@ -22,6 +23,7 @@ import { ExtrudeCreationPanel } from "../ui/panels/ExtrudeCreationPanel";
 import { previewExtrusion } from "../cad/worker/extrudePreviewClient";
 import type { CadDocument } from "../cad/document/schema";
 import type { RebuildResult } from "../cad/worker/workerProtocol";
+import { createBoxTemplate } from "../templates/templates";
 
 vi.mock("../cad/worker/extrudePreviewClient", () => ({
   previewExtrusion: vi.fn(),
@@ -268,4 +270,43 @@ it("keeps parameter and formula editing available without enabling destructive d
   expect(
     screen.getByRole("button", { name: "Start simulated drag" }),
   ).toBeEnabled();
+});
+
+it("previews and edits a saved legacy rectangle profile alias without changing its authored identity", async () => {
+  const document = createBoxTemplate();
+  const feature = document.features[0];
+  if (feature.type !== "extrude") throw new Error("Fixture needs an extrusion.");
+  useExtrudeDraft.setState({ draft: undefined });
+  useCadStore.setState({
+    history: { past: [], present: document, future: [] },
+    activeComponentId: document.rootComponentId,
+    rebuild: { status: "succeeded", kernelReady: true, result: simulatedNative(document) },
+    selection: { selectedIds: [{ kind: "feature", id: feature.id, documentId: document.id }] },
+  });
+  beginExtrudeEditing();
+  render(<ExtrudeCreationPanel />);
+  await waitFor(() => expect(jobs).toHaveLength(1));
+  await act(async () => jobs[0].resolve(simulatedNative(jobs[0].document)));
+  await waitFor(() => expect(jobs).toHaveLength(2));
+  expect(screen.queryByRole("option", { name: /Lost profile/ })).toBeNull();
+  expect(screen.getByRole("combobox", { name: /Extrude profile/ })).toHaveValue(feature.profileId);
+  expect(jobs[1].document.features[0]).toMatchObject({ profileId: feature.profileId });
+  await act(async () => jobs[1].resolve(simulatedNative(jobs[1].document)));
+  await waitFor(() => expect(jobs).toHaveLength(3));
+  await act(async () => jobs[2].resolve(simulatedNative(jobs[2].document)));
+  expect(screen.getByRole("button", { name: "Apply extrusion" })).toBeEnabled();
+  fireEvent.click(screen.getByRole("button", { name: "Apply extrusion" }));
+  expect(useCadStore.getState().history.present.features[0]).toMatchObject({ profileId: feature.profileId });
+  expect(useCadStore.getState().history.past).toEqual([document]);
+});
+
+it("keeps a profile lost when neither its current identity nor exact legacy alias exists", () => {
+  const draft = useExtrudeDraft.getState().draft!;
+  useExtrudeDraft.setState({ draft: {
+    ...draft, feature: { ...draft.feature, profileId: "missing-profile" },
+  } });
+  render(<ExtrudeCreationPanel />);
+  expect(screen.getByRole("option", { name: /Lost profile/ })).toHaveValue("missing-profile");
+  expect(screen.getByRole("button", { name: "Apply extrusion" })).toBeDisabled();
+  expect(jobs).toHaveLength(0);
 });

@@ -1,0 +1,37 @@
+.modeling-task-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0 10px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+.modeling-task-step > span {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  color: var(--muted);
+  font-size: 11px;
+}
+.modeling-task-guide, .modeling-task-selection {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.modeling-task-selection {
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+.modeling-task-actions button[type="submit"] {
+  min-width: 72px;
+}
+.modeling-task-advanced label {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0;
+}

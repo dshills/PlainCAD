@@ -64,7 +64,7 @@ test("Revolve previews a construction-axis torus, diagnoses axis/angle errors, c
   await ready(page);
   const before = await snapshot(page);
   let dialog = await open(page);
-  await expect(dialog.getByLabel("Revolve axis", { exact: true })).toHaveValue(
+  await expect(dialog.getByLabel("Rotation axis", { exact: true })).toHaveValue(
     `line:${lineId}`,
   );
   await expect(dialog.getByRole("status")).toContainText(
@@ -81,11 +81,11 @@ test("Revolve previews a construction-axis torus, diagnoses axis/angle errors, c
   ).toBeDisabled();
   await dialog.getByLabel("Revolve angle", { exact: true }).fill("90deg");
   await dialog
-    .getByLabel("Revolve axis", { exact: true })
+    .getByLabel("Rotation axis", { exact: true })
     .selectOption("origin:X");
   await expect(dialog.getByRole("alert")).toContainText("must not cross");
   await dialog
-    .getByLabel("Revolve axis", { exact: true })
+    .getByLabel("Rotation axis", { exact: true })
     .selectOption(`line:${lineId}`);
   await dialog.getByLabel("Revolve angle", { exact: true }).fill("180deg");
   await dialog.getByLabel("Revolve angle", { exact: true }).fill("90deg");

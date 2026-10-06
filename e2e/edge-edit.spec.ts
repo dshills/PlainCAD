@@ -129,7 +129,7 @@ test("Edit Fillet/Chamfer preserves multiple authored refs, validates downstream
       ids.back,
     );
     await dialog
-      .getByLabel("Edge role", { exact: true })
+      .getByLabel("Edges to change", { exact: true })
       .selectOption("startCapPerimeter");
     await expect(dialog.getByLabel("Source edge", { exact: true })).toHaveValue(
       ids.back,

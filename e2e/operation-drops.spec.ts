@@ -128,7 +128,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     expect(source.sketchId).toBe(sketchId);
     expect(solid.past).toBe(before.past + 1);
     await page
-      .getByRole("button", { name: "Use Round on geometry", exact: true })
+      .getByRole("button", { name: "Use Fillet on geometry", exact: true })
       .click();
     const cap = await viewportLocal(page, sketchId, 47, 0, 10);
     await page.mouse.click(cap.screen.x, cap.screen.y);
@@ -155,7 +155,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     await page.getByRole("button", { name: "Undo", exact: true }).click();
     await ready(page, 960);
     await page
-      .getByRole("button", { name: "Use Bevel on geometry", exact: true })
+      .getByRole("button", { name: "Use Chamfer on geometry", exact: true })
       .click();
     const card = page.getByRole("button", {
       name: `Preview on ${source.name} — start cap perimeter (all original edges)`,

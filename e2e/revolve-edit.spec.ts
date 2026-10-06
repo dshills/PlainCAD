@@ -125,14 +125,14 @@ test("Edit Revolve previews a parameter-bound cylinder beneath a Cut, rejects ax
   ).toBeDisabled();
   await dialog.getByLabel("Revolve angle", { exact: true }).fill("90deg");
   await dialog
-    .getByLabel("Revolve axis", { exact: true })
+    .getByLabel("Rotation axis", { exact: true })
     .selectOption("origin:Z");
   await expect(dialog.getByRole("alert")).toBeVisible();
   await expect(
     dialog.getByRole("button", { name: "Apply revolve" }),
   ).toBeDisabled();
   await dialog
-    .getByLabel("Revolve axis", { exact: true })
+    .getByLabel("Rotation axis", { exact: true })
     .selectOption("origin:Y");
   await dialog.getByLabel("Revolve angle", { exact: true }).fill("180deg");
   await dialog.getByLabel("Revolve angle", { exact: true }).fill("90deg");

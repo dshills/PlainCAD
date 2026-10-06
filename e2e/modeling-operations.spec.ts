@@ -182,7 +182,7 @@ test("native edge treatments: edit, parameter change, save/open, STL, and invali
     .click();
   await page
     .getByRole("dialog", { name: "Chamfer", exact: true })
-    .getByRole("combobox", { name: "Edge role", exact: true })
+    .getByRole("combobox", { name: "Edges to change", exact: true })
     .selectOption("startCapPerimeter");
   await page
     .getByRole("dialog", { name: "Chamfer", exact: true })

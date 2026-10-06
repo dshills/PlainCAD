@@ -14,6 +14,9 @@ import {
 import type { RebuildResult } from "../../cad/worker/workerProtocol";
 import type { ModelingDraft } from "../commands/modelingDraftCommand";
 
+import { useWorkspaceState } from "../../state/useWorkspaceState";
+import { ModelingAdvancedOptions, ModelingTaskStep } from "./ModelingTask";
+
 export function EdgeDraftControls({
   draft,
   feature,
@@ -27,6 +30,7 @@ export function EdgeDraftControls({
   feature: FilletFeature | ChamferFeature;
   onChange: (feature: FilletFeature | ChamferFeature) => void;
 }) {
+  const workbench = useWorkspaceState((state) => state.layout === "workbench");
   // Edit owners are measured immediately before this feature, so future owners
   // and already-absorbed bodies are excluded. Creation uses its current snapshot.
   const owners = useMemo(() => {
@@ -78,6 +82,7 @@ export function EdgeDraftControls({
     feature.type === "fillet" ? feature.radius : feature.distance;
   return (
     <>
+      <ModelingTaskStep number={1}>Selection</ModelingTaskStep>
       {feature.targetEdgeRefs.length > 1 ? (
         <label>
           Edge reference
@@ -95,34 +100,9 @@ export function EdgeDraftControls({
         </label>
       ) : null}
       <label>
-        {feature.type === "fillet" ? "Fillet radius" : "Chamfer distance"}
-        <input
-          value={expression.expression}
-          onChange={(event) =>
-            onChange(
-              feature.type === "fillet"
-                ? {
-                    ...feature,
-                    radius: {
-                      ...feature.radius,
-                      expression: event.target.value,
-                    },
-                  }
-                : {
-                    ...feature,
-                    distance: {
-                      ...feature.distance,
-                      expression: event.target.value,
-                    },
-                  },
-            )
-          }
-        />
-      </label>
-      <label>
-        Extrusion owner
+        Body from extrusion
         <select
-          aria-label="Extrusion owner"
+          aria-label="Body from extrusion"
           value={ref?.featureId ?? ""}
           onChange={(event) => {
             if (owners.some((item) => item.id === event.target.value))
@@ -141,9 +121,9 @@ export function EdgeDraftControls({
         </select>
       </label>
       <label>
-        Edge role
+        Edges to change
         <select
-          aria-label="Edge role"
+          aria-label="Edges to change"
           disabled={!owner}
           value={ref?.role ?? "endCapPerimeter"}
           onChange={(event) => {
@@ -170,45 +150,95 @@ export function EdgeDraftControls({
           </option>
         </select>
       </label>
-      <label>
-        Source edge
-        <select
-          aria-label="Source edge"
-          disabled={!owner}
-          value={ref?.sourceEntityId ?? ""}
-          onChange={(event) => {
-            if (ref)
-              replace(
-                ref.featureId,
-                (ref.role ?? "endCapPerimeter") as SupportedEdgeRole,
-                event.target.value || undefined,
-              );
-          }}
-        >
-          {ref?.sourceEntityId &&
-          !entities.some((entity) => entity.id === ref.sourceEntityId) ? (
-            <option value={ref.sourceEntityId}>Lost source — reselect</option>
-          ) : null}
-          <option value="" disabled={ref?.role === "profileEdge"}>
-            Entire perimeter
-          </option>
-          {entities
-            .filter(
-              (entity) => ref?.role !== "profileEdge" || entity.type === "line",
-            )
-            .map((entity) => (
-              <option key={entity.id} value={entity.id}>
-                {entity.type} {entity.id}
-              </option>
-            ))}
-        </select>
-      </label>
-      <p className="muted">
-        Select original feature-owned edges. Retained edges after booleans are
-        checked against current native geometry. Trimmed, missing or already
-        changed edges and invalid sizes block Apply. Grouped perimeters require
-        every original edge.
+      <p className="modeling-task-selection">
+        {!ref
+          ? "Choose a body to select edges."
+          : !owner
+            ? "The extrusion owner is lost or unavailable. Choose a current body."
+            : <>
+                {feature.targetEdgeRefs.length} edge {feature.targetEdgeRefs.length === 1 ? "group" : "groups"} selected.
+                {ref.role === "profileEdge"
+                  ? " Choose the source line in Advanced options."
+                  : ref.sourceEntityId
+                    ? " An individual source edge is selected in Advanced options."
+                    : " A perimeter group changes all its original edges."}
+              </>}
+
       </p>
+      <ModelingTaskStep number={2}>Settings</ModelingTaskStep>
+      <label>
+        {feature.type === "fillet" ? "Fillet radius" : "Chamfer distance"}
+        <input
+          value={expression.expression}
+          onChange={(event) =>
+            onChange(
+              feature.type === "fillet"
+                ? {
+                    ...feature,
+                    radius: {
+                      ...feature.radius,
+                      expression: event.target.value,
+                    },
+                  }
+                : {
+                    ...feature,
+                    distance: {
+                      ...feature.distance,
+                      expression: event.target.value,
+                    },
+                  },
+            )
+          }
+        />
+      </label>
+      <ModelingAdvancedOptions
+        initiallyOpen={!workbench}
+        required={
+          ref?.role === "profileEdge" ||
+          Boolean(ref?.sourceEntityId) ||
+          Boolean(baseResult && ref && !owner)
+        }
+      >
+        <label>
+          Source edge
+          <select
+            aria-label="Source edge"
+            disabled={!owner}
+            value={ref?.sourceEntityId ?? ""}
+            onChange={(event) => {
+              if (ref)
+                replace(
+                  ref.featureId,
+                  (ref.role ?? "endCapPerimeter") as SupportedEdgeRole,
+                  event.target.value || undefined,
+                );
+            }}
+          >
+            {ref?.sourceEntityId &&
+            !entities.some((entity) => entity.id === ref.sourceEntityId) ? (
+              <option value={ref.sourceEntityId}>Lost source — reselect</option>
+            ) : null}
+            <option value="" disabled={ref?.role === "profileEdge"}>
+              Entire perimeter
+            </option>
+            {entities
+              .filter(
+                (entity) => ref?.role !== "profileEdge" || entity.type === "line",
+              )
+              .map((entity) => (
+                <option key={entity.id} value={entity.id}>
+                  {entity.type} {entity.id}
+                </option>
+              ))}
+          </select>
+        </label>
+        <p className="muted">
+          Select original feature-owned edges. Retained edges after booleans are
+          checked against current native geometry. Trimmed, missing or already
+          changed edges and invalid sizes block Apply. Grouped perimeters require
+          every original edge.
+        </p>
+      </ModelingAdvancedOptions>
     </>
   );
 }

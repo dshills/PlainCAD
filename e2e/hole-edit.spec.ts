@@ -185,18 +185,18 @@ test("Edit Hole verifies the operation and downstream chamfer, cancels, rejects 
   await dialog.getByLabel("Hole diameter", { exact: true }).fill("8mm");
   await expect(dialog.getByRole("alert")).toBeVisible();
   await expect(
-    dialog.getByRole("button", { name: "Apply hole edits" }),
+    dialog.getByRole("button", { name: "Apply hole" }),
   ).toBeDisabled();
   expect((await snapshot(page)).document).toEqual(before.document);
   await dialog.getByLabel("Hole diameter", { exact: true }).fill("5mm");
   await dialog
-    .getByLabel("Hole termination", { exact: true })
+    .getByLabel("End condition", { exact: true })
     .selectOption("distance");
   await dialog.getByLabel("Hole depth", { exact: true }).fill("3mm");
   await expect(
     dialog.getByRole("status", { name: "Hole preview status" }),
   ).toContainText(`${final.toFixed(3)} mm³`);
-  await dialog.getByRole("button", { name: "Apply hole edits" }).click();
+  await dialog.getByRole("button", { name: "Apply hole" }).click();
   await ready(page, final, "chamfer");
   let after = await snapshot(page);
   expect(after.past).toBe(before.past + 1);
@@ -293,9 +293,9 @@ test("failed Hole references can be repaired against the native upstream stage; 
     .getByLabel("Hole center at 5.000, 5.000 mm", { exact: true })
     .check();
   await expect(
-    dialog.getByRole("button", { name: "Apply hole edits" }),
+    dialog.getByRole("button", { name: "Apply hole" }),
   ).toBeEnabled();
-  await dialog.getByRole("button", { name: "Apply hole edits" }).click();
+  await dialog.getByRole("button", { name: "Apply hole" }).click();
   const volume = 2000 - 40 * Math.PI;
   await ready(page, volume, "cut");
   const before = await snapshot(page);
@@ -317,7 +317,7 @@ test("failed Hole references can be repaired against the native upstream stage; 
       .setDocument(structuredClone(store.getState().history.present));
   });
   await expect(
-    dialog.getByRole("button", { name: "Apply hole edits" }),
+    dialog.getByRole("button", { name: "Apply hole" }),
   ).toBeDisabled();
   await expect(
     dialog.getByRole("status", { name: "Hole preview status" }),

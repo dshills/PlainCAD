@@ -24,6 +24,8 @@ import {
   type ExtrudeDraft,
 } from "../commands/extrudeCommand";
 
+import { ModelingTaskActions, ModelingTaskGuide, ModelingTaskStep } from "./ModelingTask";
+
 const EMPTY_PREVIEW_MESHES: RebuildResult["meshes"] = [];
 
 export function ExtrudeCreationPanel() {
@@ -138,9 +140,10 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
   const [dragging, setDragging] = useState(false);
   const hasTargets = operation === "newBody" || targets.length > 0;
   const hasFace = termination !== "toFace" || Boolean(targetFace);
-  const validProfile = context?.profiles.some(
-    (profile) => profile.id === profileId,
+  const selectedProfile = context?.profiles.find(
+    (profile) => profile.id === profileId || profile.alternateIds?.includes(profileId),
   );
+  const validProfile = Boolean(selectedProfile);
   useEffect(() => {
     setCommitError("");
     if (
@@ -208,7 +211,7 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
   ]);
   const shown = current && preview?.staged === staged ? preview : undefined;
   const handle = useMemo(() => {
-    const profile = context?.profiles.find((item) => item.id === profileId),
+    const profile = selectedProfile,
       plane = base.result?.sketchPlanes?.[draft.sketchId],
       feature = staged.features.find((item) => item.id === draft.feature.id);
     if (!profile || !plane || !feature || feature.type !== "extrude") return;
@@ -248,7 +251,7 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
       onDragging: setDragging,
     };
   }, [
-    context,
+    selectedProfile,
     base.result,
     draft,
     staged,
@@ -285,23 +288,20 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
         </p>
         <div className="extrude-dialog-layout">
           <div>
-            {workbench ? (
-              <p className="modeling-step-hint">
-                <strong>
-                  {termination === "distance"
-                    ? "Set thickness"
-                    : termination === "toFace"
-                      ? "Choose an end face"
-                      : hasTargets
-                        ? "Review through-all feature"
-                        : "Choose target bodies"}
-                </strong>
-                <br />
-                {termination === "distance"
-                  ? "Enter a length or drag the arrow. Review the native preview, then Apply."
-                  : "Set the termination in Advanced options. Review the native preview, then Apply."}
-              </p>
-            ) : null}
+            <ModelingTaskGuide action={
+              !validProfile
+                ? "Choose a current closed shape."
+                : !hasTargets
+                  ? "Choose the bodies to Cut or Join."
+                  : termination === "toFace" && !hasFace
+                    ? "Choose the end face in Advanced options."
+                    : termination === "distance"
+                      ? "Set a thickness or drag the distance arrow."
+                      : termination === "toFace"
+                        ? "Review the chosen end face and direction."
+                        : "Review the through-all direction and target bodies."
+            } />
+            <ModelingTaskStep number={1}>Selection</ModelingTaskStep>
             <label>
               {workbench ? "Choose shape" : "Extrude profile"}
               <select
@@ -309,13 +309,11 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
                 value={profileId}
                 onChange={(event) => setProfile(event.target.value)}
               >
-                {!context?.profiles.some(
-                  (profile) => profile.id === profileId,
-                ) ? (
+                {!selectedProfile ? (
                   <option value={profileId}>Lost profile — reselect</option>
                 ) : null}
                 {context?.profiles.map((profile, index) => (
-                  <option key={profile.id} value={profile.id}>
+                  <option key={profile.id} value={profile === selectedProfile ? profileId : profile.id}>
                     Profile {index + 1} ·{" "}
                     {(profile.bounds.maxX - profile.bounds.minX).toFixed(2)} ×{" "}
                     {(profile.bounds.maxY - profile.bounds.minY).toFixed(2)} mm
@@ -324,6 +322,7 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
                 ))}
               </select>
             </label>
+            <ModelingTaskStep number={2}>Settings</ModelingTaskStep>
             {termination === "distance" ? (
               <label>
                 {workbench ? "Thickness" : "Extrude distance"}
@@ -506,14 +505,11 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
             ) : null}
           </div>
         </div>
-        <div className="dialog-actions">
-          <button type="button" onClick={close}>
-            Cancel
-          </button>
-          <button type="submit" disabled={!shown?.result || dragging}>
-            Apply extrusion
-          </button>
-        </div>
+        <ModelingTaskActions
+          applyLabel="Apply extrusion"
+          disabled={!shown?.result || dragging}
+          onCancel={close}
+        />
       </form>
     </ModalDialog>
   );

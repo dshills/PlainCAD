@@ -20,6 +20,9 @@ import {
   type ModelingDraft,
 } from "../commands/modelingDraftCommand";
 
+import { useWorkspaceState } from "../../state/useWorkspaceState";
+import { ModelingAdvancedOptions, ModelingTaskActions, ModelingTaskGuide, ModelingTaskStep } from "./ModelingTask";
+
 const EMPTY_MESHES: RebuildResult["meshes"] = [];
 export function ModelingCreationPanel() {
   const draft = useModelingDraft((state) => state.draft);
@@ -64,7 +67,11 @@ function ModelingDialog({ draft }: { draft: ModelingDraft }) {
   const hasProfile =
     feature.type !== "revolve" ||
     Boolean(
-      context?.profiles.some((profile) => profile.id === feature.profileId),
+      context?.profiles.some(
+        (profile) =>
+          profile.id === feature.profileId ||
+          profile.alternateIds?.includes(feature.profileId),
+      ),
     );
   const hasTargets =
     feature.type !== "revolve" ||
@@ -154,6 +161,9 @@ function ModelingDialog({ draft }: { draft: ModelingDraft }) {
         </p>
         <div className="extrude-dialog-layout">
           <div>
+            <ModelingTaskGuide action={feature.type === "revolve"
+              ? "Choose a closed shape and rotation axis, then set the angle."
+              : `Choose supported extrusion edges, then set the ${feature.type === "fillet" ? "radius" : "distance"}.`} />
             {feature.type === "revolve" ? (
               <RevolveDraftControls
                 feature={feature}
@@ -169,13 +179,6 @@ function ModelingDialog({ draft }: { draft: ModelingDraft }) {
                 onChange={setFeature}
               />
             )}
-            <p className="muted">
-              Drag the preview to orbit.{" "}
-              {draft.editing
-                ? "Apply replaces this feature in one history edit after validating downstream geometry."
-                : "Apply adds one feature to the timeline."}{" "}
-              Cancel leaves the project unchanged.
-            </p>
           </div>
           <div>
             <ExtrudePreview
@@ -207,14 +210,11 @@ function ModelingDialog({ draft }: { draft: ModelingDraft }) {
             ) : null}
           </div>
         </div>
-        <div className="dialog-actions">
-          <button type="button" onClick={close}>
-            Cancel
-          </button>
-          <button type="submit" disabled={!shown?.result}>
-            Apply {feature.type}
-          </button>
-        </div>
+        <ModelingTaskActions
+          applyLabel={`Apply ${feature.type}`}
+          disabled={!shown?.result}
+          onCancel={close}
+        />
       </form>
     </ModalDialog>
   );
@@ -228,6 +228,7 @@ function RevolveDraftControls({
   onChange: (feature: RevolveFeature) => void;
   context: ReturnType<typeof extrudeContext>;
 }) {
+  const workbench = useWorkspaceState((state) => state.layout === "workbench");
   const lines = Object.values(context?.sketch.entities ?? {}).filter(
     (entity) => entity.type === "line",
   );
@@ -235,24 +236,31 @@ function RevolveDraftControls({
     feature.axis.type === "origin"
       ? `origin:${feature.axis.axis}`
       : `line:${feature.axis.lineId}`;
+  const axisLineId =
+    feature.axis.type === "sketchLine" ? feature.axis.lineId : undefined;
+  const selectedProfile = context?.profiles.find(
+    (profile) => profile.id === feature.profileId || profile.alternateIds?.includes(feature.profileId),
+  );
+  const lostAxis = Boolean(
+    axisLineId && !lines.some((line) => line.id === axisLineId),
+  );
   return (
     <>
+      <ModelingTaskStep number={1}>Selection</ModelingTaskStep>
       <label>
-        Revolve profile
+        Choose shape
         <select
-          aria-label="Revolve profile"
+          aria-label="Choose shape"
           value={feature.profileId}
           onChange={(event) =>
             onChange({ ...feature, profileId: event.target.value })
           }
         >
-          {!context?.profiles.some(
-            (profile) => profile.id === feature.profileId,
-          ) ? (
+          {!selectedProfile ? (
             <option value={feature.profileId}>Lost profile — reselect</option>
           ) : null}
           {context?.profiles.map((profile, index) => (
-            <option key={profile.id} value={profile.id}>
+            <option key={profile.id} value={profile === selectedProfile ? feature.profileId : profile.id}>
               Profile {index + 1} ·{" "}
               {(profile.bounds.maxX - profile.bounds.minX).toFixed(2)} ×{" "}
               {(profile.bounds.maxY - profile.bounds.minY).toFixed(2)} mm
@@ -261,21 +269,9 @@ function RevolveDraftControls({
         </select>
       </label>
       <label>
-        Revolve angle
-        <input
-          value={feature.angle.expression}
-          onChange={(event) =>
-            onChange({
-              ...feature,
-              angle: { ...feature.angle, expression: event.target.value },
-            })
-          }
-        />
-      </label>
-      <label>
-        Revolve axis
+        Rotation axis
         <select
-          aria-label="Revolve axis"
+          aria-label="Rotation axis"
           value={axisValue}
           onChange={(event) => {
             const value = event.target.value;
@@ -302,6 +298,9 @@ function RevolveDraftControls({
               });
           }}
         >
+          {lostAxis ? (
+            <option value={axisValue}>Lost axis line — reselect</option>
+          ) : null}
           {["X", "Y", "Z"].map((axis) => (
             <option key={axis} value={`origin:${axis}`}>
               Origin {axis}
@@ -314,8 +313,23 @@ function RevolveDraftControls({
           ))}
         </select>
       </label>
+      <p className="muted">The rotation axis must lie in this sketch's plane.</p>
+      <ModelingTaskStep number={2}>Settings</ModelingTaskStep>
       <label>
-        Revolve operation
+        Angle
+        <input
+          aria-label="Revolve angle"
+          value={feature.angle.expression}
+          onChange={(event) =>
+            onChange({
+              ...feature,
+              angle: { ...feature.angle, expression: event.target.value },
+            })
+          }
+        />
+      </label>
+      <label>
+        Operation
         <select
           aria-label="Revolve operation"
           value={feature.operation}
@@ -372,11 +386,17 @@ function RevolveDraftControls({
           })}
         </fieldset>
       ) : null}
-      <p className="muted">
-        Use a coplanar origin axis or a line in this sketch. The profile must
-        stay on one side of the axis. Angle accepts project expressions greater
-        than 0 through 360 degrees.
-      </p>
+      <ModelingAdvancedOptions initiallyOpen={!workbench}>
+        <p className="muted">
+          The profile must stay on one side of the axis. Angle accepts project expressions greater
+          than 0 through 360 degrees.
+        </p>
+        <p className="muted">
+          Angles and sizes accept project parameter expressions. Drag the preview
+          to orbit. Apply retains one Undo step and validates downstream geometry
+          when editing.
+        </p>
+      </ModelingAdvancedOptions>
     </>
   );
 }

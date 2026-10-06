@@ -21,6 +21,9 @@ import { targetBodyIds } from "../../cad/document/bodyScopes";
 import { assertNativeSolidPreview } from "../commands/modelingDraftCommand";
 import { useFeatureDraftContext } from "./useFeatureDraftContext";
 
+import { useWorkspaceState } from "../../state/useWorkspaceState";
+import { ModelingAdvancedOptions, ModelingTaskActions, ModelingTaskGuide, ModelingTaskStep } from "./ModelingTask";
+
 const EMPTY_MESHES: RebuildResult["meshes"] = [];
 export function HoleCreationPanel() {
   const draft = useHoleDraft((s) => s.draft);
@@ -32,6 +35,7 @@ export function HoleCreationPanel() {
   ) : null;
 }
 function HoleDialog({ draft }: { draft: HoleDraft }) {
+  const workbench = useWorkspaceState((state) => state.layout === "workbench");
   const current = useCadStore((state) => isCurrentHoleDraft(draft, state));
   const [sourceState] = useState(() => useCadStore.getState());
   const contextDraft = useMemo(
@@ -181,6 +185,8 @@ function HoleDialog({ draft }: { draft: HoleDraft }) {
         <h2>{draft.editing ? "Edit Hole" : "Create hole"}</h2>
         <div className="extrude-dialog-layout">
           <div>
+            <ModelingTaskGuide action="Choose the bodies to drill and center points, then set the diameter and depth." />
+            <ModelingTaskStep number={1}>Selection</ModelingTaskStep>
             {draft.editing ? (
               <label>
                 Hole source sketch
@@ -211,8 +217,8 @@ function HoleDialog({ draft }: { draft: HoleDraft }) {
             ) : null}
             <p>
               Source sketch:{" "}
-              {currentDocument.sketches[sketchId]?.name ?? "Lost sketch"}. Holes
-              cut along its positive normal.
+              {currentDocument.sketches[sketchId]?.name ?? "Lost sketch"}. Choose
+              the bodies and centers to drill.
             </p>
             {!context ? (
               <p role="status">
@@ -220,16 +226,8 @@ function HoleDialog({ draft }: { draft: HoleDraft }) {
                 sketch/body first.
               </p>
             ) : null}
-            <label>
-              Hole name
-              <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                autoFocus
-              />
-            </label>
             <fieldset>
-              <legend>Hole target scope</legend>
+              <legend>Bodies to drill</legend>
               {[
                 ...new Set([
                   ...(context?.bodies.map((b) => b.id) ?? []),
@@ -258,9 +256,8 @@ function HoleDialog({ draft }: { draft: HoleDraft }) {
                 );
               })}
               <p className="muted">
-                Choose every body to drill. Each center must cut at least one
-                selected body. Every selected body must lose volume; failures
-                retain all upstream bodies.
+                Each center must cut at least one selected body. Every selected
+                body must be cut by at least one center.
               </p>
             </fieldset>
             <fieldset>
@@ -299,24 +296,22 @@ function HoleDialog({ draft }: { draft: HoleDraft }) {
                 );
               })}
             </fieldset>
+            <p className="modeling-task-selection" aria-live="polite">
+              {centers.length} {centers.length === 1 ? "center" : "centers"} selected · {targets.length} {targets.length === 1 ? "body" : "bodies"} selected
+            </p>
+            <ModelingTaskStep number={2}>Settings</ModelingTaskStep>
             <label>
-              Hole diameter
+              Diameter
               <input
+                aria-label="Hole diameter"
                 value={diameter}
                 onChange={(e) => setDiameter(e.target.value)}
               />
             </label>
-            <p className="muted">
-              Drilling direction:{" "}
-              {original?.direction === "negative"
-                ? "into the selected face (negative sketch normal)"
-                : "positive sketch normal"}
-              .
-            </p>
             <label>
-              Hole termination
+              End condition
               <select
-                aria-label="Hole termination"
+                aria-label="End condition"
                 value={throughAll ? "throughAll" : "distance"}
                 onChange={(e) => setThroughAll(e.target.value === "throughAll")}
               >
@@ -326,13 +321,39 @@ function HoleDialog({ draft }: { draft: HoleDraft }) {
             </label>
             {!throughAll ? (
               <label>
-                Hole depth
+                Depth
                 <input
+                  aria-label="Hole depth"
                   value={depth}
                   onChange={(e) => setDepth(e.target.value)}
                 />
               </label>
             ) : null}
+            <ModelingAdvancedOptions initiallyOpen={!workbench} required={
+              [!staged.ok ? staged.reason : undefined, error, shown?.error, base.error]
+                .some((message) => Boolean(message && /\bname\b/i.test(message)))
+            }>
+              <label>
+                Hole name
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  aria-label="Hole name"
+                />
+              </label>
+              <p className="muted">
+                Drilling direction:{" "}
+                {original?.direction === "negative"
+                  ? "into the selected face (negative sketch normal)"
+                  : "positive sketch normal"}
+                .
+              </p>
+              <p className="muted">
+                Diameter and depth accept project parameter expressions. Drag the
+                preview to orbit. Apply retains one Undo step and validates
+                downstream geometry when editing.
+              </p>
+            </ModelingAdvancedOptions>
           </div>
           <div>
             <ExtrudePreview
@@ -355,7 +376,7 @@ function HoleDialog({ draft }: { draft: HoleDraft }) {
                       : shown?.error
                         ? "Preview failed"
                         : shown?.result
-                          ? `Native preview ready · ${shown.result.meshes.reduce((sum, mesh) => sum + mesh.geometryAssertions!.volume, 0).toFixed(3)} mm³`
+                          ? `Native preview ready · ${shown.result.meshes.length} bodies · ${shown.result.meshes.reduce((sum, mesh) => sum + mesh.geometryAssertions!.volume, 0).toFixed(3)} mm³`
                           : "Building native preview…"}
             </p>
             {error || shown?.error ? (
@@ -363,14 +384,12 @@ function HoleDialog({ draft }: { draft: HoleDraft }) {
             ) : null}
           </div>
         </div>
-        <div className="dialog-actions">
-          <button type="submit" disabled={!shown?.result}>
-            {draft.editing ? "Apply hole edits" : "Create hole feature"}
-          </button>
-          <button type="button" onClick={close}>
-            Cancel hole
-          </button>
-        </div>
+        <ModelingTaskActions
+          applyLabel="Apply hole"
+          cancelLabel="Cancel hole"
+          disabled={!shown?.result}
+          onCancel={close}
+        />
       </form>
     </ModalDialog>
   );

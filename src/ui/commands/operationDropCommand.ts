@@ -29,8 +29,8 @@ import { useTargetScopeCapture } from "./targetScopeCaptureCommand";
 export const OPERATION_DRAG_TYPE = "application/x-plaincad-operation";
 export const SUPPORTED_OPERATION_DROPS = [
   { id: "extrude", label: "Extrude", target: "closed profile" },
-  { id: "fillet", label: "Round", target: "original cap perimeter" },
-  { id: "chamfer", label: "Bevel", target: "original cap perimeter" },
+  { id: "fillet", label: "Fillet", target: "original cap perimeter" },
+  { id: "chamfer", label: "Chamfer", target: "original cap perimeter" },
 ] as const;
 export type DropOperation = (typeof SUPPORTED_OPERATION_DROPS)[number]["id"];
 export type OperationTarget =
@@ -280,7 +280,7 @@ export function chooseOperationDropTarget(
   } else if (target.kind === "edge" && frame.operation !== "extrude") {
     const common = {
       id: createId("feature"),
-      name: `${frame.operation === "fillet" ? "Round" : "Bevel"} ${frame.document.features.length + 1}`,
+      name: `${frame.operation === "fillet" ? "Fillet" : "Chamfer"} ${frame.document.features.length + 1}`,
       componentId: frame.componentId,
       targetEdgeRefs: [createExtrudeEdgeRef(target.ownerId, target.role)],
       createdAt: new Date().toISOString(),
@@ -314,7 +314,7 @@ export function chooseOperationDropTarget(
       );
   } else
     throw new Error(
-      "Use Extrude on a closed profile, or Round/Bevel on an original supported cap perimeter.",
+      "Use Extrude on a closed profile, or Fillet/Chamfer on an original supported cap perimeter.",
     );
   cancelOperationDrop();
 }

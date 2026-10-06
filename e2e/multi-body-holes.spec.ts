@@ -139,7 +139,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
       exact: true,
     });
     await expect(
-      dialog.getByRole("button", { name: "Create hole feature" }),
+      dialog.getByRole("button", { name: "Apply hole" }),
     ).toBeDisabled();
     await dialog
       .getByLabel("Include hole target Near Body", { exact: true })
@@ -153,7 +153,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
         .check();
     await dialog.getByLabel("Hole diameter", { exact: true }).fill("drill");
     await expect(dialog.getByRole("status", { name: "Hole preview status" })).toContainText("Native preview ready");
-    await dialog.getByRole("button", { name: "Create hole feature" }).click();
+    await dialog.getByRole("button", { name: "Apply hole" }).click();
     await expect(dialog).not.toBeVisible();
     const volume = (diameter: number, depth = 10) =>
       2000 - Math.PI * (diameter / 2) ** 2 * depth;
