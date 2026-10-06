@@ -1,0 +1,62 @@
+import type { AiPlan } from "../../ai/plan";
+export const separatePartsPlan: AiPlan = {
+  name: "Two regions",
+  summary: "Two separately sized solids",
+  warnings: [],
+  parameters: [
+    { name: "width", value: 20, unit: "mm" },
+    { name: "depth", value: 10, unit: "mm" },
+  ],
+  steps: [
+    {
+      id: "left",
+      name: "Left outline",
+      type: "sketch",
+      plane: "XY",
+      offset: "0mm",
+      profile: {
+        type: "rectangle",
+        x: "-30mm",
+        y: "0mm",
+        width: "width",
+        height: "10mm",
+      },
+    },
+    {
+      id: "leftBody",
+      name: "Left solid",
+      type: "extrude",
+      sketch: "left",
+      operation: "newBody",
+      distance: "5mm",
+      termination: "distance",
+      direction: "positive",
+      targets: [],
+    },
+    {
+      id: "right",
+      name: "Right outline",
+      type: "sketch",
+      plane: "XY",
+      offset: "0mm",
+      profile: {
+        type: "rectangle",
+        x: "30mm",
+        y: "0mm",
+        width: "10mm",
+        height: "depth",
+      },
+    },
+    {
+      id: "rightBody",
+      name: "Right solid",
+      type: "extrude",
+      sketch: "right",
+      operation: "newBody",
+      distance: "5mm",
+      termination: "distance",
+      direction: "positive",
+      targets: [],
+    },
+  ],
+};

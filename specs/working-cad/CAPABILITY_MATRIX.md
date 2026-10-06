@@ -1,6 +1,6 @@
 # Working CAD Capability Matrix
 
-Reviewed against source and automated tests on 2026-10-05. This is the current
+Reviewed against source and automated tests on 2026-10-06. This is the current
 implementation status, not a declaration that the working-CAD spec is complete.
 Unit/component tests exercise fallback geometry and jsdom. Chromium acceptance
 coverage now verifies native OpenCascade rectangle extrusion and circular through-cut
@@ -695,7 +695,9 @@ compact layouts across Light/Dark/Saturn themes. The built app checks the Focuse
 example/edit/export path under production CSP. Existing detailed CAD acceptance
 explicitly uses Full workspace. Distance extrusion handles, project-file drops,
 guided face holes and contextual AI scopes/local edits are implemented within the
-limits in their sections. Broader operation drops remain planned.
+limits in their sections. Guided repair/save/export, clearer pointer snaps,
+eligible operation placement and AI candidate-solid hints are also implemented
+within their documented bounds; broader arbitrary interactions remain planned.
 
 ### Direct and precise sketch controls
 
@@ -798,7 +800,17 @@ proposals
 retain provider validation. Display-only numeric preview context is excluded from
 provider conversation history. IDs, native operation/downstream checks, one Undo,
 stale-frame protection, save/open and STL are verified for Extrude/Hole/Revolve
-and component-parameter edits. This does not implement arbitrary direct modeling.
+and component-parameter edits. Ambiguity choices trace authored dependencies to
+current live solids and name an unambiguous authoring sketch; **Show geometry** is a
+transient hint and **Change** explicitly chooses the bounded dimension. Highlighting
+preserves document, selection and history, clears on context/rebuild/busy changes,
+and never calls a provider. Shared, locked, derived and unused component values
+remain excluded. Several fields of one feature share related solids; no exact
+face/edge/axis or general semantic dimension inference is claimed. Missing related
+geometry diagnoses without widening the current edit context. Chromium verifies
+two independent native solids' rendered highlight IDs, an explicit one-parameter
+edit with exact volumes and one Undo, and zero provider calls. This does not
+implement arbitrary direct modeling.
 
 ### Guided issue repair
 

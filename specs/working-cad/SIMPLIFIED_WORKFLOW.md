@@ -1,6 +1,6 @@
 # Making PlainCAD simple to use
 
-Status: Steps 1–2 implemented. Step 3 distance handles, project-file drops and guided face holes, and Step 4 scope/local edit routing are implemented within the limits below. Repair/fabrication guidance, broader operation drops and usability research remain planned. Updated October 5, 2026.
+Status: Steps 1–2 implemented, with bounded midpoint/center/alignment drawing snaps added. Step 3 distance handles, project-file drops, guided face holes and eligible Extrude/Round/Bevel operation placement; Step 4 bounded AI routing, local previews and candidate-solid highlights; and Step 5 guided repair/save/export tasks are implemented within the limits below. Human usability research, comprehensive accessibility validation and broader arbitrary interactions remain planned. Updated October 6, 2026.
 
 The screenshots capture the interface before Step 1. The proposal includes future
 interactions; the implementation sections and capability matrix identify the
@@ -155,7 +155,7 @@ The drawing gesture defines initial shape; driving dimensions define its subsequ
 
 ### Make snapping understandable
 
-Preview grid, endpoint, center, horizontal and vertical snaps with a marker and short label. Use screen-space picking tolerances, not world distances that change unpredictably with zoom. Provide a visible Snap toggle and temporary modifier. Add only supported, solver-validated persistent constraints; a positional snap is not automatically a permanent constraint.
+Pointer drawing now shows labeled existing-point, line-midpoint, true arc-sweep-midpoint, circle/arc-center and horizontal/vertical alignment feedback. Existing points take priority. Screen-space tolerances account for zoom and nonuniform canvas scaling. **Geometry snaps** controls inferred midpoint/center/alignment placement. Existing stored points, including authored curve centers, still snap with inference disabled; **Snap** retains the existing grid behavior. This changes initial pointer placement, not typed coordinates or constrained point movement, translation or deformation. It creates no automatic persistent constraints. Tangent/intersection snaps and a temporary modifier remain proposed refinements.
 
 When automatic relations would conflict with existing dimensions, show the rejected relation and preserve the previous valid state. Do not silently remove constraints to satisfy the gesture. Suggest anchoring or centering a shape as an explicit action rather than locking every new point.
 
@@ -187,17 +187,15 @@ Use lightweight transient feedback while dragging. Rebuild exact native previews
 
 Drag-and-drop is a discoverable shortcut when valid targets light up and a short explanation follows the cursor. Every drop must resolve a target and preview an ordinary document operation. Provide a click/select/place alternative for each action.
 
-Project-file opening is the implemented drop gesture. The guided face-to-hole
-transaction has click/select/place controls today; dragging operation tools and
-other drop rows below remain proposed alternatives.
+Project-file opening and bounded Extrude/Round/Bevel operation placement are implemented drop gestures. Operation tokens support drag, viewer clicks and exact keyboard target cards. Eligible targets receive turquoise overlays and fixed-position yellow hover feedback; choosing a target opens the ordinary native preview/Apply workflow. The guided face-to-hole transaction retains click/select/place controls. Other rows below remain proposed unless explicitly marked implemented.
 
 | Dragged item | Valid destination | Intended result and limits |
 | --- | --- | --- |
 | Rectangle/circle tool | Active sketch canvas | Start a draft shape; finish placement or type dimensions |
 | Draw action | Supported planar face | Start face-based sketch selection; show orientation and offset |
-| Closed sketch/profile | Supported target in an Add/Cut task | Prepare an explicit extrusion with profile, direction and body scope; do not imply arbitrary 3D relocation |
+| Extrude token | Current closed sketch region in the visible active component | Implemented: choose the profile and open ordinary extrusion preview; operation, direction and body scope remain explicit |
 | Hole tool | Supported face/body | Guided click/select flow exists with explicit centers/target; dragging the tool remains proposed |
-| Round/Bevel tool | Supported feature-owned perimeter | Prepare real Fillet/Chamfer; invalid or arbitrary edges remain unavailable |
+| Round/Bevel token | Original start/end cap perimeter of an untouched native distance/new-body Extrude | Implemented: open real Fillet/Chamfer preview for all original perimeter edges; modified owners, arbitrary individual edges and boolean-created topology are unavailable in this picker |
 | Existing `.pcaddoc` or `.json` file | Workspace open zone | Implemented: validate then open; explicit keep/save/replace choices; do not merge imported JSON |
 | Built-in example | Start/example zone | Clearly say whether it opens a project or creates a part; retain current replacement semantics until append is implemented |
 | History item | Valid chronology position | Preview/check a supported timeline reorder with dependency validation |
@@ -223,9 +221,7 @@ visible in a compact status line.
 Current bounded thickness routing uses a selected distance Extrude's distance or a
 unique eligible active-component thickness parameter. Otherwise it asks the user
 to choose an editable dimension; shared, locked, derived and unused component
-parameters are excluded. A future clarification such as “Do you mean the plate
-thickness or the boss height?” can add geometry highlights. Scope routing remains
-validated locally; prose cannot grant broader modification access.
+parameters are excluded. Ambiguity choices now offer **Show geometry** for related current solids and name an unambiguous authoring sketch, followed by an explicit **Change** action. Several dimensions can affect the same solid; fields belonging to one feature share its related solid. Names/current values and the exact native preview distinguish the edit. This does not infer arbitrary dimension faces, edges or semantic roles. Scope routing remains validated locally; prose cannot grant broader modification access.
 
 ### Ask only consequential questions
 
@@ -289,7 +285,7 @@ Select a feature from history, expand Details, edit a formula or supported refer
 
 ## 12. Contextual repair should replace diagnostic hunting
 
-Replace a generic wall of diagnostics with a short issue card linked to the affected geometry. Keep the full diagnostic available under Details.
+Source-linked repair cards now open the affected parameter/feature controls or select the reported driving dimension/constraint in its sketch. Upstream target-body highlights are transient. For a single unbranched 2–256-segment non-construction line/arc outline, a card can show endpoints and a dashed proposed straight closing edge. The explicit **Add missing closing edge** action validates solving/closed profiles and preserves existing IDs in one Undo. Branches, separate chains/loops, circles and invalid proposals require manual repair. Lost face references still need an explicit supported replacement. These bounded actions implement the first repair layer; richer contextual camera guidance and diagnostic explanations below remain design proposals. Full diagnostics remain available.
 
 | Problem | Plain-language message | Next action |
 | --- | --- | --- |
@@ -308,7 +304,7 @@ A failed operation preserves the last committed document. If old geometry remain
 
 Use **Save project** for editable `.pcaddoc` data and **Export STL** for a fabrication mesh. Explain the distinction at the point of use: “Save keeps dimensions and history; STL contains a mesh.” Autosave is local recovery, not evidence that a portable file has been saved.
 
-Default export to the single eligible selected part/body, with an explicit summary of what is included. For several eligible bodies, ask which to export. Expose separate-body, combined-shell and native-union modes with plain descriptions and existing overlap/mesh diagnostics; do not disguise their different outcomes.
+**File → Save or export…** now distinguishes editable project saving from printable STL. Editable saving works even when geometry has diagnostics. STL offers an explicit body/component checklist with all bodies marked by default, including hidden bodies; selected/visible shortcuts change that checklist deliberately. Counts and one-STL versus ZIP output are explained. **Advanced STL options** exposes separate-body, combined-shell and native-union modes with their existing overlap/mesh diagnostics. Source-feature navigation and bounded repair advice accompany identifiable export failures. A selected-body default is a possible later refinement to validate with users, not current behavior.
 
 Present readiness as current model validity plus mesh checks, rather than a broad “safe to manufacture” label. Keep units and output bounds visible. Advanced tessellation choices remain under Details. Export must use a successful current rebuild and the same supported validation paths as today.
 
@@ -344,14 +340,14 @@ Preserve current data disclosure: creation sends prompt/recent turns; bounded ed
 
 | Area | Implemented foundation | Remaining proposed work |
 | --- | --- | --- |
-| Drawing | Visible tools, pointer-authored lines/rectangles/circles/arcs, inline sizes, multi-selection, one-Undo bulk deletion, existing snapping and bounded movement | Additional snap types, broader constrained dragging and new camera gestures |
+| Drawing | Visible pointer tools and inline sizes; multi-selection/one-Undo deletion; labeled point/midpoint/center/alignment snaps; bounded movement | Tangent/intersection snaps, automatic persistent relations, broader constrained dragging and new camera gestures |
 | Dimensions | Driving labels/reference measurements enabled by default, selected-value emphasis and contextual size editors | Durable semantic dimension names and richer visual prioritization |
-| Features | Native extrude/revolve/Hole, distance handles, guided face holes, bounded booleans/edge treatments/references | Broader operation drops and arbitrary direct face editing remain separate work |
-| AI | Three providers, scope chips, bounded thickness routing/clarifications, exact local edits, native previews and scope-specific hints | Geometry-highlighted clarification, richer model-derived help and sketch-intent assistance |
+| Features | Native modeling, distance handles, guided face holes and eligible Extrude/Round/Bevel placement with native Apply | Broader operation destinations and arbitrary direct face editing |
+| AI | Three providers, scope chips, bounded intent/choices, candidate-solid highlights, local numeric previews and explicit native Apply | Richer semantic/model-derived help, exact dimension face/edge overlays and sketch-intent assistance |
 | Organization | Project/components/sketches/bodies, activation/history, Focused Parts/Details and explicit edit targets | Automatic first-part transaction and further organization simplification |
-| Drag and drop | Protected project-file opening drops; bounded timeline commands; guided face picking | Operation-drop registry, eligible-target highlights and pointer history reordering |
+| Drag and drop | Protected project-file opening; eligible Extrude/Round/Bevel tokens with overlays and click/keyboard alternatives; guided face picking | Draw/Hole tool drops, arbitrary edge destinations and pointer history reordering |
 | Reusable content | Built-in examples and durable projects | Append/import-part design with ID and reference remapping; placement/assemblies deferred |
-| Repair/export | Source-linked diagnostics, reference repair, STL modes and validation | Guided issue cards and a concise export task |
+| Repair/export | Source-linked issue cards, bounded closing-edge proposals, explicit reference repair, guided Save/export and validated STL modes | Broader automatic repair and measured usability/accessibility validation |
 
 Current movement/deformation and topology references have bounded support. General constrained dragging, arbitrary BRep face manipulation, assembly positioning and unrestricted imported-part editing remain separate modeling projects. Consult `CAPABILITY_MATRIX.md` before exposing a proposed gesture.
 
@@ -396,8 +392,7 @@ Acceptance is covered by unit/component and native browser checks for precise
 non-template sketches, all origin-plane orientations, dimension errors/recovery,
 undo/redo, save/open and STL. User research is still required to establish that new
 CAD users find the workflow easy. Shift-click, containment/crossing box selection,
-Select All and bulk one-Undo deletion are implemented. Additional snap types and
-new sketch camera gestures described earlier remain future work.
+Select All and bulk one-Undo deletion are implemented. Labeled midpoint, true arc-sweep midpoint, center and alignment snaps now refine pointer drawing using screen-space tolerances, without creating constraints or changing typed/constrained edits. Tangent/intersection snaps and new sketch camera gestures remain future work.
 
 ### Step 3 Add parametric handles and bounded drag and drop
 
@@ -411,8 +406,7 @@ each other; opening, side-face and other unproven boundaries reserve the native
 edges retain exact clearance. Schema 13 persists inward Hole direction; legacy
 projects retain their positive drilling behavior, with regression fixtures for
 versions 1–13.
-Broader operation drops, edge-treatment drops and pointer history reordering
-remain planned; existing bounded timeline commands remain available.
+Eligible Extrude, Round and Bevel tokens now support drag, viewer clicks and exact keyboard target cards. Extrude targets current closed regions in the visible active component; Round/Bevel targets untouched native distance/new-body Extrude owners' original cap-perimeter groups. Arbitrary individual edges, modified owners and boolean-created topology are unavailable in this picker. Turquoise target and fixed-space yellow hover feedback lead to an ordinary native preview/Apply transaction with one Undo. Picking and Apply bind the exact document/session/component/native result, and competing tasks must finish first. Broader operation destinations and pointer history reordering remain planned; existing timeline commands remain available.
 
 Project-file drops are implemented: drop one `.pcaddoc` or `.json` file to validate
 and open it. Nonempty projects get explicit keep/save/replace choices; invalid,
@@ -431,19 +425,17 @@ retain provider security and validation. The drawer shows readable generated
 parameter labels, explicit targets and scope-specific next-action hints. Scope or
 selection changes never call a provider automatically. Simple contradictory size
 wording asks for clarification; explicit absolute set requests and user-chosen
-fields remain authoritative. Richer model-derived suggestions, highlighted
-clarification targets and sketch-intent assistance remain planned until their
-context and ID-preservation contracts are ready.
+fields remain authoritative. Explicit ambiguity choices now highlight related live solids and name an unambiguous authoring sketch without changing selection, history or scope. Highlights clear on context/rebuild/busy changes; missing geometry leaves a bounded choice and diagnostic. Several fields can share a solid, so names/values and the exact native preview determine the change. Richer semantic/model-derived suggestions, exact dimension face/edge overlays and sketch-intent assistance remain planned.
 
 Acceptance: “make this thicker” edits the intended supported field or asks a clear question; it never silently edits another part or shared value. Local numeric refinements do not generate API calls. Provider failure and absence leave manual workflows usable.
 
 ### Step 5 Guide repair and fabrication and validate usability
 
-Add geometry-linked repair cards and the simplified export task. Run usability sessions, accessibility checks and cross-browser native workflows. Tune defaults from observations rather than counting how many controls were hidden.
+Guided issue cards and **Save or export…** are implemented within the repair/export limits above. Cards open source controls, select reported dimensions/constraints and can preview/commit one supported closing edge. Lost references require explicit replacement. Editable project saving remains separate from successful-model STL; an explicit all-body checklist, selected/visible shortcuts, advanced modes, readiness/mesh diagnostics and identifiable repair links guide fabrication export. Tasks reject changed/replaced contexts and competing drafts. Native workflows cover repair, selected-body output, undo, parameter edits, save/open and STL volume. Human usability sessions, comprehensive accessibility checks and broader cross-browser native workflows remain to be completed. Tune defaults from observations rather than counting hidden controls.
 
 Acceptance: users can recover from a gap, a conflicting dimension and a lost face reference; choose/export the intended bodies; and explain whether they saved an editable project or exported a mesh.
 
-For each implementation step, follow the established workflow: focused behavioral and geometry tests, Prism review with Anthropic `claude-sonnet-5-5`, address actionable findings, run the full release gate for code changes, and commit separately. The status above describes the implemented subset. Broader drag/drop operations, repair/fabrication guidance, accessibility studies and usability sessions remain planned.
+For each implementation step, follow the established workflow: focused behavioral and geometry tests, Prism review with Anthropic `claude-sonnet-5-5`, address actionable findings, run the full release gate for code changes, and commit separately. The status above describes the implemented subset. Broader operation destinations, arbitrary or automatic repairs, accessibility studies and usability sessions remain planned.
 
 ## 18. How to prove that it is easier
 
@@ -457,11 +449,7 @@ Proposed pilot goals: at least four of five participants per group complete the 
 
 Automated acceptance must cover mouse, click-place and keyboard/form routes; cancellation and one-step undo; driving/reference distinction; invalid and stale native previews; constraints and shared bindings; XY/XZ/YZ orientation; multi-body scope; save/open; STL signed volume/bounds; AI offline/failure; panel focus restoration; and viewport/zoom behavior across themes. Use Chromium, Firefox and WebKit where affected. Keep paid provider tests opt-in and report failures honestly.
 
-The quieter workspace, focused drawing tools, distance handles, protected file
-drops, guided face holes and bounded contextual AI are now delivered within the
-implementation limits above. Next, validate their usability with people and
-prioritize repair/fabrication guidance and broader supported interactions from
-those observations. Automated geometry checks do not establish ease of use.
+The quieter workspace, direct drawing, distance handles, protected file drops and guided face holes now include five further bounded layers: geometry-linked repair, guided Save/export, clearer pointer snaps, eligible operation placement and AI candidate-solid clarification. Their automated checks establish the specific implemented workflows above. Next, measure usability/accessibility with people and prioritize broader supported interactions from those observations. Automated geometry checks do not establish ease of use.
 
 ## 19. Project references
 

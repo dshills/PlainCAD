@@ -15,6 +15,21 @@ import type { CadDocument } from "../cad/document/schema";
 import type { RebuildResult } from "../cad/worker/workerProtocol";
 import { buildAiPlan } from "../ai/buildPlan";
 import { aiPlatePlan } from "./fixtures/aiPlan";
+import { separatePartsPlan } from "./fixtures/aiTargetsPlan";
+import * as clarificationTargets from "../ai/clarificationTargets";
+import { useOperationDrop } from "../ui/commands/operationDropCommand";
+import {
+  beginExtrudeCreation,
+  useExtrudeDraft,
+} from "../ui/commands/extrudeCommand";
+import {
+  beginModelingCreation,
+  useModelingDraft,
+} from "../ui/commands/modelingDraftCommand";
+import {
+  currentGeometryHighlight,
+  useGeometryHighlight,
+} from "../state/useGeometryHighlight";
 const mocks = vi.hoisted(() => ({
   providers: vi.fn(),
   request: vi.fn(),
@@ -31,6 +46,10 @@ vi.mock("../viewer/ExtrudePreview", () => ({
   ExtrudePreview: () => <div>Preview display</div>,
 }));
 beforeEach(() => {
+  useOperationDrop.setState({ frame: undefined });
+  useExtrudeDraft.setState({ draft: undefined });
+  useModelingDraft.setState({ draft: undefined });
+  useGeometryHighlight.setState({ highlight: undefined });
   useCadStore.setState(useCadStore.getInitialState(), true);
   useCadStore.getState().setDocument(createEmptyDocument());
   useCadStore.setState({
@@ -48,6 +67,10 @@ beforeEach(() => {
   mocks.request.mockResolvedValue(aiPlatePlan);
 });
 afterEach(() => {
+  useOperationDrop.setState({ frame: undefined });
+  useExtrudeDraft.setState({ draft: undefined });
+  useModelingDraft.setState({ draft: undefined });
+  useGeometryHighlight.setState({ highlight: undefined });
   useAiDrawer.setState({ open: false });
   vi.clearAllMocks();
 });
@@ -282,7 +305,7 @@ it("asks for a dimension when thickness is locked and previews only the user's c
   ).not.toBeInTheDocument();
   fireEvent.click(
     screen.getByRole("button", {
-      name: `Change ${width.name} (${width.value}mm)`,
+      name: "Change width (60mm)",
     }),
   );
   fireEvent.click(screen.getByRole("button", { name: "Generate preview" }));
@@ -320,4 +343,221 @@ it("rejects a provider changing another field after resolving a selected-feature
   ).toEqual(["distance"]);
   expect(mocks.preview).not.toHaveBeenCalled();
   expect(useCadStore.getState().history.past).toHaveLength(0);
+});
+
+it("shows distinct candidate geometry without changing scope, selection or history and clears stale highlights", async () => {
+  const staged = buildAiPlan(createEmptyDocument(), separatePartsPlan);
+  useCadStore.getState().setDocument(staged.document);
+  useCadStore.getState().activateComponent(staged.componentId);
+  const result = rebuildDocument(staged.document);
+  useCadStore.setState({
+    rebuild: { result, status: "succeeded", kernelReady: true },
+  });
+  useCadStore.getState().select({
+    kind: "feature",
+    id: staged.document.features[0].id,
+    documentId: staged.document.id,
+  });
+  const before = useCadStore.getState();
+  render(<AiDrawer />);
+  fireEvent.click(screen.getByRole("button", { name: "This part" }));
+  fireEvent.change(screen.getByLabelText("What would you like to make?"), {
+    target: { value: "Make this thicker to 8mm" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Generate preview" }));
+  const width = screen.getByRole("button", { name: "Show geometry for width" });
+  fireEvent.click(width);
+  expect(currentGeometryHighlight(useCadStore.getState())?.bodyIds).toEqual([
+    result.meshes[0].bodyId,
+  ]);
+  expect(width).toHaveAttribute("aria-pressed", "true");
+  fireEvent.click(
+    screen.getByRole("button", { name: "Show geometry for depth" }),
+  );
+  expect(currentGeometryHighlight(useCadStore.getState())?.bodyIds).toEqual([
+    result.meshes[1].bodyId,
+  ]);
+  expect(useCadStore.getState().selection).toBe(before.selection);
+  expect(useCadStore.getState().history).toBe(before.history);
+  expect(screen.getByRole("button", { name: "This part" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  expect(mocks.request).not.toHaveBeenCalled();
+  expect(mocks.preview).not.toHaveBeenCalled();
+  act(() =>
+    useCadStore.setState({
+      rebuild: { ...useCadStore.getState().rebuild, status: "queued" },
+    }),
+  );
+  expect(currentGeometryHighlight(useCadStore.getState())).toBeUndefined();
+  expect(
+    screen.getByRole("button", { name: "Show geometry for depth" }),
+  ).toBeDisabled();
+  act(() =>
+    useCadStore.setState({
+      rebuild: { ...useCadStore.getState().rebuild, status: "succeeded" },
+    }),
+  );
+  expect(currentGeometryHighlight(useCadStore.getState())).toBeUndefined();
+  fireEvent.click(
+    screen.getByRole("button", { name: "Show geometry for depth" }),
+  );
+  expect(currentGeometryHighlight(useCadStore.getState())?.bodyIds).toEqual([
+    result.meshes[1].bodyId,
+  ]);
+  act(() => useCadStore.setState({ fileBusy: true }));
+  expect(currentGeometryHighlight(useCadStore.getState())).toBeUndefined();
+  act(() => useCadStore.setState({ fileBusy: false }));
+  expect(currentGeometryHighlight(useCadStore.getState())).toBeUndefined();
+  fireEvent.click(
+    screen.getByRole("button", { name: "Show geometry for depth" }),
+  );
+  act(() =>
+    useCadStore.getState().select({
+      kind: "body",
+      id: result.meshes[0].bodyId,
+      documentId: staged.document.id,
+    }),
+  );
+  expect(currentGeometryHighlight(useCadStore.getState())).toBeUndefined();
+  fireEvent.click(
+    screen.getByRole("button", { name: "Show geometry for depth" }),
+  );
+  act(() =>
+    useCadStore.getState().select({
+      kind: "body",
+      id: result.meshes[1].bodyId,
+      documentId: staged.document.id,
+    }),
+  );
+  expect(currentGeometryHighlight(useCadStore.getState())).toBeUndefined();
+});
+
+it("keeps bounded dimension choice and an actionable message when related-geometry tracing fails", async () => {
+  const { staged } = selectedPlate();
+  const thickness = Object.values(staged.document.parameters).find((p) =>
+    p.name.endsWith("_thickness"),
+  )!;
+  useCadStore.getState().updateDocument((d) => ({
+    ...d,
+    parameters: {
+      ...d.parameters,
+      [thickness.name]: { ...thickness, locked: true },
+    },
+  }));
+  const trace = vi
+    .spyOn(clarificationTargets, "aiClarificationTargets")
+    .mockImplementation(() => {
+      throw new Error("Dependency trace unavailable");
+    });
+  try {
+    render(<AiDrawer />);
+    fireEvent.click(screen.getByRole("button", { name: "This part" }));
+    fireEvent.change(screen.getByLabelText("What would you like to make?"), {
+      target: { value: "Make this thicker to 8mm" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Generate preview" }));
+    expect(screen.getByLabelText("AI clarification")).toHaveTextContent(
+      "Related geometry is unavailable",
+    );
+    expect(
+      screen.getByRole("button", { name: "Show geometry for width" }),
+    ).toBeDisabled();
+    expect(
+      screen.queryByRole("button", { name: "Change thickness (5mm)" }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Change width (60mm)" }),
+    );
+    expect(screen.getByLabelText("AI edit target")).toHaveTextContent(
+      "ai_1_width",
+    );
+    expect(mocks.request).not.toHaveBeenCalled();
+    expect(mocks.preview).not.toHaveBeenCalled();
+  } finally {
+    trace.mockRestore();
+  }
+});
+
+it("clears read-only AI hints and disables generation throughout an operation picker and both target-bound native forms", async () => {
+  const staged = buildAiPlan(createEmptyDocument(), separatePartsPlan);
+  useCadStore.getState().setDocument(staged.document);
+  useCadStore.getState().activateComponent(staged.componentId);
+  const result = rebuildDocument(staged.document);
+  useCadStore.setState({
+    rebuild: { result, status: "succeeded", kernelReady: true },
+  });
+  const state = useCadStore.getState();
+  render(<AiDrawer />);
+  fireEvent.click(screen.getByRole("button", { name: "This part" }));
+  fireEvent.change(screen.getByLabelText("What would you like to make?"), {
+    target: { value: "Make this thicker to 8mm" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Generate preview" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "Show geometry for depth" }),
+  );
+  expect(currentGeometryHighlight(useCadStore.getState())?.bodyIds).toEqual([
+    result.meshes[1].bodyId,
+  ]);
+  // Runtime task-lifecycle fixture; native target validity is covered in Chromium.
+  act(() =>
+    useOperationDrop.setState({
+      frame: {
+        id: "picker",
+        operation: "extrude",
+        document: staged.document,
+        result,
+        session: state.documentSession,
+        componentId: staged.componentId,
+      },
+    }),
+  );
+  expect(currentGeometryHighlight(useCadStore.getState())).toBeUndefined();
+  expect(
+    screen.getByRole("button", { name: "Show geometry for depth" }),
+  ).toBeDisabled();
+  expect(
+    screen.getByRole("button", { name: "Generate preview" }),
+  ).toBeDisabled();
+  const first = staged.document.features[0];
+  if (first.type !== "extrude") throw new Error("Fixture requires extrusion");
+  act(() => {
+    beginExtrudeCreation(first.sketchId, {
+      profileId: result.profiles![first.sketchId][0].id,
+      snapshot: result,
+    });
+    useOperationDrop.setState({ frame: undefined });
+  });
+  expect(useExtrudeDraft.getState().draft?.targetSnapshot).toBe(result);
+  expect(
+    screen.getByRole("button", { name: "Generate preview" }),
+  ).toBeDisabled();
+  act(() => {
+    beginModelingCreation(
+      {
+        ...first,
+        type: "fillet",
+        targetEdgeRefs: [],
+        radius: { expression: "1mm", unit: "mm" },
+      },
+      result,
+    );
+    useExtrudeDraft.setState({ draft: undefined });
+  });
+  expect(
+    screen.getByRole("button", { name: "Generate preview" }),
+  ).toBeDisabled();
+  expect(
+    screen.getByRole("button", { name: "Show geometry for depth" }),
+  ).toBeDisabled();
+  act(() => useModelingDraft.setState({ draft: undefined }));
+  expect(
+    screen.getByRole("button", { name: "Generate preview" }),
+  ).toBeEnabled();
+  expect(currentGeometryHighlight(useCadStore.getState())).toBeUndefined();
+  expect(useCadStore.getState().history).toBe(state.history);
+  expect(mocks.request).not.toHaveBeenCalled();
+  expect(mocks.preview).not.toHaveBeenCalled();
 });

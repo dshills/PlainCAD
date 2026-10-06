@@ -1,3 +1,6 @@
+import { useOperationDrop } from "../commands/operationDropCommand";
+import { useExtrudeDraft } from "../commands/extrudeCommand";
+import { useModelingDraft } from "../commands/modelingDraftCommand";
 import { useWorkspaceState } from "../../state/useWorkspaceState";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchAiProviders, requestAiPlan } from "../../ai/client";
@@ -12,6 +15,12 @@ import {
   resolveAiIntent,
   type AiScope,
 } from "../../ai/contextualIntent";
+import {
+  aiClarificationTargets,
+  aiDimensionLabel,
+  type AiClarificationTarget,
+} from "../../ai/clarificationTargets";
+import { showGeometryHighlight } from "../../state/useGeometryHighlight";
 import { reviseAiParameters } from "../../ai/revisePlan";
 import {
   createAiConversationBudget,
@@ -64,7 +73,21 @@ export function AiDrawer() {
       : undefined;
   const fileBusy = useCadStore((state) => state.fileBusy);
   const kernelReady = useCadStore((state) => state.rebuild.kernelReady);
+  const rebuildResult = useCadStore((state) => state.rebuild.result);
+  const rebuildStatus = useCadStore((state) => state.rebuild.status);
   const canvasActive = Boolean(useSketchCanvas((state) => state.active));
+  const operationPickerActive = Boolean(
+    useOperationDrop((state) => state.frame),
+  );
+  const operationExtrudeActive = Boolean(
+    useExtrudeDraft((state) => state.draft?.targetSnapshot),
+  );
+  const operationModelingActive = Boolean(
+    useModelingDraft((state) => state.draft?.targetSnapshot),
+  );
+  const operationActive =
+    operationPickerActive || operationExtrudeActive || operationModelingActive;
+
   const [providers, setProviders] = useState<AiProviderStatus[]>([]);
   const [provider, setProvider] = useState<AiProvider>("anthropic");
   const [model, setModel] = useState("");
@@ -72,6 +95,7 @@ export function AiDrawer() {
   const [task, setTask] = useState<AiScope>("create");
   const [chosenTarget, setChosenTarget] = useState<string>();
   const [clarifying, setClarifying] = useState(false);
+  const [highlightTarget, setHighlightTarget] = useState<string>();
   const editingFeatureId = task === "feature" ? selectedFeatureId : undefined;
   const editing = useMemo(() => {
     if (task === "create") return {};
@@ -108,6 +132,108 @@ export function AiDrawer() {
       };
     }
   }, [task, prompt, editing.context, chosenTarget]);
+  const clarification = useMemo(() => {
+    if (!clarifying || !intent.choices) return { targets: [] };
+    try {
+      return {
+        targets: aiClarificationTargets(
+          document,
+          componentId,
+          task,
+          intent.choices,
+          rebuildResult,
+          editingFeatureId,
+        ),
+      };
+    } catch {
+      // Existing bounded context remains authoritative if read-only dependency
+      // tracing fails. Choosing still requires the normal fresh native preview.
+      const targets = intent.choices.flatMap((choice) => {
+        const dimension = editing.context?.parameters.find(
+          (p) => p.id === choice.id && p.name === choice.name,
+        );
+        return dimension
+          ? [
+              {
+                dimension,
+                label: aiDimensionLabel(dimension.name),
+                bodyIds: [],
+                bodyNames: [],
+              },
+            ]
+          : [];
+      });
+      return {
+        targets,
+        geometryError:
+          "Related geometry is unavailable. You can choose an allowed dimension and inspect a fresh native preview.",
+      };
+    }
+  }, [
+    clarifying,
+    intent.choices,
+    document,
+    componentId,
+    task,
+    rebuildResult,
+    editingFeatureId,
+    editing.context,
+  ]);
+  const clarificationTargets: AiClarificationTarget[] = clarification.targets;
+  useEffect(() => {
+    setHighlightTarget(undefined);
+  }, [
+    open,
+    document,
+    session,
+    componentId,
+    selected,
+    task,
+    prompt,
+    fileBusy,
+    canvasActive,
+    clarifying,
+    rebuildStatus,
+    operationActive,
+  ]);
+  useEffect(() => {
+    if (
+      !open ||
+      !clarifying ||
+      fileBusy ||
+      canvasActive ||
+      operationActive ||
+      rebuildStatus !== "succeeded"
+    )
+      return;
+    const target = clarificationTargets.find(
+      (item) => item.dimension.id === highlightTarget,
+    );
+    if (!target) return;
+    return showGeometryHighlight({
+      document,
+      session,
+      componentId,
+      result: rebuildResult,
+      source: "ai",
+      bodyIds: target.bodyIds,
+      sketchId: target.sketchId,
+      sketchEntityIds: target.sketchEntityIds,
+    });
+  }, [
+    open,
+    clarifying,
+    fileBusy,
+    canvasActive,
+    clarificationTargets,
+    highlightTarget,
+    document,
+    session,
+    componentId,
+    rebuildResult,
+    rebuildStatus,
+    operationActive,
+  ]);
   const requestContext = useMemo(() => {
     if (!editing.context || !intent.target) return editing.context;
     return {
@@ -182,6 +308,7 @@ export function AiDrawer() {
     !busy &&
     !fileBusy &&
     !canvasActive &&
+    !operationActive &&
     kernelReady &&
     Boolean(prompt.trim()) &&
     prompt.length <= AI_LIMITS.promptCharacters &&
@@ -248,8 +375,10 @@ export function AiDrawer() {
     window.dispatchEvent(new Event("resize"));
   }, [open]);
   useEffect(() => {
-    if (frame.current && !currentAiFrame(frame.current))
-      cancel("Project or component changed. Generate a fresh preview.");
+    if (frame.current && (operationActive || !currentAiFrame(frame.current)))
+      cancel(
+        "Project, component or active operation changed. Generate a fresh preview.",
+      );
   }, [
     document,
     session,
@@ -257,6 +386,7 @@ export function AiDrawer() {
     selectedFeatureId,
     fileBusy,
     canvasActive,
+    operationActive,
   ]);
   useEffect(() => {
     setHistory([]);
@@ -604,23 +734,97 @@ export function AiDrawer() {
             {clarifying && intent.clarification ? (
               <div role="status" aria-label="AI clarification">
                 <p>{intent.clarification}</p>
+                {!clarification.geometryError &&
+                !fileBusy &&
+                !canvasActive &&
+                !operationActive &&
+                rebuildStatus === "succeeded" &&
+                clarificationTargets.some((target) => target.bodyIds.length) ? (
+                  <p>
+                    Show related geometry, then choose the dimension explicitly.
+                    Highlighting does not select or edit it; the native preview
+                    will show the exact change.
+                  </p>
+                ) : null}
+                {clarificationTargets.some((target) => target.bodyIds.length) &&
+                (fileBusy ||
+                  canvasActive ||
+                  operationActive ||
+                  rebuildStatus !== "succeeded") ? (
+                  <p className="muted">
+                    Geometry highlighting is available when rebuilding and file
+                    operations have finished, sketch editing is closed, and the
+                    active modeling operation is finished.
+                  </p>
+                ) : null}
+                {task === "feature" && clarificationTargets.length > 1 ? (
+                  <p>
+                    Dimensions of this feature share the related solid. Choose
+                    by name and value, then inspect the exact native preview.
+                  </p>
+                ) : null}
+                {clarification.geometryError ? (
+                  <p>{clarification.geometryError}</p>
+                ) : null}
                 <div className="ai-actions">
-                  {intent.choices?.map((parameter) => (
-                    <button
-                      key={parameter.id}
-                      type="button"
-                      onClick={() => {
-                        cancel("Dimension chosen. Generate a fresh preview.");
-                        setChosenTarget(parameter.name);
-                        setHistory([]);
-                        setReply(undefined);
-                        setClarifying(false);
-                      }}
-                    >
-                      Change {parameter.name} ({parameter.value}
-                      {parameter.unit})
-                    </button>
-                  ))}
+                  {clarificationTargets.map((target) => {
+                    const parameter = target.dimension;
+                    const geometryReady =
+                      !fileBusy &&
+                      !canvasActive &&
+                      !operationActive &&
+                      rebuildStatus === "succeeded" &&
+                      target.bodyIds.length > 0;
+                    return (
+                      <div
+                        key={parameter.id}
+                        className="ai-clarification-choice"
+                      >
+                        <p>
+                          <strong>{target.label}</strong>: {parameter.value}
+                          {parameter.unit}
+                        </p>
+                        <p className="muted">
+                          {target.bodyNames.length
+                            ? `Related geometry: ${target.bodyNames.join(", ")}.`
+                            : "No current solid is linked to this dimension."}
+                          {target.sketchId
+                            ? ` Authoring sketch: ${document.sketches[target.sketchId]?.name ?? target.sketchId}.`
+                            : ""}
+                        </p>
+                        <button
+                          type="button"
+                          disabled={!geometryReady}
+                          aria-pressed={highlightTarget === parameter.id}
+                          onClick={() =>
+                            setHighlightTarget((current) =>
+                              current === parameter.id
+                                ? undefined
+                                : parameter.id,
+                            )
+                          }
+                        >
+                          Show geometry for {target.label}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            cancel(
+                              "Dimension chosen. Generate a fresh preview.",
+                            );
+                            setChosenTarget(parameter.name);
+                            setHistory([]);
+                            setReply(undefined);
+                            setHighlightTarget(undefined);
+                            setClarifying(false);
+                          }}
+                        >
+                          Change {target.label} ({parameter.value}
+                          {parameter.unit})
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             ) : null}
@@ -780,6 +984,12 @@ export function AiDrawer() {
             {canvasActive ? (
               <p role="status">
                 Finish sketch editing to generate an AI component.
+              </p>
+            ) : null}
+            {operationActive ? (
+              <p>
+                Finish or cancel the current operation before generating or
+                applying an AI edit.
               </p>
             ) : null}
             <p role="status" aria-label="AI conversation context">

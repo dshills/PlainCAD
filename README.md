@@ -138,7 +138,10 @@ ordinary CAD commands remain available without an AI service. The first two
 steps of the [simplified workflow proposal](specs/working-cad/SIMPLIFIED_WORKFLOW.md)
 are implemented. Distance extrusion handles, protected project-file drops, guided
 face holes, and contextual AI scopes/local numeric previews are also implemented.
-Broader operation drops and repair/fabrication guidance remain planned.
+Guided repair, Save/export, clearer pointer snaps, eligible Extrude/Round/Bevel
+placement and AI candidate-solid clarification are implemented within the limits
+below. Broader arbitrary interaction and human usability/accessibility research
+remain planned.
 
 Drop one `.pcaddoc` or `.json` file anywhere on the workspace to open a project.
 The same bounded validation and migration used by Open runs before replacement.
@@ -935,8 +938,17 @@ or an explicitly chosen field honors the absolute value. Wrong units ask for a
 supported mm/deg value. Numeric refinements also stay local. Other bounded requests
 use the selected provider after you choose Generate preview. Scope and selection
 changes do not call a provider automatically. The drawer shows the target,
-before/after values and scope-specific next-action hints; broader model-derived
-suggestions and sketch-intent assistance remain planned.
+before/after values and scope-specific next-action hints. Ambiguous eligible
+dimensions offer **Show geometry** and an explicit **Change** action. Showing a
+candidate traces authored dependencies to its related current solid(s) and names
+an unambiguous authoring sketch; it does not select or edit the model. Distinct
+parameters may affect the same solid, and a feature's fields share its related
+solid. Choose by name/value and inspect the exact native preview before Apply.
+Highlights clear on scope, prompt, selection, project/session/component, rebuild
+and busy-state changes. Missing geometry leaves the bounded dimension choice and
+native preview route available with a diagnostic. Highlighting, choosing and local
+numeric refinement make no provider request. Broader model-derived suggestions
+and sketch-intent assistance remain planned.
 Unsupported requests, wrong dimensions and stale contexts show diagnostics. Review
 the proposed values and actual native geometry before Apply; accepted edits retain
 IDs in one Undo step. Native acceptance covers selected Extrude/Hole/Revolve and
