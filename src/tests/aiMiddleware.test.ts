@@ -191,3 +191,37 @@ it("returns an actionable 413 for oversized bodies without destroying the respon
   expect(await response.text()).toContain("request is too large");
   expect(fetcher).not.toHaveBeenCalled();
 });
+
+const sketchContext = { sketchId: "sketch_test", selectedIds: [], bindingPolicy: "preserve", geometry: [], dimensions: [], constraints: [], parameters: [] };
+it("routes sketch edits through the protected gateway without sharing full projects or upstream secrets", async () => {
+  const proposal = { summary: "Which line should be trimmed?", warnings: [], actions: [] };
+  const fetcher = vi.fn().mockResolvedValue(new Response(JSON.stringify({ stop_reason: "end_turn", content: [{ type: "text", text: JSON.stringify(proposal) }] })));
+  const url = await server(fetcher), body = JSON.stringify({ ...input, sketchContext });
+  const foreign = await fetch(`${url}/api/ai/sketch`, { method: "POST", headers: { "Content-Type": "application/json", Origin: "https://foreign.example" }, body });
+  expect(foreign.status).toBe(403);
+  expect(fetcher).not.toHaveBeenCalled();
+  const response = await fetch(`${url}/api/ai/sketch`, { method: "POST", headers: { "Content-Type": "application/json", Origin: url }, body });
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({ proposal });
+  const sent = JSON.parse(fetcher.mock.calls[0][1].body);
+  expect(JSON.stringify(sent)).toContain("sketch_test");
+  expect(JSON.stringify(sent)).not.toContain("server-only-secret");
+  const unsafe = await fetch(`${url}/api/ai/sketch`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...input, sketchContext: { ...sketchContext, meshes: [] } }) });
+  expect(unsafe.status).toBe(400);
+  expect(fetcher).toHaveBeenCalledTimes(1);
+});
+it("shares busy and cancellation controls between full-part AI and sketch AI", async () => {
+  let signal: AbortSignal | undefined;
+  const fetcher = vi.fn((_url, init) => new Promise<Response>((_resolve, reject) => {
+    signal = init?.signal as AbortSignal;
+    signal.addEventListener("abort", () => reject(new Error("aborted")), { once: true });
+  }));
+  const url = await server(fetcher), controller = new AbortController();
+  const pending = fetch(`${url}/api/ai/sketch`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...input, sketchContext }), signal: controller.signal }).catch(() => undefined);
+  await vi.waitFor(() => expect(signal).toBeDefined());
+  const concurrent = await fetch(`${url}/api/ai/generate`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) });
+  expect(concurrent.status).toBe(429);
+  controller.abort(); await pending;
+  await vi.waitFor(() => expect(signal?.aborted).toBe(true));
+  expect(fetcher).toHaveBeenCalledTimes(1);
+});

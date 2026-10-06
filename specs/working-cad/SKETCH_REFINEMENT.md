@@ -53,3 +53,41 @@ same-ID replacement and late replies. Browser acceptance imports an authored
 24 × 16 × 8 extrusion, previews/refines it to 60 × 40 × 8 with native volume
 19,200 mm³, and verifies save/open and STL. Mocked unit worker results establish
 control-flow behavior; real native geometry is established by browser checks.
+
+## Opt-in provider conversation
+
+The sketch composer also offers Conversational AI provider. Local edits remains
+its default. Explicit consent shares one bounded solved sketch context and recent
+complete turns through the protected loopback gateway; inspect the context before
+sending. Anthropic, OpenAI and Google use their existing configured models and
+structured transports. Credentials remain server-only; project files, bodies and
+meshes are excluded. The whole request is limited to 32 KB, at most eight actions,
+128 entities, 64 dimensions, 64 constraints, 24 referenced parameters and 32 selected
+items. A smaller sketch or local tools is required when these limits are exceeded.
+
+Data-only actions resize a supported rectangle, edit a listed dimension, edit one
+explicitly chosen editable referenced parameter, add a matching relation, or use
+the finite-line Trim/Extend planner. Each runs the existing immutable local helper;
+existing design intent is never automatically deleted to satisfy a request.
+Default Preserve policy refuses bound formula replacement and parameter writes.
+Replace explicitly permits listed dimension formula replacement; parameter:ID
+permits only that independent unlocked referenced parameter write and discloses
+downstream effects. Locked/derived parameters remain unavailable. General sketch
+synthesis, arbitrary code, topology editing and unconstrained curve trimming are
+unavailable.
+
+Clarifications carry actions=[] and display no Apply button or geometry preview.
+Follow-ups include whole recent turns, removing older complete turns when needed
+without truncating the latest proposal. Provider switch, source/selection changes
+and a new conversation reset it; chat is not durable CAD data. Cancel/revoked
+consent/late replies cannot publish. Valid proposals use the same private native
+preview proof and one Undo Apply as local edits. A bare sketch reports solve-only
+validation; downstream solids require valid native geometry.
+
+Provider transport tests use controlled upstream responses for all three adapters;
+browser acceptance uses controlled provider replies with real worker/OpenCascade
+geometry, including clarification, late Cancel, native dimensions/volume, one Undo,
+save/open and signed STL volume. This does not prove unrestricted natural-language
+understanding. Separate live smoke requests with only a synthetic rectangle
+returned validated resize actions from all three configured adapters on 2026-10-06;
+that does not establish ongoing availability.

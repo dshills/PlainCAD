@@ -1,3 +1,4 @@
+import { generateAiSketchProposal, validateSketchAiRequest, type SketchAiRequest } from "./sketchAiProvider";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Plugin } from "vite";
 import { loadEnv } from "vite";
@@ -10,6 +11,7 @@ import {
   publicProviderStatus,
   validateAiRequest,
   type AiEnvironment,
+  type AiRequest,
 } from "./aiProvider";
 
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
@@ -51,7 +53,7 @@ function send(response: ServerResponse, status: number, value: unknown) {
   });
   response.end(JSON.stringify(value));
 }
-async function readRequest(request: IncomingMessage) {
+async function readRequest(request: IncomingMessage, sketch = false): Promise<{ kind: "sketch"; request: SketchAiRequest } | { kind: "part"; request: AiRequest }> {
   if (
     request.headers["content-type"]?.split(";")[0].trim().toLowerCase() !==
     "application/json"
@@ -69,9 +71,10 @@ async function readRequest(request: IncomingMessage) {
       );
     chunks.push(buffer);
   }
-  return validateAiRequest(
-    parseProjectJson(Buffer.concat(chunks).toString("utf8")),
-  );
+  const value = parseProjectJson(Buffer.concat(chunks).toString("utf8"));
+  return sketch
+    ? { kind: "sketch", request: validateSketchAiRequest(value) }
+    : { kind: "part", request: validateAiRequest(value) };
 }
 /** Only loopback callers may use local environment credentials, including under --host. */
 export function createAiMiddleware(
@@ -86,7 +89,7 @@ export function createAiMiddleware(
     next: () => void,
   ) => {
     const path = request.url?.split("?")[0];
-    if (path !== "/api/ai/status" && path !== "/api/ai/generate") {
+    if (path !== "/api/ai/status" && path !== "/api/ai/generate" && path !== "/api/ai/sketch") {
       next();
       return;
     }
@@ -101,7 +104,7 @@ export function createAiMiddleware(
       send(response, 200, { providers: publicProviderStatus(env) });
       return;
     }
-    if (path !== "/api/ai/generate" || request.method !== "POST") {
+    if (!["/api/ai/generate", "/api/ai/sketch"].includes(path ?? "") || request.method !== "POST") {
       send(response, 405, { error: "Unsupported AI request method." });
       return;
     }
@@ -126,7 +129,7 @@ export function createAiMiddleware(
     void (async () => {
       let parsed;
       try {
-        parsed = await readRequest(request);
+        parsed = await readRequest(request, path === "/api/ai/sketch");
       } catch (error) {
         // Do not drain an unbounded rejected body. Flush the diagnostic before
         // closing its socket, including wrong-content-type and malformed requests.
@@ -140,8 +143,13 @@ export function createAiMiddleware(
       }
       if (controller.signal.aborted) return;
       try {
+        if (parsed.kind === "sketch") {
+          const proposal = await generateAiSketchProposal(parsed.request, env, controller.signal, fetcher);
+          if (!controller.signal.aborted) send(response, 200, { proposal });
+          return;
+        }
         const plan = await generateAiPlan(
-          parsed,
+          parsed.request,
           env,
           controller.signal,
           fetcher,

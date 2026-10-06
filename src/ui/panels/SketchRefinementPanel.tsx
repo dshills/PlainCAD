@@ -1,5 +1,6 @@
+import { ProviderSketchRefinementPanel } from "./ProviderSketchRefinementPanel";
 import { SketchRefinementPreview } from "./SketchRefinementPreview";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { buildSketchRefinement, type SketchRefinement } from "../../ai/sketchRefinement";
 import type { ResolvedSketch } from "../../cad/sketch/SketchSolver";
 import type { RebuildResult } from "../../cad/worker/workerProtocol";
@@ -18,6 +19,9 @@ export function SketchRefinementPanel() {
   const kernelReady = useCadStore((s) => s.rebuild.kernelReady);
   const active = useSketchCanvas((s) => s.active);
   const selection = useSketchCanvas((s) => s.selection);
+  const providerCancel = useRef<(() => void) | undefined>(undefined);
+  const registerProviderCancel = useCallback((action: (() => void) | undefined) => { providerCancel.current = action; }, []);
+  const [mode, setMode] = useState<"local" | "provider">("local");
   const [prompt, setPrompt] = useState("");
   const [proposal, setProposal] = useState<Proposal>();
   const [busy, setBusy] = useState(false);
@@ -69,10 +73,20 @@ export function SketchRefinementPanel() {
       if (!abort || controller.current === abort) { controller.current = undefined; setBusy(false); }
     }
   };
+  const modeChoice = <label>Sketch refinement method<select value={mode} onChange={(event) => { cancel(); setError(""); setMode(event.target.value as "local" | "provider"); }}>
+    <option value="local">Local edits · no provider request</option>
+    <option value="provider">Conversational AI provider</option>
+  </select></label>;
+  if (mode === "provider") return <div id="ai-drawer-content" aria-label="Sketch refinement" onKeyDown={(event) => {
+    if (event.key === "Escape" && !event.defaultPrevented) {
+      event.preventDefault(); event.stopPropagation(); providerCancel.current?.();
+    }
+  }}>{modeChoice}<ProviderSketchRefinementPanel onCancelReady={registerProviderCancel} /></div>;
   return <div id="ai-drawer-content" className="ai-drawer-content" aria-label="Sketch refinement" onKeyDown={(event) => {
     if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); cancel(); setError(""); }
   }}>
     <div className="ai-composer">
+      {modeChoice}
       <h3>Refine your sketch</h3>
       <label>Sketch refinement request<textarea value={prompt} maxLength={1000} rows={3}
         placeholder="Make this rectangle 60 x 40 mm"

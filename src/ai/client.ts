@@ -10,7 +10,7 @@ import {
 import { parseProjectJson } from "../persistence/importSafety";
 import { prepareAiConversation } from "./conversation";
 
-async function requestJson(
+export async function requestJson(
   path: string,
   signal: AbortSignal,
   body?: unknown,
