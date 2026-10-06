@@ -23,6 +23,7 @@ import { useCanvasConstraints } from "./useCanvasConstraints";
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -55,6 +56,7 @@ import { sketchPlaneLabel } from "../../cad/sketch/planes";
 
 interface CanvasCursor extends CanvasPoint {
   snap?: CanvasSnapFeedback;
+  inferenceLimited?: boolean;
 }
 interface CanvasView {
   x: number;
@@ -141,10 +143,33 @@ export function SketchCanvasPanel() {
   ) : null;
 }
 function SketchCanvas({ active }: { active: CanvasSession }) {
+  const refinementBusy = false;
   const focused = useWorkspaceState((s) => s.layout !== "full");
   const [sizes, setSizes] = useState<CanvasSizeInput>({});
   const [precisionOpen, setPrecisionOpen] = useState(!focused);
   useEffect(() => setPrecisionOpen(!focused), [focused]);
+  const [spaceHeld, setSpaceHeld] = useState(false);
+  const [snapSuspended, setSnapSuspended] = useState(false);
+  const [panning, setPanning] = useState(false);
+  const panGesture = useRef<
+    | {
+        pointerId: number;
+        clientX: number;
+        clientY: number;
+        view: CanvasView;
+        rect: DOMRect;
+        element: SVGSVGElement;
+      }
+    | undefined
+  >(undefined);
+  const releasePan = useCallback((restore = false) => {
+    const gesture = panGesture.current;
+    panGesture.current = undefined;
+    setPanning(false);
+    if (restore && gesture) setView(gesture.view);
+    if (gesture?.element.hasPointerCapture(gesture.pointerId))
+      gesture.element.releasePointerCapture(gesture.pointerId);
+  }, []);
   const primitiveGesture = useRef<
     | { pointerId: number; x: number; y: number; element: SVGSVGElement }
     | undefined
@@ -156,6 +181,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
       gesture.element.releasePointerCapture(gesture.pointerId);
   }, []);
   useEffect(() => releasePrimitiveGesture, [releasePrimitiveGesture]);
+  useEffect(() => () => releasePan(), [releasePan]);
   const document = useCadStore((s) => s.history.present),
     fileBusy = useCadStore((s) => s.fileBusy);
   const history = useCadStore((s) => s.history);
@@ -187,7 +213,8 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
   }, []);
   useEffect(() => {
     cancelBox();
-  }, [document, fileBusy, cancelBox]);
+    releasePan(true);
+  }, [document, fileBusy, cancelBox, releasePan]);
   useEffect(() => {
     window.addEventListener("blur", cancelBox);
     return () => {
@@ -280,6 +307,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
   useEffect(() => {
     const fit = () => {
       if (context) {
+        releasePan();
         cancelBox();
         if (primitiveGesture.current) {
           releasePrimitiveGesture();
@@ -293,9 +321,10 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     };
     window.addEventListener("plaincad:fit-sketch", fit);
     return () => window.removeEventListener("plaincad:fit-sketch", fit);
-  }, [context, drag.cancel, releasePrimitiveGesture, cancelBox]);
+  }, [context, drag.cancel, releasePrimitiveGesture, cancelBox, releasePan]);
   useEffect(() => {
     if (draftDocument.current !== document) {
+      releasePan(true);
       setDraft([]);
       setSizes({});
       releasePrimitiveGesture();
@@ -312,6 +341,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     }
   };
   const cancel = () => {
+    releasePan(true);
     cancelBox();
     setDraft([]);
     setCursor(undefined);
@@ -320,8 +350,30 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     releasePrimitiveGesture();
     drag.cancel();
   };
+  const cancelGestureRef = useRef(cancel);
+  useLayoutEffect(() => { cancelGestureRef.current = cancel; });
+  useEffect(() => {
+    const cancelGesture = () => cancelGestureRef.current();
+    window.addEventListener("plaincad:cancel-sketch-gesture", cancelGesture);
+    return () => window.removeEventListener("plaincad:cancel-sketch-gesture", cancelGesture);
+  }, []);
+  useEffect(() => {
+    const releaseKey = (event: KeyboardEvent) => {
+      if (event.code === "Space") setSpaceHeld(false);
+      if (event.key === "Alt") {
+        setSnapSuspended(false);
+        setCursor(undefined);
+      }
+    };
+    window.addEventListener("keyup", releaseKey);
+    return () => window.removeEventListener("keyup", releaseKey);
+  }, []);
   useEffect(() => {
     const interrupt = () => {
+      releasePan(true);
+      setSpaceHeld(false);
+      setSnapSuspended(false);
+      drag.cancel();
       if (primitiveGesture.current) {
         releasePrimitiveGesture();
         setDraft([]);
@@ -331,18 +383,20 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     };
     window.addEventListener("blur", interrupt);
     return () => window.removeEventListener("blur", interrupt);
-  }, [releasePrimitiveGesture]);
+  }, [releasePrimitiveGesture, releasePan, drag.cancel]);
   const gridStep = Number(grid),
     validGrid =
       Number.isFinite(gridStep) && gridStep >= 0.000001 && gridStep <= 1e6;
   const disabled =
     !context ||
     fileBusy ||
+    refinementBusy ||
     (snap && !validGrid) ||
     context.solved.errors.some((e) => e.severity === "error");
   const snapFeedback =
     !disabled &&
     !isDragTool &&
+    !snapSuspended &&
     tool !== "select" &&
     !Object.values(sizes).some((size) => size?.trim())
       ? cursor?.snap
@@ -360,6 +414,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
       x: view.x + ((event.clientX - rect.left) / rect.width) * view.width,
       y: view.y + (1 - (event.clientY - rect.top) / rect.height) * view.height,
     };
+    const suspendSnaps = event.altKey && (!isDragTool || drag.inProgress);
     const inference =
       !isDragTool && snapTargets
         ? snapCanvasWithFeedback(point, snapTargets, {
@@ -373,11 +428,19 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
             view,
             anchor: draft.at(-1),
             anchorShape: tool === "rectangle" ? "rectangle" : undefined,
+            tangent: tool === "line",
+            suspended: suspendSnaps,
           })
         : undefined;
     let result: CanvasCursor = inference
-      ? { ...inference.point, snap: inference.feedback }
-      : snapCanvasPoint(
+      ? {
+          ...inference.point,
+          snap: inference.feedback,
+          inferenceLimited: inference.limited,
+        }
+      : suspendSnaps
+        ? point
+        : snapCanvasPoint(
           point,
           isDragTool && drag.inProgress
             ? {
@@ -412,6 +475,37 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     };
   };
   const draw = (event: PointerEvent<SVGSVGElement>) => {
+    if (panGesture.current) return;
+    if (event.button === 1 || (event.button === 0 && spaceHeld)) {
+      if (fileBusy) return;
+      const rect = event.currentTarget.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      // Preserve a completed click anchor, but an interrupted press-drag
+      // primitive is cancelled so the next click cannot complete it accidentally.
+      const interruptedPrimitive = Boolean(primitiveGesture.current);
+      cancelBox();
+      releasePrimitiveGesture();
+      if (interruptedPrimitive) {
+        setDraft([]);
+        setSizes({});
+      }
+      drag.cancel();
+      setCursor(undefined);
+      setError(undefined);
+      event.preventDefault();
+      event.currentTarget.focus({ preventScroll: true });
+      panGesture.current = {
+        pointerId: event.pointerId,
+        clientX: event.clientX,
+        clientY: event.clientY,
+        view,
+        rect,
+        element: event.currentTarget,
+      };
+      setPanning(true);
+      event.currentTarget.setPointerCapture(event.pointerId);
+      return;
+    }
     if (event.button !== 0 || primitiveGesture.current || boxGesture.current)
       return;
     if (tool === "select") {
@@ -505,6 +599,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     }
   };
   const zoom = (factor: number) => {
+    releasePan();
     cancelBox();
     if (primitiveGesture.current) cancel();
     drag.cancel();
@@ -519,6 +614,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     });
   };
   const pan = (x: number, y: number) => {
+    releasePan();
     cancelBox();
     if (primitiveGesture.current) cancel();
     drag.cancel();
@@ -650,6 +746,31 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
       aria-label="Sketch canvas"
       className="sketch-workspace"
       onKeyDown={(event) => {
+        const keyTarget = event.target as HTMLElement;
+        if (
+          !["SELECT", "INPUT", "TEXTAREA"].includes(keyTarget.tagName) &&
+          !keyTarget.isContentEditable
+        ) {
+          if (
+            event.code === "Space" &&
+            !event.ctrlKey &&
+            !event.metaKey &&
+            !event.altKey &&
+            !keyTarget.closest("summary, a, [role=button], [role=checkbox]")
+          ) {
+            setSpaceHeld(true);
+            // Preserve native Space activation when a toolbar button has focus.
+            if (keyTarget.tagName !== "BUTTON") {
+              event.preventDefault();
+              event.stopPropagation();
+            }
+          }
+          if (event.key === "Alt") {
+            event.preventDefault();
+            setSnapSuspended(true);
+            setCursor(undefined);
+          }
+        }
         if (
           event.defaultPrevented ||
           !event.currentTarget.contains(event.target as Node)
@@ -694,7 +815,8 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
         ) {
           event.preventDefault();
           event.stopPropagation();
-          if (boxGesture.current) cancelBox();
+          if (panGesture.current) releasePan(true);
+          else if (boxGesture.current) cancelBox();
           else if (draft.length || drag.inProgress) cancel();
           else void close();
         }
@@ -731,7 +853,10 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
         role="toolbar"
         aria-label="Drawing tools"
       >
-        {(["select", "line", "rectangle", "circle", "arc"] as const).map(
+        {([
+          "select", "line", "rectangle", "circle", "arc",
+          "move", "translate", "deform",
+        ] as const).map(
           (kind) => (
             <button
               key={kind}
@@ -1011,7 +1136,6 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
               </button>
             </div>
             <div className="canvas-toolbar">
-              {isDragTool ? drag.controls : null}
               <label>
                 Local X (mm)
                 <input
@@ -1063,13 +1187,38 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
               </button>
             </div>
           </details>
+          <p role="status" aria-label="Sketch navigation status">
+            {refinementBusy
+              ? "AI refinement in progress: Cancel or Apply its preview before changing geometry. "
+              : ""}
+            {panning
+              ? "Panning view; Escape restores the previous view."
+              : spaceHeld
+                ? "Space held: drag to pan."
+                : snapSuspended
+                  ? "Snapping paused: free coordinates while Alt is held."
+                  : "Space-drag or middle-drag to pan · Hold Alt for free coordinates."}
+            {cursor?.inferenceLimited
+              ? " Too many nearby curves for intersection/tangent inference; zoom in or use exact coordinates."
+              : ""}
+          </p>
+          {isDragTool ? (
+            <div className="canvas-toolbar" aria-label="Movement selection">
+              {drag.controls}
+            </div>
+          ) : null}
           {dimensions.controls}
           {constraints.controls}
           <details open={!focused}>
             <summary>Drawing help</summary>
             <p>
-              Existing points take priority, followed by line/arc midpoints and
-              circle/arc centers within 8 screen pixels. Geometry snaps also
+              Hold Space and drag, or drag with the middle mouse button, to pan.
+              Hold Alt while placing or moving a point to bypass all snaps.
+              Move edits a free point; Translate moves its connected group;
+              Deform preserves supported orthogonal constraints. Existing points
+              take priority, followed by line/arc midpoints and
+              circle/arc centers, finite curve intersections, and tangent
+              endpoints from a line draft within 8 screen pixels. Geometry snaps also
               align horizontally or vertically with visible geometry and the
               last draft point. Guides only place coordinates; they add no
               constraints. Grid snapping fills unsnapped axes. Keyboard fields
@@ -1172,8 +1321,27 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
             role="group"
             viewBox={`${view.x} ${-view.y - view.height} ${view.width} ${view.height}`}
             preserveAspectRatio="none"
+            style={{
+              cursor: panning ? "grabbing" : spaceHeld ? "grab" : undefined,
+              touchAction: "none",
+            }}
             onPointerDown={draw}
             onPointerMove={(event) => {
+              setSnapSuspended(event.altKey);
+              const gesture = panGesture.current;
+              if (gesture) {
+                if (gesture.pointerId === event.pointerId) {
+                  event.preventDefault();
+                  setView({
+                    ...gesture.view,
+                    x: Math.max(-1e8, Math.min(1e8, gesture.view.x -
+                      (event.clientX - gesture.clientX) / gesture.rect.width * gesture.view.width)),
+                    y: Math.max(-1e8, Math.min(1e8, gesture.view.y +
+                      (event.clientY - gesture.clientY) / gesture.rect.height * gesture.view.height)),
+                  });
+                }
+                return;
+              }
               if (boxGesture.current) {
                 if (boxGesture.current.pointerId === event.pointerId) {
                   const point = selectionPointAt(event);
@@ -1195,6 +1363,10 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
               if (isDragTool) drag.move(event, point);
             }}
             onPointerUp={(event) => {
+              if (panGesture.current?.pointerId === event.pointerId) {
+                releasePan();
+                return;
+              }
               const box = boxGesture.current;
               if (box?.pointerId === event.pointerId) {
                 const end = selectionPointAt(event);
@@ -1241,6 +1413,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
               }
             }}
             onPointerCancel={(event) => {
+              if (panGesture.current?.pointerId === event.pointerId) releasePan(true);
               if (boxGesture.current?.pointerId === event.pointerId)
                 cancelBox();
               if (primitiveGesture.current?.pointerId === event.pointerId)
@@ -1248,6 +1421,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
               else if (!primitiveGesture.current) drag.cancel();
             }}
             onLostPointerCapture={(event) => {
+              if (panGesture.current?.pointerId === event.pointerId) releasePan(true);
               if (boxGesture.current?.pointerId === event.pointerId)
                 cancelBox();
               if (primitiveGesture.current?.pointerId === event.pointerId)

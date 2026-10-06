@@ -343,3 +343,34 @@ it("preserves rectangle extents when other alignment targets coincide with its o
     snapCanvasWithFeedback({ x: 10, y: -22 }, targets, current).point,
   ).toEqual({ x: 10, y: -22 });
 });
+
+it("uses exact finite intersections and line-anchor tangency; Alt suspension bypasses every target and grid", () => {
+  const { solved } = geometry();
+  const curves = [
+    { id: "a", start: { id: "a0", x: 1, y: -4 }, end: { id: "a1", x: 1, y: 8 } },
+    { id: "b", start: { id: "b0", x: -4, y: 3 }, end: { id: "b1", x: 8, y: 3 } },
+  ];
+  const targets = { points: [], geometry: [], curves };
+  expect(snapCanvasWithFeedback({ x: 1.3, y: 3.2 }, targets, options)).toMatchObject({
+    point: { x: 1, y: 3 }, feedback: { kind: "intersection" },
+  });
+  const c = { ...solved.circles[0], center: { id: "c", x: 0, y: 0 }, radius: 5 };
+  expect(snapCanvasWithFeedback({ x: 2.6, y: Math.sqrt(18.75) + 0.1 }, { points: [], geometry: [], curves: [c] }, {
+    ...options, anchor: { x: 10, y: 0 }, tangent: true,
+  })).toMatchObject({ point: { x: 2.5 }, feedback: { kind: "tangent" } });
+  const raw = { x: 1.3, y: 3.2, pointId: "discard" };
+  expect(snapCanvasWithFeedback(raw, {
+    ...targets, points: [{ x: 1.3, y: 3.2, kind: "point", sourceId: "existing", pointId: "existing" }],
+  }, { ...options, suspended: true })).toEqual({ point: { x: 1.3, y: 3.2 } });
+  const dense = { points: [], geometry: [], curves: Array.from({ length: 65 }, (_, i) => ({ ...curves[0], id: String(i) })) };
+  expect(snapCanvasWithFeedback({ x: 1.3, y: 3.2 }, dense, options).limited).toBe(true);
+});
+it("breaks ties in locale-independent code-unit order and skips curve work when reusing an existing point", () => {
+  const points = ["a", "Z"].map((id) => ({ x: 0, y: 0, kind: "point" as const, sourceId: id, pointId: id }));
+  const curves = Array.from({ length: 65 }, (_, i) => ({ id: String(i), start: { id: "s", x: -5, y: 0 }, end: { id: "e", x: 5, y: 0 } }));
+  for (const ordered of [points, [...points].reverse()]) {
+    const result = snapCanvasWithFeedback({ x: 0.2, y: 0.1 }, { points: ordered, geometry: [], curves }, options);
+    expect(result.point.pointId).toBe("Z");
+    expect(result.limited).toBeUndefined();
+  }
+});

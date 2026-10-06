@@ -1,7 +1,18 @@
+import {
+  canvasCurveSnapTargets,
+  compareCanvasSnapIds,
+  validCanvasSnapCurve,
+  type CanvasSnapCurve,
+} from "./canvasCurveSnapping";
 import type { ResolvedSketch } from "./SketchSolver";
 import type { CanvasPoint } from "./canvasGeometry";
 
-export type CanvasSnapKind = "point" | "midpoint" | "center";
+export type CanvasSnapKind =
+  | "point"
+  | "midpoint"
+  | "center"
+  | "intersection"
+  | "tangent";
 export interface CanvasSnapTarget extends CanvasPoint {
   kind: CanvasSnapKind;
   sourceId: string;
@@ -9,6 +20,7 @@ export interface CanvasSnapTarget extends CanvasPoint {
 export interface CanvasSnapTargets {
   points: CanvasSnapTarget[];
   geometry: CanvasSnapTarget[];
+  curves?: CanvasSnapCurve[];
 }
 export interface CanvasSnapFeedback {
   kind: CanvasSnapKind | "alignment" | "grid";
@@ -24,6 +36,9 @@ export interface CanvasSnapOptions {
   anchor?: CanvasPoint;
   /** Rectangles require independent nonzero extents from their first corner. */
   anchorShape?: "rectangle";
+  /** Only a line draft has an anchor-to-curve tangent meaning. */
+  tangent?: boolean;
+  suspended?: boolean;
 }
 const finite = (point: CanvasPoint) =>
   Number.isFinite(point.x) && Number.isFinite(point.y);
@@ -38,7 +53,7 @@ function nearerTarget(
     !best ||
     distance < bestDistance ||
     (distance === bestDistance &&
-      candidate.sourceId.localeCompare(best.sourceId) < 0)
+      compareCanvasSnapIds(candidate.sourceId, best.sourceId) < 0)
   );
 }
 
@@ -48,7 +63,7 @@ export function canvasSnapTargets(solved: ResolvedSketch): CanvasSnapTargets {
   const geometry: CanvasSnapTarget[] = [];
   for (const curve of [...solved.circles, ...solved.arcs]) {
     const previous = centers.get(curve.center.id);
-    if (!previous || curve.id.localeCompare(previous) < 0)
+    if (!previous || compareCanvasSnapIds(curve.id, previous) < 0)
       centers.set(curve.center.id, curve.id);
     if (finite(curve.center))
       geometry.push({
@@ -75,6 +90,9 @@ export function canvasSnapTargets(solved: ResolvedSketch): CanvasSnapTargets {
     if (finite(point) && Number.isFinite(arc.radius) && arc.radius > 0)
       geometry.push({ ...point, kind: "midpoint", sourceId: arc.id });
   }
+  const curves = [...solved.lines, ...solved.circles, ...solved.arcs].filter(
+    validCanvasSnapCurve,
+  );
   return {
     points: Object.values(solved.points)
       .filter(finite)
@@ -86,6 +104,7 @@ export function canvasSnapTargets(solved: ResolvedSketch): CanvasSnapTargets {
         sourceId: centers.get(point.id) ?? point.id,
       })),
     geometry,
+    ...(curves.length ? { curves } : {}),
   };
 }
 
@@ -95,7 +114,8 @@ export function snapCanvasWithFeedback(
   raw: CanvasPoint,
   targets: CanvasSnapTargets,
   options: CanvasSnapOptions,
-): { point: CanvasPoint; feedback?: CanvasSnapFeedback } {
+): { point: CanvasPoint; feedback?: CanvasSnapFeedback; limited?: boolean } {
+  if (options.suspended) return { point: { x: raw.x, y: raw.y } };
   const { pixelsPerUnit: scale, tolerancePx: tolerance, view } = options;
   if (
     !finite(raw) ||
@@ -131,9 +151,21 @@ export function snapCanvasWithFeedback(
     }
     return best;
   };
+  const pointTarget = nearest(targets.points);
+  const advanced =
+    !pointTarget && options.geometry && targets.curves
+      ? canvasCurveSnapTargets(
+          targets.curves,
+          raw,
+          { x: tolerance / scale.x, y: tolerance / scale.y },
+          options.tangent ? options.anchor : undefined,
+        )
+      : { points: [], limited: false };
   const target =
-    nearest(targets.points) ??
-    (options.geometry ? nearest(targets.geometry) : undefined);
+    pointTarget ??
+    (options.geometry
+      ? nearest([...targets.geometry, ...advanced.points])
+      : undefined);
   if (target)
     return {
       point: {
@@ -141,6 +173,7 @@ export function snapCanvasWithFeedback(
         y: target.y,
         ...(target.pointId ? { pointId: target.pointId } : {}),
       },
+      ...(advanced.limited ? { limited: true } : {}),
       feedback: {
         kind: target.kind,
         label:
@@ -148,7 +181,11 @@ export function snapCanvasWithFeedback(
             ? "Existing point"
             : target.kind === "midpoint"
               ? "Midpoint"
-              : "Center",
+              : target.kind === "center"
+                ? "Center"
+                : target.kind === "intersection"
+                  ? "Intersection"
+                  : "Tangent",
         guides: [],
       },
     };
@@ -220,6 +257,7 @@ export function snapCanvasWithFeedback(
     if (x || y)
       return {
         point,
+        ...(advanced.limited ? { limited: true } : {}),
         feedback: {
           kind: "alignment",
           label:
@@ -236,6 +274,7 @@ export function snapCanvasWithFeedback(
   }
   return {
     point,
+    ...(advanced.limited ? { limited: true } : {}),
     ...(grid
       ? { feedback: { kind: "grid" as const, label: "Grid", guides: [] } }
       : {}),
