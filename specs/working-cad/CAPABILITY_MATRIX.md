@@ -799,3 +799,21 @@ retain provider validation. Display-only numeric preview context is excluded fro
 provider conversation history. IDs, native operation/downstream checks, one Undo,
 stale-frame protection, save/open and STL are verified for Extrude/Hole/Revolve
 and component-parameter edits. This does not implement arbitrary direct modeling.
+
+### Guided issue repair
+
+Source-linked diagnostic cards open parameter/feature controls and select reported
+sketch dimensions/constraints in the drawing. Upstream feature target body
+highlights are transient, filtered to current meshes, and do not modify history.
+Lost face/edge references still require explicit supported replacement; no arbitrary
+reference guessing is performed.
+
+A single connected, unbranched open outline of 2–256 non-construction line/arc
+segments can propose a straight edge between its two open endpoints. The drawing
+shows both endpoints and a dashed proposal before **Add missing closing edge**
+becomes available. The explicit edit must solve and produce valid closed profiles,
+preserves existing IDs/design intent, and creates one Undo step. Branches, multiple
+chains/loops, circles, solver failures and invalid closing geometry require manual
+repair. Cards bind the exact document/session/result and reject stale or competing
+tasks. Native Chromium coverage proves endpoint highlighting, conflict-dimension
+selection/deletion, Undo/Redo, real solid volume, save/open and positive STL volume.

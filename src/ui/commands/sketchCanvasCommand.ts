@@ -187,18 +187,24 @@ export function selectedCanvasSketch(state: CadStore) {
     return owners.length === 1 ? owners[0] : undefined;
   }
 }
-export function beginSketchCanvas() {
-  const state = useCadStore.getState(),
-    sketch = selectedCanvasSketch(state);
-  if (sketch)
+export function beginSketchCanvas(sketchId?: string): CanvasSession | undefined {
+  const state = useCadStore.getState(), document = state.history.present;
+  if (state.fileBusy) return;
+  const sketch = sketchId
+    ? (Object.hasOwn(document.sketches, sketchId) ? document.sketches[sketchId] : undefined)
+    : selectedCanvasSketch(state);
+  if (sketch) {
+    const active = {
+      documentId: document.id,
+      session: state.documentSession,
+      sketchId: sketch.id,
+    };
     useSketchCanvas.setState({
       selection: undefined,
-      active: {
-        documentId: state.history.present.id,
-        session: state.documentSession,
-        sketchId: sketch.id,
-      },
+      active,
     });
+    return active;
+  }
 }
 export function canvasContext(
   active: CanvasSession,

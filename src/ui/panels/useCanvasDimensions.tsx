@@ -15,6 +15,7 @@ import {
   type CanvasDimensionInput,
 } from "../../cad/sketch/canvasDimensions";
 import type { SketchDimension } from "../../cad/document/schema";
+import { useRepairFocus } from "../commands/repairCommand";
 import {
   canvasContext,
   commitCanvasDimension,
@@ -138,6 +139,16 @@ export function useCanvasDimensions(
     editorDocument.current = document;
     setEditorOpen(focused && openEditor && Boolean(id));
   };
+  const appliedRepair = useRef<ReturnType<typeof useRepairFocus.getState>["focus"]>(undefined);
+  const repairFocus = useRepairFocus((state) => state.focus);
+  useEffect(() => {
+    if (repairFocus && appliedRepair.current !== repairFocus && repairFocus.document === document && repairFocus.session === active.session &&
+      repairFocus.sketchId === active.sketchId && repairFocus.dimensionId) {
+      appliedRepair.current = repairFocus;
+      select(repairFocus.dimensionId);
+      setShowDimensions(true);
+    }
+  }, [repairFocus, document, active.session, active.sketchId]);
   const selectEntity = (id: string) => {
     onInspect?.();
     if (!context) return;
@@ -175,6 +186,19 @@ export function useCanvasDimensions(
     editorDocument.current = document;
     setError(undefined);
     setEditorOpen(focused);
+  };
+  const removeSelected = () => {
+    if (!context || !document || !selected) return;
+    cancelDrawing();
+    try {
+      commitCanvasDimension(active, document, undefined, selected.id);
+      setSelectedId("");
+      setExpression(type === "angle" ? "90deg" : "10mm");
+      setEditorOpen(false);
+      setError(undefined);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
   };
   const save = (inline = false) => {
     if (!context || !document) return;
@@ -373,24 +397,7 @@ export function useCanvasDimensions(
           </button>
           {selected ? (
             <button
-              onClick={() => {
-                if (!context || !document) return;
-                cancelDrawing();
-                try {
-                  commitCanvasDimension(
-                    active,
-                    document,
-                    undefined,
-                    selected.id,
-                  );
-                  setSelectedId("");
-                  setExpression(type === "angle" ? "90deg" : "10mm");
-                  setEditorOpen(false);
-                  setError(undefined);
-                } catch (e) {
-                  setError(e instanceof Error ? e.message : String(e));
-                }
-              }}
+              onClick={removeSelected}
             >
               Delete canvas dimension
             </button>
@@ -615,6 +622,7 @@ export function useCanvasDimensions(
         <button type="submit">
           {selected ? "Apply size" : "Make driving dimension"}
         </button>
+        {selected ? <button type="button" onClick={removeSelected}>Delete this dimension</button> : null}
         <button
           type="button"
           onClick={() => {

@@ -941,3 +941,19 @@ Unsupported requests, wrong dimensions and stale contexts show diagnostics. Revi
 the proposed values and actual native geometry before Apply; accepted edits retain
 IDs in one Undo step. Native acceptance covers selected Extrude/Hole/Revolve and
 component parameters, cancellation, stale replies, save/open and STL.
+
+### Guided model repair
+
+Model issues now show source-linked repair cards. **Show and repair** opens the
+relevant parameter/feature controls, or the sketch drawing with the reported
+constraint or driving dimension selected. Existing upstream target bodies can be
+highlighted without editing the project. A missing or changed face still requires
+an explicit supported replacement in the source controls.
+
+For one unbranched open outline with 2–256 non-construction line/arc segments,
+the card can show its two endpoints and a dashed proposed straight closing edge.
+**Add missing closing edge** is available only after showing that proposal; it
+preserves existing points and design intent and validates the solved closed
+profile before one undoable edit. Branches, separate loops/chains, circles, solver
+errors and invalid closing edges require manual repair. Cards from pending or
+replaced rebuilds cannot edit the document, and competing tasks must finish first.

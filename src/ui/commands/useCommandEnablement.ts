@@ -8,8 +8,10 @@ import { useShallow } from "zustand/react/shallow";
 import { useCadStore } from "../../state/useCadStore";
 import { selectCommandEnablement } from "./commandRegistry";
 import { useTargetScopeCapture } from "./targetScopeCaptureCommand";
+import { useFileJobs } from "../../persistence/fileJobs";
 
 export function useCommandEnablement() {
+  const exportDialogOpen = useFileJobs((state) => state.exportOpen);
   const canvasActive = useSketchCanvas((state) => state.active);
   const guidedHoleActive = useGuidedHole((state) => Boolean(state.draft));
   const extrudeActive = useExtrudeDraft((state) => Boolean(state.draft));
@@ -27,6 +29,7 @@ export function useCommandEnablement() {
         Boolean(canvasActive),
         guidedHoleActive,
         guidedHoleStartBlocked,
+        exportDialogOpen,
       ),
     ),
   );

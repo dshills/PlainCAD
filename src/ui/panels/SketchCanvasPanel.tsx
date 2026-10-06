@@ -6,6 +6,7 @@ import {
 } from "../../cad/sketch/sizedCanvasGeometry";
 import { activeComponentId } from "../commands/projectWorkflowCommand";
 import { sketchComponentId } from "../../cad/document/components";
+import { RepairSketchOverlay } from "./RepairSketchOverlay";
 import {
   runCommand,
   selectCommandEnablement,
@@ -1388,6 +1389,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
                 ) : null}
               </g>
             </g>
+            <g transform="scale(1,-1)"><RepairSketchOverlay solved={context?.solved} span={view.width} /></g>
             {dimensions.overlay}
             {constraints.overlay}
           </svg>

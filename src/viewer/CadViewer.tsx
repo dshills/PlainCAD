@@ -23,6 +23,7 @@ import { evaluateParameters } from "../cad/parameters/expressionEvaluator";
 import { sampleArc } from "../cad/sketch/profileDetection";
 import { solveSketch } from "../cad/sketch/SketchSolver";
 import { resolveDocumentPlanes, transformPoint } from "../cad/sketch/planes";
+import { currentGeometryHighlight, useGeometryHighlight } from "../state/useGeometryHighlight";
 
 interface ViewerRuntime {
   background: THREE.Color;
@@ -55,15 +56,27 @@ export function CadViewer() {
   const runtimeRef = useRef<ViewerRuntime | undefined>(undefined);
   const meshesRef = useRef<RenderMesh[]>([]);
   const selectedBodyIdRef = useRef<string | undefined>(undefined);
+  const highlightedBodyIdsRef = useRef<readonly string[]>([]);
   const cameraIntentRef = useRef<{ session: number; preservePose: boolean } | undefined>(undefined);
   const lastAutoFitSessionRef = useRef<number | undefined>(undefined);
   const selectRef = useRef<(selection: SelectionRef | undefined) => void>(selectNoop);
   const documentIdRef = useRef("");
   const meshes = useCadStore((state) => state.rebuild.result?.meshes ?? EMPTY_MESHES);
   const rebuild = useCadStore((state) => state.rebuild);
-  const document = useCadStore((state) => state.history.present);
+  const history = useCadStore((state) => state.history);
+  const document = history.present;
   const select = useCadStore((state) => state.select);
   const session = useCadStore((state) => state.documentSession);
+  const componentId = useCadStore((state) => state.activeComponentId);
+  const fileBusy = useCadStore((state) => state.fileBusy);
+  const highlight = useGeometryHighlight((state) => state.highlight);
+  const currentHighlight = useMemo(() => currentGeometryHighlight({ history, documentSession: session, activeComponentId: componentId, fileBusy, rebuild }, highlight), [highlight, history, session, componentId, fileBusy, rebuild]);
+  useEffect(() => {
+    // Release captured result arrays on invalidation; an Undo must not revive an
+    // old inspection hint just because it returns the same document object.
+    if (highlight && !currentHighlight && useGeometryHighlight.getState().highlight === highlight)
+      useGeometryHighlight.setState({ highlight: undefined });
+  }, [highlight, currentHighlight]);
   const view = useViewerState();
   const inspection = useInspectionState();
   const section = useSectionState();
@@ -169,7 +182,7 @@ export function CadViewer() {
           object.localToWorld(point.fromBufferAttribute(attribute, index));
           point.toArray(positions, index * 3);
         }
-        return { bodyId: object.userData.bodyId as string, visible: object.visible, clippingEnabled: object.material instanceof THREE.MeshStandardMaterial && Boolean(object.material.clippingPlanes?.length), positions, indices: Array.from(object.geometry.index?.array ?? []) };
+        return { bodyId: object.userData.bodyId as string, visible: object.visible, highlighted: object.userData.highlighted === true, clippingEnabled: object.material instanceof THREE.MeshStandardMaterial && Boolean(object.material.clippingPlanes?.length), positions, indices: Array.from(object.geometry.index?.array ?? []) };
       }),
       measurementLine: measurementGroup.children[0] instanceof THREE.Line ? Array.from(measurementGroup.children[0].geometry.getAttribute("position").array) : [],
       sketchPoints: sketchGroup.children.filter((object) => object instanceof THREE.Mesh && typeof object.userData.sketchEntityId === "string").map((object) => ({
@@ -277,7 +290,7 @@ export function CadViewer() {
     if (!runtime) return;
     updateMeshes(runtime.modelGroup, meshes);
     applyClipping(runtime.modelGroup, clippingRef.current);
-    applySelection(runtime.modelGroup, selectedBodyIdRef.current);
+    applySelection(runtime.modelGroup, selectedBodyIdRef.current, highlightedBodyIdsRef.current);
   }, [meshes]);
 
   useEffect(() => {
@@ -340,9 +353,10 @@ export function CadViewer() {
 
   useEffect(() => {
     selectedBodyIdRef.current = selectedBodyId;
+    highlightedBodyIdsRef.current = currentHighlight?.bodyIds ?? [];
     const runtime = runtimeRef.current;
-    if (runtime) applySelection(runtime.modelGroup, selectedBodyId);
-  }, [selectedBodyId]);
+    if (runtime) applySelection(runtime.modelGroup, selectedBodyId, highlightedBodyIdsRef.current);
+  }, [selectedBodyId, currentHighlight]);
 
   return <div ref={hostRef} className="viewer-canvas" />;
 }
@@ -626,18 +640,22 @@ function disposeSketchOverlayObjects(sketchGroup: THREE.Group, resources: Sketch
 function applySelection(
   modelGroup: THREE.Group,
   selectedBodyId: string | undefined,
+  highlightedBodyIds: readonly string[] = [],
 ) {
+  const highlighted = new Set(highlightedBodyIds);
   modelGroup.traverse((child) => {
     if (
       child instanceof THREE.Mesh &&
       child.material instanceof THREE.MeshStandardMaterial
     ) {
       const selected = child.userData.bodyId === selectedBodyId;
+      const suggested = highlighted.has(child.userData.bodyId as string);
+      child.userData.highlighted = suggested;
       child.material.color.set(
-        selected ? "#f2c14e" : (child.userData.baseColor ?? "#8fb7b4"),
+        selected ? "#f2c14e" : suggested ? "#32cee0" : (child.userData.baseColor ?? "#8fb7b4"),
       );
-      child.material.emissive.set(selected ? "#3a2500" : "#000000");
-      child.material.emissiveIntensity = selected ? 0.18 : 0;
+      child.material.emissive.set(selected ? "#3a2500" : suggested ? "#003c44" : "#000000");
+      child.material.emissiveIntensity = selected || suggested ? 0.18 : 0;
     }
     if (
       child instanceof THREE.LineSegments &&
@@ -647,6 +665,7 @@ function applySelection(
       child.material.color.set(
         bodyId === selectedBodyId
           ? "#7a5200"
+          : highlighted.has(bodyId ?? "") ? "#007c90"
           : (child.userData.edgeColor ?? "#31413c"),
       );
     }

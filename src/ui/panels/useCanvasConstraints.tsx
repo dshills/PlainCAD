@@ -1,11 +1,12 @@
 import { useCanvasLabelDrag } from "./useCanvasLabelDrag";
+import { useRepairFocus } from "../commands/repairCommand";
 import {
   layoutCanvasLabels,
   MAX_CANVAS_LABELS,
   type CanvasLabelView,
   type CanvasLabelBox,
 } from "../../cad/sketch/canvasLabelLayout";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   canvasConstraintAnnotations,
   CONSTRAINT_REFERENCE_HINTS,
@@ -35,9 +36,29 @@ export function useCanvasConstraints(
     [pointIds, setPointIds] = useState<string[]>([]),
     [page, setPage] = useState(0),
     [error, setError] = useState<string>();
-  const [showAll, setShowAll] = useState(false),
-    [detailsOpen, setDetailsOpen] = useState(!focused);
-  useEffect(() => setDetailsOpen(!focused), [focused]);
+  const [showAll, setShowAll] = useState(false);
+  const detailsRef = useRef<HTMLDetailsElement>(null);
+  // Native details owns user disclosure state. Only explicit repair/select
+  // reopens it; mount reset effects would erase consumed focus in StrictMode.
+  const appliedRepair =
+    useRef<ReturnType<typeof useRepairFocus.getState>["focus"]>(undefined);
+  const repairFocus = useRepairFocus((state) => state.focus);
+  useEffect(() => {
+    if (
+      repairFocus &&
+      appliedRepair.current !== repairFocus &&
+      repairFocus.document === context?.document &&
+      repairFocus.session === active.session &&
+      repairFocus.sketchId === active.sketchId &&
+      repairFocus.constraintId
+    ) {
+      appliedRepair.current = repairFocus;
+      setSelectedId(repairFocus.constraintId);
+      if (detailsRef.current) detailsRef.current.open = true;
+      setShow(true);
+      setShowAll(true);
+    }
+  }, [repairFocus, context?.document, active.session, active.sketchId]);
   const sketch = context?.sketch,
     selected = sketch?.constraints.find((c) => c.id === selectedId);
   const storedReferences = selected
@@ -132,7 +153,7 @@ export function useCanvasConstraints(
     cancelDrawing();
     setError(undefined);
     setSelectedId(id);
-    setDetailsOpen(true);
+    if (detailsRef.current) detailsRef.current.open = true;
   };
   const apply = (remove = false) => {
     if (!context || !selected) return;
@@ -220,10 +241,7 @@ export function useCanvasConstraints(
           Show all constraints
         </label>
       ) : null}
-      <details
-        open={detailsOpen}
-        onToggle={(e) => setDetailsOpen(e.currentTarget.open)}
-      >
+      <details ref={detailsRef} open={!focused}>
         <summary>Inspect and repair constraints ({annotations.length})</summary>
         <label>
           <input

@@ -70,8 +70,10 @@ import {
 import { moveTimelineItem, planTimelineMove } from "../../cad/document/timelineEditing";
 import { beginHoleCreation, beginHoleEditing, editableHole, holeCreationContext, useHoleDraft } from "./holeCommand";
 import { prepareProjectDrop, replaceWithDroppedProject, saveAndReplaceDroppedProject } from "./projectDropCommand";
+import { focusRepairIssue, addRepairClosingEdge, type RepairContext } from "./repairCommand";
 
 export interface CommandContext {
+  repair?: RepairContext;
   sketchId?: string;
   componentId?: string;
   componentName?: string;
@@ -96,6 +98,7 @@ export interface CadCommand {
 }
 
 export interface CommandEnablement {
+  repairModel: boolean;
   document: boolean;
   editProject: boolean;
   newComponent: boolean;
@@ -124,8 +127,9 @@ export interface CommandEnablement {
   selectAllSketchEntities: boolean;
 }
 
-export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useTargetScopeCapture.getState().busy, canvasActive = Boolean(useSketchCanvas.getState().active), guidedHoleActive = Boolean(useGuidedHole.getState().draft), guidedHoleStartBlocked = Boolean(useExtrudeDraft.getState().draft || useHoleDraft.getState().draft || useModelingDraft.getState().draft || useProjectWorkflow.getState().active)): CommandEnablement {
+export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useTargetScopeCapture.getState().busy, canvasActive = Boolean(useSketchCanvas.getState().active), guidedHoleActive = Boolean(useGuidedHole.getState().draft), guidedHoleStartBlocked = Boolean(useExtrudeDraft.getState().draft || useHoleDraft.getState().draft || useModelingDraft.getState().draft || useProjectWorkflow.getState().active), exportDialogOpen = useFileJobs.getState().exportOpen): CommandEnablement {
   return {
+    repairModel: !scopeCaptureBusy && !guidedHoleActive && !guidedHoleStartBlocked && !exportDialogOpen && !state.fileBusy,
     createGuidedHole: !guidedHoleActive && !canvasActive && !guidedHoleStartBlocked && canBeginGuidedHole(state),
     guidedHoleActive,
     outsideGuidedHole: !guidedHoleActive,
@@ -166,6 +170,8 @@ export function isCommandEnabledForSnapshot(
 }
 
 export const commands: CadCommand[] = [
+  { id: "repair.focus", internal: true, label: "Show and repair model issue", enablementKey: "repairModel", run: ({ repair }) => { if (repair) focusRepairIssue(repair); } },
+  { id: "repair.closeOutline", internal: true, label: "Add missing closing edge", enablementKey: "repairModel", run: ({ repair }) => { if (repair) addRepairClosingEdge(repair); } },
   { id: "sketch.entity.selectAll", internal: true, label: "Select all sketch geometry", enablementKey: "selectAllSketchEntities", run: selectAllCanvasEntities },
   { id: "file.dropProject", internal: true, label: "Open Dropped Project", enablementKey: "editProject", run: ({ file }) => { if (file) return prepareProjectDrop(file); } },
   { id: "file.replaceDroppedProject", internal: true, label: "Replace With Dropped Project", enablementKey: "editProject", run: replaceWithDroppedProject },
@@ -221,7 +227,7 @@ export const commands: CadCommand[] = [
   { id: "timeline.toggleComponentFilter", internal: true, label: "Filter Timeline to Active Component", enablementKey: "document", run: () => useViewerState.getState().toggleTimelineFilter(useCadStore.getState().documentSession) },
   { id: "sketch.create", label: "Create Sketch", enablementKey: "createSketch", run: () => beginProjectWorkflow("sketch") },
   { id: "sketch.finish", label: "Finish Sketch", enablementKey: "finishSketch", run: finishSketchCanvas },
-  { id: "sketch.editCanvas", label: "Edit Sketch Canvas", description: "Draw geometry in the selected sketch’s local plane.", enablementKey: "sketchCanvas", run: beginSketchCanvas },
+  { id: "sketch.editCanvas", label: "Edit Sketch Canvas", description: "Draw geometry in the selected sketch’s local plane.", enablementKey: "sketchCanvas", run: () => { beginSketchCanvas(); } },
   {id:"feature.captureTargetScope",label:"Capture Intersected Targets",description:"Save the current native body/tool intersections as explicit target IDs.",enablementKey:"captureTargetScope",run:captureSelectedTargetScope},
   ...STANDARD_VIEWS.map((view): CadCommand => ({ id: `view.${view}`, label: `${view[0].toUpperCase()}${view.slice(1)} View`, alwaysEnabled: true, run: () => { showStandardView(view); } })),
   { id: "view.saveNamed", label: "Save Named View", enablementKey: "saveNamedView", run: (ctx) => {

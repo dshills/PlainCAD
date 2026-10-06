@@ -9,7 +9,7 @@ export interface ViewerSnapshot {
   cameraTarget: number[];
   measurementLine: number[];
   gridNormal: number[];
-  meshes: Array<{ bodyId: string; visible: boolean; clippingEnabled: boolean; positions: number[]; indices: number[] }>;
+  meshes: Array<{ bodyId: string; visible: boolean; highlighted?: boolean; clippingEnabled: boolean; positions: number[]; indices: number[] }>;
   sketchPoints: Array<{ id: string; position: number[] }>;
   sketchCircles: Array<{ id: string; normal: number[] }>;
 }
