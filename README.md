@@ -8,6 +8,14 @@ PlainCAD uses React 19, TypeScript, Vite, Zustand, Three.js, and OpenCascade.js.
 CAD runs locally in the browser through a geometry worker. An optional local Node
 gateway handles AI requests and keeps provider credentials out of the browser.
 
+![ORBIT drive housing in PlainCAD's Saturn Command workbench, showing its recessed chamber, bearing bore, mounting counterbores, relief slots, and feature timeline](docs/images/orbit-drive-housing.png)
+
+**ORBIT drive housing** — a real OpenCascade model with 16 features, 14 sketches,
+and six editable parameters, shown in Saturn Command. The part includes a rounded
+flange, fillet/chamfer treatments, a recessed chamber, bearing bore, counterbored
+mounting and cover holes, and relief slots. [Open the editable example](docs/examples/orbit-drive-housing.pcaddoc)
+with **File → Open**, or drop the project file onto the workspace.
+
 ## Features
 
 - One local project file containing components, sketches, parameters, and a feature timeline.

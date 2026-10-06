@@ -1,0 +1,3888 @@
+{
+  "components": {
+    "component_e2eff4b4": {
+      "id": "component_e2eff4b4",
+      "name": "Precision housing"
+    }
+  },
+  "createdAt": "2026-10-06T20:04:33.513Z",
+  "displayUnits": {
+    "angle": "deg",
+    "length": "mm"
+  },
+  "features": [
+    {
+      "componentId": "component_e2eff4b4",
+      "createdAt": "2026-10-06T20:04:33.523Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "base_thickness",
+        "parameterRefs": {
+          "base_thickness": "orbit_parameter_base_thickness"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_dbb0a97c",
+      "name": "01 · Rounded mounting flange",
+      "operation": "newBody",
+      "profileId": "sketch_eb712112:profile:p12brdeh",
+      "sketchId": "sketch_eb712112",
+      "timelineStep": 2,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_e2eff4b4",
+      "createdAt": "2026-10-06T20:04:33.523Z",
+      "id": "orbit_fillet",
+      "name": "02 · Soft upper flange edge",
+      "radius": {
+        "expression": "1mm",
+        "unit": "mm"
+      },
+      "targetEdgeRefs": [
+        {
+          "featureId": "feature_dbb0a97c",
+          "kind": "edge",
+          "role": "endCapPerimeter",
+          "stableHint": "extrude:feature_dbb0a97c:endCapPerimeter:all",
+          "transientId": "extrude:feature_dbb0a97c:endCapPerimeter:all"
+        }
+      ],
+      "timelineStep": 3,
+      "type": "fillet"
+    },
+    {
+      "componentId": "component_e2eff4b4",
+      "createdAt": "2026-10-06T20:04:33.523Z",
+      "distance": {
+        "expression": "1mm",
+        "unit": "mm"
+      },
+      "id": "orbit_chamfer",
+      "name": "03 · Underside flange chamfer",
+      "targetEdgeRefs": [
+        {
+          "featureId": "feature_dbb0a97c",
+          "kind": "edge",
+          "role": "startCapPerimeter",
+          "stableHint": "extrude:feature_dbb0a97c:startCapPerimeter:all",
+          "transientId": "extrude:feature_dbb0a97c:startCapPerimeter:all"
+        }
+      ],
+      "timelineStep": 4,
+      "type": "chamfer"
+    },
+    {
+      "componentId": "component_e2eff4b4",
+      "createdAt": "2026-10-06T20:04:33.525Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "housing_height + 1mm",
+        "parameterRefs": {
+          "housing_height": "orbit_parameter_housing_height"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_dce95656",
+      "name": "04 · Raised drive enclosure",
+      "operation": "join",
+      "profileId": "sketch_274ac25d:profile:p6eoqca",
+      "sketchId": "sketch_274ac25d",
+      "targetBodyIds": [
+        "body:feature_dbb0a97c"
+      ],
+      "timelineStep": 6,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_e2eff4b4",
+      "createdAt": "2026-10-06T20:04:33.528Z",
+      "direction": "negative",
+      "distance": {
+        "expression": "pocket_depth",
+        "parameterRefs": {
+          "pocket_depth": "orbit_parameter_pocket_depth"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_7b3a54cd",
+      "name": "05 · Recessed mechanism chamber",
+      "operation": "cut",
+      "profileId": "sketch_1d69ce4f:profile:p1tmrsie",
+      "sketchId": "sketch_1d69ce4f",
+      "targetBodyIds": [
+        "body:feature_dbb0a97c"
+      ],
+      "timelineStep": 8,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_e2eff4b4",
+      "createdAt": "2026-10-06T20:04:33.528Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "42mm",
+        "unit": "mm"
+      },
+      "id": "feature_1da7f3a2",
+      "name": "06 · Through bearing bore",
+      "operation": "cut",
+      "profileId": "sketch_10f8c61a:profile:p171n3id",
+      "sketchId": "sketch_10f8c61a",
+      "targetBodyIds": [
+        "body:feature_dbb0a97c"
+      ],
+      "termination": {
+        "type": "throughAll"
+      },
+      "timelineStep": 10,
+      "type": "extrude"
+    },
+    {
+      "centerPointIds": [
+        "point_73aab9d0",
+        "point_b71eae08",
+        "point_b709cf71",
+        "point_fa270c85"
+      ],
+      "componentId": "component_e2eff4b4",
+      "createdAt": "2026-10-06T20:04:33.528Z",
+      "depth": "throughAll",
+      "diameter": {
+        "expression": "mount_diameter",
+        "parameterRefs": {
+          "mount_diameter": "orbit_parameter_mount_diameter"
+        },
+        "unit": "mm"
+      },
+      "direction": "positive",
+      "id": "orbit_drill_6",
+      "name": "07 · Four flange mounting holes",
+      "sketchId": "sketch_07711985",
+      "targetBodyIds": [
+        "body:feature_dbb0a97c"
+      ],
+      "timelineStep": 12,
+      "type": "hole"
+    },
+    {
+      "centerPointIds": [
+        "point_8abc6cc4",
+        "point_2d4b7e57",
+        "point_540f1afd",
+        "point_de67abeb"
+      ],
+      "componentId": "component_e2eff4b4",
+      "createdAt": "2026-10-06T20:04:33.528Z",
+      "depth": {
+        "expression": "4mm",
+        "unit": "mm"
+      },
+      "diameter": {
+        "expression": "12mm",
+        "unit": "mm"
+      },
+      "direction": "negative",
+      "id": "orbit_drill_7",
+      "name": "08 · Mounting counterbores",
+      "sketchId": "sketch_52ec0858",
+      "targetBodyIds": [
+        "body:feature_dbb0a97c"
+      ],
+      "timelineStep": 14,
+      "type": "hole"
+    },
+    {
+      "centerPointIds": [
+        "point_2c86b12e",
+        "point_a3a9e5d5",
+        "point_ccd758b7",
+        "point_64a2e5c8",
+        "point_ef5b15ad",
+        "point_cd50369b"
+      ],
+      "componentId": "component_e2eff4b4",
+      "createdAt": "2026-10-06T20:04:33.528Z",
+      "depth": {
+        "expression": "18mm",
+        "unit": "mm"
+      },
+      "diameter": {
+        "expression": "bolt_diameter",
+        "parameterRefs": {
+          "bolt_diameter": "orbit_parameter_bolt_diameter"
+        },
+        "unit": "mm"
+      },
+      "direction": "negative",
+      "id": "orbit_drill_8",
+      "name": "09 · Six cover bolt holes",
+      "sketchId": "sketch_0c4f258a",
+      "targetBodyIds": [
+        "body:feature_dbb0a97c"
+      ],
+      "timelineStep": 16,
+      "type": "hole"
+    },
+    {
+      "centerPointIds": [
+        "point_796c3b41",
+        "point_a7eda06a",
+        "point_fd527640",
+        "point_333b2fd3",
+        "point_76567bd1",
+        "point_86ee8c8d"
+      ],
+      "componentId": "component_e2eff4b4",
+      "createdAt": "2026-10-06T20:04:33.528Z",
+      "depth": {
+        "expression": "2mm",
+        "unit": "mm"
+      },
+      "diameter": {
+        "expression": "8mm",
+        "unit": "mm"
+      },
+      "direction": "negative",
+      "id": "orbit_drill_9",
+      "name": "10 · Cover bolt recesses",
+      "sketchId": "sketch_dfdf2474",
+      "targetBodyIds": [
+        "body:feature_dbb0a97c"
+      ],
+      "timelineStep": 18,
+      "type": "hole"
+    },
+    {
+      "componentId": "component_e2eff4b4",
+      "createdAt": "2026-10-06T20:04:33.530Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "10mm",
+        "unit": "mm"
+      },
+      "id": "feature_e5e93bc7",
+      "name": "11 · Left flange relief slot",
+      "operation": "cut",
+      "profileId": "sketch_cf53f9d5:profile:p1vmwt37",
+      "sketchId": "sketch_cf53f9d5",
+      "targetBodyIds": [
+        "body:feature_dbb0a97c"
+      ],
+      "termination": {
+        "type": "throughAll"
+      },
+      "timelineStep": 20,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_e2eff4b4",
+      "createdAt": "2026-10-06T20:04:33.532Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "10mm",
+        "unit": "mm"
+      },
+      "id": "feature_309a8560",
+      "name": "12 · Right flange relief slot",
+      "operation": "cut",
+      "profileId": "sketch_3cd31881:profile:p1bwb9no",
+      "sketchId": "sketch_3cd31881",
+      "targetBodyIds": [
+        "body:feature_dbb0a97c"
+      ],
+      "termination": {
+        "type": "throughAll"
+      },
+      "timelineStep": 22,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_e2eff4b4",
+      "createdAt": "2026-10-06T20:04:33.534Z",
+      "direction": "negative",
+      "distance": {
+        "expression": "2mm",
+        "unit": "mm"
+      },
+      "id": "feature_a37cf072",
+      "name": "13 · Rim relief · left outer",
+      "operation": "cut",
+      "profileId": "sketch_2600899c:profile:p1mopiec",
+      "sketchId": "sketch_2600899c",
+      "targetBodyIds": [
+        "body:feature_dbb0a97c"
+      ],
+      "timelineStep": 24,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_e2eff4b4",
+      "createdAt": "2026-10-06T20:04:33.535Z",
+      "direction": "negative",
+      "distance": {
+        "expression": "2mm",
+        "unit": "mm"
+      },
+      "id": "feature_32dab700",
+      "name": "14 · Rim relief · left inner",
+      "operation": "cut",
+      "profileId": "sketch_e3db49df:profile:p1few0f6",
+      "sketchId": "sketch_e3db49df",
+      "targetBodyIds": [
+        "body:feature_dbb0a97c"
+      ],
+      "timelineStep": 26,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_e2eff4b4",
+      "createdAt": "2026-10-06T20:04:33.537Z",
+      "direction": "negative",
+      "distance": {
+        "expression": "2mm",
+        "unit": "mm"
+      },
+      "id": "feature_eafbd409",
+      "name": "15 · Rim relief · right inner",
+      "operation": "cut",
+      "profileId": "sketch_8a3fff8e:profile:p1ui9a2o",
+      "sketchId": "sketch_8a3fff8e",
+      "targetBodyIds": [
+        "body:feature_dbb0a97c"
+      ],
+      "timelineStep": 28,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_e2eff4b4",
+      "createdAt": "2026-10-06T20:04:33.539Z",
+      "direction": "negative",
+      "distance": {
+        "expression": "2mm",
+        "unit": "mm"
+      },
+      "id": "feature_6d0c800d",
+      "name": "16 · Rim relief · right outer",
+      "operation": "cut",
+      "profileId": "sketch_28bbd456:profile:p1wotpqh",
+      "sketchId": "sketch_28bbd456",
+      "targetBodyIds": [
+        "body:feature_dbb0a97c"
+      ],
+      "timelineStep": 30,
+      "type": "extrude"
+    }
+  ],
+  "id": "doc_a50bb4e1",
+  "name": "ORBIT drive housing",
+  "parameters": {
+    "base_thickness": {
+      "description": "Mounting flange thickness",
+      "expression": "10mm",
+      "group": "Housing",
+      "id": "orbit_parameter_base_thickness",
+      "name": "base_thickness",
+      "unit": "mm",
+      "value": 10
+    },
+    "bolt_diameter": {
+      "description": "Cover bolt hole diameter",
+      "expression": "4.4mm",
+      "group": "Housing",
+      "id": "orbit_parameter_bolt_diameter",
+      "name": "bolt_diameter",
+      "unit": "mm",
+      "value": 4.4
+    },
+    "bore_diameter": {
+      "description": "Central bearing bore",
+      "expression": "40mm",
+      "group": "Housing",
+      "id": "orbit_parameter_bore_diameter",
+      "name": "bore_diameter",
+      "unit": "mm",
+      "value": 40
+    },
+    "housing_height": {
+      "description": "Raised enclosure height above the mounting flange",
+      "expression": "32mm",
+      "group": "Housing",
+      "id": "orbit_parameter_housing_height",
+      "name": "housing_height",
+      "unit": "mm",
+      "value": 32
+    },
+    "mount_diameter": {
+      "description": "Flange mounting hole diameter",
+      "expression": "7mm",
+      "group": "Housing",
+      "id": "orbit_parameter_mount_diameter",
+      "name": "mount_diameter",
+      "unit": "mm",
+      "value": 7
+    },
+    "pocket_depth": {
+      "description": "Recessed chamber depth",
+      "expression": "18mm",
+      "group": "Housing",
+      "id": "orbit_parameter_pocket_depth",
+      "name": "pocket_depth",
+      "unit": "mm",
+      "value": 18
+    }
+  },
+  "rootComponentId": "component_e2eff4b4",
+  "schemaVersion": 13,
+  "sketches": {
+    "sketch_07711985": {
+      "componentId": "component_e2eff4b4",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_cb59b848",
+          "pointIds": [
+            "point_73aab9d0"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_394777b3",
+          "pointIds": [
+            "point_b71eae08"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_fb0b61dd",
+          "pointIds": [
+            "point_b709cf71"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_d1a6c741",
+          "pointIds": [
+            "point_fa270c85"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-06T20:04:33.528Z",
+      "dimensions": [],
+      "entities": {
+        "point_73aab9d0": {
+          "id": "point_73aab9d0",
+          "type": "point",
+          "x": {
+            "expression": "-58mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-42mm",
+            "unit": "mm"
+          }
+        },
+        "point_b709cf71": {
+          "id": "point_b709cf71",
+          "type": "point",
+          "x": {
+            "expression": "58mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "42mm",
+            "unit": "mm"
+          }
+        },
+        "point_b71eae08": {
+          "id": "point_b71eae08",
+          "type": "point",
+          "x": {
+            "expression": "58mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-42mm",
+            "unit": "mm"
+          }
+        },
+        "point_fa270c85": {
+          "id": "point_fa270c85",
+          "type": "point",
+          "x": {
+            "expression": "-58mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "42mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_07711985",
+      "name": "07 · Four flange mounting holes · centers",
+      "plane": {
+        "plane": "XY",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 11
+    },
+    "sketch_0c4f258a": {
+      "componentId": "component_e2eff4b4",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_cb295879",
+          "pointIds": [
+            "point_2c86b12e"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_dc3e1c78",
+          "pointIds": [
+            "point_a3a9e5d5"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_6a2dc602",
+          "pointIds": [
+            "point_ccd758b7"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_9209ecb2",
+          "pointIds": [
+            "point_64a2e5c8"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_52d2d9d4",
+          "pointIds": [
+            "point_ef5b15ad"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_3b5fa120",
+          "pointIds": [
+            "point_cd50369b"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-06T20:04:33.528Z",
+      "dimensions": [],
+      "entities": {
+        "point_2c86b12e": {
+          "id": "point_2c86b12e",
+          "type": "point",
+          "x": {
+            "expression": "-42mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-26mm",
+            "unit": "mm"
+          }
+        },
+        "point_64a2e5c8": {
+          "id": "point_64a2e5c8",
+          "type": "point",
+          "x": {
+            "expression": "-42mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "26mm",
+            "unit": "mm"
+          }
+        },
+        "point_a3a9e5d5": {
+          "id": "point_a3a9e5d5",
+          "type": "point",
+          "x": {
+            "expression": "42mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-26mm",
+            "unit": "mm"
+          }
+        },
+        "point_ccd758b7": {
+          "id": "point_ccd758b7",
+          "type": "point",
+          "x": {
+            "expression": "42mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "26mm",
+            "unit": "mm"
+          }
+        },
+        "point_cd50369b": {
+          "id": "point_cd50369b",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "33mm",
+            "unit": "mm"
+          }
+        },
+        "point_ef5b15ad": {
+          "id": "point_ef5b15ad",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-33mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_0c4f258a",
+      "name": "09 · Six cover bolt holes · centers",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "base_thickness + housing_height",
+          "parameterRefs": {
+            "base_thickness": "orbit_parameter_base_thickness",
+            "housing_height": "orbit_parameter_housing_height"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 15
+    },
+    "sketch_10f8c61a": {
+      "componentId": "component_e2eff4b4",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_81c2d4c0",
+          "pointIds": [
+            "point_08aae6fa"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-06T20:04:33.528Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_b0906376"
+          ],
+          "expression": {
+            "expression": "bore_diameter / 2",
+            "parameterRefs": {
+              "bore_diameter": "orbit_parameter_bore_diameter"
+            },
+            "unit": "mm"
+          },
+          "id": "orbit_radius_circle_b0906376",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_b0906376": {
+          "centerPointId": "point_08aae6fa",
+          "id": "circle_b0906376",
+          "radius": {
+            "expression": "bore_diameter / 2",
+            "parameterRefs": {
+              "bore_diameter": "orbit_parameter_bore_diameter"
+            },
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_08aae6fa": {
+          "id": "point_08aae6fa",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_10f8c61a",
+      "name": "Bearing bore",
+      "plane": {
+        "plane": "XY",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 9
+    },
+    "sketch_1d69ce4f": {
+      "componentId": "component_e2eff4b4",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_c5be6266",
+          "pointIds": [
+            "point_8417774b"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_aa88db81",
+          "pointIds": [
+            "point_2e1ca27d"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_87f42f39",
+          "pointIds": [
+            "point_86d19286"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_3b0d42b1",
+          "pointIds": [
+            "point_2f5d9348"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_1cd49afa",
+          "pointIds": [
+            "point_7d358d66"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_8d406d6e",
+          "pointIds": [
+            "point_71a75721"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_701bee21",
+          "pointIds": [
+            "point_61c9c3da"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_9ca0499b",
+          "pointIds": [
+            "point_45e190bb"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_20c7d87b",
+          "pointIds": [
+            "point_8bdbb190"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_4c057f24",
+          "pointIds": [
+            "point_df1181a5"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_8fb00a32",
+          "pointIds": [
+            "point_8d47f0f5"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_a2152829",
+          "pointIds": [
+            "point_ab23a90c"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-06T20:04:33.525Z",
+      "dimensions": [],
+      "entities": {
+        "arc_03fa681f": {
+          "centerPointId": "point_ab23a90c",
+          "clockwise": false,
+          "endPointId": "point_8417774b",
+          "id": "arc_03fa681f",
+          "startPointId": "point_45e190bb",
+          "type": "arc"
+        },
+        "arc_267c0525": {
+          "centerPointId": "point_8d47f0f5",
+          "clockwise": false,
+          "endPointId": "point_61c9c3da",
+          "id": "arc_267c0525",
+          "startPointId": "point_71a75721",
+          "type": "arc"
+        },
+        "arc_55bc5bd2": {
+          "centerPointId": "point_df1181a5",
+          "clockwise": false,
+          "endPointId": "point_7d358d66",
+          "id": "arc_55bc5bd2",
+          "startPointId": "point_2f5d9348",
+          "type": "arc"
+        },
+        "arc_b681c4ff": {
+          "centerPointId": "point_8bdbb190",
+          "clockwise": false,
+          "endPointId": "point_86d19286",
+          "id": "arc_b681c4ff",
+          "startPointId": "point_2e1ca27d",
+          "type": "arc"
+        },
+        "line_14ed5d02": {
+          "endPointId": "point_45e190bb",
+          "id": "line_14ed5d02",
+          "startPointId": "point_61c9c3da",
+          "type": "line"
+        },
+        "line_3acd7477": {
+          "endPointId": "point_2f5d9348",
+          "id": "line_3acd7477",
+          "startPointId": "point_86d19286",
+          "type": "line"
+        },
+        "line_5bdcf17f": {
+          "endPointId": "point_2e1ca27d",
+          "id": "line_5bdcf17f",
+          "startPointId": "point_8417774b",
+          "type": "line"
+        },
+        "line_611efa69": {
+          "endPointId": "point_71a75721",
+          "id": "line_611efa69",
+          "startPointId": "point_7d358d66",
+          "type": "line"
+        },
+        "point_2e1ca27d": {
+          "id": "point_2e1ca27d",
+          "type": "point",
+          "x": {
+            "expression": "29mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-28mm",
+            "unit": "mm"
+          }
+        },
+        "point_2f5d9348": {
+          "id": "point_2f5d9348",
+          "type": "point",
+          "x": {
+            "expression": "39mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "18mm",
+            "unit": "mm"
+          }
+        },
+        "point_45e190bb": {
+          "id": "point_45e190bb",
+          "type": "point",
+          "x": {
+            "expression": "-39mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-18mm",
+            "unit": "mm"
+          }
+        },
+        "point_61c9c3da": {
+          "id": "point_61c9c3da",
+          "type": "point",
+          "x": {
+            "expression": "-39mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "18mm",
+            "unit": "mm"
+          }
+        },
+        "point_71a75721": {
+          "id": "point_71a75721",
+          "type": "point",
+          "x": {
+            "expression": "-29mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "28mm",
+            "unit": "mm"
+          }
+        },
+        "point_7d358d66": {
+          "id": "point_7d358d66",
+          "type": "point",
+          "x": {
+            "expression": "29mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "28mm",
+            "unit": "mm"
+          }
+        },
+        "point_8417774b": {
+          "id": "point_8417774b",
+          "type": "point",
+          "x": {
+            "expression": "-29mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-28mm",
+            "unit": "mm"
+          }
+        },
+        "point_86d19286": {
+          "id": "point_86d19286",
+          "type": "point",
+          "x": {
+            "expression": "39mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-18mm",
+            "unit": "mm"
+          }
+        },
+        "point_8bdbb190": {
+          "id": "point_8bdbb190",
+          "type": "point",
+          "x": {
+            "expression": "29mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-18mm",
+            "unit": "mm"
+          }
+        },
+        "point_8d47f0f5": {
+          "id": "point_8d47f0f5",
+          "type": "point",
+          "x": {
+            "expression": "-29mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "18mm",
+            "unit": "mm"
+          }
+        },
+        "point_ab23a90c": {
+          "id": "point_ab23a90c",
+          "type": "point",
+          "x": {
+            "expression": "-29mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-18mm",
+            "unit": "mm"
+          }
+        },
+        "point_df1181a5": {
+          "id": "point_df1181a5",
+          "type": "point",
+          "x": {
+            "expression": "29mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "18mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_1d69ce4f",
+      "name": "Chamber outline · R10",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "base_thickness + housing_height",
+          "parameterRefs": {
+            "base_thickness": "orbit_parameter_base_thickness",
+            "housing_height": "orbit_parameter_housing_height"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 7
+    },
+    "sketch_2600899c": {
+      "componentId": "component_e2eff4b4",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_1bff98c7",
+          "pointIds": [
+            "point_c54ce16a"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_4c9d019b",
+          "pointIds": [
+            "point_6753a4c9"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_2b42ec3f",
+          "pointIds": [
+            "point_03620ec9"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_6bff607a",
+          "pointIds": [
+            "point_1cf3c74a"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_a8e06703",
+          "pointIds": [
+            "point_af1694e3"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_4f47cab9",
+          "pointIds": [
+            "point_4088b714"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_012bef59",
+          "pointIds": [
+            "point_c1a28412"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_bdbee0ad",
+          "pointIds": [
+            "point_91a7ee7a"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_5b6dc47c",
+          "pointIds": [
+            "point_d8f38bf6"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_d563270c",
+          "pointIds": [
+            "point_dc9347ed"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_10b581c8",
+          "pointIds": [
+            "point_34e70cca"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_d2e466d9",
+          "pointIds": [
+            "point_445cd847"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-06T20:04:33.532Z",
+      "dimensions": [],
+      "entities": {
+        "arc_636f98ad": {
+          "centerPointId": "point_445cd847",
+          "clockwise": false,
+          "endPointId": "point_c54ce16a",
+          "id": "arc_636f98ad",
+          "startPointId": "point_91a7ee7a",
+          "type": "arc"
+        },
+        "arc_cd1dd32a": {
+          "centerPointId": "point_34e70cca",
+          "clockwise": false,
+          "endPointId": "point_c1a28412",
+          "id": "arc_cd1dd32a",
+          "startPointId": "point_4088b714",
+          "type": "arc"
+        },
+        "arc_d4c1c0a0": {
+          "centerPointId": "point_d8f38bf6",
+          "clockwise": false,
+          "endPointId": "point_03620ec9",
+          "id": "arc_d4c1c0a0",
+          "startPointId": "point_6753a4c9",
+          "type": "arc"
+        },
+        "arc_d948ec7a": {
+          "centerPointId": "point_dc9347ed",
+          "clockwise": false,
+          "endPointId": "point_af1694e3",
+          "id": "arc_d948ec7a",
+          "startPointId": "point_1cf3c74a",
+          "type": "arc"
+        },
+        "line_01153b75": {
+          "endPointId": "point_1cf3c74a",
+          "id": "line_01153b75",
+          "startPointId": "point_03620ec9",
+          "type": "line"
+        },
+        "line_1f62fc11": {
+          "endPointId": "point_91a7ee7a",
+          "id": "line_1f62fc11",
+          "startPointId": "point_c1a28412",
+          "type": "line"
+        },
+        "line_b7eb2687": {
+          "endPointId": "point_4088b714",
+          "id": "line_b7eb2687",
+          "startPointId": "point_af1694e3",
+          "type": "line"
+        },
+        "line_c0fd538c": {
+          "endPointId": "point_6753a4c9",
+          "id": "line_c0fd538c",
+          "startPointId": "point_c54ce16a",
+          "type": "line"
+        },
+        "point_03620ec9": {
+          "id": "point_03620ec9",
+          "type": "point",
+          "x": {
+            "expression": "-25.75mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-35mm",
+            "unit": "mm"
+          }
+        },
+        "point_1cf3c74a": {
+          "id": "point_1cf3c74a",
+          "type": "point",
+          "x": {
+            "expression": "-25.75mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-31mm",
+            "unit": "mm"
+          }
+        },
+        "point_34e70cca": {
+          "id": "point_34e70cca",
+          "type": "point",
+          "x": {
+            "expression": "-27.25mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-31mm",
+            "unit": "mm"
+          }
+        },
+        "point_4088b714": {
+          "id": "point_4088b714",
+          "type": "point",
+          "x": {
+            "expression": "-27.25mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-30mm",
+            "unit": "mm"
+          }
+        },
+        "point_445cd847": {
+          "id": "point_445cd847",
+          "type": "point",
+          "x": {
+            "expression": "-27.25mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-35mm",
+            "unit": "mm"
+          }
+        },
+        "point_6753a4c9": {
+          "id": "point_6753a4c9",
+          "type": "point",
+          "x": {
+            "expression": "-26.75mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-36mm",
+            "unit": "mm"
+          }
+        },
+        "point_91a7ee7a": {
+          "id": "point_91a7ee7a",
+          "type": "point",
+          "x": {
+            "expression": "-28.25mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-35mm",
+            "unit": "mm"
+          }
+        },
+        "point_af1694e3": {
+          "id": "point_af1694e3",
+          "type": "point",
+          "x": {
+            "expression": "-26.75mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-30mm",
+            "unit": "mm"
+          }
+        },
+        "point_c1a28412": {
+          "id": "point_c1a28412",
+          "type": "point",
+          "x": {
+            "expression": "-28.25mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-31mm",
+            "unit": "mm"
+          }
+        },
+        "point_c54ce16a": {
+          "id": "point_c54ce16a",
+          "type": "point",
+          "x": {
+            "expression": "-27.25mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-36mm",
+            "unit": "mm"
+          }
+        },
+        "point_d8f38bf6": {
+          "id": "point_d8f38bf6",
+          "type": "point",
+          "x": {
+            "expression": "-26.75mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-35mm",
+            "unit": "mm"
+          }
+        },
+        "point_dc9347ed": {
+          "id": "point_dc9347ed",
+          "type": "point",
+          "x": {
+            "expression": "-26.75mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-31mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_2600899c",
+      "name": "Rim relief 1",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "base_thickness + housing_height",
+          "parameterRefs": {
+            "base_thickness": "orbit_parameter_base_thickness",
+            "housing_height": "orbit_parameter_housing_height"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 23
+    },
+    "sketch_274ac25d": {
+      "componentId": "component_e2eff4b4",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_b5ab1030",
+          "pointIds": [
+            "point_6513ae4d"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_aa90bf5c",
+          "pointIds": [
+            "point_c20fae6d"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_6f7dd065",
+          "pointIds": [
+            "point_8df25fbf"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_0f94597c",
+          "pointIds": [
+            "point_ca504e1e"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_0274376f",
+          "pointIds": [
+            "point_fbf1a652"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_fe33240d",
+          "pointIds": [
+            "point_d8c60a7e"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_941c8f7e",
+          "pointIds": [
+            "point_95b8a0bd"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_834b6a00",
+          "pointIds": [
+            "point_cb35e432"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_7633f1a0",
+          "pointIds": [
+            "point_feda4fa4"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_9251831b",
+          "pointIds": [
+            "point_5a6c43e0"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_2299adea",
+          "pointIds": [
+            "point_3e9126fa"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_35c75e11",
+          "pointIds": [
+            "point_c12c4924"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-06T20:04:33.523Z",
+      "dimensions": [],
+      "entities": {
+        "arc_01019c40": {
+          "centerPointId": "point_3e9126fa",
+          "clockwise": false,
+          "endPointId": "point_95b8a0bd",
+          "id": "arc_01019c40",
+          "startPointId": "point_d8c60a7e",
+          "type": "arc"
+        },
+        "arc_03ccdda3": {
+          "centerPointId": "point_c12c4924",
+          "clockwise": false,
+          "endPointId": "point_6513ae4d",
+          "id": "arc_03ccdda3",
+          "startPointId": "point_cb35e432",
+          "type": "arc"
+        },
+        "arc_4da2df62": {
+          "centerPointId": "point_feda4fa4",
+          "clockwise": false,
+          "endPointId": "point_8df25fbf",
+          "id": "arc_4da2df62",
+          "startPointId": "point_c20fae6d",
+          "type": "arc"
+        },
+        "arc_f815af64": {
+          "centerPointId": "point_5a6c43e0",
+          "clockwise": false,
+          "endPointId": "point_fbf1a652",
+          "id": "arc_f815af64",
+          "startPointId": "point_ca504e1e",
+          "type": "arc"
+        },
+        "line_19f7fec0": {
+          "endPointId": "point_cb35e432",
+          "id": "line_19f7fec0",
+          "startPointId": "point_95b8a0bd",
+          "type": "line"
+        },
+        "line_576f1ae9": {
+          "endPointId": "point_ca504e1e",
+          "id": "line_576f1ae9",
+          "startPointId": "point_8df25fbf",
+          "type": "line"
+        },
+        "line_70ec2709": {
+          "endPointId": "point_c20fae6d",
+          "id": "line_70ec2709",
+          "startPointId": "point_6513ae4d",
+          "type": "line"
+        },
+        "line_e8a91d22": {
+          "endPointId": "point_d8c60a7e",
+          "id": "line_e8a91d22",
+          "startPointId": "point_fbf1a652",
+          "type": "line"
+        },
+        "point_3e9126fa": {
+          "id": "point_3e9126fa",
+          "type": "point",
+          "x": {
+            "expression": "-38mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "26mm",
+            "unit": "mm"
+          }
+        },
+        "point_5a6c43e0": {
+          "id": "point_5a6c43e0",
+          "type": "point",
+          "x": {
+            "expression": "38mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "26mm",
+            "unit": "mm"
+          }
+        },
+        "point_6513ae4d": {
+          "id": "point_6513ae4d",
+          "type": "point",
+          "x": {
+            "expression": "-38mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-38mm",
+            "unit": "mm"
+          }
+        },
+        "point_8df25fbf": {
+          "id": "point_8df25fbf",
+          "type": "point",
+          "x": {
+            "expression": "50mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-26mm",
+            "unit": "mm"
+          }
+        },
+        "point_95b8a0bd": {
+          "id": "point_95b8a0bd",
+          "type": "point",
+          "x": {
+            "expression": "-50mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "26mm",
+            "unit": "mm"
+          }
+        },
+        "point_c12c4924": {
+          "id": "point_c12c4924",
+          "type": "point",
+          "x": {
+            "expression": "-38mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-26mm",
+            "unit": "mm"
+          }
+        },
+        "point_c20fae6d": {
+          "id": "point_c20fae6d",
+          "type": "point",
+          "x": {
+            "expression": "38mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-38mm",
+            "unit": "mm"
+          }
+        },
+        "point_ca504e1e": {
+          "id": "point_ca504e1e",
+          "type": "point",
+          "x": {
+            "expression": "50mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "26mm",
+            "unit": "mm"
+          }
+        },
+        "point_cb35e432": {
+          "id": "point_cb35e432",
+          "type": "point",
+          "x": {
+            "expression": "-50mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-26mm",
+            "unit": "mm"
+          }
+        },
+        "point_d8c60a7e": {
+          "id": "point_d8c60a7e",
+          "type": "point",
+          "x": {
+            "expression": "-38mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "38mm",
+            "unit": "mm"
+          }
+        },
+        "point_fbf1a652": {
+          "id": "point_fbf1a652",
+          "type": "point",
+          "x": {
+            "expression": "38mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "38mm",
+            "unit": "mm"
+          }
+        },
+        "point_feda4fa4": {
+          "id": "point_feda4fa4",
+          "type": "point",
+          "x": {
+            "expression": "38mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-26mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_274ac25d",
+      "name": "Enclosure outline · R12",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "base_thickness - 1mm",
+          "parameterRefs": {
+            "base_thickness": "orbit_parameter_base_thickness"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 5
+    },
+    "sketch_28bbd456": {
+      "componentId": "component_e2eff4b4",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_19ba3689",
+          "pointIds": [
+            "point_d97bb078"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_5d4667cb",
+          "pointIds": [
+            "point_cb14392a"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_7e85a54c",
+          "pointIds": [
+            "point_2dd1a559"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_eff0b552",
+          "pointIds": [
+            "point_6744ac95"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_91df7519",
+          "pointIds": [
+            "point_a888bf20"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_ff122550",
+          "pointIds": [
+            "point_902246df"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_11c9882d",
+          "pointIds": [
+            "point_7ad79cda"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_d827399a",
+          "pointIds": [
+            "point_0b44f347"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_c0a0fe91",
+          "pointIds": [
+            "point_d36b7847"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_451bb89a",
+          "pointIds": [
+            "point_d8aba2fc"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_392839d6",
+          "pointIds": [
+            "point_71f3ad50"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_fabd70b4",
+          "pointIds": [
+            "point_ae95b934"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-06T20:04:33.537Z",
+      "dimensions": [],
+      "entities": {
+        "arc_280257ff": {
+          "centerPointId": "point_d36b7847",
+          "clockwise": false,
+          "endPointId": "point_2dd1a559",
+          "id": "arc_280257ff",
+          "startPointId": "point_cb14392a",
+          "type": "arc"
+        },
+        "arc_4bab16da": {
+          "centerPointId": "point_71f3ad50",
+          "clockwise": false,
+          "endPointId": "point_7ad79cda",
+          "id": "arc_4bab16da",
+          "startPointId": "point_902246df",
+          "type": "arc"
+        },
+        "arc_7e8e4b66": {
+          "centerPointId": "point_ae95b934",
+          "clockwise": false,
+          "endPointId": "point_d97bb078",
+          "id": "arc_7e8e4b66",
+          "startPointId": "point_0b44f347",
+          "type": "arc"
+        },
+        "arc_b3a42ec1": {
+          "centerPointId": "point_d8aba2fc",
+          "clockwise": false,
+          "endPointId": "point_a888bf20",
+          "id": "arc_b3a42ec1",
+          "startPointId": "point_6744ac95",
+          "type": "arc"
+        },
+        "line_254762d4": {
+          "endPointId": "point_902246df",
+          "id": "line_254762d4",
+          "startPointId": "point_a888bf20",
+          "type": "line"
+        },
+        "line_8dca3964": {
+          "endPointId": "point_cb14392a",
+          "id": "line_8dca3964",
+          "startPointId": "point_d97bb078",
+          "type": "line"
+        },
+        "line_b6e16ce1": {
+          "endPointId": "point_0b44f347",
+          "id": "line_b6e16ce1",
+          "startPointId": "point_7ad79cda",
+          "type": "line"
+        },
+        "line_f248c391": {
+          "endPointId": "point_6744ac95",
+          "id": "line_f248c391",
+          "startPointId": "point_2dd1a559",
+          "type": "line"
+        },
+        "point_0b44f347": {
+          "id": "point_0b44f347",
+          "type": "point",
+          "x": {
+            "expression": "25.75mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-35mm",
+            "unit": "mm"
+          }
+        },
+        "point_2dd1a559": {
+          "id": "point_2dd1a559",
+          "type": "point",
+          "x": {
+            "expression": "28.25mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-35mm",
+            "unit": "mm"
+          }
+        },
+        "point_6744ac95": {
+          "id": "point_6744ac95",
+          "type": "point",
+          "x": {
+            "expression": "28.25mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-31mm",
+            "unit": "mm"
+          }
+        },
+        "point_71f3ad50": {
+          "id": "point_71f3ad50",
+          "type": "point",
+          "x": {
+            "expression": "26.75mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-31mm",
+            "unit": "mm"
+          }
+        },
+        "point_7ad79cda": {
+          "id": "point_7ad79cda",
+          "type": "point",
+          "x": {
+            "expression": "25.75mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-31mm",
+            "unit": "mm"
+          }
+        },
+        "point_902246df": {
+          "id": "point_902246df",
+          "type": "point",
+          "x": {
+            "expression": "26.75mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-30mm",
+            "unit": "mm"
+          }
+        },
+        "point_a888bf20": {
+          "id": "point_a888bf20",
+          "type": "point",
+          "x": {
+            "expression": "27.25mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-30mm",
+            "unit": "mm"
+          }
+        },
+        "point_ae95b934": {
+          "id": "point_ae95b934",
+          "type": "point",
+          "x": {
+            "expression": "26.75mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-35mm",
+            "unit": "mm"
+          }
+        },
+        "point_cb14392a": {
+          "id": "point_cb14392a",
+          "type": "point",
+          "x": {
+            "expression": "27.25mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-36mm",
+            "unit": "mm"
+          }
+        },
+        "point_d36b7847": {
+          "id": "point_d36b7847",
+          "type": "point",
+          "x": {
+            "expression": "27.25mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-35mm",
+            "unit": "mm"
+          }
+        },
+        "point_d8aba2fc": {
+          "id": "point_d8aba2fc",
+          "type": "point",
+          "x": {
+            "expression": "27.25mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-31mm",
+            "unit": "mm"
+          }
+        },
+        "point_d97bb078": {
+          "id": "point_d97bb078",
+          "type": "point",
+          "x": {
+            "expression": "26.75mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-36mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_28bbd456",
+      "name": "Rim relief 4",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "base_thickness + housing_height",
+          "parameterRefs": {
+            "base_thickness": "orbit_parameter_base_thickness",
+            "housing_height": "orbit_parameter_housing_height"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 29
+    },
+    "sketch_3cd31881": {
+      "componentId": "component_e2eff4b4",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_dc9eecd1",
+          "pointIds": [
+            "point_e9d160a6"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_bcbeea17",
+          "pointIds": [
+            "point_5dd07e5b"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_101edc12",
+          "pointIds": [
+            "point_09c84525"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_5531ba4d",
+          "pointIds": [
+            "point_487f8b0a"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_bcf60182",
+          "pointIds": [
+            "point_598b6248"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_9ba7ceb4",
+          "pointIds": [
+            "point_f2049680"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_66517bef",
+          "pointIds": [
+            "point_2ccd73fd"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_651aaf6a",
+          "pointIds": [
+            "point_b4d30651"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_8dc70266",
+          "pointIds": [
+            "point_4dbb09f0"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_f77af89d",
+          "pointIds": [
+            "point_f71b7362"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_e03be7c0",
+          "pointIds": [
+            "point_b148ecdd"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_2b54b586",
+          "pointIds": [
+            "point_30f88792"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-06T20:04:33.530Z",
+      "dimensions": [],
+      "entities": {
+        "arc_133e295b": {
+          "centerPointId": "point_30f88792",
+          "clockwise": false,
+          "endPointId": "point_e9d160a6",
+          "id": "arc_133e295b",
+          "startPointId": "point_b4d30651",
+          "type": "arc"
+        },
+        "arc_2e64b2db": {
+          "centerPointId": "point_f71b7362",
+          "clockwise": false,
+          "endPointId": "point_598b6248",
+          "id": "arc_2e64b2db",
+          "startPointId": "point_487f8b0a",
+          "type": "arc"
+        },
+        "arc_97415f0d": {
+          "centerPointId": "point_b148ecdd",
+          "clockwise": false,
+          "endPointId": "point_2ccd73fd",
+          "id": "arc_97415f0d",
+          "startPointId": "point_f2049680",
+          "type": "arc"
+        },
+        "arc_f0d9b049": {
+          "centerPointId": "point_4dbb09f0",
+          "clockwise": false,
+          "endPointId": "point_09c84525",
+          "id": "arc_f0d9b049",
+          "startPointId": "point_5dd07e5b",
+          "type": "arc"
+        },
+        "line_5ef90b6f": {
+          "endPointId": "point_487f8b0a",
+          "id": "line_5ef90b6f",
+          "startPointId": "point_09c84525",
+          "type": "line"
+        },
+        "line_ac13e946": {
+          "endPointId": "point_b4d30651",
+          "id": "line_ac13e946",
+          "startPointId": "point_2ccd73fd",
+          "type": "line"
+        },
+        "line_f759c710": {
+          "endPointId": "point_5dd07e5b",
+          "id": "line_f759c710",
+          "startPointId": "point_e9d160a6",
+          "type": "line"
+        },
+        "line_fb6b0920": {
+          "endPointId": "point_f2049680",
+          "id": "line_fb6b0920",
+          "startPointId": "point_598b6248",
+          "type": "line"
+        },
+        "point_09c84525": {
+          "id": "point_09c84525",
+          "type": "point",
+          "x": {
+            "expression": "64mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-12mm",
+            "unit": "mm"
+          }
+        },
+        "point_2ccd73fd": {
+          "id": "point_2ccd73fd",
+          "type": "point",
+          "x": {
+            "expression": "56mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "12mm",
+            "unit": "mm"
+          }
+        },
+        "point_30f88792": {
+          "id": "point_30f88792",
+          "type": "point",
+          "x": {
+            "expression": "59mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-12mm",
+            "unit": "mm"
+          }
+        },
+        "point_487f8b0a": {
+          "id": "point_487f8b0a",
+          "type": "point",
+          "x": {
+            "expression": "64mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "12mm",
+            "unit": "mm"
+          }
+        },
+        "point_4dbb09f0": {
+          "id": "point_4dbb09f0",
+          "type": "point",
+          "x": {
+            "expression": "61mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-12mm",
+            "unit": "mm"
+          }
+        },
+        "point_598b6248": {
+          "id": "point_598b6248",
+          "type": "point",
+          "x": {
+            "expression": "61mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "15mm",
+            "unit": "mm"
+          }
+        },
+        "point_5dd07e5b": {
+          "id": "point_5dd07e5b",
+          "type": "point",
+          "x": {
+            "expression": "61mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-15mm",
+            "unit": "mm"
+          }
+        },
+        "point_b148ecdd": {
+          "id": "point_b148ecdd",
+          "type": "point",
+          "x": {
+            "expression": "59mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "12mm",
+            "unit": "mm"
+          }
+        },
+        "point_b4d30651": {
+          "id": "point_b4d30651",
+          "type": "point",
+          "x": {
+            "expression": "56mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-12mm",
+            "unit": "mm"
+          }
+        },
+        "point_e9d160a6": {
+          "id": "point_e9d160a6",
+          "type": "point",
+          "x": {
+            "expression": "59mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-15mm",
+            "unit": "mm"
+          }
+        },
+        "point_f2049680": {
+          "id": "point_f2049680",
+          "type": "point",
+          "x": {
+            "expression": "59mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "15mm",
+            "unit": "mm"
+          }
+        },
+        "point_f71b7362": {
+          "id": "point_f71b7362",
+          "type": "point",
+          "x": {
+            "expression": "61mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "12mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_3cd31881",
+      "name": "Right relief · R3",
+      "plane": {
+        "plane": "XY",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 21
+    },
+    "sketch_52ec0858": {
+      "componentId": "component_e2eff4b4",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_9f577fef",
+          "pointIds": [
+            "point_8abc6cc4"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_a6a7912f",
+          "pointIds": [
+            "point_2d4b7e57"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_942e5ffc",
+          "pointIds": [
+            "point_540f1afd"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_2345dbe4",
+          "pointIds": [
+            "point_de67abeb"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-06T20:04:33.528Z",
+      "dimensions": [],
+      "entities": {
+        "point_2d4b7e57": {
+          "id": "point_2d4b7e57",
+          "type": "point",
+          "x": {
+            "expression": "58mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-42mm",
+            "unit": "mm"
+          }
+        },
+        "point_540f1afd": {
+          "id": "point_540f1afd",
+          "type": "point",
+          "x": {
+            "expression": "58mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "42mm",
+            "unit": "mm"
+          }
+        },
+        "point_8abc6cc4": {
+          "id": "point_8abc6cc4",
+          "type": "point",
+          "x": {
+            "expression": "-58mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-42mm",
+            "unit": "mm"
+          }
+        },
+        "point_de67abeb": {
+          "id": "point_de67abeb",
+          "type": "point",
+          "x": {
+            "expression": "-58mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "42mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_52ec0858",
+      "name": "08 · Mounting counterbores · centers",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "base_thickness",
+          "parameterRefs": {
+            "base_thickness": "orbit_parameter_base_thickness"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 13
+    },
+    "sketch_8a3fff8e": {
+      "componentId": "component_e2eff4b4",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_c644d4b4",
+          "pointIds": [
+            "point_9d137d74"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_8a8ff140",
+          "pointIds": [
+            "point_7ed4d7bb"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_7e5d118c",
+          "pointIds": [
+            "point_5114c262"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_3f497370",
+          "pointIds": [
+            "point_50174212"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_6f6fe782",
+          "pointIds": [
+            "point_642ca178"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_b9a2ca0b",
+          "pointIds": [
+            "point_ec8f409d"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_0bd3b6c5",
+          "pointIds": [
+            "point_a69075c7"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_ddbe3b1b",
+          "pointIds": [
+            "point_44fcce83"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_d02544d0",
+          "pointIds": [
+            "point_044674db"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_623f084e",
+          "pointIds": [
+            "point_4f62d826"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_979d432e",
+          "pointIds": [
+            "point_66010332"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_e63c7204",
+          "pointIds": [
+            "point_5d1b3696"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-06T20:04:33.535Z",
+      "dimensions": [],
+      "entities": {
+        "arc_1eb9ac4c": {
+          "centerPointId": "point_66010332",
+          "clockwise": false,
+          "endPointId": "point_a69075c7",
+          "id": "arc_1eb9ac4c",
+          "startPointId": "point_ec8f409d",
+          "type": "arc"
+        },
+        "arc_4719f95e": {
+          "centerPointId": "point_044674db",
+          "clockwise": false,
+          "endPointId": "point_5114c262",
+          "id": "arc_4719f95e",
+          "startPointId": "point_7ed4d7bb",
+          "type": "arc"
+        },
+        "arc_8f82f75a": {
+          "centerPointId": "point_5d1b3696",
+          "clockwise": false,
+          "endPointId": "point_9d137d74",
+          "id": "arc_8f82f75a",
+          "startPointId": "point_44fcce83",
+          "type": "arc"
+        },
+        "arc_97f4dac5": {
+          "centerPointId": "point_4f62d826",
+          "clockwise": false,
+          "endPointId": "point_642ca178",
+          "id": "arc_97f4dac5",
+          "startPointId": "point_50174212",
+          "type": "arc"
+        },
+        "line_194498bf": {
+          "endPointId": "point_ec8f409d",
+          "id": "line_194498bf",
+          "startPointId": "point_642ca178",
+          "type": "line"
+        },
+        "line_24a85e95": {
+          "endPointId": "point_44fcce83",
+          "id": "line_24a85e95",
+          "startPointId": "point_a69075c7",
+          "type": "line"
+        },
+        "line_98823446": {
+          "endPointId": "point_7ed4d7bb",
+          "id": "line_98823446",
+          "startPointId": "point_9d137d74",
+          "type": "line"
+        },
+        "line_a9937543": {
+          "endPointId": "point_50174212",
+          "id": "line_a9937543",
+          "startPointId": "point_5114c262",
+          "type": "line"
+        },
+        "point_044674db": {
+          "id": "point_044674db",
+          "type": "point",
+          "x": {
+            "expression": "17.25mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-35mm",
+            "unit": "mm"
+          }
+        },
+        "point_44fcce83": {
+          "id": "point_44fcce83",
+          "type": "point",
+          "x": {
+            "expression": "15.75mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-35mm",
+            "unit": "mm"
+          }
+        },
+        "point_4f62d826": {
+          "id": "point_4f62d826",
+          "type": "point",
+          "x": {
+            "expression": "17.25mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-31mm",
+            "unit": "mm"
+          }
+        },
+        "point_50174212": {
+          "id": "point_50174212",
+          "type": "point",
+          "x": {
+            "expression": "18.25mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-31mm",
+            "unit": "mm"
+          }
+        },
+        "point_5114c262": {
+          "id": "point_5114c262",
+          "type": "point",
+          "x": {
+            "expression": "18.25mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-35mm",
+            "unit": "mm"
+          }
+        },
+        "point_5d1b3696": {
+          "id": "point_5d1b3696",
+          "type": "point",
+          "x": {
+            "expression": "16.75mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-35mm",
+            "unit": "mm"
+          }
+        },
+        "point_642ca178": {
+          "id": "point_642ca178",
+          "type": "point",
+          "x": {
+            "expression": "17.25mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-30mm",
+            "unit": "mm"
+          }
+        },
+        "point_66010332": {
+          "id": "point_66010332",
+          "type": "point",
+          "x": {
+            "expression": "16.75mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-31mm",
+            "unit": "mm"
+          }
+        },
+        "point_7ed4d7bb": {
+          "id": "point_7ed4d7bb",
+          "type": "point",
+          "x": {
+            "expression": "17.25mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-36mm",
+            "unit": "mm"
+          }
+        },
+        "point_9d137d74": {
+          "id": "point_9d137d74",
+          "type": "point",
+          "x": {
+            "expression": "16.75mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-36mm",
+            "unit": "mm"
+          }
+        },
+        "point_a69075c7": {
+          "id": "point_a69075c7",
+          "type": "point",
+          "x": {
+            "expression": "15.75mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-31mm",
+            "unit": "mm"
+          }
+        },
+        "point_ec8f409d": {
+          "id": "point_ec8f409d",
+          "type": "point",
+          "x": {
+            "expression": "16.75mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-30mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_8a3fff8e",
+      "name": "Rim relief 3",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "base_thickness + housing_height",
+          "parameterRefs": {
+            "base_thickness": "orbit_parameter_base_thickness",
+            "housing_height": "orbit_parameter_housing_height"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 27
+    },
+    "sketch_cf53f9d5": {
+      "componentId": "component_e2eff4b4",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_c6c38dcc",
+          "pointIds": [
+            "point_92c9f3a8"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_55188c75",
+          "pointIds": [
+            "point_9d0d394b"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_79d38c65",
+          "pointIds": [
+            "point_ff65c64f"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_cc51883a",
+          "pointIds": [
+            "point_2fe77a89"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_99b0f85e",
+          "pointIds": [
+            "point_1b938842"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_1dfa70a2",
+          "pointIds": [
+            "point_4986b83c"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_0b08ae18",
+          "pointIds": [
+            "point_d2d12ede"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_fadc796a",
+          "pointIds": [
+            "point_ce85a4c1"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_4a423009",
+          "pointIds": [
+            "point_96f2b339"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_22e569a4",
+          "pointIds": [
+            "point_2d28c96b"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_c531eddd",
+          "pointIds": [
+            "point_beddf697"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_06aabbc0",
+          "pointIds": [
+            "point_70864c9e"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-06T20:04:33.528Z",
+      "dimensions": [],
+      "entities": {
+        "arc_0b4c2796": {
+          "centerPointId": "point_70864c9e",
+          "clockwise": false,
+          "endPointId": "point_92c9f3a8",
+          "id": "arc_0b4c2796",
+          "startPointId": "point_ce85a4c1",
+          "type": "arc"
+        },
+        "arc_5bdf3550": {
+          "centerPointId": "point_2d28c96b",
+          "clockwise": false,
+          "endPointId": "point_1b938842",
+          "id": "arc_5bdf3550",
+          "startPointId": "point_2fe77a89",
+          "type": "arc"
+        },
+        "arc_687da03d": {
+          "centerPointId": "point_beddf697",
+          "clockwise": false,
+          "endPointId": "point_d2d12ede",
+          "id": "arc_687da03d",
+          "startPointId": "point_4986b83c",
+          "type": "arc"
+        },
+        "arc_89054abb": {
+          "centerPointId": "point_96f2b339",
+          "clockwise": false,
+          "endPointId": "point_ff65c64f",
+          "id": "arc_89054abb",
+          "startPointId": "point_9d0d394b",
+          "type": "arc"
+        },
+        "line_e63e1bf8": {
+          "endPointId": "point_9d0d394b",
+          "id": "line_e63e1bf8",
+          "startPointId": "point_92c9f3a8",
+          "type": "line"
+        },
+        "line_ecde3448": {
+          "endPointId": "point_ce85a4c1",
+          "id": "line_ecde3448",
+          "startPointId": "point_d2d12ede",
+          "type": "line"
+        },
+        "line_ef25f10b": {
+          "endPointId": "point_2fe77a89",
+          "id": "line_ef25f10b",
+          "startPointId": "point_ff65c64f",
+          "type": "line"
+        },
+        "line_f5351a6e": {
+          "endPointId": "point_4986b83c",
+          "id": "line_f5351a6e",
+          "startPointId": "point_1b938842",
+          "type": "line"
+        },
+        "point_1b938842": {
+          "id": "point_1b938842",
+          "type": "point",
+          "x": {
+            "expression": "-59mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "15mm",
+            "unit": "mm"
+          }
+        },
+        "point_2d28c96b": {
+          "id": "point_2d28c96b",
+          "type": "point",
+          "x": {
+            "expression": "-59mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "12mm",
+            "unit": "mm"
+          }
+        },
+        "point_2fe77a89": {
+          "id": "point_2fe77a89",
+          "type": "point",
+          "x": {
+            "expression": "-56mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "12mm",
+            "unit": "mm"
+          }
+        },
+        "point_4986b83c": {
+          "id": "point_4986b83c",
+          "type": "point",
+          "x": {
+            "expression": "-61mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "15mm",
+            "unit": "mm"
+          }
+        },
+        "point_70864c9e": {
+          "id": "point_70864c9e",
+          "type": "point",
+          "x": {
+            "expression": "-61mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-12mm",
+            "unit": "mm"
+          }
+        },
+        "point_92c9f3a8": {
+          "id": "point_92c9f3a8",
+          "type": "point",
+          "x": {
+            "expression": "-61mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-15mm",
+            "unit": "mm"
+          }
+        },
+        "point_96f2b339": {
+          "id": "point_96f2b339",
+          "type": "point",
+          "x": {
+            "expression": "-59mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-12mm",
+            "unit": "mm"
+          }
+        },
+        "point_9d0d394b": {
+          "id": "point_9d0d394b",
+          "type": "point",
+          "x": {
+            "expression": "-59mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-15mm",
+            "unit": "mm"
+          }
+        },
+        "point_beddf697": {
+          "id": "point_beddf697",
+          "type": "point",
+          "x": {
+            "expression": "-61mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "12mm",
+            "unit": "mm"
+          }
+        },
+        "point_ce85a4c1": {
+          "id": "point_ce85a4c1",
+          "type": "point",
+          "x": {
+            "expression": "-64mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-12mm",
+            "unit": "mm"
+          }
+        },
+        "point_d2d12ede": {
+          "id": "point_d2d12ede",
+          "type": "point",
+          "x": {
+            "expression": "-64mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "12mm",
+            "unit": "mm"
+          }
+        },
+        "point_ff65c64f": {
+          "id": "point_ff65c64f",
+          "type": "point",
+          "x": {
+            "expression": "-56mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-12mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_cf53f9d5",
+      "name": "Left relief · R3",
+      "plane": {
+        "plane": "XY",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 19
+    },
+    "sketch_dfdf2474": {
+      "componentId": "component_e2eff4b4",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_1f93b4d1",
+          "pointIds": [
+            "point_796c3b41"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_62b0e579",
+          "pointIds": [
+            "point_a7eda06a"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_153ba20d",
+          "pointIds": [
+            "point_fd527640"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_65b0d038",
+          "pointIds": [
+            "point_333b2fd3"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_180e5c7b",
+          "pointIds": [
+            "point_76567bd1"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_185dd64b",
+          "pointIds": [
+            "point_86ee8c8d"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-06T20:04:33.528Z",
+      "dimensions": [],
+      "entities": {
+        "point_333b2fd3": {
+          "id": "point_333b2fd3",
+          "type": "point",
+          "x": {
+            "expression": "-42mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "26mm",
+            "unit": "mm"
+          }
+        },
+        "point_76567bd1": {
+          "id": "point_76567bd1",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-33mm",
+            "unit": "mm"
+          }
+        },
+        "point_796c3b41": {
+          "id": "point_796c3b41",
+          "type": "point",
+          "x": {
+            "expression": "-42mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-26mm",
+            "unit": "mm"
+          }
+        },
+        "point_86ee8c8d": {
+          "id": "point_86ee8c8d",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "33mm",
+            "unit": "mm"
+          }
+        },
+        "point_a7eda06a": {
+          "id": "point_a7eda06a",
+          "type": "point",
+          "x": {
+            "expression": "42mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-26mm",
+            "unit": "mm"
+          }
+        },
+        "point_fd527640": {
+          "id": "point_fd527640",
+          "type": "point",
+          "x": {
+            "expression": "42mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "26mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_dfdf2474",
+      "name": "10 · Cover bolt recesses · centers",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "base_thickness + housing_height",
+          "parameterRefs": {
+            "base_thickness": "orbit_parameter_base_thickness",
+            "housing_height": "orbit_parameter_housing_height"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 17
+    },
+    "sketch_e3db49df": {
+      "componentId": "component_e2eff4b4",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_ae05f890",
+          "pointIds": [
+            "point_bfe7c6f3"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_9d956c48",
+          "pointIds": [
+            "point_6c67c807"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_65b93f8f",
+          "pointIds": [
+            "point_efc55dc4"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_ba8ecd7f",
+          "pointIds": [
+            "point_7aa00ff8"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_352b8a1a",
+          "pointIds": [
+            "point_ffc0f996"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_14832d28",
+          "pointIds": [
+            "point_cb1004a6"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_61df785e",
+          "pointIds": [
+            "point_6c3d268f"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_57a78f78",
+          "pointIds": [
+            "point_8468d0c8"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_7d9ffc92",
+          "pointIds": [
+            "point_6968ce9a"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_f56e9838",
+          "pointIds": [
+            "point_f6519ef8"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_98ff14b0",
+          "pointIds": [
+            "point_01d10fc3"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_72af85b0",
+          "pointIds": [
+            "point_4fcdba97"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-06T20:04:33.534Z",
+      "dimensions": [],
+      "entities": {
+        "arc_3c5e29ca": {
+          "centerPointId": "point_01d10fc3",
+          "clockwise": false,
+          "endPointId": "point_6c3d268f",
+          "id": "arc_3c5e29ca",
+          "startPointId": "point_cb1004a6",
+          "type": "arc"
+        },
+        "arc_5c660e94": {
+          "centerPointId": "point_6968ce9a",
+          "clockwise": false,
+          "endPointId": "point_efc55dc4",
+          "id": "arc_5c660e94",
+          "startPointId": "point_6c67c807",
+          "type": "arc"
+        },
+        "arc_5fcbf3f0": {
+          "centerPointId": "point_f6519ef8",
+          "clockwise": false,
+          "endPointId": "point_ffc0f996",
+          "id": "arc_5fcbf3f0",
+          "startPointId": "point_7aa00ff8",
+          "type": "arc"
+        },
+        "arc_c15f9d94": {
+          "centerPointId": "point_4fcdba97",
+          "clockwise": false,
+          "endPointId": "point_bfe7c6f3",
+          "id": "arc_c15f9d94",
+          "startPointId": "point_8468d0c8",
+          "type": "arc"
+        },
+        "line_0e9c3d71": {
+          "endPointId": "point_8468d0c8",
+          "id": "line_0e9c3d71",
+          "startPointId": "point_6c3d268f",
+          "type": "line"
+        },
+        "line_a3bae4b8": {
+          "endPointId": "point_cb1004a6",
+          "id": "line_a3bae4b8",
+          "startPointId": "point_ffc0f996",
+          "type": "line"
+        },
+        "line_ae1c9d83": {
+          "endPointId": "point_6c67c807",
+          "id": "line_ae1c9d83",
+          "startPointId": "point_bfe7c6f3",
+          "type": "line"
+        },
+        "line_b7c1c99f": {
+          "endPointId": "point_7aa00ff8",
+          "id": "line_b7c1c99f",
+          "startPointId": "point_efc55dc4",
+          "type": "line"
+        },
+        "point_01d10fc3": {
+          "id": "point_01d10fc3",
+          "type": "point",
+          "x": {
+            "expression": "-17.25mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-31mm",
+            "unit": "mm"
+          }
+        },
+        "point_4fcdba97": {
+          "id": "point_4fcdba97",
+          "type": "point",
+          "x": {
+            "expression": "-17.25mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-35mm",
+            "unit": "mm"
+          }
+        },
+        "point_6968ce9a": {
+          "id": "point_6968ce9a",
+          "type": "point",
+          "x": {
+            "expression": "-16.75mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-35mm",
+            "unit": "mm"
+          }
+        },
+        "point_6c3d268f": {
+          "id": "point_6c3d268f",
+          "type": "point",
+          "x": {
+            "expression": "-18.25mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-31mm",
+            "unit": "mm"
+          }
+        },
+        "point_6c67c807": {
+          "id": "point_6c67c807",
+          "type": "point",
+          "x": {
+            "expression": "-16.75mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-36mm",
+            "unit": "mm"
+          }
+        },
+        "point_7aa00ff8": {
+          "id": "point_7aa00ff8",
+          "type": "point",
+          "x": {
+            "expression": "-15.75mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-31mm",
+            "unit": "mm"
+          }
+        },
+        "point_8468d0c8": {
+          "id": "point_8468d0c8",
+          "type": "point",
+          "x": {
+            "expression": "-18.25mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-35mm",
+            "unit": "mm"
+          }
+        },
+        "point_bfe7c6f3": {
+          "id": "point_bfe7c6f3",
+          "type": "point",
+          "x": {
+            "expression": "-17.25mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-36mm",
+            "unit": "mm"
+          }
+        },
+        "point_cb1004a6": {
+          "id": "point_cb1004a6",
+          "type": "point",
+          "x": {
+            "expression": "-17.25mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-30mm",
+            "unit": "mm"
+          }
+        },
+        "point_efc55dc4": {
+          "id": "point_efc55dc4",
+          "type": "point",
+          "x": {
+            "expression": "-15.75mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-35mm",
+            "unit": "mm"
+          }
+        },
+        "point_f6519ef8": {
+          "id": "point_f6519ef8",
+          "type": "point",
+          "x": {
+            "expression": "-16.75mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-31mm",
+            "unit": "mm"
+          }
+        },
+        "point_ffc0f996": {
+          "id": "point_ffc0f996",
+          "type": "point",
+          "x": {
+            "expression": "-16.75mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-30mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_e3db49df",
+      "name": "Rim relief 2",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "base_thickness + housing_height",
+          "parameterRefs": {
+            "base_thickness": "orbit_parameter_base_thickness",
+            "housing_height": "orbit_parameter_housing_height"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 25
+    },
+    "sketch_eb712112": {
+      "componentId": "component_e2eff4b4",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_011932e0",
+          "pointIds": [
+            "point_ce073a50"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_cb837055",
+          "pointIds": [
+            "point_e2bc150f"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_39dd91f0",
+          "pointIds": [
+            "point_0cbd5d7e"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_b547040f",
+          "pointIds": [
+            "point_a1741bdd"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_908c8396",
+          "pointIds": [
+            "point_c5eefa46"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_4c983027",
+          "pointIds": [
+            "point_3ea2c8ab"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_246dbd39",
+          "pointIds": [
+            "point_94a4375a"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_ed28fd47",
+          "pointIds": [
+            "point_c5c594ed"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_fff4cc6b",
+          "pointIds": [
+            "point_7f2b4e4d"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_af84019e",
+          "pointIds": [
+            "point_7562f92b"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_90f15eb8",
+          "pointIds": [
+            "point_950e9e41"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_87707d68",
+          "pointIds": [
+            "point_b683929a"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-06T20:04:33.513Z",
+      "dimensions": [],
+      "entities": {
+        "arc_1856b722": {
+          "centerPointId": "point_950e9e41",
+          "clockwise": false,
+          "endPointId": "point_94a4375a",
+          "id": "arc_1856b722",
+          "startPointId": "point_3ea2c8ab",
+          "type": "arc"
+        },
+        "arc_659140d7": {
+          "centerPointId": "point_7f2b4e4d",
+          "clockwise": false,
+          "endPointId": "point_0cbd5d7e",
+          "id": "arc_659140d7",
+          "startPointId": "point_e2bc150f",
+          "type": "arc"
+        },
+        "arc_74889f76": {
+          "centerPointId": "point_b683929a",
+          "clockwise": false,
+          "endPointId": "point_ce073a50",
+          "id": "arc_74889f76",
+          "startPointId": "point_c5c594ed",
+          "type": "arc"
+        },
+        "arc_8a4787ee": {
+          "centerPointId": "point_7562f92b",
+          "clockwise": false,
+          "endPointId": "point_c5eefa46",
+          "id": "arc_8a4787ee",
+          "startPointId": "point_a1741bdd",
+          "type": "arc"
+        },
+        "line_002e27ec": {
+          "endPointId": "point_e2bc150f",
+          "id": "line_002e27ec",
+          "startPointId": "point_ce073a50",
+          "type": "line"
+        },
+        "line_543212f5": {
+          "endPointId": "point_3ea2c8ab",
+          "id": "line_543212f5",
+          "startPointId": "point_c5eefa46",
+          "type": "line"
+        },
+        "line_6589be8e": {
+          "endPointId": "point_c5c594ed",
+          "id": "line_6589be8e",
+          "startPointId": "point_94a4375a",
+          "type": "line"
+        },
+        "line_7e616523": {
+          "endPointId": "point_a1741bdd",
+          "id": "line_7e616523",
+          "startPointId": "point_0cbd5d7e",
+          "type": "line"
+        },
+        "point_0cbd5d7e": {
+          "id": "point_0cbd5d7e",
+          "type": "point",
+          "x": {
+            "expression": "70mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-44mm",
+            "unit": "mm"
+          }
+        },
+        "point_3ea2c8ab": {
+          "id": "point_3ea2c8ab",
+          "type": "point",
+          "x": {
+            "expression": "-60mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "54mm",
+            "unit": "mm"
+          }
+        },
+        "point_7562f92b": {
+          "id": "point_7562f92b",
+          "type": "point",
+          "x": {
+            "expression": "60mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "44mm",
+            "unit": "mm"
+          }
+        },
+        "point_7f2b4e4d": {
+          "id": "point_7f2b4e4d",
+          "type": "point",
+          "x": {
+            "expression": "60mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-44mm",
+            "unit": "mm"
+          }
+        },
+        "point_94a4375a": {
+          "id": "point_94a4375a",
+          "type": "point",
+          "x": {
+            "expression": "-70mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "44mm",
+            "unit": "mm"
+          }
+        },
+        "point_950e9e41": {
+          "id": "point_950e9e41",
+          "type": "point",
+          "x": {
+            "expression": "-60mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "44mm",
+            "unit": "mm"
+          }
+        },
+        "point_a1741bdd": {
+          "id": "point_a1741bdd",
+          "type": "point",
+          "x": {
+            "expression": "70mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "44mm",
+            "unit": "mm"
+          }
+        },
+        "point_b683929a": {
+          "id": "point_b683929a",
+          "type": "point",
+          "x": {
+            "expression": "-60mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-44mm",
+            "unit": "mm"
+          }
+        },
+        "point_c5c594ed": {
+          "id": "point_c5c594ed",
+          "type": "point",
+          "x": {
+            "expression": "-70mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-44mm",
+            "unit": "mm"
+          }
+        },
+        "point_c5eefa46": {
+          "id": "point_c5eefa46",
+          "type": "point",
+          "x": {
+            "expression": "60mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "54mm",
+            "unit": "mm"
+          }
+        },
+        "point_ce073a50": {
+          "id": "point_ce073a50",
+          "type": "point",
+          "x": {
+            "expression": "-60mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-54mm",
+            "unit": "mm"
+          }
+        },
+        "point_e2bc150f": {
+          "id": "point_e2bc150f",
+          "type": "point",
+          "x": {
+            "expression": "60mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-54mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_eb712112",
+      "name": "Mounting flange · R10",
+      "plane": {
+        "plane": "XY",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 1
+    }
+  },
+  "timelineCursor": 30,
+  "units": "metric",
+  "unitSettings": {
+    "angle": "deg",
+    "length": "mm"
+  },
+  "updatedAt": "2026-10-06T20:04:33.539Z",
+  "viewState": {
+    "namedViews": [
+      {
+        "cameraPosition": [
+          140,
+          -170,
+          150
+        ],
+        "cameraTarget": [
+          0,
+          0,
+          0
+        ],
+        "cameraUp": [
+          0,
+          0,
+          1
+        ],
+        "id": "orbit_showcase_view",
+        "name": "Showcase isometric"
+      }
+    ]
+  }
+}
