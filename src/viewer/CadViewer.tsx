@@ -1,4 +1,6 @@
 import { DemandRenderer } from "./demandRenderer";
+import { fitCameraBounds } from "./cameraFit";
+import { ViewerToolbar } from "./ViewerToolbar";
 import { addSketchMarkers, inspectSketchMarkers, type SketchMarker } from "./sketchMarkers";
 import { ModelMeshes } from "./modelMeshes";
 import { installOperationDropPicking, type OperationDropPickingHandle } from "./operationDropPicking";
@@ -42,6 +44,7 @@ interface ViewerRuntime {
   modelMeshes: ModelMeshes;
   refreshQuality(): void;
   invalidate(): void;
+  fit(): void;
   sketchGroup: THREE.Group;
   measurementGroup: THREE.Group;
   operationPicking: OperationDropPickingHandle;
@@ -166,6 +169,7 @@ export function CadViewer() {
     scene.add(measurementGroup);
     const sharpPixelRatio = Math.min(window.devicePixelRatio, 2);
     let moving = false, interacting = false, lastInput = 0;
+    let keepFitted = false;
     let edgesVisible = true;
     const frames = new DemandRenderer(() => {
       if (!host.clientWidth || !host.clientHeight || renderer.getContext().isContextLost()) return false;
@@ -195,6 +199,7 @@ export function CadViewer() {
       invalidate();
     };
     const startMoving = () => {
+      keepFitted = false;
       interacting = true;
       moving = true;
       lastInput = performance.now();
@@ -215,6 +220,7 @@ export function CadViewer() {
     listenToControls();
     const applyPose = (pose: CameraPose, remember = true): boolean => {
       if (!validCameraPose(pose)) return false;
+      keepFitted = false;
       if (remember) cameraIntentRef.current = { session: useCadStore.getState().documentSession, preservePose: true };
       // OrbitControls caches its up-axis quaternion at construction. Recreate it
       // after up changes and discard residual damping from the previous view.
@@ -240,7 +246,12 @@ export function CadViewer() {
       return true;
     };
     const operationPicking = installOperationDropPicking(scene, renderer.domElement, camera, () => clippingRef.current, invalidate);
-    runtimeRef.current = { background, grid, camera, controls, applyPose, modelGroup, modelMeshes, refreshQuality, invalidate, sketchGroup, measurementGroup, operationPicking, sketchResources: createSketchOverlayResources() };
+    const fit = () => {
+      keepFitted = true;
+      fitMeshes(camera, controls, meshesRef.current);
+      invalidate();
+    };
+    runtimeRef.current = { background, grid, camera, controls, applyPose, modelGroup, modelMeshes, refreshQuality, invalidate, fit, sketchGroup, measurementGroup, operationPicking, sketchResources: createSketchOverlayResources() };
     const unregisterPng = registerPngCapture("viewer", (request) => {
       if (request.document !== renderedDocumentRef.current || request.result?.meshes !== renderedMeshesRef.current || request.session !== useCadStore.getState().documentSession)
         throw new Error("The drawing view is updating. Wait for the current model, then export PNG again.");
@@ -302,7 +313,7 @@ export function CadViewer() {
         const position = target.clone().addScaledVector(new THREE.Vector3(...direction).normalize(), distance);
         applyPose({ cameraPosition: position.toArray(), cameraTarget: target.toArray(), cameraUp: up });
         cameraIntentRef.current = { session: useCadStore.getState().documentSession, preservePose: false };
-        fitMeshes(camera, controls, meshesRef.current);
+        fit();
       },
     });
 
@@ -353,9 +364,9 @@ export function CadViewer() {
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
       renderer.setSize(width, height);
+      if (keepFitted) fitMeshes(camera, controls, meshesRef.current);
       invalidate();
     };
-    const fit = () => { fitMeshes(camera, controls, meshesRef.current); invalidate(); };
     const reset = () => applyPose(DEFAULT_CAMERA_POSE);
     const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(resize) : undefined;
     resizeObserver?.observe(host);
@@ -475,7 +486,7 @@ export function CadViewer() {
     if (meshesRef.current.length && lastAutoFitSessionRef.current !== session) {
       const intent = cameraIntentRef.current?.session === session ? cameraIntentRef.current : undefined;
       if (!intent) runtime.applyPose(DEFAULT_CAMERA_POSE, false);
-      if (!intent?.preservePose) fitMeshes(runtime.camera, runtime.controls, meshesRef.current);
+      if (!intent?.preservePose) runtime.fit();
       lastAutoFitSessionRef.current = session;
     }
     runtime.invalidate();
@@ -522,7 +533,7 @@ export function CadViewer() {
     if (runtime) { applySelection(runtime.modelGroup, selectedBodyId, highlightedBodyIdsRef.current); runtime.invalidate(); }
   }, [selectedBodyId, currentHighlight]);
 
-  return <div ref={hostRef} className="viewer-canvas"><SolidDimensionOverlay dimensions={dimensions} project={dimensionProjector.current} subscribeFrames={subscribeFrames.current} /></div>;
+  return <div ref={hostRef} className="viewer-canvas"><SolidDimensionOverlay dimensions={dimensions} project={dimensionProjector.current} subscribeFrames={subscribeFrames.current} /><ViewerToolbar hasGeometry={meshes.some((mesh) => !hidden.includes(mesh.bodyId))} /></div>;
 }
 
 function applyClipping(group: THREE.Group, plane: THREE.Plane | undefined) {
@@ -814,18 +825,7 @@ function applySelection(
 function fitMeshes(camera: THREE.PerspectiveCamera, controls: OrbitControls, meshes: RenderMesh[]) {
   const bounds = boundsFromMeshes(meshes);
   if (!bounds) return;
-  const center = new THREE.Vector3(
-    (bounds.min[0] + bounds.max[0]) / 2,
-    (bounds.min[1] + bounds.max[1]) / 2,
-    (bounds.min[2] + bounds.max[2]) / 2,
-  );
-  const size = Math.max(bounds.max[0] - bounds.min[0], bounds.max[1] - bounds.min[1], bounds.max[2] - bounds.min[2], 40);
-  const direction = camera.position.clone().sub(controls.target).normalize();
-  if (direction.lengthSq() === 0) direction.set(1, -1, 1).normalize();
-  controls.target.copy(center);
-  camera.position.copy(center).addScaledVector(direction, size * 2.4);
-  Object.assign(camera, cameraClipRange(size * 2.4, size));
-  camera.updateProjectionMatrix();
+  fitCameraBounds(camera, controls.target, new THREE.Box3(new THREE.Vector3(...bounds.min), new THREE.Vector3(...bounds.max)));
   controls.update();
 }
 

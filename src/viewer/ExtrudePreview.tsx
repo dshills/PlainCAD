@@ -1,6 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { fitCameraBounds } from "./cameraFit";
+import "./viewerControls.css";
 import {
   distanceAlongExtrusionAxis,
   draggedExtrusionDistance,
@@ -22,6 +24,8 @@ interface PreviewRuntime {
   controls: OrbitControls;
   render: () => void;
   fitted: boolean;
+  keepFitted: boolean;
+  fit: () => void;
   fitKey?: string;
 }
 function clearMeshes(group: THREE.Group) {
@@ -184,6 +188,17 @@ export function ExtrudePreview({
       );
     };
     controls.addEventListener("change", render);
+    controls.addEventListener("start", () => {
+      if (runtime.current) runtime.current.keepFitted = false;
+    });
+    const fit = () => {
+      if (!runtime.current || !group.children.length) return;
+      fitCameraBounds(camera, controls.target, new THREE.Box3().setFromObject(group));
+      runtime.current.keepFitted = true;
+      runtime.current.fitted = true;
+      controls.update();
+      render();
+    };
     const resize = () => {
       endDrag(true);
       const width = element.clientWidth,
@@ -192,6 +207,7 @@ export function ExtrudePreview({
       renderer.setSize(width, height);
       camera.aspect = width / Math.max(height, 1);
       camera.updateProjectionMatrix();
+      if (runtime.current?.fitted && runtime.current.keepFitted) fit();
       render();
     };
     runtime.current = {
@@ -202,6 +218,8 @@ export function ExtrudePreview({
       controls,
       render,
       fitted: false,
+      keepFitted: true,
+      fit,
     };
     const observer = new ResizeObserver(resize);
     observer.observe(element);
@@ -256,22 +274,12 @@ export function ExtrudePreview({
       meshes.length &&
       !drag.current &&
       (!state.fitted ||
-        !handleRef.current ||
-        state.fitKey !== handleRef.current.key)
+        (!handleRef.current && state.keepFitted) ||
+        (handleRef.current && state.fitKey !== handleRef.current.key))
     ) {
       state.fitKey = handleRef.current?.key;
       state.fitted = true;
-      const center = bounds.getCenter(new THREE.Vector3()),
-        size = Math.max(bounds.getSize(new THREE.Vector3()).length(), 1);
-      const direction = camera.position.clone().sub(controls.target);
-      if (direction.lengthSq() < 1e-12) direction.set(1, -1, 0.8);
-      direction.normalize();
-      camera.position.copy(center).addScaledVector(direction, size * 1.8);
-      camera.near = Math.max(size / 10000, 0.0001);
-      camera.far = size * 100;
-      camera.updateProjectionMatrix();
-      controls.target.copy(center);
-      controls.update();
+      state.fit();
     }
     render();
   }, [meshes, distanceHandle?.key]);
@@ -343,6 +351,8 @@ export function ExtrudePreview({
           role="img"
           aria-label={label}
         />
+        <button type="button" className="preview-fit" aria-label={`Fit ${label}`}
+          disabled={!meshes.length} onClick={() => runtime.current?.fit()}>Fit preview</button>
         {distanceHandle && projection ? (
           <>
             <svg

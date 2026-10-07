@@ -414,6 +414,14 @@ authored cap boundaries. Arbitrary transient BRep edge picks are unavailable.
   disabled commands, camera orientation, shortcut isolation and retained recovery.
   This is bounded keyboard coverage; screen-reader and contrast audits remain open.
 
+## Viewport fitting
+
+- Fit considers the narrower camera frustum dimension and complete body bounds.
+  Auto-fitted and explicitly fitted 3D/preview views refit on canvas resize. Manual
+  camera gestures and restored named poses keep their framing until explicit Fit.
+  Compact layouts retain a visible model Fit action; native previews have their
+  own Fit button and camera. Fitting changes no CAD geometry or history.
+
 ## Performance and resource reporting
 
 - A controlled native extrude/cut benchmark records five warmups and twenty current
