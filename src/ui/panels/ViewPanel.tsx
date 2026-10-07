@@ -1,3 +1,5 @@
+import { useShallow } from "zustand/react/shallow";
+import { useViewerState } from "../../state/viewerState";
 import { useState } from "react";
 import { useCadStore } from "../../state/useCadStore";
 import { useSectionState } from "../../state/sectionState";
@@ -16,6 +18,9 @@ export function ViewPanel() {
 function ViewSession({ session }: { session: number }) {
   const doc = useCadStore((s) => s.history.present),
     section = useSectionState();
+  const viewer = useViewerState(useShallow((view) => ({ session: view.session, showModelEdges: view.showModelEdges, optimizeWhileMoving: view.optimizeWhileMoving })));
+  const showEdges = viewer.session !== session || viewer.showModelEdges;
+  const optimize = viewer.session !== session || viewer.optimizeWhileMoving;
   const [name, setName] = useState(""),
     [error, setError] = useState("");
   const axis = section.session === session ? section.axis : undefined;
@@ -25,6 +30,9 @@ function ViewSession({ session }: { session: number }) {
   return (
     <section className="panel" aria-label="View controls">
       <h2>Views</h2>
+      <label><input type="checkbox" checked={showEdges} onChange={() => void runCommand("view.toggleModelEdges")} />Show model edges</label>
+      <label><input type="checkbox" checked={optimize} onChange={() => void runCommand("view.toggleMovingQuality")} />Optimize while moving</label>
+      <p className="muted">Movement uses lower resolution and hides edge lines. Full detail returns just after movement ends; PNG downloads always use full resolution.</p>
       <div className="view-presets">
         {STANDARD_VIEWS.map((view) => (
           <button key={view} onClick={() => void runCommand(`view.${view}`)}>

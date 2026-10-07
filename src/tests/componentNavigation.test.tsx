@@ -1,3 +1,4 @@
+import { ViewPanel } from "../ui/panels/ViewPanel";
 import { BodyPanel } from "../ui/panels/BodyPanel";
 import { rebuildDocument } from "../cad/features/rebuildGraph";
 import {
@@ -72,6 +73,23 @@ function project() {
   };
 }
 describe("component navigation", () => {
+  it("routes edge and movement preferences through shared commands without adding history or project data", () => {
+    const { document } = project();
+    render(<ViewPanel />);
+    expect(screen.getByLabelText("Show model edges")).toBeChecked();
+    expect(screen.getByLabelText("Optimize while moving")).toBeChecked();
+    fireEvent.click(screen.getByLabelText("Show model edges"));
+    fireEvent.click(screen.getByLabelText("Optimize while moving"));
+    expect(useViewerState.getState()).toMatchObject({ showModelEdges: false, optimizeWhileMoving: false });
+    act(() => runCommand("view.toggleModelEdges"));
+    expect(screen.getByLabelText("Show model edges")).toBeChecked();
+    expect(useCadStore.getState().history.present).toBe(document);
+    expect(useCadStore.getState().history.past).toEqual([]);
+    expect(serializeProject(document)).not.toMatch(/showModelEdges|optimizeWhileMoving/);
+    act(() => useCadStore.getState().setDocument(document));
+    expect(screen.getByLabelText("Optimize while moving")).toBeChecked();
+  });
+
   it("hides and isolates owned bodies without editing history or persistence, resets on replacement and ignores stale commands", () => {
     const { document, a, b, session, bodies } = project();
     runCommand("component.toggleVisibility", { componentId: a.id });

@@ -8,6 +8,10 @@ interface ViewerState {
   hiddenComponentIds: string[];
   hiddenSketchIds: string[];
   activeComponentTimeline: boolean;
+  showModelEdges: boolean;
+  optimizeWhileMoving: boolean;
+  toggleModelEdges(session: number): void;
+  toggleMovingQuality(session: number): void;
   openDocument(document: CadDocument, session: number): void;
   toggleBody(
     session: number,
@@ -38,6 +42,8 @@ const defaults = {
   hiddenComponentIds: [] as string[],
   hiddenSketchIds: [] as string[],
   activeComponentTimeline: false,
+  showModelEdges: true,
+  optimizeWhileMoving: true,
 };
 // Runtime view preferences never enter document history or project JSON.
 export const useViewerState = create<ViewerState>((set, get) => {
@@ -56,6 +62,14 @@ export const useViewerState = create<ViewerState>((set, get) => {
             ? [feature.sketchId] : [],
         ))],
       }),
+    toggleModelEdges: (session) => {
+      const view = current(session);
+      set({ ...view, session, showModelEdges: !view.showModelEdges });
+    },
+    toggleMovingQuality: (session) => {
+      const view = current(session);
+      set({ ...view, session, optimizeWhileMoving: !view.optimizeWhileMoving });
+    },
     toggleBody: (session, bodyId, availableIds) => {
       if (!availableIds.includes(bodyId)) return;
       const view = current(session),

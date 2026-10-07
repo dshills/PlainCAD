@@ -4,6 +4,10 @@ import type { OperationTargetSnapshot } from "./operationDropPicking";
 // geometry, camera, or store mutation is exposed to the browser tests here.
 export interface ViewerSnapshot {
   background: string;
+  performance?: {
+    pixelRatio: number; sharpPixelRatio: number; moving: boolean; showModelEdges: boolean;
+    drawCalls: number; triangles: number; bufferWidth: number; bufferHeight: number;
+  };
   operationTargets?: OperationTargetSnapshot[];
   resources: { geometries: number; textures: number; programs: number };
   cameraUp: number[];
@@ -12,7 +16,7 @@ export interface ViewerSnapshot {
   cameraTarget: number[];
   measurementLine: number[];
   gridNormal: number[];
-  meshes: Array<{ bodyId: string; visible: boolean; highlighted?: boolean; clippingEnabled: boolean; positions: number[]; indices: number[] }>;
+  meshes: Array<{ bodyId: string; geometryId?: string; visible: boolean; highlighted?: boolean; clippingEnabled: boolean; positions: number[]; indices: number[] }>;
   sketchPoints: Array<{ id: string; position: number[] }>;
   sketchCircles: Array<{ id: string; normal: number[] }>;
 }

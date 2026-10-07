@@ -296,6 +296,14 @@ modes require acknowledgement of applicable warnings. Expensive checks may be
 skipped outside union with a diagnostic. These checks cover supported meshes and
 numerical tolerances; changed or stale results cannot be downloaded.
 
+The 3D view defaults to **Optimize while moving**: orbit, pan and zoom use at most
+1× pixel density and hide model edge lines, then restore display detail about 100 ms after
+the last camera input, without waiting for the damping tail. Turn this off in **Views** to keep full detail during
+movement. **Show model edges** controls solid edge lines independently. These
+choices are temporary view settings and reset when a project opens. Unchanged
+bodies reuse viewer buffers and cached edge lines across rebuilds; changed or
+removed bodies replace/dispose their own resources.
+
 Use **File → Download project view PNG** for the current 3D camera, visible bodies,
 and section preview, without sketch overlays, selection highlights, or inspection
 lines. Sketches used by unsuppressed modeling features start hidden in 3D when a
@@ -308,7 +316,8 @@ section clipping. Open a sketch and choose **Download sketch PNG** in File or th
 sketch header to include its visible dimensions and constraint annotations.
 Images use the current theme, omit application controls and 3D dimension buttons,
 and are capped at 4096 pixels per side. Sketch drawings render at twice their
-display size; 3D captures use the viewer's display resolution. Project/part images
+display size; 3D captures always use the viewer's full display resolution, even
+during movement. Project/part images
 require a successful current native rebuild; sketch images require a valid solved
 drawing. Downloads do not change the project, camera, visibility, or Undo history.
 

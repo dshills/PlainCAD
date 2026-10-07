@@ -1,0 +1,93 @@
+{
+  "baselineCommit": "f71b53c",
+  "scenario": "100 scripted pointer movements; 1600x1000 default focused workspace; DPR 2; headless Chromium 153; Apple M4 Pro; development build",
+  "before": [
+    {
+      "file": "orbit-drive-housing",
+      "bodies": 1,
+      "triangles": 10076,
+      "allNative": true,
+      "active": {
+        "draws": 1216,
+        "width": 2080,
+        "height": 1636,
+        "frames": 302,
+        "p50": 33.29999999999927,
+        "p95": 33.400000000001455
+      },
+      "settled": {
+        "width": 2080,
+        "height": 1636
+      }
+    },
+    {
+      "file": "10-rotary-fixture",
+      "bodies": 40,
+      "triangles": 26704,
+      "allNative": true,
+      "active": {
+        "draws": 24928,
+        "width": 2080,
+        "height": 1636,
+        "frames": 302,
+        "p50": 33.399999999999636,
+        "p95": 50
+      },
+      "settled": {
+        "width": 2080,
+        "height": 1636
+      },
+      "edit": {
+        "uploads": 160,
+        "bytes": 1282032
+      }
+    }
+  ],
+  "after": [
+    {
+      "file": "orbit-drive-housing",
+      "bodies": 1,
+      "triangles": 10076,
+      "allNative": true,
+      "active": {
+        "draws": 624,
+        "width": 1040,
+        "height": 818,
+        "frames": 205,
+        "p50": 16.69999999999891,
+        "p95": 16.799999999999272
+      },
+      "settled": {
+        "width": 2080,
+        "height": 1636
+      }
+    },
+    {
+      "file": "10-rotary-fixture",
+      "bodies": 40,
+      "triangles": 26704,
+      "allNative": true,
+      "active": {
+        "draws": 10368,
+        "width": 1040,
+        "height": 818,
+        "frames": 242,
+        "p50": 16.69999999999891,
+        "p95": 16.799999999999272
+      },
+      "settled": {
+        "width": 2080,
+        "height": 1636
+      },
+      "edit": {
+        "uploads": 108,
+        "bytes": 799488
+      }
+    }
+  ],
+  "fixtureBufferReuse": {
+    "changedBodies": 27,
+    "reusedBodies": 13,
+    "totalBodies": 40
+  }
+}

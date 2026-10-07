@@ -1,3 +1,4 @@
+import { ModelMeshes } from "./modelMeshes";
 import { installOperationDropPicking, type OperationDropPickingHandle } from "./operationDropPicking";
 import { installSketchPlanePicking } from "./sketchPlanePicking";
 import type { RebuildResult } from "../cad/worker/workerProtocol";
@@ -36,6 +37,8 @@ interface ViewerRuntime {
   applyPose(pose: CameraPose, remember?: boolean): boolean;
   controls: OrbitControls;
   modelGroup: THREE.Group;
+  modelMeshes: ModelMeshes;
+  refreshQuality(): void;
   sketchGroup: THREE.Group;
   measurementGroup: THREE.Group;
   operationPicking: OperationDropPickingHandle;
@@ -54,6 +57,7 @@ interface SketchOverlayResources {
 }
 
 const EMPTY_MESHES: RenderMesh[] = [];
+const MOVEMENT_RESTORE_DELAY_MS = 100;
 
 export function CadViewer() {
   const theme = useThemeState((state) => state.theme);
@@ -144,23 +148,62 @@ export function CadViewer() {
     light.position.set(80, -80, 120);
     scene.add(light);
 
-    const modelGroup = new THREE.Group();
+    const modelMeshes = new ModelMeshes();
+    const modelGroup = modelMeshes.group;
     scene.add(modelGroup);
     const sketchGroup = new THREE.Group();
     sketchGroup.renderOrder = 1;
     scene.add(sketchGroup);
     const measurementGroup = new THREE.Group();
     scene.add(measurementGroup);
+    const sharpPixelRatio = Math.min(window.devicePixelRatio, 2);
+    let moving = false, interacting = false, lastInput = 0;
+    let edgesVisible = true;
+    const refreshQuality = (sharp = false) => {
+      const state = useCadStore.getState(), view = useViewerState.getState();
+      const current = view.session === state.documentSession;
+      const optimize = !current || view.optimizeWhileMoving;
+      const showEdges = !current || view.showModelEdges;
+      const reduced = moving && optimize && !sharp;
+      const ratio = reduced ? Math.min(sharpPixelRatio, 1) : sharpPixelRatio;
+      if (renderer.getPixelRatio() !== ratio) renderer.setPixelRatio(ratio);
+      edgesVisible = showEdges && !reduced;
+      if (modelMeshes.setEdgesVisible(edgesVisible)) {
+        applyClipping(modelGroup, clippingRef.current);
+        applySelection(modelGroup, selectedBodyIdRef.current, highlightedBodyIdsRef.current);
+      }
+    };
+    const startMoving = () => {
+      interacting = true;
+      moving = true;
+      lastInput = performance.now();
+      refreshQuality();
+    };
+    const endMoving = () => { interacting = false; lastInput = performance.now(); };
+    const listenToControls = () => {
+      controls.addEventListener("start", startMoving);
+      controls.addEventListener("end", endMoving);
+    };
+    const disposeControls = () => {
+      controls.removeEventListener("start", startMoving);
+      controls.removeEventListener("end", endMoving);
+      controls.dispose();
+    };
+    listenToControls();
     const applyPose = (pose: CameraPose, remember = true): boolean => {
       if (!validCameraPose(pose)) return false;
       if (remember) cameraIntentRef.current = { session: useCadStore.getState().documentSession, preservePose: true };
       // OrbitControls caches its up-axis quaternion at construction. Recreate it
       // after up changes and discard residual damping from the previous view.
-      controls.dispose();
+      disposeControls();
+      moving = false;
+      interacting = false;
       camera.up.fromArray(pose.cameraUp);
       camera.position.fromArray(pose.cameraPosition);
       controls = new OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
+      listenToControls();
+      refreshQuality();
       controls.target.fromArray(pose.cameraTarget);
       camera.position.fromArray(pose.cameraPosition);
       const distance = camera.position.distanceTo(controls.target);
@@ -173,7 +216,7 @@ export function CadViewer() {
       return true;
     };
     const operationPicking = installOperationDropPicking(scene, renderer.domElement, camera, () => clippingRef.current);
-    runtimeRef.current = { background, grid, camera, controls, applyPose, modelGroup, sketchGroup, measurementGroup, operationPicking, sketchResources: createSketchOverlayResources() };
+    runtimeRef.current = { background, grid, camera, controls, applyPose, modelGroup, modelMeshes, refreshQuality, sketchGroup, measurementGroup, operationPicking, sketchResources: createSketchOverlayResources() };
     const unregisterPng = registerPngCapture("viewer", (request) => {
       if (request.document !== renderedDocumentRef.current || request.result?.meshes !== renderedMeshesRef.current || request.session !== useCadStore.getState().documentSession)
         throw new Error("The drawing view is updating. Wait for the current model, then export PNG again.");
@@ -185,8 +228,12 @@ export function CadViewer() {
       if (request.bodyId && !selectedMesh) throw new Error("Selected body is no longer available. Select a rebuilt body again.");
       if (!request.bodyId && !modelGroup.children.some((object) => object.visible))
         throw new Error("All bodies are hidden. Show a body before exporting the project view.");
+      // Encode full-resolution pixels even if a camera gesture is still settling.
+      const previousRatio = renderer.getPixelRatio();
+      const previousEdges = edgesVisible;
       const visibility = [...new Set([...scene.children, ...modelGroup.children, sketchGroup, measurementGroup])].map((object) => ({ object, visible: object.visible }));
       try {
+        refreshQuality(true);
         // 3D images present the model, without editing or inspection overlays.
         sketchGroup.visible = false;
         measurementGroup.visible = false;
@@ -212,9 +259,12 @@ export function CadViewer() {
         renderer.render(scene, exportCamera);
         return copyCanvasPng(renderer.domElement);
       } finally {
+        if (renderer.getPixelRatio() !== previousRatio) renderer.setPixelRatio(previousRatio);
+        modelMeshes.setEdgesVisible(previousEdges);
+        edgesVisible = previousEdges;
         for (const saved of visibility) saved.object.visible = saved.visible;
         applySelection(modelGroup, selectedBodyIdRef.current, highlightedBodyIdsRef.current);
-        if (selectedMesh) applyClipping(modelGroup, clippingRef.current);
+        applyClipping(modelGroup, clippingRef.current);
         renderer.render(scene, camera);
       }
     });
@@ -233,6 +283,12 @@ export function CadViewer() {
     });
 
     const unregisterDiagnostics = import.meta.env.DEV ? registerViewerDiagnostics(() => ({
+      performance: {
+        pixelRatio: renderer.getPixelRatio(), sharpPixelRatio, moving,
+        showModelEdges: edgesVisible,
+        drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles,
+        bufferWidth: renderer.domElement.width, bufferHeight: renderer.domElement.height,
+      },
       resources: { geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, programs: renderer.info.programs?.length ?? 0 },
       cameraUp: camera.up.toArray(),
       operationTargets: operationPicking.inspect(),
@@ -249,7 +305,7 @@ export function CadViewer() {
           object.localToWorld(point.fromBufferAttribute(attribute, index));
           point.toArray(positions, index * 3);
         }
-        return { bodyId: object.userData.bodyId as string, visible: object.visible, highlighted: object.userData.highlighted === true, clippingEnabled: object.material instanceof THREE.MeshStandardMaterial && Boolean(object.material.clippingPlanes?.length), positions, indices: Array.from(object.geometry.index?.array ?? []) };
+        return { bodyId: object.userData.bodyId as string, geometryId: object.geometry.uuid, visible: object.visible, highlighted: object.userData.highlighted === true, clippingEnabled: object.material instanceof THREE.MeshStandardMaterial && Boolean(object.material.clippingPlanes?.length), positions, indices: Array.from(object.geometry.index?.array ?? []) };
       }),
       measurementLine: measurementGroup.children[0] instanceof THREE.Line ? Array.from(measurementGroup.children[0].geometry.getAttribute("position").array) : [],
       sketchPoints: sketchGroup.children.filter((object) => object instanceof THREE.Mesh && typeof object.userData.sketchEntityId === "string").map((object) => ({
@@ -286,6 +342,10 @@ export function CadViewer() {
     const animate = () => {
       if (host.clientWidth && host.clientHeight) {
         controls.update();
+        if (moving && !interacting && performance.now() - lastInput >= MOVEMENT_RESTORE_DELAY_MS) {
+          moving = false;
+          refreshQuality();
+        }
         renderer.render(scene, camera);
       }
       raf = requestAnimationFrame(animate);
@@ -319,10 +379,11 @@ export function CadViewer() {
       window.removeEventListener("plaincad:fit-view", fit);
       window.removeEventListener("plaincad:reset-camera", reset);
       renderer.domElement.removeEventListener("click", click);
+      modelMeshes.dispose();
+      scene.remove(modelGroup);
       disposeObject3D(scene);
-      disposeObject3D(modelGroup);
       disposeSketchOverlayResources(runtimeRef.current?.sketchResources);
-      controls.dispose();
+      disposeControls();
       renderer.dispose();
       host.removeChild(renderer.domElement);
       runtimeRef.current = undefined;
@@ -357,11 +418,17 @@ export function CadViewer() {
   useEffect(() => {
     const runtime = runtimeRef.current;
     if (!runtime) return;
-    updateMeshes(runtime.modelGroup, meshes);
+    runtime.modelMeshes.update(meshes);
+    // Prepare requested edges with the rebuild, so ending a gesture only toggles cached lines.
+    const state = useCadStore.getState(), preferences = useViewerState.getState();
+    runtime.modelMeshes.setEdgesVisible(preferences.session !== state.documentSession || preferences.showModelEdges);
+    runtime.refreshQuality();
     renderedMeshesRef.current = meshes;
     applyClipping(runtime.modelGroup, clippingRef.current);
     applySelection(runtime.modelGroup, selectedBodyIdRef.current, highlightedBodyIdsRef.current);
   }, [meshes]);
+
+  useEffect(() => { runtimeRef.current?.refreshQuality(); }, [view.showModelEdges, view.optimizeWhileMoving, view.session, session]);
 
   useEffect(() => {
     const runtime = runtimeRef.current;
@@ -481,29 +548,6 @@ function disposeObject3D(object: THREE.Object3D) {
       disposedMaterials.add(material);
     }
   });
-}
-
-function updateMeshes(modelGroup: THREE.Group, renderMeshes: RenderMesh[]) {
-  disposeObject3D(modelGroup);
-  modelGroup.clear();
-  for (const mesh of renderMeshes) {
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute("position", new THREE.Float32BufferAttribute(mesh.positions, 3));
-    geometry.setAttribute("normal", new THREE.Float32BufferAttribute(mesh.normals, 3));
-    geometry.setIndex(mesh.indices);
-    const baseColor = mesh.color ?? "#8fb7b4";
-    const material = new THREE.MeshStandardMaterial({ color: baseColor, roughness: 0.55, metalness: 0.05, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 });
-    const object = new THREE.Mesh(geometry, material);
-    object.userData.bodyId = mesh.bodyId;
-    object.userData.baseColor = baseColor;
-    object.userData.edgeColor = "#31413c";
-    const edgeMaterial = new THREE.LineBasicMaterial({ color: "#31413c" });
-    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), edgeMaterial);
-    edges.userData.edgeOwner = true;
-    edges.userData.edgeColor = "#31413c";
-    object.add(edges);
-    modelGroup.add(object);
-  }
 }
 
 function createSketchOverlayResources(): SketchOverlayResources {

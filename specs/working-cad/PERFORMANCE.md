@@ -90,3 +90,46 @@ remain unavailable in production and are explicitly marked unavailable; resource
 growth assertions remain in the development benchmark. Neither report imposes
 hard shared-CI latency thresholds. This proves the bounded workload on the built
 app; longer sessions, complex parts and other browsers remain open.
+
+
+## Viewer interaction and buffer reuse
+
+`e2e/viewer-performance.spec.ts` loads the real ORBIT housing and 40-body rotary
+fixture. At DPR 2 it verifies reduced resolution and fewer draw calls during an
+actual pointer orbit, restored sharp detail about 100ms after input ends (independent of damping), full-resolution PNG
+export during an active gesture, independent edge/optimization controls, and
+same-ID reopen reset. It checks that an edited native body replaces its buffers
+while unchanged bodies retain their geometry identities; Undo and reopen must
+restore the original native meshes. The platter-thickness edit changes 27 bodies
+and reuses 13. These tests write `viewer-performance.json` and `buffer-reuse.json`.
+
+For a repeatable timing/upload comparison, start a **fresh** development server,
+then run `node scripts/benchmark-viewer.mjs`. Override its origin with
+`PLAINCAD_BENCHMARK_URL=http://127.0.0.1:5296` if needed. Restart Vite after source
+changes to avoid duplicate store modules from hot reload. Run comparisons without
+other browser acceptance tests concurrently. Output defaults to ignored
+`test-results/viewer-interaction.json`; an optional first argument changes it.
+The script uses a 1600×1000 focused workspace, DPR 2, 100 scripted orbit pointer
+moves with 10ms waits, rAF interval samples, and intercepted WebGL draw/buffer
+upload counts. It waits for current native geometry before recording results.
+
+A local headless Chromium 153/M4 Pro comparison on 2026-10-07, against commit
+`f71b53c`, recorded the following. Raw evidence is in
+[viewer-interaction.json](performance-evidence/viewer-interaction.json).
+
+| Measurement | Before | After |
+| --- | ---: | ---: |
+| ORBIT movement rAF interval p95 | 33.4 ms | 16.8 ms |
+| 40-body fixture movement rAF interval p95 | 50.0 ms | 16.8 ms |
+| Movement drawing buffer, both models | 2080×1636 | 1040×818 |
+| Fixture edit GPU buffer uploads | 160 | 108 |
+| Fixture edit uploaded bytes | 1,282,032 | 799,488 |
+
+The movement buffer has 75% fewer pixels; the fixture edit has 32.5% fewer uploads.
+Both models restore their 2080×1636 buffer after movement. Native triangle counts
+remain 10,076 and 26,704 respectively. rAF samples include automation/browser
+scheduling and are not direct GPU execution timings or guaranteed interactive
+FPS. Draw totals span different numbers of observed frames and should not be
+compared as equal-duration rates. This comparison is one local run, not a broad
+hardware benchmark. Rendering still runs continuously while idle; on-demand
+rendering and sketch-marker batching remain future optimizations.
