@@ -1,0 +1,4210 @@
+{
+  "components": {
+    "component_052f2f02": {
+      "id": "component_052f2f02",
+      "name": "Pivot pin 2"
+    },
+    "component_0910acfa": {
+      "id": "component_0910acfa",
+      "name": "Gripper palm"
+    },
+    "component_33d02091": {
+      "id": "component_33d02091",
+      "name": "Pivot pin 1"
+    },
+    "component_3ab40018": {
+      "id": "component_3ab40018",
+      "name": "Palm fastener 2"
+    },
+    "component_4d23f9c2": {
+      "id": "component_4d23f9c2",
+      "name": "Palm fastener 4"
+    },
+    "component_560e0ac5": {
+      "id": "component_560e0ac5",
+      "name": "Project reference"
+    },
+    "component_58711392": {
+      "id": "component_58711392",
+      "name": "Contact pad 2"
+    },
+    "component_7cd8dcdc": {
+      "id": "component_7cd8dcdc",
+      "name": "Palm fastener 3"
+    },
+    "component_8d3483db": {
+      "id": "component_8d3483db",
+      "name": "Jaw 1"
+    },
+    "component_dc42b934": {
+      "id": "component_dc42b934",
+      "name": "Contact pad 1"
+    },
+    "component_f53ba09f": {
+      "id": "component_f53ba09f",
+      "name": "Jaw 2"
+    },
+    "component_f57acf02": {
+      "id": "component_f57acf02",
+      "name": "Palm fastener 1"
+    }
+  },
+  "createdAt": "2026-10-07T09:40:53.565Z",
+  "displayUnits": {
+    "angle": "deg",
+    "length": "mm"
+  },
+  "features": [
+    {
+      "componentId": "component_0910acfa",
+      "createdAt": "2026-10-07T09:40:53.567Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "12mm",
+        "unit": "mm"
+      },
+      "id": "feature_03c84e76",
+      "name": "Palm blank",
+      "operation": "newBody",
+      "profileId": "sketch_c8d87ac0:profile:prlvs2y",
+      "sketchId": "sketch_c8d87ac0",
+      "timelineStep": 2,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_0910acfa",
+      "createdAt": "2026-10-07T09:40:53.569Z",
+      "direction": "negative",
+      "distance": {
+        "expression": "8mm",
+        "unit": "mm"
+      },
+      "id": "feature_b7b38b9e",
+      "name": "Actuator pocket",
+      "operation": "cut",
+      "profileId": "sketch_4d75e0e2:profile:p1kt71nu",
+      "sketchId": "sketch_4d75e0e2",
+      "targetBodyIds": [
+        "body:feature_03c84e76"
+      ],
+      "timelineStep": 4,
+      "type": "extrude"
+    },
+    {
+      "centerPointIds": [
+        "point_033946ac",
+        "point_d74ab09d"
+      ],
+      "componentId": "component_0910acfa",
+      "createdAt": "2026-10-07T09:40:53.569Z",
+      "depth": "throughAll",
+      "diameter": {
+        "expression": "6.8mm",
+        "unit": "mm"
+      },
+      "direction": "positive",
+      "id": "07-robot-gripper_hole_2",
+      "name": "Pivot bores",
+      "sketchId": "sketch_16b22be4",
+      "targetBodyIds": [
+        "body:feature_03c84e76"
+      ],
+      "timelineStep": 6,
+      "type": "hole"
+    },
+    {
+      "centerPointIds": [
+        "point_e912e916",
+        "point_4bc819e8",
+        "point_78834083",
+        "point_8481d8ef"
+      ],
+      "componentId": "component_0910acfa",
+      "createdAt": "2026-10-07T09:40:53.569Z",
+      "depth": "throughAll",
+      "diameter": {
+        "expression": "4.4mm",
+        "unit": "mm"
+      },
+      "direction": "positive",
+      "id": "07-robot-gripper_hole_3",
+      "name": "Palm fastening holes",
+      "sketchId": "sketch_24812e92",
+      "targetBodyIds": [
+        "body:feature_03c84e76"
+      ],
+      "timelineStep": 8,
+      "type": "hole"
+    },
+    {
+      "componentId": "component_8d3483db",
+      "createdAt": "2026-10-07T09:40:53.571Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "10mm",
+        "unit": "mm"
+      },
+      "id": "feature_979e4155",
+      "name": "Jaw blank",
+      "operation": "newBody",
+      "profileId": "sketch_7a17c37e:profile:pzdclou",
+      "sketchId": "sketch_7a17c37e",
+      "timelineStep": 10,
+      "type": "extrude"
+    },
+    {
+      "centerPointIds": [
+        "point_7f00715e"
+      ],
+      "componentId": "component_8d3483db",
+      "createdAt": "2026-10-07T09:40:53.571Z",
+      "depth": "throughAll",
+      "diameter": {
+        "expression": "6.8mm",
+        "unit": "mm"
+      },
+      "direction": "positive",
+      "id": "07-robot-gripper_hole_5",
+      "name": "Pivot clearance",
+      "sketchId": "sketch_4c2cc779",
+      "targetBodyIds": [
+        "body:feature_979e4155"
+      ],
+      "timelineStep": 12,
+      "type": "hole"
+    },
+    {
+      "componentId": "component_8d3483db",
+      "createdAt": "2026-10-07T09:40:53.572Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "10mm",
+        "unit": "mm"
+      },
+      "id": "feature_2231dac7",
+      "name": "Jaw adjustment slot",
+      "operation": "cut",
+      "profileId": "sketch_4ddbdb00:profile:p3zt25f",
+      "sketchId": "sketch_4ddbdb00",
+      "targetBodyIds": [
+        "body:feature_979e4155"
+      ],
+      "termination": {
+        "type": "throughAll"
+      },
+      "timelineStep": 14,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_f53ba09f",
+      "createdAt": "2026-10-07T09:40:53.574Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "10mm",
+        "unit": "mm"
+      },
+      "id": "feature_3e528dba",
+      "name": "Jaw blank",
+      "operation": "newBody",
+      "profileId": "sketch_be2547a3:profile:pwfnm27",
+      "sketchId": "sketch_be2547a3",
+      "timelineStep": 16,
+      "type": "extrude"
+    },
+    {
+      "centerPointIds": [
+        "point_40de6a12"
+      ],
+      "componentId": "component_f53ba09f",
+      "createdAt": "2026-10-07T09:40:53.574Z",
+      "depth": "throughAll",
+      "diameter": {
+        "expression": "6.8mm",
+        "unit": "mm"
+      },
+      "direction": "positive",
+      "id": "07-robot-gripper_hole_8",
+      "name": "Pivot clearance",
+      "sketchId": "sketch_a92ca3d0",
+      "targetBodyIds": [
+        "body:feature_3e528dba"
+      ],
+      "timelineStep": 18,
+      "type": "hole"
+    },
+    {
+      "componentId": "component_f53ba09f",
+      "createdAt": "2026-10-07T09:40:53.576Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "10mm",
+        "unit": "mm"
+      },
+      "id": "feature_db060136",
+      "name": "Jaw adjustment slot",
+      "operation": "cut",
+      "profileId": "sketch_e8e531a9:profile:p19k1gsc",
+      "sketchId": "sketch_e8e531a9",
+      "targetBodyIds": [
+        "body:feature_3e528dba"
+      ],
+      "termination": {
+        "type": "throughAll"
+      },
+      "timelineStep": 20,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_33d02091",
+      "createdAt": "2026-10-07T09:40:53.576Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "34mm",
+        "unit": "mm"
+      },
+      "id": "feature_214a51b0",
+      "name": "Pin",
+      "operation": "newBody",
+      "profileId": "sketch_a5383030:profile:p1bp5ea4",
+      "sketchId": "sketch_a5383030",
+      "timelineStep": 22,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_dc42b934",
+      "createdAt": "2026-10-07T09:40:53.577Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "6mm",
+        "unit": "mm"
+      },
+      "id": "feature_9cb46061",
+      "name": "Grip pad",
+      "operation": "newBody",
+      "profileId": "sketch_bbd51071:profile:pjz4n2y",
+      "sketchId": "sketch_bbd51071",
+      "timelineStep": 24,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_052f2f02",
+      "createdAt": "2026-10-07T09:40:53.577Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "34mm",
+        "unit": "mm"
+      },
+      "id": "feature_1712245d",
+      "name": "Pin",
+      "operation": "newBody",
+      "profileId": "sketch_193f625e:profile:pd5k5x7",
+      "sketchId": "sketch_193f625e",
+      "timelineStep": 26,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_58711392",
+      "createdAt": "2026-10-07T09:40:53.579Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "6mm",
+        "unit": "mm"
+      },
+      "id": "feature_8a1024da",
+      "name": "Grip pad",
+      "operation": "newBody",
+      "profileId": "sketch_adba167f:profile:p13e5xvx",
+      "sketchId": "sketch_adba167f",
+      "timelineStep": 28,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_f57acf02",
+      "createdAt": "2026-10-07T09:40:53.579Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "palm_fastener_length + 1mm",
+        "parameterRefs": {
+          "palm_fastener_length": "07-robot-gripper_parameter_palm_fastener_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_089260a7",
+      "name": "Fastener shank",
+      "operation": "newBody",
+      "profileId": "sketch_dcd1b93e:profile:p5kvkld",
+      "sketchId": "sketch_dcd1b93e",
+      "timelineStep": 30,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_f57acf02",
+      "createdAt": "2026-10-07T09:40:53.579Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "4mm",
+        "unit": "mm"
+      },
+      "id": "feature_cc8e556f",
+      "name": "Fastener head",
+      "operation": "join",
+      "profileId": "sketch_f848e7f9:profile:pf3nsks",
+      "sketchId": "sketch_f848e7f9",
+      "targetBodyIds": [
+        "body:feature_089260a7"
+      ],
+      "timelineStep": 32,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_3ab40018",
+      "createdAt": "2026-10-07T09:40:53.579Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "palm_fastener_length + 1mm",
+        "parameterRefs": {
+          "palm_fastener_length": "07-robot-gripper_parameter_palm_fastener_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_e6bd7375",
+      "name": "Fastener shank",
+      "operation": "newBody",
+      "profileId": "sketch_72ba4776:profile:p339cth",
+      "sketchId": "sketch_72ba4776",
+      "timelineStep": 34,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_3ab40018",
+      "createdAt": "2026-10-07T09:40:53.579Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "4mm",
+        "unit": "mm"
+      },
+      "id": "feature_32341310",
+      "name": "Fastener head",
+      "operation": "join",
+      "profileId": "sketch_8983326f:profile:pn671gm",
+      "sketchId": "sketch_8983326f",
+      "targetBodyIds": [
+        "body:feature_e6bd7375"
+      ],
+      "timelineStep": 36,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_7cd8dcdc",
+      "createdAt": "2026-10-07T09:40:53.579Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "palm_fastener_length + 1mm",
+        "parameterRefs": {
+          "palm_fastener_length": "07-robot-gripper_parameter_palm_fastener_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_6b15198e",
+      "name": "Fastener shank",
+      "operation": "newBody",
+      "profileId": "sketch_04882321:profile:p3ckzgs",
+      "sketchId": "sketch_04882321",
+      "timelineStep": 38,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_7cd8dcdc",
+      "createdAt": "2026-10-07T09:40:53.579Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "4mm",
+        "unit": "mm"
+      },
+      "id": "feature_87b1a01a",
+      "name": "Fastener head",
+      "operation": "join",
+      "profileId": "sketch_5dfd693c:profile:p1u6kd2s",
+      "sketchId": "sketch_5dfd693c",
+      "targetBodyIds": [
+        "body:feature_6b15198e"
+      ],
+      "timelineStep": 40,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_4d23f9c2",
+      "createdAt": "2026-10-07T09:40:53.579Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "palm_fastener_length + 1mm",
+        "parameterRefs": {
+          "palm_fastener_length": "07-robot-gripper_parameter_palm_fastener_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_540a487e",
+      "name": "Fastener shank",
+      "operation": "newBody",
+      "profileId": "sketch_678e4012:profile:pisn89l",
+      "sketchId": "sketch_678e4012",
+      "timelineStep": 42,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_4d23f9c2",
+      "createdAt": "2026-10-07T09:40:53.579Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "4mm",
+        "unit": "mm"
+      },
+      "id": "feature_d6ec54a0",
+      "name": "Fastener head",
+      "operation": "join",
+      "profileId": "sketch_9a8f9ead:profile:p1lc0r67",
+      "sketchId": "sketch_9a8f9ead",
+      "targetBodyIds": [
+        "body:feature_540a487e"
+      ],
+      "timelineStep": 44,
+      "type": "extrude"
+    }
+  ],
+  "id": "doc_a9179602",
+  "metadata": {
+    "example": {
+      "difficulty": "Advanced",
+      "edited": 60,
+      "order": 7,
+      "original": 56,
+      "parts": [
+        {
+          "bodyId": "body:feature_03c84e76",
+          "componentId": "component_0910acfa",
+          "name": "Gripper palm"
+        },
+        {
+          "bodyId": "body:feature_979e4155",
+          "componentId": "component_8d3483db",
+          "name": "Jaw 1"
+        },
+        {
+          "bodyId": "body:feature_3e528dba",
+          "componentId": "component_f53ba09f",
+          "name": "Jaw 2"
+        },
+        {
+          "bodyId": "body:feature_214a51b0",
+          "componentId": "component_33d02091",
+          "name": "Pivot pin 1"
+        },
+        {
+          "bodyId": "body:feature_9cb46061",
+          "componentId": "component_dc42b934",
+          "name": "Contact pad 1"
+        },
+        {
+          "bodyId": "body:feature_1712245d",
+          "componentId": "component_052f2f02",
+          "name": "Pivot pin 2"
+        },
+        {
+          "bodyId": "body:feature_8a1024da",
+          "componentId": "component_58711392",
+          "name": "Contact pad 2"
+        },
+        {
+          "bodyId": "body:feature_089260a7",
+          "componentId": "component_f57acf02",
+          "name": "Palm fastener 1"
+        },
+        {
+          "bodyId": "body:feature_e6bd7375",
+          "componentId": "component_3ab40018",
+          "name": "Palm fastener 2"
+        },
+        {
+          "bodyId": "body:feature_6b15198e",
+          "componentId": "component_7cd8dcdc",
+          "name": "Palm fastener 3"
+        },
+        {
+          "bodyId": "body:feature_540a487e",
+          "componentId": "component_4d23f9c2",
+          "name": "Palm fastener 4"
+        }
+      ],
+      "primaryParameter": "jaw_span",
+      "scope": "Static components authored in shared coordinates; no joints or assembly transforms.",
+      "slug": "07-robot-gripper",
+      "summary": "Eleven static parts: pocketed palm, slotted jaws, pins, contact pads and four fasteners."
+    }
+  },
+  "name": "Parallel robot gripper concept",
+  "parameters": {
+    "jaw_span": {
+      "description": "Primary demonstration parameter; change this to inspect the rebuild.",
+      "expression": "56mm",
+      "group": "Design dimensions",
+      "id": "07-robot-gripper_parameter_jaw_span",
+      "name": "jaw_span",
+      "unit": "mm",
+      "value": 56
+    },
+    "palm_fastener_length": {
+      "description": "Shared fastener shank length; head remains seated at the mating face.",
+      "expression": "10mm",
+      "group": "Design dimensions",
+      "id": "07-robot-gripper_parameter_palm_fastener_length",
+      "name": "palm_fastener_length",
+      "unit": "mm",
+      "value": 10
+    }
+  },
+  "rootComponentId": "component_560e0ac5",
+  "schemaVersion": 13,
+  "sketches": {
+    "sketch_04882321": {
+      "componentId": "component_7cd8dcdc",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_be3b7961",
+          "pointIds": [
+            "point_b3bd525f"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.579Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_2c68f283"
+          ],
+          "expression": {
+            "expression": "2mm",
+            "unit": "mm"
+          },
+          "id": "circle_2c68f283_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_2c68f283": {
+          "centerPointId": "point_b3bd525f",
+          "id": "circle_2c68f283",
+          "radius": {
+            "expression": "2mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_b3bd525f": {
+          "id": "point_b3bd525f",
+          "type": "point",
+          "x": {
+            "expression": "15mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "16mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_04882321",
+      "name": "Fastener shank section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "(12mm) - (palm_fastener_length)",
+          "parameterRefs": {
+            "palm_fastener_length": "07-robot-gripper_parameter_palm_fastener_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 37
+    },
+    "sketch_16b22be4": {
+      "componentId": "component_0910acfa",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_cee6e181",
+          "pointIds": [
+            "point_033946ac"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_50213b66",
+          "pointIds": [
+            "point_d74ab09d"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.569Z",
+      "dimensions": [],
+      "entities": {
+        "point_033946ac": {
+          "id": "point_033946ac",
+          "type": "point",
+          "x": {
+            "expression": "-jaw_span / 2",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-7mm",
+            "unit": "mm"
+          }
+        },
+        "point_d74ab09d": {
+          "id": "point_d74ab09d",
+          "type": "point",
+          "x": {
+            "expression": "jaw_span / 2",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-7mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_16b22be4",
+      "name": "Pivot bores centers",
+      "plane": {
+        "plane": "XY",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 5
+    },
+    "sketch_193f625e": {
+      "componentId": "component_052f2f02",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_cdb0eefe",
+          "pointIds": [
+            "point_d7c43481"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.577Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_2ba36e1a"
+          ],
+          "expression": {
+            "expression": "3mm",
+            "unit": "mm"
+          },
+          "id": "circle_2ba36e1a_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_2ba36e1a": {
+          "centerPointId": "point_d7c43481",
+          "id": "circle_2ba36e1a",
+          "radius": {
+            "expression": "3mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_d7c43481": {
+          "id": "point_d7c43481",
+          "type": "point",
+          "x": {
+            "expression": "jaw_span / 2",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-7mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_193f625e",
+      "name": "Pin section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "-5mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 25
+    },
+    "sketch_24812e92": {
+      "componentId": "component_0910acfa",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_9211d730",
+          "pointIds": [
+            "point_e912e916"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_415bea85",
+          "pointIds": [
+            "point_4bc819e8"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_e8711eb4",
+          "pointIds": [
+            "point_78834083"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_c1ec6352",
+          "pointIds": [
+            "point_8481d8ef"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.569Z",
+      "dimensions": [],
+      "entities": {
+        "point_4bc819e8": {
+          "id": "point_4bc819e8",
+          "type": "point",
+          "x": {
+            "expression": "15mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-16mm",
+            "unit": "mm"
+          }
+        },
+        "point_78834083": {
+          "id": "point_78834083",
+          "type": "point",
+          "x": {
+            "expression": "15mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "16mm",
+            "unit": "mm"
+          }
+        },
+        "point_8481d8ef": {
+          "id": "point_8481d8ef",
+          "type": "point",
+          "x": {
+            "expression": "-15mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "16mm",
+            "unit": "mm"
+          }
+        },
+        "point_e912e916": {
+          "id": "point_e912e916",
+          "type": "point",
+          "x": {
+            "expression": "-15mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-16mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_24812e92",
+      "name": "Palm fastening holes centers",
+      "plane": {
+        "plane": "XY",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 7
+    },
+    "sketch_4c2cc779": {
+      "componentId": "component_8d3483db",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_bf7526e6",
+          "pointIds": [
+            "point_7f00715e"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.571Z",
+      "dimensions": [],
+      "entities": {
+        "point_7f00715e": {
+          "id": "point_7f00715e",
+          "type": "point",
+          "x": {
+            "expression": "-jaw_span / 2",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-7mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_4c2cc779",
+      "name": "Pivot clearance centers",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "12mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 11
+    },
+    "sketch_4d75e0e2": {
+      "componentId": "component_0910acfa",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_ac10f59c",
+          "pointIds": [
+            "point_94b37239"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_662e8a8b",
+          "pointIds": [
+            "point_1b14ea8b"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_75194fd4",
+          "pointIds": [
+            "point_8ad463c6"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_89c270f5",
+          "pointIds": [
+            "point_5b2248f2"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_e6f82ce1",
+          "pointIds": [
+            "point_031e03cd"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_2cf361ec",
+          "pointIds": [
+            "point_636b3527"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_6bc925b3",
+          "pointIds": [
+            "point_5bb1ed1c"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_53253b16",
+          "pointIds": [
+            "point_8cf95629"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_5e413cdf",
+          "pointIds": [
+            "point_14d40c3f"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_6274076d",
+          "pointIds": [
+            "point_39a7918a"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_4c4226bf",
+          "pointIds": [
+            "point_9be0a7f3"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_fb4dfb06",
+          "pointIds": [
+            "point_aac225e4"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.567Z",
+      "dimensions": [],
+      "entities": {
+        "arc_58e91b62": {
+          "centerPointId": "point_aac225e4",
+          "clockwise": false,
+          "endPointId": "point_94b37239",
+          "id": "arc_58e91b62",
+          "startPointId": "point_8cf95629",
+          "type": "arc"
+        },
+        "arc_9125f0e3": {
+          "centerPointId": "point_9be0a7f3",
+          "clockwise": false,
+          "endPointId": "point_5bb1ed1c",
+          "id": "arc_9125f0e3",
+          "startPointId": "point_636b3527",
+          "type": "arc"
+        },
+        "arc_da063436": {
+          "centerPointId": "point_14d40c3f",
+          "clockwise": false,
+          "endPointId": "point_8ad463c6",
+          "id": "arc_da063436",
+          "startPointId": "point_1b14ea8b",
+          "type": "arc"
+        },
+        "arc_f01594c0": {
+          "centerPointId": "point_39a7918a",
+          "clockwise": false,
+          "endPointId": "point_031e03cd",
+          "id": "arc_f01594c0",
+          "startPointId": "point_5b2248f2",
+          "type": "arc"
+        },
+        "line_79907fd6": {
+          "endPointId": "point_636b3527",
+          "id": "line_79907fd6",
+          "startPointId": "point_031e03cd",
+          "type": "line"
+        },
+        "line_87684897": {
+          "endPointId": "point_5b2248f2",
+          "id": "line_87684897",
+          "startPointId": "point_8ad463c6",
+          "type": "line"
+        },
+        "line_d97dba75": {
+          "endPointId": "point_1b14ea8b",
+          "id": "line_d97dba75",
+          "startPointId": "point_94b37239",
+          "type": "line"
+        },
+        "line_f8c65232": {
+          "endPointId": "point_8cf95629",
+          "id": "line_f8c65232",
+          "startPointId": "point_5bb1ed1c",
+          "type": "line"
+        },
+        "point_031e03cd": {
+          "id": "point_031e03cd",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((48mm) / 2) - (3mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((20mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_14d40c3f": {
+          "id": "point_14d40c3f",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((48mm) / 2) - (3mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((20mm) / 2) - (3mm))",
+            "unit": "mm"
+          }
+        },
+        "point_1b14ea8b": {
+          "id": "point_1b14ea8b",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((48mm) / 2) - (3mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((20mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_39a7918a": {
+          "id": "point_39a7918a",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((48mm) / 2) - (3mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((20mm) / 2) - (3mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_5b2248f2": {
+          "id": "point_5b2248f2",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - ((48mm) / 2))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((20mm) / 2) - (3mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_5bb1ed1c": {
+          "id": "point_5bb1ed1c",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((48mm) / 2)",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((20mm) / 2) - (3mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_636b3527": {
+          "id": "point_636b3527",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((48mm) / 2) - (3mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((20mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_8ad463c6": {
+          "id": "point_8ad463c6",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - ((48mm) / 2))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((20mm) / 2) - (3mm))",
+            "unit": "mm"
+          }
+        },
+        "point_8cf95629": {
+          "id": "point_8cf95629",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((48mm) / 2)",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((20mm) / 2) - (3mm))",
+            "unit": "mm"
+          }
+        },
+        "point_94b37239": {
+          "id": "point_94b37239",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((48mm) / 2) - (3mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((20mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_9be0a7f3": {
+          "id": "point_9be0a7f3",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((48mm) / 2) - (3mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((20mm) / 2) - (3mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_aac225e4": {
+          "id": "point_aac225e4",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((48mm) / 2) - (3mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((20mm) / 2) - (3mm))",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_4d75e0e2",
+      "name": "Actuator pocket outline",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "12mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 3
+    },
+    "sketch_4ddbdb00": {
+      "componentId": "component_8d3483db",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_1164590a",
+          "pointIds": [
+            "point_080f75de"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_ede87436",
+          "pointIds": [
+            "point_f4d0462b"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_835c934b",
+          "pointIds": [
+            "point_5f389cca"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_d19acbdb",
+          "pointIds": [
+            "point_8c70cc58"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_7281760c",
+          "pointIds": [
+            "point_55f8d621"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_43a51e30",
+          "pointIds": [
+            "point_dcedc54b"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_ae9b5afa",
+          "pointIds": [
+            "point_e0f56159"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_031fd37e",
+          "pointIds": [
+            "point_1b00babf"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_d073d3d2",
+          "pointIds": [
+            "point_eefc4d8e"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_8b3d50d3",
+          "pointIds": [
+            "point_a0d1b64c"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_3df52219",
+          "pointIds": [
+            "point_ac72f162"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_ebb31288",
+          "pointIds": [
+            "point_43f6c8d4"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.571Z",
+      "dimensions": [],
+      "entities": {
+        "arc_21a547cc": {
+          "centerPointId": "point_a0d1b64c",
+          "clockwise": false,
+          "endPointId": "point_55f8d621",
+          "id": "arc_21a547cc",
+          "startPointId": "point_8c70cc58",
+          "type": "arc"
+        },
+        "arc_32cd56ee": {
+          "centerPointId": "point_ac72f162",
+          "clockwise": false,
+          "endPointId": "point_e0f56159",
+          "id": "arc_32cd56ee",
+          "startPointId": "point_dcedc54b",
+          "type": "arc"
+        },
+        "arc_a08a720b": {
+          "centerPointId": "point_eefc4d8e",
+          "clockwise": false,
+          "endPointId": "point_5f389cca",
+          "id": "arc_a08a720b",
+          "startPointId": "point_f4d0462b",
+          "type": "arc"
+        },
+        "arc_e1598aaf": {
+          "centerPointId": "point_43f6c8d4",
+          "clockwise": false,
+          "endPointId": "point_080f75de",
+          "id": "arc_e1598aaf",
+          "startPointId": "point_1b00babf",
+          "type": "arc"
+        },
+        "line_03d3690c": {
+          "endPointId": "point_dcedc54b",
+          "id": "line_03d3690c",
+          "startPointId": "point_55f8d621",
+          "type": "line"
+        },
+        "line_151a292a": {
+          "endPointId": "point_1b00babf",
+          "id": "line_151a292a",
+          "startPointId": "point_e0f56159",
+          "type": "line"
+        },
+        "line_b8a25580": {
+          "endPointId": "point_8c70cc58",
+          "id": "line_b8a25580",
+          "startPointId": "point_5f389cca",
+          "type": "line"
+        },
+        "line_f157424f": {
+          "endPointId": "point_f4d0462b",
+          "id": "line_f157424f",
+          "startPointId": "point_080f75de",
+          "type": "line"
+        },
+        "point_080f75de": {
+          "id": "point_080f75de",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + (((4mm) / 2) - (1mm))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(25mm) + ((24mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_1b00babf": {
+          "id": "point_1b00babf",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + ((4mm) / 2)",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(25mm) + (((24mm) / 2) - (1mm))",
+            "unit": "mm"
+          }
+        },
+        "point_43f6c8d4": {
+          "id": "point_43f6c8d4",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + (((4mm) / 2) - (1mm))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(25mm) + (((24mm) / 2) - (1mm))",
+            "unit": "mm"
+          }
+        },
+        "point_55f8d621": {
+          "id": "point_55f8d621",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + ((0mm) - (((4mm) / 2) - (1mm)))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(25mm) + ((0mm) - ((24mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_5f389cca": {
+          "id": "point_5f389cca",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + ((0mm) - ((4mm) / 2))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(25mm) + (((24mm) / 2) - (1mm))",
+            "unit": "mm"
+          }
+        },
+        "point_8c70cc58": {
+          "id": "point_8c70cc58",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + ((0mm) - ((4mm) / 2))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(25mm) + ((0mm) - (((24mm) / 2) - (1mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_a0d1b64c": {
+          "id": "point_a0d1b64c",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + ((0mm) - (((4mm) / 2) - (1mm)))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(25mm) + ((0mm) - (((24mm) / 2) - (1mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_ac72f162": {
+          "id": "point_ac72f162",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + (((4mm) / 2) - (1mm))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(25mm) + ((0mm) - (((24mm) / 2) - (1mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_dcedc54b": {
+          "id": "point_dcedc54b",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + (((4mm) / 2) - (1mm))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(25mm) + ((0mm) - ((24mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_e0f56159": {
+          "id": "point_e0f56159",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + ((4mm) / 2)",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(25mm) + ((0mm) - (((24mm) / 2) - (1mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_eefc4d8e": {
+          "id": "point_eefc4d8e",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + ((0mm) - (((4mm) / 2) - (1mm)))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(25mm) + (((24mm) / 2) - (1mm))",
+            "unit": "mm"
+          }
+        },
+        "point_f4d0462b": {
+          "id": "point_f4d0462b",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + ((0mm) - (((4mm) / 2) - (1mm)))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(25mm) + ((24mm) / 2)",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_4ddbdb00",
+      "name": "Jaw adjustment slot outline",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "12mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 13
+    },
+    "sketch_5dfd693c": {
+      "componentId": "component_7cd8dcdc",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_d1e65e5e",
+          "pointIds": [
+            "point_0d2b1d72"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.579Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_54dd7e7b"
+          ],
+          "expression": {
+            "expression": "3.6mm",
+            "unit": "mm"
+          },
+          "id": "circle_54dd7e7b_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_54dd7e7b": {
+          "centerPointId": "point_0d2b1d72",
+          "id": "circle_54dd7e7b",
+          "radius": {
+            "expression": "3.6mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_0d2b1d72": {
+          "id": "point_0d2b1d72",
+          "type": "point",
+          "x": {
+            "expression": "15mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "16mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_5dfd693c",
+      "name": "Fastener head section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "12mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 39
+    },
+    "sketch_678e4012": {
+      "componentId": "component_4d23f9c2",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_dc28815f",
+          "pointIds": [
+            "point_34429584"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.579Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_36617402"
+          ],
+          "expression": {
+            "expression": "2mm",
+            "unit": "mm"
+          },
+          "id": "circle_36617402_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_36617402": {
+          "centerPointId": "point_34429584",
+          "id": "circle_36617402",
+          "radius": {
+            "expression": "2mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_34429584": {
+          "id": "point_34429584",
+          "type": "point",
+          "x": {
+            "expression": "-15mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "16mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_678e4012",
+      "name": "Fastener shank section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "(12mm) - (palm_fastener_length)",
+          "parameterRefs": {
+            "palm_fastener_length": "07-robot-gripper_parameter_palm_fastener_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 41
+    },
+    "sketch_72ba4776": {
+      "componentId": "component_3ab40018",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_71d484b7",
+          "pointIds": [
+            "point_75cb258e"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.579Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_1aa5037e"
+          ],
+          "expression": {
+            "expression": "2mm",
+            "unit": "mm"
+          },
+          "id": "circle_1aa5037e_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_1aa5037e": {
+          "centerPointId": "point_75cb258e",
+          "id": "circle_1aa5037e",
+          "radius": {
+            "expression": "2mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_75cb258e": {
+          "id": "point_75cb258e",
+          "type": "point",
+          "x": {
+            "expression": "15mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-16mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_72ba4776",
+      "name": "Fastener shank section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "(12mm) - (palm_fastener_length)",
+          "parameterRefs": {
+            "palm_fastener_length": "07-robot-gripper_parameter_palm_fastener_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 33
+    },
+    "sketch_7a17c37e": {
+      "componentId": "component_8d3483db",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_d0cb85c2",
+          "pointIds": [
+            "point_280dea75"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_0caa3ced",
+          "pointIds": [
+            "point_ab3347c0"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_727e327f",
+          "pointIds": [
+            "point_5b82f357"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_96145960",
+          "pointIds": [
+            "point_eaf92d62"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_79ff986a",
+          "pointIds": [
+            "point_6c892d97"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_a298cb38",
+          "pointIds": [
+            "point_43ae6dfe"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_9ea7e18f",
+          "pointIds": [
+            "point_d3b7e1ad"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_39e7f9c0",
+          "pointIds": [
+            "point_8479d55c"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_b31082a2",
+          "pointIds": [
+            "point_09a9a241"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_b6cbbcae",
+          "pointIds": [
+            "point_dbd24db5"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_2105659e",
+          "pointIds": [
+            "point_5c8e4c92"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_b81eefd2",
+          "pointIds": [
+            "point_2fab8dd6"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.569Z",
+      "dimensions": [],
+      "entities": {
+        "arc_0cb8a0f4": {
+          "centerPointId": "point_dbd24db5",
+          "clockwise": false,
+          "endPointId": "point_6c892d97",
+          "id": "arc_0cb8a0f4",
+          "startPointId": "point_eaf92d62",
+          "type": "arc"
+        },
+        "arc_5259b5e7": {
+          "centerPointId": "point_2fab8dd6",
+          "clockwise": false,
+          "endPointId": "point_280dea75",
+          "id": "arc_5259b5e7",
+          "startPointId": "point_8479d55c",
+          "type": "arc"
+        },
+        "arc_8f0cc7b4": {
+          "centerPointId": "point_5c8e4c92",
+          "clockwise": false,
+          "endPointId": "point_d3b7e1ad",
+          "id": "arc_8f0cc7b4",
+          "startPointId": "point_43ae6dfe",
+          "type": "arc"
+        },
+        "arc_aee8b20f": {
+          "centerPointId": "point_09a9a241",
+          "clockwise": false,
+          "endPointId": "point_5b82f357",
+          "id": "arc_aee8b20f",
+          "startPointId": "point_ab3347c0",
+          "type": "arc"
+        },
+        "line_1df13806": {
+          "endPointId": "point_43ae6dfe",
+          "id": "line_1df13806",
+          "startPointId": "point_6c892d97",
+          "type": "line"
+        },
+        "line_a8b5cecd": {
+          "endPointId": "point_eaf92d62",
+          "id": "line_a8b5cecd",
+          "startPointId": "point_5b82f357",
+          "type": "line"
+        },
+        "line_c141c528": {
+          "endPointId": "point_ab3347c0",
+          "id": "line_c141c528",
+          "startPointId": "point_280dea75",
+          "type": "line"
+        },
+        "line_d6b50276": {
+          "endPointId": "point_8479d55c",
+          "id": "line_d6b50276",
+          "startPointId": "point_d3b7e1ad",
+          "type": "line"
+        },
+        "point_09a9a241": {
+          "id": "point_09a9a241",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + ((0mm) - (((12mm) / 2) - (2mm)))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(20mm) + (((62mm) / 2) - (2mm))",
+            "unit": "mm"
+          }
+        },
+        "point_280dea75": {
+          "id": "point_280dea75",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + (((12mm) / 2) - (2mm))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(20mm) + ((62mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_2fab8dd6": {
+          "id": "point_2fab8dd6",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + (((12mm) / 2) - (2mm))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(20mm) + (((62mm) / 2) - (2mm))",
+            "unit": "mm"
+          }
+        },
+        "point_43ae6dfe": {
+          "id": "point_43ae6dfe",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + (((12mm) / 2) - (2mm))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(20mm) + ((0mm) - ((62mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_5b82f357": {
+          "id": "point_5b82f357",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + ((0mm) - ((12mm) / 2))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(20mm) + (((62mm) / 2) - (2mm))",
+            "unit": "mm"
+          }
+        },
+        "point_5c8e4c92": {
+          "id": "point_5c8e4c92",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + (((12mm) / 2) - (2mm))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(20mm) + ((0mm) - (((62mm) / 2) - (2mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_6c892d97": {
+          "id": "point_6c892d97",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + ((0mm) - (((12mm) / 2) - (2mm)))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(20mm) + ((0mm) - ((62mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_8479d55c": {
+          "id": "point_8479d55c",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + ((12mm) / 2)",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(20mm) + (((62mm) / 2) - (2mm))",
+            "unit": "mm"
+          }
+        },
+        "point_ab3347c0": {
+          "id": "point_ab3347c0",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + ((0mm) - (((12mm) / 2) - (2mm)))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(20mm) + ((62mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_d3b7e1ad": {
+          "id": "point_d3b7e1ad",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + ((12mm) / 2)",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(20mm) + ((0mm) - (((62mm) / 2) - (2mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_dbd24db5": {
+          "id": "point_dbd24db5",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + ((0mm) - (((12mm) / 2) - (2mm)))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(20mm) + ((0mm) - (((62mm) / 2) - (2mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_eaf92d62": {
+          "id": "point_eaf92d62",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + ((0mm) - ((12mm) / 2))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(20mm) + ((0mm) - (((62mm) / 2) - (2mm)))",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_7a17c37e",
+      "name": "Jaw blank outline",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "12mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 9
+    },
+    "sketch_8983326f": {
+      "componentId": "component_3ab40018",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_cf5ac51e",
+          "pointIds": [
+            "point_e0d7234a"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.579Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_c89bba3d"
+          ],
+          "expression": {
+            "expression": "3.6mm",
+            "unit": "mm"
+          },
+          "id": "circle_c89bba3d_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_c89bba3d": {
+          "centerPointId": "point_e0d7234a",
+          "id": "circle_c89bba3d",
+          "radius": {
+            "expression": "3.6mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_e0d7234a": {
+          "id": "point_e0d7234a",
+          "type": "point",
+          "x": {
+            "expression": "15mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-16mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_8983326f",
+      "name": "Fastener head section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "12mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 35
+    },
+    "sketch_9a8f9ead": {
+      "componentId": "component_4d23f9c2",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_a2b324ef",
+          "pointIds": [
+            "point_335c44bc"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.579Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_8d0b419e"
+          ],
+          "expression": {
+            "expression": "3.6mm",
+            "unit": "mm"
+          },
+          "id": "circle_8d0b419e_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_8d0b419e": {
+          "centerPointId": "point_335c44bc",
+          "id": "circle_8d0b419e",
+          "radius": {
+            "expression": "3.6mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_335c44bc": {
+          "id": "point_335c44bc",
+          "type": "point",
+          "x": {
+            "expression": "-15mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "16mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_9a8f9ead",
+      "name": "Fastener head section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "12mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 43
+    },
+    "sketch_a5383030": {
+      "componentId": "component_33d02091",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_09a8379e",
+          "pointIds": [
+            "point_2d559d21"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.576Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_a684a37d"
+          ],
+          "expression": {
+            "expression": "3mm",
+            "unit": "mm"
+          },
+          "id": "circle_a684a37d_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_a684a37d": {
+          "centerPointId": "point_2d559d21",
+          "id": "circle_a684a37d",
+          "radius": {
+            "expression": "3mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_2d559d21": {
+          "id": "point_2d559d21",
+          "type": "point",
+          "x": {
+            "expression": "-jaw_span / 2",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-7mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_a5383030",
+      "name": "Pin section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "-5mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 21
+    },
+    "sketch_a92ca3d0": {
+      "componentId": "component_f53ba09f",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_fa1016ba",
+          "pointIds": [
+            "point_40de6a12"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.574Z",
+      "dimensions": [],
+      "entities": {
+        "point_40de6a12": {
+          "id": "point_40de6a12",
+          "type": "point",
+          "x": {
+            "expression": "jaw_span / 2",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-7mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_a92ca3d0",
+      "name": "Pivot clearance centers",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "12mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 17
+    },
+    "sketch_adba167f": {
+      "componentId": "component_58711392",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_b1db6024",
+          "pointIds": [
+            "point_414dd307"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_be59abc3",
+          "pointIds": [
+            "point_7e49e461"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_61e70f45",
+          "pointIds": [
+            "point_60b4491c"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_4a41056c",
+          "pointIds": [
+            "point_bff93b00"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_81f1380e",
+          "pointIds": [
+            "point_b4b1fe9f"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_cdb648c8",
+          "pointIds": [
+            "point_3ef5c13d"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_ab22666d",
+          "pointIds": [
+            "point_440e53e4"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_13306348",
+          "pointIds": [
+            "point_1385ef56"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_b38235a2",
+          "pointIds": [
+            "point_bc0d0fe0"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_1ec288e0",
+          "pointIds": [
+            "point_07045972"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_56212b04",
+          "pointIds": [
+            "point_668fa3f2"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_af2a6d74",
+          "pointIds": [
+            "point_b93534f0"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.577Z",
+      "dimensions": [],
+      "entities": {
+        "arc_6d923e50": {
+          "centerPointId": "point_b93534f0",
+          "clockwise": false,
+          "endPointId": "point_414dd307",
+          "id": "arc_6d923e50",
+          "startPointId": "point_1385ef56",
+          "type": "arc"
+        },
+        "arc_72419e56": {
+          "centerPointId": "point_668fa3f2",
+          "clockwise": false,
+          "endPointId": "point_440e53e4",
+          "id": "arc_72419e56",
+          "startPointId": "point_3ef5c13d",
+          "type": "arc"
+        },
+        "arc_adb9df2f": {
+          "centerPointId": "point_bc0d0fe0",
+          "clockwise": false,
+          "endPointId": "point_60b4491c",
+          "id": "arc_adb9df2f",
+          "startPointId": "point_7e49e461",
+          "type": "arc"
+        },
+        "arc_dc915d0e": {
+          "centerPointId": "point_07045972",
+          "clockwise": false,
+          "endPointId": "point_b4b1fe9f",
+          "id": "arc_dc915d0e",
+          "startPointId": "point_bff93b00",
+          "type": "arc"
+        },
+        "line_59c243da": {
+          "endPointId": "point_7e49e461",
+          "id": "line_59c243da",
+          "startPointId": "point_414dd307",
+          "type": "line"
+        },
+        "line_6d85efbd": {
+          "endPointId": "point_bff93b00",
+          "id": "line_6d85efbd",
+          "startPointId": "point_60b4491c",
+          "type": "line"
+        },
+        "line_6f151df0": {
+          "endPointId": "point_1385ef56",
+          "id": "line_6f151df0",
+          "startPointId": "point_440e53e4",
+          "type": "line"
+        },
+        "line_bb58fc20": {
+          "endPointId": "point_3ef5c13d",
+          "id": "line_bb58fc20",
+          "startPointId": "point_b4b1fe9f",
+          "type": "line"
+        },
+        "point_07045972": {
+          "id": "point_07045972",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + ((0mm) - (((14mm) / 2) - (1mm)))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(43mm) + ((0mm) - (((12mm) / 2) - (1mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_1385ef56": {
+          "id": "point_1385ef56",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + ((14mm) / 2)",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(43mm) + (((12mm) / 2) - (1mm))",
+            "unit": "mm"
+          }
+        },
+        "point_3ef5c13d": {
+          "id": "point_3ef5c13d",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + (((14mm) / 2) - (1mm))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(43mm) + ((0mm) - ((12mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_414dd307": {
+          "id": "point_414dd307",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + (((14mm) / 2) - (1mm))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(43mm) + ((12mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_440e53e4": {
+          "id": "point_440e53e4",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + ((14mm) / 2)",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(43mm) + ((0mm) - (((12mm) / 2) - (1mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_60b4491c": {
+          "id": "point_60b4491c",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + ((0mm) - ((14mm) / 2))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(43mm) + (((12mm) / 2) - (1mm))",
+            "unit": "mm"
+          }
+        },
+        "point_668fa3f2": {
+          "id": "point_668fa3f2",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + (((14mm) / 2) - (1mm))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(43mm) + ((0mm) - (((12mm) / 2) - (1mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_7e49e461": {
+          "id": "point_7e49e461",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + ((0mm) - (((14mm) / 2) - (1mm)))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(43mm) + ((12mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_b4b1fe9f": {
+          "id": "point_b4b1fe9f",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + ((0mm) - (((14mm) / 2) - (1mm)))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(43mm) + ((0mm) - ((12mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_b93534f0": {
+          "id": "point_b93534f0",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + (((14mm) / 2) - (1mm))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(43mm) + (((12mm) / 2) - (1mm))",
+            "unit": "mm"
+          }
+        },
+        "point_bc0d0fe0": {
+          "id": "point_bc0d0fe0",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + ((0mm) - (((14mm) / 2) - (1mm)))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(43mm) + (((12mm) / 2) - (1mm))",
+            "unit": "mm"
+          }
+        },
+        "point_bff93b00": {
+          "id": "point_bff93b00",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + ((0mm) - ((14mm) / 2))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(43mm) + ((0mm) - (((12mm) / 2) - (1mm)))",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_adba167f",
+      "name": "Grip pad outline",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "22mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 27
+    },
+    "sketch_bbd51071": {
+      "componentId": "component_dc42b934",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_ad8e43e2",
+          "pointIds": [
+            "point_043542e0"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_fe3a56f0",
+          "pointIds": [
+            "point_0a7d78d2"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_7aaf60cc",
+          "pointIds": [
+            "point_9c2fae6a"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_a937afe7",
+          "pointIds": [
+            "point_c0381101"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_db0ce21b",
+          "pointIds": [
+            "point_839ad4de"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_56829c74",
+          "pointIds": [
+            "point_5b16929d"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_c5d302ad",
+          "pointIds": [
+            "point_70602675"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_dc705f31",
+          "pointIds": [
+            "point_9eb9ec60"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_4b585a24",
+          "pointIds": [
+            "point_f66c1622"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_b99b53bc",
+          "pointIds": [
+            "point_7e8b1d4e"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_e92105e8",
+          "pointIds": [
+            "point_ac4a493a"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_4132b980",
+          "pointIds": [
+            "point_5d67bf71"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.576Z",
+      "dimensions": [],
+      "entities": {
+        "arc_3f6bfb95": {
+          "centerPointId": "point_7e8b1d4e",
+          "clockwise": false,
+          "endPointId": "point_839ad4de",
+          "id": "arc_3f6bfb95",
+          "startPointId": "point_c0381101",
+          "type": "arc"
+        },
+        "arc_809e416d": {
+          "centerPointId": "point_5d67bf71",
+          "clockwise": false,
+          "endPointId": "point_043542e0",
+          "id": "arc_809e416d",
+          "startPointId": "point_9eb9ec60",
+          "type": "arc"
+        },
+        "arc_afa8dc8f": {
+          "centerPointId": "point_f66c1622",
+          "clockwise": false,
+          "endPointId": "point_9c2fae6a",
+          "id": "arc_afa8dc8f",
+          "startPointId": "point_0a7d78d2",
+          "type": "arc"
+        },
+        "arc_fa95d5d0": {
+          "centerPointId": "point_ac4a493a",
+          "clockwise": false,
+          "endPointId": "point_70602675",
+          "id": "arc_fa95d5d0",
+          "startPointId": "point_5b16929d",
+          "type": "arc"
+        },
+        "line_69a345bf": {
+          "endPointId": "point_0a7d78d2",
+          "id": "line_69a345bf",
+          "startPointId": "point_043542e0",
+          "type": "line"
+        },
+        "line_9ef620f2": {
+          "endPointId": "point_c0381101",
+          "id": "line_9ef620f2",
+          "startPointId": "point_9c2fae6a",
+          "type": "line"
+        },
+        "line_d089e3b9": {
+          "endPointId": "point_5b16929d",
+          "id": "line_d089e3b9",
+          "startPointId": "point_839ad4de",
+          "type": "line"
+        },
+        "line_e329e132": {
+          "endPointId": "point_9eb9ec60",
+          "id": "line_e329e132",
+          "startPointId": "point_70602675",
+          "type": "line"
+        },
+        "point_043542e0": {
+          "id": "point_043542e0",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + (((14mm) / 2) - (1mm))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(43mm) + ((12mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_0a7d78d2": {
+          "id": "point_0a7d78d2",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + ((0mm) - (((14mm) / 2) - (1mm)))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(43mm) + ((12mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_5b16929d": {
+          "id": "point_5b16929d",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + (((14mm) / 2) - (1mm))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(43mm) + ((0mm) - ((12mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_5d67bf71": {
+          "id": "point_5d67bf71",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + (((14mm) / 2) - (1mm))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(43mm) + (((12mm) / 2) - (1mm))",
+            "unit": "mm"
+          }
+        },
+        "point_70602675": {
+          "id": "point_70602675",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + ((14mm) / 2)",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(43mm) + ((0mm) - (((12mm) / 2) - (1mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_7e8b1d4e": {
+          "id": "point_7e8b1d4e",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + ((0mm) - (((14mm) / 2) - (1mm)))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(43mm) + ((0mm) - (((12mm) / 2) - (1mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_839ad4de": {
+          "id": "point_839ad4de",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + ((0mm) - (((14mm) / 2) - (1mm)))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(43mm) + ((0mm) - ((12mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_9c2fae6a": {
+          "id": "point_9c2fae6a",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + ((0mm) - ((14mm) / 2))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(43mm) + (((12mm) / 2) - (1mm))",
+            "unit": "mm"
+          }
+        },
+        "point_9eb9ec60": {
+          "id": "point_9eb9ec60",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + ((14mm) / 2)",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(43mm) + (((12mm) / 2) - (1mm))",
+            "unit": "mm"
+          }
+        },
+        "point_ac4a493a": {
+          "id": "point_ac4a493a",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + (((14mm) / 2) - (1mm))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(43mm) + ((0mm) - (((12mm) / 2) - (1mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_c0381101": {
+          "id": "point_c0381101",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + ((0mm) - ((14mm) / 2))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(43mm) + ((0mm) - (((12mm) / 2) - (1mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_f66c1622": {
+          "id": "point_f66c1622",
+          "type": "point",
+          "x": {
+            "expression": "(-jaw_span / 2) + ((0mm) - (((14mm) / 2) - (1mm)))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(43mm) + (((12mm) / 2) - (1mm))",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_bbd51071",
+      "name": "Grip pad outline",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "22mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 23
+    },
+    "sketch_be2547a3": {
+      "componentId": "component_f53ba09f",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_ae89b568",
+          "pointIds": [
+            "point_69f4106b"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_2195b61a",
+          "pointIds": [
+            "point_9990c6c2"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_af26a6f7",
+          "pointIds": [
+            "point_62481eb5"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_852f8042",
+          "pointIds": [
+            "point_cd70f7e5"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_5870e3fc",
+          "pointIds": [
+            "point_5d44c9bd"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_cf5dfc0e",
+          "pointIds": [
+            "point_d6e0608c"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_d8a7378b",
+          "pointIds": [
+            "point_443cacc1"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_87f11a05",
+          "pointIds": [
+            "point_776d4cbe"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_18aff3b4",
+          "pointIds": [
+            "point_9d05fb10"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_6ccac253",
+          "pointIds": [
+            "point_a24adf34"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_3c4203cd",
+          "pointIds": [
+            "point_0b50628a"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_a10d609a",
+          "pointIds": [
+            "point_724d5064"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.573Z",
+      "dimensions": [],
+      "entities": {
+        "arc_07167fb1": {
+          "centerPointId": "point_9d05fb10",
+          "clockwise": false,
+          "endPointId": "point_62481eb5",
+          "id": "arc_07167fb1",
+          "startPointId": "point_9990c6c2",
+          "type": "arc"
+        },
+        "arc_0e432136": {
+          "centerPointId": "point_0b50628a",
+          "clockwise": false,
+          "endPointId": "point_443cacc1",
+          "id": "arc_0e432136",
+          "startPointId": "point_d6e0608c",
+          "type": "arc"
+        },
+        "arc_90ddeb23": {
+          "centerPointId": "point_a24adf34",
+          "clockwise": false,
+          "endPointId": "point_5d44c9bd",
+          "id": "arc_90ddeb23",
+          "startPointId": "point_cd70f7e5",
+          "type": "arc"
+        },
+        "arc_b093c011": {
+          "centerPointId": "point_724d5064",
+          "clockwise": false,
+          "endPointId": "point_69f4106b",
+          "id": "arc_b093c011",
+          "startPointId": "point_776d4cbe",
+          "type": "arc"
+        },
+        "line_173fcc4c": {
+          "endPointId": "point_776d4cbe",
+          "id": "line_173fcc4c",
+          "startPointId": "point_443cacc1",
+          "type": "line"
+        },
+        "line_7d7f3107": {
+          "endPointId": "point_9990c6c2",
+          "id": "line_7d7f3107",
+          "startPointId": "point_69f4106b",
+          "type": "line"
+        },
+        "line_d7fc5424": {
+          "endPointId": "point_d6e0608c",
+          "id": "line_d7fc5424",
+          "startPointId": "point_5d44c9bd",
+          "type": "line"
+        },
+        "line_fac11284": {
+          "endPointId": "point_cd70f7e5",
+          "id": "line_fac11284",
+          "startPointId": "point_62481eb5",
+          "type": "line"
+        },
+        "point_0b50628a": {
+          "id": "point_0b50628a",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + (((12mm) / 2) - (2mm))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(20mm) + ((0mm) - (((62mm) / 2) - (2mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_443cacc1": {
+          "id": "point_443cacc1",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + ((12mm) / 2)",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(20mm) + ((0mm) - (((62mm) / 2) - (2mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_5d44c9bd": {
+          "id": "point_5d44c9bd",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + ((0mm) - (((12mm) / 2) - (2mm)))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(20mm) + ((0mm) - ((62mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_62481eb5": {
+          "id": "point_62481eb5",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + ((0mm) - ((12mm) / 2))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(20mm) + (((62mm) / 2) - (2mm))",
+            "unit": "mm"
+          }
+        },
+        "point_69f4106b": {
+          "id": "point_69f4106b",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + (((12mm) / 2) - (2mm))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(20mm) + ((62mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_724d5064": {
+          "id": "point_724d5064",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + (((12mm) / 2) - (2mm))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(20mm) + (((62mm) / 2) - (2mm))",
+            "unit": "mm"
+          }
+        },
+        "point_776d4cbe": {
+          "id": "point_776d4cbe",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + ((12mm) / 2)",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(20mm) + (((62mm) / 2) - (2mm))",
+            "unit": "mm"
+          }
+        },
+        "point_9990c6c2": {
+          "id": "point_9990c6c2",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + ((0mm) - (((12mm) / 2) - (2mm)))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(20mm) + ((62mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_9d05fb10": {
+          "id": "point_9d05fb10",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + ((0mm) - (((12mm) / 2) - (2mm)))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(20mm) + (((62mm) / 2) - (2mm))",
+            "unit": "mm"
+          }
+        },
+        "point_a24adf34": {
+          "id": "point_a24adf34",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + ((0mm) - (((12mm) / 2) - (2mm)))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(20mm) + ((0mm) - (((62mm) / 2) - (2mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_cd70f7e5": {
+          "id": "point_cd70f7e5",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + ((0mm) - ((12mm) / 2))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(20mm) + ((0mm) - (((62mm) / 2) - (2mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_d6e0608c": {
+          "id": "point_d6e0608c",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + (((12mm) / 2) - (2mm))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(20mm) + ((0mm) - ((62mm) / 2))",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_be2547a3",
+      "name": "Jaw blank outline",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "12mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 15
+    },
+    "sketch_c8d87ac0": {
+      "componentId": "component_0910acfa",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_81b2902a",
+          "pointIds": [
+            "point_73f9ed94"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_bad3a538",
+          "pointIds": [
+            "point_4a048352"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_b51147ae",
+          "pointIds": [
+            "point_a0ea5744"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_62b59531",
+          "pointIds": [
+            "point_4cac2a36"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_90c8cfe3",
+          "pointIds": [
+            "point_80b62834"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_14cb83ab",
+          "pointIds": [
+            "point_b9ee6589"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_7f8829f0",
+          "pointIds": [
+            "point_0060e3f3"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_84e3ca4c",
+          "pointIds": [
+            "point_16a35707"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_c705fac0",
+          "pointIds": [
+            "point_89e53c97"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_4063d5a9",
+          "pointIds": [
+            "point_7a7a38c7"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_cb3b9821",
+          "pointIds": [
+            "point_8729ca0f"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_6567ea2e",
+          "pointIds": [
+            "point_74e334e1"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.565Z",
+      "dimensions": [],
+      "entities": {
+        "arc_59e8f24c": {
+          "centerPointId": "point_7a7a38c7",
+          "clockwise": false,
+          "endPointId": "point_80b62834",
+          "id": "arc_59e8f24c",
+          "startPointId": "point_4cac2a36",
+          "type": "arc"
+        },
+        "arc_840d3024": {
+          "centerPointId": "point_74e334e1",
+          "clockwise": false,
+          "endPointId": "point_73f9ed94",
+          "id": "arc_840d3024",
+          "startPointId": "point_16a35707",
+          "type": "arc"
+        },
+        "arc_8f9fc100": {
+          "centerPointId": "point_89e53c97",
+          "clockwise": false,
+          "endPointId": "point_a0ea5744",
+          "id": "arc_8f9fc100",
+          "startPointId": "point_4a048352",
+          "type": "arc"
+        },
+        "arc_b2f40f1a": {
+          "centerPointId": "point_8729ca0f",
+          "clockwise": false,
+          "endPointId": "point_0060e3f3",
+          "id": "arc_b2f40f1a",
+          "startPointId": "point_b9ee6589",
+          "type": "arc"
+        },
+        "line_170a03a7": {
+          "endPointId": "point_4a048352",
+          "id": "line_170a03a7",
+          "startPointId": "point_73f9ed94",
+          "type": "line"
+        },
+        "line_53aa4451": {
+          "endPointId": "point_16a35707",
+          "id": "line_53aa4451",
+          "startPointId": "point_0060e3f3",
+          "type": "line"
+        },
+        "line_69e2d7e4": {
+          "endPointId": "point_b9ee6589",
+          "id": "line_69e2d7e4",
+          "startPointId": "point_80b62834",
+          "type": "line"
+        },
+        "line_cb30f7d8": {
+          "endPointId": "point_4cac2a36",
+          "id": "line_cb30f7d8",
+          "startPointId": "point_a0ea5744",
+          "type": "line"
+        },
+        "point_0060e3f3": {
+          "id": "point_0060e3f3",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((80mm) / 2)",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((44mm) / 2) - (6mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_16a35707": {
+          "id": "point_16a35707",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((80mm) / 2)",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((44mm) / 2) - (6mm))",
+            "unit": "mm"
+          }
+        },
+        "point_4a048352": {
+          "id": "point_4a048352",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((80mm) / 2) - (6mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((44mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_4cac2a36": {
+          "id": "point_4cac2a36",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - ((80mm) / 2))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((44mm) / 2) - (6mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_73f9ed94": {
+          "id": "point_73f9ed94",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((80mm) / 2) - (6mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((44mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_74e334e1": {
+          "id": "point_74e334e1",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((80mm) / 2) - (6mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((44mm) / 2) - (6mm))",
+            "unit": "mm"
+          }
+        },
+        "point_7a7a38c7": {
+          "id": "point_7a7a38c7",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((80mm) / 2) - (6mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((44mm) / 2) - (6mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_80b62834": {
+          "id": "point_80b62834",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((80mm) / 2) - (6mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((44mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_8729ca0f": {
+          "id": "point_8729ca0f",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((80mm) / 2) - (6mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((44mm) / 2) - (6mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_89e53c97": {
+          "id": "point_89e53c97",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((80mm) / 2) - (6mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((44mm) / 2) - (6mm))",
+            "unit": "mm"
+          }
+        },
+        "point_a0ea5744": {
+          "id": "point_a0ea5744",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - ((80mm) / 2))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((44mm) / 2) - (6mm))",
+            "unit": "mm"
+          }
+        },
+        "point_b9ee6589": {
+          "id": "point_b9ee6589",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((80mm) / 2) - (6mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((44mm) / 2))",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_c8d87ac0",
+      "name": "Palm blank outline",
+      "plane": {
+        "plane": "XY",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 1
+    },
+    "sketch_dcd1b93e": {
+      "componentId": "component_f57acf02",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_ef8ff208",
+          "pointIds": [
+            "point_2158f07d"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.579Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_2be34bd1"
+          ],
+          "expression": {
+            "expression": "2mm",
+            "unit": "mm"
+          },
+          "id": "circle_2be34bd1_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_2be34bd1": {
+          "centerPointId": "point_2158f07d",
+          "id": "circle_2be34bd1",
+          "radius": {
+            "expression": "2mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_2158f07d": {
+          "id": "point_2158f07d",
+          "type": "point",
+          "x": {
+            "expression": "-15mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-16mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_dcd1b93e",
+      "name": "Fastener shank section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "(12mm) - (palm_fastener_length)",
+          "parameterRefs": {
+            "palm_fastener_length": "07-robot-gripper_parameter_palm_fastener_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 29
+    },
+    "sketch_e8e531a9": {
+      "componentId": "component_f53ba09f",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_37e0876d",
+          "pointIds": [
+            "point_b6746893"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_5d6cc039",
+          "pointIds": [
+            "point_a4d48a7b"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_6b644807",
+          "pointIds": [
+            "point_cf85013b"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_3aa6f7e1",
+          "pointIds": [
+            "point_fe684846"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_140c3e41",
+          "pointIds": [
+            "point_797bb4e6"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_4a5649a1",
+          "pointIds": [
+            "point_2b8ceb3d"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_2def3602",
+          "pointIds": [
+            "point_ed2b3cd2"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_0536ce4b",
+          "pointIds": [
+            "point_07633865"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_f91aee78",
+          "pointIds": [
+            "point_56e92efe"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_f9704a24",
+          "pointIds": [
+            "point_dab7fe7b"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_30b7c97d",
+          "pointIds": [
+            "point_5a47facd"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_fead758b",
+          "pointIds": [
+            "point_4cec13f7"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.574Z",
+      "dimensions": [],
+      "entities": {
+        "arc_3fa0d667": {
+          "centerPointId": "point_56e92efe",
+          "clockwise": false,
+          "endPointId": "point_cf85013b",
+          "id": "arc_3fa0d667",
+          "startPointId": "point_a4d48a7b",
+          "type": "arc"
+        },
+        "arc_415fdf75": {
+          "centerPointId": "point_4cec13f7",
+          "clockwise": false,
+          "endPointId": "point_b6746893",
+          "id": "arc_415fdf75",
+          "startPointId": "point_07633865",
+          "type": "arc"
+        },
+        "arc_e4833354": {
+          "centerPointId": "point_5a47facd",
+          "clockwise": false,
+          "endPointId": "point_ed2b3cd2",
+          "id": "arc_e4833354",
+          "startPointId": "point_2b8ceb3d",
+          "type": "arc"
+        },
+        "arc_ff11a139": {
+          "centerPointId": "point_dab7fe7b",
+          "clockwise": false,
+          "endPointId": "point_797bb4e6",
+          "id": "arc_ff11a139",
+          "startPointId": "point_fe684846",
+          "type": "arc"
+        },
+        "line_6680b100": {
+          "endPointId": "point_fe684846",
+          "id": "line_6680b100",
+          "startPointId": "point_cf85013b",
+          "type": "line"
+        },
+        "line_70759a3b": {
+          "endPointId": "point_a4d48a7b",
+          "id": "line_70759a3b",
+          "startPointId": "point_b6746893",
+          "type": "line"
+        },
+        "line_a4e7da1f": {
+          "endPointId": "point_2b8ceb3d",
+          "id": "line_a4e7da1f",
+          "startPointId": "point_797bb4e6",
+          "type": "line"
+        },
+        "line_f6f56352": {
+          "endPointId": "point_07633865",
+          "id": "line_f6f56352",
+          "startPointId": "point_ed2b3cd2",
+          "type": "line"
+        },
+        "point_07633865": {
+          "id": "point_07633865",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + ((4mm) / 2)",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(25mm) + (((24mm) / 2) - (1mm))",
+            "unit": "mm"
+          }
+        },
+        "point_2b8ceb3d": {
+          "id": "point_2b8ceb3d",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + (((4mm) / 2) - (1mm))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(25mm) + ((0mm) - ((24mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_4cec13f7": {
+          "id": "point_4cec13f7",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + (((4mm) / 2) - (1mm))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(25mm) + (((24mm) / 2) - (1mm))",
+            "unit": "mm"
+          }
+        },
+        "point_56e92efe": {
+          "id": "point_56e92efe",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + ((0mm) - (((4mm) / 2) - (1mm)))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(25mm) + (((24mm) / 2) - (1mm))",
+            "unit": "mm"
+          }
+        },
+        "point_5a47facd": {
+          "id": "point_5a47facd",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + (((4mm) / 2) - (1mm))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(25mm) + ((0mm) - (((24mm) / 2) - (1mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_797bb4e6": {
+          "id": "point_797bb4e6",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + ((0mm) - (((4mm) / 2) - (1mm)))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(25mm) + ((0mm) - ((24mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_a4d48a7b": {
+          "id": "point_a4d48a7b",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + ((0mm) - (((4mm) / 2) - (1mm)))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(25mm) + ((24mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_b6746893": {
+          "id": "point_b6746893",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + (((4mm) / 2) - (1mm))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(25mm) + ((24mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_cf85013b": {
+          "id": "point_cf85013b",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + ((0mm) - ((4mm) / 2))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(25mm) + (((24mm) / 2) - (1mm))",
+            "unit": "mm"
+          }
+        },
+        "point_dab7fe7b": {
+          "id": "point_dab7fe7b",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + ((0mm) - (((4mm) / 2) - (1mm)))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(25mm) + ((0mm) - (((24mm) / 2) - (1mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_ed2b3cd2": {
+          "id": "point_ed2b3cd2",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + ((4mm) / 2)",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(25mm) + ((0mm) - (((24mm) / 2) - (1mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_fe684846": {
+          "id": "point_fe684846",
+          "type": "point",
+          "x": {
+            "expression": "(jaw_span / 2) + ((0mm) - ((4mm) / 2))",
+            "parameterRefs": {
+              "jaw_span": "07-robot-gripper_parameter_jaw_span"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(25mm) + ((0mm) - (((24mm) / 2) - (1mm)))",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_e8e531a9",
+      "name": "Jaw adjustment slot outline",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "12mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 19
+    },
+    "sketch_f848e7f9": {
+      "componentId": "component_f57acf02",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_cc3794e2",
+          "pointIds": [
+            "point_1df45594"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.579Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_0cfd1fa7"
+          ],
+          "expression": {
+            "expression": "3.6mm",
+            "unit": "mm"
+          },
+          "id": "circle_0cfd1fa7_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_0cfd1fa7": {
+          "centerPointId": "point_1df45594",
+          "id": "circle_0cfd1fa7",
+          "radius": {
+            "expression": "3.6mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_1df45594": {
+          "id": "point_1df45594",
+          "type": "point",
+          "x": {
+            "expression": "-15mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-16mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_f848e7f9",
+      "name": "Fastener head section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "12mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 31
+    }
+  },
+  "timelineCursor": 44,
+  "units": "metric",
+  "unitSettings": {
+    "angle": "deg",
+    "length": "mm"
+  },
+  "updatedAt": "2026-10-07T09:40:53.579Z"
+}

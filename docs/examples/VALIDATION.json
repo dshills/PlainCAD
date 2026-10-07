@@ -1,0 +1,6761 @@
+{
+  "validatedAt": "2026-10-07T09:42:40.414Z",
+  "appCommit": "2733e69",
+  "environment": "Chromium; native OpenCascade geometry worker; Vite development build",
+  "projects": [
+    {
+      "order": 1,
+      "slug": "01-cable-guide",
+      "name": "Cable guide mount",
+      "summary": "Two-piece rounded foot and annular cable guide with mounting holes.",
+      "difficulty": "Beginner",
+      "parts": 2,
+      "features": 4,
+      "sketches": 3,
+      "parameter": "foot_thickness",
+      "original": 5,
+      "edited": 6,
+      "native": {
+        "durationMs": 385.90000009536743,
+        "totalVolumeMm3": 12033.484080406244,
+        "warnings": [],
+        "metrics": {
+          "parameterEvaluationMs": 0.20000004768371582,
+          "sketchSolveMs": 1.5999999046325684,
+          "profileDetectionMs": 3.700000047683716,
+          "featureRebuildMs": 374,
+          "operationCount": 4,
+          "cacheSize": 2,
+          "wasmHeapCapacityBytes": 67108864,
+          "shapeDisposalAttempts": 6,
+          "shapeDisposalFailures": 0,
+          "scopedHandles": {
+            "registered": 499,
+            "disposed": 490,
+            "released": 9,
+            "alreadyDeleted": 0,
+            "failures": 0
+          },
+          "disposalFailures": 0
+        },
+        "bodies": [
+          {
+            "bodyId": "body:feature_76c9ff2e",
+            "component": "Mounting foot",
+            "valid": true,
+            "volume": 7886.581777667717,
+            "surfaceArea": 4080.9180318279277,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -29,
+                -14,
+                0
+              ],
+              "max": [
+                29,
+                14,
+                5.0000001
+              ]
+            },
+            "triangles": 2956
+          },
+          {
+            "bodyId": "body:feature_c95783a8",
+            "component": "Cable collar",
+            "valid": true,
+            "volume": 4146.902302738527,
+            "surfaceArea": 2211.681228127214,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -13.982596897064914,
+                -13.995648548011427,
+                5
+              ],
+              "max": [
+                14,
+                13.995648548011427,
+                15
+              ]
+            },
+            "triangles": 504
+          }
+        ]
+      },
+      "parameterEdit": {
+        "from": 5,
+        "to": 6,
+        "totalVolumeMm3": 13613.338945976931,
+        "geometryChanged": true,
+        "changedBodies": [
+          {
+            "component": "Mounting foot",
+            "originalBounds": {
+              "min": [
+                -29,
+                -14,
+                0
+              ],
+              "max": [
+                29,
+                14,
+                5.0000001
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -29,
+                -14,
+                0
+              ],
+              "max": [
+                29,
+                14,
+                6.0000001
+              ]
+            },
+            "originalVolumeMm3": 7886.581777667717,
+            "editedVolumeMm3": 9466.436643238405
+          },
+          {
+            "component": "Cable collar",
+            "originalBounds": {
+              "min": [
+                -13.982596897064914,
+                -13.995648548011427,
+                5
+              ],
+              "max": [
+                14,
+                13.995648548011427,
+                15
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -13.982596897064914,
+                -13.995648548011427,
+                6
+              ],
+              "max": [
+                14,
+                13.995648548011427,
+                16
+              ]
+            },
+            "originalVolumeMm3": 4146.902302738527,
+            "editedVolumeMm3": 4146.9023027385265
+          }
+        ],
+        "undoRestoredVolumes": true
+      },
+      "saveOpen": "identical document; native body count preserved",
+      "stl": {
+        "mode": "separate",
+        "fullChecks": true,
+        "bodyCount": 2,
+        "triangleCount": 3460,
+        "warnings": [],
+        "binaryFiles": [
+          {
+            "filename": "Soft_perimeter.stl",
+            "component": "Mounting foot",
+            "triangles": 2956,
+            "signedVolumeMm3": 7886.358864826579,
+            "relativeBRepVolumeError": 0.000028264823395240946
+          },
+          {
+            "filename": "Guide_ring.stl",
+            "component": "Cable collar",
+            "triangles": 504,
+            "signedVolumeMm3": 4140.031034928279,
+            "relativeBRepVolumeError": 0.0016569639959230775
+          }
+        ]
+      },
+      "projectFileSha256": "2cca6cb80f1023c35d3cc59a05d917eb8b17be11880f6b136226c64ed01a36af"
+    },
+    {
+      "order": 2,
+      "slug": "02-spacer-stack",
+      "name": "Precision spacer stack",
+      "summary": "Three annular parts with a shared bore and parameter-linked upper washer position.",
+      "difficulty": "Beginner",
+      "parts": 3,
+      "features": 3,
+      "sketches": 3,
+      "parameter": "spacer_height",
+      "original": 20,
+      "edited": 24,
+      "native": {
+        "durationMs": 32.89999997615814,
+        "totalVolumeMm3": 10518.052204218628,
+        "warnings": [],
+        "metrics": {
+          "parameterEvaluationMs": 0,
+          "sketchSolveMs": 0.09999990463256836,
+          "profileDetectionMs": 0.10000002384185791,
+          "featureRebuildMs": 31.300000071525574,
+          "operationCount": 3,
+          "cacheSize": 3,
+          "wasmHeapCapacityBytes": 67108864,
+          "shapeDisposalAttempts": 3,
+          "shapeDisposalFailures": 0,
+          "scopedHandles": {
+            "registered": 144,
+            "disposed": 141,
+            "released": 3,
+            "alreadyDeleted": 0,
+            "failures": 0
+          },
+          "disposalFailures": 0
+        },
+        "bodies": [
+          {
+            "bodyId": "body:feature_8e4cd220",
+            "component": "Lower washer",
+            "valid": true,
+            "volume": 2902.831611916969,
+            "surfaceArea": 1979.203371761569,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -15.98011073950276,
+                -15.99502691201306,
+                0
+              ],
+              "max": [
+                16,
+                15.99502691201306,
+                4
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_aa20ece2",
+            "component": "Long spacer",
+            "valid": true,
+            "volume": 4712.38898038469,
+            "surfaceArea": 2356.1944901923453,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -9.987569212189225,
+                -9.996891820008162,
+                4
+              ],
+              "max": [
+                10,
+                9.996891820008162,
+                24
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_ea818b37",
+            "component": "Upper washer",
+            "valid": true,
+            "volume": 2902.831611916969,
+            "surfaceArea": 1979.203371761569,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -15.98011073950276,
+                -15.99502691201306,
+                24
+              ],
+              "max": [
+                16,
+                15.99502691201306,
+                28
+              ]
+            },
+            "triangles": 504
+          }
+        ]
+      },
+      "parameterEdit": {
+        "from": 20,
+        "to": 24,
+        "totalVolumeMm3": 11460.530000295565,
+        "geometryChanged": true,
+        "changedBodies": [
+          {
+            "component": "Long spacer",
+            "originalBounds": {
+              "min": [
+                -9.987569212189225,
+                -9.996891820008162,
+                4
+              ],
+              "max": [
+                10,
+                9.996891820008162,
+                24
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -9.987569212189225,
+                -9.996891820008162,
+                4
+              ],
+              "max": [
+                10,
+                9.996891820008162,
+                28
+              ]
+            },
+            "originalVolumeMm3": 4712.38898038469,
+            "editedVolumeMm3": 5654.8667764616275
+          },
+          {
+            "component": "Upper washer",
+            "originalBounds": {
+              "min": [
+                -15.98011073950276,
+                -15.99502691201306,
+                24
+              ],
+              "max": [
+                16,
+                15.99502691201306,
+                28
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -15.98011073950276,
+                -15.99502691201306,
+                28
+              ],
+              "max": [
+                16,
+                15.99502691201306,
+                32
+              ]
+            },
+            "originalVolumeMm3": 2902.831611916969,
+            "editedVolumeMm3": 2902.831611916969
+          }
+        ],
+        "undoRestoredVolumes": true
+      },
+      "saveOpen": "identical document; native body count preserved",
+      "stl": {
+        "mode": "separate",
+        "fullChecks": true,
+        "bodyCount": 3,
+        "triangleCount": 1512,
+        "warnings": [],
+        "binaryFiles": [
+          {
+            "filename": "Washer_ring.stl",
+            "component": "Lower washer",
+            "triangles": 504,
+            "signedVolumeMm3": 2898.0217257502263,
+            "relativeBRepVolumeError": 0.0016569635479359857
+          },
+          {
+            "filename": "Spacer_sleeve.stl",
+            "component": "Long spacer",
+            "triangles": 504,
+            "signedVolumeMm3": 4704.580738391942,
+            "relativeBRepVolumeError": 0.001656960413338071
+          },
+          {
+            "filename": "Upper_washer_ring.stl",
+            "component": "Upper washer",
+            "triangles": 504,
+            "signedVolumeMm3": 2898.0217257502254,
+            "relativeBRepVolumeError": 0.0016569635479363187
+          }
+        ]
+      },
+      "projectFileSha256": "412f958b82751eb0988b1f3a14ca3abf20df3a0183a8b10e6ae0b0de312d1849"
+    },
+    {
+      "order": 3,
+      "slug": "03-angle-fixture",
+      "name": "Angle bracket fixture",
+      "summary": "An L-shaped joined bracket and two horizontal fasteners; front-plane drilling tests coordinate orientation.",
+      "difficulty": "Beginner/intermediate",
+      "parts": 3,
+      "features": 7,
+      "sketches": 6,
+      "parameter": "web_height",
+      "original": 36,
+      "edited": 40,
+      "native": {
+        "durationMs": 565.6000000238419,
+        "totalVolumeMm3": 26693.547838175073,
+        "warnings": [],
+        "metrics": {
+          "parameterEvaluationMs": 0.10000002384185791,
+          "sketchSolveMs": 0.5,
+          "profileDetectionMs": 1.5,
+          "featureRebuildMs": 556.5,
+          "operationCount": 7,
+          "cacheSize": 3,
+          "wasmHeapCapacityBytes": 67108864,
+          "shapeDisposalAttempts": 12,
+          "shapeDisposalFailures": 0,
+          "scopedHandles": {
+            "registered": 722,
+            "disposed": 704,
+            "released": 18,
+            "alreadyDeleted": 0,
+            "failures": 0
+          },
+          "disposalFailures": 0
+        },
+        "bodies": [
+          {
+            "bodyId": "body:feature_55e89f9d",
+            "component": "L bracket",
+            "valid": true,
+            "volume": 26391.95494343045,
+            "surfaceArea": 10697.066586805762,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -30,
+                -20,
+                -1.7208456881689926e-15
+              ],
+              "max": [
+                30,
+                20,
+                41
+              ]
+            },
+            "triangles": 1512
+          },
+          {
+            "bodyId": "body:feature_ef31abd8",
+            "component": "Web fastener 1",
+            "valid": true,
+            "volume": 150.79644737231007,
+            "surfaceArea": 175.9291886010284,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -21.999378364001632,
+                11,
+                23
+              ],
+              "max": [
+                -18.000621635998368,
+                23,
+                26.997513842437844
+              ]
+            },
+            "triangles": 248
+          },
+          {
+            "bodyId": "body:feature_e87b22db",
+            "component": "Web fastener 2",
+            "valid": true,
+            "volume": 150.79644737231007,
+            "surfaceArea": 175.9291886010284,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                18.000621635998368,
+                11,
+                23
+              ],
+              "max": [
+                21.999378364001632,
+                23,
+                26.997513842437844
+              ]
+            },
+            "triangles": 248
+          }
+        ]
+      },
+      "parameterEdit": {
+        "from": 36,
+        "to": 40,
+        "totalVolumeMm3": 28133.547838175084,
+        "geometryChanged": true,
+        "changedBodies": [
+          {
+            "component": "L bracket",
+            "originalBounds": {
+              "min": [
+                -30,
+                -20,
+                -1.7208456881689926e-15
+              ],
+              "max": [
+                30,
+                20,
+                41
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -30,
+                -20,
+                -1.7208456881689926e-15
+              ],
+              "max": [
+                30,
+                20,
+                45
+              ]
+            },
+            "originalVolumeMm3": 26391.95494343045,
+            "editedVolumeMm3": 27831.95494343046
+          }
+        ],
+        "undoRestoredVolumes": true
+      },
+      "saveOpen": "identical document; native body count preserved",
+      "stl": {
+        "mode": "separate",
+        "fullChecks": true,
+        "bodyCount": 3,
+        "triangleCount": 2008,
+        "warnings": [],
+        "binaryFiles": [
+          {
+            "filename": "Underside_edge_break.stl",
+            "component": "L bracket",
+            "triangles": 1512,
+            "signedVolumeMm3": 26392.238659911185,
+            "relativeBRepVolumeError": 0.000010750112348301144
+          },
+          {
+            "filename": "Horizontal_shank.stl",
+            "component": "Web fastener 1",
+            "triangles": 248,
+            "signedVolumeMm3": 150.54658346711935,
+            "relativeBRepVolumeError": 0.0016569614838061186
+          },
+          {
+            "filename": "Horizontal_shank-2.stl",
+            "component": "Web fastener 2",
+            "triangles": 248,
+            "signedVolumeMm3": 150.54658346711935,
+            "relativeBRepVolumeError": 0.0016569614838061186
+          }
+        ]
+      },
+      "projectFileSha256": "5a70451f1cebaecb9820716833d1cd54112343bb49fcf7c49b8405fba5661d15"
+    },
+    {
+      "order": 4,
+      "slug": "04-panel-standoffs",
+      "name": "Elevated instrument panel",
+      "summary": "A rounded drilled panel over four hollow supports, with a shared post-height parameter.",
+      "difficulty": "Intermediate",
+      "parts": 5,
+      "features": 7,
+      "sketches": 7,
+      "parameter": "post_height",
+      "original": 18,
+      "edited": 22,
+      "native": {
+        "durationMs": 415.7999999523163,
+        "totalVolumeMm3": 22944.091541007707,
+        "warnings": [],
+        "metrics": {
+          "parameterEvaluationMs": 0.10000002384185791,
+          "sketchSolveMs": 0.8999999761581421,
+          "profileDetectionMs": 2.200000047683716,
+          "featureRebuildMs": 405.89999997615814,
+          "operationCount": 7,
+          "cacheSize": 5,
+          "wasmHeapCapacityBytes": 67108864,
+          "shapeDisposalAttempts": 12,
+          "shapeDisposalFailures": 0,
+          "scopedHandles": {
+            "registered": 541,
+            "disposed": 522,
+            "released": 19,
+            "alreadyDeleted": 0,
+            "failures": 0
+          },
+          "disposalFailures": 0
+        },
+        "bodies": [
+          {
+            "bodyId": "body:feature_0405ec61",
+            "component": "Instrument panel",
+            "valid": true,
+            "volume": 18384.006972469047,
+            "surfaceArea": 10999.366356517152,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -45,
+                -30,
+                0
+              ],
+              "max": [
+                45,
+                30,
+                4.000000200000001
+              ]
+            },
+            "triangles": 1568
+          },
+          {
+            "bodyId": "body:feature_d3d93592",
+            "component": "Support 1",
+            "valid": true,
+            "volume": 1140.021142134664,
+            "surfaceArea": 940.9698316032147,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -39.993784606094614,
+                -24.99844591000408,
+                -18
+              ],
+              "max": [
+                -30,
+                -15.001554089995919,
+                0
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_9fd609d5",
+            "component": "Support 2",
+            "valid": true,
+            "volume": 1140.021142134664,
+            "surfaceArea": 940.9698316032147,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                30.006215393905386,
+                -24.99844591000408,
+                -18
+              ],
+              "max": [
+                40,
+                -15.001554089995919,
+                0
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_dc836d14",
+            "component": "Support 3",
+            "valid": true,
+            "volume": 1140.021142134664,
+            "surfaceArea": 940.9698316032147,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                30.006215393905386,
+                15.001554089995919,
+                -18
+              ],
+              "max": [
+                40,
+                24.99844591000408,
+                0
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_447ed460",
+            "component": "Support 4",
+            "valid": true,
+            "volume": 1140.021142134664,
+            "surfaceArea": 940.9698316032147,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -39.993784606094614,
+                15.001554089995919,
+                -18
+              ],
+              "max": [
+                -30,
+                24.99844591000408,
+                0
+              ]
+            },
+            "triangles": 504
+          }
+        ]
+      },
+      "parameterEdit": {
+        "from": 18,
+        "to": 22,
+        "totalVolumeMm3": 23957.44366734963,
+        "geometryChanged": true,
+        "changedBodies": [
+          {
+            "component": "Support 1",
+            "originalBounds": {
+              "min": [
+                -39.993784606094614,
+                -24.99844591000408,
+                -18
+              ],
+              "max": [
+                -30,
+                -15.001554089995919,
+                0
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -39.993784606094614,
+                -24.99844591000408,
+                -22
+              ],
+              "max": [
+                -30,
+                -15.001554089995919,
+                0
+              ]
+            },
+            "originalVolumeMm3": 1140.021142134664,
+            "editedVolumeMm3": 1393.3591737201448
+          },
+          {
+            "component": "Support 2",
+            "originalBounds": {
+              "min": [
+                30.006215393905386,
+                -24.99844591000408,
+                -18
+              ],
+              "max": [
+                40,
+                -15.001554089995919,
+                0
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                30.006215393905386,
+                -24.99844591000408,
+                -22
+              ],
+              "max": [
+                40,
+                -15.001554089995919,
+                0
+              ]
+            },
+            "originalVolumeMm3": 1140.021142134664,
+            "editedVolumeMm3": 1393.3591737201448
+          },
+          {
+            "component": "Support 3",
+            "originalBounds": {
+              "min": [
+                30.006215393905386,
+                15.001554089995919,
+                -18
+              ],
+              "max": [
+                40,
+                24.99844591000408,
+                0
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                30.006215393905386,
+                15.001554089995919,
+                -22
+              ],
+              "max": [
+                40,
+                24.99844591000408,
+                0
+              ]
+            },
+            "originalVolumeMm3": 1140.021142134664,
+            "editedVolumeMm3": 1393.359173720145
+          },
+          {
+            "component": "Support 4",
+            "originalBounds": {
+              "min": [
+                -39.993784606094614,
+                15.001554089995919,
+                -18
+              ],
+              "max": [
+                -30,
+                24.99844591000408,
+                0
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -39.993784606094614,
+                15.001554089995919,
+                -22
+              ],
+              "max": [
+                -30,
+                24.99844591000408,
+                0
+              ]
+            },
+            "originalVolumeMm3": 1140.021142134664,
+            "editedVolumeMm3": 1393.359173720145
+          }
+        ],
+        "undoRestoredVolumes": true
+      },
+      "saveOpen": "identical document; native body count preserved",
+      "stl": {
+        "mode": "separate",
+        "fullChecks": true,
+        "bodyCount": 5,
+        "triangleCount": 3584,
+        "warnings": [],
+        "binaryFiles": [
+          {
+            "filename": "Panel_blank.stl",
+            "component": "Instrument panel",
+            "triangles": 1568,
+            "signedVolumeMm3": 18383.86540580508,
+            "relativeBRepVolumeError": 0.00000770053363108314
+          },
+          {
+            "filename": "Hollow_support.stl",
+            "component": "Support 1",
+            "triangles": 504,
+            "signedVolumeMm3": 1138.132194211792,
+            "relativeBRepVolumeError": 0.0016569411329818706
+          },
+          {
+            "filename": "Hollow_support-2.stl",
+            "component": "Support 2",
+            "triangles": 504,
+            "signedVolumeMm3": 1138.1322536673651,
+            "relativeBRepVolumeError": 0.001656888979937543
+          },
+          {
+            "filename": "Hollow_support-3.stl",
+            "component": "Support 3",
+            "triangles": 504,
+            "signedVolumeMm3": 1138.1322536673651,
+            "relativeBRepVolumeError": 0.001656888979937543
+          },
+          {
+            "filename": "Hollow_support-4.stl",
+            "component": "Support 4",
+            "triangles": 504,
+            "signedVolumeMm3": 1138.132194211792,
+            "relativeBRepVolumeError": 0.0016569411329818706
+          }
+        ]
+      },
+      "projectFileSha256": "84bdfaabc8ddf025d0480839026c19d9633f13fcdea29dd89e22618753dde9d7"
+    },
+    {
+      "order": 5,
+      "slug": "05-motor-flange",
+      "name": "Motor mounting flange",
+      "summary": "Six parts: a filleted flange with a raised bearing boss, relief slots, shaft and four headed fasteners.",
+      "difficulty": "Intermediate",
+      "parts": 6,
+      "features": 16,
+      "sketches": 15,
+      "parameter": "flange_thickness",
+      "original": 8,
+      "edited": 10,
+      "native": {
+        "durationMs": 994.8999999761581,
+        "totalVolumeMm3": 84225.84851544954,
+        "warnings": [],
+        "metrics": {
+          "parameterEvaluationMs": 0,
+          "sketchSolveMs": 1.0999999046325684,
+          "profileDetectionMs": 3.5000001192092896,
+          "featureRebuildMs": 981.6000000238419,
+          "operationCount": 16,
+          "cacheSize": 6,
+          "wasmHeapCapacityBytes": 67108864,
+          "shapeDisposalAttempts": 28,
+          "shapeDisposalFailures": 0,
+          "scopedHandles": {
+            "registered": 1104,
+            "disposed": 1068,
+            "released": 36,
+            "alreadyDeleted": 0,
+            "failures": 0
+          },
+          "disposalFailures": 0
+        },
+        "bodies": [
+          {
+            "bodyId": "body:feature_c4aa0eea",
+            "component": "Motor flange",
+            "valid": true,
+            "volume": 69893.90282977292,
+            "surfaceArea": 21787.92764140058,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -50,
+                -42,
+                0
+              ],
+              "max": [
+                50,
+                42,
+                18.0000001
+              ]
+            },
+            "triangles": 4528
+          },
+          {
+            "bodyId": "body:05-motor-flange_revolve_7",
+            "component": "Drive shaft",
+            "valid": true,
+            "volume": 12214.512237157118,
+            "surfaceArea": 3223.2740625831275,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -8.988812290970301,
+                -8.997202638007346,
+                -8
+              ],
+              "max": [
+                9,
+                8.997202638007346,
+                40
+              ]
+            },
+            "triangles": 248
+          },
+          {
+            "bodyId": "body:feature_5f1ca370",
+            "component": "Mounting bolt 1",
+            "valid": true,
+            "volume": 529.3583621298802,
+            "surfaceArea": 460.24332375090466,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -44.49440614548515,
+                -36.498601319003676,
+                -6
+              ],
+              "max": [
+                -35.5,
+                -27.501398680996328,
+                12
+              ]
+            },
+            "triangles": 500
+          },
+          {
+            "bodyId": "body:feature_b2ee0d17",
+            "component": "Mounting bolt 2",
+            "valid": true,
+            "volume": 529.3583621298802,
+            "surfaceArea": 460.24332375090466,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                35.50559385451485,
+                -36.498601319003676,
+                -6
+              ],
+              "max": [
+                44.5,
+                -27.501398680996328,
+                12
+              ]
+            },
+            "triangles": 500
+          },
+          {
+            "bodyId": "body:feature_ef07acb9",
+            "component": "Mounting bolt 3",
+            "valid": true,
+            "volume": 529.3583621298802,
+            "surfaceArea": 460.24332375090466,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                35.50559385451485,
+                27.501398680996328,
+                -6
+              ],
+              "max": [
+                44.5,
+                36.498601319003676,
+                12
+              ]
+            },
+            "triangles": 500
+          },
+          {
+            "bodyId": "body:feature_ba88ef9e",
+            "component": "Mounting bolt 4",
+            "valid": true,
+            "volume": 529.3583621298802,
+            "surfaceArea": 460.24332375090466,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -44.49440614548515,
+                27.501398680996328,
+                -6
+              ],
+              "max": [
+                -35.5,
+                36.498601319003676,
+                12
+              ]
+            },
+            "triangles": 500
+          }
+        ]
+      },
+      "parameterEdit": {
+        "from": 8,
+        "to": 10,
+        "totalVolumeMm3": 99047.90168428747,
+        "geometryChanged": true,
+        "changedBodies": [
+          {
+            "component": "Motor flange",
+            "originalBounds": {
+              "min": [
+                -50,
+                -42,
+                0
+              ],
+              "max": [
+                50,
+                42,
+                18.0000001
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -50,
+                -42,
+                0
+              ],
+              "max": [
+                50,
+                42,
+                20.0000001
+              ]
+            },
+            "originalVolumeMm3": 69893.90282977292,
+            "editedVolumeMm3": 84715.95599861085
+          },
+          {
+            "component": "Mounting bolt 1",
+            "originalBounds": {
+              "min": [
+                -44.49440614548515,
+                -36.498601319003676,
+                -6
+              ],
+              "max": [
+                -35.5,
+                -27.501398680996328,
+                12
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -44.49440614548515,
+                -36.498601319003676,
+                -4
+              ],
+              "max": [
+                -35.5,
+                -27.501398680996328,
+                14
+              ]
+            },
+            "originalVolumeMm3": 529.3583621298802,
+            "editedVolumeMm3": 529.3583621298802
+          },
+          {
+            "component": "Mounting bolt 2",
+            "originalBounds": {
+              "min": [
+                35.50559385451485,
+                -36.498601319003676,
+                -6
+              ],
+              "max": [
+                44.5,
+                -27.501398680996328,
+                12
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                35.50559385451485,
+                -36.498601319003676,
+                -4
+              ],
+              "max": [
+                44.5,
+                -27.501398680996328,
+                14
+              ]
+            },
+            "originalVolumeMm3": 529.3583621298802,
+            "editedVolumeMm3": 529.3583621298802
+          },
+          {
+            "component": "Mounting bolt 3",
+            "originalBounds": {
+              "min": [
+                35.50559385451485,
+                27.501398680996328,
+                -6
+              ],
+              "max": [
+                44.5,
+                36.498601319003676,
+                12
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                35.50559385451485,
+                27.501398680996328,
+                -4
+              ],
+              "max": [
+                44.5,
+                36.498601319003676,
+                14
+              ]
+            },
+            "originalVolumeMm3": 529.3583621298802,
+            "editedVolumeMm3": 529.3583621298802
+          },
+          {
+            "component": "Mounting bolt 4",
+            "originalBounds": {
+              "min": [
+                -44.49440614548515,
+                27.501398680996328,
+                -6
+              ],
+              "max": [
+                -35.5,
+                36.498601319003676,
+                12
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -44.49440614548515,
+                27.501398680996328,
+                -4
+              ],
+              "max": [
+                -35.5,
+                36.498601319003676,
+                14
+              ]
+            },
+            "originalVolumeMm3": 529.3583621298802,
+            "editedVolumeMm3": 529.3583621298802
+          }
+        ],
+        "undoRestoredVolumes": true
+      },
+      "saveOpen": "identical document; native body count preserved",
+      "stl": {
+        "mode": "separate",
+        "fullChecks": true,
+        "bodyCount": 6,
+        "triangleCount": 6776,
+        "warnings": [],
+        "binaryFiles": [
+          {
+            "filename": "Soft_perimeter.stl",
+            "component": "Motor flange",
+            "triangles": 4528,
+            "signedVolumeMm3": 69881.41701558651,
+            "relativeBRepVolumeError": 0.0001786395333627233
+          },
+          {
+            "filename": "Turned_shaft.stl",
+            "component": "Drive shaft",
+            "triangles": 248,
+            "signedVolumeMm3": 12194.27337807153,
+            "relativeBRepVolumeError": 0.0016569518858084997
+          },
+          {
+            "filename": "Fastener_shank.stl",
+            "component": "Mounting bolt 1",
+            "triangles": 500,
+            "signedVolumeMm3": 528.4811874634611,
+            "relativeBRepVolumeError": 0.0016570526304521271
+          },
+          {
+            "filename": "Fastener_shank-2.stl",
+            "component": "Mounting bolt 2",
+            "triangles": 500,
+            "signedVolumeMm3": 528.4811874634613,
+            "relativeBRepVolumeError": 0.001657052630451683
+          },
+          {
+            "filename": "Fastener_shank-3.stl",
+            "component": "Mounting bolt 3",
+            "triangles": 500,
+            "signedVolumeMm3": 528.4811874634606,
+            "relativeBRepVolumeError": 0.0016570526304530153
+          },
+          {
+            "filename": "Fastener_shank-4.stl",
+            "component": "Mounting bolt 4",
+            "triangles": 500,
+            "signedVolumeMm3": 528.4811874634618,
+            "relativeBRepVolumeError": 0.0016570526304507949
+          }
+        ]
+      },
+      "projectFileSha256": "7d0ad0f408d8edff2048c1c0bab2865461dc1b049d3b09473a9a991f08e99c14"
+    },
+    {
+      "order": 6,
+      "slug": "06-flanged-valve",
+      "name": "Flanged valve cartridge",
+      "summary": "Eight parts: bored valve body, cover, plunger, gasket and four bolts, with matched hole patterns.",
+      "difficulty": "Intermediate/advanced",
+      "parts": 8,
+      "features": 16,
+      "sketches": 15,
+      "parameter": "valve_height",
+      "original": 32,
+      "edited": 36,
+      "native": {
+        "durationMs": 707.2999999523163,
+        "totalVolumeMm3": 165316.84336968925,
+        "warnings": [],
+        "metrics": {
+          "parameterEvaluationMs": 0.10000002384185791,
+          "sketchSolveMs": 0.2999999523162842,
+          "profileDetectionMs": 0.10000002384185791,
+          "featureRebuildMs": 702.5,
+          "operationCount": 16,
+          "cacheSize": 8,
+          "wasmHeapCapacityBytes": 67108864,
+          "shapeDisposalAttempts": 29,
+          "shapeDisposalFailures": 0,
+          "scopedHandles": {
+            "registered": 834,
+            "disposed": 791,
+            "released": 43,
+            "alreadyDeleted": 0,
+            "failures": 0
+          },
+          "disposalFailures": 0
+        },
+        "bodies": [
+          {
+            "bodyId": "body:feature_d6705977",
+            "component": "Valve body",
+            "valid": true,
+            "volume": 113505.7425741992,
+            "surfaceArea": 22592.12736134855,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -45.942818376070434,
+                -45.98570237203755,
+                0
+              ],
+              "max": [
+                46,
+                45.98570237203755,
+                32
+              ]
+            },
+            "triangles": 2284
+          },
+          {
+            "bodyId": "body:feature_f2184885",
+            "component": "Removable cover",
+            "valid": true,
+            "volume": 34288.09619493722,
+            "surfaceArea": 14249.258975076626,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -45.942818376070434,
+                -45.98570237203755,
+                33
+              ],
+              "max": [
+                46,
+                45.98570237203755,
+                39.0000001
+              ]
+            },
+            "triangles": 1528
+          },
+          {
+            "bodyId": "body:06-flanged-valve_revolve_6",
+            "component": "Plunger",
+            "valid": true,
+            "volume": 9556.724852220148,
+            "surfaceArea": 2532.123678793373,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -12.983839975845992,
+                -12.995959366010611,
+                6
+              ],
+              "max": [
+                13,
+                12.995959366010611,
+                24
+              ]
+            },
+            "triangles": 248
+          },
+          {
+            "bodyId": "body:feature_dbac6615",
+            "component": "Gasket",
+            "valid": true,
+            "volume": 3044.203281328509,
+            "surfaceArea": 6408.849013323176,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -34.956492242662286,
+                -34.98912137002857,
+                32
+              ],
+              "max": [
+                35,
+                34.98912137002857,
+                33
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_5d64c68f",
+            "component": "Cover bolt 1",
+            "valid": true,
+            "volume": 1230.5191167510322,
+            "surfaceArea": 937.2099735153984,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -37.03373488294337,
+                -27.038433477284112,
+                2
+              ],
+              "max": [
+                -26.96,
+                -16.961566522715888,
+                43
+              ]
+            },
+            "triangles": 500
+          },
+          {
+            "bodyId": "body:feature_ee40b297",
+            "component": "Cover bolt 2",
+            "valid": true,
+            "volume": 1230.519116751032,
+            "surfaceArea": 937.2099735153984,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                26.966265117056633,
+                -27.038433477284112,
+                2
+              ],
+              "max": [
+                37.04,
+                -16.961566522715888,
+                43
+              ]
+            },
+            "triangles": 500
+          },
+          {
+            "bodyId": "body:feature_af740386",
+            "component": "Cover bolt 3",
+            "valid": true,
+            "volume": 1230.519116751032,
+            "surfaceArea": 937.2099735153984,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                26.966265117056633,
+                16.961566522715888,
+                2
+              ],
+              "max": [
+                37.04,
+                27.038433477284112,
+                43
+              ]
+            },
+            "triangles": 500
+          },
+          {
+            "bodyId": "body:feature_3a6b8ba4",
+            "component": "Cover bolt 4",
+            "valid": true,
+            "volume": 1230.5191167510322,
+            "surfaceArea": 937.2099735153984,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -37.03373488294337,
+                16.961566522715888,
+                2
+              ],
+              "max": [
+                -26.96,
+                27.038433477284112,
+                43
+              ]
+            },
+            "triangles": 500
+          }
+        ]
+      },
+      "parameterEdit": {
+        "from": 32,
+        "to": 36,
+        "totalVolumeMm3": 177020.65830507874,
+        "geometryChanged": true,
+        "changedBodies": [
+          {
+            "component": "Valve body",
+            "originalBounds": {
+              "min": [
+                -45.942818376070434,
+                -45.98570237203755,
+                0
+              ],
+              "max": [
+                46,
+                45.98570237203755,
+                32
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -45.942818376070434,
+                -45.98570237203755,
+                0
+              ],
+              "max": [
+                46,
+                45.98570237203755,
+                36
+              ]
+            },
+            "originalVolumeMm3": 113505.7425741992,
+            "editedVolumeMm3": 124815.47612712246
+          },
+          {
+            "component": "Removable cover",
+            "originalBounds": {
+              "min": [
+                -45.942818376070434,
+                -45.98570237203755,
+                33
+              ],
+              "max": [
+                46,
+                45.98570237203755,
+                39.0000001
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -45.942818376070434,
+                -45.98570237203755,
+                37
+              ],
+              "max": [
+                46,
+                45.98570237203755,
+                43.0000001
+              ]
+            },
+            "originalVolumeMm3": 34288.09619493722,
+            "editedVolumeMm3": 34288.09619493722
+          },
+          {
+            "component": "Gasket",
+            "originalBounds": {
+              "min": [
+                -34.956492242662286,
+                -34.98912137002857,
+                32
+              ],
+              "max": [
+                35,
+                34.98912137002857,
+                33
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -34.956492242662286,
+                -34.98912137002857,
+                36
+              ],
+              "max": [
+                35,
+                34.98912137002857,
+                37
+              ]
+            },
+            "originalVolumeMm3": 3044.203281328509,
+            "editedVolumeMm3": 3044.20328132851
+          },
+          {
+            "component": "Cover bolt 1",
+            "originalBounds": {
+              "min": [
+                -37.03373488294337,
+                -27.038433477284112,
+                2
+              ],
+              "max": [
+                -26.96,
+                -16.961566522715888,
+                43
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -37.03373488294337,
+                -27.038433477284112,
+                2
+              ],
+              "max": [
+                -26.96,
+                -16.961566522715888,
+                47
+              ]
+            },
+            "originalVolumeMm3": 1230.5191167510322,
+            "editedVolumeMm3": 1329.0394623676082
+          },
+          {
+            "component": "Cover bolt 2",
+            "originalBounds": {
+              "min": [
+                26.966265117056633,
+                -27.038433477284112,
+                2
+              ],
+              "max": [
+                37.04,
+                -16.961566522715888,
+                43
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                26.966265117056633,
+                -27.038433477284112,
+                2
+              ],
+              "max": [
+                37.04,
+                -16.961566522715888,
+                47
+              ]
+            },
+            "originalVolumeMm3": 1230.519116751032,
+            "editedVolumeMm3": 1329.039462367608
+          },
+          {
+            "component": "Cover bolt 3",
+            "originalBounds": {
+              "min": [
+                26.966265117056633,
+                16.961566522715888,
+                2
+              ],
+              "max": [
+                37.04,
+                27.038433477284112,
+                43
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                26.966265117056633,
+                16.961566522715888,
+                2
+              ],
+              "max": [
+                37.04,
+                27.038433477284112,
+                47
+              ]
+            },
+            "originalVolumeMm3": 1230.519116751032,
+            "editedVolumeMm3": 1329.039462367608
+          },
+          {
+            "component": "Cover bolt 4",
+            "originalBounds": {
+              "min": [
+                -37.03373488294337,
+                16.961566522715888,
+                2
+              ],
+              "max": [
+                -26.96,
+                27.038433477284112,
+                43
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -37.03373488294337,
+                16.961566522715888,
+                2
+              ],
+              "max": [
+                -26.96,
+                27.038433477284112,
+                47
+              ]
+            },
+            "originalVolumeMm3": 1230.5191167510322,
+            "editedVolumeMm3": 1329.0394623676082
+          }
+        ],
+        "undoRestoredVolumes": true
+      },
+      "saveOpen": "identical document; native body count preserved",
+      "stl": {
+        "mode": "separate",
+        "fullChecks": true,
+        "bodyCount": 8,
+        "triangleCount": 6564,
+        "warnings": [],
+        "binaryFiles": [
+          {
+            "filename": "Underside_edge_break.stl",
+            "component": "Valve body",
+            "triangles": 2284,
+            "signedVolumeMm3": 113317.66963115374,
+            "relativeBRepVolumeError": 0.0016569465013853701
+          },
+          {
+            "filename": "Cover_ring.stl",
+            "component": "Removable cover",
+            "triangles": 1528,
+            "signedVolumeMm3": 34231.28264205936,
+            "relativeBRepVolumeError": 0.0016569468469423976
+          },
+          {
+            "filename": "Turned_plunger.stl",
+            "component": "Plunger",
+            "triangles": 248,
+            "signedVolumeMm3": 9540.88977428003,
+            "relativeBRepVolumeError": 0.0016569565604306336
+          },
+          {
+            "filename": "Gasket_ring.stl",
+            "component": "Gasket",
+            "triangles": 504,
+            "signedVolumeMm3": 3039.159156691056,
+            "relativeBRepVolumeError": 0.0016569605152162437
+          },
+          {
+            "filename": "Fastener_shank.stl",
+            "component": "Cover bolt 1",
+            "triangles": 500,
+            "signedVolumeMm3": 1228.4802116289968,
+            "relativeBRepVolumeError": 0.001656947132539277
+          },
+          {
+            "filename": "Fastener_shank-2.stl",
+            "component": "Cover bolt 2",
+            "triangles": 500,
+            "signedVolumeMm3": 1228.4801743800604,
+            "relativeBRepVolumeError": 0.0016569774034516094
+          },
+          {
+            "filename": "Fastener_shank-3.stl",
+            "component": "Cover bolt 3",
+            "triangles": 500,
+            "signedVolumeMm3": 1228.4801743800597,
+            "relativeBRepVolumeError": 0.0016569774034521645
+          },
+          {
+            "filename": "Fastener_shank-4.stl",
+            "component": "Cover bolt 4",
+            "triangles": 500,
+            "signedVolumeMm3": 1228.480211629001,
+            "relativeBRepVolumeError": 0.0016569471325359464
+          }
+        ]
+      },
+      "projectFileSha256": "cda01cc75939b1829608cd53d6b4e2ea3bc7ae8df2825e585e5a24951b759285"
+    },
+    {
+      "order": 7,
+      "slug": "07-robot-gripper",
+      "name": "Parallel robot gripper concept",
+      "summary": "Eleven static parts: pocketed palm, slotted jaws, pins, contact pads and four fasteners.",
+      "difficulty": "Advanced",
+      "parts": 11,
+      "features": 22,
+      "sketches": 22,
+      "parameter": "jaw_span",
+      "original": 56,
+      "edited": 60,
+      "native": {
+        "durationMs": 1211.8999999761581,
+        "totalVolumeMm3": 49914.123671801535,
+        "warnings": [],
+        "metrics": {
+          "parameterEvaluationMs": 0,
+          "sketchSolveMs": 1.6999996900558472,
+          "profileDetectionMs": 9.200000166893005,
+          "featureRebuildMs": 1177.2999999523163,
+          "operationCount": 22,
+          "cacheSize": 11,
+          "wasmHeapCapacityBytes": 67108864,
+          "shapeDisposalAttempts": 37,
+          "shapeDisposalFailures": 0,
+          "scopedHandles": {
+            "registered": 1517,
+            "disposed": 1468,
+            "released": 49,
+            "alreadyDeleted": 0,
+            "failures": 0
+          },
+          "disposalFailures": 0
+        },
+        "bodies": [
+          {
+            "bodyId": "body:feature_03c84e76",
+            "component": "Gripper palm",
+            "valid": true,
+            "volume": 32649.51507124665,
+            "surfaceArea": 11786.683053533707,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -40,
+                -22,
+                0
+              ],
+              "max": [
+                40,
+                22,
+                12.000000199999999
+              ]
+            },
+            "triangles": 2076
+          },
+          {
+            "bodyId": "body:feature_979e4155",
+            "component": "Jaw 1",
+            "valid": true,
+            "volume": 6091.079653746047,
+            "surfaceArea": 3420.339806422956,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -34,
+                -11,
+                12
+              ],
+              "max": [
+                -22,
+                51,
+                22.000000200000002
+              ]
+            },
+            "triangles": 800
+          },
+          {
+            "bodyId": "body:feature_3e528dba",
+            "component": "Jaw 2",
+            "valid": true,
+            "volume": 6091.079653746047,
+            "surfaceArea": 3420.339806422956,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                22,
+                -11,
+                12
+              ],
+              "max": [
+                34,
+                51,
+                22.000000200000002
+              ]
+            },
+            "triangles": 800
+          },
+          {
+            "bodyId": "body:feature_214a51b0",
+            "component": "Pivot pin 1",
+            "valid": true,
+            "volume": 961.3273519984768,
+            "surfaceArea": 697.4335690969341,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -30.996270763656767,
+                -9.999067546002449,
+                -5
+              ],
+              "max": [
+                -25,
+                -4.000932453997551,
+                29
+              ]
+            },
+            "triangles": 248
+          },
+          {
+            "bodyId": "body:feature_9cb46061",
+            "component": "Contact pad 1",
+            "valid": true,
+            "volume": 1002.8495559215387,
+            "surfaceArea": 635.9822971502571,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -35,
+                37,
+                22
+              ],
+              "max": [
+                -21,
+                49,
+                28
+              ]
+            },
+            "triangles": 268
+          },
+          {
+            "bodyId": "body:feature_1712245d",
+            "component": "Pivot pin 2",
+            "valid": true,
+            "volume": 961.3273519984768,
+            "surfaceArea": 697.4335690969341,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                25.003729236343233,
+                -9.999067546002449,
+                -5
+              ],
+              "max": [
+                31,
+                -4.000932453997551,
+                29
+              ]
+            },
+            "triangles": 248
+          },
+          {
+            "bodyId": "body:feature_8a1024da",
+            "component": "Contact pad 2",
+            "valid": true,
+            "volume": 1002.8495559215387,
+            "surfaceArea": 635.9822971502571,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                21,
+                37,
+                22
+              ],
+              "max": [
+                35,
+                49,
+                28
+              ]
+            },
+            "triangles": 268
+          },
+          {
+            "bodyId": "body:feature_089260a7",
+            "component": "Palm fastener 1",
+            "valid": true,
+            "volume": 288.5238693056867,
+            "surfaceArea": 297.5716561480253,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -18.595524916388122,
+                -19.598881055202938,
+                2
+              ],
+              "max": [
+                -11.399999999999999,
+                -12.40111894479706,
+                16
+              ]
+            },
+            "triangles": 500
+          },
+          {
+            "bodyId": "body:feature_e6bd7375",
+            "component": "Palm fastener 2",
+            "valid": true,
+            "volume": 288.5238693056867,
+            "surfaceArea": 297.5716561480253,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                11.404475083611878,
+                -19.598881055202938,
+                2
+              ],
+              "max": [
+                18.6,
+                -12.40111894479706,
+                16
+              ]
+            },
+            "triangles": 500
+          },
+          {
+            "bodyId": "body:feature_6b15198e",
+            "component": "Palm fastener 3",
+            "valid": true,
+            "volume": 288.5238693056867,
+            "surfaceArea": 297.5716561480253,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                11.404475083611878,
+                12.40111894479706,
+                2
+              ],
+              "max": [
+                18.6,
+                19.598881055202938,
+                16
+              ]
+            },
+            "triangles": 500
+          },
+          {
+            "bodyId": "body:feature_540a487e",
+            "component": "Palm fastener 4",
+            "valid": true,
+            "volume": 288.5238693056867,
+            "surfaceArea": 297.5716561480253,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -18.595524916388122,
+                12.40111894479706,
+                2
+              ],
+              "max": [
+                -11.399999999999999,
+                19.598881055202938,
+                16
+              ]
+            },
+            "triangles": 500
+          }
+        ]
+      },
+      "parameterEdit": {
+        "from": 56,
+        "to": 60,
+        "totalVolumeMm3": 49914.123671801535,
+        "geometryChanged": true,
+        "changedBodies": [
+          {
+            "component": "Gripper palm",
+            "originalBounds": {
+              "min": [
+                -40,
+                -22,
+                0
+              ],
+              "max": [
+                40,
+                22,
+                12.000000199999999
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -40,
+                -22,
+                0
+              ],
+              "max": [
+                40,
+                22,
+                12.000000199999999
+              ]
+            },
+            "originalVolumeMm3": 32649.51507124665,
+            "editedVolumeMm3": 32649.51507124665
+          },
+          {
+            "component": "Jaw 1",
+            "originalBounds": {
+              "min": [
+                -34,
+                -11,
+                12
+              ],
+              "max": [
+                -22,
+                51,
+                22.000000200000002
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -36,
+                -11,
+                12
+              ],
+              "max": [
+                -24,
+                51,
+                22.000000200000002
+              ]
+            },
+            "originalVolumeMm3": 6091.079653746047,
+            "editedVolumeMm3": 6091.0796537460465
+          },
+          {
+            "component": "Jaw 2",
+            "originalBounds": {
+              "min": [
+                22,
+                -11,
+                12
+              ],
+              "max": [
+                34,
+                51,
+                22.000000200000002
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                24,
+                -11,
+                12
+              ],
+              "max": [
+                36,
+                51,
+                22.000000200000002
+              ]
+            },
+            "originalVolumeMm3": 6091.079653746047,
+            "editedVolumeMm3": 6091.079653746047
+          },
+          {
+            "component": "Pivot pin 1",
+            "originalBounds": {
+              "min": [
+                -30.996270763656767,
+                -9.999067546002449,
+                -5
+              ],
+              "max": [
+                -25,
+                -4.000932453997551,
+                29
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -32.99627076365677,
+                -9.999067546002449,
+                -5
+              ],
+              "max": [
+                -27,
+                -4.000932453997551,
+                29
+              ]
+            },
+            "originalVolumeMm3": 961.3273519984768,
+            "editedVolumeMm3": 961.3273519984766
+          },
+          {
+            "component": "Contact pad 1",
+            "originalBounds": {
+              "min": [
+                -35,
+                37,
+                22
+              ],
+              "max": [
+                -21,
+                49,
+                28
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -37,
+                37,
+                22
+              ],
+              "max": [
+                -23,
+                49,
+                28
+              ]
+            },
+            "originalVolumeMm3": 1002.8495559215387,
+            "editedVolumeMm3": 1002.8495559215387
+          },
+          {
+            "component": "Pivot pin 2",
+            "originalBounds": {
+              "min": [
+                25.003729236343233,
+                -9.999067546002449,
+                -5
+              ],
+              "max": [
+                31,
+                -4.000932453997551,
+                29
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                27.003729236343233,
+                -9.999067546002449,
+                -5
+              ],
+              "max": [
+                33,
+                -4.000932453997551,
+                29
+              ]
+            },
+            "originalVolumeMm3": 961.3273519984768,
+            "editedVolumeMm3": 961.3273519984768
+          },
+          {
+            "component": "Contact pad 2",
+            "originalBounds": {
+              "min": [
+                21,
+                37,
+                22
+              ],
+              "max": [
+                35,
+                49,
+                28
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                23,
+                37,
+                22
+              ],
+              "max": [
+                37,
+                49,
+                28
+              ]
+            },
+            "originalVolumeMm3": 1002.8495559215387,
+            "editedVolumeMm3": 1002.8495559215387
+          }
+        ],
+        "undoRestoredVolumes": true,
+        "pinHoleAlignment": [
+          {
+            "jawSpanMm": 56,
+            "pairs": [
+              {
+                "pin": 1,
+                "pinAxisOrigin": {
+                  "x": -28,
+                  "y": -7,
+                  "z": -5
+                },
+                "palmHoleCenter": {
+                  "x": -28,
+                  "y": -7,
+                  "z": 0
+                },
+                "jawHoleCenter": {
+                  "x": -28,
+                  "y": -7,
+                  "z": 12
+                },
+                "pinRadius": 3,
+                "nativePinBounds": {
+                  "min": [
+                    -30.996270763656767,
+                    -9.999067546002449,
+                    -5
+                  ],
+                  "max": [
+                    -25,
+                    -4.000932453997551,
+                    29
+                  ]
+                },
+                "nativePinVolumeMm3": 961.3273519984768,
+                "nativeSource": "opencascade"
+              },
+              {
+                "pin": 2,
+                "pinAxisOrigin": {
+                  "x": 28,
+                  "y": -7,
+                  "z": -5
+                },
+                "palmHoleCenter": {
+                  "x": 28,
+                  "y": -7,
+                  "z": 0
+                },
+                "jawHoleCenter": {
+                  "x": 28,
+                  "y": -7,
+                  "z": 12
+                },
+                "pinRadius": 3,
+                "nativePinBounds": {
+                  "min": [
+                    25.003729236343233,
+                    -9.999067546002449,
+                    -5
+                  ],
+                  "max": [
+                    31,
+                    -4.000932453997551,
+                    29
+                  ]
+                },
+                "nativePinVolumeMm3": 961.3273519984768,
+                "nativeSource": "opencascade"
+              }
+            ],
+            "xyCoincident": true,
+            "pinSpansPalmAndJaw": true,
+            "radialClearanceMm": 0.4
+          },
+          {
+            "jawSpanMm": 60,
+            "pairs": [
+              {
+                "pin": 1,
+                "pinAxisOrigin": {
+                  "x": -30,
+                  "y": -7,
+                  "z": -5
+                },
+                "palmHoleCenter": {
+                  "x": -30,
+                  "y": -7,
+                  "z": 0
+                },
+                "jawHoleCenter": {
+                  "x": -30,
+                  "y": -7,
+                  "z": 12
+                },
+                "pinRadius": 3,
+                "nativePinBounds": {
+                  "min": [
+                    -32.99627076365677,
+                    -9.999067546002449,
+                    -5
+                  ],
+                  "max": [
+                    -27,
+                    -4.000932453997551,
+                    29
+                  ]
+                },
+                "nativePinVolumeMm3": 961.3273519984766,
+                "nativeSource": "opencascade"
+              },
+              {
+                "pin": 2,
+                "pinAxisOrigin": {
+                  "x": 30,
+                  "y": -7,
+                  "z": -5
+                },
+                "palmHoleCenter": {
+                  "x": 30,
+                  "y": -7,
+                  "z": 0
+                },
+                "jawHoleCenter": {
+                  "x": 30,
+                  "y": -7,
+                  "z": 12
+                },
+                "pinRadius": 3,
+                "nativePinBounds": {
+                  "min": [
+                    27.003729236343233,
+                    -9.999067546002449,
+                    -5
+                  ],
+                  "max": [
+                    33,
+                    -4.000932453997551,
+                    29
+                  ]
+                },
+                "nativePinVolumeMm3": 961.3273519984768,
+                "nativeSource": "opencascade"
+              }
+            ],
+            "xyCoincident": true,
+            "pinSpansPalmAndJaw": true,
+            "radialClearanceMm": 0.4
+          }
+        ]
+      },
+      "saveOpen": "identical document; native body count preserved",
+      "stl": {
+        "mode": "separate",
+        "fullChecks": true,
+        "bodyCount": 11,
+        "triangleCount": 6708,
+        "warnings": [],
+        "binaryFiles": [
+          {
+            "filename": "Palm_blank.stl",
+            "component": "Gripper palm",
+            "triangles": 2076,
+            "signedVolumeMm3": 32650.352705966656,
+            "relativeBRepVolumeError": 0.000025655349495279367
+          },
+          {
+            "filename": "Jaw_blank.stl",
+            "component": "Jaw 1",
+            "triangles": 800,
+            "signedVolumeMm3": 6091.530124009418,
+            "relativeBRepVolumeError": 0.00007395573346236084
+          },
+          {
+            "filename": "Jaw_blank-2.stl",
+            "component": "Jaw 2",
+            "triangles": 800,
+            "signedVolumeMm3": 6091.530124009418,
+            "relativeBRepVolumeError": 0.00007395573346236084
+          },
+          {
+            "filename": "Pin.stl",
+            "component": "Pivot pin 1",
+            "triangles": 248,
+            "signedVolumeMm3": 959.7344744527751,
+            "relativeBRepVolumeError": 0.0016569564388138058
+          },
+          {
+            "filename": "Grip_pad.stl",
+            "component": "Contact pad 1",
+            "triangles": 268,
+            "signedVolumeMm3": 1002.8192815626243,
+            "relativeBRepVolumeError": 0.000030188335564007573
+          },
+          {
+            "filename": "Pin-2.stl",
+            "component": "Pivot pin 2",
+            "triangles": 248,
+            "signedVolumeMm3": 959.7344744527752,
+            "relativeBRepVolumeError": 0.0016569564388136948
+          },
+          {
+            "filename": "Grip_pad-2.stl",
+            "component": "Contact pad 2",
+            "triangles": 268,
+            "signedVolumeMm3": 1002.8192815626243,
+            "relativeBRepVolumeError": 0.000030188335564007573
+          },
+          {
+            "filename": "Fastener_shank.stl",
+            "component": "Palm fastener 1",
+            "triangles": 500,
+            "signedVolumeMm3": 288.0457994441649,
+            "relativeBRepVolumeError": 0.0016569508189121507
+          },
+          {
+            "filename": "Fastener_shank-2.stl",
+            "component": "Palm fastener 2",
+            "triangles": 500,
+            "signedVolumeMm3": 288.0457944760631,
+            "relativeBRepVolumeError": 0.0016569680379443508
+          },
+          {
+            "filename": "Fastener_shank-3.stl",
+            "component": "Palm fastener 3",
+            "triangles": 500,
+            "signedVolumeMm3": 288.0457944760629,
+            "relativeBRepVolumeError": 0.001656968037945128
+          },
+          {
+            "filename": "Fastener_shank-4.stl",
+            "component": "Palm fastener 4",
+            "triangles": 500,
+            "signedVolumeMm3": 288.04579944416474,
+            "relativeBRepVolumeError": 0.0016569508189127058
+          }
+        ]
+      },
+      "projectFileSha256": "28eec1f34c3f0e6b80d2cc355651eb9d03d25d431fefafcf9ecd594d837461fd"
+    },
+    {
+      "order": 8,
+      "slug": "08-belt-drive",
+      "name": "Twin-pulley drive cassette",
+      "summary": "Eighteen parts: windowed cover, stepped pulleys, bearings, shafts, spacers, columns and fasteners. Belt geometry and motion are not modeled.",
+      "difficulty": "Advanced",
+      "parts": 18,
+      "features": 29,
+      "sketches": 28,
+      "parameter": "pulley_height",
+      "original": 10,
+      "edited": 12,
+      "native": {
+        "durationMs": 1306,
+        "totalVolumeMm3": 287026.37851163925,
+        "warnings": [],
+        "metrics": {
+          "parameterEvaluationMs": 0,
+          "sketchSolveMs": 1.1000001430511475,
+          "profileDetectionMs": 3.4999998807907104,
+          "featureRebuildMs": 1286.1000000238419,
+          "operationCount": 29,
+          "cacheSize": 18,
+          "wasmHeapCapacityBytes": 67108864,
+          "shapeDisposalAttempts": 46,
+          "shapeDisposalFailures": 0,
+          "scopedHandles": {
+            "registered": 1862,
+            "disposed": 1799,
+            "released": 63,
+            "alreadyDeleted": 0,
+            "failures": 0
+          },
+          "disposalFailures": 0
+        },
+        "bodies": [
+          {
+            "bodyId": "body:feature_15070c5a",
+            "component": "Cassette base",
+            "valid": true,
+            "volume": 123337.05132702642,
+            "surfaceArea": 36099.86164175823,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -80,
+                -50,
+                0
+              ],
+              "max": [
+                80,
+                50,
+                8.000000199999999
+              ]
+            },
+            "triangles": 3980
+          },
+          {
+            "bodyId": "body:feature_1f0b4663",
+            "component": "Windowed cover",
+            "valid": true,
+            "volume": 78475.76273899405,
+            "surfaceArea": 31132.322105519677,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -80,
+                -50,
+                56
+              ],
+              "max": [
+                80,
+                50,
+                62.0000002
+              ]
+            },
+            "triangles": 1568
+          },
+          {
+            "bodyId": "body:feature_d1c85979",
+            "component": "Pulley 1",
+            "valid": true,
+            "volume": 17341.59144781566,
+            "surfaceArea": 5855.928706291375,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -63.97016610925414,
+                -23.99254036801959,
+                16
+              ],
+              "max": [
+                -16,
+                23.99254036801959,
+                31
+              ]
+            },
+            "triangles": 1008
+          },
+          {
+            "bodyId": "body:feature_8609d7ad",
+            "component": "Bearing 1",
+            "valid": true,
+            "volume": 4825.486315913921,
+            "surfaceArea": 2412.7431579569607,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -55.98011073950276,
+                -15.99502691201306,
+                8
+              ],
+              "max": [
+                -24,
+                15.99502691201306,
+                16
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_0c073f97",
+            "component": "Shaft 1",
+            "valid": true,
+            "volume": 9544.158481605793,
+            "surfaceArea": 3034.7785033677396,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -46.991298448532454,
+                -6.997824274005714,
+                -8
+              ],
+              "max": [
+                -33,
+                6.997824274005714,
+                54
+              ]
+            },
+            "triangles": 248
+          },
+          {
+            "bodyId": "body:feature_1d752c5b",
+            "component": "Spacer 1",
+            "valid": true,
+            "volume": 1256.6370614359173,
+            "surfaceArea": 1130.9733552923258,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -51.98508305462707,
+                -11.996270184009795,
+                31
+              ],
+              "max": [
+                -28,
+                11.996270184009795,
+                36
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_25fd3a8e",
+            "component": "Pulley 2",
+            "valid": true,
+            "volume": 17341.591447815656,
+            "surfaceArea": 5855.928706291375,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                16.029833890745863,
+                -23.99254036801959,
+                16
+              ],
+              "max": [
+                64,
+                23.99254036801959,
+                31
+              ]
+            },
+            "triangles": 1008
+          },
+          {
+            "bodyId": "body:feature_d626db80",
+            "component": "Bearing 2",
+            "valid": true,
+            "volume": 4825.486315913921,
+            "surfaceArea": 2412.7431579569607,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                24.01988926049724,
+                -15.99502691201306,
+                8
+              ],
+              "max": [
+                56,
+                15.99502691201306,
+                16
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_8f86793a",
+            "component": "Shaft 2",
+            "valid": true,
+            "volume": 9544.158481605793,
+            "surfaceArea": 3034.7785033677396,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                33.008701551467546,
+                -6.997824274005714,
+                -8
+              ],
+              "max": [
+                47,
+                6.997824274005714,
+                54
+              ]
+            },
+            "triangles": 248
+          },
+          {
+            "bodyId": "body:feature_df19f290",
+            "component": "Spacer 2",
+            "valid": true,
+            "volume": 1256.6370614359173,
+            "surfaceArea": 1130.9733552923258,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                28.01491694537293,
+                -11.996270184009795,
+                31
+              ],
+              "max": [
+                52,
+                11.996270184009795,
+                36
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_27338f67",
+            "component": "Column 1",
+            "valid": true,
+            "volume": 4329.366004059021,
+            "surfaceArea": 2804.2484344473214,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -70.99254152731353,
+                -40.9981350920049,
+                8
+              ],
+              "max": [
+                -59,
+                -29.001864907995103,
+                56
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_72294718",
+            "component": "Cover screw 1",
+            "valid": true,
+            "volume": 490.08845396000766,
+            "surfaceArea": 428.8273972150066,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -69.49440614548516,
+                -39.498601319003676,
+                50
+              ],
+              "max": [
+                -60.5,
+                -30.501398680996328,
+                66
+              ]
+            },
+            "triangles": 500
+          },
+          {
+            "bodyId": "body:feature_de126b76",
+            "component": "Column 2",
+            "valid": true,
+            "volume": 4329.366004059021,
+            "surfaceArea": 2804.2484344473214,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                59.007458472686466,
+                -40.9981350920049,
+                8
+              ],
+              "max": [
+                71,
+                -29.001864907995103,
+                56
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_3961bea7",
+            "component": "Cover screw 2",
+            "valid": true,
+            "volume": 490.08845396000777,
+            "surfaceArea": 428.8273972150066,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                60.50559385451485,
+                -39.498601319003676,
+                50
+              ],
+              "max": [
+                69.5,
+                -30.501398680996328,
+                66
+              ]
+            },
+            "triangles": 500
+          },
+          {
+            "bodyId": "body:feature_9a2e83cc",
+            "component": "Column 3",
+            "valid": true,
+            "volume": 4329.366004059022,
+            "surfaceArea": 2804.2484344473214,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                59.007458472686466,
+                29.001864907995103,
+                8
+              ],
+              "max": [
+                71,
+                40.9981350920049,
+                56
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_e4e1e2dc",
+            "component": "Cover screw 3",
+            "valid": true,
+            "volume": 490.08845396000777,
+            "surfaceArea": 428.8273972150066,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                60.50559385451485,
+                30.501398680996328,
+                50
+              ],
+              "max": [
+                69.5,
+                39.498601319003676,
+                66
+              ]
+            },
+            "triangles": 500
+          },
+          {
+            "bodyId": "body:feature_743dc3ac",
+            "component": "Column 4",
+            "valid": true,
+            "volume": 4329.366004059021,
+            "surfaceArea": 2804.2484344473214,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -70.99254152731353,
+                29.001864907995103,
+                8
+              ],
+              "max": [
+                -59,
+                40.9981350920049,
+                56
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_ad8dea86",
+            "component": "Cover screw 4",
+            "valid": true,
+            "volume": 490.08845396000766,
+            "surfaceArea": 428.8273972150066,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -69.49440614548516,
+                30.501398680996328,
+                50
+              ],
+              "max": [
+                -60.5,
+                39.498601319003676,
+                66
+              ]
+            },
+            "triangles": 500
+          }
+        ]
+      },
+      "parameterEdit": {
+        "from": 10,
+        "to": 12,
+        "totalVolumeMm3": 293460.3602661912,
+        "geometryChanged": true,
+        "changedBodies": [
+          {
+            "component": "Pulley 1",
+            "originalBounds": {
+              "min": [
+                -63.97016610925414,
+                -23.99254036801959,
+                16
+              ],
+              "max": [
+                -16,
+                23.99254036801959,
+                31
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -63.97016610925414,
+                -23.99254036801959,
+                16
+              ],
+              "max": [
+                -16,
+                23.99254036801959,
+                33
+              ]
+            },
+            "originalVolumeMm3": 17341.59144781566,
+            "editedVolumeMm3": 20558.582325091607
+          },
+          {
+            "component": "Spacer 1",
+            "originalBounds": {
+              "min": [
+                -51.98508305462707,
+                -11.996270184009795,
+                31
+              ],
+              "max": [
+                -28,
+                11.996270184009795,
+                36
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -51.98508305462707,
+                -11.996270184009795,
+                33
+              ],
+              "max": [
+                -28,
+                11.996270184009795,
+                38
+              ]
+            },
+            "originalVolumeMm3": 1256.6370614359173,
+            "editedVolumeMm3": 1256.6370614359173
+          },
+          {
+            "component": "Pulley 2",
+            "originalBounds": {
+              "min": [
+                16.029833890745863,
+                -23.99254036801959,
+                16
+              ],
+              "max": [
+                64,
+                23.99254036801959,
+                31
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                16.029833890745863,
+                -23.99254036801959,
+                16
+              ],
+              "max": [
+                64,
+                23.99254036801959,
+                33
+              ]
+            },
+            "originalVolumeMm3": 17341.591447815656,
+            "editedVolumeMm3": 20558.582325091604
+          },
+          {
+            "component": "Spacer 2",
+            "originalBounds": {
+              "min": [
+                28.01491694537293,
+                -11.996270184009795,
+                31
+              ],
+              "max": [
+                52,
+                11.996270184009795,
+                36
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                28.01491694537293,
+                -11.996270184009795,
+                33
+              ],
+              "max": [
+                52,
+                11.996270184009795,
+                38
+              ]
+            },
+            "originalVolumeMm3": 1256.6370614359173,
+            "editedVolumeMm3": 1256.6370614359173
+          }
+        ],
+        "undoRestoredVolumes": true
+      },
+      "saveOpen": "identical document; native body count preserved",
+      "stl": {
+        "mode": "separate",
+        "fullChecks": true,
+        "bodyCount": 18,
+        "triangleCount": 14092,
+        "warnings": [],
+        "binaryFiles": [
+          {
+            "filename": "Soft_perimeter.stl",
+            "component": "Cassette base",
+            "triangles": 3980,
+            "signedVolumeMm3": 123340.9553332587,
+            "relativeBRepVolumeError": 0.000031653150373456285
+          },
+          {
+            "filename": "Cover_blank.stl",
+            "component": "Windowed cover",
+            "triangles": 1568,
+            "signedVolumeMm3": 78477.76289101214,
+            "relativeBRepVolumeError": 0.0000254875129375165
+          },
+          {
+            "filename": "Pulley_rim.stl",
+            "component": "Pulley 1",
+            "triangles": 1008,
+            "signedVolumeMm3": 17312.857237537442,
+            "relativeBRepVolumeError": 0.0016569534788478668
+          },
+          {
+            "filename": "Bearing_sleeve.stl",
+            "component": "Bearing 1",
+            "triangles": 504,
+            "signedVolumeMm3": 4817.490624944048,
+            "relativeBRepVolumeError": 0.001656971017305331
+          },
+          {
+            "filename": "Drive_shaft.stl",
+            "component": "Shaft 1",
+            "triangles": 248,
+            "signedVolumeMm3": 9528.344302164915,
+            "relativeBRepVolumeError": 0.001656948537826275
+          },
+          {
+            "filename": "Shaft_spacer.stl",
+            "component": "Spacer 1",
+            "triangles": 504,
+            "signedVolumeMm3": 1254.5548216170948,
+            "relativeBRepVolumeError": 0.0016569937993418105
+          },
+          {
+            "filename": "Pulley_rim-2.stl",
+            "component": "Pulley 2",
+            "triangles": 1008,
+            "signedVolumeMm3": 17312.85676885226,
+            "relativeBRepVolumeError": 0.0016569805055011155
+          },
+          {
+            "filename": "Bearing_sleeve-2.stl",
+            "component": "Bearing 2",
+            "triangles": 504,
+            "signedVolumeMm3": 4817.49053148823,
+            "relativeBRepVolumeError": 0.0016569903844348977
+          },
+          {
+            "filename": "Drive_shaft-2.stl",
+            "component": "Shaft 2",
+            "triangles": 248,
+            "signedVolumeMm3": 9528.344302164915,
+            "relativeBRepVolumeError": 0.001656948537826275
+          },
+          {
+            "filename": "Shaft_spacer-2.stl",
+            "component": "Spacer 2",
+            "triangles": 504,
+            "signedVolumeMm3": 1254.5547828992817,
+            "relativeBRepVolumeError": 0.0016570246099986141
+          },
+          {
+            "filename": "Hollow_column.stl",
+            "component": "Column 1",
+            "triangles": 504,
+            "signedVolumeMm3": 4322.191446583016,
+            "relativeBRepVolumeError": 0.0016571843242818574
+          },
+          {
+            "filename": "Fastener_shank.stl",
+            "component": "Cover screw 1",
+            "triangles": 500,
+            "signedVolumeMm3": 489.27625377211393,
+            "relativeBRepVolumeError": 0.0016572522395313927
+          },
+          {
+            "filename": "Hollow_column-2.stl",
+            "component": "Column 2",
+            "triangles": 504,
+            "signedVolumeMm3": 4322.192403314925,
+            "relativeBRepVolumeError": 0.0016569633376735116
+          },
+          {
+            "filename": "Fastener_shank-2.stl",
+            "component": "Cover screw 2",
+            "triangles": 500,
+            "signedVolumeMm3": 489.2763138183793,
+            "relativeBRepVolumeError": 0.001657129718250272
+          },
+          {
+            "filename": "Hollow_column-3.stl",
+            "component": "Column 3",
+            "triangles": 504,
+            "signedVolumeMm3": 4322.192403314931,
+            "relativeBRepVolumeError": 0.0016569633376725124
+          },
+          {
+            "filename": "Fastener_shank-3.stl",
+            "component": "Cover screw 3",
+            "triangles": 500,
+            "signedVolumeMm3": 489.2763138183793,
+            "relativeBRepVolumeError": 0.001657129718250272
+          },
+          {
+            "filename": "Hollow_column-4.stl",
+            "component": "Column 4",
+            "triangles": 504,
+            "signedVolumeMm3": 4322.191446583017,
+            "relativeBRepVolumeError": 0.0016571843242816353
+          },
+          {
+            "filename": "Fastener_shank-4.stl",
+            "component": "Cover screw 4",
+            "triangles": 500,
+            "signedVolumeMm3": 489.276253772113,
+            "relativeBRepVolumeError": 0.00165725223953328
+          }
+        ]
+      },
+      "projectFileSha256": "0ddd96e6957585f41eebe1c64585fce4b73add78141ccc62c15bd2d7da87aee4"
+    },
+    {
+      "order": 9,
+      "slug": "09-heat-exchanger",
+      "name": "Sixteen-tube heat exchanger",
+      "summary": "Twenty-eight static parts with side-plane tubes, bored headers, a windowed guard and support hardware.",
+      "difficulty": "Highly complex",
+      "parts": 28,
+      "features": 37,
+      "sketches": 37,
+      "parameter": "tube_length",
+      "original": 148,
+      "edited": 152,
+      "native": {
+        "durationMs": 3059.899999976158,
+        "totalVolumeMm3": 489340.11217076535,
+        "warnings": [],
+        "metrics": {
+          "parameterEvaluationMs": 0,
+          "sketchSolveMs": 1.899999976158142,
+          "profileDetectionMs": 5.5,
+          "featureRebuildMs": 3022.7999999523163,
+          "operationCount": 37,
+          "cacheSize": 28,
+          "wasmHeapCapacityBytes": 67108864,
+          "shapeDisposalAttempts": 82,
+          "shapeDisposalFailures": 0,
+          "scopedHandles": {
+            "registered": 3349,
+            "disposed": 3191,
+            "released": 158,
+            "alreadyDeleted": 0,
+            "failures": 0
+          },
+          "disposalFailures": 0
+        },
+        "bodies": [
+          {
+            "bodyId": "body:feature_e9d8e741",
+            "component": "Exchanger base",
+            "valid": true,
+            "volume": 163280.7185221991,
+            "surfaceArea": 58927.64948553783,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -114,
+                -60,
+                0
+              ],
+              "max": [
+                114,
+                60,
+                6.0000001
+              ]
+            },
+            "triangles": 1292
+          },
+          {
+            "bodyId": "body:feature_f5ffefb0",
+            "component": "Header 1",
+            "valid": true,
+            "volume": 90066.29870287704,
+            "surfaceArea": 24628.477108785657,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -89,
+                -50,
+                6
+              ],
+              "max": [
+                -69,
+                50,
+                60
+              ]
+            },
+            "triangles": 4300
+          },
+          {
+            "bodyId": "body:feature_6d76265e",
+            "component": "Header 2",
+            "valid": true,
+            "volume": 90066.29870287703,
+            "surfaceArea": 24628.477108785657,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                69,
+                -50,
+                6
+              ],
+              "max": [
+                89,
+                50,
+                60
+              ]
+            },
+            "triangles": 4300
+          },
+          {
+            "bodyId": "body:feature_d75bf8b4",
+            "component": "Tube 01",
+            "valid": true,
+            "volume": 3835.8846300331306,
+            "surfaceArea": 7026.17196975357,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -74,
+                -39.29866348260351,
+                13.705345238758635
+              ],
+              "max": [
+                74,
+                -30.70133651739649,
+                22.299999999999997
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_50ecc6fb",
+            "component": "Tube 02",
+            "valid": true,
+            "volume": 3835.884630033127,
+            "surfaceArea": 7026.17196975357,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -74,
+                -39.29866348260351,
+                25.705345238758635
+              ],
+              "max": [
+                74,
+                -30.70133651739649,
+                34.3
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_c4be9faa",
+            "component": "Tube 03",
+            "valid": true,
+            "volume": 3835.884630033127,
+            "surfaceArea": 7026.17196975357,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -74,
+                -39.29866348260351,
+                37.70534523875863
+              ],
+              "max": [
+                74,
+                -30.70133651739649,
+                46.3
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_15aa67e5",
+            "component": "Tube 04",
+            "valid": true,
+            "volume": 3835.884630033127,
+            "surfaceArea": 7026.17196975357,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -74,
+                -39.29866348260351,
+                49.70534523875863
+              ],
+              "max": [
+                74,
+                -30.70133651739649,
+                58.3
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_afa575c5",
+            "component": "Tube 05",
+            "valid": true,
+            "volume": 3835.884630033141,
+            "surfaceArea": 7026.171969753574,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -74,
+                -16.29866348260351,
+                13.705345238758632
+              ],
+              "max": [
+                74,
+                -7.70133651739649,
+                22.3
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_fce8ea2e",
+            "component": "Tube 06",
+            "valid": true,
+            "volume": 3835.8846300331325,
+            "surfaceArea": 7026.171969753572,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -74,
+                -16.29866348260351,
+                25.705345238758632
+              ],
+              "max": [
+                74,
+                -7.70133651739649,
+                34.3
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_29fe85b6",
+            "component": "Tube 07",
+            "valid": true,
+            "volume": 3835.8846300331297,
+            "surfaceArea": 7026.171969753572,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -74,
+                -16.29866348260351,
+                37.70534523875863
+              ],
+              "max": [
+                74,
+                -7.70133651739649,
+                46.3
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_52ebffcc",
+            "component": "Tube 08",
+            "valid": true,
+            "volume": 3835.8846300331315,
+            "surfaceArea": 7026.171969753572,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -74,
+                -16.29866348260351,
+                49.70534523875863
+              ],
+              "max": [
+                74,
+                -7.70133651739649,
+                58.3
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_18fa9cbb",
+            "component": "Tube 09",
+            "valid": true,
+            "volume": 3835.88463003314,
+            "surfaceArea": 7026.171969753574,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -74,
+                7.70133651739649,
+                13.705345238758632
+              ],
+              "max": [
+                74,
+                16.29866348260351,
+                22.3
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_af7d3e42",
+            "component": "Tube 10",
+            "valid": true,
+            "volume": 3835.8846300331315,
+            "surfaceArea": 7026.171969753572,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -74,
+                7.70133651739649,
+                25.705345238758632
+              ],
+              "max": [
+                74,
+                16.29866348260351,
+                34.3
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_e5e9c349",
+            "component": "Tube 11",
+            "valid": true,
+            "volume": 3835.8846300331297,
+            "surfaceArea": 7026.171969753572,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -74,
+                7.70133651739649,
+                37.70534523875863
+              ],
+              "max": [
+                74,
+                16.29866348260351,
+                46.3
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_340e25ce",
+            "component": "Tube 12",
+            "valid": true,
+            "volume": 3835.8846300331315,
+            "surfaceArea": 7026.171969753572,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -74,
+                7.70133651739649,
+                49.70534523875863
+              ],
+              "max": [
+                74,
+                16.29866348260351,
+                58.3
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_ea8d16df",
+            "component": "Tube 13",
+            "valid": true,
+            "volume": 3835.8846300331306,
+            "surfaceArea": 7026.17196975357,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -74,
+                30.70133651739649,
+                13.705345238758635
+              ],
+              "max": [
+                74,
+                39.29866348260351,
+                22.299999999999997
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_b9ca7bfa",
+            "component": "Tube 14",
+            "valid": true,
+            "volume": 3835.884630033127,
+            "surfaceArea": 7026.17196975357,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -74,
+                30.70133651739649,
+                25.705345238758635
+              ],
+              "max": [
+                74,
+                39.29866348260351,
+                34.3
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_ab1165bf",
+            "component": "Tube 15",
+            "valid": true,
+            "volume": 3835.884630033127,
+            "surfaceArea": 7026.17196975357,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -74,
+                30.70133651739649,
+                37.70534523875863
+              ],
+              "max": [
+                74,
+                39.29866348260351,
+                46.3
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_d002eb4d",
+            "component": "Tube 16",
+            "valid": true,
+            "volume": 3835.884630033127,
+            "surfaceArea": 7026.17196975357,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -74,
+                30.70133651739649,
+                49.70534523875863
+              ],
+              "max": [
+                74,
+                39.29866348260351,
+                58.3
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_e6ec2499",
+            "component": "Windowed guard",
+            "valid": true,
+            "volume": 70574.5654731061,
+            "surfaceArea": 34357.52565609027,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -114,
+                -60,
+                60
+              ],
+              "max": [
+                114,
+                60,
+                65.00000019999999
+              ]
+            },
+            "triangles": 1568
+          },
+          {
+            "bodyId": "body:feature_2f2546d4",
+            "component": "Guard post 1",
+            "valid": true,
+            "volume": 3004.430718334062,
+            "surfaceArea": 2723.8236625154223,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -108.99378460609461,
+                -52.99844591000408,
+                6
+              ],
+              "max": [
+                -99,
+                -43.00155408999592,
+                60
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_a65991c7",
+            "component": "Guard screw 1",
+            "valid": true,
+            "volume": 490.08845396000766,
+            "surfaceArea": 428.8273972150067,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -108.49440614548516,
+                -52.498601319003676,
+                53
+              ],
+              "max": [
+                -99.5,
+                -43.501398680996324,
+                69
+              ]
+            },
+            "triangles": 500
+          },
+          {
+            "bodyId": "body:feature_d90bf0da",
+            "component": "Guard post 2",
+            "valid": true,
+            "volume": 3004.430718334063,
+            "surfaceArea": 2723.8236625154223,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                99.00621539390539,
+                -52.99844591000408,
+                6
+              ],
+              "max": [
+                109,
+                -43.00155408999592,
+                60
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_fdb7a7b4",
+            "component": "Guard screw 2",
+            "valid": true,
+            "volume": 490.08845396000766,
+            "surfaceArea": 428.8273972150067,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                99.50559385451484,
+                -52.498601319003676,
+                53
+              ],
+              "max": [
+                108.5,
+                -43.501398680996324,
+                69
+              ]
+            },
+            "triangles": 500
+          },
+          {
+            "bodyId": "body:feature_69c0d875",
+            "component": "Guard post 3",
+            "valid": true,
+            "volume": 3004.430718334063,
+            "surfaceArea": 2723.8236625154223,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                99.00621539390539,
+                43.00155408999592,
+                6
+              ],
+              "max": [
+                109,
+                52.99844591000408,
+                60
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_a2673b48",
+            "component": "Guard screw 3",
+            "valid": true,
+            "volume": 490.08845396000766,
+            "surfaceArea": 428.8273972150067,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                99.50559385451484,
+                43.501398680996324,
+                53
+              ],
+              "max": [
+                108.5,
+                52.498601319003676,
+                69
+              ]
+            },
+            "triangles": 500
+          },
+          {
+            "bodyId": "body:feature_bdc293be",
+            "component": "Guard post 4",
+            "valid": true,
+            "volume": 3004.430718334062,
+            "surfaceArea": 2723.8236625154223,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -108.99378460609461,
+                43.00155408999592,
+                6
+              ],
+              "max": [
+                -99,
+                52.99844591000408,
+                60
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_36b67a64",
+            "component": "Guard screw 4",
+            "valid": true,
+            "volume": 490.08845396000766,
+            "surfaceArea": 428.8273972150067,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -108.49440614548516,
+                43.501398680996324,
+                53
+              ],
+              "max": [
+                -99.5,
+                52.498601319003676,
+                69
+              ]
+            },
+            "triangles": 500
+          }
+        ]
+      },
+      "parameterEdit": {
+        "from": 148,
+        "to": 152,
+        "totalVolumeMm3": 494638.87306999415,
+        "geometryChanged": true,
+        "changedBodies": [
+          {
+            "component": "Exchanger base",
+            "originalBounds": {
+              "min": [
+                -114,
+                -60,
+                0
+              ],
+              "max": [
+                114,
+                60,
+                6.0000001
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -116,
+                -60,
+                0
+              ],
+              "max": [
+                116,
+                60,
+                6.0000001
+              ]
+            },
+            "originalVolumeMm3": 163280.7185221991,
+            "editedVolumeMm3": 166160.7185221991
+          },
+          {
+            "component": "Header 1",
+            "originalBounds": {
+              "min": [
+                -89,
+                -50,
+                6
+              ],
+              "max": [
+                -69,
+                50,
+                60
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -91,
+                -50,
+                6
+              ],
+              "max": [
+                -71,
+                50,
+                60
+              ]
+            },
+            "originalVolumeMm3": 90066.29870287704,
+            "editedVolumeMm3": 90066.29870287704
+          },
+          {
+            "component": "Header 2",
+            "originalBounds": {
+              "min": [
+                69,
+                -50,
+                6
+              ],
+              "max": [
+                89,
+                50,
+                60
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                71,
+                -50,
+                6
+              ],
+              "max": [
+                91,
+                50,
+                60
+              ]
+            },
+            "originalVolumeMm3": 90066.29870287703,
+            "editedVolumeMm3": 90066.29870287703
+          },
+          {
+            "component": "Tube 01",
+            "originalBounds": {
+              "min": [
+                -74,
+                -39.29866348260351,
+                13.705345238758635
+              ],
+              "max": [
+                74,
+                -30.70133651739649,
+                22.299999999999997
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -76,
+                -39.29866348260351,
+                13.705345238758635
+              ],
+              "max": [
+                76,
+                -30.70133651739649,
+                22.299999999999997
+              ]
+            },
+            "originalVolumeMm3": 3835.8846300331306,
+            "editedVolumeMm3": 3939.5571876015947
+          },
+          {
+            "component": "Tube 02",
+            "originalBounds": {
+              "min": [
+                -74,
+                -39.29866348260351,
+                25.705345238758635
+              ],
+              "max": [
+                74,
+                -30.70133651739649,
+                34.3
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -76,
+                -39.29866348260351,
+                25.705345238758635
+              ],
+              "max": [
+                76,
+                -30.70133651739649,
+                34.3
+              ]
+            },
+            "originalVolumeMm3": 3835.884630033127,
+            "editedVolumeMm3": 3939.557187601591
+          },
+          {
+            "component": "Tube 03",
+            "originalBounds": {
+              "min": [
+                -74,
+                -39.29866348260351,
+                37.70534523875863
+              ],
+              "max": [
+                74,
+                -30.70133651739649,
+                46.3
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -76,
+                -39.29866348260351,
+                37.70534523875863
+              ],
+              "max": [
+                76,
+                -30.70133651739649,
+                46.3
+              ]
+            },
+            "originalVolumeMm3": 3835.884630033127,
+            "editedVolumeMm3": 3939.557187601592
+          },
+          {
+            "component": "Tube 04",
+            "originalBounds": {
+              "min": [
+                -74,
+                -39.29866348260351,
+                49.70534523875863
+              ],
+              "max": [
+                74,
+                -30.70133651739649,
+                58.3
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -76,
+                -39.29866348260351,
+                49.70534523875863
+              ],
+              "max": [
+                76,
+                -30.70133651739649,
+                58.3
+              ]
+            },
+            "originalVolumeMm3": 3835.884630033127,
+            "editedVolumeMm3": 3939.557187601592
+          },
+          {
+            "component": "Tube 05",
+            "originalBounds": {
+              "min": [
+                -74,
+                -16.29866348260351,
+                13.705345238758632
+              ],
+              "max": [
+                74,
+                -7.70133651739649,
+                22.3
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -76,
+                -16.29866348260351,
+                13.705345238758632
+              ],
+              "max": [
+                76,
+                -7.70133651739649,
+                22.3
+              ]
+            },
+            "originalVolumeMm3": 3835.884630033141,
+            "editedVolumeMm3": 3939.5571876016047
+          },
+          {
+            "component": "Tube 06",
+            "originalBounds": {
+              "min": [
+                -74,
+                -16.29866348260351,
+                25.705345238758632
+              ],
+              "max": [
+                74,
+                -7.70133651739649,
+                34.3
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -76,
+                -16.29866348260351,
+                25.705345238758632
+              ],
+              "max": [
+                76,
+                -7.70133651739649,
+                34.3
+              ]
+            },
+            "originalVolumeMm3": 3835.8846300331325,
+            "editedVolumeMm3": 3939.5571876015965
+          },
+          {
+            "component": "Tube 07",
+            "originalBounds": {
+              "min": [
+                -74,
+                -16.29866348260351,
+                37.70534523875863
+              ],
+              "max": [
+                74,
+                -7.70133651739649,
+                46.3
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -76,
+                -16.29866348260351,
+                37.70534523875863
+              ],
+              "max": [
+                76,
+                -7.70133651739649,
+                46.3
+              ]
+            },
+            "originalVolumeMm3": 3835.8846300331297,
+            "editedVolumeMm3": 3939.5571876015947
+          },
+          {
+            "component": "Tube 08",
+            "originalBounds": {
+              "min": [
+                -74,
+                -16.29866348260351,
+                49.70534523875863
+              ],
+              "max": [
+                74,
+                -7.70133651739649,
+                58.3
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -76,
+                -16.29866348260351,
+                49.70534523875863
+              ],
+              "max": [
+                76,
+                -7.70133651739649,
+                58.3
+              ]
+            },
+            "originalVolumeMm3": 3835.8846300331315,
+            "editedVolumeMm3": 3939.5571876015956
+          },
+          {
+            "component": "Tube 09",
+            "originalBounds": {
+              "min": [
+                -74,
+                7.70133651739649,
+                13.705345238758632
+              ],
+              "max": [
+                74,
+                16.29866348260351,
+                22.3
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -76,
+                7.70133651739649,
+                13.705345238758632
+              ],
+              "max": [
+                76,
+                16.29866348260351,
+                22.3
+              ]
+            },
+            "originalVolumeMm3": 3835.88463003314,
+            "editedVolumeMm3": 3939.557187601603
+          },
+          {
+            "component": "Tube 10",
+            "originalBounds": {
+              "min": [
+                -74,
+                7.70133651739649,
+                25.705345238758632
+              ],
+              "max": [
+                74,
+                16.29866348260351,
+                34.3
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -76,
+                7.70133651739649,
+                25.705345238758632
+              ],
+              "max": [
+                76,
+                16.29866348260351,
+                34.3
+              ]
+            },
+            "originalVolumeMm3": 3835.8846300331315,
+            "editedVolumeMm3": 3939.5571876015947
+          },
+          {
+            "component": "Tube 11",
+            "originalBounds": {
+              "min": [
+                -74,
+                7.70133651739649,
+                37.70534523875863
+              ],
+              "max": [
+                74,
+                16.29866348260351,
+                46.3
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -76,
+                7.70133651739649,
+                37.70534523875863
+              ],
+              "max": [
+                76,
+                16.29866348260351,
+                46.3
+              ]
+            },
+            "originalVolumeMm3": 3835.8846300331297,
+            "editedVolumeMm3": 3939.5571876015947
+          },
+          {
+            "component": "Tube 12",
+            "originalBounds": {
+              "min": [
+                -74,
+                7.70133651739649,
+                49.70534523875863
+              ],
+              "max": [
+                74,
+                16.29866348260351,
+                58.3
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -76,
+                7.70133651739649,
+                49.70534523875863
+              ],
+              "max": [
+                76,
+                16.29866348260351,
+                58.3
+              ]
+            },
+            "originalVolumeMm3": 3835.8846300331315,
+            "editedVolumeMm3": 3939.5571876015956
+          },
+          {
+            "component": "Tube 13",
+            "originalBounds": {
+              "min": [
+                -74,
+                30.70133651739649,
+                13.705345238758635
+              ],
+              "max": [
+                74,
+                39.29866348260351,
+                22.299999999999997
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -76,
+                30.70133651739649,
+                13.705345238758635
+              ],
+              "max": [
+                76,
+                39.29866348260351,
+                22.299999999999997
+              ]
+            },
+            "originalVolumeMm3": 3835.8846300331306,
+            "editedVolumeMm3": 3939.5571876015947
+          },
+          {
+            "component": "Tube 14",
+            "originalBounds": {
+              "min": [
+                -74,
+                30.70133651739649,
+                25.705345238758635
+              ],
+              "max": [
+                74,
+                39.29866348260351,
+                34.3
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -76,
+                30.70133651739649,
+                25.705345238758635
+              ],
+              "max": [
+                76,
+                39.29866348260351,
+                34.3
+              ]
+            },
+            "originalVolumeMm3": 3835.884630033127,
+            "editedVolumeMm3": 3939.557187601592
+          },
+          {
+            "component": "Tube 15",
+            "originalBounds": {
+              "min": [
+                -74,
+                30.70133651739649,
+                37.70534523875863
+              ],
+              "max": [
+                74,
+                39.29866348260351,
+                46.3
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -76,
+                30.70133651739649,
+                37.70534523875863
+              ],
+              "max": [
+                76,
+                39.29866348260351,
+                46.3
+              ]
+            },
+            "originalVolumeMm3": 3835.884630033127,
+            "editedVolumeMm3": 3939.557187601592
+          },
+          {
+            "component": "Tube 16",
+            "originalBounds": {
+              "min": [
+                -74,
+                30.70133651739649,
+                49.70534523875863
+              ],
+              "max": [
+                74,
+                39.29866348260351,
+                58.3
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -76,
+                30.70133651739649,
+                49.70534523875863
+              ],
+              "max": [
+                76,
+                39.29866348260351,
+                58.3
+              ]
+            },
+            "originalVolumeMm3": 3835.884630033127,
+            "editedVolumeMm3": 3939.557187601592
+          },
+          {
+            "component": "Windowed guard",
+            "originalBounds": {
+              "min": [
+                -114,
+                -60,
+                60
+              ],
+              "max": [
+                114,
+                60,
+                65.00000019999999
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -116,
+                -60,
+                60
+              ],
+              "max": [
+                116,
+                60,
+                65.00000019999999
+              ]
+            },
+            "originalVolumeMm3": 70574.5654731061,
+            "editedVolumeMm3": 71334.56545123947
+          },
+          {
+            "component": "Guard post 1",
+            "originalBounds": {
+              "min": [
+                -108.99378460609461,
+                -52.99844591000408,
+                6
+              ],
+              "max": [
+                -99,
+                -43.00155408999592,
+                60
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -110.99378460609461,
+                -52.99844591000408,
+                6
+              ],
+              "max": [
+                -101,
+                -43.00155408999592,
+                60
+              ]
+            },
+            "originalVolumeMm3": 3004.430718334062,
+            "editedVolumeMm3": 3004.430718334062
+          },
+          {
+            "component": "Guard screw 1",
+            "originalBounds": {
+              "min": [
+                -108.49440614548516,
+                -52.498601319003676,
+                53
+              ],
+              "max": [
+                -99.5,
+                -43.501398680996324,
+                69
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -110.49440614548516,
+                -52.498601319003676,
+                53
+              ],
+              "max": [
+                -101.5,
+                -43.501398680996324,
+                69
+              ]
+            },
+            "originalVolumeMm3": 490.08845396000766,
+            "editedVolumeMm3": 490.08845396000766
+          },
+          {
+            "component": "Guard post 2",
+            "originalBounds": {
+              "min": [
+                99.00621539390539,
+                -52.99844591000408,
+                6
+              ],
+              "max": [
+                109,
+                -43.00155408999592,
+                60
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                101.00621539390539,
+                -52.99844591000408,
+                6
+              ],
+              "max": [
+                111,
+                -43.00155408999592,
+                60
+              ]
+            },
+            "originalVolumeMm3": 3004.430718334063,
+            "editedVolumeMm3": 3004.430718334062
+          },
+          {
+            "component": "Guard screw 2",
+            "originalBounds": {
+              "min": [
+                99.50559385451484,
+                -52.498601319003676,
+                53
+              ],
+              "max": [
+                108.5,
+                -43.501398680996324,
+                69
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                101.50559385451484,
+                -52.498601319003676,
+                53
+              ],
+              "max": [
+                110.5,
+                -43.501398680996324,
+                69
+              ]
+            },
+            "originalVolumeMm3": 490.08845396000766,
+            "editedVolumeMm3": 490.08845396000766
+          },
+          {
+            "component": "Guard post 3",
+            "originalBounds": {
+              "min": [
+                99.00621539390539,
+                43.00155408999592,
+                6
+              ],
+              "max": [
+                109,
+                52.99844591000408,
+                60
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                101.00621539390539,
+                43.00155408999592,
+                6
+              ],
+              "max": [
+                111,
+                52.99844591000408,
+                60
+              ]
+            },
+            "originalVolumeMm3": 3004.430718334063,
+            "editedVolumeMm3": 3004.430718334062
+          },
+          {
+            "component": "Guard screw 3",
+            "originalBounds": {
+              "min": [
+                99.50559385451484,
+                43.501398680996324,
+                53
+              ],
+              "max": [
+                108.5,
+                52.498601319003676,
+                69
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                101.50559385451484,
+                43.501398680996324,
+                53
+              ],
+              "max": [
+                110.5,
+                52.498601319003676,
+                69
+              ]
+            },
+            "originalVolumeMm3": 490.08845396000766,
+            "editedVolumeMm3": 490.08845396000766
+          },
+          {
+            "component": "Guard post 4",
+            "originalBounds": {
+              "min": [
+                -108.99378460609461,
+                43.00155408999592,
+                6
+              ],
+              "max": [
+                -99,
+                52.99844591000408,
+                60
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -110.99378460609461,
+                43.00155408999592,
+                6
+              ],
+              "max": [
+                -101,
+                52.99844591000408,
+                60
+              ]
+            },
+            "originalVolumeMm3": 3004.430718334062,
+            "editedVolumeMm3": 3004.430718334062
+          },
+          {
+            "component": "Guard screw 4",
+            "originalBounds": {
+              "min": [
+                -108.49440614548516,
+                43.501398680996324,
+                53
+              ],
+              "max": [
+                -99.5,
+                52.498601319003676,
+                69
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -110.49440614548516,
+                43.501398680996324,
+                53
+              ],
+              "max": [
+                -101.5,
+                52.498601319003676,
+                69
+              ]
+            },
+            "originalVolumeMm3": 490.08845396000766,
+            "editedVolumeMm3": 490.08845396000766
+          }
+        ],
+        "undoRestoredVolumes": true
+      },
+      "saveOpen": "identical document; native body count preserved",
+      "stl": {
+        "mode": "separate",
+        "fullChecks": true,
+        "bodyCount": 28,
+        "triangleCount": 23540,
+        "warnings": [],
+        "binaryFiles": [
+          {
+            "filename": "Base_blank.stl",
+            "component": "Exchanger base",
+            "triangles": 1292,
+            "signedVolumeMm3": 163279.6921249082,
+            "relativeBRepVolumeError": 0.000006286089993867705
+          },
+          {
+            "filename": "Header_block.stl",
+            "component": "Header 1",
+            "triangles": 4300,
+            "signedVolumeMm3": 90092.87056863867,
+            "relativeBRepVolumeError": 0.00029502562161765056
+          },
+          {
+            "filename": "Header_block-2.stl",
+            "component": "Header 2",
+            "triangles": 4300,
+            "signedVolumeMm3": 90092.87056863878,
+            "relativeBRepVolumeError": 0.00029502562161920487
+          },
+          {
+            "filename": "Hollow_transfer_tube.stl",
+            "component": "Tube 01",
+            "triangles": 504,
+            "signedVolumeMm3": 3829.5278938635984,
+            "relativeBRepVolumeError": 0.0016571760578413253
+          },
+          {
+            "filename": "Hollow_transfer_tube-2.stl",
+            "component": "Tube 02",
+            "triangles": 504,
+            "signedVolumeMm3": 3829.5285915264867,
+            "relativeBRepVolumeError": 0.0016569941798758592
+          },
+          {
+            "filename": "Hollow_transfer_tube-3.stl",
+            "component": "Tube 03",
+            "triangles": 504,
+            "signedVolumeMm3": 3829.529823309844,
+            "relativeBRepVolumeError": 0.001656673058811009
+          },
+          {
+            "filename": "Hollow_transfer_tube-4.stl",
+            "component": "Tube 04",
+            "triangles": 504,
+            "signedVolumeMm3": 3829.5298233098265,
+            "relativeBRepVolumeError": 0.001656673058815561
+          },
+          {
+            "filename": "Hollow_transfer_tube-5.stl",
+            "component": "Tube 05",
+            "triangles": 504,
+            "signedVolumeMm3": 3829.5284167707377,
+            "relativeBRepVolumeError": 0.0016570397380143431
+          },
+          {
+            "filename": "Hollow_transfer_tube-6.stl",
+            "component": "Tube 06",
+            "triangles": 504,
+            "signedVolumeMm3": 3829.5291144349567,
+            "relativeBRepVolumeError": 0.0016568578597008221
+          },
+          {
+            "filename": "Hollow_transfer_tube-7.stl",
+            "component": "Tube 07",
+            "triangles": 504,
+            "signedVolumeMm3": 3829.530346216505,
+            "relativeBRepVolumeError": 0.0016565367391067065
+          },
+          {
+            "filename": "Hollow_transfer_tube-8.stl",
+            "component": "Tube 08",
+            "triangles": 504,
+            "signedVolumeMm3": 3829.5303462165066,
+            "relativeBRepVolumeError": 0.0016565367391068175
+          },
+          {
+            "filename": "Hollow_transfer_tube-9.stl",
+            "component": "Tube 09",
+            "triangles": 504,
+            "signedVolumeMm3": 3829.5284167707414,
+            "relativeBRepVolumeError": 0.0016570397380131219
+          },
+          {
+            "filename": "Hollow_transfer_tube-10.stl",
+            "component": "Tube 10",
+            "triangles": 504,
+            "signedVolumeMm3": 3829.5291144349594,
+            "relativeBRepVolumeError": 0.001656857859699823
+          },
+          {
+            "filename": "Hollow_transfer_tube-11.stl",
+            "component": "Tube 11",
+            "triangles": 504,
+            "signedVolumeMm3": 3829.5303462165216,
+            "relativeBRepVolumeError": 0.0016565367391023766
+          },
+          {
+            "filename": "Hollow_transfer_tube-12.stl",
+            "component": "Tube 12",
+            "triangles": 504,
+            "signedVolumeMm3": 3829.5303462165193,
+            "relativeBRepVolumeError": 0.0016565367391034869
+          },
+          {
+            "filename": "Hollow_transfer_tube-13.stl",
+            "component": "Tube 13",
+            "triangles": 504,
+            "signedVolumeMm3": 3829.5278938635965,
+            "relativeBRepVolumeError": 0.0016571760578417694
+          },
+          {
+            "filename": "Hollow_transfer_tube-14.stl",
+            "component": "Tube 14",
+            "triangles": 504,
+            "signedVolumeMm3": 3829.5285915264485,
+            "relativeBRepVolumeError": 0.0016569941798858512
+          },
+          {
+            "filename": "Hollow_transfer_tube-15.stl",
+            "component": "Tube 15",
+            "triangles": 504,
+            "signedVolumeMm3": 3829.5298233098506,
+            "relativeBRepVolumeError": 0.0016566730588092327
+          },
+          {
+            "filename": "Hollow_transfer_tube-16.stl",
+            "component": "Tube 16",
+            "triangles": 504,
+            "signedVolumeMm3": 3829.5298233098447,
+            "relativeBRepVolumeError": 0.001656673058810787
+          },
+          {
+            "filename": "Guard_blank.stl",
+            "component": "Windowed guard",
+            "triangles": 1568,
+            "signedVolumeMm3": 70574.34153124006,
+            "relativeBRepVolumeError": 0.0000031731242626786837
+          },
+          {
+            "filename": "Hollow_guard_post.stl",
+            "component": "Guard post 1",
+            "triangles": 504,
+            "signedVolumeMm3": 2999.4516588081024,
+            "relativeBRepVolumeError": 0.0016572389223608042
+          },
+          {
+            "filename": "Fastener_shank.stl",
+            "component": "Guard screw 1",
+            "triangles": 500,
+            "signedVolumeMm3": 489.276219692779,
+            "relativeBRepVolumeError": 0.0016573217766417958
+          },
+          {
+            "filename": "Hollow_guard_post-2.stl",
+            "component": "Guard post 2",
+            "triangles": 504,
+            "signedVolumeMm3": 2999.4516588081024,
+            "relativeBRepVolumeError": 0.0016572389223611372
+          },
+          {
+            "filename": "Fastener_shank-2.stl",
+            "component": "Guard screw 2",
+            "triangles": 500,
+            "signedVolumeMm3": 489.2762196927788,
+            "relativeBRepVolumeError": 0.00165732177664224
+          },
+          {
+            "filename": "Hollow_guard_post-3.stl",
+            "component": "Guard post 3",
+            "triangles": 504,
+            "signedVolumeMm3": 2999.4516588081024,
+            "relativeBRepVolumeError": 0.0016572389223611372
+          },
+          {
+            "filename": "Fastener_shank-3.stl",
+            "component": "Guard screw 3",
+            "triangles": 500,
+            "signedVolumeMm3": 489.2762196927797,
+            "relativeBRepVolumeError": 0.0016573217766403525
+          },
+          {
+            "filename": "Hollow_guard_post-4.stl",
+            "component": "Guard post 4",
+            "triangles": 504,
+            "signedVolumeMm3": 2999.4516588081024,
+            "relativeBRepVolumeError": 0.0016572389223608042
+          },
+          {
+            "filename": "Fastener_shank-4.stl",
+            "component": "Guard screw 4",
+            "triangles": 500,
+            "signedVolumeMm3": 489.27621969278016,
+            "relativeBRepVolumeError": 0.0016573217766394643
+          }
+        ]
+      },
+      "projectFileSha256": "81779c676942860640d7590553234e95f7bad29b996382451880b67c2ecbe0c4"
+    },
+    {
+      "order": 10,
+      "slug": "10-rotary-fixture",
+      "name": "Rotary machining fixture concept",
+      "summary": "Forty static components, a turned hub, slotted platter, bearing stack, four clamps and extensive fastening hardware. No rotary joint or machining simulation.",
+      "difficulty": "Highly complex",
+      "parts": 40,
+      "features": 68,
+      "sketches": 66,
+      "parameter": "platter_thickness",
+      "original": 14,
+      "edited": 16,
+      "native": {
+        "durationMs": 3509.399999976158,
+        "totalVolumeMm3": 1000130.5834973933,
+        "warnings": [],
+        "metrics": {
+          "parameterEvaluationMs": 0,
+          "sketchSolveMs": 4.000000238418579,
+          "profileDetectionMs": 18.199999690055847,
+          "featureRebuildMs": 3433.2999999523163,
+          "operationCount": 68,
+          "cacheSize": 40,
+          "wasmHeapCapacityBytes": 67108864,
+          "shapeDisposalAttempts": 104,
+          "shapeDisposalFailures": 0,
+          "scopedHandles": {
+            "registered": 4488,
+            "disposed": 4361,
+            "released": 127,
+            "alreadyDeleted": 0,
+            "failures": 0
+          },
+          "disposalFailures": 0
+        },
+        "bodies": [
+          {
+            "bodyId": "body:feature_f2d6dfe8",
+            "component": "Fixture base",
+            "valid": true,
+            "volume": 584285.2786939341,
+            "surfaceArea": 91018.32911049057,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -100,
+                -90,
+                0
+              ],
+              "max": [
+                100,
+                90,
+                32
+              ]
+            },
+            "triangles": 4228
+          },
+          {
+            "bodyId": "body:feature_2bdb125b",
+            "component": "Slotted platter",
+            "valid": true,
+            "volume": 222920.24914616547,
+            "surfaceArea": 46552.669809953135,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -77.90303985507595,
+                -77.97575619606367,
+                34
+              ],
+              "max": [
+                78,
+                77.97575619606367,
+                48.000000500000006
+              ]
+            },
+            "triangles": 3908
+          },
+          {
+            "bodyId": "body:10-rotary-fixture_revolve_12",
+            "component": "Stepped spindle",
+            "valid": true,
+            "volume": 105007.73444623886,
+            "surfaceArea": 18051.59138752695,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -37.95276300631905,
+                -37.98818891603102,
+                12
+              ],
+              "max": [
+                38,
+                37.98818891603102,
+                82
+              ]
+            },
+            "triangles": 752
+          },
+          {
+            "bodyId": "body:feature_3bf11118",
+            "component": "Clamp 1",
+            "valid": true,
+            "volume": 5057.09732758646,
+            "surfaceArea": 2677.0442326083216,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -66,
+                -17,
+                54
+              ],
+              "max": [
+                -50,
+                17,
+                66.0000001
+              ]
+            },
+            "triangles": 544
+          },
+          {
+            "bodyId": "body:feature_68331da9",
+            "component": "Clamp shoe 1",
+            "valid": true,
+            "volume": 2370.849555921539,
+            "surfaceArea": 1259.9822971502572,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -67,
+                -11,
+                48
+              ],
+              "max": [
+                -49,
+                11,
+                54
+              ]
+            },
+            "triangles": 268
+          },
+          {
+            "bodyId": "body:feature_a0123601",
+            "component": "Clamp 2",
+            "valid": true,
+            "volume": 5057.09732758646,
+            "surfaceArea": 2677.0442326083216,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                50,
+                -17,
+                54
+              ],
+              "max": [
+                66,
+                17,
+                66.0000001
+              ]
+            },
+            "triangles": 544
+          },
+          {
+            "bodyId": "body:feature_cbb1e523",
+            "component": "Clamp shoe 2",
+            "valid": true,
+            "volume": 2370.849555921539,
+            "surfaceArea": 1259.9822971502572,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                49,
+                -11,
+                48
+              ],
+              "max": [
+                67,
+                11,
+                54
+              ]
+            },
+            "triangles": 268
+          },
+          {
+            "bodyId": "body:feature_dccb0897",
+            "component": "Clamp 3",
+            "valid": true,
+            "volume": 5057.097327586461,
+            "surfaceArea": 2677.0442326083216,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -17,
+                -66,
+                54
+              ],
+              "max": [
+                17,
+                -50,
+                66.0000001
+              ]
+            },
+            "triangles": 544
+          },
+          {
+            "bodyId": "body:feature_02fb0633",
+            "component": "Clamp shoe 3",
+            "valid": true,
+            "volume": 2370.849555921539,
+            "surfaceArea": 1259.9822971502572,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -11,
+                -67,
+                48
+              ],
+              "max": [
+                11,
+                -49,
+                54
+              ]
+            },
+            "triangles": 268
+          },
+          {
+            "bodyId": "body:feature_e7dd0df9",
+            "component": "Clamp 4",
+            "valid": true,
+            "volume": 5057.097327586461,
+            "surfaceArea": 2677.0442326083216,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -17,
+                50,
+                54
+              ],
+              "max": [
+                17,
+                66,
+                66.0000001
+              ]
+            },
+            "triangles": 544
+          },
+          {
+            "bodyId": "body:feature_58f98f74",
+            "component": "Clamp shoe 4",
+            "valid": true,
+            "volume": 2370.849555921539,
+            "surfaceArea": 1259.9822971502572,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -11,
+                49,
+                48
+              ],
+              "max": [
+                11,
+                67,
+                54
+              ]
+            },
+            "triangles": 268
+          },
+          {
+            "bodyId": "body:feature_e6eb0a44",
+            "component": "Platter screw 1",
+            "valid": true,
+            "volume": 713.2873022640094,
+            "surfaceArea": 567.7586774532391,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                58.713953117056626,
+                21.366723522715883,
+                33.5
+              ],
+              "max": [
+                68.787688,
+                31.443590477284115,
+                53.5
+              ]
+            },
+            "triangles": 500
+          },
+          {
+            "bodyId": "body:feature_e0b4b164",
+            "component": "Platter washer 1",
+            "valid": true,
+            "volume": 78.17853318458197,
+            "surfaceArea": 178.69379013618726,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                58.75390339390538,
+                21.406711089995916,
+                48
+              ],
+              "max": [
+                68.747688,
+                31.403602910004082,
+                49.5
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_91a9494a",
+            "component": "Platter screw 2",
+            "valid": true,
+            "volume": 713.2873022640099,
+            "surfaceArea": 567.7586774532389,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                21.371422117056632,
+                58.70925452271588,
+                33.5
+              ],
+              "max": [
+                31.445157,
+                68.78612147728411,
+                53.5
+              ]
+            },
+            "triangles": 500
+          },
+          {
+            "bodyId": "body:feature_b4d57c0a",
+            "component": "Platter washer 2",
+            "valid": true,
+            "volume": 78.17853318458201,
+            "surfaceArea": 178.6937901361875,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                21.41137239390539,
+                58.74924208999592,
+                48
+              ],
+              "max": [
+                31.405157,
+                68.74613391000408,
+                49.5
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_0e9796cc",
+            "component": "Platter screw 3",
+            "valid": true,
+            "volume": 713.2873022640099,
+            "surfaceArea": 567.7586774532389,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -31.438891882943366,
+                58.70925452271588,
+                33.5
+              ],
+              "max": [
+                -21.365157,
+                68.78612147728411,
+                53.5
+              ]
+            },
+            "triangles": 500
+          },
+          {
+            "bodyId": "body:feature_4a6c12ba",
+            "component": "Platter washer 3",
+            "valid": true,
+            "volume": 78.17853318458201,
+            "surfaceArea": 178.6937901361875,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -31.39894160609461,
+                58.74924208999592,
+                48
+              ],
+              "max": [
+                -21.405157,
+                68.74613391000408,
+                49.5
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_49bab75c",
+            "component": "Platter screw 4",
+            "valid": true,
+            "volume": 713.2873022640093,
+            "surfaceArea": 567.7586774532391,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -68.78142288294337,
+                21.366723522715883,
+                33.5
+              ],
+              "max": [
+                -58.70768799999999,
+                31.443590477284115,
+                53.5
+              ]
+            },
+            "triangles": 500
+          },
+          {
+            "bodyId": "body:feature_992423b8",
+            "component": "Platter washer 4",
+            "valid": true,
+            "volume": 78.17853318458202,
+            "surfaceArea": 178.69379013618752,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -68.7414726060946,
+                21.406711089995916,
+                48
+              ],
+              "max": [
+                -58.747688,
+                31.403602910004082,
+                49.5
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_52dad85d",
+            "component": "Platter screw 5",
+            "valid": true,
+            "volume": 713.2873022640093,
+            "surfaceArea": 567.7586774532391,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -68.78142288294337,
+                -31.443590477284115,
+                33.5
+              ],
+              "max": [
+                -58.70768799999999,
+                -21.366723522715883,
+                53.5
+              ]
+            },
+            "triangles": 500
+          },
+          {
+            "bodyId": "body:feature_08812870",
+            "component": "Platter washer 5",
+            "valid": true,
+            "volume": 78.178533184582,
+            "surfaceArea": 178.69379013618752,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -68.7414726060946,
+                -31.403602910004082,
+                48
+              ],
+              "max": [
+                -58.747688,
+                -21.406711089995916,
+                49.5
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_98a837fa",
+            "component": "Platter screw 6",
+            "valid": true,
+            "volume": 713.2873022640099,
+            "surfaceArea": 567.7586774532389,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -31.438891882943366,
+                -68.78612147728411,
+                33.5
+              ],
+              "max": [
+                -21.365157,
+                -58.70925452271588,
+                53.5
+              ]
+            },
+            "triangles": 500
+          },
+          {
+            "bodyId": "body:feature_c99294e8",
+            "component": "Platter washer 6",
+            "valid": true,
+            "volume": 78.17853318458202,
+            "surfaceArea": 178.6937901361875,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -31.39894160609461,
+                -68.74613391000408,
+                48
+              ],
+              "max": [
+                -21.405157,
+                -58.74924208999592,
+                49.5
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_37565979",
+            "component": "Platter screw 7",
+            "valid": true,
+            "volume": 713.2873022640099,
+            "surfaceArea": 567.7586774532389,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                21.371422117056632,
+                -68.78612147728411,
+                33.5
+              ],
+              "max": [
+                31.445157,
+                -58.70925452271588,
+                53.5
+              ]
+            },
+            "triangles": 500
+          },
+          {
+            "bodyId": "body:feature_bfc916ec",
+            "component": "Platter washer 7",
+            "valid": true,
+            "volume": 78.17853318458201,
+            "surfaceArea": 178.6937901361875,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                21.41137239390539,
+                -68.74613391000408,
+                48
+              ],
+              "max": [
+                31.405157,
+                -58.74924208999592,
+                49.5
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_87dedc52",
+            "component": "Platter screw 8",
+            "valid": true,
+            "volume": 713.2873022640094,
+            "surfaceArea": 567.7586774532391,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                58.713953117056626,
+                -31.443590477284115,
+                33.5
+              ],
+              "max": [
+                68.787688,
+                -21.366723522715883,
+                53.5
+              ]
+            },
+            "triangles": 500
+          },
+          {
+            "bodyId": "body:feature_d6d8ede4",
+            "component": "Platter washer 8",
+            "valid": true,
+            "volume": 78.17853318458197,
+            "surfaceArea": 178.69379013618726,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                58.75390339390538,
+                -31.403602910004082,
+                48
+              ],
+              "max": [
+                68.747688,
+                -21.406711089995916,
+                49.5
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_ce87853d",
+            "component": "Base bolt 1",
+            "valid": true,
+            "volume": 762.5474750722973,
+            "surfaceArea": 602.9445151734448,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -85.03373488294338,
+                -75.03843347728412,
+                -6
+              ],
+              "max": [
+                -74.96,
+                -64.96156652271588,
+                16
+              ]
+            },
+            "triangles": 500
+          },
+          {
+            "bodyId": "body:feature_5c0a0d66",
+            "component": "Mounting riser 1",
+            "valid": true,
+            "volume": 4391.192547481669,
+            "surfaceArea": 2167.44760356467,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -87.99005536975137,
+                -77.99751345600653,
+                -26
+              ],
+              "max": [
+                -72,
+                -62.00248654399347,
+                0
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_e0d16714",
+            "component": "Base bolt 2",
+            "valid": true,
+            "volume": 762.5474750722973,
+            "surfaceArea": 602.9445151734448,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                74.96626511705662,
+                -75.03843347728412,
+                -6
+              ],
+              "max": [
+                85.04,
+                -64.96156652271588,
+                16
+              ]
+            },
+            "triangles": 500
+          },
+          {
+            "bodyId": "body:feature_f33e62f6",
+            "component": "Mounting riser 2",
+            "valid": true,
+            "volume": 4391.192547481669,
+            "surfaceArea": 2167.44760356467,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                72.00994463024863,
+                -77.99751345600653,
+                -26
+              ],
+              "max": [
+                88,
+                -62.00248654399347,
+                0
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_19349fc2",
+            "component": "Base bolt 3",
+            "valid": true,
+            "volume": 762.5474750722973,
+            "surfaceArea": 602.9445151734448,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                74.96626511705662,
+                64.96156652271588,
+                -6
+              ],
+              "max": [
+                85.04,
+                75.03843347728412,
+                16
+              ]
+            },
+            "triangles": 500
+          },
+          {
+            "bodyId": "body:feature_51c72b27",
+            "component": "Mounting riser 3",
+            "valid": true,
+            "volume": 4391.192547481668,
+            "surfaceArea": 2167.44760356467,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                72.00994463024863,
+                62.00248654399347,
+                -26
+              ],
+              "max": [
+                88,
+                77.99751345600653,
+                0
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_b5d10cb9",
+            "component": "Base bolt 4",
+            "valid": true,
+            "volume": 762.5474750722973,
+            "surfaceArea": 602.9445151734448,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -85.03373488294338,
+                64.96156652271588,
+                -6
+              ],
+              "max": [
+                -74.96,
+                75.03843347728412,
+                16
+              ]
+            },
+            "triangles": 500
+          },
+          {
+            "bodyId": "body:feature_6a293a30",
+            "component": "Mounting riser 4",
+            "valid": true,
+            "volume": 4391.192547481668,
+            "surfaceArea": 2167.44760356467,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -87.99005536975137,
+                62.00248654399347,
+                -26
+              ],
+              "max": [
+                -72,
+                77.99751345600653,
+                0
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_60b7d78d",
+            "component": "Spindle bearing 1",
+            "valid": true,
+            "volume": 12440.706908215578,
+            "surfaceArea": 5874.778262212911,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -31.96022147900552,
+                -31.99005382402612,
+                14
+              ],
+              "max": [
+                32,
+                31.99005382402612,
+                22
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_a680f477",
+            "component": "Bearing seal 1",
+            "valid": true,
+            "volume": 1555.0883635269472,
+            "surfaceArea": 3455.7519189487703,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -31.96022147900552,
+                -31.99005382402612,
+                22
+              ],
+              "max": [
+                32,
+                31.99005382402612,
+                23
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_3c9f422e",
+            "component": "Spindle bearing 2",
+            "valid": true,
+            "volume": 12440.706908215578,
+            "surfaceArea": 5874.778262212911,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -31.96022147900552,
+                -31.99005382402612,
+                24
+              ],
+              "max": [
+                32,
+                31.99005382402612,
+                32
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_13bfd5f4",
+            "component": "Bearing seal 2",
+            "valid": true,
+            "volume": 1555.0883635269472,
+            "surfaceArea": 3455.7519189487703,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -31.96022147900552,
+                -31.99005382402612,
+                32
+              ],
+              "max": [
+                32,
+                31.99005382402612,
+                33
+              ]
+            },
+            "triangles": 504
+          },
+          {
+            "bodyId": "body:feature_39c5a371",
+            "component": "Spindle cap",
+            "valid": true,
+            "volume": 3267.2563597333847,
+            "surfaceArea": 2287.0794518133694,
+            "solidCount": 1,
+            "bounds": {
+              "min": [
+                -17.977624581940603,
+                -17.994405276014692,
+                82
+              ],
+              "max": [
+                18,
+                17.994405276014692,
+                86
+              ]
+            },
+            "triangles": 504
+          }
+        ]
+      },
+      "parameterEdit": {
+        "from": 14,
+        "to": 16,
+        "totalVolumeMm3": 1035316.9414546961,
+        "geometryChanged": true,
+        "changedBodies": [
+          {
+            "component": "Slotted platter",
+            "originalBounds": {
+              "min": [
+                -77.90303985507595,
+                -77.97575619606367,
+                34
+              ],
+              "max": [
+                78,
+                77.97575619606367,
+                48.000000500000006
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -77.90303985507595,
+                -77.97575619606367,
+                34
+              ],
+              "max": [
+                78,
+                77.97575619606367,
+                50.000000500000006
+              ]
+            },
+            "originalVolumeMm3": 222920.24914616547,
+            "editedVolumeMm3": 254782.8020759702
+          },
+          {
+            "component": "Stepped spindle",
+            "originalBounds": {
+              "min": [
+                -37.95276300631905,
+                -37.98818891603102,
+                12
+              ],
+              "max": [
+                38,
+                37.98818891603102,
+                82
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -37.95276300631905,
+                -37.98818891603102,
+                12
+              ],
+              "max": [
+                38,
+                37.98818891603102,
+                84
+              ]
+            },
+            "originalVolumeMm3": 105007.73444623886,
+            "editedVolumeMm3": 108331.53947373686
+          },
+          {
+            "component": "Clamp 1",
+            "originalBounds": {
+              "min": [
+                -66,
+                -17,
+                54
+              ],
+              "max": [
+                -50,
+                17,
+                66.0000001
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -66,
+                -17,
+                56
+              ],
+              "max": [
+                -50,
+                17,
+                68.0000001
+              ]
+            },
+            "originalVolumeMm3": 5057.09732758646,
+            "editedVolumeMm3": 5057.097327586462
+          },
+          {
+            "component": "Clamp shoe 1",
+            "originalBounds": {
+              "min": [
+                -67,
+                -11,
+                48
+              ],
+              "max": [
+                -49,
+                11,
+                54
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -67,
+                -11,
+                50
+              ],
+              "max": [
+                -49,
+                11,
+                56
+              ]
+            },
+            "originalVolumeMm3": 2370.849555921539,
+            "editedVolumeMm3": 2370.849555921539
+          },
+          {
+            "component": "Clamp 2",
+            "originalBounds": {
+              "min": [
+                50,
+                -17,
+                54
+              ],
+              "max": [
+                66,
+                17,
+                66.0000001
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                50,
+                -17,
+                56
+              ],
+              "max": [
+                66,
+                17,
+                68.0000001
+              ]
+            },
+            "originalVolumeMm3": 5057.09732758646,
+            "editedVolumeMm3": 5057.097327586462
+          },
+          {
+            "component": "Clamp shoe 2",
+            "originalBounds": {
+              "min": [
+                49,
+                -11,
+                48
+              ],
+              "max": [
+                67,
+                11,
+                54
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                49,
+                -11,
+                50
+              ],
+              "max": [
+                67,
+                11,
+                56
+              ]
+            },
+            "originalVolumeMm3": 2370.849555921539,
+            "editedVolumeMm3": 2370.849555921539
+          },
+          {
+            "component": "Clamp 3",
+            "originalBounds": {
+              "min": [
+                -17,
+                -66,
+                54
+              ],
+              "max": [
+                17,
+                -50,
+                66.0000001
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -17,
+                -66,
+                56
+              ],
+              "max": [
+                17,
+                -50,
+                68.0000001
+              ]
+            },
+            "originalVolumeMm3": 5057.097327586461,
+            "editedVolumeMm3": 5057.09732758646
+          },
+          {
+            "component": "Clamp shoe 3",
+            "originalBounds": {
+              "min": [
+                -11,
+                -67,
+                48
+              ],
+              "max": [
+                11,
+                -49,
+                54
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -11,
+                -67,
+                50
+              ],
+              "max": [
+                11,
+                -49,
+                56
+              ]
+            },
+            "originalVolumeMm3": 2370.849555921539,
+            "editedVolumeMm3": 2370.849555921539
+          },
+          {
+            "component": "Clamp 4",
+            "originalBounds": {
+              "min": [
+                -17,
+                50,
+                54
+              ],
+              "max": [
+                17,
+                66,
+                66.0000001
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -17,
+                50,
+                56
+              ],
+              "max": [
+                17,
+                66,
+                68.0000001
+              ]
+            },
+            "originalVolumeMm3": 5057.097327586461,
+            "editedVolumeMm3": 5057.097327586461
+          },
+          {
+            "component": "Clamp shoe 4",
+            "originalBounds": {
+              "min": [
+                -11,
+                49,
+                48
+              ],
+              "max": [
+                11,
+                67,
+                54
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -11,
+                49,
+                50
+              ],
+              "max": [
+                11,
+                67,
+                56
+              ]
+            },
+            "originalVolumeMm3": 2370.849555921539,
+            "editedVolumeMm3": 2370.849555921539
+          },
+          {
+            "component": "Platter screw 1",
+            "originalBounds": {
+              "min": [
+                58.713953117056626,
+                21.366723522715883,
+                33.5
+              ],
+              "max": [
+                68.787688,
+                31.443590477284115,
+                53.5
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                58.713953117056626,
+                21.366723522715883,
+                35.5
+              ],
+              "max": [
+                68.787688,
+                31.443590477284115,
+                55.5
+              ]
+            },
+            "originalVolumeMm3": 713.2873022640094,
+            "editedVolumeMm3": 713.2873022640094
+          },
+          {
+            "component": "Platter washer 1",
+            "originalBounds": {
+              "min": [
+                58.75390339390538,
+                21.406711089995916,
+                48
+              ],
+              "max": [
+                68.747688,
+                31.403602910004082,
+                49.5
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                58.75390339390538,
+                21.406711089995916,
+                50
+              ],
+              "max": [
+                68.747688,
+                31.403602910004082,
+                51.5
+              ]
+            },
+            "originalVolumeMm3": 78.17853318458197,
+            "editedVolumeMm3": 78.17853318458197
+          },
+          {
+            "component": "Platter screw 2",
+            "originalBounds": {
+              "min": [
+                21.371422117056632,
+                58.70925452271588,
+                33.5
+              ],
+              "max": [
+                31.445157,
+                68.78612147728411,
+                53.5
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                21.371422117056632,
+                58.70925452271588,
+                35.5
+              ],
+              "max": [
+                31.445157,
+                68.78612147728411,
+                55.5
+              ]
+            },
+            "originalVolumeMm3": 713.2873022640099,
+            "editedVolumeMm3": 713.2873022640099
+          },
+          {
+            "component": "Platter washer 2",
+            "originalBounds": {
+              "min": [
+                21.41137239390539,
+                58.74924208999592,
+                48
+              ],
+              "max": [
+                31.405157,
+                68.74613391000408,
+                49.5
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                21.41137239390539,
+                58.74924208999592,
+                50
+              ],
+              "max": [
+                31.405157,
+                68.74613391000408,
+                51.5
+              ]
+            },
+            "originalVolumeMm3": 78.17853318458201,
+            "editedVolumeMm3": 78.17853318458201
+          },
+          {
+            "component": "Platter screw 3",
+            "originalBounds": {
+              "min": [
+                -31.438891882943366,
+                58.70925452271588,
+                33.5
+              ],
+              "max": [
+                -21.365157,
+                68.78612147728411,
+                53.5
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -31.438891882943366,
+                58.70925452271588,
+                35.5
+              ],
+              "max": [
+                -21.365157,
+                68.78612147728411,
+                55.5
+              ]
+            },
+            "originalVolumeMm3": 713.2873022640099,
+            "editedVolumeMm3": 713.2873022640099
+          },
+          {
+            "component": "Platter washer 3",
+            "originalBounds": {
+              "min": [
+                -31.39894160609461,
+                58.74924208999592,
+                48
+              ],
+              "max": [
+                -21.405157,
+                68.74613391000408,
+                49.5
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -31.39894160609461,
+                58.74924208999592,
+                50
+              ],
+              "max": [
+                -21.405157,
+                68.74613391000408,
+                51.5
+              ]
+            },
+            "originalVolumeMm3": 78.17853318458201,
+            "editedVolumeMm3": 78.17853318458201
+          },
+          {
+            "component": "Platter screw 4",
+            "originalBounds": {
+              "min": [
+                -68.78142288294337,
+                21.366723522715883,
+                33.5
+              ],
+              "max": [
+                -58.70768799999999,
+                31.443590477284115,
+                53.5
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -68.78142288294337,
+                21.366723522715883,
+                35.5
+              ],
+              "max": [
+                -58.70768799999999,
+                31.443590477284115,
+                55.5
+              ]
+            },
+            "originalVolumeMm3": 713.2873022640093,
+            "editedVolumeMm3": 713.2873022640093
+          },
+          {
+            "component": "Platter washer 4",
+            "originalBounds": {
+              "min": [
+                -68.7414726060946,
+                21.406711089995916,
+                48
+              ],
+              "max": [
+                -58.747688,
+                31.403602910004082,
+                49.5
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -68.7414726060946,
+                21.406711089995916,
+                50
+              ],
+              "max": [
+                -58.747688,
+                31.403602910004082,
+                51.5
+              ]
+            },
+            "originalVolumeMm3": 78.17853318458202,
+            "editedVolumeMm3": 78.17853318458202
+          },
+          {
+            "component": "Platter screw 5",
+            "originalBounds": {
+              "min": [
+                -68.78142288294337,
+                -31.443590477284115,
+                33.5
+              ],
+              "max": [
+                -58.70768799999999,
+                -21.366723522715883,
+                53.5
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -68.78142288294337,
+                -31.443590477284115,
+                35.5
+              ],
+              "max": [
+                -58.70768799999999,
+                -21.366723522715883,
+                55.5
+              ]
+            },
+            "originalVolumeMm3": 713.2873022640093,
+            "editedVolumeMm3": 713.2873022640093
+          },
+          {
+            "component": "Platter washer 5",
+            "originalBounds": {
+              "min": [
+                -68.7414726060946,
+                -31.403602910004082,
+                48
+              ],
+              "max": [
+                -58.747688,
+                -21.406711089995916,
+                49.5
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -68.7414726060946,
+                -31.403602910004082,
+                50
+              ],
+              "max": [
+                -58.747688,
+                -21.406711089995916,
+                51.5
+              ]
+            },
+            "originalVolumeMm3": 78.178533184582,
+            "editedVolumeMm3": 78.178533184582
+          },
+          {
+            "component": "Platter screw 6",
+            "originalBounds": {
+              "min": [
+                -31.438891882943366,
+                -68.78612147728411,
+                33.5
+              ],
+              "max": [
+                -21.365157,
+                -58.70925452271588,
+                53.5
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -31.438891882943366,
+                -68.78612147728411,
+                35.5
+              ],
+              "max": [
+                -21.365157,
+                -58.70925452271588,
+                55.5
+              ]
+            },
+            "originalVolumeMm3": 713.2873022640099,
+            "editedVolumeMm3": 713.2873022640099
+          },
+          {
+            "component": "Platter washer 6",
+            "originalBounds": {
+              "min": [
+                -31.39894160609461,
+                -68.74613391000408,
+                48
+              ],
+              "max": [
+                -21.405157,
+                -58.74924208999592,
+                49.5
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -31.39894160609461,
+                -68.74613391000408,
+                50
+              ],
+              "max": [
+                -21.405157,
+                -58.74924208999592,
+                51.5
+              ]
+            },
+            "originalVolumeMm3": 78.17853318458202,
+            "editedVolumeMm3": 78.17853318458202
+          },
+          {
+            "component": "Platter screw 7",
+            "originalBounds": {
+              "min": [
+                21.371422117056632,
+                -68.78612147728411,
+                33.5
+              ],
+              "max": [
+                31.445157,
+                -58.70925452271588,
+                53.5
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                21.371422117056632,
+                -68.78612147728411,
+                35.5
+              ],
+              "max": [
+                31.445157,
+                -58.70925452271588,
+                55.5
+              ]
+            },
+            "originalVolumeMm3": 713.2873022640099,
+            "editedVolumeMm3": 713.2873022640099
+          },
+          {
+            "component": "Platter washer 7",
+            "originalBounds": {
+              "min": [
+                21.41137239390539,
+                -68.74613391000408,
+                48
+              ],
+              "max": [
+                31.405157,
+                -58.74924208999592,
+                49.5
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                21.41137239390539,
+                -68.74613391000408,
+                50
+              ],
+              "max": [
+                31.405157,
+                -58.74924208999592,
+                51.5
+              ]
+            },
+            "originalVolumeMm3": 78.17853318458201,
+            "editedVolumeMm3": 78.17853318458201
+          },
+          {
+            "component": "Platter screw 8",
+            "originalBounds": {
+              "min": [
+                58.713953117056626,
+                -31.443590477284115,
+                33.5
+              ],
+              "max": [
+                68.787688,
+                -21.366723522715883,
+                53.5
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                58.713953117056626,
+                -31.443590477284115,
+                35.5
+              ],
+              "max": [
+                68.787688,
+                -21.366723522715883,
+                55.5
+              ]
+            },
+            "originalVolumeMm3": 713.2873022640094,
+            "editedVolumeMm3": 713.2873022640094
+          },
+          {
+            "component": "Platter washer 8",
+            "originalBounds": {
+              "min": [
+                58.75390339390538,
+                -31.403602910004082,
+                48
+              ],
+              "max": [
+                68.747688,
+                -21.406711089995916,
+                49.5
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                58.75390339390538,
+                -31.403602910004082,
+                50
+              ],
+              "max": [
+                68.747688,
+                -21.406711089995916,
+                51.5
+              ]
+            },
+            "originalVolumeMm3": 78.17853318458197,
+            "editedVolumeMm3": 78.17853318458197
+          },
+          {
+            "component": "Spindle cap",
+            "originalBounds": {
+              "min": [
+                -17.977624581940603,
+                -17.994405276014692,
+                82
+              ],
+              "max": [
+                18,
+                17.994405276014692,
+                86
+              ]
+            },
+            "editedBounds": {
+              "min": [
+                -17.977624581940603,
+                -17.994405276014692,
+                84
+              ],
+              "max": [
+                18,
+                17.994405276014692,
+                88
+              ]
+            },
+            "originalVolumeMm3": 3267.2563597333847,
+            "editedVolumeMm3": 3267.2563597333847
+          }
+        ],
+        "undoRestoredVolumes": true
+      },
+      "saveOpen": "identical document; native body count preserved",
+      "stl": {
+        "mode": "separate",
+        "fullChecks": true,
+        "bodyCount": 40,
+        "triangleCount": 26704,
+        "warnings": [],
+        "binaryFiles": [
+          {
+            "filename": "Soft_perimeter.stl",
+            "component": "Fixture base",
+            "triangles": 4228,
+            "signedVolumeMm3": 584020.6088595731,
+            "relativeBRepVolumeError": 0.0004529804943101956
+          },
+          {
+            "filename": "Underside_edge_break.stl",
+            "component": "Slotted platter",
+            "triangles": 3908,
+            "signedVolumeMm3": 222534.840961042,
+            "relativeBRepVolumeError": 0.0017289061294326613
+          },
+          {
+            "filename": "Turned_spindle.stl",
+            "component": "Stepped spindle",
+            "triangles": 752,
+            "signedVolumeMm3": 104833.74140818411,
+            "relativeBRepVolumeError": 0.0016569544993262353
+          },
+          {
+            "filename": "Clamp_blank.stl",
+            "component": "Clamp 1",
+            "triangles": 544,
+            "signedVolumeMm3": 5056.915747194944,
+            "relativeBRepVolumeError": 0.00003590605039882622
+          },
+          {
+            "filename": "Contact_shoe.stl",
+            "component": "Clamp shoe 1",
+            "triangles": 268,
+            "signedVolumeMm3": 2370.819282861623,
+            "relativeBRepVolumeError": 0.00001276886584400394
+          },
+          {
+            "filename": "Clamp_blank-2.stl",
+            "component": "Clamp 2",
+            "triangles": 544,
+            "signedVolumeMm3": 5056.915747194944,
+            "relativeBRepVolumeError": 0.00003590605039882622
+          },
+          {
+            "filename": "Contact_shoe-2.stl",
+            "component": "Clamp shoe 2",
+            "triangles": 268,
+            "signedVolumeMm3": 2370.819282861623,
+            "relativeBRepVolumeError": 0.00001276886584400394
+          },
+          {
+            "filename": "Clamp_blank-3.stl",
+            "component": "Clamp 3",
+            "triangles": 544,
+            "signedVolumeMm3": 5056.915747194944,
+            "relativeBRepVolumeError": 0.00003590605039904826
+          },
+          {
+            "filename": "Contact_shoe-3.stl",
+            "component": "Clamp shoe 3",
+            "triangles": 268,
+            "signedVolumeMm3": 2370.819282861623,
+            "relativeBRepVolumeError": 0.00001276886584400394
+          },
+          {
+            "filename": "Clamp_blank-4.stl",
+            "component": "Clamp 4",
+            "triangles": 544,
+            "signedVolumeMm3": 5056.915747194944,
+            "relativeBRepVolumeError": 0.00003590605039904826
+          },
+          {
+            "filename": "Contact_shoe-4.stl",
+            "component": "Clamp shoe 4",
+            "triangles": 268,
+            "signedVolumeMm3": 2370.819282861623,
+            "relativeBRepVolumeError": 0.00001276886584400394
+          },
+          {
+            "filename": "Fastener_shank.stl",
+            "component": "Platter screw 1",
+            "triangles": 500,
+            "signedVolumeMm3": 712.1054318200187,
+            "relativeBRepVolumeError": 0.0016569346464453405
+          },
+          {
+            "filename": "Washer.stl",
+            "component": "Platter washer 1",
+            "triangles": 504,
+            "signedVolumeMm3": 78.04898945889363,
+            "relativeBRepVolumeError": 0.0016570242547589986
+          },
+          {
+            "filename": "Fastener_shank-2.stl",
+            "component": "Platter screw 2",
+            "triangles": 500,
+            "signedVolumeMm3": 712.1053828043662,
+            "relativeBRepVolumeError": 0.0016570033644118798
+          },
+          {
+            "filename": "Washer-2.stl",
+            "component": "Platter washer 2",
+            "triangles": 504,
+            "signedVolumeMm3": 78.04898770613727,
+            "relativeBRepVolumeError": 0.001657046674678364
+          },
+          {
+            "filename": "Fastener_shank-3.stl",
+            "component": "Platter screw 3",
+            "triangles": 500,
+            "signedVolumeMm3": 712.1054075875883,
+            "relativeBRepVolumeError": 0.0016569686193350641
+          },
+          {
+            "filename": "Washer-3.stl",
+            "component": "Platter washer 3",
+            "triangles": 504,
+            "signedVolumeMm3": 78.04898993391726,
+            "relativeBRepVolumeError": 0.0016570181786207394
+          },
+          {
+            "filename": "Fastener_shank-4.stl",
+            "component": "Platter screw 4",
+            "triangles": 500,
+            "signedVolumeMm3": 712.105451793932,
+            "relativeBRepVolumeError": 0.0016569066438250069
+          },
+          {
+            "filename": "Washer-4.stl",
+            "component": "Platter washer 4",
+            "triangles": 504,
+            "signedVolumeMm3": 78.04899935465801,
+            "relativeBRepVolumeError": 0.0016568976757107556
+          },
+          {
+            "filename": "Fastener_shank-5.stl",
+            "component": "Platter screw 5",
+            "triangles": 500,
+            "signedVolumeMm3": 712.1054517939316,
+            "relativeBRepVolumeError": 0.001656906643825673
+          },
+          {
+            "filename": "Washer-5.stl",
+            "component": "Platter washer 5",
+            "triangles": 504,
+            "signedVolumeMm3": 78.04899935465801,
+            "relativeBRepVolumeError": 0.0016568976757104226
+          },
+          {
+            "filename": "Fastener_shank-6.stl",
+            "component": "Platter screw 6",
+            "triangles": 500,
+            "signedVolumeMm3": 712.1054075875882,
+            "relativeBRepVolumeError": 0.0016569686193351751
+          },
+          {
+            "filename": "Washer-6.stl",
+            "component": "Platter washer 6",
+            "triangles": 504,
+            "signedVolumeMm3": 78.04898993391726,
+            "relativeBRepVolumeError": 0.0016570181786208504
+          },
+          {
+            "filename": "Fastener_shank-7.stl",
+            "component": "Platter screw 7",
+            "triangles": 500,
+            "signedVolumeMm3": 712.1053828043657,
+            "relativeBRepVolumeError": 0.001657003364412546
+          },
+          {
+            "filename": "Washer-7.stl",
+            "component": "Platter washer 7",
+            "triangles": 504,
+            "signedVolumeMm3": 78.04898770613727,
+            "relativeBRepVolumeError": 0.001657046674678364
+          },
+          {
+            "filename": "Fastener_shank-8.stl",
+            "component": "Platter screw 8",
+            "triangles": 500,
+            "signedVolumeMm3": 712.1054318200191,
+            "relativeBRepVolumeError": 0.0016569346464446744
+          },
+          {
+            "filename": "Washer-8.stl",
+            "component": "Platter washer 8",
+            "triangles": 504,
+            "signedVolumeMm3": 78.04898945889363,
+            "relativeBRepVolumeError": 0.0016570242547589986
+          },
+          {
+            "filename": "Fastener_shank-9.stl",
+            "component": "Base bolt 1",
+            "triangles": 500,
+            "signedVolumeMm3": 761.2840344236461,
+            "relativeBRepVolumeError": 0.0016568681819206788
+          },
+          {
+            "filename": "Riser_sleeve.stl",
+            "component": "Mounting riser 1",
+            "triangles": 504,
+            "signedVolumeMm3": 4383.9165135078465,
+            "relativeBRepVolumeError": 0.0016569608130700963
+          },
+          {
+            "filename": "Fastener_shank-10.stl",
+            "component": "Base bolt 2",
+            "triangles": 500,
+            "signedVolumeMm3": 761.2840344236467,
+            "relativeBRepVolumeError": 0.0016568681819197906
+          },
+          {
+            "filename": "Riser_sleeve-2.stl",
+            "component": "Mounting riser 2",
+            "triangles": 504,
+            "signedVolumeMm3": 4383.9165135078365,
+            "relativeBRepVolumeError": 0.0016569608130723168
+          },
+          {
+            "filename": "Fastener_shank-11.stl",
+            "component": "Base bolt 3",
+            "triangles": 500,
+            "signedVolumeMm3": 761.284034423646,
+            "relativeBRepVolumeError": 0.0016568681819207898
+          },
+          {
+            "filename": "Riser_sleeve-3.stl",
+            "component": "Mounting riser 3",
+            "triangles": 504,
+            "signedVolumeMm3": 4383.916513507843,
+            "relativeBRepVolumeError": 0.0016569608130706515
+          },
+          {
+            "filename": "Fastener_shank-12.stl",
+            "component": "Base bolt 4",
+            "triangles": 500,
+            "signedVolumeMm3": 761.2840344236472,
+            "relativeBRepVolumeError": 0.0016568681819191244
+          },
+          {
+            "filename": "Riser_sleeve-4.stl",
+            "component": "Mounting riser 4",
+            "triangles": 504,
+            "signedVolumeMm3": 4383.916513507842,
+            "relativeBRepVolumeError": 0.0016569608130708735
+          },
+          {
+            "filename": "Bearing_ring.stl",
+            "component": "Spindle bearing 1",
+            "triangles": 504,
+            "signedVolumeMm3": 12420.092953032185,
+            "relativeBRepVolumeError": 0.0016569761939958516
+          },
+          {
+            "filename": "Seal_ring.stl",
+            "component": "Bearing seal 1",
+            "triangles": 504,
+            "signedVolumeMm3": 1552.5116191290215,
+            "relativeBRepVolumeError": 0.0016569761939968508
+          },
+          {
+            "filename": "Bearing_ring-2.stl",
+            "component": "Spindle bearing 2",
+            "triangles": 504,
+            "signedVolumeMm3": 12420.092953032181,
+            "relativeBRepVolumeError": 0.0016569761939961847
+          },
+          {
+            "filename": "Seal_ring-2.stl",
+            "component": "Bearing seal 2",
+            "triangles": 504,
+            "signedVolumeMm3": 1552.5116191290222,
+            "relativeBRepVolumeError": 0.0016569761939964067
+          },
+          {
+            "filename": "Cap_ring.stl",
+            "component": "Spindle cap",
+            "triangles": 504,
+            "signedVolumeMm3": 3261.8426822797574,
+            "relativeBRepVolumeError": 0.0016569490904806417
+          }
+        ]
+      },
+      "projectFileSha256": "63dbaebb5b5463a0e1d4b5bd2846dac5bfa89ed63db1cde9a61a32ad7f69bf7f"
+    }
+  ],
+  "independentChecks": [
+    "Angle fixture: XZ fasteners extend along -Y from 23 to 11 mm; exact volume equals pi*2^2*12 mm3.",
+    "Heat exchanger: all 16 YZ tubes extend along +X from -74 to +74 mm and match pi*(4.3^2-3.2^2)*148 mm3.",
+    "Precision stack: spacer and washer volumes match their analytical annular cross-section times height.",
+    "XY plate bases start at Z=0 mm in projects 1, 3, 4, 5, 7, 8, 9, 10.",
+    "Reviewed valve, drive-column and guard-post stacks are seated. Rotary spindle follows the tested +2 mm platter-thickness edit.",
+    "Volume-neutral jaw_span edit moves Jaw 1 by -2 mm and Jaw 2 by +2 mm; changed-body bounds are recorded.",
+    "Gripper: at jaw_span 56 and 60 mm, native rebuild solved palm/jaw hole axes coincide in XY with both pin axes; native pin meshes span palm/jaw Z ranges and match pi*3^2*34 mm3."
+  ],
+  "reproducibility": {
+    "kind": "Recorded snapshot from temporary authoring and native-verification scripts, which are not distributed. This is not an automated continuous test gate.",
+    "stalenessRule": "If a project file SHA-256 differs from projectFileSha256, its recorded evidence is stale. Recheck with the recorded app/kernel version and browser workflow before updating claims."
+  },
+  "scopeLimits": [
+    "Static component layouts only: no joints, motion, assembly transforms, threads, load ratings or manufacturing qualification.",
+    "Obvious reviewed seating and collision issues were corrected, but full inter-body fit/interference is not qualified. Separate-file mode checks each mesh, not cross-body overlaps.",
+    "One documented primary parameter edit per project was verified. Arbitrary edits and parameter ranges were not qualified.",
+    "Development native browser checks. No application runtime code changed."
+  ]
+}

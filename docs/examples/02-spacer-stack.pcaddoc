@@ -1,0 +1,436 @@
+{
+  "components": {
+    "component_466ec00f": {
+      "id": "component_466ec00f",
+      "name": "Lower washer"
+    },
+    "component_693dfdfb": {
+      "id": "component_693dfdfb",
+      "name": "Long spacer"
+    },
+    "component_8f614276": {
+      "id": "component_8f614276",
+      "name": "Project reference"
+    },
+    "component_c760f320": {
+      "id": "component_c760f320",
+      "name": "Upper washer"
+    }
+  },
+  "createdAt": "2026-10-07T09:40:53.550Z",
+  "displayUnits": {
+    "angle": "deg",
+    "length": "mm"
+  },
+  "features": [
+    {
+      "componentId": "component_466ec00f",
+      "createdAt": "2026-10-07T09:40:53.550Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "4mm",
+        "unit": "mm"
+      },
+      "id": "feature_8e4cd220",
+      "name": "Washer ring",
+      "operation": "newBody",
+      "profileId": "sketch_9dcba23c:profile:p62hvns",
+      "sketchId": "sketch_9dcba23c",
+      "timelineStep": 2,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_693dfdfb",
+      "createdAt": "2026-10-07T09:40:53.550Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "spacer_height",
+        "parameterRefs": {
+          "spacer_height": "02-spacer-stack_parameter_spacer_height"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_aa20ece2",
+      "name": "Spacer sleeve",
+      "operation": "newBody",
+      "profileId": "sketch_1ae7a08d:profile:pk7pucv",
+      "sketchId": "sketch_1ae7a08d",
+      "timelineStep": 4,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_c760f320",
+      "createdAt": "2026-10-07T09:40:53.550Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "4mm",
+        "unit": "mm"
+      },
+      "id": "feature_ea818b37",
+      "name": "Upper washer ring",
+      "operation": "newBody",
+      "profileId": "sketch_ae7f4ec2:profile:pmlb1qq",
+      "sketchId": "sketch_ae7f4ec2",
+      "timelineStep": 6,
+      "type": "extrude"
+    }
+  ],
+  "id": "doc_33d7ebd5",
+  "metadata": {
+    "example": {
+      "difficulty": "Beginner",
+      "edited": 24,
+      "order": 2,
+      "original": 20,
+      "parts": [
+        {
+          "bodyId": "body:feature_8e4cd220",
+          "componentId": "component_466ec00f",
+          "name": "Lower washer"
+        },
+        {
+          "bodyId": "body:feature_aa20ece2",
+          "componentId": "component_693dfdfb",
+          "name": "Long spacer"
+        },
+        {
+          "bodyId": "body:feature_ea818b37",
+          "componentId": "component_c760f320",
+          "name": "Upper washer"
+        }
+      ],
+      "primaryParameter": "spacer_height",
+      "scope": "Static components authored in shared coordinates; no joints or assembly transforms.",
+      "slug": "02-spacer-stack",
+      "summary": "Three annular parts with a shared bore and parameter-linked upper washer position."
+    }
+  },
+  "name": "Precision spacer stack",
+  "parameters": {
+    "spacer_height": {
+      "description": "Primary demonstration parameter; change this to inspect the rebuild.",
+      "expression": "20mm",
+      "group": "Design dimensions",
+      "id": "02-spacer-stack_parameter_spacer_height",
+      "name": "spacer_height",
+      "unit": "mm",
+      "value": 20
+    }
+  },
+  "rootComponentId": "component_8f614276",
+  "schemaVersion": 13,
+  "sketches": {
+    "sketch_1ae7a08d": {
+      "componentId": "component_693dfdfb",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_da0b8987",
+          "pointIds": [
+            "point_cfabc2ff"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_0f3472a6",
+          "pointIds": [
+            "point_57e44051"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.550Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_5fc10eb1"
+          ],
+          "expression": {
+            "expression": "10mm",
+            "unit": "mm"
+          },
+          "id": "circle_5fc10eb1_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_d8bc59f8"
+          ],
+          "expression": {
+            "expression": "5mm",
+            "unit": "mm"
+          },
+          "id": "circle_d8bc59f8_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_5fc10eb1": {
+          "centerPointId": "point_cfabc2ff",
+          "id": "circle_5fc10eb1",
+          "radius": {
+            "expression": "10mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_d8bc59f8": {
+          "centerPointId": "point_57e44051",
+          "id": "circle_d8bc59f8",
+          "radius": {
+            "expression": "5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_57e44051": {
+          "id": "point_57e44051",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "point_cfabc2ff": {
+          "id": "point_cfabc2ff",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_1ae7a08d",
+      "name": "Spacer sleeve section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "4mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 3
+    },
+    "sketch_9dcba23c": {
+      "componentId": "component_466ec00f",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_036de449",
+          "pointIds": [
+            "point_b60704a4"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_5b750bc2",
+          "pointIds": [
+            "point_23d39af1"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.550Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_bec746cf"
+          ],
+          "expression": {
+            "expression": "16mm",
+            "unit": "mm"
+          },
+          "id": "circle_bec746cf_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_4b3ba17c"
+          ],
+          "expression": {
+            "expression": "5mm",
+            "unit": "mm"
+          },
+          "id": "circle_4b3ba17c_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_4b3ba17c": {
+          "centerPointId": "point_23d39af1",
+          "id": "circle_4b3ba17c",
+          "radius": {
+            "expression": "5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_bec746cf": {
+          "centerPointId": "point_b60704a4",
+          "id": "circle_bec746cf",
+          "radius": {
+            "expression": "16mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_23d39af1": {
+          "id": "point_23d39af1",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "point_b60704a4": {
+          "id": "point_b60704a4",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_9dcba23c",
+      "name": "Washer ring section",
+      "plane": {
+        "plane": "XY",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 1
+    },
+    "sketch_ae7f4ec2": {
+      "componentId": "component_c760f320",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_d6c2719a",
+          "pointIds": [
+            "point_ba6245a2"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_6b184cc0",
+          "pointIds": [
+            "point_1c5e3178"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.550Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_35ae9ab0"
+          ],
+          "expression": {
+            "expression": "16mm",
+            "unit": "mm"
+          },
+          "id": "circle_35ae9ab0_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_c5f9eb14"
+          ],
+          "expression": {
+            "expression": "5mm",
+            "unit": "mm"
+          },
+          "id": "circle_c5f9eb14_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_35ae9ab0": {
+          "centerPointId": "point_ba6245a2",
+          "id": "circle_35ae9ab0",
+          "radius": {
+            "expression": "16mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_c5f9eb14": {
+          "centerPointId": "point_1c5e3178",
+          "id": "circle_c5f9eb14",
+          "radius": {
+            "expression": "5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_1c5e3178": {
+          "id": "point_1c5e3178",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "point_ba6245a2": {
+          "id": "point_ba6245a2",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_ae7f4ec2",
+      "name": "Upper washer ring section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "spacer_height + 4mm",
+          "parameterRefs": {
+            "spacer_height": "02-spacer-stack_parameter_spacer_height"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 5
+    }
+  },
+  "timelineCursor": 6,
+  "units": "metric",
+  "unitSettings": {
+    "angle": "deg",
+    "length": "mm"
+  },
+  "updatedAt": "2026-10-07T09:40:53.550Z"
+}

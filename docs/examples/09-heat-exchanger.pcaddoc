@@ -1,0 +1,6361 @@
+{
+  "components": {
+    "component_1b56edb8": {
+      "id": "component_1b56edb8",
+      "name": "Tube 16"
+    },
+    "component_1d07b04a": {
+      "id": "component_1d07b04a",
+      "name": "Tube 01"
+    },
+    "component_283ce8c1": {
+      "id": "component_283ce8c1",
+      "name": "Tube 04"
+    },
+    "component_2addd0f3": {
+      "id": "component_2addd0f3",
+      "name": "Tube 09"
+    },
+    "component_2da2ec5e": {
+      "id": "component_2da2ec5e",
+      "name": "Tube 13"
+    },
+    "component_382ed4fa": {
+      "id": "component_382ed4fa",
+      "name": "Tube 02"
+    },
+    "component_3de7c696": {
+      "id": "component_3de7c696",
+      "name": "Tube 07"
+    },
+    "component_4ac620f1": {
+      "id": "component_4ac620f1",
+      "name": "Guard screw 2"
+    },
+    "component_4b819ccc": {
+      "id": "component_4b819ccc",
+      "name": "Guard post 3"
+    },
+    "component_4f903e53": {
+      "id": "component_4f903e53",
+      "name": "Project reference"
+    },
+    "component_5893a4a6": {
+      "id": "component_5893a4a6",
+      "name": "Tube 11"
+    },
+    "component_5aba8b70": {
+      "id": "component_5aba8b70",
+      "name": "Tube 08"
+    },
+    "component_5b7cbd8a": {
+      "id": "component_5b7cbd8a",
+      "name": "Tube 12"
+    },
+    "component_5e1c4fab": {
+      "id": "component_5e1c4fab",
+      "name": "Tube 03"
+    },
+    "component_691af2b1": {
+      "id": "component_691af2b1",
+      "name": "Header 1"
+    },
+    "component_6ce10d4b": {
+      "id": "component_6ce10d4b",
+      "name": "Tube 14"
+    },
+    "component_7d54c15e": {
+      "id": "component_7d54c15e",
+      "name": "Tube 06"
+    },
+    "component_869d4755": {
+      "id": "component_869d4755",
+      "name": "Header 2"
+    },
+    "component_99c51d79": {
+      "id": "component_99c51d79",
+      "name": "Tube 05"
+    },
+    "component_9d2568a5": {
+      "id": "component_9d2568a5",
+      "name": "Guard screw 4"
+    },
+    "component_b0c83a11": {
+      "id": "component_b0c83a11",
+      "name": "Tube 10"
+    },
+    "component_b329515a": {
+      "id": "component_b329515a",
+      "name": "Tube 15"
+    },
+    "component_b419bc99": {
+      "id": "component_b419bc99",
+      "name": "Exchanger base"
+    },
+    "component_bfc3dbe3": {
+      "id": "component_bfc3dbe3",
+      "name": "Guard screw 1"
+    },
+    "component_c49a6d55": {
+      "id": "component_c49a6d55",
+      "name": "Windowed guard"
+    },
+    "component_c6089db1": {
+      "id": "component_c6089db1",
+      "name": "Guard post 2"
+    },
+    "component_d54aaff3": {
+      "id": "component_d54aaff3",
+      "name": "Guard post 1"
+    },
+    "component_d6f43ece": {
+      "id": "component_d6f43ece",
+      "name": "Guard screw 3"
+    },
+    "component_e4de04f2": {
+      "id": "component_e4de04f2",
+      "name": "Guard post 4"
+    }
+  },
+  "createdAt": "2026-10-07T09:40:53.585Z",
+  "displayUnits": {
+    "angle": "deg",
+    "length": "mm"
+  },
+  "features": [
+    {
+      "componentId": "component_b419bc99",
+      "createdAt": "2026-10-07T09:40:53.586Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "6mm",
+        "unit": "mm"
+      },
+      "id": "feature_e9d8e741",
+      "name": "Base blank",
+      "operation": "newBody",
+      "profileId": "sketch_05dc7b25:profile:p67dlg5",
+      "sketchId": "sketch_05dc7b25",
+      "timelineStep": 2,
+      "type": "extrude"
+    },
+    {
+      "centerPointIds": [
+        "point_4db5e5b5",
+        "point_32491b10",
+        "point_e8b86226",
+        "point_18e0ec28"
+      ],
+      "componentId": "component_b419bc99",
+      "createdAt": "2026-10-07T09:40:53.586Z",
+      "depth": "throughAll",
+      "diameter": {
+        "expression": "5.4mm",
+        "unit": "mm"
+      },
+      "direction": "positive",
+      "id": "09-heat-exchanger_hole_1",
+      "name": "Base post pattern",
+      "sketchId": "sketch_c6470c5b",
+      "targetBodyIds": [
+        "body:feature_e9d8e741"
+      ],
+      "timelineStep": 4,
+      "type": "hole"
+    },
+    {
+      "componentId": "component_691af2b1",
+      "createdAt": "2026-10-07T09:40:53.588Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "54mm",
+        "unit": "mm"
+      },
+      "id": "feature_f5ffefb0",
+      "name": "Header block",
+      "operation": "newBody",
+      "profileId": "sketch_784f3c69:profile:p1rqf7m6",
+      "sketchId": "sketch_784f3c69",
+      "timelineStep": 6,
+      "type": "extrude"
+    },
+    {
+      "centerPointIds": [
+        "point_15dad7eb",
+        "point_0b10d955",
+        "point_fae13ffa",
+        "point_3928be27",
+        "point_3b414e24",
+        "point_8795e019",
+        "point_6fe01d87",
+        "point_a28ea3c8",
+        "point_0697d82c",
+        "point_12dabb2f",
+        "point_9c9ac7ef",
+        "point_a5633292",
+        "point_b3188844",
+        "point_d0f86e1b",
+        "point_e81be868",
+        "point_75cb4b79"
+      ],
+      "componentId": "component_691af2b1",
+      "createdAt": "2026-10-07T09:40:53.588Z",
+      "depth": {
+        "expression": "18mm",
+        "unit": "mm"
+      },
+      "diameter": {
+        "expression": "8.8mm",
+        "unit": "mm"
+      },
+      "direction": "negative",
+      "id": "09-heat-exchanger_hole_3",
+      "name": "Tube sockets",
+      "sketchId": "sketch_1549bd4a",
+      "targetBodyIds": [
+        "body:feature_f5ffefb0"
+      ],
+      "timelineStep": 8,
+      "type": "hole"
+    },
+    {
+      "componentId": "component_869d4755",
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "54mm",
+        "unit": "mm"
+      },
+      "id": "feature_6d76265e",
+      "name": "Header block",
+      "operation": "newBody",
+      "profileId": "sketch_ad1ca870:profile:p1mpt8k0",
+      "sketchId": "sketch_ad1ca870",
+      "timelineStep": 10,
+      "type": "extrude"
+    },
+    {
+      "centerPointIds": [
+        "point_0dc8cf81",
+        "point_5aa03dc7",
+        "point_8133bb1a",
+        "point_7cdac02c",
+        "point_d6a2ec8a",
+        "point_45676315",
+        "point_78fff576",
+        "point_bc04fcef",
+        "point_e245c8f6",
+        "point_975c7aa6",
+        "point_d01d311a",
+        "point_19b7c25c",
+        "point_1bcad3ea",
+        "point_cc03a7c7",
+        "point_06491807",
+        "point_38f1fafc"
+      ],
+      "componentId": "component_869d4755",
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "depth": {
+        "expression": "18mm",
+        "unit": "mm"
+      },
+      "diameter": {
+        "expression": "8.8mm",
+        "unit": "mm"
+      },
+      "direction": "positive",
+      "id": "09-heat-exchanger_hole_5",
+      "name": "Tube sockets",
+      "sketchId": "sketch_2def4af1",
+      "targetBodyIds": [
+        "body:feature_6d76265e"
+      ],
+      "timelineStep": 12,
+      "type": "hole"
+    },
+    {
+      "componentId": "component_1d07b04a",
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "tube_length",
+        "parameterRefs": {
+          "tube_length": "09-heat-exchanger_parameter_tube_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_d75bf8b4",
+      "name": "Hollow transfer tube",
+      "operation": "newBody",
+      "profileId": "sketch_e8b56cdf:profile:p14e7c8b",
+      "sketchId": "sketch_e8b56cdf",
+      "timelineStep": 14,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_382ed4fa",
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "tube_length",
+        "parameterRefs": {
+          "tube_length": "09-heat-exchanger_parameter_tube_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_50ecc6fb",
+      "name": "Hollow transfer tube",
+      "operation": "newBody",
+      "profileId": "sketch_4bcc9781:profile:p7vlmd2",
+      "sketchId": "sketch_4bcc9781",
+      "timelineStep": 16,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_5e1c4fab",
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "tube_length",
+        "parameterRefs": {
+          "tube_length": "09-heat-exchanger_parameter_tube_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_c4be9faa",
+      "name": "Hollow transfer tube",
+      "operation": "newBody",
+      "profileId": "sketch_43af4d4e:profile:p1rkqqyi",
+      "sketchId": "sketch_43af4d4e",
+      "timelineStep": 18,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_283ce8c1",
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "tube_length",
+        "parameterRefs": {
+          "tube_length": "09-heat-exchanger_parameter_tube_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_15aa67e5",
+      "name": "Hollow transfer tube",
+      "operation": "newBody",
+      "profileId": "sketch_42bb8f37:profile:pwr29w",
+      "sketchId": "sketch_42bb8f37",
+      "timelineStep": 20,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_99c51d79",
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "tube_length",
+        "parameterRefs": {
+          "tube_length": "09-heat-exchanger_parameter_tube_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_afa575c5",
+      "name": "Hollow transfer tube",
+      "operation": "newBody",
+      "profileId": "sketch_bc42ac34:profile:pohpjn0",
+      "sketchId": "sketch_bc42ac34",
+      "timelineStep": 22,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_7d54c15e",
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "tube_length",
+        "parameterRefs": {
+          "tube_length": "09-heat-exchanger_parameter_tube_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_fce8ea2e",
+      "name": "Hollow transfer tube",
+      "operation": "newBody",
+      "profileId": "sketch_f53873c9:profile:pua0co4",
+      "sketchId": "sketch_f53873c9",
+      "timelineStep": 24,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_3de7c696",
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "tube_length",
+        "parameterRefs": {
+          "tube_length": "09-heat-exchanger_parameter_tube_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_29fe85b6",
+      "name": "Hollow transfer tube",
+      "operation": "newBody",
+      "profileId": "sketch_0d2f2435:profile:p1pjtdal",
+      "sketchId": "sketch_0d2f2435",
+      "timelineStep": 26,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_5aba8b70",
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "tube_length",
+        "parameterRefs": {
+          "tube_length": "09-heat-exchanger_parameter_tube_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_52ebffcc",
+      "name": "Hollow transfer tube",
+      "operation": "newBody",
+      "profileId": "sketch_114ad7f1:profile:p14yzxjn",
+      "sketchId": "sketch_114ad7f1",
+      "timelineStep": 28,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_2addd0f3",
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "tube_length",
+        "parameterRefs": {
+          "tube_length": "09-heat-exchanger_parameter_tube_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_18fa9cbb",
+      "name": "Hollow transfer tube",
+      "operation": "newBody",
+      "profileId": "sketch_cc3390dc:profile:pe0wxyc",
+      "sketchId": "sketch_cc3390dc",
+      "timelineStep": 30,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_b0c83a11",
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "tube_length",
+        "parameterRefs": {
+          "tube_length": "09-heat-exchanger_parameter_tube_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_af7d3e42",
+      "name": "Hollow transfer tube",
+      "operation": "newBody",
+      "profileId": "sketch_4c6d113c:profile:p197x2mz",
+      "sketchId": "sketch_4c6d113c",
+      "timelineStep": 32,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_5893a4a6",
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "tube_length",
+        "parameterRefs": {
+          "tube_length": "09-heat-exchanger_parameter_tube_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_e5e9c349",
+      "name": "Hollow transfer tube",
+      "operation": "newBody",
+      "profileId": "sketch_113c8503:profile:p1n9zud8",
+      "sketchId": "sketch_113c8503",
+      "timelineStep": 34,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_5b7cbd8a",
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "tube_length",
+        "parameterRefs": {
+          "tube_length": "09-heat-exchanger_parameter_tube_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_340e25ce",
+      "name": "Hollow transfer tube",
+      "operation": "newBody",
+      "profileId": "sketch_5955c9d1:profile:ppq0cgo",
+      "sketchId": "sketch_5955c9d1",
+      "timelineStep": 36,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_2da2ec5e",
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "tube_length",
+        "parameterRefs": {
+          "tube_length": "09-heat-exchanger_parameter_tube_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_ea8d16df",
+      "name": "Hollow transfer tube",
+      "operation": "newBody",
+      "profileId": "sketch_992001b2:profile:pwmmq6o",
+      "sketchId": "sketch_992001b2",
+      "timelineStep": 38,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_6ce10d4b",
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "tube_length",
+        "parameterRefs": {
+          "tube_length": "09-heat-exchanger_parameter_tube_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_b9ca7bfa",
+      "name": "Hollow transfer tube",
+      "operation": "newBody",
+      "profileId": "sketch_decdefde:profile:p1hhxnas",
+      "sketchId": "sketch_decdefde",
+      "timelineStep": 40,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_b329515a",
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "tube_length",
+        "parameterRefs": {
+          "tube_length": "09-heat-exchanger_parameter_tube_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_ab1165bf",
+      "name": "Hollow transfer tube",
+      "operation": "newBody",
+      "profileId": "sketch_2ce4a428:profile:pifi5xa",
+      "sketchId": "sketch_2ce4a428",
+      "timelineStep": 42,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_1b56edb8",
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "tube_length",
+        "parameterRefs": {
+          "tube_length": "09-heat-exchanger_parameter_tube_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_d002eb4d",
+      "name": "Hollow transfer tube",
+      "operation": "newBody",
+      "profileId": "sketch_ec67da2b:profile:p9dk847",
+      "sketchId": "sketch_ec67da2b",
+      "timelineStep": 44,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_c49a6d55",
+      "createdAt": "2026-10-07T09:40:53.591Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "5mm",
+        "unit": "mm"
+      },
+      "id": "feature_e6ec2499",
+      "name": "Guard blank",
+      "operation": "newBody",
+      "profileId": "sketch_3f1804c6:profile:p1uythrl",
+      "sketchId": "sketch_3f1804c6",
+      "timelineStep": 46,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_c49a6d55",
+      "createdAt": "2026-10-07T09:40:53.593Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "5mm",
+        "unit": "mm"
+      },
+      "id": "feature_e8b4a884",
+      "name": "Guard opening",
+      "operation": "cut",
+      "profileId": "sketch_0290020c:profile:p2e4xao",
+      "sketchId": "sketch_0290020c",
+      "targetBodyIds": [
+        "body:feature_e6ec2499"
+      ],
+      "termination": {
+        "type": "throughAll"
+      },
+      "timelineStep": 48,
+      "type": "extrude"
+    },
+    {
+      "centerPointIds": [
+        "point_081fd882",
+        "point_607c3af3",
+        "point_960a4154",
+        "point_3f10a91c"
+      ],
+      "componentId": "component_c49a6d55",
+      "createdAt": "2026-10-07T09:40:53.593Z",
+      "depth": "throughAll",
+      "diameter": {
+        "expression": "5.4mm",
+        "unit": "mm"
+      },
+      "direction": "positive",
+      "id": "09-heat-exchanger_hole_24",
+      "name": "Guard post pattern",
+      "sketchId": "sketch_97463b14",
+      "targetBodyIds": [
+        "body:feature_e6ec2499"
+      ],
+      "timelineStep": 50,
+      "type": "hole"
+    },
+    {
+      "componentId": "component_d54aaff3",
+      "createdAt": "2026-10-07T09:40:53.593Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "54mm",
+        "unit": "mm"
+      },
+      "id": "feature_2f2546d4",
+      "name": "Hollow guard post",
+      "operation": "newBody",
+      "profileId": "sketch_6362a926:profile:p1qqszaz",
+      "sketchId": "sketch_6362a926",
+      "timelineStep": 52,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_bfc3dbe3",
+      "createdAt": "2026-10-07T09:40:53.593Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "guard_screw_length + 1mm",
+        "parameterRefs": {
+          "guard_screw_length": "09-heat-exchanger_parameter_guard_screw_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_a65991c7",
+      "name": "Fastener shank",
+      "operation": "newBody",
+      "profileId": "sketch_0a208c22:profile:p1eit480",
+      "sketchId": "sketch_0a208c22",
+      "timelineStep": 54,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_bfc3dbe3",
+      "createdAt": "2026-10-07T09:40:53.593Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "4mm",
+        "unit": "mm"
+      },
+      "id": "feature_4b0b3ac8",
+      "name": "Fastener head",
+      "operation": "join",
+      "profileId": "sketch_35dfa220:profile:pigquqq",
+      "sketchId": "sketch_35dfa220",
+      "targetBodyIds": [
+        "body:feature_a65991c7"
+      ],
+      "timelineStep": 56,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_c6089db1",
+      "createdAt": "2026-10-07T09:40:53.593Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "54mm",
+        "unit": "mm"
+      },
+      "id": "feature_d90bf0da",
+      "name": "Hollow guard post",
+      "operation": "newBody",
+      "profileId": "sketch_4737e957:profile:p7hmnbb",
+      "sketchId": "sketch_4737e957",
+      "timelineStep": 58,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_4ac620f1",
+      "createdAt": "2026-10-07T09:40:53.593Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "guard_screw_length + 1mm",
+        "parameterRefs": {
+          "guard_screw_length": "09-heat-exchanger_parameter_guard_screw_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_fdb7a7b4",
+      "name": "Fastener shank",
+      "operation": "newBody",
+      "profileId": "sketch_a4f436cd:profile:plfllg2",
+      "sketchId": "sketch_a4f436cd",
+      "timelineStep": 60,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_4ac620f1",
+      "createdAt": "2026-10-07T09:40:53.593Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "4mm",
+        "unit": "mm"
+      },
+      "id": "feature_e5e60957",
+      "name": "Fastener head",
+      "operation": "join",
+      "profileId": "sketch_9be77167:profile:p1le0b3o",
+      "sketchId": "sketch_9be77167",
+      "targetBodyIds": [
+        "body:feature_fdb7a7b4"
+      ],
+      "timelineStep": 62,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_4b819ccc",
+      "createdAt": "2026-10-07T09:40:53.593Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "54mm",
+        "unit": "mm"
+      },
+      "id": "feature_69c0d875",
+      "name": "Hollow guard post",
+      "operation": "newBody",
+      "profileId": "sketch_18d2b6d2:profile:pbykgea",
+      "sketchId": "sketch_18d2b6d2",
+      "timelineStep": 64,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_d6f43ece",
+      "createdAt": "2026-10-07T09:40:53.593Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "guard_screw_length + 1mm",
+        "parameterRefs": {
+          "guard_screw_length": "09-heat-exchanger_parameter_guard_screw_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_a2673b48",
+      "name": "Fastener shank",
+      "operation": "newBody",
+      "profileId": "sketch_58711fdc:profile:ppi7oeg",
+      "sketchId": "sketch_58711fdc",
+      "timelineStep": 66,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_d6f43ece",
+      "createdAt": "2026-10-07T09:40:53.593Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "4mm",
+        "unit": "mm"
+      },
+      "id": "feature_340b45a1",
+      "name": "Fastener head",
+      "operation": "join",
+      "profileId": "sketch_b1ba5dd3:profile:p1trri0z",
+      "sketchId": "sketch_b1ba5dd3",
+      "targetBodyIds": [
+        "body:feature_a2673b48"
+      ],
+      "timelineStep": 68,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_e4de04f2",
+      "createdAt": "2026-10-07T09:40:53.593Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "54mm",
+        "unit": "mm"
+      },
+      "id": "feature_bdc293be",
+      "name": "Hollow guard post",
+      "operation": "newBody",
+      "profileId": "sketch_40b334f5:profile:pqb37ti",
+      "sketchId": "sketch_40b334f5",
+      "timelineStep": 70,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_9d2568a5",
+      "createdAt": "2026-10-07T09:40:53.593Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "guard_screw_length + 1mm",
+        "parameterRefs": {
+          "guard_screw_length": "09-heat-exchanger_parameter_guard_screw_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_36b67a64",
+      "name": "Fastener shank",
+      "operation": "newBody",
+      "profileId": "sketch_8ddfbcf0:profile:pbx52p1",
+      "sketchId": "sketch_8ddfbcf0",
+      "timelineStep": 72,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_9d2568a5",
+      "createdAt": "2026-10-07T09:40:53.593Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "4mm",
+        "unit": "mm"
+      },
+      "id": "feature_95ed9490",
+      "name": "Fastener head",
+      "operation": "join",
+      "profileId": "sketch_893028af:profile:p1cx0xkg",
+      "sketchId": "sketch_893028af",
+      "targetBodyIds": [
+        "body:feature_36b67a64"
+      ],
+      "timelineStep": 74,
+      "type": "extrude"
+    }
+  ],
+  "id": "doc_deb2db8f",
+  "metadata": {
+    "example": {
+      "difficulty": "Highly complex",
+      "edited": 152,
+      "order": 9,
+      "original": 148,
+      "parts": [
+        {
+          "bodyId": "body:feature_e9d8e741",
+          "componentId": "component_b419bc99",
+          "name": "Exchanger base"
+        },
+        {
+          "bodyId": "body:feature_f5ffefb0",
+          "componentId": "component_691af2b1",
+          "name": "Header 1"
+        },
+        {
+          "bodyId": "body:feature_6d76265e",
+          "componentId": "component_869d4755",
+          "name": "Header 2"
+        },
+        {
+          "bodyId": "body:feature_d75bf8b4",
+          "componentId": "component_1d07b04a",
+          "name": "Tube 01"
+        },
+        {
+          "bodyId": "body:feature_50ecc6fb",
+          "componentId": "component_382ed4fa",
+          "name": "Tube 02"
+        },
+        {
+          "bodyId": "body:feature_c4be9faa",
+          "componentId": "component_5e1c4fab",
+          "name": "Tube 03"
+        },
+        {
+          "bodyId": "body:feature_15aa67e5",
+          "componentId": "component_283ce8c1",
+          "name": "Tube 04"
+        },
+        {
+          "bodyId": "body:feature_afa575c5",
+          "componentId": "component_99c51d79",
+          "name": "Tube 05"
+        },
+        {
+          "bodyId": "body:feature_fce8ea2e",
+          "componentId": "component_7d54c15e",
+          "name": "Tube 06"
+        },
+        {
+          "bodyId": "body:feature_29fe85b6",
+          "componentId": "component_3de7c696",
+          "name": "Tube 07"
+        },
+        {
+          "bodyId": "body:feature_52ebffcc",
+          "componentId": "component_5aba8b70",
+          "name": "Tube 08"
+        },
+        {
+          "bodyId": "body:feature_18fa9cbb",
+          "componentId": "component_2addd0f3",
+          "name": "Tube 09"
+        },
+        {
+          "bodyId": "body:feature_af7d3e42",
+          "componentId": "component_b0c83a11",
+          "name": "Tube 10"
+        },
+        {
+          "bodyId": "body:feature_e5e9c349",
+          "componentId": "component_5893a4a6",
+          "name": "Tube 11"
+        },
+        {
+          "bodyId": "body:feature_340e25ce",
+          "componentId": "component_5b7cbd8a",
+          "name": "Tube 12"
+        },
+        {
+          "bodyId": "body:feature_ea8d16df",
+          "componentId": "component_2da2ec5e",
+          "name": "Tube 13"
+        },
+        {
+          "bodyId": "body:feature_b9ca7bfa",
+          "componentId": "component_6ce10d4b",
+          "name": "Tube 14"
+        },
+        {
+          "bodyId": "body:feature_ab1165bf",
+          "componentId": "component_b329515a",
+          "name": "Tube 15"
+        },
+        {
+          "bodyId": "body:feature_d002eb4d",
+          "componentId": "component_1b56edb8",
+          "name": "Tube 16"
+        },
+        {
+          "bodyId": "body:feature_e6ec2499",
+          "componentId": "component_c49a6d55",
+          "name": "Windowed guard"
+        },
+        {
+          "bodyId": "body:feature_2f2546d4",
+          "componentId": "component_d54aaff3",
+          "name": "Guard post 1"
+        },
+        {
+          "bodyId": "body:feature_a65991c7",
+          "componentId": "component_bfc3dbe3",
+          "name": "Guard screw 1"
+        },
+        {
+          "bodyId": "body:feature_d90bf0da",
+          "componentId": "component_c6089db1",
+          "name": "Guard post 2"
+        },
+        {
+          "bodyId": "body:feature_fdb7a7b4",
+          "componentId": "component_4ac620f1",
+          "name": "Guard screw 2"
+        },
+        {
+          "bodyId": "body:feature_69c0d875",
+          "componentId": "component_4b819ccc",
+          "name": "Guard post 3"
+        },
+        {
+          "bodyId": "body:feature_a2673b48",
+          "componentId": "component_d6f43ece",
+          "name": "Guard screw 3"
+        },
+        {
+          "bodyId": "body:feature_bdc293be",
+          "componentId": "component_e4de04f2",
+          "name": "Guard post 4"
+        },
+        {
+          "bodyId": "body:feature_36b67a64",
+          "componentId": "component_9d2568a5",
+          "name": "Guard screw 4"
+        }
+      ],
+      "primaryParameter": "tube_length",
+      "scope": "Static components authored in shared coordinates; no joints or assembly transforms.",
+      "slug": "09-heat-exchanger",
+      "summary": "Twenty-eight static parts with side-plane tubes, bored headers, a windowed guard and support hardware."
+    }
+  },
+  "name": "Sixteen-tube heat exchanger",
+  "parameters": {
+    "guard_screw_length": {
+      "description": "Shared fastener shank length; head remains seated at the mating face.",
+      "expression": "12mm",
+      "group": "Design dimensions",
+      "id": "09-heat-exchanger_parameter_guard_screw_length",
+      "name": "guard_screw_length",
+      "unit": "mm",
+      "value": 12
+    },
+    "tube_length": {
+      "description": "Primary demonstration parameter; change this to inspect the rebuild.",
+      "expression": "148mm",
+      "group": "Design dimensions",
+      "id": "09-heat-exchanger_parameter_tube_length",
+      "name": "tube_length",
+      "unit": "mm",
+      "value": 148
+    }
+  },
+  "rootComponentId": "component_4f903e53",
+  "schemaVersion": 13,
+  "sketches": {
+    "sketch_0290020c": {
+      "componentId": "component_c49a6d55",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_5bd297a4",
+          "pointIds": [
+            "point_ad1e32a1"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_25c57328",
+          "pointIds": [
+            "point_c1ca9318"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_ef959902",
+          "pointIds": [
+            "point_8375bc21"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_c5cd59b1",
+          "pointIds": [
+            "point_3fccc289"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_81379d16",
+          "pointIds": [
+            "point_947d16e7"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_514e052b",
+          "pointIds": [
+            "point_b41e7e5d"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_85cd11ef",
+          "pointIds": [
+            "point_8773b608"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_aba86105",
+          "pointIds": [
+            "point_85109a77"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_6c0d9139",
+          "pointIds": [
+            "point_a92ab636"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_eb9698a5",
+          "pointIds": [
+            "point_b5cdc0d2"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_accb552d",
+          "pointIds": [
+            "point_34ac4736"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_a404dfa6",
+          "pointIds": [
+            "point_6dea5d32"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.592Z",
+      "dimensions": [],
+      "entities": {
+        "arc_34c295a1": {
+          "centerPointId": "point_6dea5d32",
+          "clockwise": false,
+          "endPointId": "point_ad1e32a1",
+          "id": "arc_34c295a1",
+          "startPointId": "point_85109a77",
+          "type": "arc"
+        },
+        "arc_8679db5b": {
+          "centerPointId": "point_b5cdc0d2",
+          "clockwise": false,
+          "endPointId": "point_947d16e7",
+          "id": "arc_8679db5b",
+          "startPointId": "point_3fccc289",
+          "type": "arc"
+        },
+        "arc_9163e402": {
+          "centerPointId": "point_a92ab636",
+          "clockwise": false,
+          "endPointId": "point_8375bc21",
+          "id": "arc_9163e402",
+          "startPointId": "point_c1ca9318",
+          "type": "arc"
+        },
+        "arc_a7de5178": {
+          "centerPointId": "point_34ac4736",
+          "clockwise": false,
+          "endPointId": "point_8773b608",
+          "id": "arc_a7de5178",
+          "startPointId": "point_b41e7e5d",
+          "type": "arc"
+        },
+        "line_14f66024": {
+          "endPointId": "point_85109a77",
+          "id": "line_14f66024",
+          "startPointId": "point_8773b608",
+          "type": "line"
+        },
+        "line_33b401e9": {
+          "endPointId": "point_b41e7e5d",
+          "id": "line_33b401e9",
+          "startPointId": "point_947d16e7",
+          "type": "line"
+        },
+        "line_829c3035": {
+          "endPointId": "point_3fccc289",
+          "id": "line_829c3035",
+          "startPointId": "point_8375bc21",
+          "type": "line"
+        },
+        "line_e685707c": {
+          "endPointId": "point_c1ca9318",
+          "id": "line_e685707c",
+          "startPointId": "point_ad1e32a1",
+          "type": "line"
+        },
+        "point_34ac4736": {
+          "id": "point_34ac4736",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((tube_length + 12mm) / 2) - (5mm))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((82mm) / 2) - (5mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_3fccc289": {
+          "id": "point_3fccc289",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - ((tube_length + 12mm) / 2))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((82mm) / 2) - (5mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_6dea5d32": {
+          "id": "point_6dea5d32",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((tube_length + 12mm) / 2) - (5mm))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((82mm) / 2) - (5mm))",
+            "unit": "mm"
+          }
+        },
+        "point_8375bc21": {
+          "id": "point_8375bc21",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - ((tube_length + 12mm) / 2))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((82mm) / 2) - (5mm))",
+            "unit": "mm"
+          }
+        },
+        "point_85109a77": {
+          "id": "point_85109a77",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((tube_length + 12mm) / 2)",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((82mm) / 2) - (5mm))",
+            "unit": "mm"
+          }
+        },
+        "point_8773b608": {
+          "id": "point_8773b608",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((tube_length + 12mm) / 2)",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((82mm) / 2) - (5mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_947d16e7": {
+          "id": "point_947d16e7",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((tube_length + 12mm) / 2) - (5mm)))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((82mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_a92ab636": {
+          "id": "point_a92ab636",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((tube_length + 12mm) / 2) - (5mm)))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((82mm) / 2) - (5mm))",
+            "unit": "mm"
+          }
+        },
+        "point_ad1e32a1": {
+          "id": "point_ad1e32a1",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((tube_length + 12mm) / 2) - (5mm))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((82mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_b41e7e5d": {
+          "id": "point_b41e7e5d",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((tube_length + 12mm) / 2) - (5mm))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((82mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_b5cdc0d2": {
+          "id": "point_b5cdc0d2",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((tube_length + 12mm) / 2) - (5mm)))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((82mm) / 2) - (5mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_c1ca9318": {
+          "id": "point_c1ca9318",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((tube_length + 12mm) / 2) - (5mm)))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((82mm) / 2)",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_0290020c",
+      "name": "Guard opening outline",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "60mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 47
+    },
+    "sketch_05dc7b25": {
+      "componentId": "component_b419bc99",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_cc893d2d",
+          "pointIds": [
+            "point_a5738e41"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_4bca4b94",
+          "pointIds": [
+            "point_b7a4f4e9"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_3b19bd64",
+          "pointIds": [
+            "point_ae71d03f"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_f44f47b2",
+          "pointIds": [
+            "point_1bcc686e"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_0c18e0fb",
+          "pointIds": [
+            "point_55ff6e1a"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_62a7eb22",
+          "pointIds": [
+            "point_a779934b"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_5d43a658",
+          "pointIds": [
+            "point_6834c625"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_42d82a3b",
+          "pointIds": [
+            "point_b2bc248c"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_4f52ace7",
+          "pointIds": [
+            "point_da1bd595"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_96c82b92",
+          "pointIds": [
+            "point_830a8363"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_3a2d6006",
+          "pointIds": [
+            "point_57c88f40"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_c86c0488",
+          "pointIds": [
+            "point_6ed82e4e"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.585Z",
+      "dimensions": [],
+      "entities": {
+        "arc_59ec1b45": {
+          "centerPointId": "point_57c88f40",
+          "clockwise": false,
+          "endPointId": "point_6834c625",
+          "id": "arc_59ec1b45",
+          "startPointId": "point_a779934b",
+          "type": "arc"
+        },
+        "arc_749808fd": {
+          "centerPointId": "point_6ed82e4e",
+          "clockwise": false,
+          "endPointId": "point_a5738e41",
+          "id": "arc_749808fd",
+          "startPointId": "point_b2bc248c",
+          "type": "arc"
+        },
+        "arc_979defd0": {
+          "centerPointId": "point_830a8363",
+          "clockwise": false,
+          "endPointId": "point_55ff6e1a",
+          "id": "arc_979defd0",
+          "startPointId": "point_1bcc686e",
+          "type": "arc"
+        },
+        "arc_affd4b61": {
+          "centerPointId": "point_da1bd595",
+          "clockwise": false,
+          "endPointId": "point_ae71d03f",
+          "id": "arc_affd4b61",
+          "startPointId": "point_b7a4f4e9",
+          "type": "arc"
+        },
+        "line_668330a7": {
+          "endPointId": "point_a779934b",
+          "id": "line_668330a7",
+          "startPointId": "point_55ff6e1a",
+          "type": "line"
+        },
+        "line_87dc91a1": {
+          "endPointId": "point_1bcc686e",
+          "id": "line_87dc91a1",
+          "startPointId": "point_ae71d03f",
+          "type": "line"
+        },
+        "line_9158b82e": {
+          "endPointId": "point_b2bc248c",
+          "id": "line_9158b82e",
+          "startPointId": "point_6834c625",
+          "type": "line"
+        },
+        "line_d62c7bb2": {
+          "endPointId": "point_b7a4f4e9",
+          "id": "line_d62c7bb2",
+          "startPointId": "point_a5738e41",
+          "type": "line"
+        },
+        "point_1bcc686e": {
+          "id": "point_1bcc686e",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - ((tube_length + 80mm) / 2))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((120mm) / 2) - (8mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_55ff6e1a": {
+          "id": "point_55ff6e1a",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((tube_length + 80mm) / 2) - (8mm)))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((120mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_57c88f40": {
+          "id": "point_57c88f40",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((tube_length + 80mm) / 2) - (8mm))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((120mm) / 2) - (8mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_6834c625": {
+          "id": "point_6834c625",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((tube_length + 80mm) / 2)",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((120mm) / 2) - (8mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_6ed82e4e": {
+          "id": "point_6ed82e4e",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((tube_length + 80mm) / 2) - (8mm))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((120mm) / 2) - (8mm))",
+            "unit": "mm"
+          }
+        },
+        "point_830a8363": {
+          "id": "point_830a8363",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((tube_length + 80mm) / 2) - (8mm)))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((120mm) / 2) - (8mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_a5738e41": {
+          "id": "point_a5738e41",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((tube_length + 80mm) / 2) - (8mm))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((120mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_a779934b": {
+          "id": "point_a779934b",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((tube_length + 80mm) / 2) - (8mm))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((120mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_ae71d03f": {
+          "id": "point_ae71d03f",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - ((tube_length + 80mm) / 2))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((120mm) / 2) - (8mm))",
+            "unit": "mm"
+          }
+        },
+        "point_b2bc248c": {
+          "id": "point_b2bc248c",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((tube_length + 80mm) / 2)",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((120mm) / 2) - (8mm))",
+            "unit": "mm"
+          }
+        },
+        "point_b7a4f4e9": {
+          "id": "point_b7a4f4e9",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((tube_length + 80mm) / 2) - (8mm)))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((120mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_da1bd595": {
+          "id": "point_da1bd595",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((tube_length + 80mm) / 2) - (8mm)))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((120mm) / 2) - (8mm))",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_05dc7b25",
+      "name": "Base blank outline",
+      "plane": {
+        "plane": "XY",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 1
+    },
+    "sketch_0a208c22": {
+      "componentId": "component_bfc3dbe3",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_acd76ac6",
+          "pointIds": [
+            "point_6ca73b99"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.593Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_6c04229b"
+          ],
+          "expression": {
+            "expression": "2.5mm",
+            "unit": "mm"
+          },
+          "id": "circle_6c04229b_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_6c04229b": {
+          "centerPointId": "point_6ca73b99",
+          "id": "circle_6c04229b",
+          "radius": {
+            "expression": "2.5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_6ca73b99": {
+          "id": "point_6ca73b99",
+          "type": "point",
+          "x": {
+            "expression": "-tube_length / 2 - 30mm",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-48mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_0a208c22",
+      "name": "Fastener shank section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "(65mm) - (guard_screw_length)",
+          "parameterRefs": {
+            "guard_screw_length": "09-heat-exchanger_parameter_guard_screw_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 53
+    },
+    "sketch_0d2f2435": {
+      "componentId": "component_3de7c696",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_dc518b12",
+          "pointIds": [
+            "point_3f12c05b"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_a97c87f1",
+          "pointIds": [
+            "point_da314974"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_b0ff12d6"
+          ],
+          "expression": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "id": "circle_b0ff12d6_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_0e8b80a9"
+          ],
+          "expression": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "id": "circle_0e8b80a9_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_0e8b80a9": {
+          "centerPointId": "point_da314974",
+          "id": "circle_0e8b80a9",
+          "radius": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_b0ff12d6": {
+          "centerPointId": "point_3f12c05b",
+          "id": "circle_b0ff12d6",
+          "radius": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_3f12c05b": {
+          "id": "point_3f12c05b",
+          "type": "point",
+          "x": {
+            "expression": "-12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "42mm",
+            "unit": "mm"
+          }
+        },
+        "point_da314974": {
+          "id": "point_da314974",
+          "type": "point",
+          "x": {
+            "expression": "-12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "42mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_0d2f2435",
+      "name": "Hollow transfer tube section",
+      "plane": {
+        "base": "YZ",
+        "offset": {
+          "expression": "-tube_length / 2",
+          "parameterRefs": {
+            "tube_length": "09-heat-exchanger_parameter_tube_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 25
+    },
+    "sketch_113c8503": {
+      "componentId": "component_5893a4a6",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_835e1c30",
+          "pointIds": [
+            "point_d31c6b86"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_47ce26ce",
+          "pointIds": [
+            "point_a9167bce"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_84e7c524"
+          ],
+          "expression": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "id": "circle_84e7c524_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_394f90b4"
+          ],
+          "expression": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "id": "circle_394f90b4_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_394f90b4": {
+          "centerPointId": "point_a9167bce",
+          "id": "circle_394f90b4",
+          "radius": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_84e7c524": {
+          "centerPointId": "point_d31c6b86",
+          "id": "circle_84e7c524",
+          "radius": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_a9167bce": {
+          "id": "point_a9167bce",
+          "type": "point",
+          "x": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "42mm",
+            "unit": "mm"
+          }
+        },
+        "point_d31c6b86": {
+          "id": "point_d31c6b86",
+          "type": "point",
+          "x": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "42mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_113c8503",
+      "name": "Hollow transfer tube section",
+      "plane": {
+        "base": "YZ",
+        "offset": {
+          "expression": "-tube_length / 2",
+          "parameterRefs": {
+            "tube_length": "09-heat-exchanger_parameter_tube_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 33
+    },
+    "sketch_114ad7f1": {
+      "componentId": "component_5aba8b70",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_89ad6f4b",
+          "pointIds": [
+            "point_ad4a47dd"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_950a557d",
+          "pointIds": [
+            "point_970a508a"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_eb079995"
+          ],
+          "expression": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "id": "circle_eb079995_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_b1224614"
+          ],
+          "expression": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "id": "circle_b1224614_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_b1224614": {
+          "centerPointId": "point_970a508a",
+          "id": "circle_b1224614",
+          "radius": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_eb079995": {
+          "centerPointId": "point_ad4a47dd",
+          "id": "circle_eb079995",
+          "radius": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_970a508a": {
+          "id": "point_970a508a",
+          "type": "point",
+          "x": {
+            "expression": "-12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "54mm",
+            "unit": "mm"
+          }
+        },
+        "point_ad4a47dd": {
+          "id": "point_ad4a47dd",
+          "type": "point",
+          "x": {
+            "expression": "-12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "54mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_114ad7f1",
+      "name": "Hollow transfer tube section",
+      "plane": {
+        "base": "YZ",
+        "offset": {
+          "expression": "-tube_length / 2",
+          "parameterRefs": {
+            "tube_length": "09-heat-exchanger_parameter_tube_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 27
+    },
+    "sketch_1549bd4a": {
+      "componentId": "component_691af2b1",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_5bbd3f9c",
+          "pointIds": [
+            "point_15dad7eb"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_c66e59ae",
+          "pointIds": [
+            "point_0b10d955"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_2e652452",
+          "pointIds": [
+            "point_fae13ffa"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_96b07153",
+          "pointIds": [
+            "point_3928be27"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_ed16fdae",
+          "pointIds": [
+            "point_3b414e24"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_895fa33f",
+          "pointIds": [
+            "point_8795e019"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_ed9dfa88",
+          "pointIds": [
+            "point_6fe01d87"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_6951b2fa",
+          "pointIds": [
+            "point_a28ea3c8"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_7244ea7e",
+          "pointIds": [
+            "point_0697d82c"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_30bdd80c",
+          "pointIds": [
+            "point_12dabb2f"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_c0924b32",
+          "pointIds": [
+            "point_9c9ac7ef"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_921c609b",
+          "pointIds": [
+            "point_a5633292"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_518c82cd",
+          "pointIds": [
+            "point_b3188844"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_67c9b94b",
+          "pointIds": [
+            "point_d0f86e1b"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_6af05d40",
+          "pointIds": [
+            "point_e81be868"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_962b6cf1",
+          "pointIds": [
+            "point_75cb4b79"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.588Z",
+      "dimensions": [],
+      "entities": {
+        "point_0697d82c": {
+          "id": "point_0697d82c",
+          "type": "point",
+          "x": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "18mm",
+            "unit": "mm"
+          }
+        },
+        "point_0b10d955": {
+          "id": "point_0b10d955",
+          "type": "point",
+          "x": {
+            "expression": "-35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "30mm",
+            "unit": "mm"
+          }
+        },
+        "point_12dabb2f": {
+          "id": "point_12dabb2f",
+          "type": "point",
+          "x": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "30mm",
+            "unit": "mm"
+          }
+        },
+        "point_15dad7eb": {
+          "id": "point_15dad7eb",
+          "type": "point",
+          "x": {
+            "expression": "-35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "18mm",
+            "unit": "mm"
+          }
+        },
+        "point_3928be27": {
+          "id": "point_3928be27",
+          "type": "point",
+          "x": {
+            "expression": "-35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "54mm",
+            "unit": "mm"
+          }
+        },
+        "point_3b414e24": {
+          "id": "point_3b414e24",
+          "type": "point",
+          "x": {
+            "expression": "-12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "18mm",
+            "unit": "mm"
+          }
+        },
+        "point_6fe01d87": {
+          "id": "point_6fe01d87",
+          "type": "point",
+          "x": {
+            "expression": "-12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "42mm",
+            "unit": "mm"
+          }
+        },
+        "point_75cb4b79": {
+          "id": "point_75cb4b79",
+          "type": "point",
+          "x": {
+            "expression": "35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "54mm",
+            "unit": "mm"
+          }
+        },
+        "point_8795e019": {
+          "id": "point_8795e019",
+          "type": "point",
+          "x": {
+            "expression": "-12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "30mm",
+            "unit": "mm"
+          }
+        },
+        "point_9c9ac7ef": {
+          "id": "point_9c9ac7ef",
+          "type": "point",
+          "x": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "42mm",
+            "unit": "mm"
+          }
+        },
+        "point_a28ea3c8": {
+          "id": "point_a28ea3c8",
+          "type": "point",
+          "x": {
+            "expression": "-12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "54mm",
+            "unit": "mm"
+          }
+        },
+        "point_a5633292": {
+          "id": "point_a5633292",
+          "type": "point",
+          "x": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "54mm",
+            "unit": "mm"
+          }
+        },
+        "point_b3188844": {
+          "id": "point_b3188844",
+          "type": "point",
+          "x": {
+            "expression": "35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "18mm",
+            "unit": "mm"
+          }
+        },
+        "point_d0f86e1b": {
+          "id": "point_d0f86e1b",
+          "type": "point",
+          "x": {
+            "expression": "35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "30mm",
+            "unit": "mm"
+          }
+        },
+        "point_e81be868": {
+          "id": "point_e81be868",
+          "type": "point",
+          "x": {
+            "expression": "35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "42mm",
+            "unit": "mm"
+          }
+        },
+        "point_fae13ffa": {
+          "id": "point_fae13ffa",
+          "type": "point",
+          "x": {
+            "expression": "-35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "42mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_1549bd4a",
+      "name": "Tube sockets centers",
+      "plane": {
+        "base": "YZ",
+        "offset": {
+          "expression": "-tube_length / 2 + 5mm",
+          "parameterRefs": {
+            "tube_length": "09-heat-exchanger_parameter_tube_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 7
+    },
+    "sketch_18d2b6d2": {
+      "componentId": "component_4b819ccc",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_19145d4b",
+          "pointIds": [
+            "point_54a58168"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_649e25b0",
+          "pointIds": [
+            "point_8f8dd62c"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.593Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_d85c6fbe"
+          ],
+          "expression": {
+            "expression": "5mm",
+            "unit": "mm"
+          },
+          "id": "circle_d85c6fbe_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_8eeb0e76"
+          ],
+          "expression": {
+            "expression": "2.7mm",
+            "unit": "mm"
+          },
+          "id": "circle_8eeb0e76_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_8eeb0e76": {
+          "centerPointId": "point_8f8dd62c",
+          "id": "circle_8eeb0e76",
+          "radius": {
+            "expression": "2.7mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_d85c6fbe": {
+          "centerPointId": "point_54a58168",
+          "id": "circle_d85c6fbe",
+          "radius": {
+            "expression": "5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_54a58168": {
+          "id": "point_54a58168",
+          "type": "point",
+          "x": {
+            "expression": "tube_length / 2 + 30mm",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "48mm",
+            "unit": "mm"
+          }
+        },
+        "point_8f8dd62c": {
+          "id": "point_8f8dd62c",
+          "type": "point",
+          "x": {
+            "expression": "tube_length / 2 + 30mm",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "48mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_18d2b6d2",
+      "name": "Hollow guard post section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "6mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 63
+    },
+    "sketch_2ce4a428": {
+      "componentId": "component_b329515a",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_9367802f",
+          "pointIds": [
+            "point_ad329917"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_f92e765e",
+          "pointIds": [
+            "point_6a8951b1"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_e3e79a7b"
+          ],
+          "expression": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "id": "circle_e3e79a7b_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_ecc848d1"
+          ],
+          "expression": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "id": "circle_ecc848d1_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_e3e79a7b": {
+          "centerPointId": "point_ad329917",
+          "id": "circle_e3e79a7b",
+          "radius": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_ecc848d1": {
+          "centerPointId": "point_6a8951b1",
+          "id": "circle_ecc848d1",
+          "radius": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_6a8951b1": {
+          "id": "point_6a8951b1",
+          "type": "point",
+          "x": {
+            "expression": "35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "42mm",
+            "unit": "mm"
+          }
+        },
+        "point_ad329917": {
+          "id": "point_ad329917",
+          "type": "point",
+          "x": {
+            "expression": "35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "42mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_2ce4a428",
+      "name": "Hollow transfer tube section",
+      "plane": {
+        "base": "YZ",
+        "offset": {
+          "expression": "-tube_length / 2",
+          "parameterRefs": {
+            "tube_length": "09-heat-exchanger_parameter_tube_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 41
+    },
+    "sketch_2def4af1": {
+      "componentId": "component_869d4755",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_e4237e1e",
+          "pointIds": [
+            "point_0dc8cf81"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_d1cb6b62",
+          "pointIds": [
+            "point_5aa03dc7"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_11caec17",
+          "pointIds": [
+            "point_8133bb1a"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_6c95e586",
+          "pointIds": [
+            "point_7cdac02c"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_166be349",
+          "pointIds": [
+            "point_d6a2ec8a"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_d38d7f98",
+          "pointIds": [
+            "point_45676315"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_35f37d96",
+          "pointIds": [
+            "point_78fff576"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_9a4fa999",
+          "pointIds": [
+            "point_bc04fcef"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_c3e23f4d",
+          "pointIds": [
+            "point_e245c8f6"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_8de3535e",
+          "pointIds": [
+            "point_975c7aa6"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_aa0f49ac",
+          "pointIds": [
+            "point_d01d311a"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_97cf85fe",
+          "pointIds": [
+            "point_19b7c25c"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_e50b0e30",
+          "pointIds": [
+            "point_1bcad3ea"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_bd3e9ad0",
+          "pointIds": [
+            "point_cc03a7c7"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_dad2c2fd",
+          "pointIds": [
+            "point_06491807"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_7a9d6747",
+          "pointIds": [
+            "point_38f1fafc"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "dimensions": [],
+      "entities": {
+        "point_06491807": {
+          "id": "point_06491807",
+          "type": "point",
+          "x": {
+            "expression": "35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "42mm",
+            "unit": "mm"
+          }
+        },
+        "point_0dc8cf81": {
+          "id": "point_0dc8cf81",
+          "type": "point",
+          "x": {
+            "expression": "-35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "18mm",
+            "unit": "mm"
+          }
+        },
+        "point_19b7c25c": {
+          "id": "point_19b7c25c",
+          "type": "point",
+          "x": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "54mm",
+            "unit": "mm"
+          }
+        },
+        "point_1bcad3ea": {
+          "id": "point_1bcad3ea",
+          "type": "point",
+          "x": {
+            "expression": "35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "18mm",
+            "unit": "mm"
+          }
+        },
+        "point_38f1fafc": {
+          "id": "point_38f1fafc",
+          "type": "point",
+          "x": {
+            "expression": "35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "54mm",
+            "unit": "mm"
+          }
+        },
+        "point_45676315": {
+          "id": "point_45676315",
+          "type": "point",
+          "x": {
+            "expression": "-12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "30mm",
+            "unit": "mm"
+          }
+        },
+        "point_5aa03dc7": {
+          "id": "point_5aa03dc7",
+          "type": "point",
+          "x": {
+            "expression": "-35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "30mm",
+            "unit": "mm"
+          }
+        },
+        "point_78fff576": {
+          "id": "point_78fff576",
+          "type": "point",
+          "x": {
+            "expression": "-12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "42mm",
+            "unit": "mm"
+          }
+        },
+        "point_7cdac02c": {
+          "id": "point_7cdac02c",
+          "type": "point",
+          "x": {
+            "expression": "-35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "54mm",
+            "unit": "mm"
+          }
+        },
+        "point_8133bb1a": {
+          "id": "point_8133bb1a",
+          "type": "point",
+          "x": {
+            "expression": "-35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "42mm",
+            "unit": "mm"
+          }
+        },
+        "point_975c7aa6": {
+          "id": "point_975c7aa6",
+          "type": "point",
+          "x": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "30mm",
+            "unit": "mm"
+          }
+        },
+        "point_bc04fcef": {
+          "id": "point_bc04fcef",
+          "type": "point",
+          "x": {
+            "expression": "-12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "54mm",
+            "unit": "mm"
+          }
+        },
+        "point_cc03a7c7": {
+          "id": "point_cc03a7c7",
+          "type": "point",
+          "x": {
+            "expression": "35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "30mm",
+            "unit": "mm"
+          }
+        },
+        "point_d01d311a": {
+          "id": "point_d01d311a",
+          "type": "point",
+          "x": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "42mm",
+            "unit": "mm"
+          }
+        },
+        "point_d6a2ec8a": {
+          "id": "point_d6a2ec8a",
+          "type": "point",
+          "x": {
+            "expression": "-12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "18mm",
+            "unit": "mm"
+          }
+        },
+        "point_e245c8f6": {
+          "id": "point_e245c8f6",
+          "type": "point",
+          "x": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "18mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_2def4af1",
+      "name": "Tube sockets centers",
+      "plane": {
+        "base": "YZ",
+        "offset": {
+          "expression": "tube_length / 2 - 5mm",
+          "parameterRefs": {
+            "tube_length": "09-heat-exchanger_parameter_tube_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 11
+    },
+    "sketch_35dfa220": {
+      "componentId": "component_bfc3dbe3",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_95626487",
+          "pointIds": [
+            "point_29341c54"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.593Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_2ea7b168"
+          ],
+          "expression": {
+            "expression": "4.5mm",
+            "unit": "mm"
+          },
+          "id": "circle_2ea7b168_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_2ea7b168": {
+          "centerPointId": "point_29341c54",
+          "id": "circle_2ea7b168",
+          "radius": {
+            "expression": "4.5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_29341c54": {
+          "id": "point_29341c54",
+          "type": "point",
+          "x": {
+            "expression": "-tube_length / 2 - 30mm",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-48mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_35dfa220",
+      "name": "Fastener head section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "65mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 55
+    },
+    "sketch_3f1804c6": {
+      "componentId": "component_c49a6d55",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_406619e7",
+          "pointIds": [
+            "point_d67e605a"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_0a93ce1d",
+          "pointIds": [
+            "point_62ed29d2"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_4693db75",
+          "pointIds": [
+            "point_a5228bf6"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_43063f5b",
+          "pointIds": [
+            "point_b4789e28"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_f9a7bf52",
+          "pointIds": [
+            "point_9aba1b0e"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_65370cb1",
+          "pointIds": [
+            "point_dd9d630e"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_a7c17d64",
+          "pointIds": [
+            "point_f03f50a5"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_3f79fa27",
+          "pointIds": [
+            "point_99250f6e"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_4e29c693",
+          "pointIds": [
+            "point_99b8dfc9"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_ec367616",
+          "pointIds": [
+            "point_19861030"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_1495e2b9",
+          "pointIds": [
+            "point_0f9dda1f"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_1687b586",
+          "pointIds": [
+            "point_57a199fd"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "dimensions": [],
+      "entities": {
+        "arc_2946b8e9": {
+          "centerPointId": "point_19861030",
+          "clockwise": false,
+          "endPointId": "point_9aba1b0e",
+          "id": "arc_2946b8e9",
+          "startPointId": "point_b4789e28",
+          "type": "arc"
+        },
+        "arc_3e06d448": {
+          "centerPointId": "point_99b8dfc9",
+          "clockwise": false,
+          "endPointId": "point_a5228bf6",
+          "id": "arc_3e06d448",
+          "startPointId": "point_62ed29d2",
+          "type": "arc"
+        },
+        "arc_8c2a59ff": {
+          "centerPointId": "point_0f9dda1f",
+          "clockwise": false,
+          "endPointId": "point_f03f50a5",
+          "id": "arc_8c2a59ff",
+          "startPointId": "point_dd9d630e",
+          "type": "arc"
+        },
+        "arc_fdfc4c41": {
+          "centerPointId": "point_57a199fd",
+          "clockwise": false,
+          "endPointId": "point_d67e605a",
+          "id": "arc_fdfc4c41",
+          "startPointId": "point_99250f6e",
+          "type": "arc"
+        },
+        "line_114d0e69": {
+          "endPointId": "point_99250f6e",
+          "id": "line_114d0e69",
+          "startPointId": "point_f03f50a5",
+          "type": "line"
+        },
+        "line_66ec4800": {
+          "endPointId": "point_62ed29d2",
+          "id": "line_66ec4800",
+          "startPointId": "point_d67e605a",
+          "type": "line"
+        },
+        "line_97681888": {
+          "endPointId": "point_dd9d630e",
+          "id": "line_97681888",
+          "startPointId": "point_9aba1b0e",
+          "type": "line"
+        },
+        "line_a280da87": {
+          "endPointId": "point_b4789e28",
+          "id": "line_a280da87",
+          "startPointId": "point_a5228bf6",
+          "type": "line"
+        },
+        "point_0f9dda1f": {
+          "id": "point_0f9dda1f",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((tube_length + 80mm) / 2) - (8mm))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((120mm) / 2) - (8mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_19861030": {
+          "id": "point_19861030",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((tube_length + 80mm) / 2) - (8mm)))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((120mm) / 2) - (8mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_57a199fd": {
+          "id": "point_57a199fd",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((tube_length + 80mm) / 2) - (8mm))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((120mm) / 2) - (8mm))",
+            "unit": "mm"
+          }
+        },
+        "point_62ed29d2": {
+          "id": "point_62ed29d2",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((tube_length + 80mm) / 2) - (8mm)))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((120mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_99250f6e": {
+          "id": "point_99250f6e",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((tube_length + 80mm) / 2)",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((120mm) / 2) - (8mm))",
+            "unit": "mm"
+          }
+        },
+        "point_99b8dfc9": {
+          "id": "point_99b8dfc9",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((tube_length + 80mm) / 2) - (8mm)))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((120mm) / 2) - (8mm))",
+            "unit": "mm"
+          }
+        },
+        "point_9aba1b0e": {
+          "id": "point_9aba1b0e",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((tube_length + 80mm) / 2) - (8mm)))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((120mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_a5228bf6": {
+          "id": "point_a5228bf6",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - ((tube_length + 80mm) / 2))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((120mm) / 2) - (8mm))",
+            "unit": "mm"
+          }
+        },
+        "point_b4789e28": {
+          "id": "point_b4789e28",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - ((tube_length + 80mm) / 2))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((120mm) / 2) - (8mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_d67e605a": {
+          "id": "point_d67e605a",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((tube_length + 80mm) / 2) - (8mm))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((120mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_dd9d630e": {
+          "id": "point_dd9d630e",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((tube_length + 80mm) / 2) - (8mm))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((120mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_f03f50a5": {
+          "id": "point_f03f50a5",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((tube_length + 80mm) / 2)",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((120mm) / 2) - (8mm)))",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_3f1804c6",
+      "name": "Guard blank outline",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "60mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 45
+    },
+    "sketch_40b334f5": {
+      "componentId": "component_e4de04f2",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_84a724cf",
+          "pointIds": [
+            "point_94017bfc"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_d1b68841",
+          "pointIds": [
+            "point_117a999a"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.593Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_c2d59a27"
+          ],
+          "expression": {
+            "expression": "5mm",
+            "unit": "mm"
+          },
+          "id": "circle_c2d59a27_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_7cfc005d"
+          ],
+          "expression": {
+            "expression": "2.7mm",
+            "unit": "mm"
+          },
+          "id": "circle_7cfc005d_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_7cfc005d": {
+          "centerPointId": "point_117a999a",
+          "id": "circle_7cfc005d",
+          "radius": {
+            "expression": "2.7mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_c2d59a27": {
+          "centerPointId": "point_94017bfc",
+          "id": "circle_c2d59a27",
+          "radius": {
+            "expression": "5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_117a999a": {
+          "id": "point_117a999a",
+          "type": "point",
+          "x": {
+            "expression": "-tube_length / 2 - 30mm",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "48mm",
+            "unit": "mm"
+          }
+        },
+        "point_94017bfc": {
+          "id": "point_94017bfc",
+          "type": "point",
+          "x": {
+            "expression": "-tube_length / 2 - 30mm",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "48mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_40b334f5",
+      "name": "Hollow guard post section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "6mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 69
+    },
+    "sketch_42bb8f37": {
+      "componentId": "component_283ce8c1",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_6008e1b8",
+          "pointIds": [
+            "point_145fef07"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_ea712aac",
+          "pointIds": [
+            "point_2e75b4a7"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_cae82958"
+          ],
+          "expression": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "id": "circle_cae82958_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_efa6ecc9"
+          ],
+          "expression": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "id": "circle_efa6ecc9_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_cae82958": {
+          "centerPointId": "point_145fef07",
+          "id": "circle_cae82958",
+          "radius": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_efa6ecc9": {
+          "centerPointId": "point_2e75b4a7",
+          "id": "circle_efa6ecc9",
+          "radius": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_145fef07": {
+          "id": "point_145fef07",
+          "type": "point",
+          "x": {
+            "expression": "-35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "54mm",
+            "unit": "mm"
+          }
+        },
+        "point_2e75b4a7": {
+          "id": "point_2e75b4a7",
+          "type": "point",
+          "x": {
+            "expression": "-35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "54mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_42bb8f37",
+      "name": "Hollow transfer tube section",
+      "plane": {
+        "base": "YZ",
+        "offset": {
+          "expression": "-tube_length / 2",
+          "parameterRefs": {
+            "tube_length": "09-heat-exchanger_parameter_tube_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 19
+    },
+    "sketch_43af4d4e": {
+      "componentId": "component_5e1c4fab",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_65f0577e",
+          "pointIds": [
+            "point_9885eb97"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_da27b6a9",
+          "pointIds": [
+            "point_12a081ac"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_351d5ffb"
+          ],
+          "expression": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "id": "circle_351d5ffb_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_5abcbf95"
+          ],
+          "expression": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "id": "circle_5abcbf95_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_351d5ffb": {
+          "centerPointId": "point_9885eb97",
+          "id": "circle_351d5ffb",
+          "radius": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_5abcbf95": {
+          "centerPointId": "point_12a081ac",
+          "id": "circle_5abcbf95",
+          "radius": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_12a081ac": {
+          "id": "point_12a081ac",
+          "type": "point",
+          "x": {
+            "expression": "-35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "42mm",
+            "unit": "mm"
+          }
+        },
+        "point_9885eb97": {
+          "id": "point_9885eb97",
+          "type": "point",
+          "x": {
+            "expression": "-35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "42mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_43af4d4e",
+      "name": "Hollow transfer tube section",
+      "plane": {
+        "base": "YZ",
+        "offset": {
+          "expression": "-tube_length / 2",
+          "parameterRefs": {
+            "tube_length": "09-heat-exchanger_parameter_tube_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 17
+    },
+    "sketch_4737e957": {
+      "componentId": "component_c6089db1",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_aee68660",
+          "pointIds": [
+            "point_ee18a406"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_2110db9a",
+          "pointIds": [
+            "point_4db935a3"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.593Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_6757f29d"
+          ],
+          "expression": {
+            "expression": "5mm",
+            "unit": "mm"
+          },
+          "id": "circle_6757f29d_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_a23b0127"
+          ],
+          "expression": {
+            "expression": "2.7mm",
+            "unit": "mm"
+          },
+          "id": "circle_a23b0127_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_6757f29d": {
+          "centerPointId": "point_ee18a406",
+          "id": "circle_6757f29d",
+          "radius": {
+            "expression": "5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_a23b0127": {
+          "centerPointId": "point_4db935a3",
+          "id": "circle_a23b0127",
+          "radius": {
+            "expression": "2.7mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_4db935a3": {
+          "id": "point_4db935a3",
+          "type": "point",
+          "x": {
+            "expression": "tube_length / 2 + 30mm",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-48mm",
+            "unit": "mm"
+          }
+        },
+        "point_ee18a406": {
+          "id": "point_ee18a406",
+          "type": "point",
+          "x": {
+            "expression": "tube_length / 2 + 30mm",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-48mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_4737e957",
+      "name": "Hollow guard post section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "6mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 57
+    },
+    "sketch_4bcc9781": {
+      "componentId": "component_382ed4fa",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_ba2a08d9",
+          "pointIds": [
+            "point_17a2bc62"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_71ed2dff",
+          "pointIds": [
+            "point_00ce34ec"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_09d2ae27"
+          ],
+          "expression": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "id": "circle_09d2ae27_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_ab5cbb82"
+          ],
+          "expression": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "id": "circle_ab5cbb82_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_09d2ae27": {
+          "centerPointId": "point_17a2bc62",
+          "id": "circle_09d2ae27",
+          "radius": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_ab5cbb82": {
+          "centerPointId": "point_00ce34ec",
+          "id": "circle_ab5cbb82",
+          "radius": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_00ce34ec": {
+          "id": "point_00ce34ec",
+          "type": "point",
+          "x": {
+            "expression": "-35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "30mm",
+            "unit": "mm"
+          }
+        },
+        "point_17a2bc62": {
+          "id": "point_17a2bc62",
+          "type": "point",
+          "x": {
+            "expression": "-35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "30mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_4bcc9781",
+      "name": "Hollow transfer tube section",
+      "plane": {
+        "base": "YZ",
+        "offset": {
+          "expression": "-tube_length / 2",
+          "parameterRefs": {
+            "tube_length": "09-heat-exchanger_parameter_tube_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 15
+    },
+    "sketch_4c6d113c": {
+      "componentId": "component_b0c83a11",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_a2050030",
+          "pointIds": [
+            "point_164da0ef"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_f4a29bd8",
+          "pointIds": [
+            "point_9a1e6d82"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_9baeb0f1"
+          ],
+          "expression": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "id": "circle_9baeb0f1_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_cb1f343d"
+          ],
+          "expression": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "id": "circle_cb1f343d_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_9baeb0f1": {
+          "centerPointId": "point_164da0ef",
+          "id": "circle_9baeb0f1",
+          "radius": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_cb1f343d": {
+          "centerPointId": "point_9a1e6d82",
+          "id": "circle_cb1f343d",
+          "radius": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_164da0ef": {
+          "id": "point_164da0ef",
+          "type": "point",
+          "x": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "30mm",
+            "unit": "mm"
+          }
+        },
+        "point_9a1e6d82": {
+          "id": "point_9a1e6d82",
+          "type": "point",
+          "x": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "30mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_4c6d113c",
+      "name": "Hollow transfer tube section",
+      "plane": {
+        "base": "YZ",
+        "offset": {
+          "expression": "-tube_length / 2",
+          "parameterRefs": {
+            "tube_length": "09-heat-exchanger_parameter_tube_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 31
+    },
+    "sketch_58711fdc": {
+      "componentId": "component_d6f43ece",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_452bb67a",
+          "pointIds": [
+            "point_612b42b8"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.593Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_f86d98e8"
+          ],
+          "expression": {
+            "expression": "2.5mm",
+            "unit": "mm"
+          },
+          "id": "circle_f86d98e8_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_f86d98e8": {
+          "centerPointId": "point_612b42b8",
+          "id": "circle_f86d98e8",
+          "radius": {
+            "expression": "2.5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_612b42b8": {
+          "id": "point_612b42b8",
+          "type": "point",
+          "x": {
+            "expression": "tube_length / 2 + 30mm",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "48mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_58711fdc",
+      "name": "Fastener shank section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "(65mm) - (guard_screw_length)",
+          "parameterRefs": {
+            "guard_screw_length": "09-heat-exchanger_parameter_guard_screw_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 65
+    },
+    "sketch_5955c9d1": {
+      "componentId": "component_5b7cbd8a",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_b41292ff",
+          "pointIds": [
+            "point_41602bf2"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_cc69b213",
+          "pointIds": [
+            "point_bbc360db"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_b8a7a7d5"
+          ],
+          "expression": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "id": "circle_b8a7a7d5_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_20b6e463"
+          ],
+          "expression": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "id": "circle_20b6e463_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_20b6e463": {
+          "centerPointId": "point_bbc360db",
+          "id": "circle_20b6e463",
+          "radius": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_b8a7a7d5": {
+          "centerPointId": "point_41602bf2",
+          "id": "circle_b8a7a7d5",
+          "radius": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_41602bf2": {
+          "id": "point_41602bf2",
+          "type": "point",
+          "x": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "54mm",
+            "unit": "mm"
+          }
+        },
+        "point_bbc360db": {
+          "id": "point_bbc360db",
+          "type": "point",
+          "x": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "54mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_5955c9d1",
+      "name": "Hollow transfer tube section",
+      "plane": {
+        "base": "YZ",
+        "offset": {
+          "expression": "-tube_length / 2",
+          "parameterRefs": {
+            "tube_length": "09-heat-exchanger_parameter_tube_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 35
+    },
+    "sketch_6362a926": {
+      "componentId": "component_d54aaff3",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_54aaa8ed",
+          "pointIds": [
+            "point_c8aa1613"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_0174bf36",
+          "pointIds": [
+            "point_b590cc3a"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.593Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_38adc6e7"
+          ],
+          "expression": {
+            "expression": "5mm",
+            "unit": "mm"
+          },
+          "id": "circle_38adc6e7_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_e6a6962d"
+          ],
+          "expression": {
+            "expression": "2.7mm",
+            "unit": "mm"
+          },
+          "id": "circle_e6a6962d_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_38adc6e7": {
+          "centerPointId": "point_c8aa1613",
+          "id": "circle_38adc6e7",
+          "radius": {
+            "expression": "5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_e6a6962d": {
+          "centerPointId": "point_b590cc3a",
+          "id": "circle_e6a6962d",
+          "radius": {
+            "expression": "2.7mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_b590cc3a": {
+          "id": "point_b590cc3a",
+          "type": "point",
+          "x": {
+            "expression": "-tube_length / 2 - 30mm",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-48mm",
+            "unit": "mm"
+          }
+        },
+        "point_c8aa1613": {
+          "id": "point_c8aa1613",
+          "type": "point",
+          "x": {
+            "expression": "-tube_length / 2 - 30mm",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-48mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_6362a926",
+      "name": "Hollow guard post section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "6mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 51
+    },
+    "sketch_784f3c69": {
+      "componentId": "component_691af2b1",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_3460a772",
+          "pointIds": [
+            "point_d9712941"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_9fe9ce67",
+          "pointIds": [
+            "point_55a4ff7a"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_8d9b26c6",
+          "pointIds": [
+            "point_5de8e729"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_e5bd1f15",
+          "pointIds": [
+            "point_fe483a12"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_6950d131",
+          "pointIds": [
+            "point_d13e9da9"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_2751e069",
+          "pointIds": [
+            "point_567d619a"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_3c0daa65",
+          "pointIds": [
+            "point_8b10cccb"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_3a2a0816",
+          "pointIds": [
+            "point_803d579c"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_26e8c039",
+          "pointIds": [
+            "point_02ba9eb1"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_eb1e182f",
+          "pointIds": [
+            "point_b0a0571f"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_6a5150f2",
+          "pointIds": [
+            "point_f08ab1f7"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_651e5c15",
+          "pointIds": [
+            "point_85dbaab4"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.586Z",
+      "dimensions": [],
+      "entities": {
+        "arc_0b59a8bd": {
+          "centerPointId": "point_f08ab1f7",
+          "clockwise": false,
+          "endPointId": "point_8b10cccb",
+          "id": "arc_0b59a8bd",
+          "startPointId": "point_567d619a",
+          "type": "arc"
+        },
+        "arc_320f18ba": {
+          "centerPointId": "point_02ba9eb1",
+          "clockwise": false,
+          "endPointId": "point_5de8e729",
+          "id": "arc_320f18ba",
+          "startPointId": "point_55a4ff7a",
+          "type": "arc"
+        },
+        "arc_b14b4c94": {
+          "centerPointId": "point_b0a0571f",
+          "clockwise": false,
+          "endPointId": "point_d13e9da9",
+          "id": "arc_b14b4c94",
+          "startPointId": "point_fe483a12",
+          "type": "arc"
+        },
+        "arc_b55eeeae": {
+          "centerPointId": "point_85dbaab4",
+          "clockwise": false,
+          "endPointId": "point_d9712941",
+          "id": "arc_b55eeeae",
+          "startPointId": "point_803d579c",
+          "type": "arc"
+        },
+        "line_0b60f98b": {
+          "endPointId": "point_fe483a12",
+          "id": "line_0b60f98b",
+          "startPointId": "point_5de8e729",
+          "type": "line"
+        },
+        "line_33c3f05c": {
+          "endPointId": "point_567d619a",
+          "id": "line_33c3f05c",
+          "startPointId": "point_d13e9da9",
+          "type": "line"
+        },
+        "line_4bcf4621": {
+          "endPointId": "point_803d579c",
+          "id": "line_4bcf4621",
+          "startPointId": "point_8b10cccb",
+          "type": "line"
+        },
+        "line_c5a3d1dc": {
+          "endPointId": "point_55a4ff7a",
+          "id": "line_c5a3d1dc",
+          "startPointId": "point_d9712941",
+          "type": "line"
+        },
+        "point_02ba9eb1": {
+          "id": "point_02ba9eb1",
+          "type": "point",
+          "x": {
+            "expression": "(-tube_length / 2 - 5mm) + ((0mm) - (((20mm) / 2) - (3mm)))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((100mm) / 2) - (3mm))",
+            "unit": "mm"
+          }
+        },
+        "point_55a4ff7a": {
+          "id": "point_55a4ff7a",
+          "type": "point",
+          "x": {
+            "expression": "(-tube_length / 2 - 5mm) + ((0mm) - (((20mm) / 2) - (3mm)))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((100mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_567d619a": {
+          "id": "point_567d619a",
+          "type": "point",
+          "x": {
+            "expression": "(-tube_length / 2 - 5mm) + (((20mm) / 2) - (3mm))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((100mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_5de8e729": {
+          "id": "point_5de8e729",
+          "type": "point",
+          "x": {
+            "expression": "(-tube_length / 2 - 5mm) + ((0mm) - ((20mm) / 2))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((100mm) / 2) - (3mm))",
+            "unit": "mm"
+          }
+        },
+        "point_803d579c": {
+          "id": "point_803d579c",
+          "type": "point",
+          "x": {
+            "expression": "(-tube_length / 2 - 5mm) + ((20mm) / 2)",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((100mm) / 2) - (3mm))",
+            "unit": "mm"
+          }
+        },
+        "point_85dbaab4": {
+          "id": "point_85dbaab4",
+          "type": "point",
+          "x": {
+            "expression": "(-tube_length / 2 - 5mm) + (((20mm) / 2) - (3mm))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((100mm) / 2) - (3mm))",
+            "unit": "mm"
+          }
+        },
+        "point_8b10cccb": {
+          "id": "point_8b10cccb",
+          "type": "point",
+          "x": {
+            "expression": "(-tube_length / 2 - 5mm) + ((20mm) / 2)",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((100mm) / 2) - (3mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_b0a0571f": {
+          "id": "point_b0a0571f",
+          "type": "point",
+          "x": {
+            "expression": "(-tube_length / 2 - 5mm) + ((0mm) - (((20mm) / 2) - (3mm)))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((100mm) / 2) - (3mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_d13e9da9": {
+          "id": "point_d13e9da9",
+          "type": "point",
+          "x": {
+            "expression": "(-tube_length / 2 - 5mm) + ((0mm) - (((20mm) / 2) - (3mm)))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((100mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_d9712941": {
+          "id": "point_d9712941",
+          "type": "point",
+          "x": {
+            "expression": "(-tube_length / 2 - 5mm) + (((20mm) / 2) - (3mm))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((100mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_f08ab1f7": {
+          "id": "point_f08ab1f7",
+          "type": "point",
+          "x": {
+            "expression": "(-tube_length / 2 - 5mm) + (((20mm) / 2) - (3mm))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((100mm) / 2) - (3mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_fe483a12": {
+          "id": "point_fe483a12",
+          "type": "point",
+          "x": {
+            "expression": "(-tube_length / 2 - 5mm) + ((0mm) - ((20mm) / 2))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((100mm) / 2) - (3mm)))",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_784f3c69",
+      "name": "Header block outline",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "6mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 5
+    },
+    "sketch_893028af": {
+      "componentId": "component_9d2568a5",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_d4781e94",
+          "pointIds": [
+            "point_2b44ab48"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.593Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_b1eb8118"
+          ],
+          "expression": {
+            "expression": "4.5mm",
+            "unit": "mm"
+          },
+          "id": "circle_b1eb8118_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_b1eb8118": {
+          "centerPointId": "point_2b44ab48",
+          "id": "circle_b1eb8118",
+          "radius": {
+            "expression": "4.5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_2b44ab48": {
+          "id": "point_2b44ab48",
+          "type": "point",
+          "x": {
+            "expression": "-tube_length / 2 - 30mm",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "48mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_893028af",
+      "name": "Fastener head section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "65mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 73
+    },
+    "sketch_8ddfbcf0": {
+      "componentId": "component_9d2568a5",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_c5b1d217",
+          "pointIds": [
+            "point_3e551cdf"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.593Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_c3b0caf9"
+          ],
+          "expression": {
+            "expression": "2.5mm",
+            "unit": "mm"
+          },
+          "id": "circle_c3b0caf9_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_c3b0caf9": {
+          "centerPointId": "point_3e551cdf",
+          "id": "circle_c3b0caf9",
+          "radius": {
+            "expression": "2.5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_3e551cdf": {
+          "id": "point_3e551cdf",
+          "type": "point",
+          "x": {
+            "expression": "-tube_length / 2 - 30mm",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "48mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_8ddfbcf0",
+      "name": "Fastener shank section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "(65mm) - (guard_screw_length)",
+          "parameterRefs": {
+            "guard_screw_length": "09-heat-exchanger_parameter_guard_screw_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 71
+    },
+    "sketch_97463b14": {
+      "componentId": "component_c49a6d55",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_494fde3b",
+          "pointIds": [
+            "point_081fd882"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_7f361022",
+          "pointIds": [
+            "point_607c3af3"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_24494eb0",
+          "pointIds": [
+            "point_960a4154"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_2fd9100f",
+          "pointIds": [
+            "point_3f10a91c"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.593Z",
+      "dimensions": [],
+      "entities": {
+        "point_081fd882": {
+          "id": "point_081fd882",
+          "type": "point",
+          "x": {
+            "expression": "-tube_length / 2 - 30mm",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-48mm",
+            "unit": "mm"
+          }
+        },
+        "point_3f10a91c": {
+          "id": "point_3f10a91c",
+          "type": "point",
+          "x": {
+            "expression": "-tube_length / 2 - 30mm",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "48mm",
+            "unit": "mm"
+          }
+        },
+        "point_607c3af3": {
+          "id": "point_607c3af3",
+          "type": "point",
+          "x": {
+            "expression": "tube_length / 2 + 30mm",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-48mm",
+            "unit": "mm"
+          }
+        },
+        "point_960a4154": {
+          "id": "point_960a4154",
+          "type": "point",
+          "x": {
+            "expression": "tube_length / 2 + 30mm",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "48mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_97463b14",
+      "name": "Guard post pattern centers",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "60mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 49
+    },
+    "sketch_992001b2": {
+      "componentId": "component_2da2ec5e",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_9a940444",
+          "pointIds": [
+            "point_6d4dd744"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_bd1da47b",
+          "pointIds": [
+            "point_7e541e53"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_bbaf5e7b"
+          ],
+          "expression": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "id": "circle_bbaf5e7b_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_9ca44662"
+          ],
+          "expression": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "id": "circle_9ca44662_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_9ca44662": {
+          "centerPointId": "point_7e541e53",
+          "id": "circle_9ca44662",
+          "radius": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_bbaf5e7b": {
+          "centerPointId": "point_6d4dd744",
+          "id": "circle_bbaf5e7b",
+          "radius": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_6d4dd744": {
+          "id": "point_6d4dd744",
+          "type": "point",
+          "x": {
+            "expression": "35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "18mm",
+            "unit": "mm"
+          }
+        },
+        "point_7e541e53": {
+          "id": "point_7e541e53",
+          "type": "point",
+          "x": {
+            "expression": "35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "18mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_992001b2",
+      "name": "Hollow transfer tube section",
+      "plane": {
+        "base": "YZ",
+        "offset": {
+          "expression": "-tube_length / 2",
+          "parameterRefs": {
+            "tube_length": "09-heat-exchanger_parameter_tube_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 37
+    },
+    "sketch_9be77167": {
+      "componentId": "component_4ac620f1",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_afe4b659",
+          "pointIds": [
+            "point_d4a85970"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.593Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_07c7bcac"
+          ],
+          "expression": {
+            "expression": "4.5mm",
+            "unit": "mm"
+          },
+          "id": "circle_07c7bcac_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_07c7bcac": {
+          "centerPointId": "point_d4a85970",
+          "id": "circle_07c7bcac",
+          "radius": {
+            "expression": "4.5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_d4a85970": {
+          "id": "point_d4a85970",
+          "type": "point",
+          "x": {
+            "expression": "tube_length / 2 + 30mm",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-48mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_9be77167",
+      "name": "Fastener head section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "65mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 61
+    },
+    "sketch_a4f436cd": {
+      "componentId": "component_4ac620f1",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_e37c0fda",
+          "pointIds": [
+            "point_368b2b4d"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.593Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_77cea34d"
+          ],
+          "expression": {
+            "expression": "2.5mm",
+            "unit": "mm"
+          },
+          "id": "circle_77cea34d_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_77cea34d": {
+          "centerPointId": "point_368b2b4d",
+          "id": "circle_77cea34d",
+          "radius": {
+            "expression": "2.5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_368b2b4d": {
+          "id": "point_368b2b4d",
+          "type": "point",
+          "x": {
+            "expression": "tube_length / 2 + 30mm",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-48mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_a4f436cd",
+      "name": "Fastener shank section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "(65mm) - (guard_screw_length)",
+          "parameterRefs": {
+            "guard_screw_length": "09-heat-exchanger_parameter_guard_screw_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 59
+    },
+    "sketch_ad1ca870": {
+      "componentId": "component_869d4755",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_8d2cb918",
+          "pointIds": [
+            "point_3ac8cdc8"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_efd98f81",
+          "pointIds": [
+            "point_d3b034b1"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_4c67697c",
+          "pointIds": [
+            "point_ee26f1ea"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_bbf8b7c1",
+          "pointIds": [
+            "point_0800bb35"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_c3207189",
+          "pointIds": [
+            "point_f20612c3"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_70f36ab6",
+          "pointIds": [
+            "point_d317abe8"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_6b9fd423",
+          "pointIds": [
+            "point_b35ab439"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_85db6d98",
+          "pointIds": [
+            "point_45395b07"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_3e8db359",
+          "pointIds": [
+            "point_3ab8a4e3"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_c7e61df0",
+          "pointIds": [
+            "point_b1b8b162"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_084d0c6f",
+          "pointIds": [
+            "point_9f171322"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_88556258",
+          "pointIds": [
+            "point_232c03b2"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.588Z",
+      "dimensions": [],
+      "entities": {
+        "arc_37214f11": {
+          "centerPointId": "point_3ab8a4e3",
+          "clockwise": false,
+          "endPointId": "point_ee26f1ea",
+          "id": "arc_37214f11",
+          "startPointId": "point_d3b034b1",
+          "type": "arc"
+        },
+        "arc_616fc76b": {
+          "centerPointId": "point_232c03b2",
+          "clockwise": false,
+          "endPointId": "point_3ac8cdc8",
+          "id": "arc_616fc76b",
+          "startPointId": "point_45395b07",
+          "type": "arc"
+        },
+        "arc_b94c40ae": {
+          "centerPointId": "point_b1b8b162",
+          "clockwise": false,
+          "endPointId": "point_f20612c3",
+          "id": "arc_b94c40ae",
+          "startPointId": "point_0800bb35",
+          "type": "arc"
+        },
+        "arc_ef88b4bb": {
+          "centerPointId": "point_9f171322",
+          "clockwise": false,
+          "endPointId": "point_b35ab439",
+          "id": "arc_ef88b4bb",
+          "startPointId": "point_d317abe8",
+          "type": "arc"
+        },
+        "line_3ee5b409": {
+          "endPointId": "point_45395b07",
+          "id": "line_3ee5b409",
+          "startPointId": "point_b35ab439",
+          "type": "line"
+        },
+        "line_748411cc": {
+          "endPointId": "point_d3b034b1",
+          "id": "line_748411cc",
+          "startPointId": "point_3ac8cdc8",
+          "type": "line"
+        },
+        "line_77a8bb6f": {
+          "endPointId": "point_d317abe8",
+          "id": "line_77a8bb6f",
+          "startPointId": "point_f20612c3",
+          "type": "line"
+        },
+        "line_949fa99f": {
+          "endPointId": "point_0800bb35",
+          "id": "line_949fa99f",
+          "startPointId": "point_ee26f1ea",
+          "type": "line"
+        },
+        "point_0800bb35": {
+          "id": "point_0800bb35",
+          "type": "point",
+          "x": {
+            "expression": "(tube_length / 2 + 5mm) + ((0mm) - ((20mm) / 2))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((100mm) / 2) - (3mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_232c03b2": {
+          "id": "point_232c03b2",
+          "type": "point",
+          "x": {
+            "expression": "(tube_length / 2 + 5mm) + (((20mm) / 2) - (3mm))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((100mm) / 2) - (3mm))",
+            "unit": "mm"
+          }
+        },
+        "point_3ab8a4e3": {
+          "id": "point_3ab8a4e3",
+          "type": "point",
+          "x": {
+            "expression": "(tube_length / 2 + 5mm) + ((0mm) - (((20mm) / 2) - (3mm)))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((100mm) / 2) - (3mm))",
+            "unit": "mm"
+          }
+        },
+        "point_3ac8cdc8": {
+          "id": "point_3ac8cdc8",
+          "type": "point",
+          "x": {
+            "expression": "(tube_length / 2 + 5mm) + (((20mm) / 2) - (3mm))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((100mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_45395b07": {
+          "id": "point_45395b07",
+          "type": "point",
+          "x": {
+            "expression": "(tube_length / 2 + 5mm) + ((20mm) / 2)",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((100mm) / 2) - (3mm))",
+            "unit": "mm"
+          }
+        },
+        "point_9f171322": {
+          "id": "point_9f171322",
+          "type": "point",
+          "x": {
+            "expression": "(tube_length / 2 + 5mm) + (((20mm) / 2) - (3mm))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((100mm) / 2) - (3mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_b1b8b162": {
+          "id": "point_b1b8b162",
+          "type": "point",
+          "x": {
+            "expression": "(tube_length / 2 + 5mm) + ((0mm) - (((20mm) / 2) - (3mm)))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((100mm) / 2) - (3mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_b35ab439": {
+          "id": "point_b35ab439",
+          "type": "point",
+          "x": {
+            "expression": "(tube_length / 2 + 5mm) + ((20mm) / 2)",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((100mm) / 2) - (3mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_d317abe8": {
+          "id": "point_d317abe8",
+          "type": "point",
+          "x": {
+            "expression": "(tube_length / 2 + 5mm) + (((20mm) / 2) - (3mm))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((100mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_d3b034b1": {
+          "id": "point_d3b034b1",
+          "type": "point",
+          "x": {
+            "expression": "(tube_length / 2 + 5mm) + ((0mm) - (((20mm) / 2) - (3mm)))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((100mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_ee26f1ea": {
+          "id": "point_ee26f1ea",
+          "type": "point",
+          "x": {
+            "expression": "(tube_length / 2 + 5mm) + ((0mm) - ((20mm) / 2))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((100mm) / 2) - (3mm))",
+            "unit": "mm"
+          }
+        },
+        "point_f20612c3": {
+          "id": "point_f20612c3",
+          "type": "point",
+          "x": {
+            "expression": "(tube_length / 2 + 5mm) + ((0mm) - (((20mm) / 2) - (3mm)))",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((100mm) / 2))",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_ad1ca870",
+      "name": "Header block outline",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "6mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 9
+    },
+    "sketch_b1ba5dd3": {
+      "componentId": "component_d6f43ece",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_e2cd019e",
+          "pointIds": [
+            "point_0e80b4bc"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.593Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_8c186883"
+          ],
+          "expression": {
+            "expression": "4.5mm",
+            "unit": "mm"
+          },
+          "id": "circle_8c186883_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_8c186883": {
+          "centerPointId": "point_0e80b4bc",
+          "id": "circle_8c186883",
+          "radius": {
+            "expression": "4.5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_0e80b4bc": {
+          "id": "point_0e80b4bc",
+          "type": "point",
+          "x": {
+            "expression": "tube_length / 2 + 30mm",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "48mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_b1ba5dd3",
+      "name": "Fastener head section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "65mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 67
+    },
+    "sketch_bc42ac34": {
+      "componentId": "component_99c51d79",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_7d91a480",
+          "pointIds": [
+            "point_c46c4ed1"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_6eb80ee3",
+          "pointIds": [
+            "point_94209858"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_feaca0fa"
+          ],
+          "expression": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "id": "circle_feaca0fa_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_b1c70b94"
+          ],
+          "expression": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "id": "circle_b1c70b94_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_b1c70b94": {
+          "centerPointId": "point_94209858",
+          "id": "circle_b1c70b94",
+          "radius": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_feaca0fa": {
+          "centerPointId": "point_c46c4ed1",
+          "id": "circle_feaca0fa",
+          "radius": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_94209858": {
+          "id": "point_94209858",
+          "type": "point",
+          "x": {
+            "expression": "-12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "18mm",
+            "unit": "mm"
+          }
+        },
+        "point_c46c4ed1": {
+          "id": "point_c46c4ed1",
+          "type": "point",
+          "x": {
+            "expression": "-12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "18mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_bc42ac34",
+      "name": "Hollow transfer tube section",
+      "plane": {
+        "base": "YZ",
+        "offset": {
+          "expression": "-tube_length / 2",
+          "parameterRefs": {
+            "tube_length": "09-heat-exchanger_parameter_tube_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 21
+    },
+    "sketch_c6470c5b": {
+      "componentId": "component_b419bc99",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_874f101e",
+          "pointIds": [
+            "point_4db5e5b5"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_5fd849fe",
+          "pointIds": [
+            "point_32491b10"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_f7bd5e12",
+          "pointIds": [
+            "point_e8b86226"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_dda001f6",
+          "pointIds": [
+            "point_18e0ec28"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.586Z",
+      "dimensions": [],
+      "entities": {
+        "point_18e0ec28": {
+          "id": "point_18e0ec28",
+          "type": "point",
+          "x": {
+            "expression": "-tube_length / 2 - 30mm",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "48mm",
+            "unit": "mm"
+          }
+        },
+        "point_32491b10": {
+          "id": "point_32491b10",
+          "type": "point",
+          "x": {
+            "expression": "tube_length / 2 + 30mm",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-48mm",
+            "unit": "mm"
+          }
+        },
+        "point_4db5e5b5": {
+          "id": "point_4db5e5b5",
+          "type": "point",
+          "x": {
+            "expression": "-tube_length / 2 - 30mm",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-48mm",
+            "unit": "mm"
+          }
+        },
+        "point_e8b86226": {
+          "id": "point_e8b86226",
+          "type": "point",
+          "x": {
+            "expression": "tube_length / 2 + 30mm",
+            "parameterRefs": {
+              "tube_length": "09-heat-exchanger_parameter_tube_length"
+            },
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "48mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_c6470c5b",
+      "name": "Base post pattern centers",
+      "plane": {
+        "plane": "XY",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 3
+    },
+    "sketch_cc3390dc": {
+      "componentId": "component_2addd0f3",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_36c92cb3",
+          "pointIds": [
+            "point_4fc93f0d"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_db7d387f",
+          "pointIds": [
+            "point_dfc721b5"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_c6ce1dc1"
+          ],
+          "expression": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "id": "circle_c6ce1dc1_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_b3207685"
+          ],
+          "expression": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "id": "circle_b3207685_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_b3207685": {
+          "centerPointId": "point_dfc721b5",
+          "id": "circle_b3207685",
+          "radius": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_c6ce1dc1": {
+          "centerPointId": "point_4fc93f0d",
+          "id": "circle_c6ce1dc1",
+          "radius": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_4fc93f0d": {
+          "id": "point_4fc93f0d",
+          "type": "point",
+          "x": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "18mm",
+            "unit": "mm"
+          }
+        },
+        "point_dfc721b5": {
+          "id": "point_dfc721b5",
+          "type": "point",
+          "x": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "18mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_cc3390dc",
+      "name": "Hollow transfer tube section",
+      "plane": {
+        "base": "YZ",
+        "offset": {
+          "expression": "-tube_length / 2",
+          "parameterRefs": {
+            "tube_length": "09-heat-exchanger_parameter_tube_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 29
+    },
+    "sketch_decdefde": {
+      "componentId": "component_6ce10d4b",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_b3e062a8",
+          "pointIds": [
+            "point_76ae37d3"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_7868dae6",
+          "pointIds": [
+            "point_b554bcb1"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_12ab7276"
+          ],
+          "expression": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "id": "circle_12ab7276_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_6161065d"
+          ],
+          "expression": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "id": "circle_6161065d_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_12ab7276": {
+          "centerPointId": "point_76ae37d3",
+          "id": "circle_12ab7276",
+          "radius": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_6161065d": {
+          "centerPointId": "point_b554bcb1",
+          "id": "circle_6161065d",
+          "radius": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_76ae37d3": {
+          "id": "point_76ae37d3",
+          "type": "point",
+          "x": {
+            "expression": "35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "30mm",
+            "unit": "mm"
+          }
+        },
+        "point_b554bcb1": {
+          "id": "point_b554bcb1",
+          "type": "point",
+          "x": {
+            "expression": "35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "30mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_decdefde",
+      "name": "Hollow transfer tube section",
+      "plane": {
+        "base": "YZ",
+        "offset": {
+          "expression": "-tube_length / 2",
+          "parameterRefs": {
+            "tube_length": "09-heat-exchanger_parameter_tube_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 39
+    },
+    "sketch_e8b56cdf": {
+      "componentId": "component_1d07b04a",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_1b9e1686",
+          "pointIds": [
+            "point_601bf67a"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_78b7a2a5",
+          "pointIds": [
+            "point_0d23bf43"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_35301321"
+          ],
+          "expression": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "id": "circle_35301321_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_a36834d9"
+          ],
+          "expression": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "id": "circle_a36834d9_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_35301321": {
+          "centerPointId": "point_601bf67a",
+          "id": "circle_35301321",
+          "radius": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_a36834d9": {
+          "centerPointId": "point_0d23bf43",
+          "id": "circle_a36834d9",
+          "radius": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_0d23bf43": {
+          "id": "point_0d23bf43",
+          "type": "point",
+          "x": {
+            "expression": "-35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "18mm",
+            "unit": "mm"
+          }
+        },
+        "point_601bf67a": {
+          "id": "point_601bf67a",
+          "type": "point",
+          "x": {
+            "expression": "-35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "18mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_e8b56cdf",
+      "name": "Hollow transfer tube section",
+      "plane": {
+        "base": "YZ",
+        "offset": {
+          "expression": "-tube_length / 2",
+          "parameterRefs": {
+            "tube_length": "09-heat-exchanger_parameter_tube_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 13
+    },
+    "sketch_ec67da2b": {
+      "componentId": "component_1b56edb8",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_bfa63338",
+          "pointIds": [
+            "point_81c2aeab"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_edee27c0",
+          "pointIds": [
+            "point_4d2a2a39"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_704c26fc"
+          ],
+          "expression": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "id": "circle_704c26fc_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_6b0d2dc6"
+          ],
+          "expression": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "id": "circle_6b0d2dc6_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_6b0d2dc6": {
+          "centerPointId": "point_4d2a2a39",
+          "id": "circle_6b0d2dc6",
+          "radius": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_704c26fc": {
+          "centerPointId": "point_81c2aeab",
+          "id": "circle_704c26fc",
+          "radius": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_4d2a2a39": {
+          "id": "point_4d2a2a39",
+          "type": "point",
+          "x": {
+            "expression": "35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "54mm",
+            "unit": "mm"
+          }
+        },
+        "point_81c2aeab": {
+          "id": "point_81c2aeab",
+          "type": "point",
+          "x": {
+            "expression": "35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "54mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_ec67da2b",
+      "name": "Hollow transfer tube section",
+      "plane": {
+        "base": "YZ",
+        "offset": {
+          "expression": "-tube_length / 2",
+          "parameterRefs": {
+            "tube_length": "09-heat-exchanger_parameter_tube_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 43
+    },
+    "sketch_f53873c9": {
+      "componentId": "component_7d54c15e",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_dbfe10ba",
+          "pointIds": [
+            "point_99adb9f6"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_59582e5f",
+          "pointIds": [
+            "point_7e495c50"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.590Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_a805011b"
+          ],
+          "expression": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "id": "circle_a805011b_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_be889abd"
+          ],
+          "expression": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "id": "circle_be889abd_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_a805011b": {
+          "centerPointId": "point_99adb9f6",
+          "id": "circle_a805011b",
+          "radius": {
+            "expression": "4.3mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_be889abd": {
+          "centerPointId": "point_7e495c50",
+          "id": "circle_be889abd",
+          "radius": {
+            "expression": "3.2mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_7e495c50": {
+          "id": "point_7e495c50",
+          "type": "point",
+          "x": {
+            "expression": "-12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "30mm",
+            "unit": "mm"
+          }
+        },
+        "point_99adb9f6": {
+          "id": "point_99adb9f6",
+          "type": "point",
+          "x": {
+            "expression": "-12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "30mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_f53873c9",
+      "name": "Hollow transfer tube section",
+      "plane": {
+        "base": "YZ",
+        "offset": {
+          "expression": "-tube_length / 2",
+          "parameterRefs": {
+            "tube_length": "09-heat-exchanger_parameter_tube_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 23
+    }
+  },
+  "timelineCursor": 74,
+  "units": "metric",
+  "unitSettings": {
+    "angle": "deg",
+    "length": "mm"
+  },
+  "updatedAt": "2026-10-07T09:40:53.593Z"
+}

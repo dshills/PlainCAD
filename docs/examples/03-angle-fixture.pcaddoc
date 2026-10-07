@@ -1,0 +1,895 @@
+{
+  "components": {
+    "component_192a6318": {
+      "id": "component_192a6318",
+      "name": "Project reference"
+    },
+    "component_77e61486": {
+      "id": "component_77e61486",
+      "name": "Web fastener 2"
+    },
+    "component_cfcb0f2a": {
+      "id": "component_cfcb0f2a",
+      "name": "Web fastener 1"
+    },
+    "component_f4176d0d": {
+      "id": "component_f4176d0d",
+      "name": "L bracket"
+    }
+  },
+  "createdAt": "2026-10-07T09:40:53.550Z",
+  "displayUnits": {
+    "angle": "deg",
+    "length": "mm"
+  },
+  "features": [
+    {
+      "componentId": "component_f4176d0d",
+      "createdAt": "2026-10-07T09:40:53.553Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "6mm",
+        "unit": "mm"
+      },
+      "id": "feature_55e89f9d",
+      "name": "Bracket foot",
+      "operation": "newBody",
+      "profileId": "sketch_46cbe921:profile:pfajkb",
+      "sketchId": "sketch_46cbe921",
+      "timelineStep": 2,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_f4176d0d",
+      "createdAt": "2026-10-07T09:40:53.553Z",
+      "distance": {
+        "expression": "0.8mm",
+        "unit": "mm"
+      },
+      "id": "03-angle-fixture_chamfer_1",
+      "name": "Underside edge break",
+      "targetEdgeRefs": [
+        {
+          "featureId": "feature_55e89f9d",
+          "kind": "edge",
+          "role": "startCapPerimeter",
+          "stableHint": "extrude:feature_55e89f9d:startCapPerimeter:all",
+          "transientId": "extrude:feature_55e89f9d:startCapPerimeter:all"
+        }
+      ],
+      "timelineStep": 3,
+      "type": "chamfer"
+    },
+    {
+      "componentId": "component_f4176d0d",
+      "createdAt": "2026-10-07T09:40:53.553Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "web_height",
+        "parameterRefs": {
+          "web_height": "03-angle-fixture_parameter_web_height"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_9bbb4c4b",
+      "name": "Upright web",
+      "operation": "join",
+      "profileId": "sketch_fc6e4410:profile:p5xmxi7",
+      "sketchId": "sketch_fc6e4410",
+      "targetBodyIds": [
+        "body:feature_55e89f9d"
+      ],
+      "timelineStep": 5,
+      "type": "extrude"
+    },
+    {
+      "centerPointIds": [
+        "point_e874ba1e",
+        "point_5b7eba7f"
+      ],
+      "componentId": "component_f4176d0d",
+      "createdAt": "2026-10-07T09:40:53.553Z",
+      "depth": "throughAll",
+      "diameter": {
+        "expression": "5mm",
+        "unit": "mm"
+      },
+      "direction": "positive",
+      "id": "03-angle-fixture_hole_3",
+      "name": "Foot attachment holes",
+      "sketchId": "sketch_47e9ef2c",
+      "targetBodyIds": [
+        "body:feature_55e89f9d"
+      ],
+      "timelineStep": 7,
+      "type": "hole"
+    },
+    {
+      "centerPointIds": [
+        "point_78d2214c",
+        "point_96dc96a0"
+      ],
+      "componentId": "component_f4176d0d",
+      "createdAt": "2026-10-07T09:40:53.553Z",
+      "depth": "throughAll",
+      "diameter": {
+        "expression": "5mm",
+        "unit": "mm"
+      },
+      "direction": "positive",
+      "id": "03-angle-fixture_hole_4",
+      "name": "Horizontal web holes",
+      "sketchId": "sketch_fd5e2528",
+      "targetBodyIds": [
+        "body:feature_55e89f9d"
+      ],
+      "timelineStep": 9,
+      "type": "hole"
+    },
+    {
+      "componentId": "component_cfcb0f2a",
+      "createdAt": "2026-10-07T09:40:53.553Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "12mm",
+        "unit": "mm"
+      },
+      "id": "feature_ef31abd8",
+      "name": "Horizontal shank",
+      "operation": "newBody",
+      "profileId": "sketch_ec09ee50:profile:ptq2dyi",
+      "sketchId": "sketch_ec09ee50",
+      "timelineStep": 11,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_77e61486",
+      "createdAt": "2026-10-07T09:40:53.553Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "12mm",
+        "unit": "mm"
+      },
+      "id": "feature_e87b22db",
+      "name": "Horizontal shank",
+      "operation": "newBody",
+      "profileId": "sketch_8bbc7021:profile:ptu0grg",
+      "sketchId": "sketch_8bbc7021",
+      "timelineStep": 13,
+      "type": "extrude"
+    }
+  ],
+  "id": "doc_10427f5f",
+  "metadata": {
+    "example": {
+      "difficulty": "Beginner/intermediate",
+      "edited": 40,
+      "order": 3,
+      "original": 36,
+      "parts": [
+        {
+          "bodyId": "body:feature_55e89f9d",
+          "componentId": "component_f4176d0d",
+          "name": "L bracket"
+        },
+        {
+          "bodyId": "body:feature_ef31abd8",
+          "componentId": "component_cfcb0f2a",
+          "name": "Web fastener 1"
+        },
+        {
+          "bodyId": "body:feature_e87b22db",
+          "componentId": "component_77e61486",
+          "name": "Web fastener 2"
+        }
+      ],
+      "primaryParameter": "web_height",
+      "scope": "Static components authored in shared coordinates; no joints or assembly transforms.",
+      "slug": "03-angle-fixture",
+      "summary": "An L-shaped joined bracket and two horizontal fasteners; front-plane drilling tests coordinate orientation."
+    }
+  },
+  "name": "Angle bracket fixture",
+  "parameters": {
+    "web_height": {
+      "description": "Primary demonstration parameter; change this to inspect the rebuild.",
+      "expression": "36mm",
+      "group": "Design dimensions",
+      "id": "03-angle-fixture_parameter_web_height",
+      "name": "web_height",
+      "unit": "mm",
+      "value": 36
+    }
+  },
+  "rootComponentId": "component_192a6318",
+  "schemaVersion": 13,
+  "sketches": {
+    "sketch_46cbe921": {
+      "componentId": "component_f4176d0d",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_df1cfe5d",
+          "pointIds": [
+            "point_7fbe5649"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_11f7e855",
+          "pointIds": [
+            "point_2470e783"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_475b53e4",
+          "pointIds": [
+            "point_11e694da"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_ad384887",
+          "pointIds": [
+            "point_9d9541f2"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_052351a6",
+          "pointIds": [
+            "point_9dbcec03"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_9fa7de9a",
+          "pointIds": [
+            "point_9f63178b"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_867b607f",
+          "pointIds": [
+            "point_1cbe167a"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_f299c749",
+          "pointIds": [
+            "point_3e17071d"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_a3887518",
+          "pointIds": [
+            "point_6d3244ea"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_7f2d1d8a",
+          "pointIds": [
+            "point_2fe64f55"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_4abe4a25",
+          "pointIds": [
+            "point_1c240711"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_b61aa71f",
+          "pointIds": [
+            "point_fa35ddde"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.550Z",
+      "dimensions": [],
+      "entities": {
+        "arc_0fd7e301": {
+          "centerPointId": "point_6d3244ea",
+          "clockwise": false,
+          "endPointId": "point_11e694da",
+          "id": "arc_0fd7e301",
+          "startPointId": "point_2470e783",
+          "type": "arc"
+        },
+        "arc_5adcc165": {
+          "centerPointId": "point_fa35ddde",
+          "clockwise": false,
+          "endPointId": "point_7fbe5649",
+          "id": "arc_5adcc165",
+          "startPointId": "point_3e17071d",
+          "type": "arc"
+        },
+        "arc_74945c57": {
+          "centerPointId": "point_2fe64f55",
+          "clockwise": false,
+          "endPointId": "point_9dbcec03",
+          "id": "arc_74945c57",
+          "startPointId": "point_9d9541f2",
+          "type": "arc"
+        },
+        "arc_a2ef8f0d": {
+          "centerPointId": "point_1c240711",
+          "clockwise": false,
+          "endPointId": "point_1cbe167a",
+          "id": "arc_a2ef8f0d",
+          "startPointId": "point_9f63178b",
+          "type": "arc"
+        },
+        "line_303de620": {
+          "endPointId": "point_9f63178b",
+          "id": "line_303de620",
+          "startPointId": "point_9dbcec03",
+          "type": "line"
+        },
+        "line_5c22d811": {
+          "endPointId": "point_2470e783",
+          "id": "line_5c22d811",
+          "startPointId": "point_7fbe5649",
+          "type": "line"
+        },
+        "line_b4bf85e2": {
+          "endPointId": "point_9d9541f2",
+          "id": "line_b4bf85e2",
+          "startPointId": "point_11e694da",
+          "type": "line"
+        },
+        "line_fa0731c6": {
+          "endPointId": "point_3e17071d",
+          "id": "line_fa0731c6",
+          "startPointId": "point_1cbe167a",
+          "type": "line"
+        },
+        "point_11e694da": {
+          "id": "point_11e694da",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - ((60mm) / 2))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((40mm) / 2) - (4mm))",
+            "unit": "mm"
+          }
+        },
+        "point_1c240711": {
+          "id": "point_1c240711",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((60mm) / 2) - (4mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((40mm) / 2) - (4mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_1cbe167a": {
+          "id": "point_1cbe167a",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((60mm) / 2)",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((40mm) / 2) - (4mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_2470e783": {
+          "id": "point_2470e783",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((60mm) / 2) - (4mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((40mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_2fe64f55": {
+          "id": "point_2fe64f55",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((60mm) / 2) - (4mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((40mm) / 2) - (4mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_3e17071d": {
+          "id": "point_3e17071d",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((60mm) / 2)",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((40mm) / 2) - (4mm))",
+            "unit": "mm"
+          }
+        },
+        "point_6d3244ea": {
+          "id": "point_6d3244ea",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((60mm) / 2) - (4mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((40mm) / 2) - (4mm))",
+            "unit": "mm"
+          }
+        },
+        "point_7fbe5649": {
+          "id": "point_7fbe5649",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((60mm) / 2) - (4mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((40mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_9d9541f2": {
+          "id": "point_9d9541f2",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - ((60mm) / 2))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((40mm) / 2) - (4mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_9dbcec03": {
+          "id": "point_9dbcec03",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((60mm) / 2) - (4mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((40mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_9f63178b": {
+          "id": "point_9f63178b",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((60mm) / 2) - (4mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((40mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_fa35ddde": {
+          "id": "point_fa35ddde",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((60mm) / 2) - (4mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((40mm) / 2) - (4mm))",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_46cbe921",
+      "name": "Bracket foot outline",
+      "plane": {
+        "plane": "XY",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 1
+    },
+    "sketch_47e9ef2c": {
+      "componentId": "component_f4176d0d",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_506181d0",
+          "pointIds": [
+            "point_e874ba1e"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_dff48c61",
+          "pointIds": [
+            "point_5b7eba7f"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.553Z",
+      "dimensions": [],
+      "entities": {
+        "point_5b7eba7f": {
+          "id": "point_5b7eba7f",
+          "type": "point",
+          "x": {
+            "expression": "20mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-10mm",
+            "unit": "mm"
+          }
+        },
+        "point_e874ba1e": {
+          "id": "point_e874ba1e",
+          "type": "point",
+          "x": {
+            "expression": "-20mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-10mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_47e9ef2c",
+      "name": "Foot attachment holes centers",
+      "plane": {
+        "plane": "XY",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 6
+    },
+    "sketch_8bbc7021": {
+      "componentId": "component_77e61486",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_044fa254",
+          "pointIds": [
+            "point_1fc13a91"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.553Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_79729f0b"
+          ],
+          "expression": {
+            "expression": "2mm",
+            "unit": "mm"
+          },
+          "id": "circle_79729f0b_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_79729f0b": {
+          "centerPointId": "point_1fc13a91",
+          "id": "circle_79729f0b",
+          "radius": {
+            "expression": "2mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_1fc13a91": {
+          "id": "point_1fc13a91",
+          "type": "point",
+          "x": {
+            "expression": "20mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "25mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_8bbc7021",
+      "name": "Horizontal shank section",
+      "plane": {
+        "base": "XZ",
+        "offset": {
+          "expression": "-23mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 12
+    },
+    "sketch_ec09ee50": {
+      "componentId": "component_cfcb0f2a",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_1a390608",
+          "pointIds": [
+            "point_f507db43"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.553Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_23cba414"
+          ],
+          "expression": {
+            "expression": "2mm",
+            "unit": "mm"
+          },
+          "id": "circle_23cba414_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_23cba414": {
+          "centerPointId": "point_f507db43",
+          "id": "circle_23cba414",
+          "radius": {
+            "expression": "2mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_f507db43": {
+          "id": "point_f507db43",
+          "type": "point",
+          "x": {
+            "expression": "-20mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "25mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_ec09ee50",
+      "name": "Horizontal shank section",
+      "plane": {
+        "base": "XZ",
+        "offset": {
+          "expression": "-23mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 10
+    },
+    "sketch_fc6e4410": {
+      "componentId": "component_f4176d0d",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_91d7320e",
+          "pointIds": [
+            "point_859af90e"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_0c3a08ed",
+          "pointIds": [
+            "point_af15b73d"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_81bc4a88",
+          "pointIds": [
+            "point_01a63e83"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_62c32e5c",
+          "pointIds": [
+            "point_2a1f1c99"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.553Z",
+      "dimensions": [],
+      "entities": {
+        "line_8c709715": {
+          "endPointId": "point_2a1f1c99",
+          "id": "line_8c709715",
+          "startPointId": "point_01a63e83",
+          "type": "line"
+        },
+        "line_9c5285a0": {
+          "endPointId": "point_01a63e83",
+          "id": "line_9c5285a0",
+          "startPointId": "point_af15b73d",
+          "type": "line"
+        },
+        "line_b11afaf2": {
+          "endPointId": "point_af15b73d",
+          "id": "line_b11afaf2",
+          "startPointId": "point_859af90e",
+          "type": "line"
+        },
+        "line_d93b12d4": {
+          "endPointId": "point_859af90e",
+          "id": "line_d93b12d4",
+          "startPointId": "point_2a1f1c99",
+          "type": "line"
+        },
+        "point_01a63e83": {
+          "id": "point_01a63e83",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - ((60mm) / 2))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(17mm) + ((0mm) - ((6mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_2a1f1c99": {
+          "id": "point_2a1f1c99",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((60mm) / 2)",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(17mm) + ((0mm) - ((6mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_859af90e": {
+          "id": "point_859af90e",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((60mm) / 2)",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(17mm) + ((6mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_af15b73d": {
+          "id": "point_af15b73d",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - ((60mm) / 2))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(17mm) + ((6mm) / 2)",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_fc6e4410",
+      "name": "Upright web outline",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "5mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 4
+    },
+    "sketch_fd5e2528": {
+      "componentId": "component_f4176d0d",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_9e703e2d",
+          "pointIds": [
+            "point_78d2214c"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_99199169",
+          "pointIds": [
+            "point_96dc96a0"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.553Z",
+      "dimensions": [],
+      "entities": {
+        "point_78d2214c": {
+          "id": "point_78d2214c",
+          "type": "point",
+          "x": {
+            "expression": "-20mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "25mm",
+            "unit": "mm"
+          }
+        },
+        "point_96dc96a0": {
+          "id": "point_96dc96a0",
+          "type": "point",
+          "x": {
+            "expression": "20mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "25mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_fd5e2528",
+      "name": "Horizontal web holes centers",
+      "plane": {
+        "base": "XZ",
+        "offset": {
+          "expression": "-25mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 8
+    }
+  },
+  "timelineCursor": 13,
+  "units": "metric",
+  "unitSettings": {
+    "angle": "deg",
+    "length": "mm"
+  },
+  "updatedAt": "2026-10-07T09:40:53.553Z"
+}

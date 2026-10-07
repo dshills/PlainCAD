@@ -1,0 +1,1703 @@
+{
+  "components": {
+    "component_1b1975a7": {
+      "id": "component_1b1975a7",
+      "name": "Plunger"
+    },
+    "component_23dab773": {
+      "id": "component_23dab773",
+      "name": "Cover bolt 1"
+    },
+    "component_2b4777d3": {
+      "id": "component_2b4777d3",
+      "name": "Cover bolt 2"
+    },
+    "component_39c4bd55": {
+      "id": "component_39c4bd55",
+      "name": "Valve body"
+    },
+    "component_670b4e76": {
+      "id": "component_670b4e76",
+      "name": "Project reference"
+    },
+    "component_a8654f11": {
+      "id": "component_a8654f11",
+      "name": "Removable cover"
+    },
+    "component_d492600b": {
+      "id": "component_d492600b",
+      "name": "Cover bolt 3"
+    },
+    "component_d762f0ef": {
+      "id": "component_d762f0ef",
+      "name": "Gasket"
+    },
+    "component_ded97e91": {
+      "id": "component_ded97e91",
+      "name": "Cover bolt 4"
+    }
+  },
+  "createdAt": "2026-10-07T09:40:53.564Z",
+  "displayUnits": {
+    "angle": "deg",
+    "length": "mm"
+  },
+  "features": [
+    {
+      "componentId": "component_39c4bd55",
+      "createdAt": "2026-10-07T09:40:53.564Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "8mm",
+        "unit": "mm"
+      },
+      "id": "feature_d6705977",
+      "name": "Lower flange",
+      "operation": "newBody",
+      "profileId": "sketch_bb8f6955:profile:p1y7y23",
+      "sketchId": "sketch_bb8f6955",
+      "timelineStep": 2,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_39c4bd55",
+      "createdAt": "2026-10-07T09:40:53.564Z",
+      "distance": {
+        "expression": "0.6mm",
+        "unit": "mm"
+      },
+      "id": "06-flanged-valve_chamfer_1",
+      "name": "Underside edge break",
+      "targetEdgeRefs": [
+        {
+          "featureId": "feature_d6705977",
+          "kind": "edge",
+          "role": "startCapPerimeter",
+          "stableHint": "extrude:feature_d6705977:startCapPerimeter:all",
+          "transientId": "extrude:feature_d6705977:startCapPerimeter:all"
+        }
+      ],
+      "timelineStep": 3,
+      "type": "chamfer"
+    },
+    {
+      "componentId": "component_39c4bd55",
+      "createdAt": "2026-10-07T09:40:53.564Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "valve_height - 7mm",
+        "parameterRefs": {
+          "valve_height": "06-flanged-valve_parameter_valve_height"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_6d72272b",
+      "name": "Tubular valve wall",
+      "operation": "join",
+      "profileId": "sketch_e472d5d5:profile:p13guh4k",
+      "sketchId": "sketch_e472d5d5",
+      "targetBodyIds": [
+        "body:feature_d6705977"
+      ],
+      "timelineStep": 5,
+      "type": "extrude"
+    },
+    {
+      "centerPointIds": [
+        "point_2488a50f",
+        "point_0febb05e",
+        "point_7ec186db",
+        "point_39220e96"
+      ],
+      "componentId": "component_39c4bd55",
+      "createdAt": "2026-10-07T09:40:53.564Z",
+      "depth": "throughAll",
+      "diameter": {
+        "expression": "6.4mm",
+        "unit": "mm"
+      },
+      "direction": "positive",
+      "id": "06-flanged-valve_hole_3",
+      "name": "Body bolt pattern",
+      "sketchId": "sketch_879159ca",
+      "targetBodyIds": [
+        "body:feature_d6705977"
+      ],
+      "timelineStep": 7,
+      "type": "hole"
+    },
+    {
+      "componentId": "component_a8654f11",
+      "createdAt": "2026-10-07T09:40:53.564Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "6mm",
+        "unit": "mm"
+      },
+      "id": "feature_f2184885",
+      "name": "Cover ring",
+      "operation": "newBody",
+      "profileId": "sketch_dad45530:profile:pmcovs",
+      "sketchId": "sketch_dad45530",
+      "timelineStep": 9,
+      "type": "extrude"
+    },
+    {
+      "centerPointIds": [
+        "point_3fbec4e3",
+        "point_c45e4259",
+        "point_429fe00c",
+        "point_67e139ae"
+      ],
+      "componentId": "component_a8654f11",
+      "createdAt": "2026-10-07T09:40:53.564Z",
+      "depth": "throughAll",
+      "diameter": {
+        "expression": "6.4mm",
+        "unit": "mm"
+      },
+      "direction": "positive",
+      "id": "06-flanged-valve_hole_5",
+      "name": "Cover bolt pattern",
+      "sketchId": "sketch_b6c4fa93",
+      "targetBodyIds": [
+        "body:feature_f2184885"
+      ],
+      "timelineStep": 11,
+      "type": "hole"
+    },
+    {
+      "angle": {
+        "expression": "360deg",
+        "unit": "deg"
+      },
+      "axis": {
+        "axis": "Z",
+        "type": "origin"
+      },
+      "componentId": "component_1b1975a7",
+      "createdAt": "2026-10-07T09:40:53.565Z",
+      "id": "06-flanged-valve_revolve_6",
+      "name": "Turned plunger",
+      "operation": "newBody",
+      "profileId": "sketch_2a6543be:profile:ps8oal8",
+      "sketchId": "sketch_2a6543be",
+      "timelineStep": 13,
+      "type": "revolve"
+    },
+    {
+      "componentId": "component_d762f0ef",
+      "createdAt": "2026-10-07T09:40:53.565Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "1mm",
+        "unit": "mm"
+      },
+      "id": "feature_dbac6615",
+      "name": "Gasket ring",
+      "operation": "newBody",
+      "profileId": "sketch_758d1670:profile:p1mn3dal",
+      "sketchId": "sketch_758d1670",
+      "timelineStep": 15,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_23dab773",
+      "createdAt": "2026-10-07T09:40:53.565Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "cover_bolt_length + 1mm",
+        "parameterRefs": {
+          "cover_bolt_length": "06-flanged-valve_parameter_cover_bolt_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_5d64c68f",
+      "name": "Fastener shank",
+      "operation": "newBody",
+      "profileId": "sketch_4c130309:profile:p1y84v7e",
+      "sketchId": "sketch_4c130309",
+      "timelineStep": 17,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_23dab773",
+      "createdAt": "2026-10-07T09:40:53.565Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "4mm",
+        "unit": "mm"
+      },
+      "id": "feature_569a399a",
+      "name": "Fastener head",
+      "operation": "join",
+      "profileId": "sketch_276f1d9d:profile:prllb59",
+      "sketchId": "sketch_276f1d9d",
+      "targetBodyIds": [
+        "body:feature_5d64c68f"
+      ],
+      "timelineStep": 19,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_2b4777d3",
+      "createdAt": "2026-10-07T09:40:53.565Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "cover_bolt_length + 1mm",
+        "parameterRefs": {
+          "cover_bolt_length": "06-flanged-valve_parameter_cover_bolt_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_ee40b297",
+      "name": "Fastener shank",
+      "operation": "newBody",
+      "profileId": "sketch_f90de1c5:profile:pvqn9dx",
+      "sketchId": "sketch_f90de1c5",
+      "timelineStep": 21,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_2b4777d3",
+      "createdAt": "2026-10-07T09:40:53.565Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "4mm",
+        "unit": "mm"
+      },
+      "id": "feature_04e40a35",
+      "name": "Fastener head",
+      "operation": "join",
+      "profileId": "sketch_30be2085:profile:pbhn7v6",
+      "sketchId": "sketch_30be2085",
+      "targetBodyIds": [
+        "body:feature_ee40b297"
+      ],
+      "timelineStep": 23,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_d492600b",
+      "createdAt": "2026-10-07T09:40:53.565Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "cover_bolt_length + 1mm",
+        "parameterRefs": {
+          "cover_bolt_length": "06-flanged-valve_parameter_cover_bolt_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_af740386",
+      "name": "Fastener shank",
+      "operation": "newBody",
+      "profileId": "sketch_6468a532:profile:pv4o79a",
+      "sketchId": "sketch_6468a532",
+      "timelineStep": 25,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_d492600b",
+      "createdAt": "2026-10-07T09:40:53.565Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "4mm",
+        "unit": "mm"
+      },
+      "id": "feature_720d21eb",
+      "name": "Fastener head",
+      "operation": "join",
+      "profileId": "sketch_39fd322e:profile:p1pvrh23",
+      "sketchId": "sketch_39fd322e",
+      "targetBodyIds": [
+        "body:feature_af740386"
+      ],
+      "timelineStep": 27,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_ded97e91",
+      "createdAt": "2026-10-07T09:40:53.565Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "cover_bolt_length + 1mm",
+        "parameterRefs": {
+          "cover_bolt_length": "06-flanged-valve_parameter_cover_bolt_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_3a6b8ba4",
+      "name": "Fastener shank",
+      "operation": "newBody",
+      "profileId": "sketch_613c0d2f:profile:p1exyp9p",
+      "sketchId": "sketch_613c0d2f",
+      "timelineStep": 29,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_ded97e91",
+      "createdAt": "2026-10-07T09:40:53.565Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "4mm",
+        "unit": "mm"
+      },
+      "id": "feature_fb02aab2",
+      "name": "Fastener head",
+      "operation": "join",
+      "profileId": "sketch_335bc722:profile:p1h4dqmz",
+      "sketchId": "sketch_335bc722",
+      "targetBodyIds": [
+        "body:feature_3a6b8ba4"
+      ],
+      "timelineStep": 31,
+      "type": "extrude"
+    }
+  ],
+  "id": "doc_6adcaf96",
+  "metadata": {
+    "example": {
+      "difficulty": "Intermediate/advanced",
+      "edited": 36,
+      "order": 6,
+      "original": 32,
+      "parts": [
+        {
+          "bodyId": "body:feature_d6705977",
+          "componentId": "component_39c4bd55",
+          "name": "Valve body"
+        },
+        {
+          "bodyId": "body:feature_f2184885",
+          "componentId": "component_a8654f11",
+          "name": "Removable cover"
+        },
+        {
+          "bodyId": "body:06-flanged-valve_revolve_6",
+          "componentId": "component_1b1975a7",
+          "name": "Plunger"
+        },
+        {
+          "bodyId": "body:feature_dbac6615",
+          "componentId": "component_d762f0ef",
+          "name": "Gasket"
+        },
+        {
+          "bodyId": "body:feature_5d64c68f",
+          "componentId": "component_23dab773",
+          "name": "Cover bolt 1"
+        },
+        {
+          "bodyId": "body:feature_ee40b297",
+          "componentId": "component_2b4777d3",
+          "name": "Cover bolt 2"
+        },
+        {
+          "bodyId": "body:feature_af740386",
+          "componentId": "component_d492600b",
+          "name": "Cover bolt 3"
+        },
+        {
+          "bodyId": "body:feature_3a6b8ba4",
+          "componentId": "component_ded97e91",
+          "name": "Cover bolt 4"
+        }
+      ],
+      "primaryParameter": "valve_height",
+      "scope": "Static components authored in shared coordinates; no joints or assembly transforms.",
+      "slug": "06-flanged-valve",
+      "summary": "Eight parts: bored valve body, cover, plunger, gasket and four bolts, with matched hole patterns."
+    }
+  },
+  "name": "Flanged valve cartridge",
+  "parameters": {
+    "cover_bolt_length": {
+      "description": "Shared fastener shank length; head remains seated at the mating face.",
+      "expression": "valve_height + 5mm",
+      "group": "Design dimensions",
+      "id": "06-flanged-valve_parameter_cover_bolt_length",
+      "name": "cover_bolt_length",
+      "parameterRefs": {
+        "valve_height": "06-flanged-valve_parameter_valve_height"
+      },
+      "unit": "mm",
+      "value": 37
+    },
+    "valve_height": {
+      "description": "Primary demonstration parameter; change this to inspect the rebuild.",
+      "expression": "32mm",
+      "group": "Design dimensions",
+      "id": "06-flanged-valve_parameter_valve_height",
+      "name": "valve_height",
+      "unit": "mm",
+      "value": 32
+    }
+  },
+  "rootComponentId": "component_670b4e76",
+  "schemaVersion": 13,
+  "sketches": {
+    "sketch_276f1d9d": {
+      "componentId": "component_23dab773",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_c39c5948",
+          "pointIds": [
+            "point_5a659bb6"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.565Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_c1e676e6"
+          ],
+          "expression": {
+            "expression": "5.04mm",
+            "unit": "mm"
+          },
+          "id": "circle_c1e676e6_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_c1e676e6": {
+          "centerPointId": "point_5a659bb6",
+          "id": "circle_c1e676e6",
+          "radius": {
+            "expression": "5.04mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_5a659bb6": {
+          "id": "point_5a659bb6",
+          "type": "point",
+          "x": {
+            "expression": "-32mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-22mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_276f1d9d",
+      "name": "Fastener head section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "valve_height + 7mm",
+          "parameterRefs": {
+            "valve_height": "06-flanged-valve_parameter_valve_height"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 18
+    },
+    "sketch_2a6543be": {
+      "componentId": "component_1b1975a7",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_3057f12e",
+          "pointIds": [
+            "point_09bfdc90"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_95c23150",
+          "pointIds": [
+            "point_6317f24a"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_af17fe56",
+          "pointIds": [
+            "point_51ddd206"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_60d04cc4",
+          "pointIds": [
+            "point_228c28ef"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.564Z",
+      "dimensions": [],
+      "entities": {
+        "line_350ab77a": {
+          "endPointId": "point_6317f24a",
+          "id": "line_350ab77a",
+          "startPointId": "point_09bfdc90",
+          "type": "line"
+        },
+        "line_6675ff62": {
+          "endPointId": "point_09bfdc90",
+          "id": "line_6675ff62",
+          "startPointId": "point_228c28ef",
+          "type": "line"
+        },
+        "line_e3514bd4": {
+          "endPointId": "point_228c28ef",
+          "id": "line_e3514bd4",
+          "startPointId": "point_51ddd206",
+          "type": "line"
+        },
+        "line_eb0681d9": {
+          "endPointId": "point_51ddd206",
+          "id": "line_eb0681d9",
+          "startPointId": "point_6317f24a",
+          "type": "line"
+        },
+        "point_09bfdc90": {
+          "id": "point_09bfdc90",
+          "type": "point",
+          "x": {
+            "expression": "((13mm) / 2) + ((13mm) / 2)",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "((6mm) + ((18mm) / 2)) + ((18mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_228c28ef": {
+          "id": "point_228c28ef",
+          "type": "point",
+          "x": {
+            "expression": "((13mm) / 2) + ((13mm) / 2)",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "((6mm) + ((18mm) / 2)) + ((0mm) - ((18mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_51ddd206": {
+          "id": "point_51ddd206",
+          "type": "point",
+          "x": {
+            "expression": "((13mm) / 2) + ((0mm) - ((13mm) / 2))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "((6mm) + ((18mm) / 2)) + ((0mm) - ((18mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_6317f24a": {
+          "id": "point_6317f24a",
+          "type": "point",
+          "x": {
+            "expression": "((13mm) / 2) + ((0mm) - ((13mm) / 2))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "((6mm) + ((18mm) / 2)) + ((18mm) / 2)",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_2a6543be",
+      "name": "Turned plunger lathe section",
+      "plane": {
+        "plane": "XZ",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 12
+    },
+    "sketch_30be2085": {
+      "componentId": "component_2b4777d3",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_e1b7b05c",
+          "pointIds": [
+            "point_7fdeb525"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.565Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_18f81691"
+          ],
+          "expression": {
+            "expression": "5.04mm",
+            "unit": "mm"
+          },
+          "id": "circle_18f81691_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_18f81691": {
+          "centerPointId": "point_7fdeb525",
+          "id": "circle_18f81691",
+          "radius": {
+            "expression": "5.04mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_7fdeb525": {
+          "id": "point_7fdeb525",
+          "type": "point",
+          "x": {
+            "expression": "32mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-22mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_30be2085",
+      "name": "Fastener head section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "valve_height + 7mm",
+          "parameterRefs": {
+            "valve_height": "06-flanged-valve_parameter_valve_height"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 22
+    },
+    "sketch_335bc722": {
+      "componentId": "component_ded97e91",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_9d9d2e83",
+          "pointIds": [
+            "point_e7c2d75f"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.565Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_99e40d08"
+          ],
+          "expression": {
+            "expression": "5.04mm",
+            "unit": "mm"
+          },
+          "id": "circle_99e40d08_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_99e40d08": {
+          "centerPointId": "point_e7c2d75f",
+          "id": "circle_99e40d08",
+          "radius": {
+            "expression": "5.04mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_e7c2d75f": {
+          "id": "point_e7c2d75f",
+          "type": "point",
+          "x": {
+            "expression": "-32mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "22mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_335bc722",
+      "name": "Fastener head section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "valve_height + 7mm",
+          "parameterRefs": {
+            "valve_height": "06-flanged-valve_parameter_valve_height"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 30
+    },
+    "sketch_39fd322e": {
+      "componentId": "component_d492600b",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_a08505cc",
+          "pointIds": [
+            "point_e694f9a6"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.565Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_68247149"
+          ],
+          "expression": {
+            "expression": "5.04mm",
+            "unit": "mm"
+          },
+          "id": "circle_68247149_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_68247149": {
+          "centerPointId": "point_e694f9a6",
+          "id": "circle_68247149",
+          "radius": {
+            "expression": "5.04mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_e694f9a6": {
+          "id": "point_e694f9a6",
+          "type": "point",
+          "x": {
+            "expression": "32mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "22mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_39fd322e",
+      "name": "Fastener head section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "valve_height + 7mm",
+          "parameterRefs": {
+            "valve_height": "06-flanged-valve_parameter_valve_height"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 26
+    },
+    "sketch_4c130309": {
+      "componentId": "component_23dab773",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_491d2ecc",
+          "pointIds": [
+            "point_79d5f67a"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.565Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_96b8bf5b"
+          ],
+          "expression": {
+            "expression": "2.8mm",
+            "unit": "mm"
+          },
+          "id": "circle_96b8bf5b_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_96b8bf5b": {
+          "centerPointId": "point_79d5f67a",
+          "id": "circle_96b8bf5b",
+          "radius": {
+            "expression": "2.8mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_79d5f67a": {
+          "id": "point_79d5f67a",
+          "type": "point",
+          "x": {
+            "expression": "-32mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-22mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_4c130309",
+      "name": "Fastener shank section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "(valve_height + 7mm) - (cover_bolt_length)",
+          "parameterRefs": {
+            "cover_bolt_length": "06-flanged-valve_parameter_cover_bolt_length",
+            "valve_height": "06-flanged-valve_parameter_valve_height"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 16
+    },
+    "sketch_613c0d2f": {
+      "componentId": "component_ded97e91",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_1b221f51",
+          "pointIds": [
+            "point_a8a844f0"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.565Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_34970dbd"
+          ],
+          "expression": {
+            "expression": "2.8mm",
+            "unit": "mm"
+          },
+          "id": "circle_34970dbd_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_34970dbd": {
+          "centerPointId": "point_a8a844f0",
+          "id": "circle_34970dbd",
+          "radius": {
+            "expression": "2.8mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_a8a844f0": {
+          "id": "point_a8a844f0",
+          "type": "point",
+          "x": {
+            "expression": "-32mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "22mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_613c0d2f",
+      "name": "Fastener shank section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "(valve_height + 7mm) - (cover_bolt_length)",
+          "parameterRefs": {
+            "cover_bolt_length": "06-flanged-valve_parameter_cover_bolt_length",
+            "valve_height": "06-flanged-valve_parameter_valve_height"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 28
+    },
+    "sketch_6468a532": {
+      "componentId": "component_d492600b",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_18665c98",
+          "pointIds": [
+            "point_50ae356e"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.565Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_be6ed2bb"
+          ],
+          "expression": {
+            "expression": "2.8mm",
+            "unit": "mm"
+          },
+          "id": "circle_be6ed2bb_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_be6ed2bb": {
+          "centerPointId": "point_50ae356e",
+          "id": "circle_be6ed2bb",
+          "radius": {
+            "expression": "2.8mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_50ae356e": {
+          "id": "point_50ae356e",
+          "type": "point",
+          "x": {
+            "expression": "32mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "22mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_6468a532",
+      "name": "Fastener shank section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "(valve_height + 7mm) - (cover_bolt_length)",
+          "parameterRefs": {
+            "cover_bolt_length": "06-flanged-valve_parameter_cover_bolt_length",
+            "valve_height": "06-flanged-valve_parameter_valve_height"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 24
+    },
+    "sketch_758d1670": {
+      "componentId": "component_d762f0ef",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_4fb37973",
+          "pointIds": [
+            "point_234c22d5"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_1e1e4c13",
+          "pointIds": [
+            "point_92769b7e"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.565Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_1ab32c61"
+          ],
+          "expression": {
+            "expression": "35mm",
+            "unit": "mm"
+          },
+          "id": "circle_1ab32c61_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_02ae61bd"
+          ],
+          "expression": {
+            "expression": "16mm",
+            "unit": "mm"
+          },
+          "id": "circle_02ae61bd_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_02ae61bd": {
+          "centerPointId": "point_92769b7e",
+          "id": "circle_02ae61bd",
+          "radius": {
+            "expression": "16mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_1ab32c61": {
+          "centerPointId": "point_234c22d5",
+          "id": "circle_1ab32c61",
+          "radius": {
+            "expression": "35mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_234c22d5": {
+          "id": "point_234c22d5",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "point_92769b7e": {
+          "id": "point_92769b7e",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_758d1670",
+      "name": "Gasket ring section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "valve_height",
+          "parameterRefs": {
+            "valve_height": "06-flanged-valve_parameter_valve_height"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 14
+    },
+    "sketch_879159ca": {
+      "componentId": "component_39c4bd55",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_4bf5fc3f",
+          "pointIds": [
+            "point_2488a50f"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_0a1ea3b0",
+          "pointIds": [
+            "point_0febb05e"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_3a12697b",
+          "pointIds": [
+            "point_7ec186db"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_25c1b5d9",
+          "pointIds": [
+            "point_39220e96"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.564Z",
+      "dimensions": [],
+      "entities": {
+        "point_0febb05e": {
+          "id": "point_0febb05e",
+          "type": "point",
+          "x": {
+            "expression": "32mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-22mm",
+            "unit": "mm"
+          }
+        },
+        "point_2488a50f": {
+          "id": "point_2488a50f",
+          "type": "point",
+          "x": {
+            "expression": "-32mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-22mm",
+            "unit": "mm"
+          }
+        },
+        "point_39220e96": {
+          "id": "point_39220e96",
+          "type": "point",
+          "x": {
+            "expression": "-32mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "22mm",
+            "unit": "mm"
+          }
+        },
+        "point_7ec186db": {
+          "id": "point_7ec186db",
+          "type": "point",
+          "x": {
+            "expression": "32mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "22mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_879159ca",
+      "name": "Body bolt pattern centers",
+      "plane": {
+        "plane": "XY",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 6
+    },
+    "sketch_b6c4fa93": {
+      "componentId": "component_a8654f11",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_e09cad6b",
+          "pointIds": [
+            "point_3fbec4e3"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_26c0776f",
+          "pointIds": [
+            "point_c45e4259"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_60d07f3e",
+          "pointIds": [
+            "point_429fe00c"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_90405480",
+          "pointIds": [
+            "point_67e139ae"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.564Z",
+      "dimensions": [],
+      "entities": {
+        "point_3fbec4e3": {
+          "id": "point_3fbec4e3",
+          "type": "point",
+          "x": {
+            "expression": "-32mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-22mm",
+            "unit": "mm"
+          }
+        },
+        "point_429fe00c": {
+          "id": "point_429fe00c",
+          "type": "point",
+          "x": {
+            "expression": "32mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "22mm",
+            "unit": "mm"
+          }
+        },
+        "point_67e139ae": {
+          "id": "point_67e139ae",
+          "type": "point",
+          "x": {
+            "expression": "-32mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "22mm",
+            "unit": "mm"
+          }
+        },
+        "point_c45e4259": {
+          "id": "point_c45e4259",
+          "type": "point",
+          "x": {
+            "expression": "32mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-22mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_b6c4fa93",
+      "name": "Cover bolt pattern centers",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "valve_height + 1mm",
+          "parameterRefs": {
+            "valve_height": "06-flanged-valve_parameter_valve_height"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 10
+    },
+    "sketch_bb8f6955": {
+      "componentId": "component_39c4bd55",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_b6256fbb",
+          "pointIds": [
+            "point_5047a98e"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_acf3504a",
+          "pointIds": [
+            "point_e1bd5e2a"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.564Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_50bb48f7"
+          ],
+          "expression": {
+            "expression": "46mm",
+            "unit": "mm"
+          },
+          "id": "circle_50bb48f7_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_89ba7265"
+          ],
+          "expression": {
+            "expression": "16mm",
+            "unit": "mm"
+          },
+          "id": "circle_89ba7265_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_50bb48f7": {
+          "centerPointId": "point_5047a98e",
+          "id": "circle_50bb48f7",
+          "radius": {
+            "expression": "46mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_89ba7265": {
+          "centerPointId": "point_e1bd5e2a",
+          "id": "circle_89ba7265",
+          "radius": {
+            "expression": "16mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_5047a98e": {
+          "id": "point_5047a98e",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "point_e1bd5e2a": {
+          "id": "point_e1bd5e2a",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_bb8f6955",
+      "name": "Lower flange section",
+      "plane": {
+        "plane": "XY",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 1
+    },
+    "sketch_dad45530": {
+      "componentId": "component_a8654f11",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_db3f6e66",
+          "pointIds": [
+            "point_bea9cc53"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_ef8c0544",
+          "pointIds": [
+            "point_20510018"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.564Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_168c36d2"
+          ],
+          "expression": {
+            "expression": "46mm",
+            "unit": "mm"
+          },
+          "id": "circle_168c36d2_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_c16b1959"
+          ],
+          "expression": {
+            "expression": "16mm",
+            "unit": "mm"
+          },
+          "id": "circle_c16b1959_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_168c36d2": {
+          "centerPointId": "point_bea9cc53",
+          "id": "circle_168c36d2",
+          "radius": {
+            "expression": "46mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_c16b1959": {
+          "centerPointId": "point_20510018",
+          "id": "circle_c16b1959",
+          "radius": {
+            "expression": "16mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_20510018": {
+          "id": "point_20510018",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "point_bea9cc53": {
+          "id": "point_bea9cc53",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_dad45530",
+      "name": "Cover ring section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "valve_height + 1mm",
+          "parameterRefs": {
+            "valve_height": "06-flanged-valve_parameter_valve_height"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 8
+    },
+    "sketch_e472d5d5": {
+      "componentId": "component_39c4bd55",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_5ba4a09e",
+          "pointIds": [
+            "point_31e4f7b8"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_d56094b9",
+          "pointIds": [
+            "point_d0ea2fad"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.564Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_f9ddca09"
+          ],
+          "expression": {
+            "expression": "34mm",
+            "unit": "mm"
+          },
+          "id": "circle_f9ddca09_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_a0e250a5"
+          ],
+          "expression": {
+            "expression": "16mm",
+            "unit": "mm"
+          },
+          "id": "circle_a0e250a5_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_a0e250a5": {
+          "centerPointId": "point_d0ea2fad",
+          "id": "circle_a0e250a5",
+          "radius": {
+            "expression": "16mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_f9ddca09": {
+          "centerPointId": "point_31e4f7b8",
+          "id": "circle_f9ddca09",
+          "radius": {
+            "expression": "34mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_31e4f7b8": {
+          "id": "point_31e4f7b8",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "point_d0ea2fad": {
+          "id": "point_d0ea2fad",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_e472d5d5",
+      "name": "Tubular valve wall section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "7mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 4
+    },
+    "sketch_f90de1c5": {
+      "componentId": "component_2b4777d3",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_d8dc2ad6",
+          "pointIds": [
+            "point_14d75ed8"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.565Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_cbd412e6"
+          ],
+          "expression": {
+            "expression": "2.8mm",
+            "unit": "mm"
+          },
+          "id": "circle_cbd412e6_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_cbd412e6": {
+          "centerPointId": "point_14d75ed8",
+          "id": "circle_cbd412e6",
+          "radius": {
+            "expression": "2.8mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_14d75ed8": {
+          "id": "point_14d75ed8",
+          "type": "point",
+          "x": {
+            "expression": "32mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-22mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_f90de1c5",
+      "name": "Fastener shank section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "(valve_height + 7mm) - (cover_bolt_length)",
+          "parameterRefs": {
+            "cover_bolt_length": "06-flanged-valve_parameter_cover_bolt_length",
+            "valve_height": "06-flanged-valve_parameter_valve_height"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 20
+    }
+  },
+  "timelineCursor": 31,
+  "units": "metric",
+  "unitSettings": {
+    "angle": "deg",
+    "length": "mm"
+  },
+  "updatedAt": "2026-10-07T09:40:53.565Z"
+}

@@ -1,0 +1,2218 @@
+{
+  "components": {
+    "component_06ef61ec": {
+      "id": "component_06ef61ec",
+      "name": "Mounting bolt 4"
+    },
+    "component_1c2bdcf2": {
+      "id": "component_1c2bdcf2",
+      "name": "Mounting bolt 3"
+    },
+    "component_581fe135": {
+      "id": "component_581fe135",
+      "name": "Drive shaft"
+    },
+    "component_6c8abe82": {
+      "id": "component_6c8abe82",
+      "name": "Mounting bolt 1"
+    },
+    "component_b01d466c": {
+      "id": "component_b01d466c",
+      "name": "Mounting bolt 2"
+    },
+    "component_f0bd5c3d": {
+      "id": "component_f0bd5c3d",
+      "name": "Motor flange"
+    },
+    "component_f108fb8e": {
+      "id": "component_f108fb8e",
+      "name": "Project reference"
+    }
+  },
+  "createdAt": "2026-10-07T09:40:53.558Z",
+  "displayUnits": {
+    "angle": "deg",
+    "length": "mm"
+  },
+  "features": [
+    {
+      "componentId": "component_f0bd5c3d",
+      "createdAt": "2026-10-07T09:40:53.560Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "flange_thickness",
+        "parameterRefs": {
+          "flange_thickness": "05-motor-flange_parameter_flange_thickness"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_c4aa0eea",
+      "name": "Flange blank",
+      "operation": "newBody",
+      "profileId": "sketch_05839f85:profile:p180k7o2",
+      "sketchId": "sketch_05839f85",
+      "timelineStep": 2,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_f0bd5c3d",
+      "createdAt": "2026-10-07T09:40:53.560Z",
+      "id": "05-motor-flange_fillet_1",
+      "name": "Soft perimeter",
+      "radius": {
+        "expression": "1mm",
+        "unit": "mm"
+      },
+      "targetEdgeRefs": [
+        {
+          "featureId": "feature_c4aa0eea",
+          "kind": "edge",
+          "role": "endCapPerimeter",
+          "stableHint": "extrude:feature_c4aa0eea:endCapPerimeter:all",
+          "transientId": "extrude:feature_c4aa0eea:endCapPerimeter:all"
+        }
+      ],
+      "timelineStep": 3,
+      "type": "fillet"
+    },
+    {
+      "componentId": "component_f0bd5c3d",
+      "createdAt": "2026-10-07T09:40:53.560Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "11mm",
+        "unit": "mm"
+      },
+      "id": "feature_c8f49061",
+      "name": "Bearing boss",
+      "operation": "join",
+      "profileId": "sketch_a7d2ec92:profile:pya7114",
+      "sketchId": "sketch_a7d2ec92",
+      "targetBodyIds": [
+        "body:feature_c4aa0eea"
+      ],
+      "timelineStep": 5,
+      "type": "extrude"
+    },
+    {
+      "centerPointIds": [
+        "point_28048083"
+      ],
+      "componentId": "component_f0bd5c3d",
+      "createdAt": "2026-10-07T09:40:53.560Z",
+      "depth": "throughAll",
+      "diameter": {
+        "expression": "24mm",
+        "unit": "mm"
+      },
+      "direction": "positive",
+      "id": "05-motor-flange_hole_3",
+      "name": "Bearing clearance",
+      "sketchId": "sketch_123df537",
+      "targetBodyIds": [
+        "body:feature_c4aa0eea"
+      ],
+      "timelineStep": 7,
+      "type": "hole"
+    },
+    {
+      "centerPointIds": [
+        "point_f6ec9aa5",
+        "point_40b2edb7",
+        "point_2368de40",
+        "point_75b0a92c"
+      ],
+      "componentId": "component_f0bd5c3d",
+      "createdAt": "2026-10-07T09:40:53.560Z",
+      "depth": "throughAll",
+      "diameter": {
+        "expression": "6mm",
+        "unit": "mm"
+      },
+      "direction": "positive",
+      "id": "05-motor-flange_hole_4",
+      "name": "Flange mounting holes",
+      "sketchId": "sketch_cdfa1264",
+      "targetBodyIds": [
+        "body:feature_c4aa0eea"
+      ],
+      "timelineStep": 9,
+      "type": "hole"
+    },
+    {
+      "componentId": "component_f0bd5c3d",
+      "createdAt": "2026-10-07T09:40:53.562Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "20mm",
+        "unit": "mm"
+      },
+      "id": "feature_6988fd8a",
+      "name": "Left relief",
+      "operation": "cut",
+      "profileId": "sketch_81c4815f:profile:p4wiyda",
+      "sketchId": "sketch_81c4815f",
+      "targetBodyIds": [
+        "body:feature_c4aa0eea"
+      ],
+      "termination": {
+        "type": "throughAll"
+      },
+      "timelineStep": 11,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_f0bd5c3d",
+      "createdAt": "2026-10-07T09:40:53.564Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "20mm",
+        "unit": "mm"
+      },
+      "id": "feature_ca34d358",
+      "name": "Right relief",
+      "operation": "cut",
+      "profileId": "sketch_95493132:profile:plsf20z",
+      "sketchId": "sketch_95493132",
+      "targetBodyIds": [
+        "body:feature_c4aa0eea"
+      ],
+      "termination": {
+        "type": "throughAll"
+      },
+      "timelineStep": 13,
+      "type": "extrude"
+    },
+    {
+      "angle": {
+        "expression": "360deg",
+        "unit": "deg"
+      },
+      "axis": {
+        "axis": "Z",
+        "type": "origin"
+      },
+      "componentId": "component_581fe135",
+      "createdAt": "2026-10-07T09:40:53.564Z",
+      "id": "05-motor-flange_revolve_7",
+      "name": "Turned shaft",
+      "operation": "newBody",
+      "profileId": "sketch_1f5e700f:profile:p18nxzkx",
+      "sketchId": "sketch_1f5e700f",
+      "timelineStep": 15,
+      "type": "revolve"
+    },
+    {
+      "componentId": "component_6c8abe82",
+      "createdAt": "2026-10-07T09:40:53.564Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "mounting_bolt_length + 1mm",
+        "parameterRefs": {
+          "mounting_bolt_length": "05-motor-flange_parameter_mounting_bolt_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_5f1ca370",
+      "name": "Fastener shank",
+      "operation": "newBody",
+      "profileId": "sketch_51773c64:profile:prwmxky",
+      "sketchId": "sketch_51773c64",
+      "timelineStep": 17,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_6c8abe82",
+      "createdAt": "2026-10-07T09:40:53.564Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "4mm",
+        "unit": "mm"
+      },
+      "id": "feature_82bdf3bc",
+      "name": "Fastener head",
+      "operation": "join",
+      "profileId": "sketch_b79a5f96:profile:p2jg3ho",
+      "sketchId": "sketch_b79a5f96",
+      "targetBodyIds": [
+        "body:feature_5f1ca370"
+      ],
+      "timelineStep": 19,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_b01d466c",
+      "createdAt": "2026-10-07T09:40:53.564Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "mounting_bolt_length + 1mm",
+        "parameterRefs": {
+          "mounting_bolt_length": "05-motor-flange_parameter_mounting_bolt_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_b2ee0d17",
+      "name": "Fastener shank",
+      "operation": "newBody",
+      "profileId": "sketch_70982992:profile:p1meoya6",
+      "sketchId": "sketch_70982992",
+      "timelineStep": 21,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_b01d466c",
+      "createdAt": "2026-10-07T09:40:53.564Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "4mm",
+        "unit": "mm"
+      },
+      "id": "feature_dd08b3aa",
+      "name": "Fastener head",
+      "operation": "join",
+      "profileId": "sketch_82653084:profile:p1b8g65t",
+      "sketchId": "sketch_82653084",
+      "targetBodyIds": [
+        "body:feature_b2ee0d17"
+      ],
+      "timelineStep": 23,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_1c2bdcf2",
+      "createdAt": "2026-10-07T09:40:53.564Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "mounting_bolt_length + 1mm",
+        "parameterRefs": {
+          "mounting_bolt_length": "05-motor-flange_parameter_mounting_bolt_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_ef07acb9",
+      "name": "Fastener shank",
+      "operation": "newBody",
+      "profileId": "sketch_220844d6:profile:p1rbz8t3",
+      "sketchId": "sketch_220844d6",
+      "timelineStep": 25,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_1c2bdcf2",
+      "createdAt": "2026-10-07T09:40:53.564Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "4mm",
+        "unit": "mm"
+      },
+      "id": "feature_45bed57c",
+      "name": "Fastener head",
+      "operation": "join",
+      "profileId": "sketch_f6baede6:profile:p1fvvmxo",
+      "sketchId": "sketch_f6baede6",
+      "targetBodyIds": [
+        "body:feature_ef07acb9"
+      ],
+      "timelineStep": 27,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_06ef61ec",
+      "createdAt": "2026-10-07T09:40:53.564Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "mounting_bolt_length + 1mm",
+        "parameterRefs": {
+          "mounting_bolt_length": "05-motor-flange_parameter_mounting_bolt_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_ba88ef9e",
+      "name": "Fastener shank",
+      "operation": "newBody",
+      "profileId": "sketch_11a3c250:profile:p1973ps4",
+      "sketchId": "sketch_11a3c250",
+      "timelineStep": 29,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_06ef61ec",
+      "createdAt": "2026-10-07T09:40:53.564Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "4mm",
+        "unit": "mm"
+      },
+      "id": "feature_c9673d6e",
+      "name": "Fastener head",
+      "operation": "join",
+      "profileId": "sketch_d5421d06:profile:p9nwlnt",
+      "sketchId": "sketch_d5421d06",
+      "targetBodyIds": [
+        "body:feature_ba88ef9e"
+      ],
+      "timelineStep": 31,
+      "type": "extrude"
+    }
+  ],
+  "id": "doc_abfff818",
+  "metadata": {
+    "example": {
+      "difficulty": "Intermediate",
+      "edited": 10,
+      "order": 5,
+      "original": 8,
+      "parts": [
+        {
+          "bodyId": "body:feature_c4aa0eea",
+          "componentId": "component_f0bd5c3d",
+          "name": "Motor flange"
+        },
+        {
+          "bodyId": "body:05-motor-flange_revolve_7",
+          "componentId": "component_581fe135",
+          "name": "Drive shaft"
+        },
+        {
+          "bodyId": "body:feature_5f1ca370",
+          "componentId": "component_6c8abe82",
+          "name": "Mounting bolt 1"
+        },
+        {
+          "bodyId": "body:feature_b2ee0d17",
+          "componentId": "component_b01d466c",
+          "name": "Mounting bolt 2"
+        },
+        {
+          "bodyId": "body:feature_ef07acb9",
+          "componentId": "component_1c2bdcf2",
+          "name": "Mounting bolt 3"
+        },
+        {
+          "bodyId": "body:feature_ba88ef9e",
+          "componentId": "component_06ef61ec",
+          "name": "Mounting bolt 4"
+        }
+      ],
+      "primaryParameter": "flange_thickness",
+      "scope": "Static components authored in shared coordinates; no joints or assembly transforms.",
+      "slug": "05-motor-flange",
+      "summary": "Six parts: a filleted flange with a raised bearing boss, relief slots, shaft and four headed fasteners."
+    }
+  },
+  "name": "Motor mounting flange",
+  "parameters": {
+    "flange_thickness": {
+      "description": "Primary demonstration parameter; change this to inspect the rebuild.",
+      "expression": "8mm",
+      "group": "Design dimensions",
+      "id": "05-motor-flange_parameter_flange_thickness",
+      "name": "flange_thickness",
+      "unit": "mm",
+      "value": 8
+    },
+    "mounting_bolt_length": {
+      "description": "Shared fastener shank length; head remains seated at the mating face.",
+      "expression": "14mm",
+      "group": "Design dimensions",
+      "id": "05-motor-flange_parameter_mounting_bolt_length",
+      "name": "mounting_bolt_length",
+      "unit": "mm",
+      "value": 14
+    }
+  },
+  "rootComponentId": "component_f108fb8e",
+  "schemaVersion": 13,
+  "sketches": {
+    "sketch_05839f85": {
+      "componentId": "component_f0bd5c3d",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_fb057fd8",
+          "pointIds": [
+            "point_67f28fe6"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_170bbef2",
+          "pointIds": [
+            "point_dbb3d8e9"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_3f35066c",
+          "pointIds": [
+            "point_d409b148"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_b4a93b54",
+          "pointIds": [
+            "point_7d538c49"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_15098135",
+          "pointIds": [
+            "point_6bd656a2"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_a71e2ebb",
+          "pointIds": [
+            "point_ef00e6ad"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_d5873d74",
+          "pointIds": [
+            "point_3be58bd1"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_3a544842",
+          "pointIds": [
+            "point_ee867d67"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_9e963872",
+          "pointIds": [
+            "point_3b7db6e8"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_1ca01df7",
+          "pointIds": [
+            "point_c4422616"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_48161d82",
+          "pointIds": [
+            "point_b7825246"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_437a2eac",
+          "pointIds": [
+            "point_18daf199"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.558Z",
+      "dimensions": [],
+      "entities": {
+        "arc_0b7a5c97": {
+          "centerPointId": "point_3b7db6e8",
+          "clockwise": false,
+          "endPointId": "point_d409b148",
+          "id": "arc_0b7a5c97",
+          "startPointId": "point_dbb3d8e9",
+          "type": "arc"
+        },
+        "arc_692f8040": {
+          "centerPointId": "point_b7825246",
+          "clockwise": false,
+          "endPointId": "point_3be58bd1",
+          "id": "arc_692f8040",
+          "startPointId": "point_ef00e6ad",
+          "type": "arc"
+        },
+        "arc_89309024": {
+          "centerPointId": "point_18daf199",
+          "clockwise": false,
+          "endPointId": "point_67f28fe6",
+          "id": "arc_89309024",
+          "startPointId": "point_ee867d67",
+          "type": "arc"
+        },
+        "arc_93a03798": {
+          "centerPointId": "point_c4422616",
+          "clockwise": false,
+          "endPointId": "point_6bd656a2",
+          "id": "arc_93a03798",
+          "startPointId": "point_7d538c49",
+          "type": "arc"
+        },
+        "line_1d411e51": {
+          "endPointId": "point_ef00e6ad",
+          "id": "line_1d411e51",
+          "startPointId": "point_6bd656a2",
+          "type": "line"
+        },
+        "line_2491256e": {
+          "endPointId": "point_ee867d67",
+          "id": "line_2491256e",
+          "startPointId": "point_3be58bd1",
+          "type": "line"
+        },
+        "line_4f88f712": {
+          "endPointId": "point_7d538c49",
+          "id": "line_4f88f712",
+          "startPointId": "point_d409b148",
+          "type": "line"
+        },
+        "line_bf6fca38": {
+          "endPointId": "point_dbb3d8e9",
+          "id": "line_bf6fca38",
+          "startPointId": "point_67f28fe6",
+          "type": "line"
+        },
+        "point_18daf199": {
+          "id": "point_18daf199",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((100mm) / 2) - (8mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((84mm) / 2) - (8mm))",
+            "unit": "mm"
+          }
+        },
+        "point_3b7db6e8": {
+          "id": "point_3b7db6e8",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((100mm) / 2) - (8mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((84mm) / 2) - (8mm))",
+            "unit": "mm"
+          }
+        },
+        "point_3be58bd1": {
+          "id": "point_3be58bd1",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((100mm) / 2)",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((84mm) / 2) - (8mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_67f28fe6": {
+          "id": "point_67f28fe6",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((100mm) / 2) - (8mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((84mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_6bd656a2": {
+          "id": "point_6bd656a2",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((100mm) / 2) - (8mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((84mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_7d538c49": {
+          "id": "point_7d538c49",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - ((100mm) / 2))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((84mm) / 2) - (8mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_b7825246": {
+          "id": "point_b7825246",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((100mm) / 2) - (8mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((84mm) / 2) - (8mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_c4422616": {
+          "id": "point_c4422616",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((100mm) / 2) - (8mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((84mm) / 2) - (8mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_d409b148": {
+          "id": "point_d409b148",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - ((100mm) / 2))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((84mm) / 2) - (8mm))",
+            "unit": "mm"
+          }
+        },
+        "point_dbb3d8e9": {
+          "id": "point_dbb3d8e9",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((100mm) / 2) - (8mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((84mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_ee867d67": {
+          "id": "point_ee867d67",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((100mm) / 2)",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((84mm) / 2) - (8mm))",
+            "unit": "mm"
+          }
+        },
+        "point_ef00e6ad": {
+          "id": "point_ef00e6ad",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((100mm) / 2) - (8mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((84mm) / 2))",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_05839f85",
+      "name": "Flange blank outline",
+      "plane": {
+        "plane": "XY",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 1
+    },
+    "sketch_11a3c250": {
+      "componentId": "component_06ef61ec",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_a47f0548",
+          "pointIds": [
+            "point_0ab5668d"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.564Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_9df69d48"
+          ],
+          "expression": {
+            "expression": "2.5mm",
+            "unit": "mm"
+          },
+          "id": "circle_9df69d48_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_9df69d48": {
+          "centerPointId": "point_0ab5668d",
+          "id": "circle_9df69d48",
+          "radius": {
+            "expression": "2.5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_0ab5668d": {
+          "id": "point_0ab5668d",
+          "type": "point",
+          "x": {
+            "expression": "-40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "32mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_11a3c250",
+      "name": "Fastener shank section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "(flange_thickness) - (mounting_bolt_length)",
+          "parameterRefs": {
+            "flange_thickness": "05-motor-flange_parameter_flange_thickness",
+            "mounting_bolt_length": "05-motor-flange_parameter_mounting_bolt_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 28
+    },
+    "sketch_123df537": {
+      "componentId": "component_f0bd5c3d",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_f333d52e",
+          "pointIds": [
+            "point_28048083"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.560Z",
+      "dimensions": [],
+      "entities": {
+        "point_28048083": {
+          "id": "point_28048083",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_123df537",
+      "name": "Bearing clearance centers",
+      "plane": {
+        "plane": "XY",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 6
+    },
+    "sketch_1f5e700f": {
+      "componentId": "component_581fe135",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_fa68c6b8",
+          "pointIds": [
+            "point_dbda7b0d"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_85313ed5",
+          "pointIds": [
+            "point_84809f8b"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_8a8a01bf",
+          "pointIds": [
+            "point_b6e1b571"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_340f3953",
+          "pointIds": [
+            "point_0565d7f0"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.564Z",
+      "dimensions": [],
+      "entities": {
+        "line_56ea8bf5": {
+          "endPointId": "point_0565d7f0",
+          "id": "line_56ea8bf5",
+          "startPointId": "point_b6e1b571",
+          "type": "line"
+        },
+        "line_a297a7b0": {
+          "endPointId": "point_dbda7b0d",
+          "id": "line_a297a7b0",
+          "startPointId": "point_0565d7f0",
+          "type": "line"
+        },
+        "line_c8af0cbf": {
+          "endPointId": "point_b6e1b571",
+          "id": "line_c8af0cbf",
+          "startPointId": "point_84809f8b",
+          "type": "line"
+        },
+        "line_ec5e638e": {
+          "endPointId": "point_84809f8b",
+          "id": "line_ec5e638e",
+          "startPointId": "point_dbda7b0d",
+          "type": "line"
+        },
+        "point_0565d7f0": {
+          "id": "point_0565d7f0",
+          "type": "point",
+          "x": {
+            "expression": "((9mm) / 2) + ((9mm) / 2)",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "((-8mm) + ((48mm) / 2)) + ((0mm) - ((48mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_84809f8b": {
+          "id": "point_84809f8b",
+          "type": "point",
+          "x": {
+            "expression": "((9mm) / 2) + ((0mm) - ((9mm) / 2))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "((-8mm) + ((48mm) / 2)) + ((48mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_b6e1b571": {
+          "id": "point_b6e1b571",
+          "type": "point",
+          "x": {
+            "expression": "((9mm) / 2) + ((0mm) - ((9mm) / 2))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "((-8mm) + ((48mm) / 2)) + ((0mm) - ((48mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_dbda7b0d": {
+          "id": "point_dbda7b0d",
+          "type": "point",
+          "x": {
+            "expression": "((9mm) / 2) + ((9mm) / 2)",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "((-8mm) + ((48mm) / 2)) + ((48mm) / 2)",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_1f5e700f",
+      "name": "Turned shaft lathe section",
+      "plane": {
+        "plane": "XZ",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 14
+    },
+    "sketch_220844d6": {
+      "componentId": "component_1c2bdcf2",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_ae750cb2",
+          "pointIds": [
+            "point_5af86f61"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.564Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_38e4eff8"
+          ],
+          "expression": {
+            "expression": "2.5mm",
+            "unit": "mm"
+          },
+          "id": "circle_38e4eff8_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_38e4eff8": {
+          "centerPointId": "point_5af86f61",
+          "id": "circle_38e4eff8",
+          "radius": {
+            "expression": "2.5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_5af86f61": {
+          "id": "point_5af86f61",
+          "type": "point",
+          "x": {
+            "expression": "40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "32mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_220844d6",
+      "name": "Fastener shank section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "(flange_thickness) - (mounting_bolt_length)",
+          "parameterRefs": {
+            "flange_thickness": "05-motor-flange_parameter_flange_thickness",
+            "mounting_bolt_length": "05-motor-flange_parameter_mounting_bolt_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 24
+    },
+    "sketch_51773c64": {
+      "componentId": "component_6c8abe82",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_a077d6ce",
+          "pointIds": [
+            "point_e9b8f10e"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.564Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_b13b45dc"
+          ],
+          "expression": {
+            "expression": "2.5mm",
+            "unit": "mm"
+          },
+          "id": "circle_b13b45dc_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_b13b45dc": {
+          "centerPointId": "point_e9b8f10e",
+          "id": "circle_b13b45dc",
+          "radius": {
+            "expression": "2.5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_e9b8f10e": {
+          "id": "point_e9b8f10e",
+          "type": "point",
+          "x": {
+            "expression": "-40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-32mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_51773c64",
+      "name": "Fastener shank section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "(flange_thickness) - (mounting_bolt_length)",
+          "parameterRefs": {
+            "flange_thickness": "05-motor-flange_parameter_flange_thickness",
+            "mounting_bolt_length": "05-motor-flange_parameter_mounting_bolt_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 16
+    },
+    "sketch_70982992": {
+      "componentId": "component_b01d466c",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_6dd29b35",
+          "pointIds": [
+            "point_36595e9b"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.564Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_448ea761"
+          ],
+          "expression": {
+            "expression": "2.5mm",
+            "unit": "mm"
+          },
+          "id": "circle_448ea761_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_448ea761": {
+          "centerPointId": "point_36595e9b",
+          "id": "circle_448ea761",
+          "radius": {
+            "expression": "2.5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_36595e9b": {
+          "id": "point_36595e9b",
+          "type": "point",
+          "x": {
+            "expression": "40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-32mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_70982992",
+      "name": "Fastener shank section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "(flange_thickness) - (mounting_bolt_length)",
+          "parameterRefs": {
+            "flange_thickness": "05-motor-flange_parameter_flange_thickness",
+            "mounting_bolt_length": "05-motor-flange_parameter_mounting_bolt_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 20
+    },
+    "sketch_81c4815f": {
+      "componentId": "component_f0bd5c3d",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_38b92723",
+          "pointIds": [
+            "point_b8102e47"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_bad88a6d",
+          "pointIds": [
+            "point_0876cac7"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_ec7cc8e1",
+          "pointIds": [
+            "point_cda02f02"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_33ce6df6",
+          "pointIds": [
+            "point_8a8749e5"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_2af2b74e",
+          "pointIds": [
+            "point_2a66145f"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_aa573a04",
+          "pointIds": [
+            "point_16753123"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_6424e915",
+          "pointIds": [
+            "point_40f164ad"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_2545885a",
+          "pointIds": [
+            "point_9db24942"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_298281c9",
+          "pointIds": [
+            "point_11bfafc7"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_ba0341bc",
+          "pointIds": [
+            "point_e8526f32"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_0ed69d59",
+          "pointIds": [
+            "point_8ec5f4c5"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_f92eac24",
+          "pointIds": [
+            "point_c324517f"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.560Z",
+      "dimensions": [],
+      "entities": {
+        "arc_73446a33": {
+          "centerPointId": "point_e8526f32",
+          "clockwise": false,
+          "endPointId": "point_2a66145f",
+          "id": "arc_73446a33",
+          "startPointId": "point_8a8749e5",
+          "type": "arc"
+        },
+        "arc_9f8bd462": {
+          "centerPointId": "point_c324517f",
+          "clockwise": false,
+          "endPointId": "point_b8102e47",
+          "id": "arc_9f8bd462",
+          "startPointId": "point_9db24942",
+          "type": "arc"
+        },
+        "arc_a4070719": {
+          "centerPointId": "point_11bfafc7",
+          "clockwise": false,
+          "endPointId": "point_cda02f02",
+          "id": "arc_a4070719",
+          "startPointId": "point_0876cac7",
+          "type": "arc"
+        },
+        "arc_e1f60c0d": {
+          "centerPointId": "point_8ec5f4c5",
+          "clockwise": false,
+          "endPointId": "point_40f164ad",
+          "id": "arc_e1f60c0d",
+          "startPointId": "point_16753123",
+          "type": "arc"
+        },
+        "line_5b17e9ac": {
+          "endPointId": "point_16753123",
+          "id": "line_5b17e9ac",
+          "startPointId": "point_2a66145f",
+          "type": "line"
+        },
+        "line_5ecc2487": {
+          "endPointId": "point_8a8749e5",
+          "id": "line_5ecc2487",
+          "startPointId": "point_cda02f02",
+          "type": "line"
+        },
+        "line_ca0f02cd": {
+          "endPointId": "point_0876cac7",
+          "id": "line_ca0f02cd",
+          "startPointId": "point_b8102e47",
+          "type": "line"
+        },
+        "line_e235359d": {
+          "endPointId": "point_9db24942",
+          "id": "line_e235359d",
+          "startPointId": "point_40f164ad",
+          "type": "line"
+        },
+        "point_0876cac7": {
+          "id": "point_0876cac7",
+          "type": "point",
+          "x": {
+            "expression": "(-32mm) + ((0mm) - (((8mm) / 2) - (3mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((24mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_11bfafc7": {
+          "id": "point_11bfafc7",
+          "type": "point",
+          "x": {
+            "expression": "(-32mm) + ((0mm) - (((8mm) / 2) - (3mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((24mm) / 2) - (3mm))",
+            "unit": "mm"
+          }
+        },
+        "point_16753123": {
+          "id": "point_16753123",
+          "type": "point",
+          "x": {
+            "expression": "(-32mm) + (((8mm) / 2) - (3mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((24mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_2a66145f": {
+          "id": "point_2a66145f",
+          "type": "point",
+          "x": {
+            "expression": "(-32mm) + ((0mm) - (((8mm) / 2) - (3mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((24mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_40f164ad": {
+          "id": "point_40f164ad",
+          "type": "point",
+          "x": {
+            "expression": "(-32mm) + ((8mm) / 2)",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((24mm) / 2) - (3mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_8a8749e5": {
+          "id": "point_8a8749e5",
+          "type": "point",
+          "x": {
+            "expression": "(-32mm) + ((0mm) - ((8mm) / 2))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((24mm) / 2) - (3mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_8ec5f4c5": {
+          "id": "point_8ec5f4c5",
+          "type": "point",
+          "x": {
+            "expression": "(-32mm) + (((8mm) / 2) - (3mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((24mm) / 2) - (3mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_9db24942": {
+          "id": "point_9db24942",
+          "type": "point",
+          "x": {
+            "expression": "(-32mm) + ((8mm) / 2)",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((24mm) / 2) - (3mm))",
+            "unit": "mm"
+          }
+        },
+        "point_b8102e47": {
+          "id": "point_b8102e47",
+          "type": "point",
+          "x": {
+            "expression": "(-32mm) + (((8mm) / 2) - (3mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((24mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_c324517f": {
+          "id": "point_c324517f",
+          "type": "point",
+          "x": {
+            "expression": "(-32mm) + (((8mm) / 2) - (3mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((24mm) / 2) - (3mm))",
+            "unit": "mm"
+          }
+        },
+        "point_cda02f02": {
+          "id": "point_cda02f02",
+          "type": "point",
+          "x": {
+            "expression": "(-32mm) + ((0mm) - ((8mm) / 2))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((24mm) / 2) - (3mm))",
+            "unit": "mm"
+          }
+        },
+        "point_e8526f32": {
+          "id": "point_e8526f32",
+          "type": "point",
+          "x": {
+            "expression": "(-32mm) + ((0mm) - (((8mm) / 2) - (3mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((24mm) / 2) - (3mm)))",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_81c4815f",
+      "name": "Left relief outline",
+      "plane": {
+        "plane": "XY",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 10
+    },
+    "sketch_82653084": {
+      "componentId": "component_b01d466c",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_a2206ba8",
+          "pointIds": [
+            "point_57dfff4b"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.564Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_7b52baa1"
+          ],
+          "expression": {
+            "expression": "4.5mm",
+            "unit": "mm"
+          },
+          "id": "circle_7b52baa1_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_7b52baa1": {
+          "centerPointId": "point_57dfff4b",
+          "id": "circle_7b52baa1",
+          "radius": {
+            "expression": "4.5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_57dfff4b": {
+          "id": "point_57dfff4b",
+          "type": "point",
+          "x": {
+            "expression": "40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-32mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_82653084",
+      "name": "Fastener head section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "flange_thickness",
+          "parameterRefs": {
+            "flange_thickness": "05-motor-flange_parameter_flange_thickness"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 22
+    },
+    "sketch_95493132": {
+      "componentId": "component_f0bd5c3d",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_503ba47c",
+          "pointIds": [
+            "point_c20fff63"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_064c05e5",
+          "pointIds": [
+            "point_8853b02a"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_2fe66933",
+          "pointIds": [
+            "point_64adbc6d"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_fd733691",
+          "pointIds": [
+            "point_4993305b"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_9e18f5d0",
+          "pointIds": [
+            "point_8b19e312"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_a05143a6",
+          "pointIds": [
+            "point_9901a043"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_fa84b768",
+          "pointIds": [
+            "point_fc85bd94"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_4ed93656",
+          "pointIds": [
+            "point_8f4f3792"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_fd83741a",
+          "pointIds": [
+            "point_9b2e50dc"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_a7634824",
+          "pointIds": [
+            "point_52bd0a67"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_76a6fab8",
+          "pointIds": [
+            "point_67554383"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_9e93a95d",
+          "pointIds": [
+            "point_a05f1b04"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.562Z",
+      "dimensions": [],
+      "entities": {
+        "arc_5857d3d2": {
+          "centerPointId": "point_9b2e50dc",
+          "clockwise": false,
+          "endPointId": "point_64adbc6d",
+          "id": "arc_5857d3d2",
+          "startPointId": "point_8853b02a",
+          "type": "arc"
+        },
+        "arc_d3cb079a": {
+          "centerPointId": "point_a05f1b04",
+          "clockwise": false,
+          "endPointId": "point_c20fff63",
+          "id": "arc_d3cb079a",
+          "startPointId": "point_8f4f3792",
+          "type": "arc"
+        },
+        "arc_db6b281e": {
+          "centerPointId": "point_52bd0a67",
+          "clockwise": false,
+          "endPointId": "point_8b19e312",
+          "id": "arc_db6b281e",
+          "startPointId": "point_4993305b",
+          "type": "arc"
+        },
+        "arc_f82a94bb": {
+          "centerPointId": "point_67554383",
+          "clockwise": false,
+          "endPointId": "point_fc85bd94",
+          "id": "arc_f82a94bb",
+          "startPointId": "point_9901a043",
+          "type": "arc"
+        },
+        "line_03f8fe40": {
+          "endPointId": "point_8853b02a",
+          "id": "line_03f8fe40",
+          "startPointId": "point_c20fff63",
+          "type": "line"
+        },
+        "line_4440b473": {
+          "endPointId": "point_8f4f3792",
+          "id": "line_4440b473",
+          "startPointId": "point_fc85bd94",
+          "type": "line"
+        },
+        "line_c281ea29": {
+          "endPointId": "point_4993305b",
+          "id": "line_c281ea29",
+          "startPointId": "point_64adbc6d",
+          "type": "line"
+        },
+        "line_e8e0c20c": {
+          "endPointId": "point_9901a043",
+          "id": "line_e8e0c20c",
+          "startPointId": "point_8b19e312",
+          "type": "line"
+        },
+        "point_4993305b": {
+          "id": "point_4993305b",
+          "type": "point",
+          "x": {
+            "expression": "(32mm) + ((0mm) - ((8mm) / 2))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((24mm) / 2) - (3mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_52bd0a67": {
+          "id": "point_52bd0a67",
+          "type": "point",
+          "x": {
+            "expression": "(32mm) + ((0mm) - (((8mm) / 2) - (3mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((24mm) / 2) - (3mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_64adbc6d": {
+          "id": "point_64adbc6d",
+          "type": "point",
+          "x": {
+            "expression": "(32mm) + ((0mm) - ((8mm) / 2))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((24mm) / 2) - (3mm))",
+            "unit": "mm"
+          }
+        },
+        "point_67554383": {
+          "id": "point_67554383",
+          "type": "point",
+          "x": {
+            "expression": "(32mm) + (((8mm) / 2) - (3mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((24mm) / 2) - (3mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_8853b02a": {
+          "id": "point_8853b02a",
+          "type": "point",
+          "x": {
+            "expression": "(32mm) + ((0mm) - (((8mm) / 2) - (3mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((24mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_8b19e312": {
+          "id": "point_8b19e312",
+          "type": "point",
+          "x": {
+            "expression": "(32mm) + ((0mm) - (((8mm) / 2) - (3mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((24mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_8f4f3792": {
+          "id": "point_8f4f3792",
+          "type": "point",
+          "x": {
+            "expression": "(32mm) + ((8mm) / 2)",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((24mm) / 2) - (3mm))",
+            "unit": "mm"
+          }
+        },
+        "point_9901a043": {
+          "id": "point_9901a043",
+          "type": "point",
+          "x": {
+            "expression": "(32mm) + (((8mm) / 2) - (3mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((24mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_9b2e50dc": {
+          "id": "point_9b2e50dc",
+          "type": "point",
+          "x": {
+            "expression": "(32mm) + ((0mm) - (((8mm) / 2) - (3mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((24mm) / 2) - (3mm))",
+            "unit": "mm"
+          }
+        },
+        "point_a05f1b04": {
+          "id": "point_a05f1b04",
+          "type": "point",
+          "x": {
+            "expression": "(32mm) + (((8mm) / 2) - (3mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((24mm) / 2) - (3mm))",
+            "unit": "mm"
+          }
+        },
+        "point_c20fff63": {
+          "id": "point_c20fff63",
+          "type": "point",
+          "x": {
+            "expression": "(32mm) + (((8mm) / 2) - (3mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((24mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_fc85bd94": {
+          "id": "point_fc85bd94",
+          "type": "point",
+          "x": {
+            "expression": "(32mm) + ((8mm) / 2)",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((24mm) / 2) - (3mm)))",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_95493132",
+      "name": "Right relief outline",
+      "plane": {
+        "plane": "XY",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 12
+    },
+    "sketch_a7d2ec92": {
+      "componentId": "component_f0bd5c3d",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_3895c9b4",
+          "pointIds": [
+            "point_e9132464"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.560Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_9c6228cc"
+          ],
+          "expression": {
+            "expression": "22mm",
+            "unit": "mm"
+          },
+          "id": "circle_9c6228cc_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_9c6228cc": {
+          "centerPointId": "point_e9132464",
+          "id": "circle_9c6228cc",
+          "radius": {
+            "expression": "22mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_e9132464": {
+          "id": "point_e9132464",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_a7d2ec92",
+      "name": "Bearing boss section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "flange_thickness - 1mm",
+          "parameterRefs": {
+            "flange_thickness": "05-motor-flange_parameter_flange_thickness"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 4
+    },
+    "sketch_b79a5f96": {
+      "componentId": "component_6c8abe82",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_2d6e1c83",
+          "pointIds": [
+            "point_b1ef67c6"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.564Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_09ab416c"
+          ],
+          "expression": {
+            "expression": "4.5mm",
+            "unit": "mm"
+          },
+          "id": "circle_09ab416c_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_09ab416c": {
+          "centerPointId": "point_b1ef67c6",
+          "id": "circle_09ab416c",
+          "radius": {
+            "expression": "4.5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_b1ef67c6": {
+          "id": "point_b1ef67c6",
+          "type": "point",
+          "x": {
+            "expression": "-40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-32mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_b79a5f96",
+      "name": "Fastener head section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "flange_thickness",
+          "parameterRefs": {
+            "flange_thickness": "05-motor-flange_parameter_flange_thickness"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 18
+    },
+    "sketch_cdfa1264": {
+      "componentId": "component_f0bd5c3d",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_6c2c42e3",
+          "pointIds": [
+            "point_f6ec9aa5"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_75f7bc01",
+          "pointIds": [
+            "point_40b2edb7"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_628999a1",
+          "pointIds": [
+            "point_2368de40"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_c09759a1",
+          "pointIds": [
+            "point_75b0a92c"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.560Z",
+      "dimensions": [],
+      "entities": {
+        "point_2368de40": {
+          "id": "point_2368de40",
+          "type": "point",
+          "x": {
+            "expression": "40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "32mm",
+            "unit": "mm"
+          }
+        },
+        "point_40b2edb7": {
+          "id": "point_40b2edb7",
+          "type": "point",
+          "x": {
+            "expression": "40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-32mm",
+            "unit": "mm"
+          }
+        },
+        "point_75b0a92c": {
+          "id": "point_75b0a92c",
+          "type": "point",
+          "x": {
+            "expression": "-40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "32mm",
+            "unit": "mm"
+          }
+        },
+        "point_f6ec9aa5": {
+          "id": "point_f6ec9aa5",
+          "type": "point",
+          "x": {
+            "expression": "-40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-32mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_cdfa1264",
+      "name": "Flange mounting holes centers",
+      "plane": {
+        "plane": "XY",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 8
+    },
+    "sketch_d5421d06": {
+      "componentId": "component_06ef61ec",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_bf3b8732",
+          "pointIds": [
+            "point_f0155f0c"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.564Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_3639745f"
+          ],
+          "expression": {
+            "expression": "4.5mm",
+            "unit": "mm"
+          },
+          "id": "circle_3639745f_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_3639745f": {
+          "centerPointId": "point_f0155f0c",
+          "id": "circle_3639745f",
+          "radius": {
+            "expression": "4.5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_f0155f0c": {
+          "id": "point_f0155f0c",
+          "type": "point",
+          "x": {
+            "expression": "-40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "32mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_d5421d06",
+      "name": "Fastener head section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "flange_thickness",
+          "parameterRefs": {
+            "flange_thickness": "05-motor-flange_parameter_flange_thickness"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 30
+    },
+    "sketch_f6baede6": {
+      "componentId": "component_1c2bdcf2",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_2f712f25",
+          "pointIds": [
+            "point_8d636756"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.564Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_51f6f94a"
+          ],
+          "expression": {
+            "expression": "4.5mm",
+            "unit": "mm"
+          },
+          "id": "circle_51f6f94a_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_51f6f94a": {
+          "centerPointId": "point_8d636756",
+          "id": "circle_51f6f94a",
+          "radius": {
+            "expression": "4.5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_8d636756": {
+          "id": "point_8d636756",
+          "type": "point",
+          "x": {
+            "expression": "40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "32mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_f6baede6",
+      "name": "Fastener head section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "flange_thickness",
+          "parameterRefs": {
+            "flange_thickness": "05-motor-flange_parameter_flange_thickness"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 26
+    }
+  },
+  "timelineCursor": 31,
+  "units": "metric",
+  "unitSettings": {
+    "angle": "deg",
+    "length": "mm"
+  },
+  "updatedAt": "2026-10-07T09:40:53.564Z"
+}

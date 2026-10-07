@@ -1,0 +1,624 @@
+{
+  "components": {
+    "component_06544412": {
+      "id": "component_06544412",
+      "name": "Cable collar"
+    },
+    "component_ca6d7752": {
+      "id": "component_ca6d7752",
+      "name": "Project reference"
+    },
+    "component_f742246f": {
+      "id": "component_f742246f",
+      "name": "Mounting foot"
+    }
+  },
+  "createdAt": "2026-10-07T09:40:53.536Z",
+  "displayUnits": {
+    "angle": "deg",
+    "length": "mm"
+  },
+  "features": [
+    {
+      "componentId": "component_f742246f",
+      "createdAt": "2026-10-07T09:40:53.550Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "foot_thickness",
+        "parameterRefs": {
+          "foot_thickness": "01-cable-guide_parameter_foot_thickness"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_76c9ff2e",
+      "name": "Rounded foot",
+      "operation": "newBody",
+      "profileId": "sketch_e40c40cc:profile:p1k7g1o0",
+      "sketchId": "sketch_e40c40cc",
+      "timelineStep": 2,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_f742246f",
+      "createdAt": "2026-10-07T09:40:53.550Z",
+      "id": "01-cable-guide_fillet_1",
+      "name": "Soft perimeter",
+      "radius": {
+        "expression": "0.6mm",
+        "unit": "mm"
+      },
+      "targetEdgeRefs": [
+        {
+          "featureId": "feature_76c9ff2e",
+          "kind": "edge",
+          "role": "endCapPerimeter",
+          "stableHint": "extrude:feature_76c9ff2e:endCapPerimeter:all",
+          "transientId": "extrude:feature_76c9ff2e:endCapPerimeter:all"
+        }
+      ],
+      "timelineStep": 3,
+      "type": "fillet"
+    },
+    {
+      "centerPointIds": [
+        "point_fcbd83f5",
+        "point_710b79fd"
+      ],
+      "componentId": "component_f742246f",
+      "createdAt": "2026-10-07T09:40:53.550Z",
+      "depth": "throughAll",
+      "diameter": {
+        "expression": "4.4mm",
+        "unit": "mm"
+      },
+      "direction": "positive",
+      "id": "01-cable-guide_hole_2",
+      "name": "Two mounting holes",
+      "sketchId": "sketch_17c1e300",
+      "targetBodyIds": [
+        "body:feature_76c9ff2e"
+      ],
+      "timelineStep": 5,
+      "type": "hole"
+    },
+    {
+      "componentId": "component_06544412",
+      "createdAt": "2026-10-07T09:40:53.550Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "10mm",
+        "unit": "mm"
+      },
+      "id": "feature_c95783a8",
+      "name": "Guide ring",
+      "operation": "newBody",
+      "profileId": "sketch_95e22142:profile:p1ulzyb7",
+      "sketchId": "sketch_95e22142",
+      "timelineStep": 7,
+      "type": "extrude"
+    }
+  ],
+  "id": "doc_897305bb",
+  "metadata": {
+    "example": {
+      "difficulty": "Beginner",
+      "edited": 6,
+      "order": 1,
+      "original": 5,
+      "parts": [
+        {
+          "bodyId": "body:feature_76c9ff2e",
+          "componentId": "component_f742246f",
+          "name": "Mounting foot"
+        },
+        {
+          "bodyId": "body:feature_c95783a8",
+          "componentId": "component_06544412",
+          "name": "Cable collar"
+        }
+      ],
+      "primaryParameter": "foot_thickness",
+      "scope": "Static components authored in shared coordinates; no joints or assembly transforms.",
+      "slug": "01-cable-guide",
+      "summary": "Two-piece rounded foot and annular cable guide with mounting holes."
+    }
+  },
+  "name": "Cable guide mount",
+  "parameters": {
+    "foot_thickness": {
+      "description": "Primary demonstration parameter; change this to inspect the rebuild.",
+      "expression": "5mm",
+      "group": "Design dimensions",
+      "id": "01-cable-guide_parameter_foot_thickness",
+      "name": "foot_thickness",
+      "unit": "mm",
+      "value": 5
+    }
+  },
+  "rootComponentId": "component_ca6d7752",
+  "schemaVersion": 13,
+  "sketches": {
+    "sketch_17c1e300": {
+      "componentId": "component_f742246f",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_f0d426bc",
+          "pointIds": [
+            "point_fcbd83f5"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_78829d45",
+          "pointIds": [
+            "point_710b79fd"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.550Z",
+      "dimensions": [],
+      "entities": {
+        "point_710b79fd": {
+          "id": "point_710b79fd",
+          "type": "point",
+          "x": {
+            "expression": "22mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "point_fcbd83f5": {
+          "id": "point_fcbd83f5",
+          "type": "point",
+          "x": {
+            "expression": "-22mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_17c1e300",
+      "name": "Two mounting holes centers",
+      "plane": {
+        "plane": "XY",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 4
+    },
+    "sketch_95e22142": {
+      "componentId": "component_06544412",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_587f7ffc",
+          "pointIds": [
+            "point_fa38cfaf"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_c3546a83",
+          "pointIds": [
+            "point_aee009c3"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.550Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_c2fdebd5"
+          ],
+          "expression": {
+            "expression": "14mm",
+            "unit": "mm"
+          },
+          "id": "circle_c2fdebd5_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_b6e9e3e2"
+          ],
+          "expression": {
+            "expression": "8mm",
+            "unit": "mm"
+          },
+          "id": "circle_b6e9e3e2_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_b6e9e3e2": {
+          "centerPointId": "point_aee009c3",
+          "id": "circle_b6e9e3e2",
+          "radius": {
+            "expression": "8mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_c2fdebd5": {
+          "centerPointId": "point_fa38cfaf",
+          "id": "circle_c2fdebd5",
+          "radius": {
+            "expression": "14mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_aee009c3": {
+          "id": "point_aee009c3",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "point_fa38cfaf": {
+          "id": "point_fa38cfaf",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_95e22142",
+      "name": "Guide ring section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "foot_thickness",
+          "parameterRefs": {
+            "foot_thickness": "01-cable-guide_parameter_foot_thickness"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 6
+    },
+    "sketch_e40c40cc": {
+      "componentId": "component_f742246f",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_ceac1796",
+          "pointIds": [
+            "point_62a54107"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_1fd4b2f2",
+          "pointIds": [
+            "point_6139146c"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_16c73a54",
+          "pointIds": [
+            "point_8654c85f"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_015bdf8f",
+          "pointIds": [
+            "point_2dab3965"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_da72f5cd",
+          "pointIds": [
+            "point_cf1e62ee"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_54510e09",
+          "pointIds": [
+            "point_de4bf5be"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_6a86ad3d",
+          "pointIds": [
+            "point_8b7c3024"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_ab0eecca",
+          "pointIds": [
+            "point_3fe5c8cc"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_67c9c374",
+          "pointIds": [
+            "point_7cca5c8c"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_1724d16f",
+          "pointIds": [
+            "point_ef606eed"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_537e5807",
+          "pointIds": [
+            "point_631b1eb0"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_05cd7ab6",
+          "pointIds": [
+            "point_d6a519f1"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.537Z",
+      "dimensions": [],
+      "entities": {
+        "arc_667a42d7": {
+          "centerPointId": "point_7cca5c8c",
+          "clockwise": false,
+          "endPointId": "point_8654c85f",
+          "id": "arc_667a42d7",
+          "startPointId": "point_6139146c",
+          "type": "arc"
+        },
+        "arc_8a15f391": {
+          "centerPointId": "point_ef606eed",
+          "clockwise": false,
+          "endPointId": "point_cf1e62ee",
+          "id": "arc_8a15f391",
+          "startPointId": "point_2dab3965",
+          "type": "arc"
+        },
+        "arc_922bc73d": {
+          "centerPointId": "point_631b1eb0",
+          "clockwise": false,
+          "endPointId": "point_8b7c3024",
+          "id": "arc_922bc73d",
+          "startPointId": "point_de4bf5be",
+          "type": "arc"
+        },
+        "arc_d5ff51f0": {
+          "centerPointId": "point_d6a519f1",
+          "clockwise": false,
+          "endPointId": "point_62a54107",
+          "id": "arc_d5ff51f0",
+          "startPointId": "point_3fe5c8cc",
+          "type": "arc"
+        },
+        "line_9c2913f2": {
+          "endPointId": "point_2dab3965",
+          "id": "line_9c2913f2",
+          "startPointId": "point_8654c85f",
+          "type": "line"
+        },
+        "line_a9493a86": {
+          "endPointId": "point_de4bf5be",
+          "id": "line_a9493a86",
+          "startPointId": "point_cf1e62ee",
+          "type": "line"
+        },
+        "line_c86c90ad": {
+          "endPointId": "point_6139146c",
+          "id": "line_c86c90ad",
+          "startPointId": "point_62a54107",
+          "type": "line"
+        },
+        "line_cd80e533": {
+          "endPointId": "point_3fe5c8cc",
+          "id": "line_cd80e533",
+          "startPointId": "point_8b7c3024",
+          "type": "line"
+        },
+        "point_2dab3965": {
+          "id": "point_2dab3965",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - ((58mm) / 2))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((28mm) / 2) - (4mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_3fe5c8cc": {
+          "id": "point_3fe5c8cc",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((58mm) / 2)",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((28mm) / 2) - (4mm))",
+            "unit": "mm"
+          }
+        },
+        "point_6139146c": {
+          "id": "point_6139146c",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((58mm) / 2) - (4mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((28mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_62a54107": {
+          "id": "point_62a54107",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((58mm) / 2) - (4mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((28mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_631b1eb0": {
+          "id": "point_631b1eb0",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((58mm) / 2) - (4mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((28mm) / 2) - (4mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_7cca5c8c": {
+          "id": "point_7cca5c8c",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((58mm) / 2) - (4mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((28mm) / 2) - (4mm))",
+            "unit": "mm"
+          }
+        },
+        "point_8654c85f": {
+          "id": "point_8654c85f",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - ((58mm) / 2))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((28mm) / 2) - (4mm))",
+            "unit": "mm"
+          }
+        },
+        "point_8b7c3024": {
+          "id": "point_8b7c3024",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((58mm) / 2)",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((28mm) / 2) - (4mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_cf1e62ee": {
+          "id": "point_cf1e62ee",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((58mm) / 2) - (4mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((28mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_d6a519f1": {
+          "id": "point_d6a519f1",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((58mm) / 2) - (4mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((28mm) / 2) - (4mm))",
+            "unit": "mm"
+          }
+        },
+        "point_de4bf5be": {
+          "id": "point_de4bf5be",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((58mm) / 2) - (4mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((28mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_ef606eed": {
+          "id": "point_ef606eed",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((58mm) / 2) - (4mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((28mm) / 2) - (4mm)))",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_e40c40cc",
+      "name": "Rounded foot outline",
+      "plane": {
+        "plane": "XY",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 1
+    }
+  },
+  "timelineCursor": 7,
+  "units": "metric",
+  "unitSettings": {
+    "angle": "deg",
+    "length": "mm"
+  },
+  "updatedAt": "2026-10-07T09:40:53.550Z"
+}

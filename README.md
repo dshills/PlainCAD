@@ -16,6 +16,11 @@ flange, fillet/chamfer treatments, a recessed chamber, bearing bore, counterbore
 mounting and cover holes, and relief slots. [Open the editable example](docs/examples/orbit-drive-housing.pcaddoc)
 with **File → Open**, or drop the project file onto the workspace.
 
+Explore the [ten-project example gallery](docs/examples/README.md), from a two-part
+cable guide to a 40-part rotary fixture, with editable files, native PNG previews,
+[geometry validation](docs/examples/VALIDATION.json), and a
+[workflow usability audit](docs/examples/WORKFLOW_AUDIT.md).
+
 ## Features
 
 - One local project file containing components, sketches, parameters, and a feature timeline.

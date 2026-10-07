@@ -1,0 +1,3827 @@
+{
+  "components": {
+    "component_00eebc54": {
+      "id": "component_00eebc54",
+      "name": "Spacer 2"
+    },
+    "component_0fe83aa2": {
+      "id": "component_0fe83aa2",
+      "name": "Column 4"
+    },
+    "component_1d7e8810": {
+      "id": "component_1d7e8810",
+      "name": "Bearing 1"
+    },
+    "component_2d506db6": {
+      "id": "component_2d506db6",
+      "name": "Cassette base"
+    },
+    "component_39573b22": {
+      "id": "component_39573b22",
+      "name": "Cover screw 1"
+    },
+    "component_485fbda7": {
+      "id": "component_485fbda7",
+      "name": "Pulley 2"
+    },
+    "component_4d2bf7b9": {
+      "id": "component_4d2bf7b9",
+      "name": "Column 2"
+    },
+    "component_601970e5": {
+      "id": "component_601970e5",
+      "name": "Cover screw 4"
+    },
+    "component_737fc3a2": {
+      "id": "component_737fc3a2",
+      "name": "Shaft 2"
+    },
+    "component_89d4f69a": {
+      "id": "component_89d4f69a",
+      "name": "Shaft 1"
+    },
+    "component_ba697845": {
+      "id": "component_ba697845",
+      "name": "Cover screw 2"
+    },
+    "component_cdbfc507": {
+      "id": "component_cdbfc507",
+      "name": "Bearing 2"
+    },
+    "component_d8a2ab09": {
+      "id": "component_d8a2ab09",
+      "name": "Project reference"
+    },
+    "component_e1a196e5": {
+      "id": "component_e1a196e5",
+      "name": "Spacer 1"
+    },
+    "component_e2f1441c": {
+      "id": "component_e2f1441c",
+      "name": "Pulley 1"
+    },
+    "component_e4be21c5": {
+      "id": "component_e4be21c5",
+      "name": "Column 3"
+    },
+    "component_e6cbe8b1": {
+      "id": "component_e6cbe8b1",
+      "name": "Column 1"
+    },
+    "component_ecba45e0": {
+      "id": "component_ecba45e0",
+      "name": "Windowed cover"
+    },
+    "component_f3fa9b7a": {
+      "id": "component_f3fa9b7a",
+      "name": "Cover screw 3"
+    }
+  },
+  "createdAt": "2026-10-07T09:40:53.579Z",
+  "displayUnits": {
+    "angle": "deg",
+    "length": "mm"
+  },
+  "features": [
+    {
+      "componentId": "component_2d506db6",
+      "createdAt": "2026-10-07T09:40:53.581Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "8mm",
+        "unit": "mm"
+      },
+      "id": "feature_15070c5a",
+      "name": "Base blank",
+      "operation": "newBody",
+      "profileId": "sketch_c2365be0:profile:pf8qha0",
+      "sketchId": "sketch_c2365be0",
+      "timelineStep": 2,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_2d506db6",
+      "createdAt": "2026-10-07T09:40:53.581Z",
+      "id": "08-belt-drive_fillet_1",
+      "name": "Soft perimeter",
+      "radius": {
+        "expression": "0.8mm",
+        "unit": "mm"
+      },
+      "targetEdgeRefs": [
+        {
+          "featureId": "feature_15070c5a",
+          "kind": "edge",
+          "role": "endCapPerimeter",
+          "stableHint": "extrude:feature_15070c5a:endCapPerimeter:all",
+          "transientId": "extrude:feature_15070c5a:endCapPerimeter:all"
+        }
+      ],
+      "timelineStep": 3,
+      "type": "fillet"
+    },
+    {
+      "centerPointIds": [
+        "point_6a975ae0",
+        "point_778b7fe0",
+        "point_ff55ce5b",
+        "point_0122cf73"
+      ],
+      "componentId": "component_2d506db6",
+      "createdAt": "2026-10-07T09:40:53.581Z",
+      "depth": "throughAll",
+      "diameter": {
+        "expression": "5.4mm",
+        "unit": "mm"
+      },
+      "direction": "positive",
+      "id": "08-belt-drive_hole_2",
+      "name": "Base post pattern",
+      "sketchId": "sketch_81655891",
+      "targetBodyIds": [
+        "body:feature_15070c5a"
+      ],
+      "timelineStep": 5,
+      "type": "hole"
+    },
+    {
+      "centerPointIds": [
+        "point_f115e311",
+        "point_c38be97e"
+      ],
+      "componentId": "component_2d506db6",
+      "createdAt": "2026-10-07T09:40:53.581Z",
+      "depth": "throughAll",
+      "diameter": {
+        "expression": "16.5mm",
+        "unit": "mm"
+      },
+      "direction": "positive",
+      "id": "08-belt-drive_hole_3",
+      "name": "Shaft clearance",
+      "sketchId": "sketch_ec3c4ae1",
+      "targetBodyIds": [
+        "body:feature_15070c5a"
+      ],
+      "timelineStep": 7,
+      "type": "hole"
+    },
+    {
+      "componentId": "component_ecba45e0",
+      "createdAt": "2026-10-07T09:40:53.582Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "6mm",
+        "unit": "mm"
+      },
+      "id": "feature_1f0b4663",
+      "name": "Cover blank",
+      "operation": "newBody",
+      "profileId": "sketch_43d68bfb:profile:plpj6ds",
+      "sketchId": "sketch_43d68bfb",
+      "timelineStep": 9,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_ecba45e0",
+      "createdAt": "2026-10-07T09:40:53.584Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "6mm",
+        "unit": "mm"
+      },
+      "id": "feature_d2549f01",
+      "name": "Inspection window",
+      "operation": "cut",
+      "profileId": "sketch_2cdfc597:profile:p6go0g7",
+      "sketchId": "sketch_2cdfc597",
+      "targetBodyIds": [
+        "body:feature_1f0b4663"
+      ],
+      "termination": {
+        "type": "throughAll"
+      },
+      "timelineStep": 11,
+      "type": "extrude"
+    },
+    {
+      "centerPointIds": [
+        "point_ffb8f0b2",
+        "point_d6ed0c69",
+        "point_b11dcad9",
+        "point_1cb4e42f"
+      ],
+      "componentId": "component_ecba45e0",
+      "createdAt": "2026-10-07T09:40:53.584Z",
+      "depth": "throughAll",
+      "diameter": {
+        "expression": "5.4mm",
+        "unit": "mm"
+      },
+      "direction": "positive",
+      "id": "08-belt-drive_hole_6",
+      "name": "Cover post pattern",
+      "sketchId": "sketch_79e310bd",
+      "targetBodyIds": [
+        "body:feature_1f0b4663"
+      ],
+      "timelineStep": 13,
+      "type": "hole"
+    },
+    {
+      "componentId": "component_e2f1441c",
+      "createdAt": "2026-10-07T09:40:53.584Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "pulley_height",
+        "parameterRefs": {
+          "pulley_height": "08-belt-drive_parameter_pulley_height"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_d1c85979",
+      "name": "Pulley rim",
+      "operation": "newBody",
+      "profileId": "sketch_4c74a061:profile:pu2yrl3",
+      "sketchId": "sketch_4c74a061",
+      "timelineStep": 15,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_e2f1441c",
+      "createdAt": "2026-10-07T09:40:53.584Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "6mm",
+        "unit": "mm"
+      },
+      "id": "feature_70737b8e",
+      "name": "Pulley hub",
+      "operation": "join",
+      "profileId": "sketch_1e128042:profile:p1362beb",
+      "sketchId": "sketch_1e128042",
+      "targetBodyIds": [
+        "body:feature_d1c85979"
+      ],
+      "timelineStep": 17,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_1d7e8810",
+      "createdAt": "2026-10-07T09:40:53.584Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "8mm",
+        "unit": "mm"
+      },
+      "id": "feature_8609d7ad",
+      "name": "Bearing sleeve",
+      "operation": "newBody",
+      "profileId": "sketch_59362634:profile:p15vw6hm",
+      "sketchId": "sketch_59362634",
+      "timelineStep": 19,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_89d4f69a",
+      "createdAt": "2026-10-07T09:40:53.584Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "62mm",
+        "unit": "mm"
+      },
+      "id": "feature_0c073f97",
+      "name": "Drive shaft",
+      "operation": "newBody",
+      "profileId": "sketch_bbd44eea:profile:p1oe9ehn",
+      "sketchId": "sketch_bbd44eea",
+      "timelineStep": 21,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_e1a196e5",
+      "createdAt": "2026-10-07T09:40:53.584Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "5mm",
+        "unit": "mm"
+      },
+      "id": "feature_1d752c5b",
+      "name": "Shaft spacer",
+      "operation": "newBody",
+      "profileId": "sketch_b87753e1:profile:p1nzopsd",
+      "sketchId": "sketch_b87753e1",
+      "timelineStep": 23,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_485fbda7",
+      "createdAt": "2026-10-07T09:40:53.584Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "pulley_height",
+        "parameterRefs": {
+          "pulley_height": "08-belt-drive_parameter_pulley_height"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_25fd3a8e",
+      "name": "Pulley rim",
+      "operation": "newBody",
+      "profileId": "sketch_f1a47941:profile:p1tka49c",
+      "sketchId": "sketch_f1a47941",
+      "timelineStep": 25,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_485fbda7",
+      "createdAt": "2026-10-07T09:40:53.584Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "6mm",
+        "unit": "mm"
+      },
+      "id": "feature_d284a650",
+      "name": "Pulley hub",
+      "operation": "join",
+      "profileId": "sketch_f93d8008:profile:p1pmgvsx",
+      "sketchId": "sketch_f93d8008",
+      "targetBodyIds": [
+        "body:feature_25fd3a8e"
+      ],
+      "timelineStep": 27,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_cdbfc507",
+      "createdAt": "2026-10-07T09:40:53.584Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "8mm",
+        "unit": "mm"
+      },
+      "id": "feature_d626db80",
+      "name": "Bearing sleeve",
+      "operation": "newBody",
+      "profileId": "sketch_443fc813:profile:pbyp3u0",
+      "sketchId": "sketch_443fc813",
+      "timelineStep": 29,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_737fc3a2",
+      "createdAt": "2026-10-07T09:40:53.584Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "62mm",
+        "unit": "mm"
+      },
+      "id": "feature_8f86793a",
+      "name": "Drive shaft",
+      "operation": "newBody",
+      "profileId": "sketch_4885a0d4:profile:pvd0gmv",
+      "sketchId": "sketch_4885a0d4",
+      "timelineStep": 31,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_00eebc54",
+      "createdAt": "2026-10-07T09:40:53.584Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "5mm",
+        "unit": "mm"
+      },
+      "id": "feature_df19f290",
+      "name": "Shaft spacer",
+      "operation": "newBody",
+      "profileId": "sketch_ffebeb4f:profile:psqifoi",
+      "sketchId": "sketch_ffebeb4f",
+      "timelineStep": 33,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_e6cbe8b1",
+      "createdAt": "2026-10-07T09:40:53.585Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "48mm",
+        "unit": "mm"
+      },
+      "id": "feature_27338f67",
+      "name": "Hollow column",
+      "operation": "newBody",
+      "profileId": "sketch_0a280007:profile:pbov8dg",
+      "sketchId": "sketch_0a280007",
+      "timelineStep": 35,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_39573b22",
+      "createdAt": "2026-10-07T09:40:53.585Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "cover_screw_length + 1mm",
+        "parameterRefs": {
+          "cover_screw_length": "08-belt-drive_parameter_cover_screw_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_72294718",
+      "name": "Fastener shank",
+      "operation": "newBody",
+      "profileId": "sketch_a5c41cf7:profile:px0vhd",
+      "sketchId": "sketch_a5c41cf7",
+      "timelineStep": 37,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_39573b22",
+      "createdAt": "2026-10-07T09:40:53.585Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "4mm",
+        "unit": "mm"
+      },
+      "id": "feature_e736888a",
+      "name": "Fastener head",
+      "operation": "join",
+      "profileId": "sketch_2b09cbfe:profile:p1orpnqz",
+      "sketchId": "sketch_2b09cbfe",
+      "targetBodyIds": [
+        "body:feature_72294718"
+      ],
+      "timelineStep": 39,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_4d2bf7b9",
+      "createdAt": "2026-10-07T09:40:53.585Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "48mm",
+        "unit": "mm"
+      },
+      "id": "feature_de126b76",
+      "name": "Hollow column",
+      "operation": "newBody",
+      "profileId": "sketch_6fde8299:profile:p1s0i82d",
+      "sketchId": "sketch_6fde8299",
+      "timelineStep": 41,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_ba697845",
+      "createdAt": "2026-10-07T09:40:53.585Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "cover_screw_length + 1mm",
+        "parameterRefs": {
+          "cover_screw_length": "08-belt-drive_parameter_cover_screw_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_3961bea7",
+      "name": "Fastener shank",
+      "operation": "newBody",
+      "profileId": "sketch_ea41b9ab:profile:p1ri87xt",
+      "sketchId": "sketch_ea41b9ab",
+      "timelineStep": 43,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_ba697845",
+      "createdAt": "2026-10-07T09:40:53.585Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "4mm",
+        "unit": "mm"
+      },
+      "id": "feature_ac9c25ac",
+      "name": "Fastener head",
+      "operation": "join",
+      "profileId": "sketch_cf2ddff9:profile:pfrfk40",
+      "sketchId": "sketch_cf2ddff9",
+      "targetBodyIds": [
+        "body:feature_3961bea7"
+      ],
+      "timelineStep": 45,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_e4be21c5",
+      "createdAt": "2026-10-07T09:40:53.585Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "48mm",
+        "unit": "mm"
+      },
+      "id": "feature_9a2e83cc",
+      "name": "Hollow column",
+      "operation": "newBody",
+      "profileId": "sketch_d8b78025:profile:pjqzr2i",
+      "sketchId": "sketch_d8b78025",
+      "timelineStep": 47,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_f3fa9b7a",
+      "createdAt": "2026-10-07T09:40:53.585Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "cover_screw_length + 1mm",
+        "parameterRefs": {
+          "cover_screw_length": "08-belt-drive_parameter_cover_screw_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_e4e1e2dc",
+      "name": "Fastener shank",
+      "operation": "newBody",
+      "profileId": "sketch_84206d35:profile:pn1975f",
+      "sketchId": "sketch_84206d35",
+      "timelineStep": 49,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_f3fa9b7a",
+      "createdAt": "2026-10-07T09:40:53.585Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "4mm",
+        "unit": "mm"
+      },
+      "id": "feature_d152ad27",
+      "name": "Fastener head",
+      "operation": "join",
+      "profileId": "sketch_bf3dc216:profile:p4o0ptm",
+      "sketchId": "sketch_bf3dc216",
+      "targetBodyIds": [
+        "body:feature_e4e1e2dc"
+      ],
+      "timelineStep": 51,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_0fe83aa2",
+      "createdAt": "2026-10-07T09:40:53.585Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "48mm",
+        "unit": "mm"
+      },
+      "id": "feature_743dc3ac",
+      "name": "Hollow column",
+      "operation": "newBody",
+      "profileId": "sketch_2e3fa34b:profile:pajnpyp",
+      "sketchId": "sketch_2e3fa34b",
+      "timelineStep": 53,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_601970e5",
+      "createdAt": "2026-10-07T09:40:53.585Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "cover_screw_length + 1mm",
+        "parameterRefs": {
+          "cover_screw_length": "08-belt-drive_parameter_cover_screw_length"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_ad8dea86",
+      "name": "Fastener shank",
+      "operation": "newBody",
+      "profileId": "sketch_581fee73:profile:p1o2846v",
+      "sketchId": "sketch_581fee73",
+      "timelineStep": 55,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_601970e5",
+      "createdAt": "2026-10-07T09:40:53.585Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "4mm",
+        "unit": "mm"
+      },
+      "id": "feature_b53e2755",
+      "name": "Fastener head",
+      "operation": "join",
+      "profileId": "sketch_4d4cf057:profile:p1iuf9k1",
+      "sketchId": "sketch_4d4cf057",
+      "targetBodyIds": [
+        "body:feature_ad8dea86"
+      ],
+      "timelineStep": 57,
+      "type": "extrude"
+    }
+  ],
+  "id": "doc_10443454",
+  "metadata": {
+    "example": {
+      "difficulty": "Advanced",
+      "edited": 12,
+      "order": 8,
+      "original": 10,
+      "parts": [
+        {
+          "bodyId": "body:feature_15070c5a",
+          "componentId": "component_2d506db6",
+          "name": "Cassette base"
+        },
+        {
+          "bodyId": "body:feature_1f0b4663",
+          "componentId": "component_ecba45e0",
+          "name": "Windowed cover"
+        },
+        {
+          "bodyId": "body:feature_d1c85979",
+          "componentId": "component_e2f1441c",
+          "name": "Pulley 1"
+        },
+        {
+          "bodyId": "body:feature_8609d7ad",
+          "componentId": "component_1d7e8810",
+          "name": "Bearing 1"
+        },
+        {
+          "bodyId": "body:feature_0c073f97",
+          "componentId": "component_89d4f69a",
+          "name": "Shaft 1"
+        },
+        {
+          "bodyId": "body:feature_1d752c5b",
+          "componentId": "component_e1a196e5",
+          "name": "Spacer 1"
+        },
+        {
+          "bodyId": "body:feature_25fd3a8e",
+          "componentId": "component_485fbda7",
+          "name": "Pulley 2"
+        },
+        {
+          "bodyId": "body:feature_d626db80",
+          "componentId": "component_cdbfc507",
+          "name": "Bearing 2"
+        },
+        {
+          "bodyId": "body:feature_8f86793a",
+          "componentId": "component_737fc3a2",
+          "name": "Shaft 2"
+        },
+        {
+          "bodyId": "body:feature_df19f290",
+          "componentId": "component_00eebc54",
+          "name": "Spacer 2"
+        },
+        {
+          "bodyId": "body:feature_27338f67",
+          "componentId": "component_e6cbe8b1",
+          "name": "Column 1"
+        },
+        {
+          "bodyId": "body:feature_72294718",
+          "componentId": "component_39573b22",
+          "name": "Cover screw 1"
+        },
+        {
+          "bodyId": "body:feature_de126b76",
+          "componentId": "component_4d2bf7b9",
+          "name": "Column 2"
+        },
+        {
+          "bodyId": "body:feature_3961bea7",
+          "componentId": "component_ba697845",
+          "name": "Cover screw 2"
+        },
+        {
+          "bodyId": "body:feature_9a2e83cc",
+          "componentId": "component_e4be21c5",
+          "name": "Column 3"
+        },
+        {
+          "bodyId": "body:feature_e4e1e2dc",
+          "componentId": "component_f3fa9b7a",
+          "name": "Cover screw 3"
+        },
+        {
+          "bodyId": "body:feature_743dc3ac",
+          "componentId": "component_0fe83aa2",
+          "name": "Column 4"
+        },
+        {
+          "bodyId": "body:feature_ad8dea86",
+          "componentId": "component_601970e5",
+          "name": "Cover screw 4"
+        }
+      ],
+      "primaryParameter": "pulley_height",
+      "scope": "Static components authored in shared coordinates; no joints or assembly transforms.",
+      "slug": "08-belt-drive",
+      "summary": "Eighteen parts: windowed cover, stepped pulleys, bearings, shafts, spacers, columns and fasteners. Belt geometry and motion are not modeled."
+    }
+  },
+  "name": "Twin-pulley drive cassette",
+  "parameters": {
+    "cover_screw_length": {
+      "description": "Shared fastener shank length; head remains seated at the mating face.",
+      "expression": "12mm",
+      "group": "Design dimensions",
+      "id": "08-belt-drive_parameter_cover_screw_length",
+      "name": "cover_screw_length",
+      "unit": "mm",
+      "value": 12
+    },
+    "pulley_height": {
+      "description": "Primary demonstration parameter; change this to inspect the rebuild.",
+      "expression": "10mm",
+      "group": "Design dimensions",
+      "id": "08-belt-drive_parameter_pulley_height",
+      "name": "pulley_height",
+      "unit": "mm",
+      "value": 10
+    }
+  },
+  "rootComponentId": "component_d8a2ab09",
+  "schemaVersion": 13,
+  "sketches": {
+    "sketch_0a280007": {
+      "componentId": "component_e6cbe8b1",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_575158bf",
+          "pointIds": [
+            "point_51b43106"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_9958ff4e",
+          "pointIds": [
+            "point_c5951968"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.584Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_1b9343c3"
+          ],
+          "expression": {
+            "expression": "6mm",
+            "unit": "mm"
+          },
+          "id": "circle_1b9343c3_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_099b8b7b"
+          ],
+          "expression": {
+            "expression": "2.7mm",
+            "unit": "mm"
+          },
+          "id": "circle_099b8b7b_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_099b8b7b": {
+          "centerPointId": "point_c5951968",
+          "id": "circle_099b8b7b",
+          "radius": {
+            "expression": "2.7mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_1b9343c3": {
+          "centerPointId": "point_51b43106",
+          "id": "circle_1b9343c3",
+          "radius": {
+            "expression": "6mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_51b43106": {
+          "id": "point_51b43106",
+          "type": "point",
+          "x": {
+            "expression": "-65mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-35mm",
+            "unit": "mm"
+          }
+        },
+        "point_c5951968": {
+          "id": "point_c5951968",
+          "type": "point",
+          "x": {
+            "expression": "-65mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-35mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_0a280007",
+      "name": "Hollow column section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "8mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 34
+    },
+    "sketch_1e128042": {
+      "componentId": "component_e2f1441c",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_8d36e5d3",
+          "pointIds": [
+            "point_4dec6e74"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_627c0bba",
+          "pointIds": [
+            "point_204cc60b"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.584Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_137d8306"
+          ],
+          "expression": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "id": "circle_137d8306_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_65884623"
+          ],
+          "expression": {
+            "expression": "8mm",
+            "unit": "mm"
+          },
+          "id": "circle_65884623_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_137d8306": {
+          "centerPointId": "point_4dec6e74",
+          "id": "circle_137d8306",
+          "radius": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_65884623": {
+          "centerPointId": "point_204cc60b",
+          "id": "circle_65884623",
+          "radius": {
+            "expression": "8mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_204cc60b": {
+          "id": "point_204cc60b",
+          "type": "point",
+          "x": {
+            "expression": "-40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "point_4dec6e74": {
+          "id": "point_4dec6e74",
+          "type": "point",
+          "x": {
+            "expression": "-40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_1e128042",
+      "name": "Pulley hub section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "pulley_height + 15mm",
+          "parameterRefs": {
+            "pulley_height": "08-belt-drive_parameter_pulley_height"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 16
+    },
+    "sketch_2b09cbfe": {
+      "componentId": "component_39573b22",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_f2f76699",
+          "pointIds": [
+            "point_e34a0354"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.585Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_c592391c"
+          ],
+          "expression": {
+            "expression": "4.5mm",
+            "unit": "mm"
+          },
+          "id": "circle_c592391c_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_c592391c": {
+          "centerPointId": "point_e34a0354",
+          "id": "circle_c592391c",
+          "radius": {
+            "expression": "4.5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_e34a0354": {
+          "id": "point_e34a0354",
+          "type": "point",
+          "x": {
+            "expression": "-65mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-35mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_2b09cbfe",
+      "name": "Fastener head section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "62mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 38
+    },
+    "sketch_2cdfc597": {
+      "componentId": "component_ecba45e0",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_6e601863",
+          "pointIds": [
+            "point_98fbc3c0"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_c5a9f1e7",
+          "pointIds": [
+            "point_df5154c6"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_aee673a3",
+          "pointIds": [
+            "point_cfd30ffd"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_104d2dca",
+          "pointIds": [
+            "point_7b06ac50"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_fb685f6d",
+          "pointIds": [
+            "point_96bbe784"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_43a29ad9",
+          "pointIds": [
+            "point_62129da8"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_498977af",
+          "pointIds": [
+            "point_c492cc07"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_3cc687e4",
+          "pointIds": [
+            "point_863d260b"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_5ca43671",
+          "pointIds": [
+            "point_0949fb23"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_6ddab948",
+          "pointIds": [
+            "point_8305b471"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_86d8dd3a",
+          "pointIds": [
+            "point_97b69b0d"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_15d174c4",
+          "pointIds": [
+            "point_d110aaa4"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.582Z",
+      "dimensions": [],
+      "entities": {
+        "arc_ae0fa296": {
+          "centerPointId": "point_d110aaa4",
+          "clockwise": false,
+          "endPointId": "point_98fbc3c0",
+          "id": "arc_ae0fa296",
+          "startPointId": "point_863d260b",
+          "type": "arc"
+        },
+        "arc_b5ba6eb5": {
+          "centerPointId": "point_8305b471",
+          "clockwise": false,
+          "endPointId": "point_96bbe784",
+          "id": "arc_b5ba6eb5",
+          "startPointId": "point_7b06ac50",
+          "type": "arc"
+        },
+        "arc_d0b6b64b": {
+          "centerPointId": "point_97b69b0d",
+          "clockwise": false,
+          "endPointId": "point_c492cc07",
+          "id": "arc_d0b6b64b",
+          "startPointId": "point_62129da8",
+          "type": "arc"
+        },
+        "arc_dfe87c9c": {
+          "centerPointId": "point_0949fb23",
+          "clockwise": false,
+          "endPointId": "point_cfd30ffd",
+          "id": "arc_dfe87c9c",
+          "startPointId": "point_df5154c6",
+          "type": "arc"
+        },
+        "line_15853431": {
+          "endPointId": "point_863d260b",
+          "id": "line_15853431",
+          "startPointId": "point_c492cc07",
+          "type": "line"
+        },
+        "line_380ac1b2": {
+          "endPointId": "point_62129da8",
+          "id": "line_380ac1b2",
+          "startPointId": "point_96bbe784",
+          "type": "line"
+        },
+        "line_75b3d481": {
+          "endPointId": "point_7b06ac50",
+          "id": "line_75b3d481",
+          "startPointId": "point_cfd30ffd",
+          "type": "line"
+        },
+        "line_a4e6e76e": {
+          "endPointId": "point_df5154c6",
+          "id": "line_a4e6e76e",
+          "startPointId": "point_98fbc3c0",
+          "type": "line"
+        },
+        "point_0949fb23": {
+          "id": "point_0949fb23",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((110mm) / 2) - (10mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((26mm) / 2) - (10mm))",
+            "unit": "mm"
+          }
+        },
+        "point_62129da8": {
+          "id": "point_62129da8",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((110mm) / 2) - (10mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((26mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_7b06ac50": {
+          "id": "point_7b06ac50",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - ((110mm) / 2))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((26mm) / 2) - (10mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_8305b471": {
+          "id": "point_8305b471",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((110mm) / 2) - (10mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((26mm) / 2) - (10mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_863d260b": {
+          "id": "point_863d260b",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((110mm) / 2)",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((26mm) / 2) - (10mm))",
+            "unit": "mm"
+          }
+        },
+        "point_96bbe784": {
+          "id": "point_96bbe784",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((110mm) / 2) - (10mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((26mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_97b69b0d": {
+          "id": "point_97b69b0d",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((110mm) / 2) - (10mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((26mm) / 2) - (10mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_98fbc3c0": {
+          "id": "point_98fbc3c0",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((110mm) / 2) - (10mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((26mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_c492cc07": {
+          "id": "point_c492cc07",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((110mm) / 2)",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((26mm) / 2) - (10mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_cfd30ffd": {
+          "id": "point_cfd30ffd",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - ((110mm) / 2))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((26mm) / 2) - (10mm))",
+            "unit": "mm"
+          }
+        },
+        "point_d110aaa4": {
+          "id": "point_d110aaa4",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((110mm) / 2) - (10mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((26mm) / 2) - (10mm))",
+            "unit": "mm"
+          }
+        },
+        "point_df5154c6": {
+          "id": "point_df5154c6",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((110mm) / 2) - (10mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((26mm) / 2)",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_2cdfc597",
+      "name": "Inspection window outline",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "56mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 10
+    },
+    "sketch_2e3fa34b": {
+      "componentId": "component_0fe83aa2",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_010da722",
+          "pointIds": [
+            "point_1b86d261"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_18b8a418",
+          "pointIds": [
+            "point_9d6e5033"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.585Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_b06aa92e"
+          ],
+          "expression": {
+            "expression": "6mm",
+            "unit": "mm"
+          },
+          "id": "circle_b06aa92e_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_8fc121dc"
+          ],
+          "expression": {
+            "expression": "2.7mm",
+            "unit": "mm"
+          },
+          "id": "circle_8fc121dc_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_8fc121dc": {
+          "centerPointId": "point_9d6e5033",
+          "id": "circle_8fc121dc",
+          "radius": {
+            "expression": "2.7mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_b06aa92e": {
+          "centerPointId": "point_1b86d261",
+          "id": "circle_b06aa92e",
+          "radius": {
+            "expression": "6mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_1b86d261": {
+          "id": "point_1b86d261",
+          "type": "point",
+          "x": {
+            "expression": "-65mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "35mm",
+            "unit": "mm"
+          }
+        },
+        "point_9d6e5033": {
+          "id": "point_9d6e5033",
+          "type": "point",
+          "x": {
+            "expression": "-65mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "35mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_2e3fa34b",
+      "name": "Hollow column section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "8mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 52
+    },
+    "sketch_43d68bfb": {
+      "componentId": "component_ecba45e0",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_bf627c40",
+          "pointIds": [
+            "point_5e6748c9"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_cec55d6f",
+          "pointIds": [
+            "point_15f169d0"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_698c1af3",
+          "pointIds": [
+            "point_b54e3502"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_aaa6d259",
+          "pointIds": [
+            "point_990f148e"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_28eb4f1f",
+          "pointIds": [
+            "point_676ae7ff"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_99acda2d",
+          "pointIds": [
+            "point_f6ab1a70"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_056727b0",
+          "pointIds": [
+            "point_7baf1f9f"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_a2dbe9fe",
+          "pointIds": [
+            "point_bca52c49"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_00931652",
+          "pointIds": [
+            "point_8c5c4364"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_7fc89c9c",
+          "pointIds": [
+            "point_67d62669"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_df558422",
+          "pointIds": [
+            "point_42fdb9cb"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_6923bc79",
+          "pointIds": [
+            "point_67cf553b"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.581Z",
+      "dimensions": [],
+      "entities": {
+        "arc_85da0f76": {
+          "centerPointId": "point_67cf553b",
+          "clockwise": false,
+          "endPointId": "point_5e6748c9",
+          "id": "arc_85da0f76",
+          "startPointId": "point_bca52c49",
+          "type": "arc"
+        },
+        "arc_8e1a5299": {
+          "centerPointId": "point_67d62669",
+          "clockwise": false,
+          "endPointId": "point_676ae7ff",
+          "id": "arc_8e1a5299",
+          "startPointId": "point_990f148e",
+          "type": "arc"
+        },
+        "arc_c6f41493": {
+          "centerPointId": "point_42fdb9cb",
+          "clockwise": false,
+          "endPointId": "point_7baf1f9f",
+          "id": "arc_c6f41493",
+          "startPointId": "point_f6ab1a70",
+          "type": "arc"
+        },
+        "arc_da346cd6": {
+          "centerPointId": "point_8c5c4364",
+          "clockwise": false,
+          "endPointId": "point_b54e3502",
+          "id": "arc_da346cd6",
+          "startPointId": "point_15f169d0",
+          "type": "arc"
+        },
+        "line_b5283d95": {
+          "endPointId": "point_f6ab1a70",
+          "id": "line_b5283d95",
+          "startPointId": "point_676ae7ff",
+          "type": "line"
+        },
+        "line_d4923272": {
+          "endPointId": "point_990f148e",
+          "id": "line_d4923272",
+          "startPointId": "point_b54e3502",
+          "type": "line"
+        },
+        "line_dee6441e": {
+          "endPointId": "point_15f169d0",
+          "id": "line_dee6441e",
+          "startPointId": "point_5e6748c9",
+          "type": "line"
+        },
+        "line_ecd36d09": {
+          "endPointId": "point_bca52c49",
+          "id": "line_ecd36d09",
+          "startPointId": "point_7baf1f9f",
+          "type": "line"
+        },
+        "point_15f169d0": {
+          "id": "point_15f169d0",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((160mm) / 2) - (8mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((100mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_42fdb9cb": {
+          "id": "point_42fdb9cb",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((160mm) / 2) - (8mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((100mm) / 2) - (8mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_5e6748c9": {
+          "id": "point_5e6748c9",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((160mm) / 2) - (8mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((100mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_676ae7ff": {
+          "id": "point_676ae7ff",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((160mm) / 2) - (8mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((100mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_67cf553b": {
+          "id": "point_67cf553b",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((160mm) / 2) - (8mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((100mm) / 2) - (8mm))",
+            "unit": "mm"
+          }
+        },
+        "point_67d62669": {
+          "id": "point_67d62669",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((160mm) / 2) - (8mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((100mm) / 2) - (8mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_7baf1f9f": {
+          "id": "point_7baf1f9f",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((160mm) / 2)",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((100mm) / 2) - (8mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_8c5c4364": {
+          "id": "point_8c5c4364",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((160mm) / 2) - (8mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((100mm) / 2) - (8mm))",
+            "unit": "mm"
+          }
+        },
+        "point_990f148e": {
+          "id": "point_990f148e",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - ((160mm) / 2))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((100mm) / 2) - (8mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_b54e3502": {
+          "id": "point_b54e3502",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - ((160mm) / 2))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((100mm) / 2) - (8mm))",
+            "unit": "mm"
+          }
+        },
+        "point_bca52c49": {
+          "id": "point_bca52c49",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((160mm) / 2)",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((100mm) / 2) - (8mm))",
+            "unit": "mm"
+          }
+        },
+        "point_f6ab1a70": {
+          "id": "point_f6ab1a70",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((160mm) / 2) - (8mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((100mm) / 2))",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_43d68bfb",
+      "name": "Cover blank outline",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "56mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 8
+    },
+    "sketch_443fc813": {
+      "componentId": "component_cdbfc507",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_96e879a1",
+          "pointIds": [
+            "point_810b8c8a"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_d0427b34",
+          "pointIds": [
+            "point_7fbc242a"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.584Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_0e446346"
+          ],
+          "expression": {
+            "expression": "16mm",
+            "unit": "mm"
+          },
+          "id": "circle_0e446346_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_a6869a99"
+          ],
+          "expression": {
+            "expression": "8mm",
+            "unit": "mm"
+          },
+          "id": "circle_a6869a99_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_0e446346": {
+          "centerPointId": "point_810b8c8a",
+          "id": "circle_0e446346",
+          "radius": {
+            "expression": "16mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_a6869a99": {
+          "centerPointId": "point_7fbc242a",
+          "id": "circle_a6869a99",
+          "radius": {
+            "expression": "8mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_7fbc242a": {
+          "id": "point_7fbc242a",
+          "type": "point",
+          "x": {
+            "expression": "40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "point_810b8c8a": {
+          "id": "point_810b8c8a",
+          "type": "point",
+          "x": {
+            "expression": "40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_443fc813",
+      "name": "Bearing sleeve section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "8mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 28
+    },
+    "sketch_4885a0d4": {
+      "componentId": "component_737fc3a2",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_82c39ae1",
+          "pointIds": [
+            "point_7979ae36"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.584Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_4ba5efec"
+          ],
+          "expression": {
+            "expression": "7mm",
+            "unit": "mm"
+          },
+          "id": "circle_4ba5efec_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_4ba5efec": {
+          "centerPointId": "point_7979ae36",
+          "id": "circle_4ba5efec",
+          "radius": {
+            "expression": "7mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_7979ae36": {
+          "id": "point_7979ae36",
+          "type": "point",
+          "x": {
+            "expression": "40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_4885a0d4",
+      "name": "Drive shaft section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "-8mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 30
+    },
+    "sketch_4c74a061": {
+      "componentId": "component_e2f1441c",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_5b24c9fc",
+          "pointIds": [
+            "point_1cd5e5a8"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_488de85d",
+          "pointIds": [
+            "point_2f41226c"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.584Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_cc7e99fe"
+          ],
+          "expression": {
+            "expression": "24mm",
+            "unit": "mm"
+          },
+          "id": "circle_cc7e99fe_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_f4561180"
+          ],
+          "expression": {
+            "expression": "8mm",
+            "unit": "mm"
+          },
+          "id": "circle_f4561180_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_cc7e99fe": {
+          "centerPointId": "point_1cd5e5a8",
+          "id": "circle_cc7e99fe",
+          "radius": {
+            "expression": "24mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_f4561180": {
+          "centerPointId": "point_2f41226c",
+          "id": "circle_f4561180",
+          "radius": {
+            "expression": "8mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_1cd5e5a8": {
+          "id": "point_1cd5e5a8",
+          "type": "point",
+          "x": {
+            "expression": "-40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "point_2f41226c": {
+          "id": "point_2f41226c",
+          "type": "point",
+          "x": {
+            "expression": "-40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_4c74a061",
+      "name": "Pulley rim section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "16mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 14
+    },
+    "sketch_4d4cf057": {
+      "componentId": "component_601970e5",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_9f000a0e",
+          "pointIds": [
+            "point_e3db3bd2"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.585Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_001a7093"
+          ],
+          "expression": {
+            "expression": "4.5mm",
+            "unit": "mm"
+          },
+          "id": "circle_001a7093_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_001a7093": {
+          "centerPointId": "point_e3db3bd2",
+          "id": "circle_001a7093",
+          "radius": {
+            "expression": "4.5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_e3db3bd2": {
+          "id": "point_e3db3bd2",
+          "type": "point",
+          "x": {
+            "expression": "-65mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "35mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_4d4cf057",
+      "name": "Fastener head section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "62mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 56
+    },
+    "sketch_581fee73": {
+      "componentId": "component_601970e5",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_10eac6d8",
+          "pointIds": [
+            "point_9a4d2abd"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.585Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_26b2d66a"
+          ],
+          "expression": {
+            "expression": "2.5mm",
+            "unit": "mm"
+          },
+          "id": "circle_26b2d66a_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_26b2d66a": {
+          "centerPointId": "point_9a4d2abd",
+          "id": "circle_26b2d66a",
+          "radius": {
+            "expression": "2.5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_9a4d2abd": {
+          "id": "point_9a4d2abd",
+          "type": "point",
+          "x": {
+            "expression": "-65mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "35mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_581fee73",
+      "name": "Fastener shank section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "(62mm) - (cover_screw_length)",
+          "parameterRefs": {
+            "cover_screw_length": "08-belt-drive_parameter_cover_screw_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 54
+    },
+    "sketch_59362634": {
+      "componentId": "component_1d7e8810",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_2056647e",
+          "pointIds": [
+            "point_fef9114c"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_85cdbcb5",
+          "pointIds": [
+            "point_9c6cb5f6"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.584Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_fab2af4f"
+          ],
+          "expression": {
+            "expression": "16mm",
+            "unit": "mm"
+          },
+          "id": "circle_fab2af4f_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_886da1f5"
+          ],
+          "expression": {
+            "expression": "8mm",
+            "unit": "mm"
+          },
+          "id": "circle_886da1f5_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_886da1f5": {
+          "centerPointId": "point_9c6cb5f6",
+          "id": "circle_886da1f5",
+          "radius": {
+            "expression": "8mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_fab2af4f": {
+          "centerPointId": "point_fef9114c",
+          "id": "circle_fab2af4f",
+          "radius": {
+            "expression": "16mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_9c6cb5f6": {
+          "id": "point_9c6cb5f6",
+          "type": "point",
+          "x": {
+            "expression": "-40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "point_fef9114c": {
+          "id": "point_fef9114c",
+          "type": "point",
+          "x": {
+            "expression": "-40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_59362634",
+      "name": "Bearing sleeve section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "8mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 18
+    },
+    "sketch_6fde8299": {
+      "componentId": "component_4d2bf7b9",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_3775888e",
+          "pointIds": [
+            "point_6e6300f8"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_e1997ca5",
+          "pointIds": [
+            "point_335003b5"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.585Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_46d91746"
+          ],
+          "expression": {
+            "expression": "6mm",
+            "unit": "mm"
+          },
+          "id": "circle_46d91746_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_ccb506bd"
+          ],
+          "expression": {
+            "expression": "2.7mm",
+            "unit": "mm"
+          },
+          "id": "circle_ccb506bd_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_46d91746": {
+          "centerPointId": "point_6e6300f8",
+          "id": "circle_46d91746",
+          "radius": {
+            "expression": "6mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_ccb506bd": {
+          "centerPointId": "point_335003b5",
+          "id": "circle_ccb506bd",
+          "radius": {
+            "expression": "2.7mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_335003b5": {
+          "id": "point_335003b5",
+          "type": "point",
+          "x": {
+            "expression": "65mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-35mm",
+            "unit": "mm"
+          }
+        },
+        "point_6e6300f8": {
+          "id": "point_6e6300f8",
+          "type": "point",
+          "x": {
+            "expression": "65mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-35mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_6fde8299",
+      "name": "Hollow column section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "8mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 40
+    },
+    "sketch_79e310bd": {
+      "componentId": "component_ecba45e0",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_04dcd82a",
+          "pointIds": [
+            "point_ffb8f0b2"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_b7a98879",
+          "pointIds": [
+            "point_d6ed0c69"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_de6bfbfb",
+          "pointIds": [
+            "point_b11dcad9"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_4b5e41d2",
+          "pointIds": [
+            "point_1cb4e42f"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.584Z",
+      "dimensions": [],
+      "entities": {
+        "point_1cb4e42f": {
+          "id": "point_1cb4e42f",
+          "type": "point",
+          "x": {
+            "expression": "-65mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "35mm",
+            "unit": "mm"
+          }
+        },
+        "point_b11dcad9": {
+          "id": "point_b11dcad9",
+          "type": "point",
+          "x": {
+            "expression": "65mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "35mm",
+            "unit": "mm"
+          }
+        },
+        "point_d6ed0c69": {
+          "id": "point_d6ed0c69",
+          "type": "point",
+          "x": {
+            "expression": "65mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-35mm",
+            "unit": "mm"
+          }
+        },
+        "point_ffb8f0b2": {
+          "id": "point_ffb8f0b2",
+          "type": "point",
+          "x": {
+            "expression": "-65mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-35mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_79e310bd",
+      "name": "Cover post pattern centers",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "56mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 12
+    },
+    "sketch_81655891": {
+      "componentId": "component_2d506db6",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_c077b92d",
+          "pointIds": [
+            "point_6a975ae0"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_21d60faa",
+          "pointIds": [
+            "point_778b7fe0"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_a87fa01e",
+          "pointIds": [
+            "point_ff55ce5b"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_6771e195",
+          "pointIds": [
+            "point_0122cf73"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.581Z",
+      "dimensions": [],
+      "entities": {
+        "point_0122cf73": {
+          "id": "point_0122cf73",
+          "type": "point",
+          "x": {
+            "expression": "-65mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "35mm",
+            "unit": "mm"
+          }
+        },
+        "point_6a975ae0": {
+          "id": "point_6a975ae0",
+          "type": "point",
+          "x": {
+            "expression": "-65mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-35mm",
+            "unit": "mm"
+          }
+        },
+        "point_778b7fe0": {
+          "id": "point_778b7fe0",
+          "type": "point",
+          "x": {
+            "expression": "65mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-35mm",
+            "unit": "mm"
+          }
+        },
+        "point_ff55ce5b": {
+          "id": "point_ff55ce5b",
+          "type": "point",
+          "x": {
+            "expression": "65mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "35mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_81655891",
+      "name": "Base post pattern centers",
+      "plane": {
+        "plane": "XY",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 4
+    },
+    "sketch_84206d35": {
+      "componentId": "component_f3fa9b7a",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_846ee58a",
+          "pointIds": [
+            "point_ee1a6999"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.585Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_7f01c38e"
+          ],
+          "expression": {
+            "expression": "2.5mm",
+            "unit": "mm"
+          },
+          "id": "circle_7f01c38e_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_7f01c38e": {
+          "centerPointId": "point_ee1a6999",
+          "id": "circle_7f01c38e",
+          "radius": {
+            "expression": "2.5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_ee1a6999": {
+          "id": "point_ee1a6999",
+          "type": "point",
+          "x": {
+            "expression": "65mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "35mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_84206d35",
+      "name": "Fastener shank section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "(62mm) - (cover_screw_length)",
+          "parameterRefs": {
+            "cover_screw_length": "08-belt-drive_parameter_cover_screw_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 48
+    },
+    "sketch_a5c41cf7": {
+      "componentId": "component_39573b22",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_1bed3030",
+          "pointIds": [
+            "point_0117c3c4"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.585Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_cc9aa5a6"
+          ],
+          "expression": {
+            "expression": "2.5mm",
+            "unit": "mm"
+          },
+          "id": "circle_cc9aa5a6_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_cc9aa5a6": {
+          "centerPointId": "point_0117c3c4",
+          "id": "circle_cc9aa5a6",
+          "radius": {
+            "expression": "2.5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_0117c3c4": {
+          "id": "point_0117c3c4",
+          "type": "point",
+          "x": {
+            "expression": "-65mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-35mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_a5c41cf7",
+      "name": "Fastener shank section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "(62mm) - (cover_screw_length)",
+          "parameterRefs": {
+            "cover_screw_length": "08-belt-drive_parameter_cover_screw_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 36
+    },
+    "sketch_b87753e1": {
+      "componentId": "component_e1a196e5",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_052394bf",
+          "pointIds": [
+            "point_78c4da6e"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_f7e2ae03",
+          "pointIds": [
+            "point_d686dbdd"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.584Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_d182540b"
+          ],
+          "expression": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "id": "circle_d182540b_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_6ccd5353"
+          ],
+          "expression": {
+            "expression": "8mm",
+            "unit": "mm"
+          },
+          "id": "circle_6ccd5353_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_6ccd5353": {
+          "centerPointId": "point_d686dbdd",
+          "id": "circle_6ccd5353",
+          "radius": {
+            "expression": "8mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_d182540b": {
+          "centerPointId": "point_78c4da6e",
+          "id": "circle_d182540b",
+          "radius": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_78c4da6e": {
+          "id": "point_78c4da6e",
+          "type": "point",
+          "x": {
+            "expression": "-40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "point_d686dbdd": {
+          "id": "point_d686dbdd",
+          "type": "point",
+          "x": {
+            "expression": "-40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_b87753e1",
+      "name": "Shaft spacer section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "pulley_height + 21mm",
+          "parameterRefs": {
+            "pulley_height": "08-belt-drive_parameter_pulley_height"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 22
+    },
+    "sketch_bbd44eea": {
+      "componentId": "component_89d4f69a",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_55c54cec",
+          "pointIds": [
+            "point_928741a8"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.584Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_b174f84e"
+          ],
+          "expression": {
+            "expression": "7mm",
+            "unit": "mm"
+          },
+          "id": "circle_b174f84e_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_b174f84e": {
+          "centerPointId": "point_928741a8",
+          "id": "circle_b174f84e",
+          "radius": {
+            "expression": "7mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_928741a8": {
+          "id": "point_928741a8",
+          "type": "point",
+          "x": {
+            "expression": "-40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_bbd44eea",
+      "name": "Drive shaft section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "-8mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 20
+    },
+    "sketch_bf3dc216": {
+      "componentId": "component_f3fa9b7a",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_c7ea172b",
+          "pointIds": [
+            "point_833819f3"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.585Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_8b63fd43"
+          ],
+          "expression": {
+            "expression": "4.5mm",
+            "unit": "mm"
+          },
+          "id": "circle_8b63fd43_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_8b63fd43": {
+          "centerPointId": "point_833819f3",
+          "id": "circle_8b63fd43",
+          "radius": {
+            "expression": "4.5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_833819f3": {
+          "id": "point_833819f3",
+          "type": "point",
+          "x": {
+            "expression": "65mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "35mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_bf3dc216",
+      "name": "Fastener head section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "62mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 50
+    },
+    "sketch_c2365be0": {
+      "componentId": "component_2d506db6",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_7dcaac7e",
+          "pointIds": [
+            "point_5442c228"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_ab9a641a",
+          "pointIds": [
+            "point_c4a24a56"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_d03a8f5a",
+          "pointIds": [
+            "point_79638599"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_e183ce29",
+          "pointIds": [
+            "point_e06757b0"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_cf38dbc8",
+          "pointIds": [
+            "point_f81d568a"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_4047d4d8",
+          "pointIds": [
+            "point_7f95cfa3"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_5e351d1d",
+          "pointIds": [
+            "point_dd1e71fb"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_4eeb09bd",
+          "pointIds": [
+            "point_1503d6c6"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_ef93afff",
+          "pointIds": [
+            "point_56a73e9d"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_dcde3644",
+          "pointIds": [
+            "point_79fbe8f1"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_ab90d572",
+          "pointIds": [
+            "point_3ef07781"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_de512b8f",
+          "pointIds": [
+            "point_9a1f94e7"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.579Z",
+      "dimensions": [],
+      "entities": {
+        "arc_04a98133": {
+          "centerPointId": "point_56a73e9d",
+          "clockwise": false,
+          "endPointId": "point_79638599",
+          "id": "arc_04a98133",
+          "startPointId": "point_c4a24a56",
+          "type": "arc"
+        },
+        "arc_53dbf2e3": {
+          "centerPointId": "point_79fbe8f1",
+          "clockwise": false,
+          "endPointId": "point_f81d568a",
+          "id": "arc_53dbf2e3",
+          "startPointId": "point_e06757b0",
+          "type": "arc"
+        },
+        "arc_cbf597f3": {
+          "centerPointId": "point_3ef07781",
+          "clockwise": false,
+          "endPointId": "point_dd1e71fb",
+          "id": "arc_cbf597f3",
+          "startPointId": "point_7f95cfa3",
+          "type": "arc"
+        },
+        "arc_e0400297": {
+          "centerPointId": "point_9a1f94e7",
+          "clockwise": false,
+          "endPointId": "point_5442c228",
+          "id": "arc_e0400297",
+          "startPointId": "point_1503d6c6",
+          "type": "arc"
+        },
+        "line_3c6a96d6": {
+          "endPointId": "point_1503d6c6",
+          "id": "line_3c6a96d6",
+          "startPointId": "point_dd1e71fb",
+          "type": "line"
+        },
+        "line_602f2298": {
+          "endPointId": "point_c4a24a56",
+          "id": "line_602f2298",
+          "startPointId": "point_5442c228",
+          "type": "line"
+        },
+        "line_75ab6982": {
+          "endPointId": "point_7f95cfa3",
+          "id": "line_75ab6982",
+          "startPointId": "point_f81d568a",
+          "type": "line"
+        },
+        "line_c74e435d": {
+          "endPointId": "point_e06757b0",
+          "id": "line_c74e435d",
+          "startPointId": "point_79638599",
+          "type": "line"
+        },
+        "point_1503d6c6": {
+          "id": "point_1503d6c6",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((160mm) / 2)",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((100mm) / 2) - (8mm))",
+            "unit": "mm"
+          }
+        },
+        "point_3ef07781": {
+          "id": "point_3ef07781",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((160mm) / 2) - (8mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((100mm) / 2) - (8mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_5442c228": {
+          "id": "point_5442c228",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((160mm) / 2) - (8mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((100mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_56a73e9d": {
+          "id": "point_56a73e9d",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((160mm) / 2) - (8mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((100mm) / 2) - (8mm))",
+            "unit": "mm"
+          }
+        },
+        "point_79638599": {
+          "id": "point_79638599",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - ((160mm) / 2))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((100mm) / 2) - (8mm))",
+            "unit": "mm"
+          }
+        },
+        "point_79fbe8f1": {
+          "id": "point_79fbe8f1",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((160mm) / 2) - (8mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((100mm) / 2) - (8mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_7f95cfa3": {
+          "id": "point_7f95cfa3",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((160mm) / 2) - (8mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((100mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_9a1f94e7": {
+          "id": "point_9a1f94e7",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((160mm) / 2) - (8mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((100mm) / 2) - (8mm))",
+            "unit": "mm"
+          }
+        },
+        "point_c4a24a56": {
+          "id": "point_c4a24a56",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((160mm) / 2) - (8mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((100mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_dd1e71fb": {
+          "id": "point_dd1e71fb",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((160mm) / 2)",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((100mm) / 2) - (8mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_e06757b0": {
+          "id": "point_e06757b0",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - ((160mm) / 2))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((100mm) / 2) - (8mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_f81d568a": {
+          "id": "point_f81d568a",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((160mm) / 2) - (8mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((100mm) / 2))",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_c2365be0",
+      "name": "Base blank outline",
+      "plane": {
+        "plane": "XY",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 1
+    },
+    "sketch_cf2ddff9": {
+      "componentId": "component_ba697845",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_fa1ff70f",
+          "pointIds": [
+            "point_f22779e5"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.585Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_86acae93"
+          ],
+          "expression": {
+            "expression": "4.5mm",
+            "unit": "mm"
+          },
+          "id": "circle_86acae93_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_86acae93": {
+          "centerPointId": "point_f22779e5",
+          "id": "circle_86acae93",
+          "radius": {
+            "expression": "4.5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_f22779e5": {
+          "id": "point_f22779e5",
+          "type": "point",
+          "x": {
+            "expression": "65mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-35mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_cf2ddff9",
+      "name": "Fastener head section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "62mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 44
+    },
+    "sketch_d8b78025": {
+      "componentId": "component_e4be21c5",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_f138d532",
+          "pointIds": [
+            "point_60f63de5"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_8cf8ec98",
+          "pointIds": [
+            "point_70547145"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.585Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_85bf3068"
+          ],
+          "expression": {
+            "expression": "6mm",
+            "unit": "mm"
+          },
+          "id": "circle_85bf3068_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_f6202c46"
+          ],
+          "expression": {
+            "expression": "2.7mm",
+            "unit": "mm"
+          },
+          "id": "circle_f6202c46_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_85bf3068": {
+          "centerPointId": "point_60f63de5",
+          "id": "circle_85bf3068",
+          "radius": {
+            "expression": "6mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_f6202c46": {
+          "centerPointId": "point_70547145",
+          "id": "circle_f6202c46",
+          "radius": {
+            "expression": "2.7mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_60f63de5": {
+          "id": "point_60f63de5",
+          "type": "point",
+          "x": {
+            "expression": "65mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "35mm",
+            "unit": "mm"
+          }
+        },
+        "point_70547145": {
+          "id": "point_70547145",
+          "type": "point",
+          "x": {
+            "expression": "65mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "35mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_d8b78025",
+      "name": "Hollow column section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "8mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 46
+    },
+    "sketch_ea41b9ab": {
+      "componentId": "component_ba697845",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_cb694107",
+          "pointIds": [
+            "point_30deb2d4"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.585Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_50c5c412"
+          ],
+          "expression": {
+            "expression": "2.5mm",
+            "unit": "mm"
+          },
+          "id": "circle_50c5c412_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_50c5c412": {
+          "centerPointId": "point_30deb2d4",
+          "id": "circle_50c5c412",
+          "radius": {
+            "expression": "2.5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_30deb2d4": {
+          "id": "point_30deb2d4",
+          "type": "point",
+          "x": {
+            "expression": "65mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-35mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_ea41b9ab",
+      "name": "Fastener shank section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "(62mm) - (cover_screw_length)",
+          "parameterRefs": {
+            "cover_screw_length": "08-belt-drive_parameter_cover_screw_length"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 42
+    },
+    "sketch_ec3c4ae1": {
+      "componentId": "component_2d506db6",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_e8ee548c",
+          "pointIds": [
+            "point_f115e311"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_60489ef4",
+          "pointIds": [
+            "point_c38be97e"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.581Z",
+      "dimensions": [],
+      "entities": {
+        "point_c38be97e": {
+          "id": "point_c38be97e",
+          "type": "point",
+          "x": {
+            "expression": "40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "point_f115e311": {
+          "id": "point_f115e311",
+          "type": "point",
+          "x": {
+            "expression": "-40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_ec3c4ae1",
+      "name": "Shaft clearance centers",
+      "plane": {
+        "plane": "XY",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 6
+    },
+    "sketch_f1a47941": {
+      "componentId": "component_485fbda7",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_a86b8915",
+          "pointIds": [
+            "point_3144f15f"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_0123ec59",
+          "pointIds": [
+            "point_7abd127f"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.584Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_3da1183f"
+          ],
+          "expression": {
+            "expression": "24mm",
+            "unit": "mm"
+          },
+          "id": "circle_3da1183f_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_64b23abd"
+          ],
+          "expression": {
+            "expression": "8mm",
+            "unit": "mm"
+          },
+          "id": "circle_64b23abd_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_3da1183f": {
+          "centerPointId": "point_3144f15f",
+          "id": "circle_3da1183f",
+          "radius": {
+            "expression": "24mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_64b23abd": {
+          "centerPointId": "point_7abd127f",
+          "id": "circle_64b23abd",
+          "radius": {
+            "expression": "8mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_3144f15f": {
+          "id": "point_3144f15f",
+          "type": "point",
+          "x": {
+            "expression": "40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "point_7abd127f": {
+          "id": "point_7abd127f",
+          "type": "point",
+          "x": {
+            "expression": "40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_f1a47941",
+      "name": "Pulley rim section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "16mm",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 24
+    },
+    "sketch_f93d8008": {
+      "componentId": "component_485fbda7",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_4be35f3e",
+          "pointIds": [
+            "point_316fa0a5"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_483bfc14",
+          "pointIds": [
+            "point_0f78ee88"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.584Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_7e2cf0f7"
+          ],
+          "expression": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "id": "circle_7e2cf0f7_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_6c19089d"
+          ],
+          "expression": {
+            "expression": "8mm",
+            "unit": "mm"
+          },
+          "id": "circle_6c19089d_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_6c19089d": {
+          "centerPointId": "point_0f78ee88",
+          "id": "circle_6c19089d",
+          "radius": {
+            "expression": "8mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_7e2cf0f7": {
+          "centerPointId": "point_316fa0a5",
+          "id": "circle_7e2cf0f7",
+          "radius": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_0f78ee88": {
+          "id": "point_0f78ee88",
+          "type": "point",
+          "x": {
+            "expression": "40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "point_316fa0a5": {
+          "id": "point_316fa0a5",
+          "type": "point",
+          "x": {
+            "expression": "40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_f93d8008",
+      "name": "Pulley hub section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "pulley_height + 15mm",
+          "parameterRefs": {
+            "pulley_height": "08-belt-drive_parameter_pulley_height"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 26
+    },
+    "sketch_ffebeb4f": {
+      "componentId": "component_00eebc54",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_e421ee9e",
+          "pointIds": [
+            "point_2cb0ec5c"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_13a90855",
+          "pointIds": [
+            "point_bc4108fe"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.584Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_cfde2a58"
+          ],
+          "expression": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "id": "circle_cfde2a58_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_59f32435"
+          ],
+          "expression": {
+            "expression": "8mm",
+            "unit": "mm"
+          },
+          "id": "circle_59f32435_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_59f32435": {
+          "centerPointId": "point_bc4108fe",
+          "id": "circle_59f32435",
+          "radius": {
+            "expression": "8mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_cfde2a58": {
+          "centerPointId": "point_2cb0ec5c",
+          "id": "circle_cfde2a58",
+          "radius": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_2cb0ec5c": {
+          "id": "point_2cb0ec5c",
+          "type": "point",
+          "x": {
+            "expression": "40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "point_bc4108fe": {
+          "id": "point_bc4108fe",
+          "type": "point",
+          "x": {
+            "expression": "40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_ffebeb4f",
+      "name": "Shaft spacer section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "pulley_height + 21mm",
+          "parameterRefs": {
+            "pulley_height": "08-belt-drive_parameter_pulley_height"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 32
+    }
+  },
+  "timelineCursor": 57,
+  "units": "metric",
+  "unitSettings": {
+    "angle": "deg",
+    "length": "mm"
+  },
+  "updatedAt": "2026-10-07T09:40:53.585Z"
+}

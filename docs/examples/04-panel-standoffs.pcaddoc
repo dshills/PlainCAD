@@ -1,0 +1,1379 @@
+{
+  "components": {
+    "component_2c20f645": {
+      "id": "component_2c20f645",
+      "name": "Support 4"
+    },
+    "component_3659f8e9": {
+      "id": "component_3659f8e9",
+      "name": "Support 3"
+    },
+    "component_46bf06f4": {
+      "id": "component_46bf06f4",
+      "name": "Instrument panel"
+    },
+    "component_4b9715b3": {
+      "id": "component_4b9715b3",
+      "name": "Support 2"
+    },
+    "component_d1eb13b0": {
+      "id": "component_d1eb13b0",
+      "name": "Support 1"
+    },
+    "component_fd880227": {
+      "id": "component_fd880227",
+      "name": "Project reference"
+    }
+  },
+  "createdAt": "2026-10-07T09:40:53.553Z",
+  "displayUnits": {
+    "angle": "deg",
+    "length": "mm"
+  },
+  "features": [
+    {
+      "componentId": "component_46bf06f4",
+      "createdAt": "2026-10-07T09:40:53.556Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "4mm",
+        "unit": "mm"
+      },
+      "id": "feature_0405ec61",
+      "name": "Panel blank",
+      "operation": "newBody",
+      "profileId": "sketch_8fdd3021:profile:p1t7c1il",
+      "sketchId": "sketch_8fdd3021",
+      "timelineStep": 2,
+      "type": "extrude"
+    },
+    {
+      "centerPointIds": [
+        "point_b60699c9",
+        "point_acf2b122",
+        "point_bf2fb623",
+        "point_1b5d6a67"
+      ],
+      "componentId": "component_46bf06f4",
+      "createdAt": "2026-10-07T09:40:53.556Z",
+      "depth": "throughAll",
+      "diameter": {
+        "expression": "4.4mm",
+        "unit": "mm"
+      },
+      "direction": "positive",
+      "id": "04-panel-standoffs_hole_1",
+      "name": "Support holes",
+      "sketchId": "sketch_c49cfda5",
+      "targetBodyIds": [
+        "body:feature_0405ec61"
+      ],
+      "timelineStep": 4,
+      "type": "hole"
+    },
+    {
+      "componentId": "component_46bf06f4",
+      "createdAt": "2026-10-07T09:40:53.558Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "4mm",
+        "unit": "mm"
+      },
+      "id": "feature_db74aa7a",
+      "name": "Display opening",
+      "operation": "cut",
+      "profileId": "sketch_b98d6196:profile:p3vh2vs",
+      "sketchId": "sketch_b98d6196",
+      "targetBodyIds": [
+        "body:feature_0405ec61"
+      ],
+      "termination": {
+        "type": "throughAll"
+      },
+      "timelineStep": 6,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_d1eb13b0",
+      "createdAt": "2026-10-07T09:40:53.558Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "post_height",
+        "parameterRefs": {
+          "post_height": "04-panel-standoffs_parameter_post_height"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_d3d93592",
+      "name": "Hollow support",
+      "operation": "newBody",
+      "profileId": "sketch_8325933f:profile:pm2huj9",
+      "sketchId": "sketch_8325933f",
+      "timelineStep": 8,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_4b9715b3",
+      "createdAt": "2026-10-07T09:40:53.558Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "post_height",
+        "parameterRefs": {
+          "post_height": "04-panel-standoffs_parameter_post_height"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_9fd609d5",
+      "name": "Hollow support",
+      "operation": "newBody",
+      "profileId": "sketch_bdd6beef:profile:p1gk99t1",
+      "sketchId": "sketch_bdd6beef",
+      "timelineStep": 10,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_3659f8e9",
+      "createdAt": "2026-10-07T09:40:53.558Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "post_height",
+        "parameterRefs": {
+          "post_height": "04-panel-standoffs_parameter_post_height"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_dc836d14",
+      "name": "Hollow support",
+      "operation": "newBody",
+      "profileId": "sketch_0df3ad44:profile:p1q2y913",
+      "sketchId": "sketch_0df3ad44",
+      "timelineStep": 12,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_2c20f645",
+      "createdAt": "2026-10-07T09:40:53.558Z",
+      "direction": "positive",
+      "distance": {
+        "expression": "post_height",
+        "parameterRefs": {
+          "post_height": "04-panel-standoffs_parameter_post_height"
+        },
+        "unit": "mm"
+      },
+      "id": "feature_447ed460",
+      "name": "Hollow support",
+      "operation": "newBody",
+      "profileId": "sketch_d2e8e2c2:profile:pl2ggwp",
+      "sketchId": "sketch_d2e8e2c2",
+      "timelineStep": 14,
+      "type": "extrude"
+    }
+  ],
+  "id": "doc_c4ea1b3b",
+  "metadata": {
+    "example": {
+      "difficulty": "Intermediate",
+      "edited": 22,
+      "order": 4,
+      "original": 18,
+      "parts": [
+        {
+          "bodyId": "body:feature_0405ec61",
+          "componentId": "component_46bf06f4",
+          "name": "Instrument panel"
+        },
+        {
+          "bodyId": "body:feature_d3d93592",
+          "componentId": "component_d1eb13b0",
+          "name": "Support 1"
+        },
+        {
+          "bodyId": "body:feature_9fd609d5",
+          "componentId": "component_4b9715b3",
+          "name": "Support 2"
+        },
+        {
+          "bodyId": "body:feature_dc836d14",
+          "componentId": "component_3659f8e9",
+          "name": "Support 3"
+        },
+        {
+          "bodyId": "body:feature_447ed460",
+          "componentId": "component_2c20f645",
+          "name": "Support 4"
+        }
+      ],
+      "primaryParameter": "post_height",
+      "scope": "Static components authored in shared coordinates; no joints or assembly transforms.",
+      "slug": "04-panel-standoffs",
+      "summary": "A rounded drilled panel over four hollow supports, with a shared post-height parameter."
+    }
+  },
+  "name": "Elevated instrument panel",
+  "parameters": {
+    "post_height": {
+      "description": "Primary demonstration parameter; change this to inspect the rebuild.",
+      "expression": "18mm",
+      "group": "Design dimensions",
+      "id": "04-panel-standoffs_parameter_post_height",
+      "name": "post_height",
+      "unit": "mm",
+      "value": 18
+    }
+  },
+  "rootComponentId": "component_fd880227",
+  "schemaVersion": 13,
+  "sketches": {
+    "sketch_0df3ad44": {
+      "componentId": "component_3659f8e9",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_8c054e39",
+          "pointIds": [
+            "point_820f02ca"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_1e2c0aa3",
+          "pointIds": [
+            "point_10c67123"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.558Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_673d4113"
+          ],
+          "expression": {
+            "expression": "5mm",
+            "unit": "mm"
+          },
+          "id": "circle_673d4113_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_10b54c88"
+          ],
+          "expression": {
+            "expression": "2.2mm",
+            "unit": "mm"
+          },
+          "id": "circle_10b54c88_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_10b54c88": {
+          "centerPointId": "point_10c67123",
+          "id": "circle_10b54c88",
+          "radius": {
+            "expression": "2.2mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_673d4113": {
+          "centerPointId": "point_820f02ca",
+          "id": "circle_673d4113",
+          "radius": {
+            "expression": "5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_10c67123": {
+          "id": "point_10c67123",
+          "type": "point",
+          "x": {
+            "expression": "35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "20mm",
+            "unit": "mm"
+          }
+        },
+        "point_820f02ca": {
+          "id": "point_820f02ca",
+          "type": "point",
+          "x": {
+            "expression": "35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "20mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_0df3ad44",
+      "name": "Hollow support section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "-post_height",
+          "parameterRefs": {
+            "post_height": "04-panel-standoffs_parameter_post_height"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 11
+    },
+    "sketch_8325933f": {
+      "componentId": "component_d1eb13b0",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_c744599d",
+          "pointIds": [
+            "point_a1ab2fa2"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_5250237d",
+          "pointIds": [
+            "point_62f2c0ba"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.558Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_b6734c29"
+          ],
+          "expression": {
+            "expression": "5mm",
+            "unit": "mm"
+          },
+          "id": "circle_b6734c29_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_2b8401ef"
+          ],
+          "expression": {
+            "expression": "2.2mm",
+            "unit": "mm"
+          },
+          "id": "circle_2b8401ef_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_2b8401ef": {
+          "centerPointId": "point_62f2c0ba",
+          "id": "circle_2b8401ef",
+          "radius": {
+            "expression": "2.2mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_b6734c29": {
+          "centerPointId": "point_a1ab2fa2",
+          "id": "circle_b6734c29",
+          "radius": {
+            "expression": "5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_62f2c0ba": {
+          "id": "point_62f2c0ba",
+          "type": "point",
+          "x": {
+            "expression": "-35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-20mm",
+            "unit": "mm"
+          }
+        },
+        "point_a1ab2fa2": {
+          "id": "point_a1ab2fa2",
+          "type": "point",
+          "x": {
+            "expression": "-35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-20mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_8325933f",
+      "name": "Hollow support section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "-post_height",
+          "parameterRefs": {
+            "post_height": "04-panel-standoffs_parameter_post_height"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 7
+    },
+    "sketch_8fdd3021": {
+      "componentId": "component_46bf06f4",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_e5b6d880",
+          "pointIds": [
+            "point_2400e2a2"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_2c732180",
+          "pointIds": [
+            "point_1280e5c2"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_9eeb1fa2",
+          "pointIds": [
+            "point_b1b23781"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_0f6f0f9c",
+          "pointIds": [
+            "point_6297037e"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_98146ae2",
+          "pointIds": [
+            "point_ec4dfb9d"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_8027380f",
+          "pointIds": [
+            "point_960f0590"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_5b06e480",
+          "pointIds": [
+            "point_7be7643b"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_9e47f4ae",
+          "pointIds": [
+            "point_694875fa"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_a39f7753",
+          "pointIds": [
+            "point_0b48bf0f"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_b15bad9f",
+          "pointIds": [
+            "point_5bd63c6e"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_b46d5ff4",
+          "pointIds": [
+            "point_a1e48076"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_fb1472d8",
+          "pointIds": [
+            "point_6d5e8e4f"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.553Z",
+      "dimensions": [],
+      "entities": {
+        "arc_1b212207": {
+          "centerPointId": "point_6d5e8e4f",
+          "clockwise": false,
+          "endPointId": "point_2400e2a2",
+          "id": "arc_1b212207",
+          "startPointId": "point_694875fa",
+          "type": "arc"
+        },
+        "arc_2adf7226": {
+          "centerPointId": "point_0b48bf0f",
+          "clockwise": false,
+          "endPointId": "point_b1b23781",
+          "id": "arc_2adf7226",
+          "startPointId": "point_1280e5c2",
+          "type": "arc"
+        },
+        "arc_b43e8b85": {
+          "centerPointId": "point_a1e48076",
+          "clockwise": false,
+          "endPointId": "point_7be7643b",
+          "id": "arc_b43e8b85",
+          "startPointId": "point_960f0590",
+          "type": "arc"
+        },
+        "arc_fd12b479": {
+          "centerPointId": "point_5bd63c6e",
+          "clockwise": false,
+          "endPointId": "point_ec4dfb9d",
+          "id": "arc_fd12b479",
+          "startPointId": "point_6297037e",
+          "type": "arc"
+        },
+        "line_03b94270": {
+          "endPointId": "point_6297037e",
+          "id": "line_03b94270",
+          "startPointId": "point_b1b23781",
+          "type": "line"
+        },
+        "line_65b56f8c": {
+          "endPointId": "point_960f0590",
+          "id": "line_65b56f8c",
+          "startPointId": "point_ec4dfb9d",
+          "type": "line"
+        },
+        "line_c86a7258": {
+          "endPointId": "point_1280e5c2",
+          "id": "line_c86a7258",
+          "startPointId": "point_2400e2a2",
+          "type": "line"
+        },
+        "line_d7c477c4": {
+          "endPointId": "point_694875fa",
+          "id": "line_d7c477c4",
+          "startPointId": "point_7be7643b",
+          "type": "line"
+        },
+        "point_0b48bf0f": {
+          "id": "point_0b48bf0f",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((90mm) / 2) - (6mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((60mm) / 2) - (6mm))",
+            "unit": "mm"
+          }
+        },
+        "point_1280e5c2": {
+          "id": "point_1280e5c2",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((90mm) / 2) - (6mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((60mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_2400e2a2": {
+          "id": "point_2400e2a2",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((90mm) / 2) - (6mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((60mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_5bd63c6e": {
+          "id": "point_5bd63c6e",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((90mm) / 2) - (6mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((60mm) / 2) - (6mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_6297037e": {
+          "id": "point_6297037e",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - ((90mm) / 2))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((60mm) / 2) - (6mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_694875fa": {
+          "id": "point_694875fa",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((90mm) / 2)",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((60mm) / 2) - (6mm))",
+            "unit": "mm"
+          }
+        },
+        "point_6d5e8e4f": {
+          "id": "point_6d5e8e4f",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((90mm) / 2) - (6mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((60mm) / 2) - (6mm))",
+            "unit": "mm"
+          }
+        },
+        "point_7be7643b": {
+          "id": "point_7be7643b",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((90mm) / 2)",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((60mm) / 2) - (6mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_960f0590": {
+          "id": "point_960f0590",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((90mm) / 2) - (6mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((60mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_a1e48076": {
+          "id": "point_a1e48076",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((90mm) / 2) - (6mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((60mm) / 2) - (6mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_b1b23781": {
+          "id": "point_b1b23781",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - ((90mm) / 2))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((60mm) / 2) - (6mm))",
+            "unit": "mm"
+          }
+        },
+        "point_ec4dfb9d": {
+          "id": "point_ec4dfb9d",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((90mm) / 2) - (6mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((60mm) / 2))",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_8fdd3021",
+      "name": "Panel blank outline",
+      "plane": {
+        "plane": "XY",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 1
+    },
+    "sketch_b98d6196": {
+      "componentId": "component_46bf06f4",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_8c674a22",
+          "pointIds": [
+            "point_37f860cd"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_4db5432f",
+          "pointIds": [
+            "point_f8f9cf98"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_ebabec49",
+          "pointIds": [
+            "point_732731e5"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_7fac026d",
+          "pointIds": [
+            "point_6aef48a2"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_7c0645ff",
+          "pointIds": [
+            "point_9cc86801"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_c61a8183",
+          "pointIds": [
+            "point_10faf5e0"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_ed13599b",
+          "pointIds": [
+            "point_3c7fea2a"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_40656855",
+          "pointIds": [
+            "point_cc053d60"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_88b3c779",
+          "pointIds": [
+            "point_8605b7b9"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_7287c79f",
+          "pointIds": [
+            "point_efd11e4d"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_e8cebcd0",
+          "pointIds": [
+            "point_70eab999"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_6a4aff78",
+          "pointIds": [
+            "point_0d56a8b7"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.556Z",
+      "dimensions": [],
+      "entities": {
+        "arc_4df0914b": {
+          "centerPointId": "point_8605b7b9",
+          "clockwise": false,
+          "endPointId": "point_732731e5",
+          "id": "arc_4df0914b",
+          "startPointId": "point_f8f9cf98",
+          "type": "arc"
+        },
+        "arc_61978c1d": {
+          "centerPointId": "point_70eab999",
+          "clockwise": false,
+          "endPointId": "point_3c7fea2a",
+          "id": "arc_61978c1d",
+          "startPointId": "point_10faf5e0",
+          "type": "arc"
+        },
+        "arc_95ba1b8f": {
+          "centerPointId": "point_0d56a8b7",
+          "clockwise": false,
+          "endPointId": "point_37f860cd",
+          "id": "arc_95ba1b8f",
+          "startPointId": "point_cc053d60",
+          "type": "arc"
+        },
+        "arc_ce7544af": {
+          "centerPointId": "point_efd11e4d",
+          "clockwise": false,
+          "endPointId": "point_9cc86801",
+          "id": "arc_ce7544af",
+          "startPointId": "point_6aef48a2",
+          "type": "arc"
+        },
+        "line_06d7bb03": {
+          "endPointId": "point_cc053d60",
+          "id": "line_06d7bb03",
+          "startPointId": "point_3c7fea2a",
+          "type": "line"
+        },
+        "line_26ebec57": {
+          "endPointId": "point_10faf5e0",
+          "id": "line_26ebec57",
+          "startPointId": "point_9cc86801",
+          "type": "line"
+        },
+        "line_5cfd0edf": {
+          "endPointId": "point_f8f9cf98",
+          "id": "line_5cfd0edf",
+          "startPointId": "point_37f860cd",
+          "type": "line"
+        },
+        "line_c4479c30": {
+          "endPointId": "point_6aef48a2",
+          "id": "line_c4479c30",
+          "startPointId": "point_732731e5",
+          "type": "line"
+        },
+        "point_0d56a8b7": {
+          "id": "point_0d56a8b7",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((36mm) / 2) - (3mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((20mm) / 2) - (3mm))",
+            "unit": "mm"
+          }
+        },
+        "point_10faf5e0": {
+          "id": "point_10faf5e0",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((36mm) / 2) - (3mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((20mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_37f860cd": {
+          "id": "point_37f860cd",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((36mm) / 2) - (3mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((20mm) / 2)",
+            "unit": "mm"
+          }
+        },
+        "point_3c7fea2a": {
+          "id": "point_3c7fea2a",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((36mm) / 2)",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((20mm) / 2) - (3mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_6aef48a2": {
+          "id": "point_6aef48a2",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - ((36mm) / 2))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((20mm) / 2) - (3mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_70eab999": {
+          "id": "point_70eab999",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + (((36mm) / 2) - (3mm))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((20mm) / 2) - (3mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_732731e5": {
+          "id": "point_732731e5",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - ((36mm) / 2))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((20mm) / 2) - (3mm))",
+            "unit": "mm"
+          }
+        },
+        "point_8605b7b9": {
+          "id": "point_8605b7b9",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((36mm) / 2) - (3mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((20mm) / 2) - (3mm))",
+            "unit": "mm"
+          }
+        },
+        "point_9cc86801": {
+          "id": "point_9cc86801",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((36mm) / 2) - (3mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - ((20mm) / 2))",
+            "unit": "mm"
+          }
+        },
+        "point_cc053d60": {
+          "id": "point_cc053d60",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((36mm) / 2)",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + (((20mm) / 2) - (3mm))",
+            "unit": "mm"
+          }
+        },
+        "point_efd11e4d": {
+          "id": "point_efd11e4d",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((36mm) / 2) - (3mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((0mm) - (((20mm) / 2) - (3mm)))",
+            "unit": "mm"
+          }
+        },
+        "point_f8f9cf98": {
+          "id": "point_f8f9cf98",
+          "type": "point",
+          "x": {
+            "expression": "(0mm) + ((0mm) - (((36mm) / 2) - (3mm)))",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "(0mm) + ((20mm) / 2)",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_b98d6196",
+      "name": "Display opening outline",
+      "plane": {
+        "plane": "XY",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 5
+    },
+    "sketch_bdd6beef": {
+      "componentId": "component_4b9715b3",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_f5d998dd",
+          "pointIds": [
+            "point_61148d83"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_54711c00",
+          "pointIds": [
+            "point_3635dee8"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.558Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_86d21a69"
+          ],
+          "expression": {
+            "expression": "5mm",
+            "unit": "mm"
+          },
+          "id": "circle_86d21a69_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_470f06e5"
+          ],
+          "expression": {
+            "expression": "2.2mm",
+            "unit": "mm"
+          },
+          "id": "circle_470f06e5_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_470f06e5": {
+          "centerPointId": "point_3635dee8",
+          "id": "circle_470f06e5",
+          "radius": {
+            "expression": "2.2mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_86d21a69": {
+          "centerPointId": "point_61148d83",
+          "id": "circle_86d21a69",
+          "radius": {
+            "expression": "5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_3635dee8": {
+          "id": "point_3635dee8",
+          "type": "point",
+          "x": {
+            "expression": "35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-20mm",
+            "unit": "mm"
+          }
+        },
+        "point_61148d83": {
+          "id": "point_61148d83",
+          "type": "point",
+          "x": {
+            "expression": "35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-20mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_bdd6beef",
+      "name": "Hollow support section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "-post_height",
+          "parameterRefs": {
+            "post_height": "04-panel-standoffs_parameter_post_height"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 9
+    },
+    "sketch_c49cfda5": {
+      "componentId": "component_46bf06f4",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_e6ba4850",
+          "pointIds": [
+            "point_b60699c9"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_eade4b3a",
+          "pointIds": [
+            "point_acf2b122"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_4da3d637",
+          "pointIds": [
+            "point_bf2fb623"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_f294c3d5",
+          "pointIds": [
+            "point_1b5d6a67"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.556Z",
+      "dimensions": [],
+      "entities": {
+        "point_1b5d6a67": {
+          "id": "point_1b5d6a67",
+          "type": "point",
+          "x": {
+            "expression": "-35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "20mm",
+            "unit": "mm"
+          }
+        },
+        "point_acf2b122": {
+          "id": "point_acf2b122",
+          "type": "point",
+          "x": {
+            "expression": "35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-20mm",
+            "unit": "mm"
+          }
+        },
+        "point_b60699c9": {
+          "id": "point_b60699c9",
+          "type": "point",
+          "x": {
+            "expression": "-35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-20mm",
+            "unit": "mm"
+          }
+        },
+        "point_bf2fb623": {
+          "id": "point_bf2fb623",
+          "type": "point",
+          "x": {
+            "expression": "35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "20mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_c49cfda5",
+      "name": "Support holes centers",
+      "plane": {
+        "plane": "XY",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 3
+    },
+    "sketch_d2e8e2c2": {
+      "componentId": "component_2c20f645",
+      "constraints": [
+        {
+          "entityIds": [],
+          "id": "constraint_70696f97",
+          "pointIds": [
+            "point_c84b0bee"
+          ],
+          "type": "fixed"
+        },
+        {
+          "entityIds": [],
+          "id": "constraint_7d313239",
+          "pointIds": [
+            "point_5d6189ee"
+          ],
+          "type": "fixed"
+        }
+      ],
+      "createdAt": "2026-10-07T09:40:53.558Z",
+      "dimensions": [
+        {
+          "entityIds": [
+            "circle_a2314118"
+          ],
+          "expression": {
+            "expression": "5mm",
+            "unit": "mm"
+          },
+          "id": "circle_a2314118_radius",
+          "type": "radius"
+        },
+        {
+          "entityIds": [
+            "circle_b7f7e2ea"
+          ],
+          "expression": {
+            "expression": "2.2mm",
+            "unit": "mm"
+          },
+          "id": "circle_b7f7e2ea_radius",
+          "type": "radius"
+        }
+      ],
+      "entities": {
+        "circle_a2314118": {
+          "centerPointId": "point_c84b0bee",
+          "id": "circle_a2314118",
+          "radius": {
+            "expression": "5mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "circle_b7f7e2ea": {
+          "centerPointId": "point_5d6189ee",
+          "id": "circle_b7f7e2ea",
+          "radius": {
+            "expression": "2.2mm",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "point_5d6189ee": {
+          "id": "point_5d6189ee",
+          "type": "point",
+          "x": {
+            "expression": "-35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "20mm",
+            "unit": "mm"
+          }
+        },
+        "point_c84b0bee": {
+          "id": "point_c84b0bee",
+          "type": "point",
+          "x": {
+            "expression": "-35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "20mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_d2e8e2c2",
+      "name": "Hollow support section",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "expression": "-post_height",
+          "parameterRefs": {
+            "post_height": "04-panel-standoffs_parameter_post_height"
+          },
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 13
+    }
+  },
+  "timelineCursor": 14,
+  "units": "metric",
+  "unitSettings": {
+    "angle": "deg",
+    "length": "mm"
+  },
+  "updatedAt": "2026-10-07T09:40:53.558Z"
+}
