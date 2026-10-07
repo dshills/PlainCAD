@@ -1,4 +1,5 @@
-import type { CadDocument, Sketch, SketchEntity } from "../document/schema";
+import type { CadDocument, Sketch, SketchEntity, SketchLine } from "../document/schema";
+import { RECTANGLE_CENTER_DIAGONAL_PREFIX, RECTANGLE_CENTER_LINK_PREFIX, RECTANGLE_CENTER_POINT_PREFIX } from "./SketchModel";
 
 function pointReferences(entity: SketchEntity): string[] {
   switch (entity.type) {
@@ -10,6 +11,49 @@ function pointReferences(entity: SketchEntity): string[] {
       return [entity.centerPointId];
     case "arc":
       return [entity.centerPointId, entity.startPointId, entity.endPointId];
+  }
+}
+
+/** Cleanup only generated center helpers; borrowed points keep their authored intent. */
+function removeCenterRectangleSupports(
+  sketch: Sketch,
+  entityIds: Set<string>,
+  document: Pick<CadDocument, "features">,
+) {
+  // Center rectangles use a construction diagonal with a midpoint. Removing
+  // every outline edge also removes this support; shared/external centers survive.
+  for (const midpoint of sketch.constraints.filter((c) => c.type === "midpoint")) {
+    const diagonal = sketch.entities[midpoint.entityIds[0]],
+      centerId = midpoint.pointIds?.[0];
+    if (diagonal?.type !== "line" || !diagonal.construction || !centerId ||
+        !diagonal.id.startsWith(`${RECTANGLE_CENTER_DIAGONAL_PREFIX}_`)) continue;
+    const outlines = Object.values(sketch.entities).filter((entity): entity is SketchLine => entity.type === "line" &&
+      entity.id !== diagonal.id && entityIds.has(entity.id));
+    const adjacent = (id: string) => outlines.filter((line) => line.startPointId === id || line.endPointId === id);
+    const fromStart = adjacent(diagonal.startPointId);
+    if (fromStart.length !== 2) continue;
+    const middleIds = fromStart.map((line) => line.startPointId === diagonal.startPointId ? line.endPointId : line.startPointId);
+    const toEnd = middleIds.map((id) => outlines.find((line) =>
+      (line.startPointId === id && line.endPointId === diagonal.endPointId) ||
+      (line.endPointId === id && line.startPointId === diagonal.endPointId)));
+    if (middleIds[0] === middleIds[1] || toEnd.some((line) => !line)) continue;
+    const rectangle = [...fromStart, ...toEnd.filter((line): line is SketchLine => Boolean(line))];
+    if (new Set(rectangle.map((line) => line.id)).size !== 4 || rectangle.some((line) =>
+      !sketch.constraints.some((c) => (c.type === "horizontal" || c.type === "vertical") && c.entityIds.includes(line.id)))) continue;
+    if (!entityIds.has(diagonal.id) && [...sketch.constraints, ...sketch.dimensions].some((reference) =>
+      reference.id !== midpoint.id && reference.entityIds.includes(diagonal.id))) continue;
+    entityIds.add(diagonal.id);
+    const center = sketch.entities[centerId];
+    const externalReference = Object.values(sketch.entities).some((entity) => !entityIds.has(entity.id) && pointReferences(entity).includes(centerId)) ||
+      [...sketch.constraints, ...sketch.dimensions].some((reference) =>
+        !(reference.id.startsWith(`${RECTANGLE_CENTER_LINK_PREFIX}_`) && reference.pointIds?.[1] === centerId) &&
+        !(reference.type === "fixed" && reference.entityIds.length === 0 &&
+          reference.pointIds?.length === 1 && reference.pointIds[0] === centerId) &&
+        !reference.entityIds.some((id) => entityIds.has(id)) &&
+        [...reference.entityIds, ...(reference.pointIds ?? [])].includes(centerId)) ||
+      document.features.some((feature) => feature.type === "hole" && feature.sketchId === sketch.id && feature.centerPointIds.includes(centerId));
+    if (center?.type === "point" && center.construction &&
+        centerId.startsWith(`${RECTANGLE_CENTER_POINT_PREFIX}_`) && !externalReference) entityIds.add(centerId);
   }
 }
 
@@ -33,11 +77,34 @@ export function planSketchEntitiesDeletion(
     if (pointReferences(candidate).some((id) => selectedPoints.has(id)))
       entityIds.add(candidate.id);
   }
+  removeCenterRectangleSupports(sketch, entityIds, document);
   const referencesDeletedBy =
     (deleted: ReadonlySet<string>) =>
     (reference: { entityIds: string[]; pointIds?: string[] }) =>
       reference.entityIds.some((id) => deleted.has(id)) ||
       reference.pointIds?.some((id) => deleted.has(id)) === true;
+  // A helper may outlive its first rectangle when another rectangle borrows it.
+  // After the final owned link is removed, clean that generated support too.
+  const centerCandidates = new Set(sketch.constraints.filter(referencesDeletedBy(entityIds))
+    .flatMap((reference) => [...reference.entityIds, ...(reference.pointIds ?? [])]));
+  for (const pointId of centerCandidates) {
+    const point = sketch.entities[pointId];
+    if (point?.type !== "point" || !point.construction ||
+        !point.id.startsWith(`${RECTANGLE_CENTER_POINT_PREFIX}_`) || entityIds.has(point.id)) continue;
+    const stillUsed = Object.values(sketch.entities).some((entity) => !entityIds.has(entity.id) && pointReferences(entity).includes(point.id)) ||
+      [...sketch.constraints, ...sketch.dimensions].some((reference) =>
+        !referencesDeletedBy(entityIds)(reference) &&
+        !(reference.type === "fixed" && reference.entityIds.length === 0 &&
+          reference.pointIds?.length === 1 && reference.pointIds[0] === point.id) &&
+        !(reference.id.startsWith(`${RECTANGLE_CENTER_LINK_PREFIX}_`) && reference.pointIds?.[1] === point.id) &&
+        [...reference.entityIds, ...(reference.pointIds ?? [])].includes(point.id)) ||
+      document.features.some((feature) => feature.type === "hole" && feature.sketchId === sketch.id && feature.centerPointIds.includes(point.id));
+    if (!stillUsed) {
+      entityIds.add(point.id);
+      for (const reference of sketch.constraints.filter((c) => c.id.startsWith(`${RECTANGLE_CENTER_LINK_PREFIX}_`) && c.pointIds?.includes(point.id)))
+        reference.pointIds?.forEach((id) => centerCandidates.add(id));
+    }
+  }
   // Determine surviving references before adding candidate orphan points.
   const initiallyDeleted = new Set(entityIds);
   const referencesInitiallyDeleted = referencesDeletedBy(initiallyDeleted);

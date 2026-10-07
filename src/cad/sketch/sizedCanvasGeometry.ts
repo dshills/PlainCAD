@@ -1,22 +1,25 @@
 import type { Sketch, UnitSettings } from "../document/schema";
+import { createId } from "../document/ids";
 import type { Quantity } from "../parameters/units";
 import { evaluateExpressionRef } from "../parameters/expressionEvaluator";
-import { addConstraint } from "./SketchModel";
+import { addConstraint, addLine, addPoint, RECTANGLE_CENTER_DIAGONAL_PREFIX, RECTANGLE_CENTER_LINK_PREFIX, RECTANGLE_CENTER_POINT_PREFIX, setConstruction } from "./SketchModel";
 import { solveSketch, type ResolvedSketch } from "./SketchSolver";
 import {
   addCanvasGeometry,
   distance2d,
+  snapCanvasPoint,
   type CanvasPoint,
   type CanvasTool,
 } from "./canvasGeometry";
 import { withCanvasDimension } from "./canvasDimensions";
+import { entityPoints } from "./canvasPointMove";
 import { MIN_ENTITY_SIZE, SKETCH_TOLERANCE } from "./tolerances";
 
 export interface CanvasSizeInput {
   width?: string;
   height?: string;
   diameter?: string;
-  /** Transient creation mode; the document stores ordinary rectangle geometry. */
+  /** Creation mode; center intent persists as ordinary construction geometry and constraints. */
   rectangleMode?: "corner" | "center";
 }
 function readSize(
@@ -104,6 +107,9 @@ export function addSizedCanvasGeometry(
   parameters: Record<string, Quantity>,
   unit: UnitSettings["length"],
 ) {
+  const centered = tool === "rectangle" && sizes.rectangleMode === "center";
+  if (centered && sketch.solveMode === "validate" && Object.keys(sketch.entities).length)
+    throw new Error("Center rectangles require driving solving. Use Corner mode for this legacy sketch, or create a new sketch to preserve its existing validation intent.");
   const points = sizedCanvasPoints(tool, input, sizes, parameters, unit);
   const result = addCanvasGeometry(
     sketch,
@@ -117,8 +123,8 @@ export function addSizedCanvasGeometry(
     tool === "rectangle"
       ? Boolean(sizes.width?.trim() || sizes.height?.trim())
       : tool === "circle" && Boolean(sizes.diameter?.trim());
-  if (!hasSizes) return result;
-  let next = result.sketch;
+  if (!hasSizes && !centered) return result;
+  let next = centered ? { ...result.sketch, solveMode: "driving" as const } : result.sketch;
   const entities = Object.values(next.entities).filter(
     (e) => !sketch.entities[e.id],
   );
@@ -152,6 +158,46 @@ export function addSizedCanvasGeometry(
     });
     for (const role of roles)
       next = addConstraint(next, role.type, { entityIds: [role.id] });
+    if (centered) {
+      // A midpoint on a construction diagonal makes the rectangle center durable
+      // using existing schema/solver primitives. It never participates in profiles.
+      const center = input[0];
+      const borrowedId = center.pointId ?? snapCanvasPoint(center, solved, SKETCH_TOLERANCE, 0).pointId;
+      if (borrowedId && (!solved.points[borrowedId] ||
+          distance2d(solved.points[borrowedId], center) > SKETCH_TOLERANCE))
+        throw new Error("Snapped center changed. Cancel and draw again.");
+      const point = addPoint(next, `${center.x.toFixed(12)}mm`, `${center.y.toFixed(12)}mm`, RECTANGLE_CENTER_POINT_PREFIX);
+      next = setConstruction(point.sketch, point.pointId, true);
+      const centerId = point.pointId;
+      if (borrowedId) {
+        const borrowed = sketch.entities[borrowedId];
+        const support = next.entities[centerId];
+        if (borrowed?.type !== "point" || support.type !== "point")
+          throw new Error("Snapped center is unavailable. Cancel and draw again.");
+        const coordinate = (ref: typeof borrowed.x, value: number, fallback: typeof support.x) => {
+          const authored = evaluateExpressionRef(ref, { parameters }).quantity?.value;
+          return authored !== undefined && Math.abs(authored - value) <= SKETCH_TOLERANCE ? ref : fallback;
+        };
+        next = { ...next, entities: { ...next.entities, [centerId]: { ...support,
+          x: coordinate(borrowed.x, center.x, support.x), y: coordinate(borrowed.y, center.y, support.y) } },
+          constraints: [...next.constraints, { id: createId(RECTANGLE_CENTER_LINK_PREFIX), type: "coincident",
+            entityIds: [], pointIds: [borrowedId, centerId] }] };
+      }
+      const startId = lines[0].startPointId;
+      const adjacentIds = lines.flatMap((line) => line.startPointId === startId
+        ? [line.endPointId] : line.endPointId === startId ? [line.startPointId] : []);
+      const oppositeId = lines.flatMap((line) => [line.startPointId, line.endPointId])
+        .find((id) => id !== startId && !adjacentIds.includes(id));
+      if (!oppositeId) throw new Error("Center intent could not be applied: opposite corner is unavailable.");
+      const diagonal = addLine(next, startId, oppositeId, RECTANGLE_CENTER_DIAGONAL_PREFIX);
+      next = setConstruction(diagonal.sketch, diagonal.lineId, true);
+      next = addConstraint(next, "midpoint", { entityIds: [diagonal.lineId], pointIds: [centerId] });
+      // Preserve the chosen location, including parameter-bound center coordinates.
+      // Reusing a fixed center must not introduce a redundant fixed constraint.
+      if (!next.constraints.some((constraint) => constraint.type === "fixed" &&
+          [...constraint.entityIds.flatMap((id) => entityPoints(next, id)), ...(constraint.pointIds ?? [])].includes(borrowedId ?? centerId)))
+        next = addConstraint(next, "fixed", { pointIds: [centerId] });
+    }
     for (const [role, expression] of [
       ["horizontal", sizes.width],
       ["vertical", sizes.height],

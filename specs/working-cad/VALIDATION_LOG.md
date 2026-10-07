@@ -12,8 +12,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Change: Rectangle workflow and selection-based reference dimensions, commit `dbc4dea`.
 - Result: type checks, build/bundle budget, 994 unit/component tests,
   228 development browser tests, and 29 production browser tests passed.
-- Completed items since that full gate: **3**.
-- Next full gate: item **5**, after two more completed items.
+- Completed items since that full gate: **4**.
+- Next full gate: item **5**, after one more completed item.
 
 ## Completed batch
 
@@ -54,11 +54,14 @@ Prism review `9224995a388d49c8a2f70b83670b95e9` covered all twenty-four Rectangl
 | --- | --- | --- | --- | --- |
 | 1 | Lightweight Model/Render presets and matching PNG | Anthropic `claude-sonnet-5-5`; no high/medium findings; four low notes assessed | Passed: type checks, 998 unit tests, build/bundle budget, 5 development and 14 production smoke tests; 7 additional native viewer/Render tests and 1 production Render CSP test | Not due |
 | 2 | Simplified fabrication options and persistent completion actions | Anthropic `claude-sonnet-5-5`; no high/medium findings; one low test note assessed | Passed: type checks, 1029 unit tests, build/bundle budget, 5 development and 14 production smoke tests; native export/footer/ZIP tests | Not due |
+| 3 | Compact Parts browser and contextual actions | Anthropic `claude-sonnet-5-5`; no high/medium findings; final low note assessed | Passed: shared frozen-checkout reduced gate, 1032 unit tests, type checks, build/bundle budget, 5 development and 14 production smoke tests; compact native Parts case | Not due |
+| 4 | Associative center rectangles and owned-support deletion | Anthropic `claude-sonnet-5-5`; no high/medium findings; six low notes assessed | Passed: shared frozen-checkout reduced gate; 4 native rectangle workflows including XY/XZ parameter centers, undo/redo, save/open and STL | Not due |
 
 Prism review `42e25361187ae950c8a18d6b6c5ac59a` covered the complete fabrication change. Earlier label, bounds and cancellation findings were fixed. The final low note concerns the scroll-container test: compact native coverage actually scrolls options and verifies reachable footer actions; desktop coverage verifies the footer stays outside that container. Separate-file checks now accurately exclude cross-file overlaps. The reduced gate passed on the integrated checkout, with a largest JavaScript bundle of 417.69 kB.
 
 Prism review `9f83a6142b0afbbf57d91bdaaf2059d5` covered all sixteen Render files. The idle observation begins only after frame scheduling settles. Preset snapshots are private to mode switching; active controls use current grid/edge flags, with switch/reset tests. Fixed light counts/order enforce the bounded studio budget. Render grid visibility is intentionally optional and remembered independently. Final integration sources match the native-tested checkout exactly; geometry buffers, camera/picking, idle rendering, movement quality, PNG pixels and unchanged STL were verified. Largest JavaScript bundle is 414.41 kB within the 500 kB budget.
 
-| 3 | Compact Parts browser and contextual actions | Anthropic `claude-sonnet-5-5`; no high/medium findings; final low note assessed | Passed: shared frozen-checkout reduced gate, 1032 unit tests, type checks, build/bundle budget, 5 development and 14 production smoke tests; compact native Parts case | Not due |
 
 Prism review `dba73cb49b64e95fc76221217363bca8` covered all nine Parts files. Outside dismissal now blurs a dirty rename before hiding the disclosure; native checks verify rename, Escape cancellation and Undo. The remaining low note concerns unsupported detached-window DOM constructors; current docks all live in the app document. The reduced gate is shared by the parallel, frozen implementation items so identical broad checks need not be repeated. Largest bundle: 417.91 kB.
+
+Prism review `54193d8e6ade405d5238bc5fcb5c68aa` covered all nine centered-rectangle commit files. Numeric native assertions preserve strict centered placement and compare free Corner sizes rather than promising an unconstrained position; project round trips preserve actual bounds. Helper namespaces are documented and tested with borrowed centers, external constraints, holes and reordered entities. Both cleanup predicates now preserve multi-point fixed constraints. Empty validate sketches have no existing intent to change; nonempty validate sketches receive actionable guidance. The shared menu helper supports the older startup card as well as the collapsed menu, keeping intermediate commits usable.

@@ -26,8 +26,15 @@ export function createSketchOnPlane(
   };
 }
 
-export function addPoint(sketch: Sketch, x: string, y: string): { sketch: Sketch; pointId: string } {
-  const pointId = createId("point");
+/** Reserved generated-center namespace. Persist IDs unchanged: deletion uses this
+ * provenance plus construction/midpoint topology to preserve borrowed sketch points.
+ * createId writes the prefix followed by an underscore; both helpers reserve that format. */
+export const RECTANGLE_CENTER_POINT_PREFIX = "rectangleCenter";
+export const RECTANGLE_CENTER_LINK_PREFIX = "rectangleCenterLink";
+export const RECTANGLE_CENTER_DIAGONAL_PREFIX = "rectangleCenterDiagonal";
+
+export function addPoint(sketch: Sketch, x: string, y: string, idPrefix = "point"): { sketch: Sketch; pointId: string } {
+  const pointId = createId(idPrefix);
   return {
     pointId,
     sketch: {
@@ -40,8 +47,8 @@ export function addPoint(sketch: Sketch, x: string, y: string): { sketch: Sketch
   };
 }
 
-export function addLine(sketch: Sketch, startPointId: string, endPointId: string): { sketch: Sketch; lineId: string } {
-  const lineId = createId("line");
+export function addLine(sketch: Sketch, startPointId: string, endPointId: string, idPrefix = "line"): { sketch: Sketch; lineId: string } {
+  const lineId = createId(idPrefix);
   return {
     lineId,
     sketch: {

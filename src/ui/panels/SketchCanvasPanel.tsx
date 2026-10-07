@@ -1064,7 +1064,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
           </p>
           <p id="canvas-instructions">
             {tool === "rectangle" && rectangleMode === "center"
-              ? "Click the center then a corner, or drag from the center. Width and height specify the full rectangle size; Tab moves between sizes and Enter accepts. Dimensions subsequently resize from the first corner. Center snapping sets the initial position without adding a center constraint."
+              ? "Click the center then a corner, or drag from the center. Width and height specify the full rectangle size; Tab moves between sizes and Enter accepts. Dimensions keep the picked center in place. A construction diagonal and midpoint constraint preserve the center; a snapped center follows its coordinate expressions."
               : instructions[tool]}
           </p>
           {draft.length === 1 && (tool === "rectangle" || tool === "circle") ? (

@@ -1035,10 +1035,15 @@ Exit isolation restores body/component visibility while preserving sketch visibi
 
 The main Rectangle command opens/updates the current sketch canvas with explicit
 corner or center creation modes. Typed dimensions author ordinary driving
-dimensions; center mode mirrors the initial corners around the picked center.
+dimensions; center mode mirrors corners around the picked center and saves a
+construction diagonal, midpoint constraint and fixed center support.
 Draft sizes appear in the properties panel outside the drawing surface; the panel
-stacks below the drawing on compact screens. Subsequent dimension solving retains existing corner anchoring; center snapping
-positions the initial rectangle without an associative center constraint. Driving labels
+stacks below the drawing on compact screens. Newly drawn Center rectangles keep
+the chosen center during size changes; parameter-bound snapped centers remain
+associative. Older rectangles retain their original constraints and free Corner
+rectangles keep their positional freedom. Explicit validate-only sketches require
+Corner mode or a new driving sketch. Deleting a centered rectangle removes only
+its owned support geometry, preserving borrowed points and external references. Driving labels
 remain visible/editable by default within the existing canvas-label limit. Reference labels are selection-based by default, with
 a Show reference measurements opt-in. Existing advanced fixed presets remain.
 Native workflows verify both creation modes, exact bounds/volumes, inline sizing,

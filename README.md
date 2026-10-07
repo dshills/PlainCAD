@@ -42,9 +42,10 @@ creation modes and optional typed width/height in the sketch properties panel,
 leaving the canvas clear for mouse drawing. Driving dimensions stay visible
 and editable by default; reference measurements appear for selected geometry or when Show
 reference measurements is enabled. Finish Sketch returns the header to Solid tools. Existing fixed rectangle presets
-remain in advanced commands. Center mode controls creation; later size edits retain the
-existing corner-anchored solving behavior. Center snapping sets an initial position
-without an associative center constraint.
+remain in advanced commands. Newly drawn Center rectangles retain their chosen center
+when width or height changes, using saved construction geometry and constraints.
+A parameter-bound snapped center remains associative. Older saved rectangles keep
+their existing constraints; free Corner rectangles retain their positional freedom.
 
 ## Features
 
