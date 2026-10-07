@@ -1,4 +1,4 @@
-export const CURRENT_SCHEMA_VERSION = 13;
+export const CURRENT_SCHEMA_VERSION = 14;
 
 export type UnitSystem = "metric" | "imperial";
 
@@ -227,12 +227,25 @@ export interface ChamferFeature extends FeatureBase {
   distance: ExpressionRef;
 }
 
+/** Count includes the source. Coordinates and axes belong to the source sketch plane. */
+export type FeaturePatternSettings =
+  | { type: "linear"; count: ExpressionRef; spacing: ExpressionRef; direction: "X" | "Y" }
+  | { type: "circular"; count: ExpressionRef; angle: ExpressionRef; centerX: ExpressionRef; centerY: ExpressionRef };
+
+export interface FeaturePatternFeature extends FeatureBase {
+  type: "pattern";
+  sourceFeatureId: string;
+  targetBodyIds: string[];
+  pattern: FeaturePatternSettings;
+}
+
 export type Feature =
   | ExtrudeFeature
   | RevolveFeature
   | HoleFeature
   | FilletFeature
-  | ChamferFeature;
+  | ChamferFeature
+  | FeaturePatternFeature;
 
 export interface TopologyRef {
   featureId: string;

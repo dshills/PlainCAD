@@ -12,6 +12,11 @@
   straight-edge angles and planar-face angle/separation are supported. General
   BRep topology and arbitrary curved-distance pairs remain unavailable.
   See [click measurement limits](CLICK_MEASURE.md).
+- Schema 14 associative linear/circular feature patterns repeat an upstream
+  single-center Hole or finite-distance Cut Extrude, preserving source dimensions,
+  signed direction and saved body scope. Count 2–32 includes the source; circular
+  360-degree layouts avoid a duplicate endpoint. Overlaps and no-op/missing cuts
+  diagnose; native outputs publish atomically. See [pattern limits](FEATURE_PATTERNS.md).
 - Task guidance uses current worker sketch profiles/diagnostics and distinguishes
   empty/open/closed/broken sketches, failed rebuilds and native/fallback solids.
   Disabled actions show prerequisites; diagnostics retain explicit source repair.

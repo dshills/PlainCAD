@@ -1,4 +1,5 @@
 import { afterEach, beforeAll, expect, it, vi } from "vitest";
+import { CURRENT_SCHEMA_VERSION } from "../cad/document/schema";
 import { OpenCascadeKernel } from "../cad/kernel/OpenCascadeKernel";
 import {
   createEmptyDocument,
@@ -208,7 +209,7 @@ it("preserves schema-12 positive semantics, round-trips schema-13 negative direc
   const legacy = importProjectText(
     JSON.stringify({ ...current, schemaVersion: 12 }),
   );
-  expect(legacy.schemaVersion).toBe(13);
+  expect(legacy.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
   const hole = legacy.features.find((f) => f.type === "hole")!;
   expect(hole.direction).toBeUndefined();
   expect(rebuildDocument(legacy).success).toBe(false);

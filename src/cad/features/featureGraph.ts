@@ -22,6 +22,7 @@ export function planFeatureGraph(document: CadDocument): FeatureGraphPlan {
   const errors: FeatureGraphIssue[] = [];
   const warnings: FeatureGraphIssue[] = [];
   const orderedFeatures = [...document.features].sort(compareFeatures);
+  const featureRanks = new Map(orderedFeatures.map((feature, index) => [feature.id, index]));
   const stepOwner = new Map<number, string>();
   for (const sketch of Object.values(document.sketches).sort((a, b) =>
     compareStrings(a.id, b.id),
@@ -40,6 +41,11 @@ export function planFeatureGraph(document: CadDocument): FeatureGraphPlan {
   }
 
   for (const feature of orderedFeatures) {
+    if (feature.type === "pattern") {
+      const sourceIndex = featureRanks.get(feature.sourceFeatureId);
+      if (sourceIndex === undefined || sourceIndex >= featureRanks.get(feature.id)!)
+        errors.push({ id: `feature:${feature.id}:pattern-source`, source: "feature", sourceId: feature.id, message: "Pattern must appear after its source feature in the timeline. Restore the source or move the pattern after it." });
+    }
     if (feature.timelineStep !== undefined) {
       const owner = stepOwner.get(feature.timelineStep);
       if (owner) {
@@ -101,6 +107,7 @@ export function planFeatureGraph(document: CadDocument): FeatureGraphPlan {
     if (feature.suppressed) continue;
     const targets = targetBodyIds(feature);
     let depth = 1;
+    if (feature.type === "pattern") depth = Math.max(depth, 1 + (featureDepths.get(feature.sourceFeatureId) ?? 0));
     for (const id of targets)
       depth = Math.max(depth, 1 + (bodyDepths.get(id) ?? 0));
     if ("sketchId" in feature) {

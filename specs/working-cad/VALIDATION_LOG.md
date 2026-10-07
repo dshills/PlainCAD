@@ -15,8 +15,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
   The development run had 240 passes and two outdated test steps; both corrected
   files passed their 3-case rerun. Production completed separately after that fix.
   Only test steps changed; runtime sources stayed frozen throughout validation.
-- Completed items since that full gate: **3**.
-- Next full gate: item **5**, after two more completed items.
+- Completed items since that full gate: **4**.
+- Next full gate: item **5**, after one more completed item.
 
 ## Completed batch
 
@@ -97,3 +97,9 @@ The exact commit checkout passed `npm run check:item`: type checks, 1036 unit/co
 Prism `ad4c2f2881b5b2d2fba834629e0bad63` covered the isolated measurement implementation; fixup reviews `210fd6571b86261f3509666c58e2b05b` and `8f3f702fa1f50cc3d81d0a3d67c57571` covered its final guards and tests. All used Anthropic `claude-sonnet-5-5`. Actionable session reset, hidden-pair resolution, stale overlays, missing-path and positive-test findings were fixed. Final fixup review has no high/medium findings. Competing drafts are already excluded through `targetPickerActive`, which includes `interactionDraftBusy`; that medium note was a false positive. Low notes concern the documented bounded target set, ordered analytic fixtures, and placement helpers whose expected lost/budget errors use plain Error. Unexpected subclasses now propagate and a ReferenceError regression proves this.
 
 The exact commit checkout verified every `check:item` stage: type checks, 1050 unit/component tests, build/bundle budget (largest 429.60 kB), 5 development and 14 production smoke tests. Both additional native click-measure cases passed, proving edge/endpoint/circle/plane values, units and stale handling. A concurrent development run initially cleared production trace artifacts during cleanup; the complete 14-case production smoke set then passed sequentially on unchanged runtime sources. Future browser runs remain serial within a checkout.
+
+### Item 4: associative native Hole/pocket patterns
+
+Prism `b148ba44a3b4d8b5f2f0a55281809006` reviewed all 31 isolated files using Anthropic `claude-sonnet-5-5`; no high findings. Its arc-test medium was clarified: envelopes are intentionally conservative, and the regression now checks enclosure of the actual semicircle extrema despite narrower sampled bounds. Fixup `bdc97b604b40fcb00059c66ec2d8c8de` found no high/medium issues. Remaining low notes were assessed: featureGraph already enforces upstream ordering; schema14 has a separate real-pattern production fixture, while legacy box fixtures stop at13. Typed field retention and the bound feature lookup follow the validated schema/upsert contracts. Native tests independently prove invalid-cut diagnostics.
+
+`npm run check:item` passed on the isolated checkout: type checks, 1059 unit/component tests, build/bundle budget (largest 439.39 kB), 5 development and 14 production smoke tests. The clarified bounds test passed its 9-test focused rerun on unchanged runtime sources. All 3 native pattern cases and the additional built-app schema14 case passed, covering linear Holes, YZ circular pockets, source/count parameter changes, undo, save/open, STL and overlap/no-op refusal. Native BRep mass uses 1e-8 relative precision; the production three-decimal readout has its explicit rounding allowance.

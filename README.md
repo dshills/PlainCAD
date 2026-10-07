@@ -55,6 +55,7 @@ their existing constraints; free Corner rectangles retain their positional freed
 - XY/XZ/YZ, offset, and supported feature-owned face sketch planes.
 - Native Extrude, Revolve, Cut/Join, Hole, Fillet, and Chamfer with preview, Apply, and Cancel.
 - Sketch Trim/Extend, Mirror, linear patterns, and bounded outline Offset.
+- Associative linear/circular patterns of single-center Holes and distance Cut Extrudes.
 - Guided face holes and pockets, extrusion distance handles, and supported operation drag-and-drop.
 - Unit-aware parameter expressions, stable bindings, undo/redo, timeline ordering, and explicit reference repair.
 - Docked Workbench, Minimal and Full layouts, and Light, Dark, and Saturn Command themes.
@@ -110,6 +111,12 @@ Components currently share the project origin. Modeling targets stay within thei
 component; supported face-plane references can use another component's upstream
 geometry. Nested assemblies, placement transforms, joints, and linked designs
 remain planned.
+
+Select a single-center Hole or distance Cut Extrude in History and choose
+**Pattern** to repeat it with editable count (2–32 including the original), linear
+spacing or circular sweep/center. Each additional instance must remove native
+material; overlapping or off-part instances diagnose before Apply. Source size,
+profile and depth stay linked. See [pattern limits](specs/working-cad/FEATURE_PATTERNS.md).
 
 Open **Measure → Pick in model** to click supported native authored edges,
 endpoints or planar faces. Values are analytic; pair measurements support point

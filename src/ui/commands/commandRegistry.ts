@@ -13,6 +13,7 @@ import { beginSaveOrExport, canBeginSaveOrExport, saveOrExportBlocked } from "./
 import { beginGuidedHole, cancelGuidedHole, canBeginGuidedHole, useGuidedHole } from "./guidedHoleCommand";
 import { beginExtrudeCreation, beginExtrudeEditing, editableExtrude, useExtrudeDraft } from "./extrudeCommand";
 import { beginModelingCreation, beginModelingEditing, editableModelingFeature, useModelingDraft } from "./modelingDraftCommand";
+import { beginFeaturePattern, beginFeaturePatternEditing, selectedPattern, selectedPatternSource } from "./featurePatternCommand";
 import { useViewerState } from "../../state/viewerState";
 import { exportPng } from "../../persistence/exportPng";
 import { toggleAiDrawer, beginPartDescription } from "./aiCommand";
@@ -149,6 +150,7 @@ export interface CommandEnablement {
   moveEarlier: boolean;
   moveLater: boolean;
   createHole: boolean;
+  createFeaturePattern: boolean;
   createGuidedHole: boolean;
   guidedHoleActive: boolean;
   outsideGuidedHole: boolean;
@@ -202,12 +204,13 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
     exportSketchPng: canvasActive && !state.fileBusy && !targetPickerActive && !guidedHoleStartBlocked && !scopeCaptureBusy,
     createExtrude: !canvasActive && ((!targetPickerActive && canCreateExtrude(state)) || handoffReady),
     createRevolve: !targetPickerActive && !canvasActive && Boolean(defaultRevolveAxis(state)),
-    editFeature: !targetPickerActive && !canvasActive && Boolean(editableExtrude(state) || editableModelingFeature(state) || editableHole(state)),
+    editFeature: !targetPickerActive && !canvasActive && Boolean(editableExtrude(state) || editableModelingFeature(state) || editableHole(state) || selectedPattern(state)),
     selectedFeature: !targetPickerActive && !canvasActive && Boolean(getSelectedFeature(state)),
     createEdgeTreatment: !targetPickerActive && !canvasActive && Boolean(edgeTreatmentOwner(state)),
     moveEarlier: !targetPickerActive && !canvasActive && !planTimelineMove(state.history.present, state.selection.selectedIds[0], "earlier").reason,
     moveLater: !targetPickerActive && !canvasActive && !planTimelineMove(state.history.present, state.selection.selectedIds[0], "later").reason,
     createHole: !targetPickerActive && !canvasActive && Boolean(holeCreationContext(state)),
+    createFeaturePattern: !targetPickerActive && !canvasActive && Boolean(selectedPatternSource(state)),
     captureTargetScope: !targetPickerActive && !canvasActive && canCaptureTargetScope(state,scopeCaptureBusy),
   };
 }
@@ -255,7 +258,8 @@ export const commands: CadCommand[] = [
   { id: "feature.cancelGuidedHole", internal: true, label: "Cancel Guided Holes", alwaysEnabled: true, run: cancelGuidedHole },
   { id: "sketch.entity.delete", internal: true, label: "Delete selected sketch item", enablementKey: "deleteSketchEntity", run: deleteSelectedCanvasEntity },
   { id: "ai.toggle", label: "Toggle AI Drawer", description: "Describe a part and preview an editable AI component.", enablementKey: "outsideGuidedHole", run: toggleAiDrawer },
-  { id: "feature.edit", label: "Edit Selected Feature", description: "Preview changes to the selected Extrude, Revolve, Fillet, Chamfer or Hole and its downstream geometry.", enablementKey: "editFeature", run: () => { if (editableExtrude(useCadStore.getState())) beginExtrudeEditing(); else if (editableHole(useCadStore.getState())) beginHoleEditing(); else beginModelingEditing(); } },
+  { id: "feature.edit", label: "Edit Selected Feature", description: "Preview changes to the selected Extrude, Revolve, Fillet, Chamfer, Hole or Pattern and its downstream geometry.", enablementKey: "editFeature", run: () => { if (selectedPattern(useCadStore.getState())) beginFeaturePatternEditing(); else if (editableExtrude(useCadStore.getState())) beginExtrudeEditing(); else if (editableHole(useCadStore.getState())) beginHoleEditing(); else beginModelingEditing(); } },
+  { id: "feature.pattern", label: "Repeat Hole or Pocket", description: "Select a single-center Hole or distance Cut Extrude, then create a linked linear or circular native feature pattern.", enablementKey: "createFeaturePattern", run: beginFeaturePattern },
   {
     id: "file.renameProject", internal: true, label: "Rename Project", enablementKey: "editProject",
     run: ({ projectName }) => {

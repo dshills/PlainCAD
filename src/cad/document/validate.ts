@@ -388,6 +388,13 @@ export function validateDocument(document: CadDocument, mode: "modeling" | "stor
     // Well-typed broken references must survive open/recovery so the inspector can repair them.
     // Modeling still rejects them below; malformed fields and duplicate IDs always fail.
     if (mode === "storage") continue;
+    if (feature.type === "pattern") {
+      const source = document.features.find(item => item.id === feature.sourceFeatureId);
+      if (!source || source.suppressed || !((source.type === "hole" && source.centerPointIds.length === 1) || (source.type === "extrude" && source.operation === "cut" && (!source.termination || source.termination.type === "distance"))))
+        issues.push({ source: "feature", sourceId: feature.id, message: "Pattern source was lost, suppressed, or changed. Select a single-center Hole or distance Cut Extrude." });
+      if (!feature.targetBodyIds.length || new Set(feature.targetBodyIds).size !== feature.targetBodyIds.length || (source && JSON.stringify([...targetBodyIds(source)].sort()) !== JSON.stringify([...feature.targetBodyIds].sort())))
+        issues.push({ source: "feature", sourceId: feature.id, message: "Pattern targets must match the source feature’s unique explicit body scope. Repair the source or reselect it." });
+    }
     if (feature.type === "extrude" && !document.sketches[feature.sketchId]) {
       issues.push({
         source: "feature",
@@ -706,6 +713,13 @@ function validatePersistedFields(document: CadDocument): ValidationIssue[] {
           (feature.depth === "throughAll" || expression(feature.depth)),
         "Hole dimensions require expressions and units.",
       );
+    }
+    if (feature.type === "pattern") {
+      const pattern = feature.pattern;
+      checkFeature(typeof feature.sourceFeatureId === "string" && feature.sourceFeatureId.length > 0 && strings(feature.targetBodyIds) && feature.targetBodyIds.length <= MODEL_RESOURCE_LIMITS.maxBodies, "Malformed feature pattern references.");
+      checkFeature(Boolean(pattern && typeof pattern === "object" && !Array.isArray(pattern) &&
+        (pattern.type === "linear" ? expression(pattern.count) && expression(pattern.spacing) && ["X", "Y"].includes(pattern.direction)
+          : pattern.type === "circular" && expression(pattern.count) && expression(pattern.angle) && expression(pattern.centerX) && expression(pattern.centerY))), "Malformed feature pattern settings.");
     }
     if (feature.type === "fillet" || feature.type === "chamfer") {
       checkFeature(

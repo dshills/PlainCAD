@@ -27,6 +27,7 @@ import { useCommandEnablement } from "../ui/commands/useCommandEnablement";
 import { RecoveryPanel } from "../ui/panels/RecoveryPanel";
 import { FabricationPanel } from "../ui/panels/FabricationPanel";
 import { HoleCreationPanel } from "../ui/panels/HoleCreationPanel";
+import { FeaturePatternPanel } from "../ui/panels/FeaturePatternPanel";
 import { lazy, Suspense, useEffect, useMemo, useRef } from "react";
 import { CadViewer } from "../viewer/CadViewer";
 import {
@@ -202,6 +203,13 @@ const toolbarGroups: ToolbarGroup[] = [
         ariaLabel: "Hole from selected sketch",
       },
       {
+        command: "feature.pattern",
+        label: "Pattern",
+        icon: "Pat",
+        title: "Repeat a selected Hole or distance Cut Extrude",
+        ariaLabel: "Repeat selected hole or pocket",
+      },
+      {
         command: "template.createMountingPlate",
         label: "Mount Plate",
         icon: "M",
@@ -296,6 +304,7 @@ const FOCUSED_WHEN_ENABLED = new Set([
   "feature.extrude",
   "feature.revolve",
   "feature.hole",
+  "feature.pattern",
   "feature.guidedHole",
 ]);
 
@@ -531,6 +540,7 @@ export function App() {
       <RecoveryPanel />
       <FabricationPanel />
       <HoleCreationPanel />
+      <FeaturePatternPanel />
       <SolidDimensionEditor />
       <ExtrudeCreationPanel />
       <FacePocketPanel />

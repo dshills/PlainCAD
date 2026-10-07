@@ -22,7 +22,7 @@ export function featureComponentId(
   if (feature.componentId) return feature.componentId;
   if ("sketchId" in feature)
     return sketchComponentId(document, feature.sketchId);
-  const ownerId = feature.targetEdgeRefs[0]?.featureId;
+  const ownerId = feature.type === "pattern" ? feature.sourceFeatureId : feature.targetEdgeRefs[0]?.featureId;
   const owner = document.features.find((item) => item.id === ownerId);
   // Supported edge owners are new-body extrusions, so this never follows recursive refs.
   return (

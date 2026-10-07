@@ -143,6 +143,8 @@ export function buildDependencyGraph(document: CadDocument): DependencyGraph {
       to = dependencyKey("feature", f.id);
     if ("sketchId" in f)
       connect(reference("sketch", f.sketchId), to, "Source sketch");
+    if (f.type === "pattern")
+      connect(reference("feature", f.sourceFeatureId), to, "Pattern source feature");
     if (f.type === "revolve" && f.axis.type === "sketchLine")
       connect(reference("sketch", f.axis.sketchId), to, "Axis line sketch");
     if (f.type === "extrude" && f.termination?.type === "toFace")

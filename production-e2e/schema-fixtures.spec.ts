@@ -71,7 +71,9 @@ function stlGeometry(bytes: Buffer) {
   return { volume, min, max };
 }
 
-for (let version = 1; version <= CURRENT_SCHEMA_VERSION; version++) {
+// These historical fixtures share the original base/through-hole contract.
+// New schema feature fixtures have dedicated native assertions in separate files.
+for (let version = 1; version <= 13; version++) {
   test(`schema ${version}: production native migration, edit, save/open and STL preserve intent`, async ({
     page,
   }, info) => {

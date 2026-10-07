@@ -18,6 +18,7 @@ const migrations = new Map<number, Migration>([
   [10, migrateV10ToV11],
   [11, migrateV11ToV12],
   [12, migrateV12ToV13],
+  [13, (document) => ({ ...document, schemaVersion: 14 })],
 ]);
 
 function migrateV12ToV13(document: CadDocument): CadDocument {
@@ -364,6 +365,20 @@ function sanitizeFeature(feature: Feature): Feature | undefined {
       ...(isRecord(feature.termination) ? { termination: sanitizeExtrudeTermination(feature.termination, feature.distance) } : {}),
       ...(Array.isArray(feature.targetBodyIds) ? { targetBodyIds: [...feature.targetBodyIds] } : {}),
       direction: feature.direction,
+    };
+  }
+  if (feature.type === "pattern") {
+    const pattern = feature.pattern;
+    if (!isRecord(pattern) || (pattern.type !== "linear" && pattern.type !== "circular"))
+      throw new Error("Malformed feature pattern settings.");
+    if (!Array.isArray(feature.targetBodyIds) || feature.targetBodyIds.some(id => typeof id !== "string"))
+      throw new Error("Malformed feature pattern target scope.");
+    return {
+      ...base, type: "pattern", sourceFeatureId: feature.sourceFeatureId,
+      targetBodyIds: [...feature.targetBodyIds],
+      pattern: pattern.type === "linear"
+        ? { type: "linear", count: sanitizeExpressionRef(pattern.count), spacing: sanitizeExpressionRef(pattern.spacing), direction: pattern.direction }
+        : { type: "circular", count: sanitizeExpressionRef(pattern.count), angle: sanitizeExpressionRef(pattern.angle), centerX: sanitizeExpressionRef(pattern.centerX), centerY: sanitizeExpressionRef(pattern.centerY) },
     };
   }
   if (feature.type === "hole") {

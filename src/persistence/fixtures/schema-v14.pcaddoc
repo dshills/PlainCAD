@@ -1,0 +1,296 @@
+{
+  "schemaVersion": 14,
+  "id": "fixture-v14",
+  "name": "Schema 14 associative hole pattern fixture",
+  "units": "metric",
+  "unitSettings": {
+    "length": "mm",
+    "angle": "deg"
+  },
+  "createdAt": "2025-01-01T00:00:00.000Z",
+  "updatedAt": "2025-01-01T00:00:03.000Z",
+  "parameters": {
+    "thickness": {
+      "id": "thickness-parameter",
+      "name": "thickness",
+      "expression": "5",
+      "value": 5,
+      "unit": "mm",
+      "authoredUnit": "mm",
+      "group": "Manufacturing"
+    }
+  },
+  "sketches": {
+    "section": {
+      "id": "section",
+      "name": "Rectangle",
+      "plane": {
+        "type": "origin",
+        "plane": "XY"
+      },
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "entities": {
+        "corner0": {
+          "id": "corner0",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "corner1": {
+          "id": "corner1",
+          "type": "point",
+          "x": {
+            "expression": "20mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "corner2": {
+          "id": "corner2",
+          "type": "point",
+          "x": {
+            "expression": "20mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "10mm",
+            "unit": "mm"
+          }
+        },
+        "corner3": {
+          "id": "corner3",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "10mm",
+            "unit": "mm"
+          }
+        },
+        "side0": {
+          "id": "side0",
+          "type": "line",
+          "startPointId": "corner0",
+          "endPointId": "corner1"
+        },
+        "side1": {
+          "id": "side1",
+          "type": "line",
+          "startPointId": "corner1",
+          "endPointId": "corner2"
+        },
+        "side2": {
+          "id": "side2",
+          "type": "line",
+          "startPointId": "corner2",
+          "endPointId": "corner3"
+        },
+        "side3": {
+          "id": "side3",
+          "type": "line",
+          "startPointId": "corner3",
+          "endPointId": "corner0"
+        },
+        "helper": {
+          "id": "helper",
+          "type": "point",
+          "x": {
+            "expression": "25mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "5mm",
+            "unit": "mm"
+          },
+          "construction": true
+        }
+      },
+      "constraints": [
+        {
+          "id": "fixed-origin",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "corner0"
+          ]
+        },
+        {
+          "id": "horizontal-base",
+          "type": "horizontal",
+          "entityIds": [
+            "side0"
+          ]
+        }
+      ],
+      "dimensions": [
+        {
+          "id": "width-dimension",
+          "type": "length",
+          "entityIds": [
+            "side0"
+          ],
+          "expression": {
+            "expression": "20mm",
+            "unit": "mm"
+          }
+        }
+      ],
+      "timelineStep": 1,
+      "solveMode": "driving",
+      "solveRevision": 2,
+      "componentId": "root-component"
+    },
+    "hole-section": {
+      "id": "hole-section",
+      "name": "Hole centers",
+      "plane": {
+        "type": "face",
+        "featureId": "base",
+        "stableFaceId": "extrude:base:endCap"
+      },
+      "createdAt": "2025-01-01T00:00:02.000Z",
+      "entities": {
+        "center": {
+          "id": "center",
+          "type": "point",
+          "x": {
+            "expression": "10mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "5mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "constraints": [],
+      "dimensions": [],
+      "timelineStep": 3,
+      "componentId": "root-component"
+    }
+  },
+  "features": [
+    {
+      "id": "base",
+      "name": "Base",
+      "type": "extrude",
+      "sketchId": "section",
+      "profileId": "section:profile:rectangle",
+      "operation": "newBody",
+      "distance": {
+        "expression": "thickness",
+        "unit": "mm",
+        "parameterRefs": {
+          "thickness": "thickness-parameter"
+        }
+      },
+      "direction": "positive",
+      "createdAt": "2025-01-01T00:00:01.000Z",
+      "timelineStep": 2,
+      "termination": {
+        "type": "distance",
+        "distance": {
+          "expression": "thickness",
+          "unit": "mm",
+          "parameterRefs": {
+            "thickness": "thickness-parameter"
+          }
+        }
+      },
+      "targetBodyIds": [],
+      "componentId": "root-component"
+    },
+    {
+      "id": "hole",
+      "name": "Through hole",
+      "type": "hole",
+      "sketchId": "hole-section",
+      "centerPointIds": [
+        "center"
+      ],
+      "diameter": {
+        "expression": "2mm",
+        "unit": "mm"
+      },
+      "depth": "throughAll",
+      "createdAt": "2025-01-01T00:00:03.000Z",
+      "timelineStep": 4,
+      "targetBodyIds": [
+        "body:base"
+      ],
+      "componentId": "root-component",
+      "direction": "negative"
+    },
+    {
+      "id": "hole-pattern",
+      "name": "Linear holes",
+      "type": "pattern",
+      "sourceFeatureId": "hole",
+      "componentId": "root-component",
+      "targetBodyIds": [
+        "body:base"
+      ],
+      "timelineStep": 5,
+      "pattern": {
+        "type": "linear",
+        "count": {
+          "expression": "2",
+          "unit": "",
+          "authoredUnit": ""
+        },
+        "spacing": {
+          "expression": "7mm",
+          "unit": "mm",
+          "authoredUnit": "mm"
+        },
+        "direction": "X"
+      }
+    }
+  ],
+  "timelineCursor": 5,
+  "viewState": {
+    "namedViews": [
+      {
+        "id": "view_fixture",
+        "name": "Fixture camera",
+        "cameraPosition": [
+          100,
+          -100,
+          100
+        ],
+        "cameraTarget": [
+          0,
+          0,
+          0
+        ],
+        "cameraUp": [
+          0,
+          0,
+          1
+        ]
+      }
+    ]
+  },
+  "displayUnits": {
+    "length": "in",
+    "angle": "rad"
+  },
+  "rootComponentId": "root-component",
+  "components": {
+    "root-component": {
+      "id": "root-component",
+      "name": "Root Component"
+    }
+  }
+}

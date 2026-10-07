@@ -91,6 +91,12 @@ export function mapDocumentExpressions(
     if (f.type === "fillet") return { ...f, radius: read(f.radius, "radius") };
     if (f.type === "chamfer")
       return { ...f, distance: read(f.distance, "distance") };
+    if (f.type === "pattern") {
+      const pattern = f.pattern;
+      return { ...f, pattern: pattern.type === "linear"
+        ? { ...pattern, count: read(pattern.count, "count"), spacing: read(pattern.spacing, "spacing") }
+        : { ...pattern, count: read(pattern.count, "count"), angle: read(pattern.angle, "angle"), centerX: read(pattern.centerX, "centerX"), centerY: read(pattern.centerY, "centerY") } };
+    }
     const exhaustive: never = f;
     return exhaustive;
   });
@@ -175,7 +181,7 @@ export function bindDocumentExpressions(
               document.sketches[id]?.dimensions.find(
                 (d) => d.id === field.slice("dimension:".length),
               )?.type === "angle");
-          bound.authoredUnit = angle
+          bound.authoredUnit = field === "count" ? "" : angle
             ? document.unitSettings.angle
             : document.unitSettings.length;
         }

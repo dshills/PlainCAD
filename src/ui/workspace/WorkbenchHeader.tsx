@@ -47,6 +47,7 @@ const groups = {
     ["feature.guidedHole", "Hole", "Place holes on face", CircleIcon],
     ["feature.fillet", "Fillet", "Fillet extrusion edges", CylinderIcon],
     ["feature.chamfer", "Chamfer", "Chamfer extrusion edges", CubeIcon],
+    ["feature.pattern", "Pattern", "Repeat selected hole or pocket", SquareIcon],
   ],
 } as const;
 export function WorkbenchHeader({ context }: { context: CommandContext }) {

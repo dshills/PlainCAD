@@ -38,6 +38,8 @@ import { resolveDocumentPlanes, SketchPlaneTransform } from "../sketch/planes";
 import { planFeatureGraph, stableBodyIdForFeature } from "./featureGraph";
 import { resolveRevolveAxis } from "./revolveAxis";
 import { resolveSupportedEdgeRefs } from "./topologyRefs";
+import { featurePatternTransforms, patternSource, patternToolBounds, patternBoundsMayOverlap } from "./featurePattern";
+import type { FeaturePatternFeature } from "../document/schema";
 
 const kernel = new OpenCascadeKernel();
 const edgeProofCache = new NativeEdgeProofCache();
@@ -271,6 +273,7 @@ export function rebuildDocument(
           feature.type !== "hole" &&
           feature.type !== "fillet" &&
           feature.type !== "chamfer" &&
+          feature.type !== "pattern" &&
           feature.operation === "newBody" &&
           runtimeBodies.size >= MODEL_RESOURCE_LIMITS.maxBodies
         ) {
@@ -284,6 +287,10 @@ export function rebuildDocument(
           continue;
         }
         operationCount += 1;
+        if (feature.type === "pattern") {
+          rebuildPatternFeature(feature, document, profilesBySketch, solvedSketches, planes.transforms, evaluated.values, runtimeBodies, shapesToDispose, errors);
+          continue;
+        }
         if (feature.type === "revolve") {
           rebuildRevolveFeature(
             feature,
@@ -585,6 +592,79 @@ export function rebuildDocument(
           disposableMetricsStarted.failures),
     },
   };
+}
+
+function rebuildPatternFeature(
+  feature: FeaturePatternFeature,
+  document: CadDocument,
+  profiles: Map<string, ReturnType<typeof detectProfiles>>,
+  solvedSketches: Map<string, ReturnType<typeof solveSketch>>,
+  planes: Map<string, SketchPlaneTransform>,
+  parameters: Parameters<typeof evaluateExpressionRef>[1]["parameters"],
+  runtimeBodies: Map<string, RuntimeBody>,
+  ownedShapes: Set<KernelShape>,
+  errors: RebuildError[],
+) {
+  try {
+    if (!OpenCascadeKernel.isInitialized() || !kernel.cutScope || !kernel.hasCommonVolume)
+      throw new Error("Feature patterns require native OpenCascade geometry; fallback meshes cannot repeat cuts.");
+    const source = patternSource(document, feature.sourceFeatureId),
+      plane = planes.get(source.sketchId),
+      solved = solvedSketches.get(source.sketchId);
+    if (!plane || !solved || solved.errors.length) throw new Error("Pattern source sketch or plane was lost. Repair it first.");
+    const targets = feature.targetBodyIds.map(bodyId => ({ bodyId, body: runtimeBodies.get(bodyId) }));
+    if (!targets.length || targets.some(target => !target.body?.mesh || target.body.mesh.geometrySource !== "opencascade"))
+      throw new Error("Pattern targets were lost or are not current native solids. Restore the source body scope.");
+    const transforms = featurePatternTransforms(feature.pattern, plane, parameters);
+    let depth: number;
+    let profile: ReturnType<typeof detectProfiles>["profiles"][number];
+    if (source.type === "hole") {
+      const diameter = evaluateExpressionRef(source.diameter, { parameters }),
+        center = solved.points[source.centerPointIds[0]];
+      if (!center || diameter.error || diameter.quantity?.dimension !== "length" || diameter.quantity.value <= 0)
+        throw new Error("Pattern source Hole center or diameter is invalid. Repair the source Hole.");
+      profile = circleToolProfile(feature.id, source.centerPointIds[0], center.x, center.y, diameter.quantity.value / 2);
+      const depths = source.depth === "throughAll"
+        ? targets.map(target => throughAllDistance(target.body!.mesh!.bounds, plane, source.direction ?? "positive"))
+        : [evaluateHoleDepth(source.depth, parameters)];
+      if (depths.some(value => value === undefined || value <= 0)) throw new Error("Pattern source Hole depth cannot reach the target bodies.");
+      depth = Math.max(...depths as number[]);
+    } else {
+      const found = profiles.get(source.sketchId)?.profiles.find(item => item.id === source.profileId || item.alternateIds?.includes(source.profileId));
+      if (!found) throw new Error("Pattern source pocket profile was lost. Repair the source Cut Extrude.");
+      profile = found;
+      const distance = resolveExtrudeDistance(source, parameters, targets.map(target => target.body!.mesh!), plane);
+      if (distance.error || distance.value <= 0) throw new Error(distance.error ?? "Pattern source pocket depth must be positive.");
+      depth = distance.value;
+    }
+    const tools: KernelShape[] = [];
+    const bounds: ReturnType<typeof patternToolBounds>[] = [];
+    for (const [index, transform] of transforms.entries()) {
+      const sweep = extrusionSweep(transform, depth, source.direction ?? "positive"), toolBounds = patternToolBounds(profile, sweep, depth);
+      const tool = kernel.extrudeProfile(profile, depth, sweep);
+      ownedShapes.add(tool);
+      for (const [previousIndex, previous] of tools.entries())
+        if (patternBoundsMayOverlap(bounds[previousIndex], toolBounds) && kernel.hasCommonVolume(previous, tool))
+          throw new Error(`Pattern instance ${index + 1} overlaps instance ${previousIndex + 1}. Increase spacing, adjust sweep/center, or reduce count.`);
+      tools.push(tool);
+      bounds.push(toolBounds);
+    }
+    let cuts: KernelShape[];
+    try {
+      // The original already exists; validate every additional tool and every target atomically.
+      cuts = kernel.cutScope(targets.map(target => target.body!.shape), tools.slice(1));
+    } catch (error) {
+      if (error instanceof HoleScopeError)
+        throw new Error(error.scope === "center"
+          ? `Pattern instance ${error.index + 2} does not remove new material. Move it onto the target or reduce count. ${error.message}`
+          : `Pattern target ${targets[error.index].body!.name} does not lose material. Restore the source target scope. ${error.message}`);
+      throw error;
+    }
+    cuts.forEach(shape => ownedShapes.add(shape));
+    publishOperationOutputs(kernel, runtimeBodies, cuts.map((shape, index) => ({ ...targets[index].body!, bodyId: targets[index].bodyId, shape })));
+  } catch (error) {
+    errors.push({ id: `kernel:${feature.id}`, source: "kernel", sourceId: feature.id, message: kernelErrorMessage("pattern", error) });
+  }
 }
 
 function rebuildRevolveFeature(

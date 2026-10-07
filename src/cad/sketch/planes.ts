@@ -106,6 +106,7 @@ export function faceOwnerModifiedBefore(
         f.operation !== "newBody" &&
         f.targetBodyIds?.includes(`body:${ownerId}`)) ||
         (f.type === "hole" && targetBodyIds(f).includes(`body:${ownerId}`)) ||
+        (f.type === "pattern" && targetBodyIds(f).includes(`body:${ownerId}`)) ||
         ((f.type === "fillet" || f.type === "chamfer") &&
           f.targetEdgeRefs?.some((ref) => ref.featureId === ownerId))),
   );
