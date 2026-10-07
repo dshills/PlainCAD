@@ -62,6 +62,9 @@ afterEach(() => {
 it("starts focused with clear entry choices and no empty panel or timeline wall; all tools retains shared enablement", () => {
   render(<App />);
   expect(screen.getByLabelText("Workspace layout")).toHaveValue("focused");
+  expect(screen.queryByRole("heading", { name: "What would you like to make?" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("region", { name: "Start a part" })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByText("New part", { exact: true }));
   const start = screen.getByRole("region", { name: "Start a part" });
   expect(
     within(start).getByRole("button", { name: "Draw a shape" }),
@@ -123,6 +126,7 @@ it("opens Parts deliberately, restores focus when closed and starts the existing
   expect(screen.getByRole("heading", { name: "Browser" })).toBeVisible();
   fireEvent.click(screen.getByRole("button", { name: "Close Parts" }));
   expect(screen.getByRole("button", { name: "Parts" })).toHaveFocus();
+  fireEvent.click(screen.getByText("New part", { exact: true }));
   fireEvent.click(screen.getByRole("button", { name: "Draw a shape" }));
   expect(screen.getByRole("region", { name: "Create Sketch" })).toBeVisible();
 });

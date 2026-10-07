@@ -1,3 +1,4 @@
+import { openNewPartMenu } from "../e2e/newPartWorkflow";
 import { focusedWorkspaceStorageState } from "../e2e/workspaceStorage";
 import { applyExtrusion } from "../e2e/extrudeWorkflow";
 import { test, expect } from "@playwright/test";
@@ -17,6 +18,7 @@ test("built focused workspace starts quietly and edits/exports a native example 
   await expect(
     page.getByRole("heading", { name: "Dependencies" }),
   ).toBeHidden();
+  await openNewPartMenu(page);
   await page.getByText("Start from example", { exact: true }).click();
   await page
     .getByRole("button", { name: "Load mounting plate template", exact: true })
@@ -72,6 +74,7 @@ test("built Focused precise sketch and inline dimension edit produce native STL 
     "worker-src 'self'",
   );
   await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+  await openNewPartMenu(page);
   await page.getByRole("button", { name: "Draw a shape", exact: true }).click();
   await page
     .getByRole("button", { name: "Sketch on Front (XZ) plane", exact: true })

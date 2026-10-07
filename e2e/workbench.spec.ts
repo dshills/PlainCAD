@@ -1,3 +1,4 @@
+import { openNewPartMenu } from "./newPartWorkflow";
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import {
@@ -49,6 +50,7 @@ test("default workbench preserves native mouse modeling, docked distance preview
   await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
   await expect(page.locator(".app-shell")).toHaveClass(/docked-workbench/);
   await page.getByRole("button", { name: "Close Parts", exact: true }).click();
+  await openNewPartMenu(page);
   await page.getByRole("button", { name: "Draw a shape", exact: true }).click();
   await page
     .getByRole("button", { name: "Sketch on Top (XY) plane", exact: true })
@@ -73,9 +75,7 @@ test("default workbench preserves native mouse modeling, docked distance preview
   await page
     .getByRole("button", { name: "Finish Sketch", exact: true })
     .click();
-  await page
-    .getByRole("button", { name: "Extrude selected sketch", exact: true })
-    .click();
+  await expect(page.getByRole("dialog", { name: "Extrude", exact: true })).toBeVisible();
   const dialog = page.getByRole("dialog", { name: "Extrude", exact: true });
   await expect(dialog).toHaveClass(/docked-model-dialog/);
   await dialog.getByLabel("Extrude distance").fill("8mm");

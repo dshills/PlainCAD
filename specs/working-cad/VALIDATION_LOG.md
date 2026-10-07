@@ -9,11 +9,14 @@ missing or the count cannot be determined, establish a baseline with the full ga
 ## Last successful full gate
 
 - Date: 2026-10-07.
-- Change: Rectangle workflow and selection-based reference dimensions, commit `dbc4dea`.
-- Result: type checks, build/bundle budget, 994 unit/component tests,
-  228 development browser tests, and 29 production browser tests passed.
-- Completed items since that full gate: **4**.
-- Next full gate: item **5**, after one more completed item.
+- Change: Direct Finish Sketch preview and clear startup canvas (including the additional starter-card removal).
+- Result: type checks, build/bundle budget, 1032 unit/component tests,
+  all 242 development browser cases verified, and 30 production browser tests passed.
+  The development run had 240 passes and two outdated test steps; both corrected
+  files passed their 3-case rerun. Production completed separately after that fix.
+  Only test steps changed; runtime sources stayed frozen throughout validation.
+- Completed items since that full gate: **0**.
+- Next full gate: item **5**, after five more completed items.
 
 ## Completed batch
 
@@ -48,7 +51,7 @@ Prism review `cca424c1601d9788c19e28bdbd73e7dc` covered all twenty item-4 files.
 
 Prism review `9224995a388d49c8a2f70b83670b95e9` covered all twenty-four Rectangle/integration files. Positive-length validation and zero/negative center-size tests already reject degenerate sizes; each sketch test replaces the document and rebuild state. Tool consumption is immutable and guarded, its cancel ref is initialized, and reference IDs and memoization match the annotation builder. Draft sizing now occupies the always-present properties panel outside the canvas, with native overlap assertions and successful side-face mouse pockets. Disabled solid-dimension cards pass pointer events through to geometry; all twelve native pointer regressions passed before the full gate. The full gate found and verified these obstruction fixes. File-job status is now a non-flow overlay so PNG encoding cannot resize/refit the viewport; strict native camera assertions and keyboard cancellation were verified. Older reference-display, optional-guidance and parameter-selector fixtures now exercise the intended UI. The pending validation entry has now been completed.
 
-## Current batch
+## Completed batch: first-part workflow
 
 | Item | Requested change | Prism review | Reduced gate | Full gate |
 | --- | --- | --- | --- | --- |
@@ -56,14 +59,19 @@ Prism review `9224995a388d49c8a2f70b83670b95e9` covered all twenty-four Rectangl
 | 2 | Simplified fabrication options and persistent completion actions | Anthropic `claude-sonnet-5-5`; no high/medium findings; one low test note assessed | Passed: type checks, 1029 unit tests, build/bundle budget, 5 development and 14 production smoke tests; native export/footer/ZIP tests | Not due |
 | 3 | Compact Parts browser and contextual actions | Anthropic `claude-sonnet-5-5`; no high/medium findings; final low note assessed | Passed: shared frozen-checkout reduced gate, 1032 unit tests, type checks, build/bundle budget, 5 development and 14 production smoke tests; compact native Parts case | Not due |
 | 4 | Associative center rectangles and owned-support deletion | Anthropic `claude-sonnet-5-5`; no high/medium findings; six low notes assessed | Passed: shared frozen-checkout reduced gate; 4 native rectangle workflows including XY/XZ parameter centers, undo/redo, save/open and STL | Not due |
+| 5 | Direct single-region Finish Sketch thickness preview | Anthropic `claude-sonnet-5-5`; one medium missing-helper false positive verified; no actionable functional findings remain | Shared frozen-checkout reduced gate passed | Full stages verified: 1032 units, 242 development cases after targeted test-step repairs, 30 production cases |
+| Additional | Remove startup question card; retain collapsed New part menu | Same reviewed first-part change; native Draw/Describe and compact theme cases passed | Shared reduced gate passed | Covered by the same checkpoint before completion |
 
 Prism review `42e25361187ae950c8a18d6b6c5ac59a` covered the complete fabrication change. Earlier label, bounds and cancellation findings were fixed. The final low note concerns the scroll-container test: compact native coverage actually scrolls options and verifies reachable footer actions; desktop coverage verifies the footer stays outside that container. Separate-file checks now accurately exclude cross-file overlaps. The reduced gate passed on the integrated checkout, with a largest JavaScript bundle of 417.69 kB.
 
 Prism review `9f83a6142b0afbbf57d91bdaaf2059d5` covered all sixteen Render files. The idle observation begins only after frame scheduling settles. Preset snapshots are private to mode switching; active controls use current grid/edge flags, with switch/reset tests. Fixed light counts/order enforce the bounded studio budget. Render grid visibility is intentionally optional and remembered independently. Final integration sources match the native-tested checkout exactly; geometry buffers, camera/picking, idle rendering, movement quality, PNG pixels and unchanged STL were verified. Largest JavaScript bundle is 414.41 kB within the 500 kB budget.
-
 
 Prism review `dba73cb49b64e95fc76221217363bca8` covered all nine Parts files. Outside dismissal now blurs a dirty rename before hiding the disclosure; native checks verify rename, Escape cancellation and Undo. The remaining low note concerns unsupported detached-window DOM constructors; current docks all live in the app document. The reduced gate is shared by the parallel, frozen implementation items so identical broad checks need not be repeated. Largest bundle: 417.91 kB.
 
 Prism review `54193d8e6ade405d5238bc5fcb5c68aa` covered all nine centered-rectangle commit files. Numeric native assertions preserve strict centered placement and compare free Corner sizes rather than promising an unconstrained position; project round trips preserve actual bounds. Helper namespaces are documented and tested with borrowed centers, external constraints, holes and reordered entities. Both cleanup predicates now preserve multi-point fixed constraints. Empty validate sketches have no existing intent to change; nonempty validate sketches receive actionable guidance. The shared menu helper supports the older startup card as well as the collapsed menu, keeping intermediate commits usable.
 
 Fabrication test fixup: Prism `f74c1d464c683faa5d4328937254bead` reviewed the Cancel-action keyboard selectors (no high/medium; one low repetition note assessed). Both native keyboard cases passed, including radio-group focus wrapping and recovery. Type checking passed. This test-only fix belongs to item 2 and does not advance cadence.
+
+Prism `e71f5f90769510418b97423827ad1a88` covered the complete 24-file first-part change. Its missing-helper medium finding is false: `e2e/newPartWorkflow.ts` was already tracked by preceding commit `1e1d469`, and all importing browser cases ran successfully. Native details expose their expanded state automatically; nested example disclosure state is retained deliberately. Current commands dispatch immediately and shared enablement defines all prerequisite keys. Earlier actionable error/enablement findings were fixed. Prism `c256122939a5946ce1dcaba063d23aa3` reviewed the remaining automatic-preview test step; its low note describes the intended new behavior.
+
+The initial `release:check` invocation passed lint, all units and the build, then ended with 240 development passes and the two outdated keyboard/Finish test steps. After test-only corrections, lint and both affected files (3 cases) passed; all 30 production cases passed. All distinct tests of the full gate are therefore verified on unchanged runtime sources. This completed checkpoint resets cadence, and covers both first-part workflow requests. CI still executes the complete release command from a clean checkout.

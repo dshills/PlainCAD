@@ -1,10 +1,11 @@
-.project-start .project-start-name {
-  display: grid;
-  gap: 6px;
-  margin-block: 16px;
-  font-weight: 600;
-}
-.project-start .project-start-name input {
-  width: 100%;
-  min-width: 0;
-}
+.workspace-control-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.workspace-control-row > .workspace-controls,
+.workspace-control-row > .workbench-breadcrumb { flex: 1; min-width: 0; }
+.new-part-menu { position: relative; margin-right: 12px; flex: none; }
+.new-part-menu > summary { cursor: pointer; padding: 6px 10px; border: 1px solid var(--border); border-radius: 4px; background: var(--panel); }
+.new-part-options { position: absolute; z-index: 12; right: 0; top: calc(100% + 6px); width: min(320px, calc(100vw - 32px)); max-height: min(480px, 65vh); overflow: auto; padding: 16px; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 6px; box-shadow: 0 6px 24px #0002; }
+.new-part-options .project-start-name { display: grid; gap: 6px; margin-bottom: 12px; font-weight: 600; }
+.new-part-options .project-start-name input { width: 100%; min-width: 0; }
+.new-part-options .project-start-actions { display: grid; gap: 8px; }
+.new-part-options .project-start-actions > button { text-align: left; }
+.new-part-options .project-start-actions details button { display: block; margin-top: 8px; width: 100%; }

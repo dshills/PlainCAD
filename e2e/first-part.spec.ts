@@ -1,3 +1,4 @@
+import { openNewPartMenu } from "./newPartWorkflow";
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { aiSnapshot, stlSignedVolume } from "./aiAcceptanceHelpers";
@@ -41,13 +42,16 @@ async function pointerStart(page: Page, x: number, y: number) {
 test("named Draw route creates component and sketch atomically, then produces portable native geometry", async ({ page }, info) => {
   await page.goto("/");
   await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+  await openNewPartMenu(page);
   await page.getByLabel("Part name", { exact: true }).fill("Mouse bracket");
+  await expect(page.getByRole("region", { name: "Start a part" })).toBeVisible();
   await page.getByRole("button", { name: "Draw a shape", exact: true }).click();
   await page.getByRole("button", { name: "Cancel plane selection", exact: true }).click();
   const canceled = await aiSnapshot(page);
   expect(canceled.past).toBe(0);
   expect(Object.keys(canceled.document.components)).toHaveLength(1);
   expect(Object.keys(canceled.document.sketches)).toHaveLength(0);
+  await openNewPartMenu(page);
   await page.getByRole("button", { name: "Draw a shape", exact: true }).click();
   await page.getByRole("button", { name: "Sketch on Top (XY) plane", exact: true }).click();
   const created = await aiSnapshot(page);
@@ -62,7 +66,7 @@ test("named Draw route creates component and sketch atomically, then produces po
   await page.getByLabel("Draft height", { exact: true }).fill("20mm");
   await page.getByLabel("Draft height", { exact: true }).press("Enter");
   await page.getByRole("button", { name: "Finish Sketch", exact: true }).click();
-  await page.getByRole("button", { name: "Extrude selected sketch", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Extrude", exact: true })).toBeVisible();
   await page.getByRole("dialog", { name: "Extrude", exact: true }).getByLabel("Extrude distance").fill("6mm");
   await applyExtrusion(page);
   await nativePart(page, 3600, "Mouse bracket");
@@ -94,6 +98,7 @@ test("named Describe route previews native geometry without an empty component a
   });
   await page.goto("/");
   await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+  await openNewPartMenu(page);
   const start = page.getByRole("region", { name: "Start a part" });
   await start.getByLabel("Part name", { exact: true }).fill("Described bracket");
   await start.getByRole("button", { name: "Describe a part with AI", exact: true }).click();

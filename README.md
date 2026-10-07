@@ -112,17 +112,21 @@ remain planned.
 
 ### Make your first part
 
-1. On the empty project, enter **Part name** and choose **Draw a shape**.
+1. Open **New part** above the canvas, enter **Part name**, and choose **Draw a shape**.
 2. Confirm a plane. PlainCAD creates the component and its first sketch together.
 3. Choose **Rectangle**, **Circle**, or another drawing tool. Click or drag to draw;
    enter precise sizes or edit the drawing's dimension labels.
-4. Choose **Finish Sketch**, select a highlighted closed region, then **Make solid**.
+4. Choose **Finish Sketch**. A single closed region on an origin/offset plane
+   opens thickness preview directly. With several regions, select one and choose
+   **Make solid**; face sketches keep the Add/Remove material choice explicit.
 5. Inspect the Extrude preview, choose thickness and direction, then **Apply extrusion**.
 6. Add holes or a pocket on a supported face, or create another sketch and cut/join it.
 7. Edit a driving dimension or parameter, inspect the rebuilt geometry, then use
    **File → Save or export…** to download an editable project or printable STL.
 
-For another part, choose **New Component**, activate it, and **Create Sketch**.
+The startup question card no longer covers the canvas. **New part** keeps drawing,
+AI description, editable examples and opening a project in a collapsed menu.
+For another part, use **New part**, or choose **New Component**, activate it, and **Create Sketch**.
 Selecting a sketch, body, or timeline feature activates its owner. Double-click a
 sketch to edit it. **Mount Plate** and **Box** provide editable examples.
 

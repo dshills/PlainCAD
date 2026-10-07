@@ -560,26 +560,6 @@
   border-color: var(--accent);
   color: var(--accent);
 }
-.docked-workbench .project-start {
-  max-width: 480px;
-  padding: 32px;
-  background: var(--surface);
-  border-radius: 4px;
-  box-shadow: 0 8px 24px #0001;
-}
-.docked-workbench .project-start h1 {
-  font-size: 24px;
-  letter-spacing: -0.5px;
-  margin-top: 0;
-}
-.docked-workbench .project-start p {
-  line-height: 1.5;
-  color: var(--muted);
-  font-size: 13px;
-}
-.docked-workbench .project-start-actions {
-  gap: 8px;
-}
 /* Native top-layer dialog: preview occupies the modeling canvas and controls the
    task dock. Background commands stay inert until explicit Apply or Cancel. */
 dialog.docked-model-dialog::backdrop {

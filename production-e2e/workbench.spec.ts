@@ -1,3 +1,4 @@
+import { openNewPartMenu } from "../e2e/newPartWorkflow";
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { workbenchTaskFixture, type WorkbenchOperation } from "../e2e/workbenchTaskFixtures";
@@ -24,6 +25,7 @@ test("built workbench loads editors on demand and retains the AI draft across hi
   await expect(prompt).toHaveValue("A small instrument housing");
   expect(chunks("AiDrawer")).toHaveLength(1);
   await page.getByRole("button", { name: "Close AI drawer", exact: true }).click();
+  await openNewPartMenu(page);
   await page.getByRole("button", { name: "Draw a shape", exact: true }).click();
   await page.getByRole("button", { name: "Sketch on Front (XZ) plane", exact: true }).click();
   await expect(page.getByRole("group", { name: "Sketch drawing canvas", exact: true })).toBeVisible();

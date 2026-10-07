@@ -1,6 +1,6 @@
 import { useCadStore } from "../../state/useCadStore";
 import { useProjectWorkflow } from "../commands/projectWorkflowCommand";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CommandContext } from "../commands/commandRegistry";
 import { runCommand } from "../commands/commandRegistry";
 import "./projectStart.css";
@@ -8,6 +8,9 @@ import { useCommandEnablement } from "../commands/useCommandEnablement";
 
 export function ProjectStart({ context }: { context: CommandContext }) {
   const enabled = useCommandEnablement();
+  const menu = useRef<HTMLDetailsElement>(null);
+  const [open, setOpen] = useState(false);
+  const [error, setError] = useState<string>();
   const [name, setName] = useState(() => {
     const saved = useProjectWorkflow.getState().startName;
     const state = useCadStore.getState();
@@ -19,6 +22,8 @@ export function ProjectStart({ context }: { context: CommandContext }) {
   const session = useCadStore((state) => state.documentSession);
   const documentId = useCadStore((state) => state.history.present.id);
   useEffect(() => {
+    setOpen(false);
+    setError(undefined);
     const saved = useProjectWorkflow.getState().startName;
     setName(
       saved?.documentId === documentId && saved.session === session
@@ -26,28 +31,48 @@ export function ProjectStart({ context }: { context: CommandContext }) {
         : "Part 1",
     );
   }, [session, documentId]);
-  const [error, setError] = useState<string>();
+  useEffect(() => {
+    const closeOutside = (event: Event) => {
+      if (menu.current && event.target instanceof Node && !menu.current.contains(event.target)) {
+        setOpen(false);
+      }
+    };
+    window.document.addEventListener("pointerdown", closeOutside);
+    window.document.addEventListener("focusin", closeOutside);
+    return () => {
+      window.document.removeEventListener("pointerdown", closeOutside);
+      window.document.removeEventListener("focusin", closeOutside);
+    };
+  }, []);
   const validName = Boolean(name.trim()) && name.trim().length <= 120;
-  async function start(command: string) {
+  async function start(command: string, named = false) {
     try {
       setError(undefined);
       const state = useCadStore.getState();
-      useProjectWorkflow.setState({
+      if (named) useProjectWorkflow.setState({
         startName: {
           name,
           documentId: state.history.present.id,
           session: state.documentSession,
         },
       });
-      await runCommand(command, { ...context, componentName: name });
+      await runCommand(command, named ? { ...context, componentName: name } : context);
+      setOpen(false);
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : String(failure));
     }
   }
   return (
-    <section className="project-start" aria-label="Start a part">
-      <h1>What would you like to make?</h1>
-      <p>Draw a shape, describe a part, or start from an example.</p>
+    <details className="new-part-menu" ref={menu} open={open} onKeyDown={(event) => {
+      if (open && event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        setOpen(false);
+        menu.current?.querySelector("summary")?.focus();
+      }
+    }}>
+      <summary onClick={(event) => { event.preventDefault(); setOpen((current) => !current); }}>New part</summary>
+      <section className="new-part-options" aria-label="Start a part" hidden={!open}>
       <label className="project-start-name">
         Part name
         <input
@@ -56,22 +81,19 @@ export function ProjectStart({ context }: { context: CommandContext }) {
           onChange={(event) => setName(event.target.value)}
         />
       </label>
-      <p className="muted">
-        We organize your part and sketches inside this project for you.
-      </p>
       {error ? <p role="alert">{error}</p> : null}
       <div className="project-start-actions">
         <button
           type="button"
           disabled={!enabled.newComponent || !validName}
-          onClick={() => void start("project.startDrawing")}
+          onClick={() => void start("project.startDrawing", true)}
         >
           Draw a shape
         </button>
         <button
           type="button"
           disabled={!enabled.newComponent || !validName}
-          onClick={() => void start("project.startDescribing")}
+          onClick={() => void start("project.startDescribing", true)}
         >
           Describe a part with AI
         </button>
@@ -80,30 +102,29 @@ export function ProjectStart({ context }: { context: CommandContext }) {
           <button
             type="button"
             aria-label="Load mounting plate template"
-            onClick={() =>
-              void runCommand("template.createMountingPlate", context)
-            }
+            disabled={!enabled.outsideGuidedHole}
+            onClick={() => void start("template.createMountingPlate")}
           >
             Mounting plate
           </button>
           <button
             type="button"
             aria-label="Load parametric box template"
-            onClick={() => void runCommand("template.createBox", context)}
+            disabled={!enabled.outsideGuidedHole}
+            onClick={() => void start("template.createBox")}
           >
             Parametric box
           </button>
         </details>
         <button
           type="button"
-          onClick={() => void runCommand("file.openProject", context)}
+          disabled={!enabled.outsideGuidedHole}
+          onClick={() => void start("file.openProject")}
         >
           Open an existing project
         </button>
       </div>
-      <p className="muted">
-        AI is optional. Your editable project stays local.
-      </p>
-    </section>
+      </section>
+    </details>
   );
 }

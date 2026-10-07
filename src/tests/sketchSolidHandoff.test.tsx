@@ -123,6 +123,26 @@ it("selects the only region while preserving a deliberate Make solid action", ()
   expect(useOperationDrop.getState().frame).toBeUndefined();
   expect(useCadStore.getState().history).toBe(history);
 });
+it("Finish Sketch opens the single-region preview without changing history, while stale rebuilds wait", () => {
+  const { sketch, document, result } = fixture(1);
+  const history = useCadStore.getState().history;
+  const rebuild = useCadStore.getState().rebuild;
+  useCadStore.setState({ rebuild: { ...rebuild, status: "queued" } });
+  useSketchCanvas.setState({ active: { sketchId: sketch.id, documentId: document.id, session: useCadStore.getState().documentSession } });
+  finishSketchCanvas();
+  const source = useSketchSolidHandoff.getState().source!;
+  refreshSketchSolidHandoff(source);
+  expect(useExtrudeDraft.getState().draft).toBeUndefined();
+  useCadStore.setState({ rebuild });
+  refreshSketchSolidHandoff(source);
+  expect(useExtrudeDraft.getState().draft?.feature.profileId).toBe(result.profiles![sketch.id][0].id);
+  expect(useCadStore.getState().history).toBe(history);
+  expect(useOperationDrop.getState().frame).toBeUndefined();
+  expect(useSketchSolidHandoff.getState().source).toBeUndefined();
+  useExtrudeDraft.setState({ draft: undefined });
+  refreshSketchSolidHandoff(source);
+  expect(useExtrudeDraft.getState().draft).toBeUndefined();
+});
 it("waits for the current rebuild and rejects failed analysis and absent native readiness", () => {
   const { sketch } = fixture();
   beginSketchSolidHandoff(sketch.id);

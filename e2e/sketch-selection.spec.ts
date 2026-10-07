@@ -1,3 +1,4 @@
+import { openNewPartMenu } from "./newPartWorkflow";
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { aiSnapshot, stlSignedVolume } from "./aiAcceptanceHelpers";
@@ -62,6 +63,7 @@ test("box and Shift selection delete whole shapes once, preserve native geometry
 }, info) => {
   await page.goto("/");
   await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+  await openNewPartMenu(page);
   await page.getByRole("button", { name: "Draw a shape", exact: true }).click();
   await page
     .getByRole("button", { name: "Sketch on Top (XY) plane", exact: true })
@@ -125,9 +127,7 @@ test("box and Shift selection delete whole shapes once, preserve native geometry
   await page
     .getByRole("button", { name: "Finish Sketch", exact: true })
     .click();
-  await page
-    .getByRole("button", { name: "Extrude selected sketch", exact: true })
-    .click();
+  await expect(page.getByRole("dialog", { name: "Extrude", exact: true })).toBeVisible();
   await page.getByLabel("Extrude distance", { exact: true }).fill("5mm");
   await applyExtrusion(page);
   await nativeVolume(page, 1200);

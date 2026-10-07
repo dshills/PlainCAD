@@ -63,7 +63,7 @@ for (const mode of ["corner", "center"] as const) {
     await expect(page.locator(".canvas-driving-dimension")).toHaveCount(2);
     await expect(page.locator(".canvas-reference-dimension")).toHaveCount(0);
     await page.getByRole("button", { name: "Finish Sketch", exact: true }).click();
-    await page.getByRole("button", { name: "Extrude selected sketch", exact: true }).click();
+    await expect(page.getByRole("dialog", { name: "Extrude", exact: true })).toBeVisible();
     await page.getByLabel("Extrude distance", { exact: true }).fill("5mm");
     await applyExtrusion(page);
     await ready(page, 1440);

@@ -19,10 +19,10 @@ async function ready(page: Page, volume?: number) {
     }
   }).toPass({ timeout: 30000 });
 }
-async function fixture(page: Page, plane: "XY" | "XZ") {
+async function fixture(page: Page, plane: "XY" | "XZ", regions = 2) {
   await page.goto("/");
   await ready(page);
-  const sketchId = await page.evaluate(async (plane) => {
+  const sketchId = await page.evaluate(async ({ plane, regions }) => {
     const docsPath = "/src/cad/document/CadDocument.ts", modelPath = "/src/cad/sketch/SketchModel.ts",
       geometryPath = "/src/cad/sketch/canvasGeometry.ts", solverPath = "/src/cad/sketch/SketchSolver.ts",
       storePath = "/src/state/useCadStore.ts";
@@ -30,7 +30,7 @@ async function fixture(page: Page, plane: "XY" | "XZ") {
       { addCanvasGeometry } = await import(geometryPath), { solveSketch } = await import(solverPath),
       { useCadStore } = await import(storePath);
     let sketch = createSketchOnPlane("Two shapes", plane);
-    for (const [start, end] of [[{ x: -10, y: -6 }, { x: 10, y: 6 }], [{ x: 35, y: -4 }, { x: 47, y: 4 }]])
+    for (const [start, end] of [[{ x: -10, y: -6 }, { x: 10, y: 6 }], [{ x: 35, y: -4 }, { x: 47, y: 4 }]].slice(0, regions))
       sketch = addCanvasGeometry(sketch, solveSketch(sketch, {}), "rectangle", [start, end]).sketch;
     const otherBase = createSketchOnPlane("Unrelated shape", plane);
     const other = addCanvasGeometry(otherBase, solveSketch(otherBase, {}),
@@ -39,7 +39,7 @@ async function fixture(page: Page, plane: "XY" | "XZ") {
     useCadStore.getState().setDocument(document);
     useCadStore.getState().select({ kind: "sketch", id: sketch.id, documentId: document.id });
     return sketch.id;
-  }, plane);
+  }, { plane, regions });
   await ready(page);
   return sketchId;
 }
@@ -136,4 +136,49 @@ test("a same-ID project replacement rejects an old finished-sketch region callba
   await expect(page.getByRole("dialog", { name: "Extrude", exact: true })).toHaveCount(0);
   await ready(page);
   expect((await aiSnapshot(page)).document.features).toEqual([]);
+});
+
+for (const plane of ["XY", "XZ"] as const) test(`${plane} single-region Finish opens thickness preview directly and only Apply models`, async ({ page }, info) => {
+  const sketchId = await fixture(page, plane, 1);
+  await expect(page.getByRole("heading", { name: "What would you like to make?" })).toHaveCount(0);
+  const before = await aiSnapshot(page);
+  async function openPreview() {
+    await page.evaluate(async () => {
+      const path = "/src/ui/commands/commandRegistry.ts";
+      await (await import(path)).runCommand("sketch.editCanvas");
+    });
+    await page.getByRole("button", { name: "Finish Sketch", exact: true }).click();
+    await expect(page.getByRole("dialog", { name: "Extrude", exact: true })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Make solid from finished sketch" })).toHaveCount(0);
+  }
+  await openPreview();
+  const dialog = page.getByRole("dialog", { name: "Extrude", exact: true });
+  await expect(dialog.getByRole("status")).toContainText("Native preview ready");
+  expect((await aiSnapshot(page)).document).toEqual(before.document);
+  await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
+  expect((await aiSnapshot(page)).past).toBe(before.past);
+  await expect(dialog).toHaveCount(0);
+  await openPreview();
+  await dialog.getByLabel("Extrude distance", { exact: true }).fill("7mm");
+  await applyExtrusion(page);
+  await ready(page, 1680);
+  const after = await aiSnapshot(page);
+  expect(after.past).toBe(before.past + 1);
+  expect(after.document.features[0]).toMatchObject({ sketchId, type: "extrude" });
+  const expected = plane === "XY" ? { min: [-10, -6, 0], max: [10, 6, 7] } : { min: [-10, -7, -6], max: [10, 0, 6] };
+  for (const side of ["min", "max"] as const) expected[side].forEach((value, axis) => expect(after.result!.meshes[0].bounds[side][axis]).toBeCloseTo(value, 6));
+  const saving = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const projectPath = info.outputPath(`${plane}-direct-preview.pcaddoc`);
+  await (await saving).saveAs(projectPath);
+  await page.locator('input[type="file"]').setInputFiles(projectPath);
+  await expect.poll(async () => (await aiSnapshot(page)).session).toBeGreaterThan(after.session);
+  await ready(page, 1680);
+  expect((await aiSnapshot(page)).document.features).toEqual(after.document.features);
+  await page.locator(".file-menu > summary").click();
+  const exporting = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export STL", exact: true }).click();
+  const stlPath = info.outputPath(`${plane}-direct-preview.stl`);
+  await (await exporting).saveAs(stlPath);
+  expect(stlSignedVolume(await readFile(stlPath))).toBeCloseTo(1680, 3);
 });

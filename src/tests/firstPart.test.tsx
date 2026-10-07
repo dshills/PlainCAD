@@ -98,10 +98,9 @@ it("repeated Draw starts and duplicate plane callbacks publish only one part and
   const first = useProjectWorkflow.getState().active!;
   runCommand("project.startDrawing", { componentName: "Bracket" });
   const latest = useProjectWorkflow.getState().active!;
-  expect(latest).not.toBe(first);
+  expect(latest).toBe(first);
   expect(useCadStore.getState().history.present).toBe(before);
   expect(useCadStore.getState().history.past).toHaveLength(0);
-  expect(() => finishProjectWorkflow(first, "XY")).toThrow(/changed/);
   finishProjectWorkflow(latest, "XY");
   expect(() => finishProjectWorkflow(latest, "XY")).toThrow(/changed/);
   const published = useCadStore.getState().history;
@@ -164,6 +163,7 @@ it("canceled or replaced first-part choices cannot leave an unused part or sketc
 
 it("requires a name in either first-part route and sends it through shared commands", () => {
   render(<ProjectStart context={{}} />);
+  fireEvent.click(screen.getByText("New part", { exact: true }));
   const name = screen.getByLabelText("Part name");
   expect(name).toHaveAttribute("maxlength", "120");
   fireEvent.change(name, { target: { value: " " } });
@@ -175,6 +175,7 @@ it("requires a name in either first-part route and sends it through shared comma
   cleanup();
   useProjectWorkflow.setState({ active: undefined });
   render(<ProjectStart context={{}} />);
+  fireEvent.click(screen.getByText("New part", { exact: true }));
   expect(screen.getByLabelText("Part name")).toHaveValue("Bracket");
   act(() => useCadStore.getState().setDocument(createEmptyDocument()));
   expect(screen.getByLabelText("Part name")).toHaveValue("Part 1");

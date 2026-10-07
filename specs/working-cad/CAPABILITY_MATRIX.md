@@ -22,9 +22,9 @@
   A [human usability pilot protocol](WORKBENCH_VALIDATION.md) is prepared; human
   sessions and comprehensive accessibility audits remain unperformed.
 
-- Finishing a new unmodeled sketch in Workbench opens a source-scoped closed-region
-  chooser; clicking a highlighted region selects it, Make solid opens Extrude,
-  and Apply creates geometry. Existing modeled sketches and Full layout retain
+- Finishing a new unmodeled sketch in Workbench opens thickness preview directly
+  for one origin/offset-plane region. Multiple regions and face sketches retain a
+  source-scoped chooser; selection and Make solid open Extrude, and Apply creates geometry. Existing modeled sketches and Full layout retain
   ordinary Finish behavior unless a guided face-pocket sketch is active. See [handoff limits](SKETCH_SOLID_HANDOFF.md).
 - Sketch mouse tools support view-only Space/middle panning, visible Move/Translate/
   Deform, finite analytic intersections and external-anchor tangents; Alt bypasses
@@ -1083,3 +1083,16 @@ authored features still count while geometry rebuilds. Search expands matching
 descendants and resets when replacing a project. Current-document filtering keeps
 obsolete rebuild body IDs out of the tree. Native tests cover activation,
 visibility, isolation, search, nested components and compact layout.
+
+## Clear canvas and direct sketch completion
+
+The starter question card is removed. A collapsed **New part** menu above the
+canvas retains named Draw/Describe, example and Open actions. It dismisses on
+Escape/outside interaction and resets with the project session.
+Workbench Finish Sketch opens thickness preview for one unambiguous region on
+an origin/offset plane, after current worker analysis succeeds. Multi-region and
+face sketches retain explicit selection and Add/Remove choices. Existing-feature
+sketch edits and other layouts retain their prior finish behavior. Preview
+creation leaves history unchanged; Apply publishes, Cancel discards, and the
+consumed handoff source cannot reopen a canceled preview. Native XY/XZ tests
+verify exact bounds/volume, cancellation, save/open and STL.

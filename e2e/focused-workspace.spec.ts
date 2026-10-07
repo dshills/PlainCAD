@@ -1,3 +1,4 @@
+import { openNewPartMenu } from "./newPartWorkflow";
 import { focusedWorkspaceStorageState } from "./workspaceStorage";
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
@@ -49,6 +50,7 @@ test("focused sketch deletion cleans references, rejects typing, diagnoses lost 
 }, info) => {
   await page.goto("/");
   await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+  await openNewPartMenu(page);
   await page.getByRole("button", { name: "Draw a shape", exact: true }).click();
   await page
     .getByRole("button", { name: "Sketch on Top (XY) plane", exact: true })
@@ -237,6 +239,7 @@ test("focused mouse sketch, native extrude/cut, parameter edit, save/open and ST
   await expect(
     page.getByRole("heading", { name: "Parametric Timeline" }),
   ).toBeHidden();
+  await openNewPartMenu(page);
   await page.getByRole("button", { name: "Draw a shape", exact: true }).click();
   await page
     .getByRole("button", { name: "Sketch on Top (XY) plane", exact: true })
@@ -377,6 +380,7 @@ test("AI settings, full access, pins and layout persistence preserve the current
   await page.goto("/");
   await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
   const before = await aiSnapshot(page);
+  await openNewPartMenu(page);
   await page.getByRole("button", { name: "Describe a part with AI" }).click();
   const drawer = page.getByRole("region", { name: "AI modeling assistant" });
   await expect(drawer.getByLabel("AI provider", { exact: true })).toBeHidden();
@@ -426,9 +430,9 @@ test("compact focused layout keeps the start canvas and one details sheet usable
 }, info) => {
   await page.setViewportSize({ width: 760, height: 900 });
   await page.goto("/");
-  await expect(
-    page.getByRole("region", { name: "Start a part" }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "What would you like to make?" })).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "Start a part" })).toBeHidden();
+  await expect(page.locator(".new-part-menu > summary")).toBeVisible();
   for (const theme of ["light", "dark", "saturn"]) {
     await page.getByText("Settings", { exact: true }).click();
     await page.getByLabel("UI theme", { exact: true }).selectOption(theme);
@@ -472,6 +476,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
   }, info) => {
     await page.goto("/");
     await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+    await openNewPartMenu(page);
     await page
       .getByRole("button", { name: "Draw a shape", exact: true })
       .click();
@@ -587,6 +592,7 @@ test("focused mouse drags, cancellation and circle size edits preserve analytic 
 }, info) => {
   await page.goto("/");
   await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+  await openNewPartMenu(page);
   await page.getByRole("button", { name: "Draw a shape", exact: true }).click();
   await page
     .getByRole("button", { name: "Sketch on Top (XY) plane", exact: true })
@@ -715,6 +721,7 @@ test("compact sketch size drafts and selected dimensions remain usable across th
   await page.setViewportSize({ width: 760, height: 900 });
   await page.goto("/");
   await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+  await openNewPartMenu(page);
   await page.getByRole("button", { name: "Draw a shape", exact: true }).click();
   await page
     .getByRole("button", { name: "Sketch on Top (XY) plane", exact: true })

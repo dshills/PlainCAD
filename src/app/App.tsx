@@ -4,7 +4,6 @@ import { SolidDimensionEditor } from "../ui/panels/SolidDimensionEditor";
 import { SketchSolidHandoffPanel } from "../ui/panels/SketchSolidHandoffPanel";
 import { OperationDropPanel } from "../ui/panels/OperationDropPanel";
 import { GuidedHolePanel } from "../ui/panels/GuidedHolePanel";
-import { useGuidedHole } from "../ui/commands/guidedHoleCommand";
 import { useShallow } from "zustand/react/shallow";
 import { useWorkspacePresentation } from "../ui/workspace/useWorkspacePresentation";
 import { useWorkspaceState } from "../state/useWorkspaceState";
@@ -13,7 +12,6 @@ import { WorkspaceControls } from "../ui/workspace/WorkspaceControls";
 import { ProjectStart } from "../ui/workspace/ProjectStart";
 import { ProjectFileDrop } from "../ui/workspace/ProjectFileDrop";
 import { useAiDrawer } from "../ui/commands/aiCommand";
-import { useProjectWorkflow } from "../ui/commands/projectWorkflowCommand";
 import { ModelingCreationPanel } from "../ui/panels/ModelingCreationPanel";
 import { WorkbenchBottomDock } from "../ui/workspace/WorkbenchBottomDock";
 import { WorkbenchHeader } from "../ui/workspace/WorkbenchHeader";
@@ -331,11 +329,9 @@ export function App() {
     ),
   );
   const setPaletteOpen = useCadStore((s) => s.setPaletteOpen);
-  const { full, hasHistory, partsVisible, historyVisible } =
+  const { full, partsVisible, historyVisible } =
     useWorkspacePresentation();
   const aiOpen = useAiDrawer((s) => s.open);
-  const guidedHole = useGuidedHole((state) => state.draft);
-  const workflow = useProjectWorkflow((s) => s.active);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const sketchActive = useSketchCanvas((state) => state.active);
   const documentName = useCadStore(
@@ -539,7 +535,10 @@ export function App() {
       <ExtrudeCreationPanel />
       <FacePocketPanel />
       <ModelingCreationPanel />
-      <WorkspaceControls />
+      <div className="workspace-control-row">
+        <WorkspaceControls />
+        <ProjectStart context={commandContext} />
+      </div>
       <main
         className={`workspace ${workbench ? "workbench-workspace" : full ? "" : "workspace-focused"} ${partsVisible ? "parts-open" : ""}`}
       >
@@ -580,14 +579,6 @@ export function App() {
             <div className="model-view" hidden={Boolean(sketchActive)}>
               <CadViewer />
             </div>
-            {!full &&
-            !hasHistory &&
-            !sketchActive &&
-            !workflow &&
-            !guidedHole &&
-            !aiOpen ? (
-              <ProjectStart context={commandContext} />
-            ) : null}
             <RetainedPanel visible={Boolean(sketchActive)}>
               <Suspense fallback={<p role="status">Loading sketch editor…</p>}>
                 <SketchCanvasPanel />

@@ -42,10 +42,8 @@ test("workbench guides an open outline through explicit repair to a native solid
   await repair.getByRole("button", { name: "Show and repair", exact: true }).click();
   await repair.getByRole("button", { name: "Add missing closing edge", exact: true }).click();
   await page.getByRole("button", { name: "Finish Sketch", exact: true }).click();
-  await expect(guide).toHaveAttribute("data-readiness", "sketch-handoff");
-  const handoff = page.getByRole("region", { name: "Make solid from finished sketch", exact: true });
-  await expect(handoff.getByRole("button", { name: "Make solid", exact: true })).toBeEnabled();
-  await handoff.getByRole("button", { name: "Make solid", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Extrude", exact: true })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Make solid from finished sketch" })).toHaveCount(0);
   await applyExtrusion(page);
   await expect(async () => {
     const after = await aiSnapshot(page);
@@ -86,6 +84,6 @@ test("workbench links a failed sketch to its current driving-dimension repair", 
   await expect(page.getByRole("region", { name: "Sketch canvas", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Delete this dimension", exact: true }).click();
   await page.getByRole("button", { name: "Finish Sketch", exact: true }).click();
-  await expect(guide).toHaveAttribute("data-readiness", "sketch-handoff");
+  await expect(page.getByRole("dialog", { name: "Extrude", exact: true })).toBeVisible();
   expect((await aiSnapshot(page)).past).toBe(before.past + 1);
 });

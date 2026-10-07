@@ -179,7 +179,7 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
     // Preserve the shared legacy command key while blocking all transient target tasks.
     outsideGuidedHole: !targetPickerActive,
     editProject: !state.fileBusy && !targetPickerActive,
-    newComponent: !targetPickerActive && !state.fileBusy && !canvasActive && Object.keys(state.history.present.components).length < MODEL_RESOURCE_LIMITS.maxComponents,
+    newComponent: !targetPickerActive && !guidedHoleStartBlocked && !state.fileBusy && !canvasActive && Object.keys(state.history.present.components).length < MODEL_RESOURCE_LIMITS.maxComponents,
     createSketch: !targetPickerActive && !state.fileBusy && !canvasActive,
     finishSketch: !targetPickerActive && canvasActive,
     drawSketch: !targetPickerActive && !guidedHoleStartBlocked && !scopeCaptureBusy && canBeginSketchCanvasTool(state),

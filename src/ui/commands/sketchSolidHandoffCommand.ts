@@ -21,6 +21,7 @@ export interface SketchSolidHandoff {
   componentId: string;
   sketchId: string;
   pocketIntent?: boolean;
+  autoPreview?: boolean;
 }
 type HandoffContext = Pick<CadStore, "fileBusy" | "history" | "documentSession" | "activeComponentId">;
 export const useSketchSolidHandoff = create<{
@@ -30,7 +31,7 @@ export const useSketchSolidHandoff = create<{
 }>(() => ({}));
 
 /** An immutable source capture, separate from durable geometry and history. */
-export function beginSketchSolidHandoff(sketchId: string) {
+export function beginSketchSolidHandoff(sketchId: string, autoPreview = false) {
   const state = useCadStore.getState();
   if (state.fileBusy || !state.history.present.sketches[sketchId] ||
       sketchComponentId(state.history.present, sketchId) !== state.activeComponentId) return;
@@ -41,6 +42,7 @@ export function beginSketchSolidHandoff(sketchId: string) {
     session: state.documentSession,
     componentId: state.activeComponentId,
     sketchId,
+    autoPreview,
     pocketIntent: Boolean(intent && intent.sketchId === sketchId && intent.documentId === state.history.present.id && intent.session === state.documentSession && intent.componentId === state.activeComponentId),
   }, selectedTargetId: undefined, error: undefined });
 }
@@ -72,6 +74,16 @@ export function refreshSketchSolidHandoff(source: SketchSolidHandoff) {
       selectedTargetId: targets.length === 1 ? targets[0].id : undefined,
       error: undefined,
     });
+    // A face sketch has an additive/subtractive choice; never infer that intent.
+    // Only the guided Finish action may skip an unambiguous region chooser.
+    if (source.autoPreview && targets.length === 1 &&
+        source.document.sketches[source.sketchId].plane.type !== "face") {
+      try {
+        makeSketchSolid();
+      } catch (failure) {
+        useSketchSolidHandoff.setState({ error: `Could not open thickness preview: ${failure instanceof Error ? failure.message : String(failure)}` });
+      }
+    }
   } catch {
     // Another draft owns the interaction. The panel exposes Cancel/Edit rather
     // than stealing it; once that draft closes the subscribed refresh retries.

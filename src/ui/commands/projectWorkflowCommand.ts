@@ -169,6 +169,6 @@ export function finishSketchCanvas() {
     if (useWorkspaceState.getState().layout === "workbench" &&
         !state.history.present.features.some((feature) => !feature.suppressed &&
           "sketchId" in feature && feature.sketchId === active.sketchId))
-      beginSketchSolidHandoff(active.sketchId);
+      beginSketchSolidHandoff(active.sketchId, true);
   }
 }
