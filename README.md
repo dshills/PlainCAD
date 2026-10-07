@@ -63,6 +63,7 @@ their existing constraints; free Corner rectangles retain their positional freed
 - Body visibility, named camera views, section previews, sketch measurements, and linked diagnostics.
 - Click-to-measure supported model edges, endpoints and planar faces, with analytic values.
 - Editable `.pcaddoc`/JSON files, autosave/recovery, and validated single- or multi-body STL export.
+- Reusable-part insertion with independent parameters and safe reference remapping.
 - PNG downloads of the current 3D view, an isolated selected body, or a sketch with its visible dimensions.
 - AI part creation, bounded existing-part edits/additions, and conversational sketch refinement.
 
@@ -112,6 +113,14 @@ Components currently share the project origin. Modeling targets stay within thei
 component; supported face-plane references can use another component's upstream
 geometry. Nested assemblies, placement transforms, joints, and linked designs
 remain planned.
+
+**New part → Insert a reusable part** copies all components or a selected component
+from a local project into the open project at its original coordinates. Imported
+parameters are independent; conflicting names receive suffixes. Single-component
+insertion rejects dependencies outside that component. The task checks portable
+file/resource limits and creates one Undo step. It preserves the open project's
+identity and saved views; overlapping parts stay separate solids. See
+[insertion limits](specs/working-cad/REUSABLE_PARTS.md).
 
 In a sketch, **Project edges** previews a complete surviving authored extrusion
 cap boundary on a parallel plane. Linked geometry follows upstream dimensions;

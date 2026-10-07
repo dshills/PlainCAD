@@ -12,8 +12,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Change: Associative native sketch projection, including the preceding edge-proof cache, click measurement and feature-pattern items.
 - Result: type checks, 1071 unit/component tests, build/bundle budget (largest 445.60 kB), all 251 development browser cases and all 32 production browser cases verified.
   The complete release invocation passed development and initially had two production test-step failures. After test-only fixes, the complete production rerun passed 31 cases; the remaining projection case passed its final focused rerun (3.9s). Final type checks passed. Application sources remained unchanged throughout these runs.
-- Completed items since that full gate: **0**.
-- Next full gate: after **5** more completed items.
+- Completed items since that full gate: **1**.
+- Next full gate: after **4** more completed items.
 
 ## Completed batch
 
@@ -108,3 +108,15 @@ Prism reviewed the isolated projection implementation with Anthropic `claude-son
 The full checkpoint verified type checks, all 1071 unit/component tests, the production build/bundle budget (445.60 kB largest), all 251 development cases and all 32 production cases. The original release command exposed a collapsed measurement disclosure and outdated body-selection steps in production tests. The complete production rerun passed 31 cases; the remaining linked-cover test passed after fixing its component body label, JSON key-order comparison and automatic export-dialog closure. Its final reviewed test and type checks passed again. Runtime sources stayed frozen. This verifies all full-gate stages and resets cadence; CI still runs the complete release command from a clean checkout.
 
 Projection native acceptance proves source edits update linked geometry, save/open preserves links and IDs, unsupported oblique boundaries fail explicitly, and repair/break/remove use the current model. The production schema-15 fixture verifies two independent native solids, cover volume following width edits, coordinate orientation, saved links and multibody STL.
+
+## Current batch: reusable projects
+
+### Item 1: independent reusable-part insertion
+
+Prism `de30d1e22f7b617009a16f5283bbfb83` reviewed the complete isolated 15-file insertion change using Anthropic `claude-sonnet-5-5`, with no high/medium findings. Supplemental final alias review `2f35925e075754ebb37d24d81058e999` covered the final importer and regressions, also with no high/medium findings. Earlier actionable stale-task/resource-bound findings and reference-ID cases were fixed. Explicit entities named `all` now remap correctly; profile aliases are scoped by sketch and preserve the worker's first-match ordering, with an unresolved first candidate refusing insertion. Focused tests cover cross-sketch and same-sketch alias collisions, actual copied geometry, cancellation, resource limits, units and ownership.
+
+Low review notes were assessed: components currently contain only id/name; the size check uses the same pretty-printed portable save format; exact allocator retries test the bounded resource contract; stable and transient edge identities share the same format. Current readiness hooks subscribe to every competing task and their UI behavior is tested. Component activation is a synchronous existence-guarded store action. Native export is invoked through the development module API; insertion, Undo/Redo, parameter edits and Save use actual UI controls. Supported face/edge references are extrusion-owned; revolve solids are copied without inventing unsupported revolve topology references. Profile geometry matching remains bounded by import limits.
+
+The exact commit checkout passed `npm run check:item`: type checks, 1101 unit/component tests, production build/bundle budget (largest 460.57 kB), 5 development and 14 production native smoke tests. The final focused native insertion case passed (4.6s), proving independent parameter edits, exact BRep volumes, source-origin orientation, real toolbar Undo/Redo/Save, reopen and selected-part STL. The latest production projection test also passed after its final mesh-tolerance-only test correction; application runtime sources stayed frozen.
+
+This is the first completed item after the successful full checkpoint above. The next full gate is due after four additional requested changes. Reusable insertion creates independent editable copies at shared original coordinates; placement transforms, joints and external linking remain planned.

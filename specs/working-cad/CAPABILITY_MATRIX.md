@@ -23,6 +23,13 @@
   signed direction and saved body scope. Count 2–32 includes the source; circular
   360-degree layouts avoid a duplicate endpoint. Overlaps and no-op/missing cuts
   diagnose; native outputs publish atomically. See [pattern limits](FEATURE_PATTERNS.md).
+- Reusable-part insertion copies all source components or one explicitly chosen
+  component at the shared origin through the safe import codec, with independent
+  parameter names/bindings and remapped geometry/profile/topology identities.
+  Outside-scope dependencies, missing references, stale tasks and combined
+  portable-file/resource excesses reject insertion. Assembly placement and linked
+  external designs remain unavailable. See [insertion limits](REUSABLE_PARTS.md).
+
 - Task guidance uses current worker sketch profiles/diagnostics and distinguishes
   empty/open/closed/broken sketches, failed rebuilds and native/fallback solids.
   Disabled actions show prerequisites; diagnostics retain explicit source repair.

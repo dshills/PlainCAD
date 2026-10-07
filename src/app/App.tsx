@@ -1,3 +1,4 @@
+import { ReusablePartPanel } from "../ui/panels/ReusablePartPanel";
 import { FacePocketPanel } from "../ui/panels/FacePocketPanel";
 import { cancelFacePocket, useFacePocket } from "../ui/commands/facePocketCommand";
 import { SolidDimensionEditor } from "../ui/panels/SolidDimensionEditor";
@@ -582,6 +583,7 @@ export function App() {
           </aside>
         )}
         <div className="model-area">
+          <ReusablePartPanel />
           <ProjectWorkflowPanel />
           <GuidedHolePanel />
           <section className="viewer-region" aria-label="3D CAD viewer">

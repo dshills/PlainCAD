@@ -116,6 +116,7 @@ export function ProjectStart({ context }: { context: CommandContext }) {
             Parametric box
           </button>
         </details>
+        <button type="button" disabled={!enabled.insertProject} onClick={() => void start("file.insertProject")}>Insert a reusable part</button>
         <button
           type="button"
           disabled={!enabled.outsideGuidedHole}

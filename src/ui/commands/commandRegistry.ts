@@ -1,6 +1,7 @@
 import { useInspectionState } from "../../state/inspectionState";
 import { useWorkspaceState } from "../../state/useWorkspaceState";
 import { canOpenSketchProjection, openSketchProjection } from "./sketchProjectionCommand";
+import { beginInsertProject, canInsertProject } from "./reusablePartCommand";
 import { beginFacePocket, canBeginFacePocket, cancelFacePocket, useFacePocket } from "./facePocketCommand";
 import { interactionDraftBusy } from "./interactionDraftState";
 import { openSketchReplication, canOpenSketchReplication } from "./sketchReplicationCommand";
@@ -118,6 +119,7 @@ export interface CadCommand {
 
 export interface CommandEnablement {
   projectSketchEdges: boolean;
+  insertProject: boolean;
   measurementPicking: boolean;
   createFacePocket: boolean;
   removeSketchMaterial: boolean;
@@ -170,6 +172,7 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
   const targetPickerActive = facePickerActive || guidedHoleActive || operationBusy || exportDialogOpen || refinementBusy;
   return {
     projectSketchEdges: !targetPickerActive && !guidedHoleStartBlocked && !state.fileBusy && canOpenSketchProjection(state),
+    insertProject: canInsertProject(state),
     measurementPicking: state.rebuild.status === "succeeded" && Boolean(state.rebuild.result?.success && state.rebuild.result.documentId === state.history.present.id) && !state.fileBusy && !canvasActive && !guidedHoleStartBlocked && !targetPickerActive && !scopeCaptureBusy,
     createFacePocket: !targetPickerActive && !canvasActive && !guidedHoleStartBlocked && !scopeCaptureBusy && canBeginFacePocket(state),
     removeSketchMaterial: handoffReady && canRemoveSketchMaterial(state),
@@ -356,6 +359,7 @@ export const commands: CadCommand[] = [
   },
   { id: "inspect.pickModel", label: "Measure in Model", description: "Click supported authored points, edges, faces and bodies to inspect their geometry.", enablementKey: "measurementPicking", run: () => { const state = useCadStore.getState(); useInspectionState.getState().setPicking(state.documentSession, true); useViewerState.getState().setPresentationMode(state.documentSession, "model"); useWorkspaceState.getState().setPanel("measure"); } },
   { id: "sketch.projectEdges", label: "Project Edges into Sketch", description: "Link a surviving complete authored cap boundary into a parallel sketch.", enablementKey: "projectSketchEdges", run: () => openSketchProjection() },
+  { id: "file.insertProject", label: "Insert Reusable Part", description: "Copy editable components from a local project at the shared origin without replacing the open project.", enablementKey: "insertProject", run: beginInsertProject },
   {
     id: "file.openProject",
     label: "Open Project",
