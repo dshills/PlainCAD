@@ -176,16 +176,18 @@ async function fixture() {
   return { document: current, result, feature, outline, second };
 }
 it("offers only explicit visible active-component profiles and untouched native cap groups", async () => {
-  const { feature, second } = await fixture();
-  expect(operationDropTargets("extrude")).toHaveLength(2);
+  const { feature, outline, second } = await fixture();
+  expect(operationDropTargets("extrude").map((target) => target.kind === "profile" && target.sketchId)).toEqual([second.id]);
   expect(
     operationDropTargets("fillet").filter((t) => t.kind === "edge" && !t.sourceEntityId).map((t) => t.kind === "edge" && t.role),
   ).toEqual(["endCapPerimeter", "startCapPerimeter"]);
   const state = useCadStore.getState();
   useViewerState
     .getState()
-    .toggleSketch(state.documentSession, second.id, [second.id]);
-  expect(operationDropTargets("extrude")).toHaveLength(1);
+    .toggleSketch(state.documentSession, second.id, [outline.id, second.id]);
+  expect(operationDropTargets("extrude")).toHaveLength(0);
+  runCommand("sketch.toggleVisibility", { sketchId: outline.id, documentSession: state.documentSession });
+  expect(operationDropTargets("extrude").map((target) => target.kind === "profile" && target.sketchId)).toEqual([outline.id]);
   useViewerState
     .getState()
     .toggleBody(state.documentSession, `body:${feature.id}`, [

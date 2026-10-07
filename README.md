@@ -297,7 +297,12 @@ skipped outside union with a diagnostic. These checks cover supported meshes and
 numerical tolerances; changed or stale results cannot be downloaded.
 
 Use **File → Download project view PNG** for the current 3D camera, visible bodies,
-sketch overlays, and section preview. Select a body, then choose **Download selected
+and section preview, without sketch overlays, selection highlights, or inspection
+lines. Sketches used by unsuppressed modeling features start hidden in 3D when a
+project opens; unused sketches stay visible. Use a sketch’s **3D** checkbox to
+show it, or **Edit Sketch** to open its complete drawing. Component isolation and
+**Show all bodies** preserve these sketch choices; **Show all components** also
+shows every sketch. Select a body, then choose **Download selected
 part PNG** for a fitted image of that body alone, without selection highlights or
 section clipping. Open a sketch and choose **Download sketch PNG** in File or the
 sketch header to include its visible dimensions and constraint annotations.

@@ -8,6 +8,7 @@ interface ViewerState {
   hiddenComponentIds: string[];
   hiddenSketchIds: string[];
   activeComponentTimeline: boolean;
+  openDocument(document: CadDocument, session: number): void;
   toggleBody(
     session: number,
     bodyId: string,
@@ -45,6 +46,16 @@ export const useViewerState = create<ViewerState>((set, get) => {
   return {
     session: -1,
     ...defaults,
+    // Keep source drawings editable, but open finished models without their overlays.
+    openDocument: (document, session) =>
+      set({
+        ...defaults,
+        session,
+        hiddenSketchIds: [...new Set(document.features.flatMap((feature) =>
+          !feature.suppressed && "sketchId" in feature && document.sketches[feature.sketchId]
+            ? [feature.sketchId] : [],
+        ))],
+      }),
     toggleBody: (session, bodyId, availableIds) => {
       if (!availableIds.includes(bodyId)) return;
       const view = current(session),
@@ -89,7 +100,6 @@ export const useViewerState = create<ViewerState>((set, get) => {
         ...current(session),
         session,
         hiddenBodyIds: [],
-        hiddenSketchIds: [],
         hiddenComponentIds: availableIds.filter((id) => id !== componentId),
       });
     },

@@ -4,6 +4,10 @@ import type { CadDocument } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
 import type { ViewerSnapshot } from "../src/viewer/viewerDiagnostics";
 async function ready(page: Page) {
+  await expect.poll(() => page.evaluate(async () => {
+    const path = "/src/state/useCadStore.ts", state = (await import(path)).useCadStore.getState();
+    return state.rebuild.status === "succeeded" && state.rebuild.result?.documentId === state.history.present.id;
+  })).toBe(true);
   await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
 }
 async function snapshot(
@@ -98,7 +102,10 @@ test("individual sketch hiding filters real viewer overlays while native editing
   );
   await expect
     .poll(async () => (await viewer(page)).sketchPoints.length)
-    .toBe(5);
+    .toBe(1);
+  await expect(page.getByLabel("Show sketch Outline in 3D", { exact: true })).not.toBeChecked();
+  await page.getByLabel("Show sketch Outline in 3D", { exact: true }).check();
+  await expect.poll(async () => (await viewer(page)).sketchPoints.length).toBe(5);
   await page.getByLabel("Show sketch Outline in 3D", { exact: true }).uncheck();
   await expect
     .poll(async () => (await viewer(page)).sketchPoints.length)
@@ -198,10 +205,10 @@ test("individual sketch hiding filters real viewer overlays while native editing
   await ready(page);
   await expect(
     page.getByLabel("Show sketch Outline in 3D", { exact: true }),
-  ).toBeChecked();
+  ).not.toBeChecked();
   await expect
     .poll(async () => (await viewer(page)).sketchPoints.length)
-    .toBe(5);
+    .toBe(1);
   await expect
     .poll(
       async () =>

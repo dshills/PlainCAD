@@ -191,6 +191,30 @@ describe("component navigation", () => {
       document.rootComponentId,
     );
   });
+  it("opens used sketches hidden, keeps unused/suppressed sources visible and resets same-ID sessions", () => {
+    const { document, session } = project();
+    const sourceIds = Object.keys(document.sketches);
+    expect(useViewerState.getState().hiddenSketchIds).toEqual(sourceIds);
+    const unused = createXySketch("Unused drawing");
+    const suppressedId = document.features[1].id;
+    const reopened = upsertSketch({ ...document, features: document.features.map((feature) =>
+      feature.id === suppressedId ? { ...feature, suppressed: true } : feature,
+    ) }, unused);
+    runCommand("view.showAllComponents");
+    useCadStore.getState().setDocument(reopened);
+    const state = useCadStore.getState();
+    expect(state.documentSession).toBe(session + 1);
+    expect(useViewerState.getState().session).toBe(state.documentSession);
+    expect(useViewerState.getState().hiddenSketchIds).toEqual([sourceIds[0]]);
+    render(<SketchPanel />);
+    fireEvent.click(screen.getByRole("button", { name: "Expand component Bracket" }));
+    fireEvent.click(screen.getByRole("button", { name: "Expand component Cover" }));
+    expect(screen.getByLabelText("Show sketch Bracket section in 3D")).not.toBeChecked();
+    expect(screen.getByLabelText("Show sketch Cover section in 3D")).toBeChecked();
+    expect(screen.getByLabelText("Show sketch Unused drawing in 3D")).toBeChecked();
+    expect(state.history.past).toEqual([]);
+    expect(serializeProject(state.history.present)).not.toContain("hiddenSketchIds");
+  });
   it("independently hides sketch overlays, preserves hiding when restoring bodies and clears it for full views", () => {
     const { document, a, session } = project();
     useCadStore.setState({
@@ -200,6 +224,7 @@ describe("component navigation", () => {
         result: rebuildDocument(document),
       },
     });
+    runCommand("view.showAllComponents");
     render(<SketchPanel />);
     act(() => useCadStore.getState().activateComponent(a.id));
     const sketch = Object.values(document.sketches).find(
@@ -238,7 +263,7 @@ describe("component navigation", () => {
     });
     expect(
       screen.getByLabelText("Show sketch Bracket section in 3D"),
-    ).toBeChecked();
+    ).not.toBeChecked();
     expect(useCadStore.getState().history.present).toBe(document);
     expect(useCadStore.getState().history.past).toEqual([]);
     expect(serializeProject(document)).not.toContain("hiddenSketchIds");
@@ -246,6 +271,7 @@ describe("component navigation", () => {
   it("rejects stale or missing sketch visibility contexts even when project IDs are reused", () => {
     const { document, session } = project(),
       sketchId = Object.keys(document.sketches)[0];
+    runCommand("view.showAllComponents");
     runCommand("sketch.toggleVisibility", { sketchId });
     runCommand("sketch.toggleVisibility", {
       sketchId: "lost",

@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useViewerState } from "./viewerState";
 import { selectionComponentId } from "../cad/document/components";
 import { normalizeQuantity } from "../cad/parameters/units";
 import { CadDocument, SelectionState } from "../cad/document/schema";
@@ -152,7 +153,9 @@ export const useCadStore = create<CadStore>((set, get) => ({
       set({ fileError: error instanceof Error ? error.message : String(error) });
       return;
     }
-    set({ activeComponentId: bound.rootComponentId, history: { past: [], present: bound, future: [] }, rebuild: { ...get().rebuild, result: undefined }, documentSession: get().documentSession + 1, selection: { selectedIds: [] }, fileError: undefined });
+    const session = get().documentSession + 1;
+    useViewerState.getState().openDocument(bound, session);
+    set({ activeComponentId: bound.rootComponentId, history: { past: [], present: bound, future: [] }, rebuild: { ...get().rebuild, result: undefined }, documentSession: session, selection: { selectedIds: [] }, fileError: undefined });
     get().rebuildNow();
   },
   updateDocument: (mutator) => {

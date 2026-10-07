@@ -217,7 +217,7 @@ export function isCommandEnabledForSnapshot(
 }
 
 export const commands: CadCommand[] = [
-  { id: "file.exportProjectPng", label: "Download project view PNG", description: "Capture the current 3D camera, visible bodies, sketches and section view.", enablementKey: "exportProjectPng", run: () => exportPng("project") },
+  { id: "file.exportProjectPng", label: "Download project view PNG", description: "Capture the current 3D camera, visible bodies and section view without sketch or selection overlays.", enablementKey: "exportProjectPng", run: () => exportPng("project") },
   { id: "file.exportBodyPng", label: "Download selected part PNG", description: "Select a body, then download a fitted image of that body alone.", enablementKey: "exportBodyPng", run: () => exportPng("body") },
   { id: "file.exportSketchPng", label: "Download sketch PNG", description: "Open a sketch, then capture the drawing with its visible dimensions and constraints.", enablementKey: "exportSketchPng", run: () => exportPng("sketch") },
   { id: "sketch.facePocket", label: "Draw on face", enablementKey: "createFacePocket", run: () => beginFacePocket() },

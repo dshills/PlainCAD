@@ -98,6 +98,8 @@ test("component visibility/isolation filters native bodies, sketch overlays and 
     });
     expect(mesh.geometryAssertions.volume).toBeCloseTo(2000, 7);
   }
+  await expect.poll(async () => (await viewer(page)).sketchPoints.length).toBe(0);
+  await page.getByRole("button", { name: "Show all components", exact: true }).click();
   const allPoints = (await viewer(page)).sketchPoints.length;
   expect(allPoints).toBeGreaterThan(0);
   await page.getByLabel("Show component Cover", { exact: true }).uncheck();
@@ -172,7 +174,7 @@ test("component visibility/isolation filters native bodies, sketch overlays and 
     .toEqual([true, true]);
   await expect
     .poll(async () => (await viewer(page)).sketchPoints.length)
-    .toBe(allPoints);
+    .toBe(0);
   await expect(track.getByRole("listitem")).toHaveCount(4);
   await page.screenshot({
     path: info.outputPath("component-navigation.png"),

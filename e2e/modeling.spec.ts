@@ -76,6 +76,8 @@ function assertGeometry(state: BrowserState, thickness: number, cut: boolean, pl
 }
 
 async function assertViewer(page: Page, state: BrowserState) {
+  // Orientation checks deliberately reveal source sketches, including after reopen.
+  await page.getByRole("button", { name: "Show all components", exact: true }).click();
   await expect.poll(async () => (await viewer(page)).meshes[0]?.positions).toEqual(Array.from(new Float32Array(state.result!.meshes[0].positions)));
   const view = await viewer(page);
   expect(view.cameraUp).toEqual([0, 0, 1]);

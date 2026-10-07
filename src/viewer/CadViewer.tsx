@@ -185,13 +185,16 @@ export function CadViewer() {
       if (request.bodyId && !selectedMesh) throw new Error("Selected body is no longer available. Select a rebuilt body again.");
       if (!request.bodyId && !modelGroup.children.some((object) => object.visible))
         throw new Error("All bodies are hidden. Show a body before exporting the project view.");
-      const visibility = [...scene.children, ...modelGroup.children].map((object) => ({ object, visible: object.visible }));
+      const visibility = [...new Set([...scene.children, ...modelGroup.children, sketchGroup, measurementGroup])].map((object) => ({ object, visible: object.visible }));
       try {
+        // 3D images present the model, without editing or inspection overlays.
+        sketchGroup.visible = false;
+        measurementGroup.visible = false;
+        applySelection(modelGroup, undefined, []);
         let exportCamera = camera;
         if (selectedMesh) {
           for (const child of scene.children) child.visible = child === modelGroup || child instanceof THREE.Light;
           for (const child of modelGroup.children) child.visible = child.userData.bodyId === request.bodyId;
-          applySelection(modelGroup, undefined, []);
           applyClipping(modelGroup, undefined);
           exportCamera = camera.clone();
           const bounds = selectedMesh.bounds;
@@ -210,10 +213,8 @@ export function CadViewer() {
         return copyCanvasPng(renderer.domElement);
       } finally {
         for (const saved of visibility) saved.object.visible = saved.visible;
-        if (selectedMesh) {
-          applySelection(modelGroup, selectedBodyIdRef.current, highlightedBodyIdsRef.current);
-          applyClipping(modelGroup, clippingRef.current);
-        }
+        applySelection(modelGroup, selectedBodyIdRef.current, highlightedBodyIdsRef.current);
+        if (selectedMesh) applyClipping(modelGroup, clippingRef.current);
         renderer.render(scene, camera);
       }
     });
