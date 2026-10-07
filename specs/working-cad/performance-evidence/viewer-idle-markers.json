@@ -1,0 +1,72 @@
+{
+  "date": "2026-10-07",
+  "environment": {
+    "os": "macOS arm64",
+    "cpu": "Apple M4 Pro",
+    "browser": "headless Chromium 153",
+    "viewport": {
+      "width": 1600,
+      "height": 1000
+    },
+    "deviceScaleFactor": 1,
+    "workspace": "full"
+  },
+  "scenario": "Native ORBIT housing, settled camera, visible solid driving label; 500ms idle window. All 129 source points shown for draw-call comparison.",
+  "before": {
+    "baselineCommit": "ec5dce6",
+    "idleWindowMs": 500,
+    "before": {
+      "draws": 752,
+      "requests": 375
+    },
+    "after": {
+      "draws": 876,
+      "requests": 437
+    },
+    "delta": {
+      "draws": 124,
+      "requests": 62
+    },
+    "points": 129,
+    "drawCalls": 171,
+    "volume": 272452.36918433453,
+    "triangles": 10076
+  },
+  "after": {
+    "idle": {
+      "idleWindowMs": 500,
+      "before": {
+        "scheduled": false,
+        "frameCount": 8,
+        "markerBatches": 0,
+        "pixelRatio": 1,
+        "sharpPixelRatio": 1,
+        "moving": false,
+        "showModelEdges": true,
+        "drawCalls": 4,
+        "triangles": 10076,
+        "bufferWidth": 960,
+        "bufferHeight": 645
+      },
+      "idleBefore": {
+        "draws": 20,
+        "requests": 11
+      },
+      "idleAfter": {
+        "draws": 20,
+        "requests": 11
+      }
+    },
+    "markers": {
+      "points": 129,
+      "markerBatches": 1,
+      "hiddenDrawCalls": 4,
+      "shownDrawCalls": 43
+    }
+  },
+  "limits": [
+    "One local browser run; draw counts describe GPU commands, not GPU execution timing or power use.",
+    "Camera damping continues drawing while the pose changes; labels use viewer frames rather than an independent idle loop.",
+    "Lines, arcs and circles retain their existing rendering; point batches share the previous sphere geometry/materials."
+  ]
+}

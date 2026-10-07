@@ -5,6 +5,7 @@ import type { OperationTargetSnapshot } from "./operationDropPicking";
 export interface ViewerSnapshot {
   background: string;
   performance?: {
+    frameCount: number; scheduled: boolean; markerBatches: number;
     pixelRatio: number; sharpPixelRatio: number; moving: boolean; showModelEdges: boolean;
     drawCalls: number; triangles: number; bufferWidth: number; bufferHeight: number;
   };

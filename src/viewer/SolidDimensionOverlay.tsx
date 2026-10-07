@@ -9,9 +9,10 @@ import "./SolidDimensionOverlay.css";
 export interface DimensionProjection { x: number; y: number; depth: number; width: number; height: number }
 
 /** Labels stay associated with authored fields; the ordinary native task owns preview and Apply. */
-export function SolidDimensionOverlay({ dimensions, project }: {
+export function SolidDimensionOverlay({ dimensions, project, subscribeFrames }: {
   dimensions: SolidDimension[];
   project: (point: [number, number, number]) => DimensionProjection | undefined;
+  subscribeFrames: (listener: () => void) => () => void;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const base = useCadStore(useShallow((state) => ({
@@ -22,15 +23,15 @@ export function SolidDimensionOverlay({ dimensions, project }: {
   const canEdit = Boolean(target && enablement.editSolidDimension);
   useEffect(() => {
     if (!dimensions.length) return;
-    let frame = 0;
     let lastPosition = "";
     let size = { width: 0, height: 0 };
     const observer = typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(() => {
       if (host.current) size = { width: host.current.offsetWidth, height: host.current.offsetHeight };
       lastPosition = "";
+      position();
     });
     if (host.current) observer?.observe(host.current);
-    const position = () => {
+    function position() {
       const element = host.current, projected = project(dimensions[0].anchor);
       if (element) {
         const visible = projected && projected.depth >= -1 && projected.depth <= 1 &&
@@ -49,11 +50,11 @@ export function SolidDimensionOverlay({ dimensions, project }: {
           }
         }
       }
-      frame = requestAnimationFrame(position);
-    };
+    }
     position();
-    return () => { cancelAnimationFrame(frame); observer?.disconnect(); };
-  }, [dimensions, project]);
+    const unsubscribe = subscribeFrames(position);
+    return () => { unsubscribe(); observer?.disconnect(); };
+  }, [dimensions, project, subscribeFrames]);
   if (!dimensions.length) return null;
   return (
     <div ref={host} className="solid-dimensions" role="group" aria-label="Solid driving dimensions">

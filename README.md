@@ -302,7 +302,12 @@ the last camera input, without waiting for the damping tail. Turn this off in **
 movement. **Show model edges** controls solid edge lines independently. These
 choices are temporary view settings and reset when a project opens. Unchanged
 bodies reuse viewer buffers and cached edge lines across rebuilds; changed or
-removed bodies replace/dispose their own resources.
+removed bodies replace/dispose their own resources. The 3D view redraws for scene
+changes and while the camera settles, then stops scheduling frames while idle.
+Solid dimension labels follow the same updates. Visible sketch points share
+instanced sphere batches (one each for normal/error colors) rather than issuing
+a draw call per point; point identities, sizes, plane positions, and visibility
+stay available.
 
 Use **File → Download project view PNG** for the current 3D camera, visible bodies,
 and section preview, without sketch overlays, selection highlights, or inspection

@@ -81,6 +81,8 @@ test("native ORBIT orbit/zoom uses reduced resolution and edge passes, restores 
   const sharp = await viewer(page);
   expect(sharp.performance?.pixelRatio).toBe(2);
   expect(sharp.performance?.showModelEdges).toBe(true);
+  // Keep wheel input on canvas, away from the solid labels that an orbit click may reveal.
+  await page.mouse.move(box.x + box.width * 0.2, box.y + box.height * 0.2);
   await observeQualityRestoration(page, "wheel");
   await page.mouse.wheel(0, -120);
   const zoomRestoreMs = await restoredQualityDelay(page);

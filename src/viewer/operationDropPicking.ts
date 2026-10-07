@@ -40,6 +40,7 @@ export function installOperationDropPicking(
   canvas: HTMLCanvasElement,
   camera: THREE.Camera,
   clipping: () => THREE.Plane | undefined,
+  invalidate: () => void = () => {},
 ): OperationDropPickingHandle {
   const group = new THREE.Group();
   scene.add(group);
@@ -77,6 +78,7 @@ export function installOperationDropPicking(
         materials.forEach((material) => material.dispose());
       }
     group.clear();
+    invalidate();
     paths.clear();
     closedPaths.clear();
     individualTargetIds.clear();
@@ -84,6 +86,7 @@ export function installOperationDropPicking(
   };
   const color = () => {
     const frame = active();
+    if (group.children.length) invalidate();
     const id = frame ? useOperationDrop.getState().hoverId ??
       (frame.handoffSketchId ? useSketchSolidHandoff.getState().selectedTargetId : undefined) : undefined;
     for (const object of group.children) {

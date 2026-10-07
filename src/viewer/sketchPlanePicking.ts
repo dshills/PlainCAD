@@ -40,6 +40,7 @@ export function installSketchPlanePicking(
   camera: THREE.Camera,
   models: THREE.Group,
   clipping: () => THREE.Plane | undefined,
+  invalidate: () => void = () => {},
 ) {
   const planes = new THREE.Group(),
     highlight = new THREE.Group();
@@ -63,6 +64,7 @@ export function installSketchPlanePicking(
   };
   const hovered = () => {
     clear(highlight);
+    invalidate();
     const workflow = active();
     const fallbackId = workflow?.kind === "facePocket" ? workflow.choiceId : undefined;
     const storedHover = workflow
@@ -160,6 +162,7 @@ export function installSketchPlanePicking(
     previousActive = workflow;
     clear(planes);
     clear(highlight);
+    invalidate();
     choices = workflow
       ? workflow.kind === "facePocket"
         ? facePocketFaces(state)
@@ -344,6 +347,7 @@ export function installSketchPlanePicking(
     renderer.domElement.removeEventListener("click", click, true);
     clear(planes);
     clear(highlight);
+    invalidate();
     scene.remove(planes, highlight);
   };
 }

@@ -1,3 +1,5 @@
+import { DemandRenderer } from "./demandRenderer";
+import { addSketchMarkers, inspectSketchMarkers, type SketchMarker } from "./sketchMarkers";
 import { ModelMeshes } from "./modelMeshes";
 import { installOperationDropPicking, type OperationDropPickingHandle } from "./operationDropPicking";
 import { installSketchPlanePicking } from "./sketchPlanePicking";
@@ -39,6 +41,7 @@ interface ViewerRuntime {
   modelGroup: THREE.Group;
   modelMeshes: ModelMeshes;
   refreshQuality(): void;
+  invalidate(): void;
   sketchGroup: THREE.Group;
   measurementGroup: THREE.Group;
   operationPicking: OperationDropPickingHandle;
@@ -62,6 +65,11 @@ const MOVEMENT_RESTORE_DELAY_MS = 100;
 export function CadViewer() {
   const theme = useThemeState((state) => state.theme);
   const hostRef = useRef<HTMLDivElement>(null);
+  const frameListeners = useRef(new Set<() => void>());
+  const subscribeFrames = useRef((listener: () => void) => {
+    frameListeners.current.add(listener);
+    return () => { frameListeners.current.delete(listener); };
+  });
   const runtimeRef = useRef<ViewerRuntime | undefined>(undefined);
   const meshesRef = useRef<RenderMesh[]>([]);
   const renderedMeshesRef = useRef<RenderMesh[]>([]);
@@ -159,6 +167,18 @@ export function CadViewer() {
     const sharpPixelRatio = Math.min(window.devicePixelRatio, 2);
     let moving = false, interacting = false, lastInput = 0;
     let edgesVisible = true;
+    const frames = new DemandRenderer(() => {
+      if (!host.clientWidth || !host.clientHeight || renderer.getContext().isContextLost()) return false;
+      const changed = controls.update();
+      if (moving && !interacting && performance.now() - lastInput >= MOVEMENT_RESTORE_DELAY_MS) {
+        moving = false;
+        refreshQuality();
+      }
+      renderer.render(scene, camera);
+      frameListeners.current.forEach((listener) => listener());
+      return changed || (moving && !interacting);
+    });
+    const invalidate = frames.invalidate;
     const refreshQuality = (sharp = false) => {
       const state = useCadStore.getState(), view = useViewerState.getState();
       const current = view.session === state.documentSession;
@@ -172,6 +192,7 @@ export function CadViewer() {
         applyClipping(modelGroup, clippingRef.current);
         applySelection(modelGroup, selectedBodyIdRef.current, highlightedBodyIdsRef.current);
       }
+      invalidate();
     };
     const startMoving = () => {
       interacting = true;
@@ -179,12 +200,14 @@ export function CadViewer() {
       lastInput = performance.now();
       refreshQuality();
     };
-    const endMoving = () => { interacting = false; lastInput = performance.now(); };
+    const endMoving = () => { interacting = false; lastInput = performance.now(); invalidate(); };
     const listenToControls = () => {
+      controls.addEventListener("change", invalidate);
       controls.addEventListener("start", startMoving);
       controls.addEventListener("end", endMoving);
     };
     const disposeControls = () => {
+      controls.removeEventListener("change", invalidate);
       controls.removeEventListener("start", startMoving);
       controls.removeEventListener("end", endMoving);
       controls.dispose();
@@ -213,10 +236,11 @@ export function CadViewer() {
       camera.updateProjectionMatrix();
       controls.update();
       if (runtimeRef.current) runtimeRef.current.controls = controls;
+      invalidate();
       return true;
     };
-    const operationPicking = installOperationDropPicking(scene, renderer.domElement, camera, () => clippingRef.current);
-    runtimeRef.current = { background, grid, camera, controls, applyPose, modelGroup, modelMeshes, refreshQuality, sketchGroup, measurementGroup, operationPicking, sketchResources: createSketchOverlayResources() };
+    const operationPicking = installOperationDropPicking(scene, renderer.domElement, camera, () => clippingRef.current, invalidate);
+    runtimeRef.current = { background, grid, camera, controls, applyPose, modelGroup, modelMeshes, refreshQuality, invalidate, sketchGroup, measurementGroup, operationPicking, sketchResources: createSketchOverlayResources() };
     const unregisterPng = registerPngCapture("viewer", (request) => {
       if (request.document !== renderedDocumentRef.current || request.result?.meshes !== renderedMeshesRef.current || request.session !== useCadStore.getState().documentSession)
         throw new Error("The drawing view is updating. Wait for the current model, then export PNG again.");
@@ -284,6 +308,8 @@ export function CadViewer() {
 
     const unregisterDiagnostics = import.meta.env.DEV ? registerViewerDiagnostics(() => ({
       performance: {
+        ...frames.inspect(),
+        markerBatches: sketchGroup.children.filter((object) => object instanceof THREE.InstancedMesh).length,
         pixelRatio: renderer.getPixelRatio(), sharpPixelRatio, moving,
         showModelEdges: edgesVisible,
         drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles,
@@ -308,9 +334,7 @@ export function CadViewer() {
         return { bodyId: object.userData.bodyId as string, geometryId: object.geometry.uuid, visible: object.visible, highlighted: object.userData.highlighted === true, clippingEnabled: object.material instanceof THREE.MeshStandardMaterial && Boolean(object.material.clippingPlanes?.length), positions, indices: Array.from(object.geometry.index?.array ?? []) };
       }),
       measurementLine: measurementGroup.children[0] instanceof THREE.Line ? Array.from(measurementGroup.children[0].geometry.getAttribute("position").array) : [],
-      sketchPoints: sketchGroup.children.filter((object) => object instanceof THREE.Mesh && typeof object.userData.sketchEntityId === "string").map((object) => ({
-        id: object.userData.sketchEntityId as string, position: object.getWorldPosition(new THREE.Vector3()).toArray(),
-      })),
+      sketchPoints: inspectSketchMarkers(sketchGroup),
       sketchCircles: sketchGroup.children.filter((object) => object instanceof THREE.LineLoop).map((object) => ({
         id: object.userData.sketchEntityId as string,
         normal: new THREE.Vector3(0, 0, 1).applyQuaternion(object.getWorldQuaternion(new THREE.Quaternion())).toArray(),
@@ -329,8 +353,9 @@ export function CadViewer() {
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
       renderer.setSize(width, height);
+      invalidate();
     };
-    const fit = () => fitMeshes(camera, controls, meshesRef.current);
+    const fit = () => { fitMeshes(camera, controls, meshesRef.current); invalidate(); };
     const reset = () => applyPose(DEFAULT_CAMERA_POSE);
     const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(resize) : undefined;
     resizeObserver?.observe(host);
@@ -338,21 +363,10 @@ export function CadViewer() {
     window.addEventListener("plaincad:fit-view", fit);
     window.addEventListener("plaincad:reset-camera", reset);
 
-    let raf = 0;
-    const animate = () => {
-      if (host.clientWidth && host.clientHeight) {
-        controls.update();
-        if (moving && !interacting && performance.now() - lastInput >= MOVEMENT_RESTORE_DELAY_MS) {
-          moving = false;
-          refreshQuality();
-        }
-        renderer.render(scene, camera);
-      }
-      raf = requestAnimationFrame(animate);
-    };
-    animate();
+    renderer.domElement.addEventListener("webglcontextrestored", invalidate);
+    invalidate();
 
-    const uninstallPlanePicking = installSketchPlanePicking(scene, renderer, camera, modelGroup, () => clippingRef.current);
+    const uninstallPlanePicking = installSketchPlanePicking(scene, renderer, camera, modelGroup, () => clippingRef.current, invalidate);
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
     const click = (event: MouseEvent) => {
@@ -373,14 +387,17 @@ export function CadViewer() {
       unregisterDiagnostics?.();
       unregisterCamera();
       unregisterPng();
-      cancelAnimationFrame(raf);
+      frames.dispose();
+      renderer.domElement.removeEventListener("webglcontextrestored", invalidate);
       resizeObserver?.disconnect();
       window.removeEventListener("resize", resize);
       window.removeEventListener("plaincad:fit-view", fit);
       window.removeEventListener("plaincad:reset-camera", reset);
       renderer.domElement.removeEventListener("click", click);
       modelMeshes.dispose();
-      scene.remove(modelGroup);
+      scene.remove(modelGroup, sketchGroup);
+      if (runtimeRef.current) disposeSketchOverlayObjects(sketchGroup, runtimeRef.current.sketchResources);
+      sketchGroup.clear();
       disposeObject3D(scene);
       disposeSketchOverlayResources(runtimeRef.current?.sketchResources);
       disposeControls();
@@ -413,6 +430,7 @@ export function CadViewer() {
     resources.errorLineMaterial.color.set(colors.error);
     resources.errorPointMaterial.color.set(colors.error);
     resources.circleMaterial.color.set(colors.circle);
+    runtime.invalidate();
   }, [theme]);
 
   useEffect(() => {
@@ -426,6 +444,7 @@ export function CadViewer() {
     renderedMeshesRef.current = meshes;
     applyClipping(runtime.modelGroup, clippingRef.current);
     applySelection(runtime.modelGroup, selectedBodyIdRef.current, highlightedBodyIdsRef.current);
+    runtime.invalidate();
   }, [meshes]);
 
   useEffect(() => { runtimeRef.current?.refreshQuality(); }, [view.showModelEdges, view.optimizeWhileMoving, view.session, session]);
@@ -445,7 +464,7 @@ export function CadViewer() {
           ? rebuild.result
           : undefined,
       );
-    if (runtime) applyClipping(runtime.sketchGroup, clippingRef.current);
+    if (runtime) { applyClipping(runtime.sketchGroup, clippingRef.current); runtime.invalidate(); }
   }, [document, rebuild, view.hiddenComponentIds, view.hiddenSketchIds, view.session, session]);
 
   useEffect(() => {
@@ -459,13 +478,16 @@ export function CadViewer() {
       if (!intent?.preservePose) fitMeshes(runtime.camera, runtime.controls, meshesRef.current);
       lastAutoFitSessionRef.current = session;
     }
+    runtime.invalidate();
   }, [meshes, document, view.hiddenBodyIds, view.hiddenComponentIds, view.session, session]);
 
   useEffect(() => {
-    const group = runtimeRef.current?.measurementGroup;
+    const runtime = runtimeRef.current;
+    const group = runtime?.measurementGroup;
     if (!group) return;
     disposeObject3D(group);
     group.clear();
+    runtime.invalidate();
     if (inspection.session !== session || !inspection.first || !inspection.second || rebuild.status !== "succeeded" || !rebuild.result?.success || rebuild.result.documentId !== document.id) return;
     try {
       const points = [inspection.first,inspection.second].map((ref) => measureWorldPoint(document,rebuild.result!,ref));
@@ -490,16 +512,17 @@ export function CadViewer() {
     // The picker must read the newly installed plane, after this effect updates
     // clippingRef; a synchronous section-store subscription reads the old plane.
     runtime.operationPicking.refresh();
+    runtime.invalidate();
   }, [session, section.session, section.axis, section.offset, section.positive]);
 
   useEffect(() => {
     selectedBodyIdRef.current = selectedBodyId;
     highlightedBodyIdsRef.current = currentHighlight?.bodyIds ?? [];
     const runtime = runtimeRef.current;
-    if (runtime) applySelection(runtime.modelGroup, selectedBodyId, highlightedBodyIdsRef.current);
+    if (runtime) { applySelection(runtime.modelGroup, selectedBodyId, highlightedBodyIdsRef.current); runtime.invalidate(); }
   }, [selectedBodyId, currentHighlight]);
 
-  return <div ref={hostRef} className="viewer-canvas"><SolidDimensionOverlay dimensions={dimensions} project={dimensionProjector.current} /></div>;
+  return <div ref={hostRef} className="viewer-canvas"><SolidDimensionOverlay dimensions={dimensions} project={dimensionProjector.current} subscribeFrames={subscribeFrames.current} /></div>;
 }
 
 function applyClipping(group: THREE.Group, plane: THREE.Plane | undefined) {
@@ -615,6 +638,7 @@ function updateSketchOverlay(
   const linePositions: number[] = [];
   const constructionPositions: number[] = [];
   const errorPositions: number[] = [];
+  const points: SketchMarker[] = [], errorPoints: SketchMarker[] = [];
   const planes = result?.sketchPlanes
     ? { transforms: new Map(Object.entries(result.sketchPlanes)) }
     : resolveDocumentPlanes(document, evaluated.values);
@@ -673,13 +697,7 @@ function updateSketchOverlay(
     for (const point of Object.values(solved.points)) {
       if (!Number.isFinite(point.x) || !Number.isFinite(point.y)) continue;
       const world = transformPoint(transform, point.x, point.y);
-      const object = new THREE.Mesh(
-        resources.pointGeometry,
-        failed ? resources.errorPointMaterial : resources.pointMaterial,
-      );
-      object.position.set(world.x, world.y, world.z);
-      object.userData.sketchEntityId = point.id;
-      sketchGroup.add(object);
+      (failed ? errorPoints : points).push({ id: point.id, position: [world.x, world.y, world.z] });
     }
     for (const circle of solved.circles) {
       if (!finite(circle.center.x, circle.center.y, circle.radius)) continue;
@@ -716,6 +734,8 @@ function updateSketchOverlay(
       sketchGroup.add(object);
     }
   }
+  addSketchMarkers(sketchGroup, points, resources.pointGeometry, resources.pointMaterial);
+  addSketchMarkers(sketchGroup, errorPoints, resources.pointGeometry, resources.errorPointMaterial);
   if (errorPositions.length) {
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute(
@@ -749,6 +769,7 @@ function updateSketchOverlay(
 function disposeSketchOverlayObjects(sketchGroup: THREE.Group, resources: SketchOverlayResources) {
   sketchGroup.traverse((child) => {
     const object = child as THREE.Object3D & { geometry?: THREE.BufferGeometry };
+    if (child instanceof THREE.InstancedMesh) child.dispose();
     if (object.geometry && object.geometry !== resources.pointGeometry && object.geometry !== resources.unitCircleGeometry) {
       object.geometry.dispose();
     }

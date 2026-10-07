@@ -131,5 +131,56 @@ remain 10,076 and 26,704 respectively. rAF samples include automation/browser
 scheduling and are not direct GPU execution timings or guaranteed interactive
 FPS. Draw totals span different numbers of observed frames and should not be
 compared as equal-duration rates. This comparison is one local run, not a broad
-hardware benchmark. Rendering still runs continuously while idle; on-demand
-rendering and sketch-marker batching remain future optimizations.
+hardware benchmark. That comparison predates the demand-rendering and sketch-point
+batching described below.
+
+## Idle rendering and sketch marker batches
+
+The viewer coalesces scene changes into requested frames. Camera changes keep it
+active through OrbitControls damping; full resolution still returns about 100ms
+after the last input, independent of damping. Once settled it releases the RAF
+loop. Model changes, theme, resize/layout, selection/highlights, visibility,
+measurements, section clipping, picker hover/previews, camera commands, and
+restored WebGL contexts request a fresh frame. Solid driving-dimension labels
+subscribe to viewer frames and their own size changes instead of polling at idle.
+PNG capture still renders full-resolution pixels synchronously before copying.
+
+Visible 3D sketch points use one instanced sphere batch for normal points and one
+for failed sketches, only when those groups contain points. The spheres retain
+the previous 1.4mm radius and shared geometry/materials; each instance retains
+its entity ID and transformed world position in development diagnostics. Instance
+buffers are disposed when overlays change or the viewer unmounts, while the
+viewer owns the shared geometry and materials. Lines/arcs/circles retain their
+existing rendering; this does not change the 2D drawing canvas or CAD solving.
+
+`e2e/viewer-demand.spec.ts` loads the native ORBIT housing and verifies a settled
+500ms window has zero new WebGL draw calls, RAF requests, or viewer frames even
+with driving dimension labels visible. It verifies rendering resumes for pan,
+resize, theme, selection, clipping and measurements. It also checks the source
+point IDs/coordinates, constant marker-batch count, visibility and resource
+stability. It writes `viewer-idle.json` and `marker-batches.json`; the ordinary
+viewer, picking, native geometry, save/open and export suites remain in the
+release gate. Unit coverage exercises frame coalescing, damping continuation,
+disposal/cancelled callbacks and a 400-point batch with valid culling bounds.
+
+These are bounded correctness checks, not a hardware FPS or power-consumption
+guarantee. Camera damping intentionally keeps drawing while its pose changes;
+longer sessions, much larger sketches, and other browsers still need broader
+measurements.
+
+A local headless Chromium 153/M4 Pro comparison on 2026-10-07, against `ec5dce6`,
+used a 1600×1000 full workspace at DPR 1 and the same native ORBIT housing:
+
+| Measurement | Before | After |
+| --- | ---: | ---: |
+| WebGL draws during a settled 500ms window, labels visible | 124 | 0 |
+| RAF requests during the same window | 62 | 0 |
+| Draw calls per frame with all 129 source points visible | 171 | 43 |
+| Point marker draw calls | 129 | 1 |
+
+The whole frame uses about 75% fewer draw calls with these source sketches shown;
+the 128 removed calls are the point markers. Native volume (272,452.369184mm³)
+and 10,076 native triangles remain unchanged. Raw before/after data and scope
+limits are in [viewer-idle-markers.json](performance-evidence/viewer-idle-markers.json).
+This demonstrates reduced idle and marker submission work in this workload;
+it does not measure wattage, GPU execution time, or broad-device FPS.
