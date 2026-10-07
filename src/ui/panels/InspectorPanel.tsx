@@ -2,6 +2,7 @@ import { runCommand } from "../commands/commandRegistry";
 import { useCommandEnablement } from "../commands/useCommandEnablement";
 import { useEffect, useMemo, useState } from "react";
 import { useCadStore } from "../../state/useCadStore";
+import { bodyDisplayNames } from "../../cad/document/bodyDisplayNames";
 import { SketchCircle, SketchPoint } from "../../cad/document/schema";
 import * as documentOps from "../../cad/document/CadDocument";
 import { sketchPlaneLabel } from "../../cad/sketch/planes";
@@ -370,9 +371,9 @@ export function InspectorPanel() {
       ) : null}
       {body ? (
         <div key={`body:${body.id}`} className="item-card">
-          <strong>{body.name}</strong>
+          <strong>{bodyDisplayNames(document, rebuild?.bodies ?? [body])[body.id]}</strong>
           <p className="muted">
-            Generated from {body.featureId ?? "unknown feature"}
+            Generated from {bodyFeature?.name ?? "unknown feature"}
           </p>
           {bodyFeature ? (
             <button

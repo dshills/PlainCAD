@@ -9,6 +9,7 @@ export interface FabricationRequest {
   mode: StlMode;
   fullChecks: boolean;
   bodyIds?: string[];
+  bodyNames?: Record<string, string>;
 }
 self.onmessage = async (event: MessageEvent<FabricationRequest>) => {
   try {
@@ -36,6 +37,7 @@ self.onmessage = async (event: MessageEvent<FabricationRequest>) => {
       request.document.name,
       request.mode,
       request.fullChecks,
+      request.bodyNames,
     );
     self.postMessage({ result }, { transfer: [result.file.bytes] });
   } catch (error) {

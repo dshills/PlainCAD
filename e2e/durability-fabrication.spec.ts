@@ -268,12 +268,16 @@ test("separate ZIP alignment, overlapping shells warning, stale validation and r
   const panel = page.getByRole("dialog", { name: "STL export options" });
   await expect(panel).toBeVisible();
   await expect(panel.getByLabel("STL mode")).toHaveValue("separate");
+  const partNames = await panel.getByRole("checkbox", { name: /^Export body / }).evaluateAll((elements) => elements.map((element) =>
+    `${element.getAttribute("aria-label")!.replace(/^Export body /, "")}.stl`,
+  ));
   let download = page.waitForEvent("download");
   await panel.getByRole("button", { name: "Generate STL" }).click();
   let file = info.outputPath("parts.zip");
   await (await download).saveAs(file);
   const parts = unpack(await readFile(file));
-  expect(parts.map((p) => p.name)).toEqual(["Part.stl", "part-2.stl"]);
+  expect(parts.map((p) => p.name)).toEqual(partNames);
+  expect(new Set(partNames.map((name) => name.toLowerCase())).size).toBe(2);
   expect(stl(parts[0].data)).toMatchObject({ minX: 0, maxX: 20 });
   expect(stl(parts[1].data)).toMatchObject({ minX: 15, maxX: 35 });
   expect(stl(parts[1].data).volume).toBeCloseTo(2000);

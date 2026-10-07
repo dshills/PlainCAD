@@ -240,7 +240,7 @@ test("AI cap/straight-side sketches and to-face extrusion produce native geometr
       await options
         .getByRole("button", { name: "Clear body selection", exact: true })
         .click();
-      await options.getByLabel("Export body Pillar", { exact: true }).check();
+      await options.getByLabel("Export body To-face pillar · Pillar", { exact: true }).check();
       await options
         .getByRole("button", { name: "Generate STL", exact: true })
         .click();
@@ -974,7 +974,7 @@ test("AI polygons, analytic arcs and indexed Hole patterns produce exact native 
     .getByRole("button", { name: "Clear body selection", exact: true })
     .click();
   await exportPanel
-    .getByLabel("Export body Plate extrusion", { exact: true })
+    .getByLabel("Export body Four-hole plate", { exact: true })
     .check();
   await exportPanel
     .getByRole("button", { name: "Generate STL", exact: true })

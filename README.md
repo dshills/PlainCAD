@@ -27,6 +27,12 @@ Parameters show their full names with a deliberate Rename action. While a rebuil
 is pending, a previous value is explicitly labeled stale; invalid values show
 Unavailable and cannot authorize export.
 
+Parts use their component name in the browser, inspector, selected-part PNG, and
+separate-part STL filenames. Multiple bodies in one component include their body name; duplicate
+and unsafe filename collisions receive stable suffixes. Root-component projects
+retain their existing part labels. Exit isolation restores component/part visibility
+without revealing hidden source sketches.
+
 ## Features
 
 - One local project file containing components, sketches, parameters, and a feature timeline.

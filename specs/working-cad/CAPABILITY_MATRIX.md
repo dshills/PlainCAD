@@ -1021,3 +1021,12 @@ label previous values stale while updating, clear invalid values, and reset acro
 project sessions. Names wrap in full; Rename opens the name editor deliberately.
 Native acceptance covers a free rectangle, valid/invalid edits, held worker delivery,
 export availability, and same-ID project replacement.
+
+## Part identity and isolation
+
+Presentation names follow component ownership without changing document/body IDs
+or feature history. A child component with one body uses the component name;
+multiple bodies include their body names. Duplicate labels and safe-filename
+collisions are resolved in stable ID order against the full model, so selected
+exports match ZIP member names. Root-component bodies retain legacy names.
+Exit isolation restores body/component visibility while preserving sketch visibility.

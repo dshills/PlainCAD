@@ -176,6 +176,34 @@ test("component visibility/isolation filters native bodies, sketch overlays and 
     .poll(async () => (await viewer(page)).sketchPoints.length)
     .toBe(0);
   await expect(track.getByRole("listitem")).toHaveCount(4);
+  await page.getByRole("button", { name: "Isolate component Cover", exact: true }).click();
+  await page.getByRole("button", { name: "Exit isolation", exact: true }).click();
+  await expect.poll(async () => (await viewer(page)).meshes.map((mesh) => mesh.visible)).toEqual([true, true]);
+  await expect.poll(async () => (await viewer(page)).sketchPoints.length).toBe(0);
+  await page.getByRole("button", { name: "Export STL", exact: true }).click();
+  const exportDialog = page.getByRole("dialog", { name: "STL export options" });
+  await expect(exportDialog.getByRole("checkbox", { name: "Export body Bracket", exact: true })).toBeChecked();
+  await expect(exportDialog.getByRole("checkbox", { name: "Export body Cover", exact: true })).toBeChecked();
+  const zipDownload = page.waitForEvent("download");
+  await exportDialog.getByRole("button", { name: "Generate STL", exact: true }).click();
+  const zipPath = info.outputPath("named-parts.zip");
+  await (await zipDownload).saveAs(zipPath);
+  const zip = await readFile(zipPath);
+  const entries: string[] = [];
+  for (let offset = 0; zip.readUInt32LE(offset) === 0x04034b50;) {
+    const size = zip.readUInt32LE(offset + 18);
+    const nameSize = zip.readUInt16LE(offset + 26);
+    const dataOffset = offset + 30 + nameSize + zip.readUInt16LE(offset + 28);
+    entries.push(zip.subarray(offset + 30, offset + 30 + nameSize).toString());
+    expect(zip.readUInt32LE(dataOffset + 80)).toBeGreaterThan(0);
+    offset = dataOffset + size;
+  }
+  expect(entries).toEqual(["Bracket.stl", "Cover.stl"]);
+  await page.getByRole("button", { name: "Export STL", exact: true }).click();
+  await exportDialog.getByRole("checkbox", { name: "Export body Bracket", exact: true }).uncheck();
+  const partDownload = page.waitForEvent("download");
+  await exportDialog.getByRole("button", { name: "Generate STL", exact: true }).click();
+  expect((await partDownload).suggestedFilename()).toBe("Cover.stl");
   await page.screenshot({
     path: info.outputPath("component-navigation.png"),
     fullPage: true,

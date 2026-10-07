@@ -27,12 +27,21 @@ import { hiddenViewerBodies, useViewerState } from "../state/viewerState";
 import { runCommand } from "../ui/commands/commandRegistry";
 import { FeatureTimeline } from "../ui/panels/FeatureTimeline";
 import { SketchPanel } from "../ui/panels/SketchPanel";
+import { InspectorPanel } from "../ui/panels/InspectorPanel";
+import { FabricationPanel } from "../ui/panels/FabricationPanel";
+import { openFabrication, useFileJobs } from "../persistence/fileJobs";
 
 beforeEach(() => {
   useCadStore.setState(useCadStore.getInitialState(), true);
   useViewerState.setState(useViewerState.getInitialState(), true);
+  useFileJobs.getState().cancel();
+  useFileJobs.setState({ exportOpen: false });
 });
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  useFileJobs.getState().cancel();
+  useFileJobs.setState({ exportOpen: false });
+});
 function project() {
   const a = addComponent(createEmptyDocument(), "Bracket"),
     b = addComponent(a.document, "Cover");
@@ -73,6 +82,21 @@ function project() {
   };
 }
 describe("component navigation", () => {
+  it("presents the same part identity in the browser, inspector and export choices while retaining source feature names", () => {
+    const { document } = project();
+    useCadStore.setState({ rebuild: {
+      status: "succeeded", kernelReady: true, result: rebuildDocument(document),
+    } });
+    render(<><BodyPanel /><InspectorPanel /><FabricationPanel /></>);
+    fireEvent.click(screen.getByRole("button", { name: "Bracket" }));
+    expect(screen.getByText("Generated from Bracket solid")).toBeInTheDocument();
+    expect(screen.getAllByText("Bracket", { exact: true })).toHaveLength(2);
+    act(() => openFabrication());
+    expect(screen.getByLabelText("Export body Bracket")).toBeChecked();
+    expect(screen.getByLabelText("Export body Cover")).toBeChecked();
+    expect(useCadStore.getState().history.present.features[0].name).toBe("Bracket solid");
+    expect(useCadStore.getState().history.past).toEqual([]);
+  });
   it("routes edge and movement preferences through shared commands without adding history or project data", () => {
     const { document } = project();
     render(<ViewPanel />);
@@ -167,9 +191,9 @@ describe("component navigation", () => {
         documentSession: session,
       });
     });
-    expect(screen.getByLabelText("Show body Bracket solid")).not.toBeChecked();
-    expect(screen.getByLabelText("Show body Bracket solid")).toBeDisabled();
-    expect(screen.getByLabelText("Show body Cover solid")).toBeChecked();
+    expect(screen.getByLabelText("Show body Bracket")).not.toBeChecked();
+    expect(screen.getByLabelText("Show body Bracket")).toBeDisabled();
+    expect(screen.getByLabelText("Show body Cover")).toBeChecked();
   });
   it("labels ownership and filters the timeline as the active component changes without altering global ordering", () => {
     const { document, a } = project();
@@ -199,6 +223,11 @@ describe("component navigation", () => {
     );
     expect(screen.getByLabelText("Show component Cover")).toBeChecked();
     expect(screen.getByLabelText("Show component Bracket")).not.toBeChecked();
+    fireEvent.click(screen.getByRole("button", { name: "Exit isolation" }));
+    expect(screen.getByLabelText("Show component Bracket")).toBeChecked();
+    expect(useViewerState.getState().hiddenBodyIds).toEqual([]);
+    expect(useViewerState.getState().hiddenSketchIds).toEqual(Object.keys(document.sketches));
+    expect(screen.queryByRole("button", { name: "Exit isolation" })).toBeNull();
     expect(useCadStore.getState().history.present).toBe(document);
     act(() => useCadStore.getState().setDocument(document));
     expect(

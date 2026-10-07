@@ -1,4 +1,5 @@
 import { bodyComponentId } from "../../cad/document/components";
+import { bodyDisplayNames } from "../../cad/document/bodyDisplayNames";
 import { useCadStore } from "../../state/useCadStore";
 import { useViewerState } from "../../state/viewerState";
 import {
@@ -32,6 +33,7 @@ export function BodyPanel({
         )
       : [];
   const hidden = view.session === session ? view.hiddenBodyIds : [];
+  const names = bodyDisplayNames(document, rebuild.result?.bodies ?? []);
   return (
     <>
       <div className="browser-folder">
@@ -54,12 +56,12 @@ export function BodyPanel({
                   .select({ kind: "body", id: body.id, documentId })
               }
             >
-              <strong>{body.name}</strong>
+              <strong>{names[body.id]}</strong>
             </button>
             <label>
               <input
                 type="checkbox"
-                aria-label={`Show body ${body.name}`}
+                aria-label={`Show body ${names[body.id]}`}
                 checked={!componentHidden && !hidden.includes(body.id)}
                 disabled={componentHidden}
                 title={

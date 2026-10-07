@@ -14,7 +14,7 @@ import {
   useGuidedExport,
   type GuidedExportTask,
 } from "../commands/guidedExportCommand";
-import { bodyComponentId } from "../../cad/document/components";
+import { bodyDisplayNames } from "../../cad/document/bodyDisplayNames";
 import { exportDiagnostic } from "../../fabrication/exportDiagnostic";
 import type { StlMode } from "../../fabrication/exportPlan";
 import "./FabricationPanel.css";
@@ -102,6 +102,7 @@ function ExportDialog({
     diagnosticFeatureId = diagnostic?.featureId;
   const clearPrepared = () =>
     useFileJobs.setState({ prepared: undefined, preparedFor: undefined });
+  const names = bodyDisplayNames(cadDocument, bodies);
   const setBodies = (ids: string[]) => {
     clearPrepared();
     useFileJobs.setState({ exportBodyIds: ids });
@@ -233,15 +234,11 @@ function ExportDialog({
             </p>
             <div className="export-bodies">
               {bodies.map((body) => {
-                const componentId = bodyComponentId(cadDocument, body.id),
-                  componentName = componentId
-                    ? cadDocument.components[componentId]?.name
-                    : undefined;
                 return (
                   <label key={body.id}>
                     <input
                       type="checkbox"
-                      aria-label={`Export body ${body.name}`}
+                      aria-label={`Export body ${names[body.id]}`}
                       checked={selected.includes(body.id)}
                       onChange={(event) =>
                         setBodies(
@@ -251,8 +248,7 @@ function ExportDialog({
                         )
                       }
                     />
-                    {body.name}
-                    {componentName ? <small> · {componentName}</small> : null}
+                    {names[body.id]}
                   </label>
                 );
               })}

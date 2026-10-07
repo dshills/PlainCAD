@@ -6,6 +6,7 @@ import { exportFabrication } from "../fabrication/exportClient";
 import type { FabricationResult, StlMode } from "../fabrication/exportPlan";
 import { downloadArrayBuffer } from "./exportProject";
 import { selectFabricationBodies } from "../fabrication/bodySelection";
+import { bodyDisplayNames } from "../cad/document/bodyDisplayNames";
 export interface FileJobState {
   busy: boolean;
   message?: string;
@@ -132,6 +133,7 @@ export async function runFabrication(
         document,
         meshes: selected.meshes,
         bodies: selected.bodies,
+        bodyNames: bodyDisplayNames(document, result.bodies),
         bodyIds: bodyIds ? [...bodyIds] : undefined,
         mode,
         fullChecks,

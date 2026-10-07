@@ -293,6 +293,7 @@ export const commands: CadCommand[] = [
   },
   { id: "view.toggleModelEdges", label: "Toggle Model Edges", description: "Show or hide solid edge lines in the 3D view and PNG images.", enablementKey: "document", run: () => useViewerState.getState().toggleModelEdges(useCadStore.getState().documentSession) },
   { id: "view.toggleMovingQuality", label: "Toggle Movement Optimization", description: "Use lower resolution and hide model edges while moving the camera, then restore detail promptly after input ends.", enablementKey: "document", run: () => useViewerState.getState().toggleMovingQuality(useCadStore.getState().documentSession) },
+  { id: "view.exitIsolation", label: "Exit isolation", description: "Restore all component and part visibility while preserving source sketch visibility.", enablementKey: "document", run: () => useViewerState.getState().showAllBodies(useCadStore.getState().documentSession) },
   { id: "view.showAllBodies", label: "Show All Bodies", enablementKey: "document", run: () => useViewerState.getState().showAllBodies(useCadStore.getState().documentSession) },
   { id: "view.showAllComponents", label: "Show All Components, Bodies and Sketches", enablementKey: "document", run: () => useViewerState.getState().showAll(useCadStore.getState().documentSession) },
   { id: "timeline.toggleComponentFilter", internal: true, label: "Filter Timeline to Active Component", enablementKey: "document", run: () => useViewerState.getState().toggleTimelineFilter(useCadStore.getState().documentSession) },

@@ -1,5 +1,6 @@
 import { CaretDownIcon, CaretRightIcon } from "../design-system/Icons";
 import { useViewerState } from "../../state/viewerState";
+import { bodyDisplayNames } from "../../cad/document/bodyDisplayNames";
 import { useCommandEnablement } from "../commands/useCommandEnablement";
 import { CommitInput } from "./CommitInput";
 import { runCommand } from "../commands/commandRegistry";
@@ -33,6 +34,7 @@ export function SketchPanel({ compact = false }: { compact?: boolean }) {
   const select = useCadStore((state) => state.select);
   const selection = useCadStore((state) => state.selection.selectedIds[0]);
   const sketches = useMemo(() => orderedSketches(document), [document]);
+  const names = useMemo(() => bodyDisplayNames(document, bodies ?? []), [document, bodies]);
   const activeSketch =
     selection?.kind === "sketch"
       ? document.sketches[selection.id]
@@ -81,6 +83,11 @@ export function SketchPanel({ compact = false }: { compact?: boolean }) {
           <strong>{document.name}</strong>
           <span className="muted">{document.units} local project</span>
         </div>
+        {hidden.length ? (
+          <button className="exit-isolation" onClick={() => void runCommand("view.exitIsolation")}>
+            Exit isolation
+          </button>
+        ) : null}
         <details className="project-settings" open={!compact}>
           <summary>Project settings</summary>
           <label className="component-name">
@@ -145,7 +152,7 @@ export function SketchPanel({ compact = false }: { compact?: boolean }) {
                           (body) =>
                             bodyComponentId(document, body.id) === component.id,
                         )
-                        .map((body) => body.name) ?? []),
+                        .map((body) => names[body.id]) ?? []),
                     ].some((name) => name.toLocaleLowerCase().includes(filter))
                   }
                   name={component.name}

@@ -4,6 +4,7 @@ import { beginFileJob, fileJobCurrent, finishFileJob } from "./fileJobs";
 import { capturePng } from "./pngCapture";
 import { downloadArrayBuffer } from "./exportProject";
 import { safeFilename } from "./filenames";
+import { bodyDisplayNames } from "../cad/document/bodyDisplayNames";
 
 export type PngScope = "project" | "body" | "sketch";
 
@@ -36,7 +37,7 @@ export async function exportPng(scope: PngScope) {
     const current = useCadStore.getState();
     if (current.history.present !== document || current.documentSession !== session || (scope !== "sketch" && (current.rebuild.result !== result || current.rebuild.status !== "succeeded")))
       throw new Error("Project changed during PNG export. Export the current view again.");
-    const name = sketch?.name ?? (bodyId ? result?.bodies.find((body) => body.id === bodyId)?.name ?? "Part" : document.name);
+    const name = sketch?.name ?? (bodyId ? bodyDisplayNames(document, result?.bodies ?? [])[bodyId] ?? "Part" : document.name);
     downloadArrayBuffer(bytes, safeFilename(name, ".png"), "image/png");
   } catch (error) {
     if (!controller || fileJobCurrent(controller)) state.setFileError(error instanceof Error ? error.message : "PNG export failed.");

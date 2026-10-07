@@ -19,6 +19,7 @@ export function buildStlExport(
   name: string,
   mode: StlMode,
   fullChecks = true,
+  bodyNames?: Readonly<Record<string, string>>,
 ): FabricationResult {
   const started = performance.now();
   if (!["separate", "shells", "merged"].includes(mode))
@@ -45,8 +46,12 @@ export function buildStlExport(
     checks = meshes.map((mesh) => validateMesh(mesh, fullChecks, budget));
   const names = meshes.map(
     (mesh) =>
-      bodies.find((body) => body.id === mesh.bodyId)?.name ?? mesh.bodyId,
+      bodyNames?.[mesh.bodyId] ?? bodies.find((body) => body.id === mesh.bodyId)?.name ?? mesh.bodyId,
   );
+  // Resolve safe-filename collisions against the full model, not the current export subset.
+  const namedIds = bodyNames ? Object.keys(bodyNames).sort() : meshes.map((mesh) => mesh.bodyId);
+  const filenames = uniqueFilenames(bodyNames ? namedIds.map((id) => bodyNames[id]) : names);
+  const filenameById = new Map(namedIds.map((id, i) => [id, filenames[i]]));
   const warnings =
     fullChecks && mode !== "separate"
       ? overlapWarnings(checks, names, budget)
@@ -63,19 +68,20 @@ export function buildStlExport(
   const encodingStarted = performance.now();
   let file: ExportFile;
   if (mode === "separate" && meshes.length > 1) {
-    const filenames = uniqueFilenames(names);
     file = {
       filename: safeFilename(name, ".zip", "-STL"),
       bytes: zipFiles(
         checks.map((check, i) => ({
-          filename: filenames[i],
+          filename: filenameById.get(check.mesh.bodyId) ?? safeFilename(names[i], ".stl"),
           bytes: exportMeshesToStl([check.mesh], names[i]),
         })),
       ),
     };
   } else
     file = {
-      filename: safeFilename(name, ".stl"),
+      filename: mode === "separate" && bodyNames
+        ? filenameById.get(meshes[0].bodyId) ?? safeFilename(names[0], ".stl")
+        : safeFilename(name, ".stl"),
       bytes: exportMeshesToStl(
         checks.map((check) => check.mesh),
         name,

@@ -28,6 +28,7 @@ export async function exportFabrication(
     request.document.name,
     request.mode,
     request.fullChecks,
+    request.bodyNames,
   );
   if (signal.aborted) throw new Error("Operation cancelled.");
   return output;

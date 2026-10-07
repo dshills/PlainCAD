@@ -198,7 +198,7 @@ test("local project → active components → plane-based sketches → native bo
     .click();
   await page
     .locator(".body-row")
-    .getByRole("button", { name: "Extrude 1", exact: true })
+    .getByRole("button", { name: "Bracket", exact: true })
     .click();
   const exporting = page.waitForEvent("download");
   await page
