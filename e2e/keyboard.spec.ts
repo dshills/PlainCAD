@@ -141,7 +141,7 @@ test("keyboard palette traps/restores focus, runs available commands and isolate
     await goal.check();
     await goal.focus();
     await page.keyboard.press("Shift+Tab");
-    await expect(exportDialog.getByRole("button", { name: /Close/ })).toBeFocused();
+    await expect(exportDialog.getByRole("button", { name: /^Cancel (save|export)$/ })).toBeFocused();
     await page.keyboard.press("Tab");
     await expect(goal).toBeFocused();
   }
@@ -154,7 +154,7 @@ test("keyboard palette traps/restores focus, runs available commands and isolate
   for (const index of [0, 1]) {
     await goals.nth(index).focus();
     await page.keyboard.press("Shift+Tab");
-    await expect(exportDialog.getByRole("button", { name: /Close/ })).toBeFocused();
+    await expect(exportDialog.getByRole("button", { name: /^Cancel (save|export)$/ })).toBeFocused();
     await page.keyboard.press("Tab");
     await expect(goals.first()).toBeFocused();
   }
