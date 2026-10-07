@@ -1,3 +1,4 @@
+import { createPresentationLights } from "./presentationLights";
 import { DemandRenderer } from "./demandRenderer";
 import { fitCameraBounds } from "./cameraFit";
 import { ViewerToolbar } from "./ViewerToolbar";
@@ -20,7 +21,7 @@ import type { CameraPose } from "../cad/document/schema";
 import { useInspectionState } from "../state/inspectionState";
 import { MeasurementError, measureWorldPoint } from "../cad/inspection/measurements";
 import { sketchComponentId } from "../cad/document/components";
-import { hiddenViewerBodies, useViewerState } from "../state/viewerState";
+import { hiddenViewerBodies, useViewerState, type PresentationMode } from "../state/viewerState";
 import { useCadStore } from "../state/useCadStore";
 import { SelectionRef } from "../cad/document/schema";
 import { RenderMesh } from "../cad/kernel/KernelAdapter";
@@ -100,6 +101,7 @@ export function CadViewer() {
       useGeometryHighlight.setState({ highlight: undefined });
   }, [highlight, currentHighlight]);
   const view = useViewerState();
+  const presentationMode = view.session === session ? view.presentationMode : "model";
   const inspection = useInspectionState();
   const section = useSectionState();
   const clippingRef = useRef<THREE.Plane | undefined>(undefined);
@@ -153,11 +155,9 @@ export function CadViewer() {
     grid.rotation.x = Math.PI / 2;
     for (const material of Array.isArray(grid.material) ? grid.material : [grid.material]) material.depthWrite = false;
     scene.add(grid);
-    scene.add(new THREE.AxesHelper(60));
-    scene.add(new THREE.HemisphereLight("#ffffff", "#a8b0ad", 2.6));
-    const light = new THREE.DirectionalLight("#ffffff", 2);
-    light.position.set(80, -80, 120);
-    scene.add(light);
+    const axes = new THREE.AxesHelper(60);
+    scene.add(axes);
+    const lights = createPresentationLights(scene);
 
     const modelMeshes = new ModelMeshes();
     const modelGroup = modelMeshes.group;
@@ -171,6 +171,7 @@ export function CadViewer() {
     let moving = false, interacting = false, lastInput = 0;
     let keepFitted = false;
     let edgesVisible = true;
+    let appliedPresentationMode: PresentationMode | undefined;
     const frames = new DemandRenderer(() => {
       if (!host.clientWidth || !host.clientHeight || renderer.getContext().isContextLost()) return false;
       const changed = controls.update();
@@ -188,6 +189,16 @@ export function CadViewer() {
       const current = view.session === state.documentSession;
       const optimize = !current || view.optimizeWhileMoving;
       const showEdges = !current || view.showModelEdges;
+      const mode = current ? view.presentationMode : "model";
+      if (mode !== appliedPresentationMode) {
+        modelMeshes.setPresentationMode(mode);
+        lights.setMode(mode);
+        axes.visible = mode === "model";
+        sketchGroup.visible = measurementGroup.visible = mode === "model";
+        applySelection(modelGroup, selectedBodyIdRef.current, highlightedBodyIdsRef.current);
+        appliedPresentationMode = mode;
+      }
+      grid.visible = !current || view.showGrid;
       const reduced = moving && optimize && !sharp;
       const ratio = reduced ? Math.min(sharpPixelRatio, 1) : sharpPixelRatio;
       if (renderer.getPixelRatio() !== ratio) renderer.setPixelRatio(ratio);
@@ -326,6 +337,7 @@ export function CadViewer() {
         drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles,
         bufferWidth: renderer.domElement.width, bufferHeight: renderer.domElement.height,
       },
+      presentation: { mode: modelGroup.userData.presentationMode ?? "model", gridVisible: grid.visible, axesVisible: axes.visible, sketchVisible: sketchGroup.visible, measurementVisible: measurementGroup.visible, lights: scene.children.filter((object) => object instanceof THREE.Light && object.visible).length, shadowMaps: renderer.shadowMap.enabled },
       resources: { geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, programs: renderer.info.programs?.length ?? 0 },
       cameraUp: camera.up.toArray(),
       operationTargets: operationPicking.inspect(),
@@ -342,7 +354,7 @@ export function CadViewer() {
           object.localToWorld(point.fromBufferAttribute(attribute, index));
           point.toArray(positions, index * 3);
         }
-        return { bodyId: object.userData.bodyId as string, geometryId: object.geometry.uuid, visible: object.visible, highlighted: object.userData.highlighted === true, clippingEnabled: object.material instanceof THREE.MeshStandardMaterial && Boolean(object.material.clippingPlanes?.length), positions, indices: Array.from(object.geometry.index?.array ?? []) };
+        return { bodyId: object.userData.bodyId as string, geometryId: object.geometry.uuid, visible: object.visible, highlighted: object.userData.highlighted === true, clippingEnabled: object.material instanceof THREE.MeshStandardMaterial && Boolean(object.material.clippingPlanes?.length), normals: Array.from(object.geometry.getAttribute("normal").array), appearance: object.material instanceof THREE.MeshStandardMaterial ? { roughness: object.material.roughness, metalness: object.material.metalness, flatShading: object.material.flatShading } : undefined, positions, indices: Array.from(object.geometry.index?.array ?? []) };
       }),
       measurementLine: measurementGroup.children[0] instanceof THREE.Line ? Array.from(measurementGroup.children[0].geometry.getAttribute("position").array) : [],
       sketchPoints: inspectSketchMarkers(sketchGroup),
@@ -458,7 +470,7 @@ export function CadViewer() {
     runtime.invalidate();
   }, [meshes]);
 
-  useEffect(() => { runtimeRef.current?.refreshQuality(); }, [view.showModelEdges, view.optimizeWhileMoving, view.session, session]);
+  useEffect(() => { runtimeRef.current?.refreshQuality(); }, [view.presentationMode, view.showGrid, view.showModelEdges, view.optimizeWhileMoving, view.session, session]);
 
   useEffect(() => {
     const runtime = runtimeRef.current;
@@ -533,7 +545,7 @@ export function CadViewer() {
     if (runtime) { applySelection(runtime.modelGroup, selectedBodyId, highlightedBodyIdsRef.current); runtime.invalidate(); }
   }, [selectedBodyId, currentHighlight]);
 
-  return <div ref={hostRef} className="viewer-canvas"><SolidDimensionOverlay dimensions={dimensions} project={dimensionProjector.current} subscribeFrames={subscribeFrames.current} /><ViewerToolbar hasGeometry={meshes.some((mesh) => !hidden.includes(mesh.bodyId))} /></div>;
+  return <div ref={hostRef} className="viewer-canvas">{presentationMode === "model" ? <SolidDimensionOverlay dimensions={dimensions} project={dimensionProjector.current} subscribeFrames={subscribeFrames.current} /> : null}<ViewerToolbar hasGeometry={meshes.some((mesh) => !hidden.includes(mesh.bodyId))} /></div>;
 }
 
 function applyClipping(group: THREE.Group, plane: THREE.Plane | undefined) {
@@ -792,6 +804,10 @@ function applySelection(
   selectedBodyId: string | undefined,
   highlightedBodyIds: readonly string[] = [],
 ) {
+  if (modelGroup.userData.presentationMode === "render") {
+    selectedBodyId = undefined;
+    highlightedBodyIds = [];
+  }
   const highlighted = new Set(highlightedBodyIds);
   modelGroup.traverse((child) => {
     if (

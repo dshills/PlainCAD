@@ -2,14 +2,23 @@ import { create } from "zustand";
 import type { CadDocument } from "../cad/document/schema";
 import { bodyComponentId } from "../cad/document/components";
 
+export type PresentationMode = "model" | "render";
+interface AppearancePreferences { showModelEdges: boolean; showGrid: boolean; }
+
 interface ViewerState {
   session: number;
   hiddenBodyIds: string[];
   hiddenComponentIds: string[];
   hiddenSketchIds: string[];
   activeComponentTimeline: boolean;
+  presentationMode: PresentationMode;
+  modelPreferences: AppearancePreferences;
+  renderPreferences: AppearancePreferences;
+  showGrid: boolean;
   showModelEdges: boolean;
   optimizeWhileMoving: boolean;
+  setPresentationMode(session: number, mode: PresentationMode): void;
+  toggleGrid(session: number): void;
   toggleModelEdges(session: number): void;
   toggleMovingQuality(session: number): void;
   openDocument(document: CadDocument, session: number): void;
@@ -42,6 +51,10 @@ const defaults = {
   hiddenComponentIds: [] as string[],
   hiddenSketchIds: [] as string[],
   activeComponentTimeline: false,
+  presentationMode: "model" as PresentationMode,
+  modelPreferences: { showModelEdges: true, showGrid: true },
+  renderPreferences: { showModelEdges: false, showGrid: false },
+  showGrid: true,
   showModelEdges: true,
   optimizeWhileMoving: true,
 };
@@ -62,6 +75,19 @@ export const useViewerState = create<ViewerState>((set, get) => {
             ? [feature.sketchId] : [],
         ))],
       }),
+    setPresentationMode: (session, mode) => {
+      const view = current(session);
+      if (mode === view.presentationMode) return;
+      const saved = { showModelEdges: view.showModelEdges, showGrid: view.showGrid };
+      const next = mode === "model" ? view.modelPreferences : view.renderPreferences;
+      set({ ...view, session, presentationMode: mode,
+        ...(view.presentationMode === "model" ? { modelPreferences: saved } : { renderPreferences: saved }),
+        ...next });
+    },
+    toggleGrid: (session) => {
+      const view = current(session);
+      set({ ...view, session, showGrid: !view.showGrid });
+    },
     toggleModelEdges: (session) => {
       const view = current(session);
       set({ ...view, session, showModelEdges: !view.showModelEdges });

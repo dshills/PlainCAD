@@ -1,0 +1,48 @@
+import { expect, test } from "@playwright/test";
+import { readFile } from "node:fs/promises";
+import { inspectPngDownload } from "../e2e/pngDownload";
+import { stlSignedVolume } from "../e2e/aiAcceptanceHelpers";
+
+test("production native Render preset changes PNG pixels, preserves STL and restores public controls under CSP", async ({ page }, info) => {
+  const errors: string[] = [], violations: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.exposeFunction("renderCspViolation", (directive: string) => violations.push(directive));
+  await page.addInitScript(() => document.addEventListener("securitypolicyviolation", (event) => {
+    void (window as unknown as { renderCspViolation(directive: string): Promise<void> }).renderCspViolation(event.effectiveDirective);
+  }));
+  await page.goto("/");
+  await page.getByRole("button", { name: "Load parametric box template", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Export STL", exact: true })).toBeEnabled();
+  await page.locator(".body-row").getByRole("button", { name: "Box Extrude", exact: true }).click();
+  await expect(page.getByText("Volume (mm³)", { exact: true }).locator("..").locator("dd")).toHaveText("80000.000");
+  let download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export STL", exact: true }).click();
+  const modelStl = await download;
+  await modelStl.saveAs(info.outputPath("model.stl"));
+  download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download project view PNG", exact: true }).click();
+  const modelPng = await inspectPngDownload(page, await download, info.outputPath("model.png"));
+  await page.getByRole("button", { name: "Render view", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Render view", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("group", { name: "Solid driving dimensions" })).toHaveCount(0);
+  download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download project view PNG", exact: true }).click();
+  const renderPng = await inspectPngDownload(page, await download, info.outputPath("render.png"));
+  expect(renderPng.pixels.width).toBe(modelPng.pixels.width);
+  expect(renderPng.pixels.height).toBe(modelPng.pixels.height);
+  expect(renderPng.bytes.equals(modelPng.bytes)).toBe(false);
+  download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download selected part PNG", exact: true }).click();
+  await inspectPngDownload(page, await download, info.outputPath("render-part.png"));
+  download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export STL", exact: true }).click();
+  const renderStl = await download;
+  await renderStl.saveAs(info.outputPath("render.stl"));
+  const [modelBytes, renderBytes] = await Promise.all([readFile(info.outputPath("model.stl")), readFile(info.outputPath("render.stl"))]);
+  expect(renderBytes.equals(modelBytes)).toBe(true);
+  expect(stlSignedVolume(renderBytes)).toBeCloseTo(80000, 3);
+  await page.getByRole("button", { name: "Model view", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Model view", exact: true })).toHaveAttribute("aria-pressed", "true");
+  expect(errors).toEqual([]);
+  expect(violations).toEqual([]);
+});

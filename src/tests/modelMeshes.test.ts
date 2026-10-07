@@ -9,6 +9,33 @@ function mesh(bodyId = "body"): RenderMesh {
 function body(cache: ModelMeshes, index = 0) { return cache.group.children[index] as THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>; }
 
 describe("viewer body buffer ownership", () => {
+  it("switches presentation with identical buffers, IDs, native normals and source data, including new rebuilt bodies", () => {
+    const cache = new ModelMeshes(), source = mesh();
+    const saved = structuredClone(source);
+    try {
+      cache.update([source]);
+      cache.setEdgesVisible(true);
+      const original = body(cache), geometry = original.geometry, positions = geometry.getAttribute("position"), normals = geometry.getAttribute("normal"), indices = geometry.index, edges = original.children[0];
+      const dispose = vi.spyOn(geometry, "dispose");
+      cache.setPresentationMode("render");
+      cache.setEdgesVisible(false);
+      expect(body(cache)).toBe(original);
+      expect(original.userData.bodyId).toBe(source.bodyId);
+      expect(original.geometry.getAttribute("position")).toBe(positions);
+      expect(original.geometry.getAttribute("normal")).toBe(normals);
+      expect(original.geometry.index).toBe(indices);
+      expect(original.material).toMatchObject({ roughness: 0.32, metalness: 0.22, flatShading: false });
+      expect(source).toEqual(saved);
+      cache.update([source, mesh("new")]);
+      expect(body(cache, 1).material).toMatchObject({ roughness: 0.32, metalness: 0.22, flatShading: false });
+      cache.setPresentationMode("model");
+      cache.setEdgesVisible(true);
+      expect(original.material).toMatchObject({ roughness: 0.55, metalness: 0.05, flatShading: false });
+      expect(original.children[0]).toBe(edges);
+      expect(dispose).not.toHaveBeenCalled();
+      expect(source).toEqual(saved);
+    } finally { cache.dispose(); }
+  });
   it("reuses buffers and edge geometry for identical cloned payloads and appearance changes", () => {
     const cache = new ModelMeshes(), source = mesh();
     try {

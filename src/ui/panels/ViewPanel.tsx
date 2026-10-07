@@ -18,7 +18,9 @@ export function ViewPanel() {
 function ViewSession({ session }: { session: number }) {
   const doc = useCadStore((s) => s.history.present),
     section = useSectionState();
-  const viewer = useViewerState(useShallow((view) => ({ session: view.session, showModelEdges: view.showModelEdges, optimizeWhileMoving: view.optimizeWhileMoving })));
+  const viewer = useViewerState(useShallow((view) => ({ session: view.session, presentationMode: view.presentationMode, showGrid: view.showGrid, showModelEdges: view.showModelEdges, optimizeWhileMoving: view.optimizeWhileMoving })));
+  const mode = viewer.session === session ? viewer.presentationMode : "model";
+  const showGrid = viewer.session !== session || viewer.showGrid;
   const showEdges = viewer.session !== session || viewer.showModelEdges;
   const optimize = viewer.session !== session || viewer.optimizeWhileMoving;
   const [name, setName] = useState(""),
@@ -30,6 +32,12 @@ function ViewSession({ session }: { session: number }) {
   return (
     <section className="panel" aria-label="View controls">
       <h2>Views</h2>
+      <div role="group" aria-label="View presentation preset">
+        <button aria-label="Model presentation preset" aria-pressed={mode === "model"} onClick={() => void runCommand("view.model")}>Model</button>
+        <button aria-label="Render presentation preset" aria-pressed={mode === "render"} onClick={() => void runCommand("view.render")}>Render</button>
+      </div>
+      <p className="muted">Render uses studio lighting and clean overlays. Camera, part visibility and native geometry stay as you set them. Each preset remembers its edges and grid for this project session.</p>
+      <label><input type="checkbox" checked={showGrid} onChange={() => void runCommand("view.toggleGrid")} />Show ground grid</label>
       <label><input type="checkbox" checked={showEdges} onChange={() => void runCommand("view.toggleModelEdges")} />Show model edges</label>
       <label><input type="checkbox" checked={optimize} onChange={() => void runCommand("view.toggleMovingQuality")} />Optimize while moving</label>
       <p className="muted">Movement uses lower resolution and hides edge lines. Full detail returns just after movement ends; PNG downloads always use full resolution.</p>

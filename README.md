@@ -322,6 +322,16 @@ widths. Fitted views keep the complete model visible when docks or the canvas
 resize; manual camera gestures and restored camera poses preserve their framing
 until Fit is requested again. Fit uses both viewport dimensions.
 
+Use the viewport **Model / Render** controls or the matching **Views** presets.
+Model shows modeling overlays; Render uses smooth native shading and fixed studio
+lighting, with grid, axes, edges, sketch overlays, dimensions, and selection highlights
+hidden by default. **Show ground grid** and **Show model edges** are independent
+preferences for each preset during the current project session. Opening a project
+restores Model defaults. Camera poses, part visibility, and CAD geometry are preserved;
+project and selected-part PNG downloads match the current preset. Render is a lightweight
+raster view with no ray tracing or shadow passes and retains demand rendering and
+movement optimization.
+
 The 3D view defaults to **Optimize while moving**: orbit, pan and zoom use at most
 1× pixel density and hide model edge lines, then restore display detail about 100 ms after
 the last camera input, without waiting for the damping tail. Turn this off in **Views** to keep full detail during

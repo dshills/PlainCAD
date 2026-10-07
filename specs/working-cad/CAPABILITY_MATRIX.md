@@ -1043,3 +1043,18 @@ remain visible/editable by default within the existing canvas-label limit. Refer
 a Show reference measurements opt-in. Existing advanced fixed presets remain.
 Native workflows verify both creation modes, exact bounds/volumes, inline sizing,
 reference visibility, undo/redo, project round trips and STL.
+
+## Model and Render presentation presets
+
+Public viewport and Views commands switch temporary presentation state without
+editing the durable document, history, camera or part visibility. Each preset
+remembers independent grid/edge choices until project replacement; Model defaults
+show both and Render defaults hide both. Render also hides axes, sketch/measurement
+and driving-dimension overlays and selection colors, while native body picking remains
+available. Existing native positions, normals, triangulation and body IDs are reused.
+A fixed hemisphere plus key/fill/rim lights and material appearance provide studio
+shading with no textures, shadows or ray tracing. The demand renderer, movement DPR
+and cached buffers remain in use. Project/part PNG captures use the active preset at
+full resolution and restore temporary capture state. Native browser checks cover
+buffer identity, idle frames, camera/picking, parameter rebuilds, save/open, PNG and
+STL; a production CSP check compares changed PNG pixels and byte-identical STL.

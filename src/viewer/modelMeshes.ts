@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import type { PresentationMode } from "../state/viewerState";
 import type { RenderMesh } from "../cad/kernel/KernelAdapter";
 
 interface RenderedBody {
@@ -45,6 +46,7 @@ function disposeBody({ object, edges }: RenderedBody) {
 /** Viewer-owned buffers only. Matching IDs alone never establish matching geometry. */
 export class ModelMeshes {
   private bodies = new Map<string, RenderedBody>();
+  private mode: PresentationMode = "model";
   readonly group = new THREE.Group();
 
   update(sources: readonly RenderMesh[]) {
@@ -68,12 +70,29 @@ export class ModelMeshes {
       body.source = source;
       body.object.userData.baseColor = source.color ?? "#8fb7b4";
       body.object.material.color.set(body.object.userData.baseColor);
+      this.applyAppearance(body);
       if (body.object.parent !== this.group) this.group.add(body.object);
     }
     // Keep native result ordering for diagnostics and picking without rebuilding buffers.
     const order = new Map(sources.map((source, index) => [source.bodyId, index]));
     this.group.children.sort((a, b) => order.get(a.userData.bodyId)! - order.get(b.userData.bodyId)!);
     this.bodies = next;
+  }
+
+  /** Appearance never changes the native mesh buffers or durable geometry. */
+  setPresentationMode(mode: PresentationMode) {
+    this.mode = mode;
+    this.group.userData.presentationMode = mode;
+    for (const body of this.bodies.values()) this.applyAppearance(body);
+  }
+
+  private applyAppearance(body: RenderedBody) {
+    const material = body.object.material;
+    material.roughness = this.mode === "render" ? 0.32 : 0.55;
+    material.metalness = this.mode === "render" ? 0.22 : 0.05;
+    // Interpolate the existing per-face native vertex normals. Keep hard-edge
+    // splits, positions and triangulation intact; STL still uses native data.
+    material.flatShading = false;
   }
 
   setEdgesVisible(visible: boolean) {
