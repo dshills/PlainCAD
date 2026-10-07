@@ -1,12 +1,13 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
+import { runCommand, selectCommandEnablement } from "../ui/commands/commandRegistry";
 import { createEmptyDocument, upsertSketch } from "../cad/document/CadDocument";
 import { rebuildDocument } from "../cad/features/rebuildGraph";
 import { createXySketch } from "../cad/sketch/SketchModel";
 import { solveSketch } from "../cad/sketch/SketchSolver";
 import { addCanvasGeometry } from "../cad/sketch/canvasGeometry";
 import { useCadStore } from "../state/useCadStore";
-import { beginSketchCanvas, useSketchCanvas } from "../ui/commands/sketchCanvasCommand";
+import { beginSketchCanvas, beginSketchCanvasTool, consumeSketchCanvasToolRequest, commitCanvasDimension, useSketchCanvas } from "../ui/commands/sketchCanvasCommand";
 import { SketchCanvasPanel } from "../ui/panels/SketchCanvasPanel";
 import { useSketchRefinement } from "../ui/commands/sketchRefinementCommand";
 
@@ -39,6 +40,7 @@ afterEach(() => {
   vi.restoreAllMocks();
   useSketchRefinement.setState({ frame: undefined });
   useSketchCanvas.setState({ active: undefined });
+  useCadStore.setState({ fileBusy: false });
   useCadStore.getState().setDocument(createEmptyDocument());
 });
 it("exposes bounded Move/Translate/Deform and selection without opening precision", () => {
@@ -129,4 +131,117 @@ it("discards an interrupted press-drag primitive so the next click starts a fres
   pointer(svg, "pointerup", 180, 130);
   expect(screen.getByLabelText("Draft width")).toHaveValue("");
   expect(useCadStore.getState().history).toBe(history);
+});
+
+it("shows a single Rectangle tool with explicit creation modes and cancels a draft when modes change", () => {
+  const { svg, history } = open();
+  fireEvent.click(screen.getByRole("button", { name: "Draw tool: rectangle" }));
+  expect(screen.getAllByRole("button", { name: "Draw tool: rectangle" })).toHaveLength(1);
+  const mode = screen.getByLabelText("Rectangle creation mode");
+  expect(mode).toHaveValue("corner");
+  pointer(svg, "pointerdown", 200, 150);
+  pointer(svg, "pointerup", 200, 150);
+  fireEvent.change(screen.getByLabelText("Draft width"), { target: { value: "8mm" } });
+  fireEvent.change(mode, { target: { value: "center" } });
+  expect(screen.queryByLabelText("Draft width")).toBeNull();
+  expect(mode).toHaveValue("center");
+  expect(useCadStore.getState().history).toBe(history);
+});
+it("shared Rectangle command updates the open canvas without creating geometry", () => {
+  const { history } = open();
+  act(() => { runCommand("sketch.drawRectangle"); });
+  expect(screen.getByRole("button", { name: "Draw tool: rectangle" })).toHaveAttribute("aria-pressed", "true");
+  expect(screen.getByLabelText("Rectangle creation mode")).toBeVisible();
+  expect(useCadStore.getState().history).toBe(history);
+  expect(useSketchCanvas.getState().active?.requestedTool).toBeUndefined();
+  fireEvent.click(screen.getByRole("button", { name: "Draw tool: circle" }));
+  act(() => { runCommand("sketch.drawRectangle"); });
+  expect(screen.getByRole("button", { name: "Draw tool: rectangle" })).toHaveAttribute("aria-pressed", "true");
+});
+it("keeps driving dimensions visible and editable while revealing reference measurements only on selection or opt-in", () => {
+  const { document } = open();
+  const canvas = screen.getByRole("group", { name: "Sketch drawing canvas" });
+  expect(canvas.querySelectorAll(".canvas-reference-dimension")).toHaveLength(0);
+  const active = useSketchCanvas.getState().active!;
+  const line = Object.values(document.sketches[active.sketchId].entities).find((e) => e.type === "line")!;
+  act(() => {
+    commitCanvasDimension(active, document, { type: "length", refs: [line.id], expression: "20mm" });
+    const next = useCadStore.getState().history.present;
+    useCadStore.setState({ rebuild: { status: "succeeded", kernelReady: false, result: rebuildDocument(next) } });
+  });
+  expect(canvas.querySelectorAll(".canvas-driving-dimension")).toHaveLength(1);
+  expect(canvas.querySelectorAll(".canvas-reference-dimension")).toHaveLength(0);
+  fireEvent.click(screen.getByRole("button", { name: "Draw tool: select" }));
+  const other = Object.values(document.sketches[active.sketchId].entities).find((e) => e.type === "line" && e.id !== line.id)!;
+  fireEvent.change(screen.getByLabelText("Selected sketch item"), { target: { value: other.id } });
+  expect(canvas.querySelectorAll(".canvas-reference-dimension")).toHaveLength(1);
+  fireEvent.change(screen.getByLabelText("Selected sketch item"), { target: { value: "" } });
+  expect(canvas.querySelectorAll(".canvas-reference-dimension")).toHaveLength(0);
+  fireEvent.change(screen.getByLabelText("Canvas dimension selection"), { target: { value: useCadStore.getState().history.present.sketches[active.sketchId].dimensions[0].id } });
+  fireEvent.keyDown(canvas.querySelector(".canvas-driving-dimension")!, { key: "Enter" });
+  expect(screen.getByLabelText("Sketch size expression")).toHaveValue("20mm");
+  fireEvent.click(screen.getByRole("button", { name: "Cancel size edit" }));
+  fireEvent.click(screen.getByLabelText("Show reference measurements"));
+  expect(canvas.querySelectorAll(".canvas-reference-dimension")).toHaveLength(3);
+});
+it("keeps lost driving dimensions and their repair diagnostics available with references hidden", () => {
+  const { document } = open();
+  const active = useSketchCanvas.getState().active!;
+  act(() => {
+    useCadStore.getState().updateDocument((current) => ({
+      ...current,
+      sketches: {
+        ...current.sketches,
+        [active.sketchId]: {
+          ...current.sketches[active.sketchId],
+          dimensions: [{ id: "lost-size", type: "length", entityIds: ["missing-edge"], expression: { expression: "25mm", unit: "mm" } }],
+        },
+      },
+    }));
+    const changed = useCadStore.getState().history.present;
+    useCadStore.setState({ rebuild: { status: "failed", kernelReady: false, result: rebuildDocument(changed) } });
+  });
+  expect(screen.getByRole("button", { name: "Edit canvas dimension 1" })).toHaveTextContent("unavailable");
+  expect(screen.getAllByRole("alert").some((alert) => /reference|missing|unavailable/i.test(alert.textContent ?? ""))).toBe(true);
+  expect(screen.getByRole("group", { name: "Sketch drawing canvas" }).querySelectorAll(".canvas-reference-dimension")).toHaveLength(0);
+  expect(useCadStore.getState().history.present.id).toBe(document.id);
+});
+
+it("blocks Rectangle drawing while a file job is active", () => {
+  const { history } = open();
+  useCadStore.setState({ fileBusy: true });
+  expect(selectCommandEnablement(useCadStore.getState()).drawSketch).toBe(false);
+  act(() => { runCommand("sketch.drawRectangle"); });
+  expect(useSketchCanvas.getState().active?.requestedTool).toBeUndefined();
+  expect(useCadStore.getState().history).toBe(history);
+});
+
+it("consumes Rectangle requests so remounting does not replay an old tool", () => {
+  open();
+  act(() => { runCommand("sketch.drawRectangle"); });
+  fireEvent.click(screen.getByRole("button", { name: "Draw tool: circle" }));
+  expect(useSketchCanvas.getState().active?.requestedTool).toBeUndefined();
+  cleanup();
+  render(<SketchCanvasPanel />);
+  expect(screen.getByRole("button", { name: "Draw tool: rectangle" })).toHaveAttribute("aria-pressed", "false");
+});
+
+it("opens the Rectangle canvas from a selected sketch without authoring a preset", () => {
+  const { history } = open();
+  act(() => { useSketchCanvas.setState({ active: undefined }); });
+  expect(screen.queryByRole("group", { name: "Sketch drawing canvas" })).not.toBeInTheDocument();
+  act(() => { runCommand("sketch.drawRectangle"); });
+  expect(screen.getByRole("button", { name: "Draw tool: rectangle" })).toHaveAttribute("aria-pressed", "true");
+  expect(useCadStore.getState().history).toBe(history);
+});
+
+it("does not let an old tool consumer clear a newer request", () => {
+  open();
+  act(() => {
+    const oldRequest = beginSketchCanvasTool("rectangle")!;
+    const nextRequest = beginSketchCanvasTool("circle")!;
+    consumeSketchCanvasToolRequest(oldRequest);
+    expect(useSketchCanvas.getState().active).toBe(nextRequest);
+  });
+  expect(screen.getByRole("button", { name: "Draw tool: circle" })).toHaveAttribute("aria-pressed", "true");
 });

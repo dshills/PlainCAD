@@ -33,6 +33,15 @@ and unsafe filename collisions receive stable suffixes. Root-component projects
 retain their existing part labels. Exit isolation restores component/part visibility
 without revealing hidden source sketches.
 
+The main Rectangle command opens the drawing tool with explicit Corner or Center
+creation modes and optional typed width/height in the sketch properties panel,
+leaving the canvas clear for mouse drawing. Driving dimensions stay visible
+and editable by default; reference measurements appear for selected geometry or when Show
+reference measurements is enabled. Finish Sketch returns the header to Solid tools. Existing fixed rectangle presets
+remain in advanced commands. Center mode controls creation; later size edits retain the
+existing corner-anchored solving behavior. Center snapping sets an initial position
+without an associative center constraint.
+
 ## Features
 
 - One local project file containing components, sketches, parameters, and a feature timeline.

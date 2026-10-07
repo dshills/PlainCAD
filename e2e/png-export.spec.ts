@@ -53,6 +53,7 @@ test("native project/isolated part and dimensioned sketch download real PNG pixe
   expect(afterView.sectionPlane).toEqual(priorView.sectionPlane);
   await page.evaluate(async (id) => { const sp = "/src/state/useCadStore.ts", cp = "/src/ui/commands/sketchCanvasCommand.ts"; const state = (await import(sp)).useCadStore.getState(); state.select({ kind: "sketch", id, documentId: state.history.present.id }); (await import(cp)).beginSketchCanvas(id); }, sketchId);
   const svg = page.getByRole("group", { name: "Sketch drawing canvas", exact: true });
+  await page.getByLabel("Show reference measurements", { exact: true }).check();
   await expect(svg.locator(".canvas-dimensions text")).toContainText(["R 10.0000 mm"]);
   download = page.waitForEvent("download");
   // The sketch workspace and the full ribbon both expose this command.

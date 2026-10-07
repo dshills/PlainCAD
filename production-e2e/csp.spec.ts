@@ -362,6 +362,7 @@ test("built app draws and dimensions a native sketch under production CSP", asyn
     .getByRole("button", { name: "Place coordinate", exact: true })
     .click();
   const svg = page.getByLabel("Sketch drawing canvas", { exact: true });
+  await page.getByLabel("Show reference measurements", { exact: true }).check();
   await expect(svg.locator("text")).toHaveText("R 5.0000 mm");
   await page
     .getByLabel("Canvas dimension type", { exact: true })

@@ -17,7 +17,7 @@ import { toggleAiDrawer, beginPartDescription } from "./aiCommand";
 import { activeComponentId, beginPartDrawing, beginProjectWorkflow, finishSketchCanvas, useProjectWorkflow } from "./projectWorkflowCommand";
 import { renameComponent, sketchComponentId } from "../../cad/document/components";
 import { MODEL_RESOURCE_LIMITS } from "../../cad/resourceLimits";
-import { beginSketchCanvas, deleteSelectedCanvasEntity, selectedCanvasEntity, selectedCanvasSketch, selectAllCanvasEntities, canSelectAllCanvasEntities, useSketchCanvas } from "./sketchCanvasCommand";
+import { beginSketchCanvasTool, canBeginSketchCanvasTool, beginSketchCanvas, deleteSelectedCanvasEntity, selectedCanvasEntity, selectedCanvasSketch, selectAllCanvasEntities, canSelectAllCanvasEntities, useSketchCanvas } from "./sketchCanvasCommand";
 import { canCaptureTargetScope, captureSelectedTargetScope, useTargetScopeCapture } from "./targetScopeCaptureCommand";
 import { captureCamera, restoreCamera, showStandardView } from "../../viewer/cameraController";
 import { MAX_NAMED_VIEWS, STANDARD_VIEWS, saveNamedCamera, unusedViewName } from "../../cad/inspection/cameraViews";
@@ -151,6 +151,7 @@ export interface CommandEnablement {
   outsideGuidedHole: boolean;
   captureTargetScope: boolean;
   sketchCanvas: boolean;
+  drawSketch: boolean;
   deleteSketchEntity: boolean;
   selectAllSketchEntities: boolean;
 }
@@ -181,6 +182,7 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
     newComponent: !targetPickerActive && !state.fileBusy && !canvasActive && Object.keys(state.history.present.components).length < MODEL_RESOURCE_LIMITS.maxComponents,
     createSketch: !targetPickerActive && !state.fileBusy && !canvasActive,
     finishSketch: !targetPickerActive && canvasActive,
+    drawSketch: !targetPickerActive && !guidedHoleStartBlocked && !scopeCaptureBusy && canBeginSketchCanvasTool(state),
     sketchCanvas: !targetPickerActive && !canvasActive && Boolean(selectedCanvasSketch(state)),
     selectAllSketchEntities: !targetPickerActive && canvasActive && canSelectAllCanvasEntities(state),
     deleteSketchEntity: !targetPickerActive && canvasActive && Boolean(selectedCanvasEntity(state)),
@@ -299,6 +301,7 @@ export const commands: CadCommand[] = [
   { id: "timeline.toggleComponentFilter", internal: true, label: "Filter Timeline to Active Component", enablementKey: "document", run: () => useViewerState.getState().toggleTimelineFilter(useCadStore.getState().documentSession) },
   { id: "sketch.create", label: "Create Sketch", enablementKey: "createSketch", run: () => beginProjectWorkflow("sketch") },
   { id: "sketch.finish", label: "Finish Sketch", enablementKey: "finishSketch", run: finishSketchCanvas },
+  { id: "sketch.drawRectangle", label: "Draw Rectangle", description: "Draw a rectangle with explicit corner or center creation mode in the selected sketch.", enablementKey: "drawSketch", run: () => { beginSketchCanvasTool("rectangle"); } },
   { id: "sketch.editCanvas", label: "Edit Sketch Canvas", description: "Draw geometry in the selected sketch’s local plane.", enablementKey: "sketchCanvas", run: () => { beginSketchCanvas(); } },
   {id:"feature.captureTargetScope",label:"Capture Intersected Targets",description:"Save the current native body/tool intersections as explicit target IDs.",enablementKey:"captureTargetScope",run:captureSelectedTargetScope},
   ...STANDARD_VIEWS.map((view): CadCommand => ({ id: `view.${view}`, label: `${view[0].toUpperCase()}${view.slice(1)} View`, alwaysEnabled: true, run: () => { showStandardView(view); } })),
@@ -492,6 +495,7 @@ export const commands: CadCommand[] = [
   {
     id: "sketch.addCenterRectangle",
     label: "Add Center Rectangle",
+    description: "Insert an 80mm by 50mm centered rectangle preset. Use Draw Rectangle for mouse or typed-size creation.",
     enablementKey: "outsideGuidedHole",
     run: () =>
       updateSelectedSketch((sketch) =>
@@ -501,6 +505,7 @@ export const commands: CadCommand[] = [
   {
     id: "sketch.addCornerRectangle",
     label: "Add Corner Rectangle",
+    description: "Insert an 80mm by 50mm corner rectangle preset. Use Draw Rectangle for mouse or typed-size creation.",
     enablementKey: "outsideGuidedHole",
     run: () =>
       updateSelectedSketch((sketch) =>

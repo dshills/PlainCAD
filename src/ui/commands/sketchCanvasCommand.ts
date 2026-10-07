@@ -35,6 +35,8 @@ export interface CanvasSession {
   documentId: string;
   session: number;
   sketchId: string;
+  requestedTool?: CanvasTool;
+  toolRevision?: number;
 }
 export const useSketchCanvas = create<{
   active?: CanvasSession;
@@ -206,6 +208,47 @@ export function beginSketchCanvas(sketchId?: string): CanvasSession | undefined 
     return active;
   }
 }
+function currentCanvasToolSession(state: CadStore) {
+  const current = useSketchCanvas.getState().active;
+  return current && current.session === state.documentSession &&
+    current.documentId === state.history.present.id &&
+    state.history.present.sketches[current.sketchId] &&
+    sketchInActiveComponent(state, current.sketchId) ? current : undefined;
+}
+export function canBeginSketchCanvasTool(state = useCadStore.getState()): boolean {
+  if (state.fileBusy) return false;
+  if (currentCanvasToolSession(state)) return true;
+  const sketch = selectedCanvasSketch(state);
+  return Boolean(sketch && sketchInActiveComponent(state, sketch.id));
+}
+
+/** Request a drawing tool through shared commands without editing the document. */
+export function beginSketchCanvasTool(tool: CanvasTool): CanvasSession | undefined {
+  const state = useCadStore.getState();
+  if (!canBeginSketchCanvasTool(state)) return;
+  const active = currentCanvasToolSession(state) ?? beginSketchCanvas();
+  if (!active) return;
+  const requested = {
+    ...active,
+    requestedTool: tool,
+    toolRevision: (active.toolRevision ?? 0) + 1,
+  };
+  // Starting new drawing geometry exits the previous entity selection.
+  useSketchCanvas.setState({ active: requested, selection: undefined });
+  return requested;
+}
+
+/** Acknowledge only the exact request; a newer request must survive a stale consumer. */
+export function consumeSketchCanvasToolRequest(request: CanvasSession) {
+  useSketchCanvas.setState((state) => {
+    const active = state.active;
+    if (!active || active.session !== request.session || active.documentId !== request.documentId ||
+      active.sketchId !== request.sketchId || active.toolRevision !== request.toolRevision ||
+      active.requestedTool !== request.requestedTool) return {};
+    return { active: { ...active, requestedTool: undefined } };
+  });
+}
+
 export function canvasContext(
   active: CanvasSession,
   state = useCadStore.getState(),

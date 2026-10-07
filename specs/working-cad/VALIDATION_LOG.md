@@ -9,11 +9,11 @@ missing or the count cannot be determined, establish a baseline with the full ga
 ## Last successful full gate
 
 - Date: 2026-10-07.
-- Change: bundle splitting, commit `f12e025`.
-- Result: type checks, build/bundle budget, 960 unit/component tests,
-  224 development browser tests, and 29 production browser tests passed.
-- Completed items since that full gate: **4**.
-- Next full gate: item **5**, after one more completed item.
+- Change: Rectangle workflow and selection-based reference dimensions.
+- Result: type checks, build/bundle budget, 994 unit/component tests,
+  228 development browser tests, and 29 production browser tests passed.
+- Completed items since that full gate: **0**.
+- Next full gate: the fifth completed item in the next batch.
 
 ## Current batch
 
@@ -23,6 +23,7 @@ missing or the count cannot be determined, establish a baseline with the full ga
 | 2 | Keep fitted models and previews visible through dock/canvas resize | Anthropic `claude-sonnet-5-5`; no high/medium findings; actionable fit findings fixed | Passed: type checks, build/bundle budget, 966 unit tests, 5 development and 14 production smoke tests; 7 additional native viewport/preview tests | Not due |
 | 3 | Clear success feedback and readable parameter editing | Anthropic `claude-sonnet-5-5`; no high/medium findings; four low notes assessed | Passed: type checks, build/bundle budget, 975 unit tests, 5 development and 14 production smoke tests; 6 native parameter/status/deformation tests | Not due |
 | 4 | Consistent part names and explicit Exit isolation | Anthropic `claude-sonnet-5-5`; no high/medium findings; four low notes assessed | Passed: type checks, build/bundle budget, 980 unit tests, 5 development and 14 production smoke tests; 17 additional native component/fabrication/AI tests | Not due |
+| 5 | Rectangle workflow and selection-based reference dimensions | Anthropic `claude-sonnet-5-5`; no high/medium findings; six low notes assessed | Superseded by full gate | Passed: type checks, 994 unit tests, build/bundle budget, 228 development and 29 production browser tests |
 
 Prism review `dc636fab53dbe0066d9b0f92d040fda1` covered all four changed files.
 Its low notes concern explicit smoke-file lists and manual cadence tracking.
@@ -44,3 +45,5 @@ the complete release gate on pull requests and pushes to `main`.
 Prism review `ab638806e8e44e075ef9714fe7f9f474` covered all eighteen item-3 files. Low notes were checked: held worker delivery and its replacement queue are explicitly asserted before release, cache validity is checked during render and its empty error array is stable, and TypeScript verifies the result narrowing. The small rename setup remains local to each existing spec helper to avoid unrelated test refactoring.
 
 Prism review `cca424c1601d9788c19e28bdbd73e7dc` covered all twenty item-4 files. STL export rejects empty meshes before indexing. Display maps cover the same complete body list used by the browser and inspector; exports receive that complete map and collision tests exercise full/subset naming. Separate parts use part names; shell/merged project exports retain project names, clarified in README.
+
+Prism review `9224995a388d49c8a2f70b83670b95e9` covered all twenty-four Rectangle/integration files. Positive-length validation and zero/negative center-size tests already reject degenerate sizes; each sketch test replaces the document and rebuild state. Tool consumption is immutable and guarded, its cancel ref is initialized, and reference IDs and memoization match the annotation builder. Draft sizing now occupies the always-present properties panel outside the canvas, with native overlap assertions and successful side-face mouse pockets. Disabled solid-dimension cards pass pointer events through to geometry; all twelve native pointer regressions passed before the full gate. The full gate found and verified these obstruction fixes. File-job status is now a non-flow overlay so PNG encoding cannot resize/refit the viewport; strict native camera assertions and keyboard cancellation were verified. Older reference-display, optional-guidance and parameter-selector fixtures now exercise the intended UI. The pending validation entry has now been completed.

@@ -41,6 +41,7 @@ import {
 } from "react";
 import { useCadStore } from "../../state/useCadStore";
 import {
+  consumeSketchCanvasToolRequest,
   canvasContext,
   commitCanvasGeometry,
   selectCanvasEntity,
@@ -160,6 +161,11 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
   const offsetFrame = useSketchOffset((s) => s.frame);
   const focused = useWorkspaceState((s) => s.layout !== "full");
   const [sizes, setSizes] = useState<CanvasSizeInput>({});
+  const [rectangleMode, setRectangleMode] = useState<"corner" | "center">("corner");
+  const creationSizes = useMemo(
+    () => ({ ...sizes, rectangleMode }),
+    [sizes, rectangleMode],
+  );
   const [precisionOpen, setPrecisionOpen] = useState(!focused);
   useEffect(() => setPrecisionOpen(!focused), [focused]);
   const [spaceHeld, setSpaceHeld] = useState(false);
@@ -270,7 +276,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     if (selection && selection.document !== document)
       useSketchCanvas.setState({ selection: undefined });
   }, [document, selection]);
-  const [tool, setTool] = useState<CanvasMode>("line"),
+  const [tool, setTool] = useState<CanvasMode>(active.requestedTool ?? "line"),
     [draft, setDraft] = useState<CanvasPoint[]>([]),
     [cursor, setCursor] = useState<CanvasCursor>();
   const draftDocument = useRef(document);
@@ -371,6 +377,13 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     window.addEventListener("plaincad:cancel-sketch-gesture", cancelGesture);
     return () => window.removeEventListener("plaincad:cancel-sketch-gesture", cancelGesture);
   }, []);
+  useEffect(() => {
+    if (active.requestedTool) {
+      cancelGestureRef.current();
+      setTool(active.requestedTool);
+      consumeSketchCanvasToolRequest(active);
+    }
+  }, [active, active.toolRevision, active.requestedTool]);
   useEffect(() => {
     const releaseKey = (event: KeyboardEvent) => {
       if (event.code === "Space") setSpaceHeld(false);
@@ -616,7 +629,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
         points,
         construction,
         clockwise,
-        sizes,
+        creationSizes,
       );
       draftDocument.current = useCadStore.getState().history.present;
       setDraft(tool === "line" && result.endpoint ? [result.endpoint] : []);
@@ -680,7 +693,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
         points: sizedCanvasPoints(
           tool,
           rawPreview,
-          sizes,
+          creationSizes,
           parameters,
           document.unitSettings.length,
         ),
@@ -696,7 +709,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     tool,
     draft,
     cursor,
-    sizes,
+    creationSizes,
     parameters,
     document.unitSettings.length,
     isDragTool,
@@ -712,6 +725,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     focused,
     tool === "select",
     () => useSketchCanvas.setState({ selection: undefined }),
+    selectedIds,
   );
   const chooseItem = (id?: string, toggle = false) => {
     cancel();
@@ -907,6 +921,21 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
             </button>
           ),
         )}
+        {tool === "rectangle" ? (
+          <label>
+            Rectangle mode
+            <select
+              aria-label="Rectangle creation mode"
+              value={rectangleMode}
+              onChange={(event) => {
+                cancel();
+                setRectangleMode(event.target.value as "corner" | "center");
+              }}>
+              <option value="corner">Corner to corner</option>
+              <option value="center">Center to corner</option>
+            </select>
+          </label>
+        ) : null}
         <button type="button" aria-label="Trim sketch lines" disabled={!selectCommandEnablement(useCadStore.getState()).trimSketch} onClick={() => { cancel(); void runCommand("sketch.trim"); }}>Trim</button>
         <button type="button" aria-label="Extend sketch lines" disabled={!selectCommandEnablement(useCadStore.getState()).trimSketch} onClick={() => { cancel(); void runCommand("sketch.extend"); }}>Extend</button>
         <button type="button" aria-label="Mirror selected sketch geometry" disabled={!selectCommandEnablement(useCadStore.getState()).replicateSketch} onClick={() => { cancel(); void runCommand("sketch.mirror"); }}>Mirror</button>
@@ -1033,7 +1062,77 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
             {context?.solved.status ?? "unavailable"} ·{" "}
             {context?.solved.degreesOfFreedom ?? "—"} degrees of freedom
           </p>
-          <p id="canvas-instructions">{instructions[tool]}</p>
+          <p id="canvas-instructions">
+            {tool === "rectangle" && rectangleMode === "center"
+              ? "Click the center then a corner, or drag from the center. Width and height specify the full rectangle size; Tab moves between sizes and Enter accepts. Dimensions subsequently resize from the first corner. Center snapping sets the initial position without adding a center constraint."
+              : instructions[tool]}
+          </p>
+          {draft.length === 1 && (tool === "rectangle" || tool === "circle") ? (
+            <form
+              className="canvas-draft-size"
+              aria-label="Draft shape size"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!previewAnalysis.error)
+                  place(cursor ?? { x: draft[0].x + 1, y: draft[0].y + 1 });
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  cancel();
+                  svgRef.current?.focus({ preventScroll: true });
+                }
+              }}
+            >
+              <strong>
+                {tool === "rectangle" ? "Rectangle size" : "Circle diameter"}
+              </strong>
+              {(tool === "rectangle"
+                ? (["width", "height"] as const)
+                : (["diameter"] as const)
+              ).map((name) => (
+                <label key={name}>
+                  {name} ({document.unitSettings.length})
+                  <input
+                    aria-label={`Draft ${name}`}
+                    value={sizes[name] ?? ""}
+                    placeholder="Pointer size"
+                    maxLength={2000}
+                    onChange={(e) =>
+                      setSizes((s) => ({ ...s, [name]: e.target.value }))
+                    }
+                  />
+                </label>
+              ))}
+              <span>
+                {preview.length === 2
+                  ? tool === "rectangle"
+                    ? `${Math.abs(preview[1].x - preview[0].x).toFixed(3)} × ${Math.abs(preview[1].y - preview[0].y).toFixed(3)} mm`
+                    : `Ø ${(distance2d(preview[0], preview[1]) * 2).toFixed(3)} mm`
+                  : "Move the pointer or enter sizes."}
+              </span>
+              <button
+                type="submit"
+                disabled={
+                  disabled ||
+                  Boolean(previewAnalysis.error) ||
+                  (!cursor &&
+                    (tool === "rectangle"
+                      ? !sizes.width?.trim() || !sizes.height?.trim()
+                      : !sizes.diameter?.trim()))
+                }
+              >
+                Accept shape
+              </button>
+              <button type="button" onClick={cancel}>
+                Cancel shape
+              </button>
+              {previewAnalysis.error ? (
+                <p role="alert">{previewAnalysis.error}</p>
+              ) : null}
+            </form>
+          ) : null}
           <details
             open={precisionOpen}
             onToggle={(e) => setPrecisionOpen(e.currentTarget.open)}
@@ -1281,76 +1380,6 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
           ) : null}
         </div>
         <div className="sketch-workspace-drawing">
-          {draft.length === 1 && (tool === "rectangle" || tool === "circle") ? (
-            <form
-              className="canvas-draft-size"
-              aria-label="Draft shape size"
-              style={{
-                left: `min(${Math.max(2, Math.min(45, ((draft[0].x - view.x) / view.width) * 100 + 4))}%, max(2%, calc(100% - 370px)))`,
-                top: `min(${Math.max(2, Math.min(65, ((view.y + view.height - draft[0].y) / view.height) * 100 + 4))}%, max(2%, calc(100% - 220px)))`,
-              }}
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (!previewAnalysis.error)
-                  place(cursor ?? { x: draft[0].x + 1, y: draft[0].y + 1 });
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Escape") {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  cancel();
-                  svgRef.current?.focus({ preventScroll: true });
-                }
-              }}
-            >
-              <strong>
-                {tool === "rectangle" ? "Rectangle size" : "Circle diameter"}
-              </strong>
-              {(tool === "rectangle"
-                ? (["width", "height"] as const)
-                : (["diameter"] as const)
-              ).map((name) => (
-                <label key={name}>
-                  {name} ({document.unitSettings.length})
-                  <input
-                    aria-label={`Draft ${name}`}
-                    value={sizes[name] ?? ""}
-                    placeholder="Pointer size"
-                    maxLength={2000}
-                    onChange={(e) =>
-                      setSizes((s) => ({ ...s, [name]: e.target.value }))
-                    }
-                  />
-                </label>
-              ))}
-              <span>
-                {preview.length === 2
-                  ? tool === "rectangle"
-                    ? `${Math.abs(preview[1].x - preview[0].x).toFixed(3)} × ${Math.abs(preview[1].y - preview[0].y).toFixed(3)} mm`
-                    : `Ø ${(distance2d(preview[0], preview[1]) * 2).toFixed(3)} mm`
-                  : "Move the pointer or enter sizes."}
-              </span>
-              <button
-                type="submit"
-                disabled={
-                  disabled ||
-                  Boolean(previewAnalysis.error) ||
-                  (!cursor &&
-                    (tool === "rectangle"
-                      ? !sizes.width?.trim() || !sizes.height?.trim()
-                      : !sizes.diameter?.trim()))
-                }
-              >
-                Accept shape
-              </button>
-              <button type="button" onClick={cancel}>
-                Cancel shape
-              </button>
-              {previewAnalysis.error ? (
-                <p role="alert">{previewAnalysis.error}</p>
-              ) : null}
-            </form>
-          ) : null}
           {dimensions.inlineEditor}
           <svg
             ref={svgRef}

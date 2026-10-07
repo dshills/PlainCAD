@@ -1030,3 +1030,16 @@ multiple bodies include their body names. Duplicate labels and safe-filename
 collisions are resolved in stable ID order against the full model, so selected
 exports match ZIP member names. Root-component bodies retain legacy names.
 Exit isolation restores body/component visibility while preserving sketch visibility.
+
+## Rectangle drawing and dimensions
+
+The main Rectangle command opens/updates the current sketch canvas with explicit
+corner or center creation modes. Typed dimensions author ordinary driving
+dimensions; center mode mirrors the initial corners around the picked center.
+Draft sizes appear in the properties panel outside the drawing surface; the panel
+stacks below the drawing on compact screens. Subsequent dimension solving retains existing corner anchoring; center snapping
+positions the initial rectangle without an associative center constraint. Driving labels
+remain visible/editable by default within the existing canvas-label limit. Reference labels are selection-based by default, with
+a Show reference measurements opt-in. Existing advanced fixed presets remain.
+Native workflows verify both creation modes, exact bounds/volumes, inline sizing,
+reference visibility, undo/redo, project round trips and STL.

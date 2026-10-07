@@ -57,7 +57,7 @@ export function SolidDimensionOverlay({ dimensions, project, subscribeFrames }: 
   }, [dimensions, project, subscribeFrames]);
   if (!dimensions.length) return null;
   return (
-    <div ref={host} className="solid-dimensions" role="group" aria-label="Solid driving dimensions">
+    <div ref={host} className="solid-dimensions" role="group" aria-label="Solid driving dimensions" style={{ pointerEvents: canEdit ? undefined : "none" }}>
       <span className="solid-dimensions-heading">{dimensions[0].featureName} · driving dimensions</span>
       {dimensions.map((dimension) => (
         <button key={dimension.id} type="button"

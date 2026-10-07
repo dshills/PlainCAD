@@ -132,6 +132,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     await page
       .getByRole("button", { name: "Use Fillet on geometry", exact: true })
       .click();
+    await expect(page.getByRole("group", { name: "Solid driving dimensions", exact: true })).toHaveCSS("pointer-events", "none");
     const cap = await viewportLocal(page, sketchId, 47, 0, 10);
     await page.mouse.click(cap.screen.x, cap.screen.y);
     const fillet = page.getByRole("dialog", { name: "Fillet", exact: true });

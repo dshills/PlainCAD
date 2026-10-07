@@ -40,3 +40,21 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* File jobs must not resize/refit the user's CAD viewport while pixels encode. */
+.file-job-status {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: 20;
+  max-width: calc(100vw - 24px);
+  box-sizing: border-box;
+  flex-wrap: wrap;
+  border: 1px solid var(--warning-border);
+  border-radius: 4px;
+  box-shadow: 0 4px 16px #0003;
+}
+.file-job-status span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

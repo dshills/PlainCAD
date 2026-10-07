@@ -118,6 +118,7 @@ test("dimension labels move without modeling edits and cancel stale pointer gest
   await clickLocal(page, 0, 0);
   await clickLocal(page, 5, 0);
   await ready(page);
+  await page.getByLabel("Show reference measurements", { exact: true }).check();
   const reference = page.locator(".canvas-reference-dimension").first();
   expect(await reference.getAttribute("role")).toBeNull();
   const referenceBefore = await snapshot(page);
@@ -335,6 +336,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     const original = await snapshot(page);
     await page.locator(".sketch-chip").first().click();
     await openCanvas(page);
+    await page.getByLabel("Show reference measurements", { exact: true }).check();
     const svg = page.getByLabel("Sketch drawing canvas", { exact: true });
     const marker = svg.locator(`[data-constraint-id="${id}"]`),
       text = marker.locator("text");
@@ -487,6 +489,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     });
     await done(page);
     await openCanvas(page);
+    await page.getByLabel("Show reference measurements", { exact: true }).check();
     expect(await position()).toEqual(initial);
     await done(page);
     const saving = page.waitForEvent("download");
@@ -1109,6 +1112,7 @@ test("drawing dimensions drive native geometry, diagnose conflicts, persist and 
   await clickLocal(page, 5, 0);
   await ready(page);
   const svg = page.getByLabel("Sketch drawing canvas", { exact: true });
+  await page.getByLabel("Show reference measurements", { exact: true }).check();
   await expect(svg.locator("text")).toContainText(["R 5.0000 mm"]);
   await page
     .getByLabel("Canvas dimension type", { exact: true })

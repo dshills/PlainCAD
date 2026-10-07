@@ -96,6 +96,7 @@ it("offers visible tools and keeps precision collapsed while dimensions stay vis
 });
 it("inspects a reference measurement without mutation and Escape returns to the canvas", async () => {
   await open(false);
+  fireEvent.click(screen.getByLabelText("Show reference measurements"));
   fireEvent.click(screen.getByRole("button", { name: "Draw tool: select" }));
   const before = useCadStore.getState().history;
   fireEvent.click(screen.getByRole("button", { name: /^Inspect drawing/ }));
@@ -216,6 +217,7 @@ it("closes a size draft when choosing a drawing tool and resets deleted dimensio
 
 it("reports unmeasurable reference sizes without replacing the previous dimension form intent", async () => {
   await open(false);
+  fireEvent.click(screen.getByLabelText("Show reference measurements"));
   const before = useCadStore.getState().history;
   vi.spyOn(dimensionModule, "canvasEntitySize").mockReturnValue({
     type: "radius",

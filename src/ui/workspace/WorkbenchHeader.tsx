@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCadStore } from "../../state/useCadStore";
 import { useWorkspaceState } from "../../state/useWorkspaceState";
 import { useSketchCanvas } from "../commands/sketchCanvasCommand";
@@ -34,9 +34,9 @@ const groups = {
       PencilSimpleIcon,
     ],
     [
-      "sketch.addCenterRectangle",
+      "sketch.drawRectangle",
       "Rectangle",
-      "Add center rectangle",
+      "Draw rectangle",
       SquareIcon,
     ],
     ["sketch.addCircle", "Circle", "Add circle", CircleIcon],
@@ -54,6 +54,9 @@ export function WorkbenchHeader({ context }: { context: CommandContext }) {
   const rebuild = useCadStore((state) => state.rebuild);
   const sketching = Boolean(useSketchCanvas((state) => state.active));
   const [mode, setMode] = useState<Mode>("solid");
+  useEffect(() => {
+    if (!sketching) setMode("solid");
+  }, [sketching]);
   const current = sketching ? "draw" : mode;
   const palette = useCadStore((state) => state.setPaletteOpen);
   return (

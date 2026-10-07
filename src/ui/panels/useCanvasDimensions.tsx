@@ -22,6 +22,7 @@ import {
   type CanvasSession,
 } from "../commands/sketchCanvasCommand";
 
+const EMPTY_GEOMETRY_SELECTION: readonly string[] = [];
 type Context = ReturnType<typeof canvasContext>;
 /** Controls and SVG annotations share one selection; every edit goes through document history. */
 export function useCanvasDimensions(
@@ -33,8 +34,9 @@ export function useCanvasDimensions(
   focused = false,
   inspectReferences = true,
   onInspect?: () => void,
+  selectedGeometry: readonly string[] = EMPTY_GEOMETRY_SELECTION,
 ) {
-  const [showReference, setShowReference] = useState(true),
+  const [showReference, setShowReference] = useState(false),
     [showDimensions, setShowDimensions] = useState(true),
     [positionReferences, setPositionReferences] = useState(false);
   const [selectedId, setSelectedId] = useState("");
@@ -82,11 +84,14 @@ export function useCanvasDimensions(
             context.solved,
             context.document.displayUnits ?? context.document.unitSettings,
             span,
-            showReference,
+            true,
             context.pending,
+          ).filter(
+            (annotation) => annotation.dimensionId || showReference ||
+              (annotation.id.startsWith("reference:") && selectedGeometry.includes(annotation.id.slice("reference:".length))),
           )
         : [],
-    [context, span, showReference],
+    [context, span, showReference, selectedGeometry],
   );
   const visible = useMemo(
     () =>
@@ -137,7 +142,7 @@ export function useCanvasDimensions(
     setSelectedId(id);
     if (!id) setExpression(type === "angle" ? "90deg" : "10mm");
     editorDocument.current = document;
-    setEditorOpen(focused && openEditor && Boolean(id));
+    setEditorOpen(openEditor && Boolean(id));
   };
   const appliedRepair = useRef<ReturnType<typeof useRepairFocus.getState>["focus"]>(undefined);
   const repairFocus = useRepairFocus((state) => state.focus);
@@ -185,7 +190,7 @@ export function useCanvasDimensions(
     setExpression(measuredExpression);
     editorDocument.current = document;
     setError(undefined);
-    setEditorOpen(focused);
+    setEditorOpen(true);
   };
   const removeSelected = () => {
     if (!context || !document || !selected) return;
@@ -264,8 +269,8 @@ export function useCanvasDimensions(
       <h3>Drawing dimensions</h3>
       {focused ? (
         <p>
-          Click geometry or a dimension to inspect its size. D labels drive
-          geometry; plain values are reference measurements.
+          Click a D label to edit its driving dimension. Select geometry to
+          inspect its reference measurement; show all references in display tools.
         </p>
       ) : null}
       <details
@@ -580,7 +585,7 @@ export function useCanvasDimensions(
   const selectedEntityId = selected?.entityIds[0] ?? ref1;
   const position = selectedAnnotation?.position;
   const inlineEditor =
-    focused && editorOpen && context ? (
+    editorOpen && context ? (
       <form
         className="canvas-inline-dimension"
         aria-label="Selected sketch size"

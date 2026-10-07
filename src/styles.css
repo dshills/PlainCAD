@@ -1063,8 +1063,8 @@ summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .sketch-direct-tools label { display: inline-flex; align-items: center; gap: 4px; }
 .sketch-workspace-drawing { position: relative; }
 .canvas-draft-size, .canvas-inline-dimension { box-sizing: border-box; padding: 10px; border: 1px solid var(--accent); border-radius: 6px; background: var(--panel); color: var(--text); box-shadow: 0 4px 16px #0002; z-index: 3; }
-.canvas-draft-size { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; position: absolute; width: min(360px, 90%); }
-.canvas-draft-size label { width: 135px; }
+.canvas-draft-size { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0; position: static; width: 100%; }
+.canvas-draft-size label { width: 100%; }
 .canvas-draft-size input { width: 100%; }
 .canvas-inline-dimension { position: absolute; width: min(250px, 90%); }
 .canvas-inline-dimension label { display: block; margin: 6px 0; }

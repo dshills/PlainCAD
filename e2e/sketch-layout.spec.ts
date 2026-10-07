@@ -27,7 +27,12 @@ test("new sketch diagnostics keep the pointer drawing coordinate frame stationar
   await clickLocal(page, 0, 0);
   await clickLocal(page, 40, 30);
   await expect.poll(async () => (await aiSnapshot(page)).status).toBe("succeeded");
-  await expect(page.getByRole("button", { name: /^Model issues/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Model issues/ })).toHaveCount(0);
+  const drawn = await aiSnapshot(page);
+  const sketchId = Object.keys(drawn.document.sketches)[0];
+  expect(drawn.result!.warnings).toEqual(expect.arrayContaining([
+    expect.objectContaining({ id: `sketch:${sketchId}:dof` }),
+  ]));
   const after = await canvas.boundingBox();
   expect(after).not.toBeNull();
   for (const coordinate of ["x", "y", "width", "height"] as const) {

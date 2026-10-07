@@ -119,7 +119,7 @@ for (const theme of ["light", "dark", "saturn"] as const) {
       return [
         ".left-panel",
         ".rebuild-pill.succeeded",
-        ".row input",
+        ".parameter-card input",
         ".theme-control select",
       ].map((selector) => {
         const element = document.querySelector(selector)!;

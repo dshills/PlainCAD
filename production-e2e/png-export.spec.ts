@@ -20,6 +20,7 @@ test("production CSP permits native viewer and dimensioned SVG PNG downloads", a
   await inspectPngDownload(page, await download, info.outputPath("production-part.png"));
   await page.getByRole("button", { name: /^Box Base XY plane/ }).click();
   await page.getByRole("button", { name: "Edit sketch canvas", exact: true }).click();
+  await page.getByLabel("Show reference measurements", { exact: true }).check();
   await expect(page.getByRole("group", { name: "Sketch drawing canvas", exact: true }).locator(".canvas-dimensions text")).not.toHaveCount(0);
   download = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download sketch PNG", exact: true }).last().click();

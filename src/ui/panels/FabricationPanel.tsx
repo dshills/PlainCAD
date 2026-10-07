@@ -42,7 +42,7 @@ export function FabricationPanel() {
   return (
     <>
       {jobs.busy ? (
-        <div className="kernel-banner" role="status">
+        <div className="kernel-banner file-job-status" role="status">
           <span>{jobs.message}</span>
           <button onClick={jobs.cancel}>Cancel file operation</button>
         </div>

@@ -16,6 +16,8 @@ export interface CanvasSizeInput {
   width?: string;
   height?: string;
   diameter?: string;
+  /** Transient creation mode; the document stores ordinary rectangle geometry. */
+  rectangleMode?: "corner" | "center";
 }
 function readSize(
   expression: string,
@@ -51,17 +53,18 @@ export function sizedCanvasPoints(
     return input;
   const [a, b] = input;
   let end = b;
+  const centered = tool === "rectangle" && sizes.rectangleMode === "center";
   if (tool === "rectangle")
     end = {
       x: sizes.width?.trim()
         ? a.x +
           (b.x < a.x ? -1 : 1) *
-            readSize(sizes.width, "Width", parameters, unit)
+            readSize(sizes.width, "Width", parameters, unit) / (centered ? 2 : 1)
         : b.x,
       y: sizes.height?.trim()
         ? a.y +
           (b.y < a.y ? -1 : 1) *
-            readSize(sizes.height, "Height", parameters, unit)
+            readSize(sizes.height, "Height", parameters, unit) / (centered ? 2 : 1)
         : b.y,
     };
   else if (sizes.diameter?.trim()) {
@@ -75,6 +78,13 @@ export function sizedCanvasPoints(
           }
         : { x: a.x + radius, y: a.y };
   }
+  if (centered)
+    return [
+      { x: 2 * a.x - end.x, y: 2 * a.y - end.y },
+      distance2d(end, b) <= SKETCH_TOLERANCE
+        ? { ...end, pointId: b.pointId }
+        : end,
+    ];
   return [
     a,
     distance2d(end, b) <= SKETCH_TOLERANCE

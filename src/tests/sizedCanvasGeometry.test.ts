@@ -188,3 +188,37 @@ it("commits sized geometry and dimensions together and preserves their IDs and u
   useCadStore.getState().redo();
   expect(useCadStore.getState().history.present).toBe(after.present);
 });
+
+
+it.each([[18, 25], [2, 5]])("creates center rectangles with full sizes in either pointer quadrant (%s, %s)", (x, y) => {
+  const sketch = createXySketch();
+  const next = addSizedCanvasGeometry(sketch, solveSketch(sketch, {}), "rectangle",
+    [{ x: 10, y: 15 }, { x, y }], false, false,
+    { rectangleMode: "center", width: "30mm", height: "20mm" }, {}, "mm").sketch;
+  const solved = solveSketch(next, {});
+  expect(solved.errors).toEqual([]);
+  const profile = detectProfiles(solved).profiles[0];
+  expect(profile.bounds).toMatchObject({ minX: -5, maxX: 25, minY: 5, maxY: 25 });
+  expect(next.dimensions).toHaveLength(2);
+  const document = upsertSketch(createEmptyDocument(), next);
+  expect(importProjectText(serializeProject(document)).sketches[next.id]).toEqual(document.sketches[next.id]);
+});
+it("mirrors a center gesture without reusing its center as a rectangle corner", () => {
+  expect(sizedCanvasPoints("rectangle", [{ x: 10, y: 5, pointId: "center" }, { x: 18, y: 9, pointId: "corner" }],
+    { rectangleMode: "center" }, {}, "mm")).toEqual([{ x: 2, y: 1 }, { x: 18, y: 9, pointId: "corner" }]);
+});
+
+it.each(["0mm", "-1mm"])("rejects invalid center-mode width %s before creating geometry", (width) => {
+  expect(() => sizedCanvasPoints("rectangle", [{ x: 10, y: 5 }, { x: 12, y: 7 }],
+    { rectangleMode: "center", width, height: "10mm" }, {}, "mm")).toThrow(/Width must be positive/);
+});
+it("uses the full parameter-driven width for center-mode driving intent", () => {
+  const sketch = createXySketch();
+  const next = addSizedCanvasGeometry(sketch, solveSketch(sketch, {}), "rectangle", [{ x: 10, y: 5 }, { x: 12, y: 7 }],
+    false, false, { rectangleMode: "center", width: "width", height: "10mm" },
+    { width: normalizeQuantity(30, "mm") }, "mm").sketch;
+  expect(next.dimensions[0].expression.expression).toBe("width");
+  expect(detectProfiles(solveSketch(next, { width: normalizeQuantity(30, "mm") })).profiles[0].bounds).toMatchObject({ minX: -5, maxX: 25 });
+  const edited = detectProfiles(solveSketch(next, { width: normalizeQuantity(40, "mm") })).profiles[0];
+  expect(edited.bounds.maxX - edited.bounds.minX).toBeCloseTo(40, 6);
+});
