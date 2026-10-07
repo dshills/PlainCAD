@@ -142,6 +142,11 @@ instrument panels, cyan readouts, monospaced labels, and illuminated controls.
 Layout, theme, visibility, and isolation are browser/session preferences rather
 than CAD geometry. Named camera poses are saved explicitly in the project.
 
+Save/export keeps its completion buttons visible while options scroll. For STL,
+**Output files → One file per part** produces separate STL files (a ZIP for multiple
+parts). Advanced checks explain whether they validate individual parts or overlaps
+in a combined file; separate-file checks do not certify assembled fit.
+
 ### Draw and dimension
 
 Use points, lines, rectangles, circles, arcs, and construction geometry in the

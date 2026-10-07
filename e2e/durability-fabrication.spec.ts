@@ -267,7 +267,7 @@ test("separate ZIP alignment, overlapping shells warning, stale validation and r
   await page.getByRole("button", { name: "Export STL", exact: true }).click();
   const panel = page.getByRole("dialog", { name: "STL export options" });
   await expect(panel).toBeVisible();
-  await expect(panel.getByLabel("STL mode")).toHaveValue("separate");
+  await expect(panel.getByLabel("Output files")).toHaveValue("separate");
   const partNames = await panel.getByRole("checkbox", { name: /^Export body / }).evaluateAll((elements) => elements.map((element) =>
     `${element.getAttribute("aria-label")!.replace(/^Export body /, "")}.stl`,
   ));
@@ -282,7 +282,7 @@ test("separate ZIP alignment, overlapping shells warning, stale validation and r
   expect(stl(parts[1].data)).toMatchObject({ minX: 15, maxX: 35 });
   expect(stl(parts[1].data).volume).toBeCloseTo(2000);
   await page.getByRole("button", { name: "Export STL", exact: true }).click();
-  await panel.getByLabel("STL mode").selectOption("shells");
+  await panel.getByLabel("Output files").selectOption("shells");
   await panel.getByRole("button", { name: "Generate STL" }).click();
   await expect(panel.getByText(/intersect, touch, or contain/)).toBeVisible();
   download = page.waitForEvent("download");
@@ -291,7 +291,7 @@ test("separate ZIP alignment, overlapping shells warning, stale validation and r
   await (await download).saveAs(file);
   expect(stl(await readFile(file)).volume).toBeCloseTo(4000);
   await page.getByRole("button", { name: "Export STL", exact: true }).click();
-  await panel.getByLabel("STL mode").selectOption("shells");
+  await panel.getByLabel("Output files").selectOption("shells");
   await panel.getByRole("button", { name: "Generate STL" }).click();
   await expect(panel.getByText(/intersect, touch, or contain/)).toBeVisible();
   await page.evaluate(async () => {
@@ -309,7 +309,7 @@ test("separate ZIP alignment, overlapping shells warning, stale validation and r
       .getByRole("alert")
       .filter({ hasText: "Model changed after validation" }),
   ).toBeVisible();
-  await panel.getByLabel("STL mode").selectOption("merged");
+  await panel.getByLabel("Output files").selectOption("merged");
   download = page.waitForEvent("download");
   await panel.getByRole("button", { name: "Generate STL" }).click();
   // A connected union has no overlap warning and downloads automatically.

@@ -149,179 +149,167 @@ function ExportDialog({
   };
   return (
     <ModalDialog
-      className="file-dialog"
+      className="file-dialog fabrication-dialog"
       label={task ? "Save or export" : "STL export options"}
       onDismiss={close}
     >
       <h2>{task ? "Save or export" : "Export STL"}</h2>
-      <fieldset disabled={busy}>
-        <legend>What do you need?</legend>
-        <div className="file-goal-options">
-          <label>
-            <input
-              type="radio"
-              name="file-goal"
-              value="project"
-              checked={goal === "project"}
-              onChange={() => chooseGoal("project")}
-            />{" "}
-            Save editable project (.pcaddoc)
-            <small>
-              Keep sketches, dimensions, parameters and feature history.
-            </small>
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="file-goal"
-              value="stl"
-              checked={goal === "stl"}
-              onChange={() => chooseGoal("stl")}
-            />{" "}
-            Export for printing (.stl)
-            <small>A mesh for slicers and fabrication tools.</small>
-          </label>
-        </div>
-      </fieldset>
-      {!sameProject ? (
-        <p role="alert">Project replaced. Close and reopen this file task.</p>
-      ) : changed ? (
-        <p role="alert">
-          Project changed. Close and reopen Save or export to use the current
-          model.
-        </p>
-      ) : null}
-      {goal === "project" ? (
-        <>
-          <p>
-            Save <strong>{cadDocument.name}</strong> as a .pcaddoc file. Open it
-            in PlainCAD to continue editing. Saving does not require successful
-            geometry.
-          </p>
-          {fileError ? (
-            <div
-              className="export-diagnostic"
-              role="group"
-              aria-label="Save diagnostic"
-            >
-              <p>{fileError}</p>
-              <p>
-                Keep this project open and try saving again after resolving the
-                error.
-              </p>
-            </div>
-          ) : null}
-          <button
-            type="button"
-            disabled={busy || !sameProject || changed}
-            onClick={() => void saveProject()}
-          >
-            Save editable project
-          </button>
-        </>
-      ) : (
-        <>
-          <p>
-            STL keeps the shape, but does not keep editable sketches or
-            parameters. Coordinates remain in millimeters in the global model
-            frame.
-          </p>
-          <fieldset disabled={busy || !sameProject || changed}>
-            <legend>Export bodies ({selected.length} selected)</legend>
-            <p>
-              Only marked bodies will be exported. Visibility does not change
-              export selection.
-            </p>
-            <div className="export-bodies">
-              {bodies.map((body) => {
-                return (
-                  <label key={body.id}>
-                    <input
-                      type="checkbox"
-                      aria-label={`Export body ${names[body.id]}`}
-                      checked={selected.includes(body.id)}
-                      onChange={(event) =>
-                        setBodies(
-                          event.target.checked
-                            ? [...selected, body.id]
-                            : selected.filter((id) => id !== body.id),
-                        )
-                      }
-                    />
-                    {names[body.id]}
-                  </label>
-                );
-              })}
-            </div>
-            <button
-              type="button"
-              onClick={() => setBodies(bodies.map((body) => body.id))}
-            >
-              Select all bodies
-            </button>
-            <button
-              type="button"
-              disabled={!selectedBody}
-              onClick={() => selectedBody && setBodies([selectedBody])}
-            >
-              Use selected body
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                const hidden = hiddenViewerBodies(
-                  cadDocument,
-                  bodies.map((body) => body.id),
-                  session,
-                  useViewerState.getState(),
-                );
-                setBodies(
-                  bodies
-                    .filter((body) => !hidden.includes(body.id))
-                    .map((body) => body.id),
-                );
-              }}
-            >
-              Select visible bodies
-            </button>
-            <button type="button" onClick={() => setBodies([])}>
-              Clear body selection
-            </button>
-          </fieldset>
-          {lost.length ? (
-            <p role="alert">
-              {lost.length} selected bodies are no longer available. Select
-              export bodies again.
-            </p>
-          ) : null}
-          {!available ? (
-            <p>
-              STL needs a successful rebuild of the current model. Repair its
-              diagnostics or wait for rebuilding to finish, then reopen this
-              task.
-            </p>
-          ) : null}
-          <div
-            className="export-workflow-summary"
-            role="group"
-            aria-label="STL output summary"
-          >
-            <strong>
-              {selected.length} {selected.length === 1 ? "body" : "bodies"}{" "}
-              selected · {triangleCount.toLocaleString()} input triangles
-            </strong>
-            <p>{describeStlOutput(mode, selected.length)}</p>
-          </div>
-          <details
-            className="export-advanced"
-            open={advanced}
-            onToggle={(event) => setAdvanced(event.currentTarget.open)}
-          >
-            <summary>Advanced STL options</summary>
+      <div className="fabrication-dialog-content">
+        <fieldset disabled={busy}>
+          <legend>What do you need?</legend>
+          <div className="file-goal-options">
             <label>
-              STL mode
+              <input
+                type="radio"
+                name="file-goal"
+                value="project"
+                checked={goal === "project"}
+                onChange={() => chooseGoal("project")}
+              />{" "}
+              Save editable project (.pcaddoc)
+              <small>
+                Keep sketches, dimensions, parameters and feature history.
+              </small>
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="file-goal"
+                value="stl"
+                checked={goal === "stl"}
+                onChange={() => chooseGoal("stl")}
+              />{" "}
+              Export for printing (.stl)
+              <small>A mesh for slicers and fabrication tools.</small>
+            </label>
+          </div>
+        </fieldset>
+        {!sameProject ? (
+          <p role="alert">Project replaced. Close and reopen this file task.</p>
+        ) : changed ? (
+          <p role="alert">
+            Project changed. Close and reopen Save or export to use the current
+            model.
+          </p>
+        ) : null}
+        {goal === "project" ? (
+          <>
+            <p>
+              Save <strong>{cadDocument.name}</strong> as a .pcaddoc file. Open it
+              in PlainCAD to continue editing. Saving does not require successful
+              geometry.
+            </p>
+            {fileError ? (
+              <div
+                className="export-diagnostic"
+                role="group"
+                aria-label="Save diagnostic"
+              >
+                <p>{fileError}</p>
+                <p>
+                  Keep this project open and try saving again after resolving the
+                  error.
+                </p>
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <>
+            <p>
+              STL keeps the shape, but does not keep editable sketches or
+              parameters. Coordinates remain in millimeters in the global model
+              frame.
+            </p>
+            <fieldset disabled={busy || !sameProject || changed}>
+              <legend>Export bodies ({selected.length} selected)</legend>
+              <p>
+                Only marked bodies will be exported. Visibility does not change
+                export selection.
+              </p>
+              <div className="export-bodies">
+                {bodies.map((body) => {
+                  return (
+                    <label key={body.id}>
+                      <input
+                        type="checkbox"
+                        aria-label={`Export body ${names[body.id]}`}
+                        checked={selected.includes(body.id)}
+                        onChange={(event) =>
+                          setBodies(
+                            event.target.checked
+                              ? [...selected, body.id]
+                              : selected.filter((id) => id !== body.id),
+                          )
+                        }
+                      />
+                      {names[body.id]}
+                    </label>
+                  );
+                })}
+              </div>
+              <button
+                type="button"
+                onClick={() => setBodies(bodies.map((body) => body.id))}
+              >
+                Select all bodies
+              </button>
+              <button
+                type="button"
+                disabled={!selectedBody}
+                onClick={() => selectedBody && setBodies([selectedBody])}
+              >
+                Use selected body
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const hidden = hiddenViewerBodies(
+                    cadDocument,
+                    bodies.map((body) => body.id),
+                    session,
+                    useViewerState.getState(),
+                  );
+                  setBodies(
+                    bodies
+                      .filter((body) => !hidden.includes(body.id))
+                      .map((body) => body.id),
+                  );
+                }}
+              >
+                Select visible bodies
+              </button>
+              <button type="button" onClick={() => setBodies([])}>
+                Clear body selection
+              </button>
+            </fieldset>
+            {lost.length ? (
+              <p role="alert">
+                {lost.length} selected bodies are no longer available. Select
+                export bodies again.
+              </p>
+            ) : null}
+            {!available ? (
+              <p>
+                STL needs a successful rebuild of the current model. Repair its
+                diagnostics or wait for rebuilding to finish, then reopen this
+                task.
+              </p>
+            ) : null}
+            <div
+              className="export-workflow-summary"
+              role="group"
+              aria-label="STL output summary"
+            >
+              <strong>
+                {selected.length} {selected.length === 1 ? "body" : "bodies"}{" "}
+                selected · {triangleCount.toLocaleString()} input triangles
+              </strong>
+              <p>{describeStlOutput(mode, selected.length)}</p>
+            </div>
+            <label>
+              Output files
               <select
-                aria-label="STL mode"
+                aria-label="Output files"
                 value={mode}
                 disabled={busy || !sameProject || changed}
                 onChange={(event) => {
@@ -329,122 +317,145 @@ function ExportDialog({
                   clearPrepared();
                 }}
               >
-                <option value="separate">Separate files (ZIP)</option>
-                <option value="shells">Single file with separate shells</option>
-                <option value="merged">Native union</option>
+                <option value="separate">One file per part (ZIP for multiple parts)</option>
+                <option value="shells">One file containing all parts (separate shells)</option>
+                <option value="merged">Combine parts with native union</option>
               </select>
             </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={full || mode === "merged"}
-                disabled={busy || mode === "merged" || !sameProject || changed}
-                onChange={(event) => {
-                  setFull(event.target.checked);
-                  clearPrepared();
-                }}
-              />
-              Check self-intersections and body overlaps
-            </label>
-            <p>
-              Topology, winding, and float32 coordinates are always checked.
-              Union is best-effort; failures preserve your model.
-            </p>
-          </details>
-          {diagnostic ? (
-            <div
-              className="export-diagnostic"
-              role="group"
-              aria-label="Export diagnostic"
-              aria-live="polite"
+            <details
+              className="export-advanced"
+              open={advanced}
+              onToggle={(event) => setAdvanced(event.currentTarget.open)}
             >
-              <p>
-                {diagnostic.bodyName ? `${diagnostic.bodyName}: ` : ""}
-                {diagnostic.message}
-              </p>
-              <p>{diagnostic.advice}</p>
-              {diagnosticFeatureId ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    close();
-                    useCadStore.getState().select({
-                      kind: "feature",
-                      id: diagnosticFeatureId,
-                      documentId: cadDocument.id,
-                    });
-                  }}
-                >
-                  Inspect {diagnostic.featureName}
-                </button>
-              ) : null}
-            </div>
-          ) : null}
-          {jobs.prepared ? (
-            <>
-              <p>
-                {jobs.prepared.triangleCount.toLocaleString()} triangles
-                validated. Review these warnings before downloading:
-              </p>
-              <ul>
-                {jobs.prepared.warnings.map((warning) => (
-                  <li key={warning}>{warning}</li>
-                ))}
-              </ul>
-              <button
-                type="button"
-                disabled={
-                  busy ||
-                  !sameProject ||
-                  changed ||
-                  !available ||
-                  lost.length > 0
-                }
-                onClick={() => downloadPrepared(jobs.prepared!)}
-              >
-                Download with warnings
-              </button>
-              {mode !== "separate" ? (
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => {
-                    setMode("separate");
+              <summary>Advanced STL options</summary>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={full || mode === "merged"}
+                  disabled={busy || mode === "merged" || !sameProject || changed}
+                  onChange={(event) => {
+                    setFull(event.target.checked);
                     clearPrepared();
                   }}
-                >
-                  Use separate files instead
-                </button>
-              ) : null}
-            </>
-          ) : (
-            <button
-              type="button"
-              disabled={
-                busy ||
-                !available ||
-                !sameProject ||
-                changed ||
-                !selected.length ||
-                lost.length > 0
-              }
-              onClick={() =>
-                void runFabrication(
-                  mode,
-                  full || mode === "merged",
-                  selected,
-                  jobs.exportSession,
-                )
-              }
-            >
-              Generate STL
-            </button>
-          )}
-        </>
-      )}
-      <button type="button" disabled={saving} onClick={close}>
-        Close export
-      </button>
+                />
+                {mode === "separate"
+                  ? "Check each part for self-intersections"
+                  : mode === "shells"
+                    ? "Check self-intersections and overlaps between parts"
+                    : "Check the union for self-intersections"}
+              </label>
+              <p>
+                Topology, winding, and float32 coordinates are always checked.{" "}
+                {mode === "separate"
+                  ? "Each part is checked independently; overlaps between separate files are not checked."
+                  : mode === "shells"
+                    ? "With this option enabled, overlaps and containment between parts are checked before download."
+                    : "Native union requires full validation; disconnected solids produce a warning. Union is best-effort and failures preserve your model."}
+              </p>
+            </details>
+            {diagnostic ? (
+              <div
+                className="export-diagnostic"
+                role="group"
+                aria-label="Export diagnostic"
+                aria-live="polite"
+              >
+                <p>
+                  {diagnostic.bodyName ? `${diagnostic.bodyName}: ` : ""}
+                  {diagnostic.message}
+                </p>
+                <p>{diagnostic.advice}</p>
+                {diagnosticFeatureId ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      close();
+                      useCadStore.getState().select({
+                        kind: "feature",
+                        id: diagnosticFeatureId,
+                        documentId: cadDocument.id,
+                      });
+                    }}
+                  >
+                    Inspect {diagnostic.featureName}
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
+            {jobs.prepared ? (
+              <>
+                <p>
+                  {jobs.prepared.triangleCount.toLocaleString()} triangles
+                  validated. Review these warnings before downloading:
+                </p>
+                <ul>
+                  {jobs.prepared.warnings.map((warning) => (
+                    <li key={warning}>{warning}</li>
+                  ))}
+                </ul>
+                {mode !== "separate" ? (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => {
+                      setMode("separate");
+                      clearPrepared();
+                    }}
+                  >
+                    Use separate files instead
+                  </button>
+                ) : null}
+              </>
+            ) : null}
+          </>
+        )}
+      </div>
+      <footer className="fabrication-dialog-actions">
+        {goal === "project" ? (
+          <button
+            type="button"
+            disabled={busy || !sameProject || changed}
+            onClick={() => void saveProject()}
+          >
+            Save editable project
+          </button>
+        ) : jobs.prepared ? (
+          <button
+            type="button"
+            disabled={
+              busy || !sameProject || changed || !available || lost.length > 0
+            }
+            onClick={() => downloadPrepared(jobs.prepared!)}
+          >
+            Download with warnings
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled={
+              busy ||
+              !available ||
+              !sameProject ||
+              changed ||
+              !selected.length ||
+              lost.length > 0
+            }
+            onClick={() =>
+              void runFabrication(
+                mode,
+                full || mode === "merged",
+                selected,
+                jobs.exportSession,
+              )
+            }
+          >
+            Generate STL
+          </button>
+        )}
+        <button type="button" disabled={saving} onClick={close}>
+          {goal === "project" ? "Cancel save" : "Cancel export"}
+        </button>
+      </footer>
     </ModalDialog>
   );
 }

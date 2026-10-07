@@ -206,7 +206,7 @@ test("built app enforces CSP while native modeling, import, recovery and STL wor
   await expect(exporting).toBeEnabled();
   await exporting.click();
   const panel = page.getByRole("dialog", { name: "STL export options" });
-  await panel.getByLabel("STL mode").selectOption("merged");
+  await panel.getByLabel("Output files").selectOption("merged");
   download = page.waitForEvent("download");
   await panel
     .getByRole("button", { name: "Generate STL", exact: true })

@@ -12,8 +12,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Change: Rectangle workflow and selection-based reference dimensions, commit `dbc4dea`.
 - Result: type checks, build/bundle budget, 994 unit/component tests,
   228 development browser tests, and 29 production browser tests passed.
-- Completed items since that full gate: **1**.
-- Next full gate: item **5**, after four more completed items.
+- Completed items since that full gate: **2**.
+- Next full gate: item **5**, after three more completed items.
 
 ## Completed batch
 
@@ -53,5 +53,8 @@ Prism review `9224995a388d49c8a2f70b83670b95e9` covered all twenty-four Rectangl
 | Item | Requested change | Prism review | Reduced gate | Full gate |
 | --- | --- | --- | --- | --- |
 | 1 | Lightweight Model/Render presets and matching PNG | Anthropic `claude-sonnet-5-5`; no high/medium findings; four low notes assessed | Passed: type checks, 998 unit tests, build/bundle budget, 5 development and 14 production smoke tests; 7 additional native viewer/Render tests and 1 production Render CSP test | Not due |
+| 2 | Simplified fabrication options and persistent completion actions | Anthropic `claude-sonnet-5-5`; no high/medium findings; one low test note assessed | Passed: type checks, 1029 unit tests, build/bundle budget, 5 development and 14 production smoke tests; native export/footer/ZIP tests | Not due |
+
+Prism review `42e25361187ae950c8a18d6b6c5ac59a` covered the complete fabrication change. Earlier label, bounds and cancellation findings were fixed. The final low note concerns the scroll-container test: compact native coverage actually scrolls options and verifies reachable footer actions; desktop coverage verifies the footer stays outside that container. Separate-file checks now accurately exclude cross-file overlaps. The reduced gate passed on the integrated checkout, with a largest JavaScript bundle of 417.69 kB.
 
 Prism review `9f83a6142b0afbbf57d91bdaaf2059d5` covered all sixteen Render files. The idle observation begins only after frame scheduling settles. Preset snapshots are private to mode switching; active controls use current grid/edge flags, with switch/reset tests. Fixed light counts/order enforce the bounded studio budget. Render grid visibility is intentionally optional and remembered independently. Final integration sources match the native-tested checkout exactly; geometry buffers, camera/picking, idle rendering, movement quality, PNG pixels and unchanged STL were verified. Largest JavaScript bundle is 414.41 kB within the 500 kB budget.

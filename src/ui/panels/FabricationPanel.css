@@ -58,3 +58,48 @@
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
+/* Keep actions in view while a long part list or warning report scrolls. */
+dialog.file-dialog.fabrication-dialog {
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(620px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  box-sizing: border-box;
+  padding: 0;
+  overflow: hidden;
+}
+dialog.fabrication-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+.fabrication-dialog > h2 {
+  flex: none;
+  margin: 0;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.fabrication-dialog-content {
+  min-height: 0;
+  overflow: auto;
+  padding: 16px 20px;
+  overscroll-behavior: contain;
+}
+.fabrication-dialog-content > fieldset {
+  min-width: 0;
+}
+.fabrication-dialog-actions {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  background: var(--dialog-bg);
+}
+.file-dialog .fabrication-dialog-actions button {
+  margin: 0;
+}
+.fabrication-dialog-actions button:first-child {
+  flex: 1;
+}

@@ -241,7 +241,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
       await page
         .getByRole("button", { name: "Export STL", exact: true })
         .click();
-      await page.getByLabel("STL mode", { exact: true }).selectOption("shells");
+      await page.getByLabel("Output files", { exact: true }).selectOption("shells");
       const exported = page.waitForEvent("download");
       await page
         .getByRole("button", { name: "Generate STL", exact: true })

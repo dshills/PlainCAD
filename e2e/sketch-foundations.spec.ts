@@ -230,7 +230,7 @@ test("arc authoring, construction, driving dimensions, face offsets, save/open a
   const exporting = page.waitForEvent("download");
   await page.getByRole("button", { name: "Export STL", exact: true }).click();
   const exportPanel = page.getByRole("dialog", { name: "STL export options" });
-  await exportPanel.getByLabel("STL mode").selectOption("shells");
+  await exportPanel.getByLabel("Output files").selectOption("shells");
   await exportPanel.getByRole("button", { name: "Generate STL" }).click();
   const stl = testInfo.outputPath("arc.stl");
   await (await exporting).saveAs(stl);

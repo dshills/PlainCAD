@@ -143,6 +143,7 @@ describe("fabrication validation", () => {
     expect(
       buildStlExport([a, overlap], [], "assembly", "shells").warnings[0],
     ).toMatch(/intersect/);
+    expect(buildStlExport([a, overlap], [], "assembly", "separate").warnings).toEqual([]);
     expect(buildStlExport([a, b], [], "assembly", "shells").warnings).toEqual(
       [],
     );
@@ -155,9 +156,10 @@ describe("fabrication validation", () => {
     expect(
       buildStlExport([box(), inner], [], "nested", "shells").warnings[0],
     ).toMatch(/contain/);
-    expect(
-      buildStlExport([box()], [], "single", "separate", false).warnings[0],
-    ).toMatch(/skipped/);
+    const separateWarning = buildStlExport([box()], [], "single", "separate", false).warnings[0];
+    expect(separateWarning).toMatch(/Self-intersection checks for each part were skipped/);
+    expect(separateWarning).toMatch(/Overlaps between separate files are not checked/);
+    expect(separateWarning).not.toMatch(/body-overlap checks were skipped/);
   });
   it("hardens names and keeps suffixes unique after truncation", () => {
     for (const name of [

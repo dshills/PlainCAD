@@ -1058,3 +1058,14 @@ and cached buffers remain in use. Project/part PNG captures use the active prese
 full resolution and restore temporary capture state. Native browser checks cover
 buffer identity, idle frames, camera/picking, parameter rebuilds, save/open, PNG and
 STL; a production CSP check compares changed PNG pixels and byte-identical STL.
+
+## Simplified fabrication task
+
+Save/export keeps the header and primary Save/Generate/Download plus Cancel actions
+outside independently scrolling options. **Output files** is always visible for
+STL, defaulting to **One file per part**. Advanced numerical checks describe their
+actual scope: separate files validate each part without checking overlaps between
+files; a file with separate shells can check cross-part overlaps; native union
+requires full self-intersection validation and may retain disconnected solids.
+Document/session/rebuild checks still reject obsolete tasks. Compact/desktop native
+acceptance covers reachable footer actions, ZIP placement/volume, and stale tasks.

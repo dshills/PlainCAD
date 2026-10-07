@@ -128,7 +128,7 @@ it("explains editable saving separately, saves the captured current project, and
   expect(
     screen.getByRole("radio", { name: /Save editable project/ }),
   ).toBeChecked();
-  expect(screen.queryByLabelText("STL mode")).toBeNull();
+  expect(screen.queryByLabelText("Output files")).toBeNull();
   fireEvent.click(
     screen.getByRole("button", { name: "Save editable project" }),
   );
@@ -151,7 +151,7 @@ it("exports only explicitly marked bodies with full validation and keeps hidden 
   expect(screen.getByLabelText("STL output summary")).toHaveTextContent(
     "2 bodies selected",
   );
-  expect(screen.getByLabelText("STL mode")).not.toBeVisible();
+  expect(screen.getByLabelText("Output files")).toBeVisible();
   fireEvent.click(
     screen.getByRole("button", { name: "Select visible bodies" }),
   );
@@ -215,8 +215,8 @@ it("legacy options retain explicit advanced modes and prepared warnings are inva
   expect(
     screen.getByRole("dialog", { name: "STL export options" }),
   ).toBeVisible();
-  expect(screen.getByLabelText("STL mode")).toBeVisible();
-  fireEvent.change(screen.getByLabelText("STL mode"), {
+  expect(screen.getByLabelText("Output files")).toBeVisible();
+  fireEvent.change(screen.getByLabelText("Output files"), {
     target: { value: "shells" },
   });
   fireEvent.click(screen.getByRole("button", { name: "Generate STL" }));
@@ -443,4 +443,32 @@ it("reactively blocks guided file tasks during target scope capture at runtime a
     before.history.present,
   );
   expect(useCadStore.getState().history).toBe(before.history);
+});
+
+it("offers one file per part without opening advanced settings and describes each validation scope accurately", async () => {
+  beginSaveOrExport();
+  render(<FabricationPanel />);
+  fireEvent.click(screen.getByRole("radio", { name: /Export for printing/ }));
+  const mode = screen.getByLabelText("Output files");
+  expect(mode).toBeVisible();
+  expect(mode).toHaveValue("separate");
+  expect(screen.getByRole("option", { name: /One file per part/ })).toBeInTheDocument();
+  fireEvent.click(screen.getByText("Advanced STL options"));
+  expect(screen.getByRole("checkbox", { name: "Check each part for self-intersections" })).toBeChecked();
+  expect(screen.getByText(/overlaps between separate files are not checked/i)).toBeVisible();
+  fireEvent.change(mode, { target: { value: "shells" } });
+  expect(screen.getByRole("checkbox", { name: "Check self-intersections and overlaps between parts" })).toBeChecked();
+  fireEvent.change(mode, { target: { value: "merged" } });
+  expect(screen.getByRole("checkbox", { name: "Check the union for self-intersections" })).toBeDisabled();
+  expect(screen.getByRole("checkbox", { name: "Check the union for self-intersections" })).toBeChecked();
+  fireEvent.change(mode, { target: { value: "separate" } });
+  fireEvent.click(screen.getByRole("checkbox", { name: "Check each part for self-intersections" }));
+  fireEvent.click(screen.getByRole("button", { name: "Generate STL" }));
+  await waitFor(() => expect(downloadArrayBuffer).toHaveBeenCalledTimes(1));
+  expect(useCadStore.getState().fileError).toMatch(/Self-intersection checks for each part were skipped/);
+  expect(useCadStore.getState().fileError).not.toMatch(/body-overlap checks were skipped/);
+  act(() => beginSaveOrExport());
+  fireEvent.click(screen.getByRole("button", { name: "Cancel save" }));
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(downloadArrayBuffer).toHaveBeenCalledTimes(1);
 });

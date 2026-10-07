@@ -248,7 +248,7 @@ test("retained native cap after Cut supports sketch/extrude, owner distance edit
   const exporting = page.waitForEvent("download");
   await page.getByRole("button", { name: "Export STL", exact: true }).click();
   const options = page.getByRole("dialog", { name: "STL export options" });
-  await options.getByLabel("STL mode", { exact: true }).selectOption("merged");
+  await options.getByLabel("Output files", { exact: true }).selectOption("merged");
   await options
     .getByRole("button", { name: "Generate STL", exact: true })
     .click();

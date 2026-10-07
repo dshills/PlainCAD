@@ -58,7 +58,9 @@ export function buildStlExport(
       : [];
   if (!fullChecks)
     warnings.push(
-      "Expensive self-intersection and body-overlap checks were skipped; topology and orientation were validated.",
+      mode === "separate"
+        ? "Self-intersection checks for each part were skipped; topology and orientation were validated. Overlaps between separate files are not checked."
+        : "Expensive self-intersection and body-overlap checks were skipped; topology and orientation were validated.",
     );
   if (mode === "merged" && (meshes[0].geometryAssertions?.solidCount ?? 1) > 1)
     warnings.push(

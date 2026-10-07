@@ -117,7 +117,7 @@ test("guided editable save/open and explicit native body export retain dimension
   await expect(
     dialog.getByRole("radio", { name: /Save editable project/ }),
   ).toBeChecked();
-  await expect(dialog.getByLabel("STL mode")).toHaveCount(0);
+  await expect(dialog.getByLabel("Output files")).toHaveCount(0);
   let pending = page.waitForEvent("download");
   await dialog
     .getByRole("button", { name: "Save editable project", exact: true })
@@ -155,7 +155,7 @@ test("guided editable save/open and explicit native body export retain dimension
   await expect(dialog.getByLabel("STL output summary")).toContainText(
     "2 bodies selected",
   );
-  await expect(dialog.getByLabel("STL mode")).toBeHidden();
+  await expect(dialog.getByLabel("Output files")).toBeVisible();
   await dialog
     .getByRole("button", { name: "Use selected body", exact: true })
     .click();
@@ -218,7 +218,7 @@ test("guided export never downloads a same-ID replacement or edited draft", asyn
     dialog.getByRole("button", { name: "Generate STL", exact: true }),
   ).toBeDisabled();
   await dialog
-    .getByRole("button", { name: "Close export", exact: true })
+    .getByRole("button", { name: "Cancel export", exact: true })
     .click();
   await page
     .getByRole("button", { name: "Save or export", exact: true })
@@ -241,3 +241,52 @@ test("guided export never downloads a same-ID replacement or edited draft", asyn
   ).toBeDisabled();
   expect(downloads).toEqual([]);
 });
+
+for (const viewport of [{ width: 1600, height: 1000 }, { width: 390, height: 640 }]) {
+  test(`export actions remain visible above scrolling options at ${viewport.width}px`, async ({ page }, info) => {
+    await page.setViewportSize(viewport);
+    await page.goto("/");
+    await assembly(page);
+    await nativeReady(page);
+    await page.getByRole("button", { name: "Save or export", exact: true }).click();
+    const dialog = page.getByRole("dialog", { name: "Save or export", exact: true });
+    await dialog.getByRole("radio", { name: /Export for printing/ }).check();
+    const generate = dialog.getByRole("button", { name: "Generate STL", exact: true });
+    const cancel = dialog.getByRole("button", { name: "Cancel export", exact: true });
+    const bounds = await generate.boundingBox();
+    expect(bounds).not.toBeNull();
+    expect(bounds!.y).toBeGreaterThan(0);
+    expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(viewport.height);
+    const cancelBounds = await cancel.boundingBox();
+    expect(cancelBounds).not.toBeNull();
+    expect(cancelBounds!.y + cancelBounds!.height).toBeLessThanOrEqual(viewport.height);
+    const mode = dialog.getByLabel("Output files");
+    await expect(mode).toBeVisible();
+    await dialog.getByText("Advanced STL options", { exact: true }).click();
+    await expect(mode).toBeVisible();
+    await expect(mode).toHaveValue("separate");
+    await expect(dialog.getByRole("option", { name: /One file per part/ })).toHaveCount(1);
+    await expect(dialog.getByRole("checkbox", { name: "Check each part for self-intersections" })).toBeChecked();
+    await mode.selectOption("shells");
+    await expect(dialog.getByRole("checkbox", { name: "Check self-intersections and overlaps between parts" })).toBeChecked();
+    await mode.selectOption("separate");
+    const footerBounds = await generate.boundingBox();
+    // Scrolling either direction must leave the footer in the same position.
+    for (const scrollTop of [0, 10000]) {
+      await dialog.locator(".fabrication-dialog-content").evaluate((node, top) => { node.scrollTop = top; }, scrollTop);
+      const current = await generate.boundingBox();
+      expect(current!.y).toBeCloseTo(footerBounds!.y, 1);
+      await expect(generate).toBeInViewport({ ratio: 1 });
+      await expect(cancel).toBeInViewport({ ratio: 1 });
+    }
+    await page.screenshot({ path: info.outputPath("export-footer.png") });
+    const pending = page.waitForEvent("download");
+    await generate.click();
+    const zipPath = info.outputPath("parts.zip");
+    await (await pending).saveAs(zipPath);
+    const parts = unpack(await readFile(zipPath));
+    expect(parts).toHaveLength(2);
+    for (const part of parts) expect(stlSignedVolume(part.data)).toBeCloseTo(2000, 5);
+    await nativeReady(page);
+  });
+}

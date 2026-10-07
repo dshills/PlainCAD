@@ -164,7 +164,7 @@ test("body visibility, visible fit/picking, explicit subset STL and selected nat
   await expect(
     panel.getByLabel("Export body Far", { exact: true }),
   ).not.toBeChecked();
-  await panel.getByLabel("STL mode").selectOption("merged");
+  await panel.getByLabel("Output files").selectOption("merged");
   download = page.waitForEvent("download");
   await panel
     .getByRole("button", { name: "Generate STL", exact: true })
@@ -207,7 +207,7 @@ test("body visibility, visible fit/picking, explicit subset STL and selected nat
     panel.getByRole("button", { name: "Generate STL", exact: true }),
   ).toBeDisabled();
   await panel
-    .getByRole("button", { name: "Close export", exact: true })
+    .getByRole("button", { name: "Cancel export", exact: true })
     .click();
   await page.locator('input[type="file"]').setInputFiles(path);
   await ready(page);
