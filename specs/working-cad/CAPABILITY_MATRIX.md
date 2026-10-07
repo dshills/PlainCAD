@@ -12,6 +12,12 @@
   straight-edge angles and planar-face angle/separation are supported. General
   BRep topology and arbitrary curved-distance pairs remain unavailable.
   See [click measurement limits](CLICK_MEASURE.md).
+- Schema 15 linked projections copy complete retained authored distance-extrusion
+  cap boundaries into parallel origin/offset/supported face sketches. Stable
+  members follow source dimensions, with explicit role repair, break-link and
+  whole-projection removal. Native survival is checked at the consuming sketch's
+  timeline position. Oblique, fragmented and new boolean boundaries diagnose.
+  See [projection limits](SKETCH_PROJECTION.md).
 - Schema 14 associative linear/circular feature patterns repeat an upstream
   single-center Hole or finite-distance Cut Extrude, preserving source dimensions,
   signed direction and saved body scope. Count 2–32 includes the source; circular

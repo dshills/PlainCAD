@@ -1,5 +1,8 @@
 import { currentNativeEdges } from "./nativeEdgeTargets";
 import { NativeEdgeProofCache } from "./nativeEdgeProofCache";
+import { materializeSketchProjections } from "../sketch/sketchProjection";
+import { documentTimeline } from "../document/timelineOrdering";
+import { nativeProjectionValidator } from "./nativeProjectionValidator";
 import { currentNativeFaces, nativeSketchPlaneValidator } from "./nativeSketchPlanes";
 import { absorbedBodyIds, targetBodyIds } from "../document/bodyScopes";
 import { extrusionSweep, throughAllDistance } from "./extrusionSweep";
@@ -142,7 +145,16 @@ export function rebuildDocument(
 
   const solvedSketches = new Map<string, ReturnType<typeof solveSketch>>();
   const profilesBySketch = new Map<string, ReturnType<typeof detectProfiles>>();
-  for (const sketch of Object.values(document.sketches)) {
+  for (const item of documentTimeline(document)) {
+    if (item.kind !== "sketch") continue;
+    let sketch = item.sketch;
+    try {
+      sketch = materializeSketchProjections(document, sketch, solvedSketches, profilesBySketch, evaluated.values);
+      if (sketch !== item.sketch) document = { ...document, sketches: { ...document.sketches, [sketch.id]: sketch } };
+    } catch (error) {
+      errors.push({ id: `sketch:${sketch.id}:projection`, source: "sketch", sourceId: sketch.id, message: error instanceof Error ? error.message : String(error) });
+      continue;
+    }
     const signature = JSON.stringify([
       sketch.solveRevision ?? 0,
       sketch.entities,
@@ -219,11 +231,13 @@ export function rebuildDocument(
   const nativePlanes = nativeReferences
     ? nativeSketchPlaneValidator(document, planes, kernel, runtimeBodies, failedBodies, errors)
     : undefined;
+  const nativeProjections = nativeProjectionValidator(document, kernel, runtimeBodies, failedBodies, errors, nativeReferences, edgeProofCache);
 
   // Any sketch/parameter/validation error blocks feature execution, including unsupported planes.
   if (errors.length === 0) {
     for (const feature of graphPlan.orderedFeatures) {
       nativePlanes?.beforeFeature(feature.id);
+      nativeProjections.beforeFeature(feature.id);
       if (feature.suppressed) continue;
       // Supported edge roles belong to a new-body extrusion, so this is the
       // same stable target ID used by rebuildEdgeTreatmentFeature below.
@@ -243,6 +257,10 @@ export function rebuildDocument(
           continue;
         }
         if ("sketchId" in feature) {
+          if (nativeProjections.invalidSketchIds.has(feature.sketchId)) {
+            errors.push({ id: `feature:${feature.id}:invalid-projection`, source: "feature", sourceId: feature.id, message: "Sketch has an invalid linked projection. Repair its cap boundary reference or remove the projection before rebuilding this feature." });
+            continue;
+          }
           if (nativePlanes?.invalidSketchIds.has(feature.sketchId)) {
             errors.push({ id: `feature:${feature.id}:invalid-plane`, source: "feature", sourceId: feature.id, message: "Sketch plane failed native validation. Repair its face reference before rebuilding this feature." });
             continue;
@@ -461,6 +479,7 @@ export function rebuildDocument(
       }
     }
     nativePlanes?.finish();
+    nativeProjections.finish();
   }
   if (options.exportUnion && options.exportBodyIds && !errors.length) {
     const ids = options.exportBodyIds;

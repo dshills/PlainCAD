@@ -1,3 +1,4 @@
+import { assertEditableGeometry } from "./projectedGeometry";
 import type { Sketch } from "../document/schema";
 import { collectExpressionDependencies } from "../parameters/expressionEvaluator";
 import { entityPoints } from "./canvasPointMove";
@@ -155,6 +156,7 @@ export function deformedCanvasSketch(
   target: CanvasPoint,
   plan = canvasDeformationPlan(sketch, solved, pointId),
 ) {
+  assertEditableGeometry(sketch, [pointId, ...plan.pointIds]);
   if (plan.reason) throw new Error(plan.reason);
   if (
     ![target.x, target.y].every(Number.isFinite) ||

@@ -2,6 +2,8 @@ import { ContextualSketchConstraints } from "./ContextualSketchConstraints";
 import { registerPngCapture, sketchPng } from "../../persistence/pngCapture";
 import { SketchTrimExtendPanel } from "./SketchTrimExtendPanel";
 import { SketchReplicationPanel } from "./SketchReplicationPanel";
+import { SketchProjectionPanel, SketchProjectionLinks } from "./SketchProjectionPanel";
+import { useSketchProjection } from "../commands/sketchProjectionState";
 import { SketchOffsetPanel } from "./SketchOffsetPanel";
 import { useSketchReplication } from "../commands/sketchReplicationState";
 import { useSketchOffset } from "../commands/sketchOffsetState";
@@ -159,6 +161,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
   const trimFrame = useSketchTrimExtend((s) => s.frame);
   const replicationFrame = useSketchReplication((s) => s.frame);
   const offsetFrame = useSketchOffset((s) => s.frame);
+  const projectionFrame = useSketchProjection((s) => s.frame);
   const focused = useWorkspaceState((s) => s.layout !== "full");
   const [sizes, setSizes] = useState<CanvasSizeInput>({});
   const [rectangleMode, setRectangleMode] = useState<"corner" | "center">("corner");
@@ -245,7 +248,14 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
   const subscribedCanDelete = useCadStore(
     (s) => selectCommandEnablement(s).deleteSketchEntity,
   );
-  const canDelete = selectedIds.length > 0 && subscribedCanDelete;
+  const projectedGroups = useMemo(() => {
+    const sketch = document.sketches[active.sketchId];
+    return sketch?.projections?.map((projection) => ({ members: new Set(projection.members.map((member) => member.targetEntityId)), curves: projection.members.filter((member) => sketch.entities[member.targetEntityId]?.type !== "point").map((member) => member.targetEntityId) })) ?? [];
+  }, [document.sketches, active.sketchId]);
+  const selectedProjected = projectedGroups.some((group) => selectedIds.some((id) => group.members.has(id)));
+  const selectedSet = new Set(selectedIds);
+  const partialProjectedSelection = projectedGroups.some((group) => selectedIds.some((id) => group.members.has(id)) && !group.curves.every((id) => selectedSet.has(id)));
+  const canDelete = selectedIds.length > 0 && subscribedCanDelete && !partialProjectedSelection;
   const canSelectAll = useCadStore(
     (s) => selectCommandEnablement(s).selectAllSketchEntities,
   );
@@ -267,10 +277,10 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     sketch = document.sketches[active.sketchId];
   const deletionPlan = useMemo(
     () =>
-      selectedIds.length && selectedIds.every((id) => sketch?.entities[id])
+      !partialProjectedSelection && selectedIds.length && selectedIds.every((id) => sketch?.entities[id])
         ? planSketchEntitiesDeletion(sketch, selectedIds, document)
         : undefined,
-    [sketch, selectedIds, document],
+    [sketch, selectedIds, document, partialProjectedSelection],
   );
   useEffect(() => {
     if (selection && selection.document !== document)
@@ -417,7 +427,8 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
   const disabled =
     !context ||
     fileBusy ||
-    refinementBusy || contextualBusy || Boolean(trimFrame) || Boolean(replicationFrame) || Boolean(offsetFrame) ||
+    (selectedProjected && isDragTool) ||
+    refinementBusy || contextualBusy || Boolean(trimFrame) || Boolean(replicationFrame) || Boolean(offsetFrame) || Boolean(projectionFrame) ||
     (snap && !validGrid) ||
     context.solved.errors.some((e) => e.severity === "error");
   const snapFeedback =
@@ -941,6 +952,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
         <button type="button" aria-label="Mirror selected sketch geometry" disabled={!selectCommandEnablement(useCadStore.getState()).replicateSketch} onClick={() => { cancel(); void runCommand("sketch.mirror"); }}>Mirror</button>
         <button type="button" aria-label="Linear pattern selected sketch geometry" disabled={!selectCommandEnablement(useCadStore.getState()).replicateSketch} onClick={() => { cancel(); void runCommand("sketch.linearPattern"); }}>Pattern</button>
         <button type="button" aria-label="Offset sketch outline" disabled={!selectCommandEnablement(useCadStore.getState()).offsetSketch} onClick={() => { cancel(); void runCommand("sketch.offsetOutline"); }}>Offset</button>
+        <button type="button" aria-label="Project part edges into sketch" disabled={!selectCommandEnablement(useCadStore.getState()).projectSketchEdges} onClick={() => { cancel(); void runCommand("sketch.projectEdges"); }}>Project edges</button>
         <label>
           <input
             type="checkbox"
@@ -1343,12 +1355,14 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
               {drag.controls}
             </div>
           ) : null}
-          {dimensions.controls}
-          <ContextualSketchConstraints />
+          {!selectedProjected ? dimensions.controls : null}
+          {!selectedProjected ? <ContextualSketchConstraints /> : null}
           {trimFrame ? <SketchTrimExtendPanel key={trimFrame.active.sketchId} /> : null}
           {replicationFrame ? <SketchReplicationPanel /> : null}
           {offsetFrame ? <SketchOffsetPanel /> : null}
-          {constraints.controls}
+          {projectionFrame ? <SketchProjectionPanel /> : null}
+          <SketchProjectionLinks />
+          {!selectedProjected ? constraints.controls : null}
           <details open={!focused}>
             <summary>Drawing help</summary>
             <p>

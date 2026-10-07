@@ -1,0 +1,322 @@
+{
+  "schemaVersion": 15,
+  "id": "fixture-v15",
+  "name": "Schema 15 linked cover",
+  "units": "metric",
+  "unitSettings": {
+    "length": "mm",
+    "angle": "deg"
+  },
+  "displayUnits": {
+    "length": "mm",
+    "angle": "deg"
+  },
+  "createdAt": "2025-01-01T00:00:00.000Z",
+  "updatedAt": "2025-01-01T00:00:00.000Z",
+  "timelineCursor": 4,
+  "rootComponentId": "base-component",
+  "components": {
+    "base-component": {
+      "id": "base-component",
+      "name": "Base part"
+    },
+    "cover-component": {
+      "id": "cover-component",
+      "name": "Cover part"
+    }
+  },
+  "parameters": {
+    "width": {
+      "id": "projection-width-parameter",
+      "name": "width",
+      "expression": "30mm",
+      "value": 30,
+      "unit": "mm"
+    }
+  },
+  "sketches": {
+    "source-section": {
+      "id": "source-section",
+      "name": "Source rectangle",
+      "componentId": "base-component",
+      "plane": {
+        "type": "origin",
+        "plane": "XY"
+      },
+      "timelineStep": 1,
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "solveMode": "validate",
+      "entities": {
+        "source-p0": {
+          "id": "source-p0",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "construction": false
+        },
+        "source-p1": {
+          "id": "source-p1",
+          "type": "point",
+          "x": {
+            "expression": "width",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "construction": false
+        },
+        "source-p2": {
+          "id": "source-p2",
+          "type": "point",
+          "x": {
+            "expression": "width",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "20mm",
+            "unit": "mm"
+          },
+          "construction": false
+        },
+        "source-p3": {
+          "id": "source-p3",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "20mm",
+            "unit": "mm"
+          },
+          "construction": false
+        },
+        "source-l0": {
+          "id": "source-l0",
+          "type": "line",
+          "startPointId": "source-p0",
+          "endPointId": "source-p1",
+          "construction": false
+        },
+        "source-l1": {
+          "id": "source-l1",
+          "type": "line",
+          "startPointId": "source-p1",
+          "endPointId": "source-p2",
+          "construction": false
+        },
+        "source-l2": {
+          "id": "source-l2",
+          "type": "line",
+          "startPointId": "source-p2",
+          "endPointId": "source-p3",
+          "construction": false
+        },
+        "source-l3": {
+          "id": "source-l3",
+          "type": "line",
+          "startPointId": "source-p3",
+          "endPointId": "source-p0",
+          "construction": false
+        }
+      },
+      "constraints": [],
+      "dimensions": []
+    },
+    "cover-section": {
+      "id": "cover-section",
+      "name": "Linked cover outline",
+      "componentId": "cover-component",
+      "plane": {
+        "type": "offset",
+        "base": "XY",
+        "offset": {
+          "expression": "12mm",
+          "unit": "mm"
+        }
+      },
+      "timelineStep": 3,
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "solveMode": "driving",
+      "entities": {
+        "cover-p0": {
+          "id": "cover-p0",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "construction": false
+        },
+        "cover-p1": {
+          "id": "cover-p1",
+          "type": "point",
+          "x": {
+            "expression": "30mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "construction": false
+        },
+        "cover-p2": {
+          "id": "cover-p2",
+          "type": "point",
+          "x": {
+            "expression": "30mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "20mm",
+            "unit": "mm"
+          },
+          "construction": false
+        },
+        "cover-p3": {
+          "id": "cover-p3",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "20mm",
+            "unit": "mm"
+          },
+          "construction": false
+        },
+        "cover-l0": {
+          "id": "cover-l0",
+          "type": "line",
+          "startPointId": "cover-p0",
+          "endPointId": "cover-p1",
+          "construction": false
+        },
+        "cover-l1": {
+          "id": "cover-l1",
+          "type": "line",
+          "startPointId": "cover-p1",
+          "endPointId": "cover-p2",
+          "construction": false
+        },
+        "cover-l2": {
+          "id": "cover-l2",
+          "type": "line",
+          "startPointId": "cover-p2",
+          "endPointId": "cover-p3",
+          "construction": false
+        },
+        "cover-l3": {
+          "id": "cover-l3",
+          "type": "line",
+          "startPointId": "cover-p3",
+          "endPointId": "cover-p0",
+          "construction": false
+        }
+      },
+      "constraints": [
+        {
+          "id": "projection:linked-cover:fixed",
+          "type": "fixed",
+          "entityIds": [
+            "cover-p0",
+            "cover-p1",
+            "cover-p2",
+            "cover-p3"
+          ]
+        }
+      ],
+      "dimensions": [],
+      "projections": [
+        {
+          "id": "linked-cover",
+          "sourceFeatureId": "base",
+          "role": "endCapPerimeter",
+          "construction": false,
+          "members": [
+            {
+              "sourceEntityId": "source-p0",
+              "targetEntityId": "cover-p0"
+            },
+            {
+              "sourceEntityId": "source-p1",
+              "targetEntityId": "cover-p1"
+            },
+            {
+              "sourceEntityId": "source-p2",
+              "targetEntityId": "cover-p2"
+            },
+            {
+              "sourceEntityId": "source-p3",
+              "targetEntityId": "cover-p3"
+            },
+            {
+              "sourceEntityId": "source-l0",
+              "targetEntityId": "cover-l0"
+            },
+            {
+              "sourceEntityId": "source-l1",
+              "targetEntityId": "cover-l1"
+            },
+            {
+              "sourceEntityId": "source-l2",
+              "targetEntityId": "cover-l2"
+            },
+            {
+              "sourceEntityId": "source-l3",
+              "targetEntityId": "cover-l3"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "features": [
+    {
+      "id": "base",
+      "name": "Base",
+      "type": "extrude",
+      "componentId": "base-component",
+      "sketchId": "source-section",
+      "profileId": "source-section:profile:rectangle",
+      "operation": "newBody",
+      "distance": {
+        "expression": "8mm",
+        "unit": "mm"
+      },
+      "direction": "positive",
+      "timelineStep": 2,
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "cover",
+      "name": "Cover",
+      "type": "extrude",
+      "componentId": "cover-component",
+      "sketchId": "cover-section",
+      "profileId": "cover-section:profile:rectangle",
+      "operation": "newBody",
+      "distance": {
+        "expression": "2mm",
+        "unit": "mm"
+      },
+      "direction": "positive",
+      "timelineStep": 4,
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    }
+  ]
+}

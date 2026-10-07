@@ -111,6 +111,8 @@ export function planFeatureGraph(document: CadDocument): FeatureGraphPlan {
     for (const id of targets)
       depth = Math.max(depth, 1 + (bodyDepths.get(id) ?? 0));
     if ("sketchId" in feature) {
+      for (const projection of document.sketches[feature.sketchId]?.projections ?? [])
+        depth = Math.max(depth, 1 + (featureDepths.get(projection.sourceFeatureId) ?? 0));
       const plane = document.sketches[feature.sketchId]?.plane;
       const ref =
         plane?.type === "face"

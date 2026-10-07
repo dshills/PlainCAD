@@ -1,3 +1,4 @@
+import { assertEditableGeometry } from "./projectedGeometry";
 import { ConstraintType, ExpressionRef, OriginPlane, Sketch, SketchPlaneReference } from "../document/schema";
 import { createId } from "../document/ids";
 import { originPlaneRef } from "./planes";
@@ -116,6 +117,7 @@ export function addConstraint(
   type: ConstraintType,
   input: { entityIds?: string[]; pointIds?: string[] },
 ): Sketch {
+  assertEditableGeometry(sketch, [...(input.entityIds ?? []), ...(input.pointIds ?? [])]);
   return {
     ...sketch,
     constraints: [
@@ -162,6 +164,7 @@ export function setConstruction(
   entityId: string,
   construction: boolean,
 ): Sketch {
+  assertEditableGeometry(sketch, [entityId]);
   const entity = sketch.entities[entityId];
   return entity
     ? {

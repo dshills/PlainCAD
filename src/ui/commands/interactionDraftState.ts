@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { useInspectionState } from "../../state/inspectionState";
+import { useSketchProjection } from "./sketchProjectionState";
 import type { SolidDimensionEditFrame } from "./solidDimensionCommand";
 import type { SketchRefinementFrame } from "./sketchRefinementCommand";
 import type { ContextualConstraintFrame } from "./contextualConstraintCommand";
@@ -20,10 +21,11 @@ export const useSketchTrimExtend = create<{ frame?: SketchTrimExtendFrame; mode:
 export const useFacePocket = create<{ frame?: FacePocketFrame }>(() => ({}));
 export const useFeaturePattern = create<{ frame?: FeaturePatternFrame }>(() => ({}));
 
-export type InteractionDraftOwner = "solidDimension" | "sketchRefinement" | "constraint" | "trimExtend" | "facePocket" | "replication" | "featureAddition" | "offset" | "pattern";
+export type InteractionDraftOwner = "solidDimension" | "sketchRefinement" | "constraint" | "trimExtend" | "facePocket" | "replication" | "featureAddition" | "offset" | "pattern" | "projection";
 /** Each draft can inspect competing owners without counting its own frame. */
 export function interactionDraftBusy(owner?: InteractionDraftOwner) {
   return Boolean(
+    (owner !== "projection" && useSketchProjection.getState().frame) ||
     (owner !== "pattern" && useFeaturePattern.getState().frame) ||
     useInspectionState.getState().picking ||
     (owner !== "solidDimension" && useSolidDimensionEdit.getState().frame) ||

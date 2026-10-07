@@ -1,3 +1,4 @@
+import { assertEditableGeometry } from "./projectedGeometry";
 import type { Sketch } from "../document/schema";
 import { collectExpressionDependencies } from "../parameters/expressionEvaluator";
 import type { CanvasPoint } from "./canvasGeometry";
@@ -58,6 +59,7 @@ export function movedCanvasPoint(
   pointId: string,
   target: CanvasPoint,
 ): Sketch {
+  assertEditableGeometry(sketch, [pointId]);
   const reason = canvasPointMoveReason(sketch, pointId);
   if (reason) throw new Error(reason);
   if (

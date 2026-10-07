@@ -125,6 +125,7 @@ test("production CSP: controlled current-native-model and validated STL download
     Number.isFinite(coldLoadToFirstModelMs) && coldLoadToFirstModelMs >= 0,
   ).toBe(true);
   const measurements = page.getByRole("region", { name: "Measurements" });
+  await measurements.getByText("Choose sketch geometry by name", { exact: true }).click();
   await measurements
     .getByLabel("Measurement first point")
     .selectOption({ label: "Benchmark base — point 1" });

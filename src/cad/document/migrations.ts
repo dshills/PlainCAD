@@ -19,6 +19,10 @@ const migrations = new Map<number, Migration>([
   [11, migrateV11ToV12],
   [12, migrateV12ToV13],
   [13, (document) => ({ ...document, schemaVersion: 14 })],
+  [14, (document) => ({ ...document, schemaVersion: 15, sketches: Object.fromEntries(Object.entries(document.sketches).map(([id, sketch]) => {
+    const { projections: _projections, ...legacy } = sketch;
+    return [id, legacy];
+  })) })],
 ]);
 
 function migrateV12ToV13(document: CadDocument): CadDocument {
@@ -244,6 +248,7 @@ function sanitizeSketch(sketch: Sketch): Sketch {
   return {
     id: sketchRecord.id,
     name: sketchRecord.name,
+    ...(sketchRecord.projections !== undefined ? { projections: sanitizeProjections(sketchRecord.projections) } : {}),
     ...(sketchRecord.componentId !== undefined ? { componentId: sketchRecord.componentId } : {}),
     plane: normalizePlaneReference(sketchRecord.plane),
     ...(sketchRecord.solveRevision !== undefined
@@ -304,6 +309,23 @@ function sanitizeSketch(sketch: Sketch): Sketch {
         }) as Sketch["dimensions"])
       : [],
   };
+}
+
+function sanitizeProjections(value: unknown): NonNullable<Sketch["projections"]> {
+  if (!Array.isArray(value) || value.length > 32) throw new Error("Malformed or excessive sketch projections.");
+  return value.map((projection) => {
+    if (!isRecord(projection) || typeof projection.id !== "string" || !projection.id ||
+      typeof projection.sourceFeatureId !== "string" || !projection.sourceFeatureId ||
+      !["startCapPerimeter", "endCapPerimeter"].includes(projection.role) || typeof projection.construction !== "boolean" ||
+      !Array.isArray(projection.members) || !projection.members.length || projection.members.length > 256)
+      throw new Error("Malformed sketch projection. Reselect a complete supported cap boundary.");
+    return { id: projection.id, sourceFeatureId: projection.sourceFeatureId, role: projection.role,
+      construction: projection.construction, members: projection.members.map((member: unknown) => {
+        if (!isRecord(member) || typeof member.sourceEntityId !== "string" || !member.sourceEntityId || typeof member.targetEntityId !== "string" || !member.targetEntityId)
+          throw new Error("Malformed sketch projection member.");
+        return { sourceEntityId: member.sourceEntityId, targetEntityId: member.targetEntityId };
+      }) };
+  });
 }
 
 function sanitizeEntity(value: unknown): unknown {

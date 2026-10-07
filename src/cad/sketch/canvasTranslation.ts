@@ -1,3 +1,4 @@
+import { assertEditableGeometry } from "./projectedGeometry";
 import type { Sketch } from "../document/schema";
 import { collectExpressionDependencies } from "../parameters/expressionEvaluator";
 import type { CanvasPoint } from "./canvasGeometry";
@@ -154,6 +155,7 @@ export function translatedCanvasGroup(
 ) {
   const group = canvasTranslationGroup(sketch, solved, pointId);
   if (group.reason) throw new Error(group.reason);
+  assertEditableGeometry(sketch, [pointId, ...group.pointIds]);
   const anchor = solved.points[pointId],
     dx = target.x - anchor.x,
     dy = target.y - anchor.y;

@@ -1,4 +1,4 @@
-export const CURRENT_SCHEMA_VERSION = 14;
+export const CURRENT_SCHEMA_VERSION = 15;
 
 export type UnitSystem = "metric" | "imperial";
 
@@ -75,6 +75,8 @@ export interface FacePlaneReference {
 }
 
 export interface Sketch {
+  /** Associative copies of complete authored cap boundaries; generated members are read-only. */
+  projections?: SketchProjection[];
   componentId?: string;
   id: string;
   name: string;
@@ -87,6 +89,14 @@ export interface Sketch {
   /** Version 6 and earlier dimensions were checks; migration preserves that intent. */
   solveMode?: "driving" | "validate";
   solveRevision?: number;
+}
+
+export interface SketchProjection {
+  id: string;
+  sourceFeatureId: string;
+  role: "startCapPerimeter" | "endCapPerimeter";
+  construction: boolean;
+  members: Array<{ sourceEntityId: string; targetEntityId: string }>;
 }
 
 export type SketchEntity = SketchPoint | SketchLine | SketchCircle | SketchArc;

@@ -124,6 +124,8 @@ export function buildDependencyGraph(document: CadDocument): DependencyGraph {
   const absorbed = new Map<string, string>();
   for (const item of documentTimeline(document)) {
     if (item.kind === "sketch") {
+      for (const projection of item.sketch.projections ?? [])
+        connect(reference("feature", projection.sourceFeatureId), dependencyKey("sketch", item.sketch.id), "Projected cap boundary");
       const p = item.sketch.plane,
         face =
           p.type === "face"

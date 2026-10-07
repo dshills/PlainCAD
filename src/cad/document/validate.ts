@@ -101,6 +101,34 @@ export function validateDocument(document: CadDocument, mode: "modeling" | "stor
         message: "Sketch key does not match its id.",
       });
     addId(sketch.id, "sketch");
+    if (sketch.projections !== undefined) {
+      if (!Array.isArray(sketch.projections) || sketch.projections.length > 32) {
+        issues.push({ source: "sketch", sourceId: sketch.id, message: "Sketch projections exceed the resource limit or are malformed." });
+      } else {
+        const used = new Set<string>();
+        for (const projection of sketch.projections) {
+          if (!projection || typeof projection.id !== "string" || !projection.id || typeof projection.sourceFeatureId !== "string" || !projection.sourceFeatureId ||
+            !["startCapPerimeter", "endCapPerimeter"].includes(projection.role) || typeof projection.construction !== "boolean" ||
+            !Array.isArray(projection.members) || !projection.members.length || projection.members.length > 256) {
+            issues.push({ source: "sketch", sourceId: sketch.id, message: "Malformed sketch projection." });
+            continue;
+          }
+          addId(projection.id, "sketch");
+          const owner = document.features.find((feature) => feature.id === projection.sourceFeatureId);
+          if (mode === "modeling" && (!owner || owner.type !== "extrude" || owner.suppressed || owner.operation !== "newBody" || (owner.termination && owner.termination.type !== "distance")))
+            issues.push({ source: "sketch", sourceId: sketch.id, message: "Projected boundary owner is missing or unsupported. Repair its source or remove the projection link." });
+          const sources = new Set<string>();
+          for (const member of projection.members) {
+            if (!member || typeof member.sourceEntityId !== "string" || !member.sourceEntityId || typeof member.targetEntityId !== "string" || !member.targetEntityId || sources.has(member.sourceEntityId) || used.has(member.targetEntityId)) {
+              issues.push({ source: "sketch", sourceId: sketch.id, message: "Malformed or duplicate sketch projection member." });
+              continue;
+            }
+            sources.add(member.sourceEntityId); used.add(member.targetEntityId);
+            if (mode === "modeling" && !sketch.entities[member.targetEntityId]) issues.push({ source: "sketch", sourceId: sketch.id, message: "Projected geometry is missing. Delete its link or reselect the boundary." });
+          }
+        }
+      }
+    }
     const planeValid = (plane: unknown): boolean => {
       if (!plane || typeof plane !== "object") return false;
       const p = plane as Record<string, unknown>;

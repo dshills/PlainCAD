@@ -66,12 +66,19 @@ export function planSketchEntitiesDeletion(
   if (!selectedIds.length)
     throw new Error("Select sketch geometry before deleting.");
   const entityIds = new Set(selectedIds);
+  for (const projection of sketch.projections ?? []) {
+    const present = projection.members.map((member) => member.targetEntityId).filter((id) => sketch.entities[id]);
+    if (!present.some((id) => entityIds.has(id))) continue;
+    const curves = present.filter((id) => sketch.entities[id].type !== "point");
+    if (!curves.every((id) => entityIds.has(id))) throw new Error("Delete the complete linked projection, or break its link before deleting individual geometry.");
+    present.forEach((id) => entityIds.add(id));
+  }
   for (const id of entityIds) {
     if (!sketch.entities[id])
       throw new Error("Sketch item was removed. Select a current item.");
   }
   const selectedPoints = new Set(
-    selectedIds.filter((id) => sketch.entities[id].type === "point"),
+    [...entityIds].filter((id) => sketch.entities[id].type === "point"),
   );
   for (const candidate of Object.values(sketch.entities)) {
     if (pointReferences(candidate).some((id) => selectedPoints.has(id)))
@@ -161,6 +168,7 @@ export function deleteSketchEntities(
       (c) => !plan.constraintIds.has(c.id),
     ),
     dimensions: sketch.dimensions.filter((d) => !plan.dimensionIds.has(d.id)),
+    ...(sketch.projections ? { projections: sketch.projections.filter((p) => !p.members.some((m) => plan.entityIds.has(m.targetEntityId))) } : {}),
   };
 }
 

@@ -9,14 +9,11 @@ missing or the count cannot be determined, establish a baseline with the full ga
 ## Last successful full gate
 
 - Date: 2026-10-07.
-- Change: Direct Finish Sketch preview and clear startup canvas, commit `3f5987f` (including the additional starter-card removal).
-- Result: type checks, build/bundle budget, 1032 unit/component tests,
-  all 242 development browser cases verified, and 30 production browser tests passed.
-  The development run had 240 passes and two outdated test steps; both corrected
-  files passed their 3-case rerun. Production completed separately after that fix.
-  Only test steps changed; runtime sources stayed frozen throughout validation.
-- Completed items since that full gate: **4**.
-- Next full gate: item **5**, after one more completed item.
+- Change: Associative native sketch projection, including the preceding edge-proof cache, click measurement and feature-pattern items.
+- Result: type checks, 1071 unit/component tests, build/bundle budget (largest 445.60 kB), all 251 development browser cases and all 32 production browser cases verified.
+  The complete release invocation passed development and initially had two production test-step failures. After test-only fixes, the complete production rerun passed 31 cases; the remaining projection case passed its final focused rerun (3.9s). Final type checks passed. Application sources remained unchanged throughout these runs.
+- Completed items since that full gate: **0**.
+- Next full gate: after **5** more completed items.
 
 ## Completed batch
 
@@ -103,3 +100,11 @@ The exact commit checkout verified every `check:item` stage: type checks, 1050 u
 Prism `b148ba44a3b4d8b5f2f0a55281809006` reviewed all 31 isolated files using Anthropic `claude-sonnet-5-5`; no high findings. Its arc-test medium was clarified: envelopes are intentionally conservative, and the regression now checks enclosure of the actual semicircle extrema despite narrower sampled bounds. Fixup `bdc97b604b40fcb00059c66ec2d8c8de` found no high/medium issues. Remaining low notes were assessed: featureGraph already enforces upstream ordering; schema14 has a separate real-pattern production fixture, while legacy box fixtures stop at13. Typed field retention and the bound feature lookup follow the validated schema/upsert contracts. Native tests independently prove invalid-cut diagnostics.
 
 `npm run check:item` passed on the isolated checkout: type checks, 1059 unit/component tests, build/bundle budget (largest 439.39 kB), 5 development and 14 production smoke tests. The clarified bounds test passed its 9-test focused rerun on unchanged runtime sources. All 3 native pattern cases and the additional built-app schema14 case passed, covering linear Holes, YZ circular pockets, source/count parameter changes, undo, save/open, STL and overlap/no-op refusal. Native BRep mass uses 1e-8 relative precision; the production three-decimal readout has its explicit rounding allowance.
+
+### Item 5: associative native sketch projection
+
+Prism reviewed the isolated projection implementation with Anthropic `claude-sonnet-5-5`; final command review `2ea20756786519b77653f3b6f36c26f3` has no findings. Earlier actionable current-result, read-only edit, lost-source diagnostic and no-op completion findings were fixed. Required dimension-reference types and complete document-timeline enumeration disproved the remaining medium notes. Production-test review `a02f1bb4c57a8128c250e3a06a1b7cf8` has no high/medium findings; disclosure currency, nonempty fixture intent and positive-winding/relative STL-volume checks were improved. Low formatting/cwd notes were assessed against the npm scripts and fixed analytic fixture. Native BRep volume assertions remain exact to the displayed precision; mesh tolerance is separate.
+
+The full checkpoint verified type checks, all 1071 unit/component tests, the production build/bundle budget (445.60 kB largest), all 251 development cases and all 32 production cases. The original release command exposed a collapsed measurement disclosure and outdated body-selection steps in production tests. The complete production rerun passed 31 cases; the remaining linked-cover test passed after fixing its component body label, JSON key-order comparison and automatic export-dialog closure. Its final reviewed test and type checks passed again. Runtime sources stayed frozen. This verifies all full-gate stages and resets cadence; CI still runs the complete release command from a clean checkout.
+
+Projection native acceptance proves source edits update linked geometry, save/open preserves links and IDs, unsupported oblique boundaries fail explicitly, and repair/break/remove use the current model. The production schema-15 fixture verifies two independent native solids, cover volume following width edits, coordinate orientation, saved links and multibody STL.

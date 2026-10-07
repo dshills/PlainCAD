@@ -1,3 +1,4 @@
+import { assertEditableGeometry } from "./projectedGeometry";
 import { normalizeQuantity } from "../parameters/units";
 import { MIN_ENTITY_SIZE } from "./tolerances";
 import type { Sketch, SketchDimension, UnitSettings } from "../document/schema";
@@ -64,6 +65,8 @@ export function withCanvasDimension(
   sketch: Sketch,
   input: CanvasDimensionInput,
 ): Sketch {
+  const references = input.id ? sketch.dimensions.find((dimension) => dimension.id === input.id) : undefined;
+  assertEditableGeometry(sketch, references ? [...references.entityIds, ...(references.pointIds ?? [])] : input.refs);
   if (!input.expression.trim())
     throw new Error("Dimension expression is required.");
   if (input.id) {
