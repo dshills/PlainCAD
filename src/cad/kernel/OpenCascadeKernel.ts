@@ -11,6 +11,7 @@ import {
   TessellationOptions,
   ResolvedRevolveAxis,
   GeometryAssertions,
+  AvailableCapEdge,
 } from "./KernelAdapter";
 import {
   computeNormals,
@@ -91,6 +92,16 @@ type KernelHandle =
       tool: KernelHandle;
       occtShape?: unknown;
     };
+
+/** Expected unsupported geometry differs from an unexpected native probe failure. */
+class EdgeReferenceUnavailableError extends Error {}
+
+interface NativeEdgeCandidate {
+  edge: any;
+  curveType: number;
+  fullCircle: boolean;
+  points: Array<{ x: number; y: number; z: number }>;
+}
 
 function fallbackCut(
   base: KernelHandle,
@@ -638,20 +649,78 @@ export class OpenCascadeKernel implements KernelAdapter {
     }
   }
 
-  private resolveNativeEdges(
-    handle: KernelHandle,
-    refs: TopologyRef[],
-    scope: DisposableScope,
-  ): any[] {
-    const oc = OpenCascadeKernel.openCascade!;
+  /** Probe contours without building or modifying geometry. A face alone never
+   * establishes that its complete original perimeter survived a boolean. */
+  availableExtrudeCapEdges(shape: KernelShape): AvailableCapEdge[] {
+    const oc = OpenCascadeKernel.openCascade;
+    const handle = shape.kernelHandle as KernelHandle;
+    if (!oc || !handle.occtShape) return [];
     let source = handle;
-    while (source.kind === "fillet" || source.kind === "chamfer" || source.kind === "boolean")
-      source = source.base;
-    if (source.kind !== "extrusion" || !source.transform)
-      throw new Error(
-        "Edge reference requires repair: its source is no longer a supported distance extrusion.",
-      );
-    const transform = source.transform;
+    while (source.kind === "fillet" || source.kind === "chamfer" || source.kind === "boolean") source = source.base;
+    if (source.kind !== "extrusion" || !source.transform) return [];
+    const segments = authoredBoundarySegments(source.profile);
+    if (!segments.length) return [];
+    return withDisposableScope((scope) => {
+      const candidates = this.nativeEdgeCandidates(handle, scope);
+      const available: AvailableCapEdge[] = [];
+      for (const role of ["endCapPerimeter", "startCapPerimeter"] as const) {
+        let complete = true;
+        const matches: Array<{ sourceEntityId: string; edge: any }> = [];
+        for (const segment of segments) {
+          try {
+            const ref: TopologyRef = { featureId: "probe", kind: "edge", transientId: "probe", role, sourceEntityId: segment.id };
+            const edges = this.resolveNativeEdges(handle, [ref], scope, candidates);
+            if (edges.length !== 1) throw new EdgeReferenceUnavailableError("Authored edge is ambiguous.");
+            matches.push({ sourceEntityId: segment.id, edge: edges[0] });
+          } catch (error) {
+            if (!(error instanceof EdgeReferenceUnavailableError)) throw error;
+            complete = false;
+          }
+        }
+        if (matches.length === 0) continue;
+        const fillet = scope.use(new oc.BRepFilletAPI_MakeFillet(handle.occtShape, oc.ChFi3d_FilletShape.ChFi3d_Rational));
+        const chamfer = scope.use(new oc.BRepFilletAPI_MakeChamfer(handle.occtShape));
+        for (const match of matches) {
+          // Remove each temporary contour before the next probe. Reusing the
+          // expensive native shape index must not retain previous contour state.
+          const contour = withDisposableScope((probeScope) => {
+            let single = true;
+            let coversAll = true;
+            for (const builder of [fillet, chamfer]) {
+              try {
+                builder.Add_2(1, match.edge);
+                const index = builder.Contour(match.edge);
+                if (index === 0) return { sharp: false, original: false, single: false, coversAll: false };
+                const count = builder.NbEdges(index);
+                if (count !== 1) single = false;
+                if (count !== matches.length) coversAll = false;
+                for (let edgeIndex = 1; edgeIndex <= count; edgeIndex++) {
+                  const edge = probeScope.use(builder.Edge(index, edgeIndex));
+                  if (!matches.some((original) => original.edge.IsSame(edge)))
+                    return { sharp: true, original: false, single: false, coversAll: false };
+                }
+              } finally {
+                builder.Remove(match.edge);
+              }
+            }
+            return { sharp: true, original: true, single, coversAll };
+          });
+          if (!contour.sharp || !contour.original) complete = false;
+          if (contour.sharp && contour.original && contour.single)
+            available.push({ role, sourceEntityId: match.sourceEntityId });
+          // Both native contours proved every original cap edge is in the same
+          // complete chain. Offer its group once rather than reindexing that
+          // identical contour for every segment; no single-edge target is safe.
+          if (contour.sharp && contour.original && !contour.single && contour.coversAll) break;
+        }
+        if (complete) available.push({ role });
+      }
+      return available;
+    });
+  }
+
+  private nativeEdgeCandidates(handle: KernelHandle, scope: DisposableScope): NativeEdgeCandidate[] {
+    const oc = OpenCascadeKernel.openCascade!;
     const explorer = scope.use(
       new oc.TopExp_Explorer_2(
         handle.occtShape,
@@ -659,11 +728,7 @@ export class OpenCascadeKernel implements KernelAdapter {
         oc.TopAbs_ShapeEnum.TopAbs_SHAPE,
       ),
     );
-    const candidates: Array<{
-      edge: any;
-      fullCircle: boolean;
-      points: Array<{ x: number; y: number; z: number }>;
-    }> = [];
+    const candidates: NativeEdgeCandidate[] = [];
     for (; explorer.More(); explorer.Next()) {
       const current = scope.use(explorer.Current());
       const edge = scope.use(oc.TopoDS.Edge_1(current));
@@ -683,8 +748,27 @@ export class OpenCascadeKernel implements KernelAdapter {
           return { x: p.X(), y: p.Y(), z: p.Z() };
         });
       });
-      candidates.push({ edge, points, fullCircle: curve.GetType().value === oc.GeomAbs_CurveType.GeomAbs_Circle.value && Math.abs(last - first - Math.PI * 2) < 1e-7 });
+      candidates.push({ edge, points, curveType: curve.GetType().value, fullCircle: curve.GetType().value === oc.GeomAbs_CurveType.GeomAbs_Circle.value && Math.abs(last - first - Math.PI * 2) < 1e-7 });
     }
+    return candidates;
+  }
+
+  private resolveNativeEdges(
+    handle: KernelHandle,
+    refs: TopologyRef[],
+    scope: DisposableScope,
+    existingCandidates?: NativeEdgeCandidate[],
+  ): any[] {
+    const oc = OpenCascadeKernel.openCascade!;
+    let source = handle;
+    while (source.kind === "fillet" || source.kind === "chamfer" || source.kind === "boolean")
+      source = source.base;
+    if (source.kind !== "extrusion" || !source.transform)
+      throw new EdgeReferenceUnavailableError(
+        "Edge reference requires repair: its source is no longer a supported distance extrusion.",
+      );
+    const transform = source.transform;
+    const candidates = existingCandidates ?? this.nativeEdgeCandidates(handle, scope);
     const selected: any[] = [];
     const segments = authoredBoundarySegments(source.profile);
     // A grouped perimeter requires every original edge to survive. New boolean
@@ -696,10 +780,10 @@ export class OpenCascadeKernel implements KernelAdapter {
     );
     for (const ref of authoredRefs) {
       if (ref.repairRequired || ref.kind !== "edge")
-        throw new Error("Edge reference requires repair.");
+        throw new EdgeReferenceUnavailableError("Edge reference requires repair.");
       const segment = segments.find((s) => s.id === ref.sourceEntityId);
       const height = ref.role === "startCapPerimeter" ? 0 : source.distance;
-      const matches = candidates.filter(({ points, fullCircle }) => {
+      const matches = candidates.filter(({ points, fullCircle, curveType }) => {
         if (ref.role === "profileEdge") {
           if (!segment || segment.type !== "line") return false;
           return [segment.start, segment.end].some((p) => {
@@ -725,6 +809,7 @@ export class OpenCascadeKernel implements KernelAdapter {
           return false;
         if (!ref.sourceEntityId) return true;
         if (!segment) return false;
+        if (curveType !== (segment.type === "line" ? oc.GeomAbs_CurveType.GeomAbs_Line.value : oc.GeomAbs_CurveType.GeomAbs_Circle.value)) return false;
         if (segment.type === "arc" && Math.abs(Math.abs(segment.sweep) - Math.PI * 2) < 1e-7) {
           // All points passed the cap-plane membership check above.
           // Native circle seams depend on the plane basis. Match the complete
@@ -770,7 +855,7 @@ export class OpenCascadeKernel implements KernelAdapter {
           ref.role !== "profileEdge" &&
           matches.length !== 1)
       )
-        throw new Error(
+        throw new EdgeReferenceUnavailableError(
           "Edge reference was lost or is ambiguous. Reselect the current feature-owned perimeter.",
         );
       for (const match of matches)
@@ -778,7 +863,7 @@ export class OpenCascadeKernel implements KernelAdapter {
           selected.push(match.edge);
     }
     if (!selected.length)
-      throw new Error("Select at least one supported extrusion edge.");
+      throw new EdgeReferenceUnavailableError("Select at least one supported extrusion edge.");
     return selected;
   }
 

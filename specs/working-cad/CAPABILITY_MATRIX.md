@@ -186,8 +186,9 @@ multiple valid solids in one stable target-body compound. Empty cuts fail explic
 Only retained authored edges/cap perimeters can survive supported boolean
 modifications. Treatment chains may select remaining cap perimeters or unchanged
 source edges; changed, trimmed or missing boundaries require explicit reselection.
-The operation-token picker remains limited to untouched owners and complete
-authored cap boundaries. Arbitrary transient BRep edge picks are unavailable.
+The operation-token picker uses native proofs of original sharp cap boundaries
+on extrusion or supported Cut/Join results. Whole-cap groups require every
+original edge; arbitrary transient BRep edge picks are unavailable.
 
 ## Measurement and inspection
 
@@ -977,12 +978,16 @@ pointer gesture. Choose a target, inspect the native preview, then explicitly Ap
 Cancel changes no project data; Apply retains one Undo step.
 
 Extrude accepts current closed sketch regions in the visible active component.
-Fillet/Chamfer drop targets are limited to untouched native distance/new-body Extrude
-owners and their original start/end cap-perimeter groups or individual complete
-authored line/arc/circle cap edges. Individual viewer picks take precedence over
-the coincident whole-cap group; an exact keyboard card resolves ambiguous picks.
-Split authored edges, boolean-created topology, vertical side edges and modified
-owners are unavailable in this picker. Ambiguous or detailed targets can
+Fillet/Chamfer drop targets require native distance/new-body Extrude owners and
+their original start/end cap-perimeter groups or individual unchanged authored
+line/arc/circle cap edges. Native matching permits retained edges after Cut/Join.
+Groups require every original edge to survive; individual targets require a
+single-edge sharp contour for both treatments. Contours that propagate beyond
+original cap boundaries are excluded. Individual viewer picks take precedence
+over the coincident whole-cap group; an exact keyboard card resolves ambiguity.
+Split/trimmed edges, boolean-created topology, vertical sides and smooth or
+ambiguous boundaries are unavailable. Final Fillet/Chamfer body results and
+Revolve/to-face origins are excluded from this picker. Ambiguous or detailed targets can
 be selected by their exact card. At most 128 targets are offered; viewer overlays
 pre-bound sampled vertices to 8192 per target and 65536 total.
 
@@ -1096,3 +1101,23 @@ sketch edits and other layouts retain their prior finish behavior. Preview
 creation leaves history unchanged; Apply publishes, Cancel discards, and the
 consumed handoff source cannot reopen a canceled preview. Native XY/XZ tests
 verify exact bounds/volume, cancellation, save/open and STL.
+
+## Retained native edge picking
+
+Rebuild results carry bounded, handle-free runtime edge proofs outside project
+JSON. Both treatment contours must match original sharp boundaries on the current
+final body. Each probe clears contour state; a fully proven original tangent
+chain is offered once as a group, avoiding repeated native indexing. Unexpected
+probe failures produce source-linked warnings while preserving validated solids.
+Native XY/XZ/YZ viewer picks verify changed exact fillet/chamfer volume after
+Cut/Join, parameter edits, stale same-ID replacement guards, save/open and STL
+orientation. Split groups, smooth seams and propagated individual targets are
+excluded. The public picker remains capped at 128 filtered targets.
+
+Edge proofs run eagerly in the geometry worker so availability belongs to the
+exact current rebuild. This adds rebuild work rather than render-frame work.
+The 2026-10-07 controlled small-model sample reported worker rebuild p95 117.2ms;
+the 64-edge tangent-contour regression took about 1.3s. Resource checks passed,
+but these workloads do not establish a latency budget for large parts. Adapters
+without native edge proofs conservatively offer no targets; the shipped native
+adapter implements the probe, and fallback meshes never authorize edge picking.

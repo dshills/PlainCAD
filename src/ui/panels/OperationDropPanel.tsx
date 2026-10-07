@@ -174,7 +174,7 @@ export function OperationDropPanel() {
           {frame.operation !== "extrude" ? (
             <p className="muted">
               Click an individual highlighted cap edge, or choose an entire
-              perimeter below. Only untouched distance-extrusion owners are offered.
+              perimeter below. Original sharp edges retained after Cut or Join are offered; split, changed, smooth, and ambiguous edges are unavailable.
             </p>
           ) : null}
           <p

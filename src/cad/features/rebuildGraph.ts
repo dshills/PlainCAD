@@ -1,3 +1,4 @@
+import { currentNativeEdges } from "./nativeEdgeTargets";
 import { currentNativeFaces, nativeSketchPlaneValidator } from "./nativeSketchPlanes";
 import { absorbedBodyIds, targetBodyIds } from "../document/bodyScopes";
 import { extrusionSweep, throughAllDistance } from "./extrusionSweep";
@@ -524,6 +525,7 @@ export function rebuildDocument(
         "Model exceeds the total triangle resource limit. Simplify or suppress bodies.",
     });
   const availableFaces = nativeReferences ? currentNativeFaces(planes.faces, kernel, runtimeBodies, failedBodies) : undefined;
+  const availableEdges = nativeReferences ? currentNativeEdges(document, kernel, runtimeBodies, failedBodies, warnings) : undefined;
   let disposalFailures = 0;
   shapesToDispose.forEach((shape) => {
     try {
@@ -549,6 +551,7 @@ export function rebuildDocument(
     ),
     sketchPlanes: Object.fromEntries(planes.transforms),
     ...(availableFaces !== undefined ? { availableFaces } : {}),
+    ...(availableEdges !== undefined ? { availableEdges } : {}),
     parameterValues: evaluated.values,
     ...(capturedTargetBodyIds !== undefined ? { capturedTargetBodyIds } : {}),
     metrics: {

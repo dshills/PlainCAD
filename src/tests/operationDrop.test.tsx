@@ -1,3 +1,4 @@
+import { currentNativeEdges } from "../cad/features/nativeEdgeTargets";
 import {
   act,
   cleanup,
@@ -326,17 +327,18 @@ it("reports missing cap profiles and boundary loops without throwing lookup Type
 });
 it("reserves whole-cap targets for later owners when individual edges fill the target budget", async () => {
   await fixture();
-  let sketch = createXySketch("Detailed polygon");
-  const points: string[] = [];
-  for (let index = 0; index < 64; index++) {
-    const angle = index * Math.PI / 32;
-    const point = addPoint(sketch, `${(100 + 10 * Math.cos(angle)).toFixed(10)}mm`, `${(10 * Math.sin(angle)).toFixed(10)}mm`);
-    sketch = point.sketch; points.push(point.pointId);
+  let document = useCadStore.getState().history.present;
+  const detailedIds: string[] = [];
+  // Sharp independent rectangles fill the target budget. A finely segmented
+  // polygon can form a tangent chain, which is offered only as a complete group.
+  for (let index = 0; index < 14; index++) {
+    const base = createXySketch(`Detailed owner ${index}`);
+    const sketch = addCanvasGeometry(base, solveSketch(base, {}), "rectangle", [{ x: 100 + index * 30, y: -5 }, { x: 120 + index * 30, y: 5 }]).sketch;
+    const profile = detectProfiles(solveSketch(sketch, {})).profiles[0];
+    const detailed = createExtrudeFeature({ name: `Detailed ${index}`, sketchId: sketch.id, profileId: profile.id, operation: "newBody", distance: { expression: "height", unit: "mm" }, direction: "positive" });
+    document = upsertFeature(upsertSketch(document, sketch), detailed);
+    detailedIds.push(detailed.id);
   }
-  for (const [index, pointId] of points.entries()) sketch = addLine(sketch, pointId, points[(index + 1) % points.length]).sketch;
-  const profile = detectProfiles(solveSketch(sketch, {})).profiles[0];
-  const detailed = createExtrudeFeature({ name: "Detailed", sketchId: sketch.id, profileId: profile.id, operation: "newBody", distance: { expression: "height", unit: "mm" }, direction: "positive" });
-  let document = upsertFeature(upsertSketch(useCadStore.getState().history.present, sketch), detailed);
   const laterSketch = Object.values(document.sketches).find((candidate) => candidate.name === "Loose shape")!;
   const later = createExtrudeFeature({ name: "Later owner", sketchId: laterSketch.id, profileId: detectProfiles(solveSketch(laterSketch, {})).profiles[0].id, operation: "newBody", distance: { expression: "height", unit: "mm" }, direction: "positive" });
   document = upsertFeature(document, later);
@@ -347,7 +349,7 @@ it("reserves whole-cap targets for later owners when individual edges fill the t
   const targets = operationDropTargets("fillet");
   expect(targets).toHaveLength(128);
   const caps = targets.filter((target) => target.kind === "edge" && target.sourceEntityId === undefined);
-  for (const ownerId of [detailed.id, later.id]) {
+  for (const ownerId of [...detailedIds, later.id]) {
     expect(caps.filter((target) => target.kind === "edge" && target.ownerId === ownerId).map((target) => target.kind === "edge" ? target.role : "").sort()).toEqual(["endCapPerimeter", "startCapPerimeter"]);
   }
 });
@@ -657,3 +659,120 @@ it.each(["picker", "profile preview", "edge preview"] as const)(
     expect(useCadStore.getState().history).toBe(before);
   },
 );
+
+async function retainedFixture(mode: "cut" | "join" | "split" | "smoothJoin") {
+  const { feature, outline } = await fixture();
+  const baseDocument = useCadStore.getState().history.present;
+  const toolBase = createXySketch("Modifier section");
+  const tool = addCanvasGeometry(toolBase, solveSketch(toolBase, {}), mode === "cut" ? "circle" : "rectangle",
+    mode === "cut" ? [{ x: 0, y: 0 }, { x: 2, y: 0 }] : mode === "join" ? [{ x: 5, y: -2 }, { x: 15, y: 2 }] : mode === "smoothJoin" ? [{ x: 10, y: -6 }, { x: 15, y: 6 }] : [{ x: -1, y: -6 }, { x: 1, y: 6 }]).sketch;
+  const modifier = createExtrudeFeature({ name: mode, sketchId: tool.id,
+    profileId: detectProfiles(solveSketch(tool, {})).profiles[0].id,
+    operation: mode === "join" || mode === "smoothJoin" ? "join" : "cut", targetBodyIds: [`body:${feature.id}`],
+    distance: { expression: "10mm", unit: "mm" }, direction: "positive" });
+  const document = upsertFeature(upsertSketch(baseDocument, tool), modifier);
+  useCadStore.getState().setDocument(document);
+  const current = useCadStore.getState().history.present;
+  const result = rebuildDocument(current);
+  expect(result.success).toBe(true);
+  useCadStore.setState({ rebuild: { result, kernelReady: true, status: "succeeded" } });
+  return { feature, outline, document: current, result };
+}
+
+it.each(["cut", "join"] as const)("offers native retained authored edges after %s and changes exact volume through the shared picker", async (mode) => {
+  const { feature, document, result } = await retainedFixture(mode);
+  const edges = operationDropTargets("chamfer");
+  expect(edges.some((target) => target.kind === "edge" && target.sourceEntityId)).toBe(true);
+  expect(edges.every((target) => target.kind === "edge" && target.ownerId === feature.id)).toBe(true);
+  const groups = edges.filter((target) => target.kind === "edge" && !target.sourceEntityId);
+  expect(groups).toHaveLength(mode === "cut" ? 2 : 0);
+  const target = edges.find((candidate) => {
+    if (candidate.kind !== "edge" || !candidate.sourceEntityId || candidate.role !== "endCapPerimeter") return false;
+    const geometry = individualCapOperationGeometry(feature.id, true, candidate.sourceEntityId, document, result);
+    return geometry.loops[0].every((point) => Math.abs(point.x + 10) < 1e-7);
+  });
+  if (target?.kind !== "edge" || !target.sourceEntityId) throw new Error("Expected unchanged left edge.");
+  const originalVolume = 2400 + (mode === "cut" ? -40 * Math.PI : 200);
+  expect(result.meshes[0].geometryAssertions!.volume).toBeCloseTo(originalVolume, 6);
+  beginOperationDrop("chamfer");
+  chooseOperationDropTarget(useOperationDrop.getState().frame, target.id);
+  const draft = useModelingDraft.getState().draft!;
+  const staged = upsertFeature(draft.document, draft.feature), preview = rebuildDocument(staged);
+  expect(preview.success).toBe(true);
+  expect(preview.meshes[0].geometryAssertions).toMatchObject({ valid: true, solidCount: 1 });
+  expect(preview.meshes[0].geometryAssertions!.volume).toBeCloseTo(originalVolume - 6, 6);
+  expect(preview.meshes[0].bounds).toEqual(result.meshes[0].bounds);
+  commitModelingDraft(draft, staged, preview);
+  useCadStore.getState().undo();
+  expect(useCadStore.getState().history.present).toBe(document);
+});
+
+it("omits split perimeter groups while retaining whole unchanged sharp edges independently of planar-face availability", async () => {
+  const { feature, document, result } = await retainedFixture("split");
+  expect(result.meshes[0].geometryAssertions).toMatchObject({ valid: true, solidCount: 2, volume: 2160 });
+  expect(result.availableFaces?.some((face) => face.id === `extrude:${feature.id}:endCap`)).toBe(false);
+  const edges = operationDropTargets("fillet");
+  expect(edges).toHaveLength(4);
+  expect(edges.every((target) => target.kind === "edge" && target.sourceEntityId)).toBe(true);
+  expect(() => capOperationGeometry(feature.id, true, document, result)).toThrow(/lost, split, smooth or ambiguous/);
+  // A native face still present cannot authorize a perimeter with lost edges.
+  const faceOnly = { ...result, availableEdges: [] };
+  useCadStore.setState({ rebuild: { result: faceOnly, status: "succeeded", kernelReady: true } });
+  expect(operationDropTargets("chamfer")).toEqual([]);
+});
+
+it("never offers a smooth internal cap seam preserved by a coplanar Join", async () => {
+  const { feature, outline, result } = await retainedFixture("smoothJoin");
+  const source = result.profiles![outline.id][0].outerLoop.segments!.find((segment) => Math.abs(segment.start.x - 10) < 1e-7 && Math.abs(segment.end.x - 10) < 1e-7)!;
+  expect(source).toBeDefined();
+  const available = result.availableEdges!.filter((edge) => edge.featureId === feature.id);
+  expect(available.some((edge) => edge.sourceEntityId === source.id)).toBe(false);
+  // Original horizontal cap edges join tangent chains containing new tool
+  // boundaries; a single-edge action must not silently treat those new edges.
+  const propagated = result.profiles![outline.id][0].outerLoop.segments!.filter((segment) => Math.abs(segment.start.y - segment.end.y) < 1e-7).map((segment) => segment.id);
+  expect(available.some((edge) => propagated.includes(edge.sourceEntityId ?? ""))).toBe(false);
+  expect(available).toHaveLength(2);
+  expect(available.some((edge) => edge.sourceEntityId === undefined)).toBe(false);
+  expect(operationDropTargets("fillet").every((edge) => edge.kind === "edge" && edge.sourceEntityId !== source.id)).toBe(true);
+  expect(result.meshes[0].geometryAssertions).toMatchObject({ valid: true, solidCount: 1, volume: 3000 });
+  expect(JSON.parse(JSON.stringify(available))).toEqual(available);
+});
+
+it("reports unexpected native edge probe errors without invalidating validated geometry", async () => {
+  const { document, result, feature } = await fixture();
+  vi.spyOn(OpenCascadeKernel.prototype, "availableExtrudeCapEdges").mockImplementation(() => { throw new Error("Native contour probe failed"); });
+  const probed = rebuildDocument(document);
+  expect(probed.success).toBe(true);
+  expect(probed.errors).toEqual([]);
+  expect(probed.availableEdges).toEqual([]);
+  expect(probed.warnings).toContainEqual(expect.objectContaining({
+    id: `feature:${feature.id}:edge-picking`, source: "kernel", sourceId: feature.id,
+    message: expect.stringContaining("Native contour probe failed"),
+  }));
+  expect(probed.meshes[0].geometryAssertions).toEqual(result.meshes[0].geometryAssertions);
+  expect(probed.meshes[0].bounds).toEqual(result.meshes[0].bounds);
+  expect(currentNativeEdges(document, {} as OpenCascadeKernel, new Map(), new Set())).toEqual([]);
+});
+
+it("keeps a complete original tangent contour available as a group while excluding ambiguous single-edge propagation", async () => {
+  let sketch = createXySketch("Tangent contour");
+  const points: string[] = [];
+  for (let index = 0; index < 64; index++) {
+    const angle = index * Math.PI / 32;
+    const point = addPoint(sketch, `${(10 * Math.cos(angle)).toFixed(10)}mm`, `${(10 * Math.sin(angle)).toFixed(10)}mm`);
+    sketch = point.sketch;
+    points.push(point.pointId);
+  }
+  for (const [index, id] of points.entries()) sketch = addLine(sketch, id, points[(index + 1) % points.length]).sketch;
+  const profile = detectProfiles(solveSketch(sketch, {})).profiles[0];
+  const owner = createExtrudeFeature({ name: "Tangent owner", sketchId: sketch.id, profileId: profile.id,
+    operation: "newBody", distance: { expression: "10mm", unit: "mm" }, direction: "positive" });
+  const result = rebuildDocument(upsertFeature(upsertSketch(createEmptyDocument(), sketch), owner));
+  expect(result.success).toBe(true);
+  expect(result.warnings.filter((warning) => warning.id.endsWith(":edge-picking"))).toEqual([]);
+  expect(result.meshes[0].geometryAssertions!.volume).toBeCloseTo(32000 * Math.sin(Math.PI / 32), 5);
+  expect(result.availableEdges).toEqual([
+    { role: "endCapPerimeter", featureId: owner.id, bodyId: `body:${owner.id}` },
+    { role: "startCapPerimeter", featureId: owner.id, bodyId: `body:${owner.id}` },
+  ]);
+});

@@ -1,7 +1,7 @@
 import type { SketchProfile } from "../sketch/profileDetection";
 import type { ResolvedSketch } from "../sketch/SketchSolver";
 import type { AvailableFace, SketchPlaneTransform } from "../sketch/planes";
-import { RenderMesh } from "../kernel/KernelAdapter";
+import { RenderMesh, type AvailableCapEdge } from "../kernel/KernelAdapter";
 import type { Quantity } from "../parameters/units";
 
 export interface CadBody {
@@ -10,6 +10,11 @@ export interface CadBody {
   featureId?: string;
   triangleCount?: number;
   bounds?: RenderMesh["bounds"];
+}
+
+export interface AvailableEdge extends AvailableCapEdge {
+  featureId: string;
+  bodyId: string;
 }
 
 export interface RebuildResult {
@@ -29,6 +34,8 @@ export interface RebuildResult {
   sketchPlanes?: Record<string, SketchPlaneTransform>;
   /** Native-validated current faces, without kernel handles. Never persisted. */
   availableFaces?: AvailableFace[];
+  /** Native-validated current sharp authored edges, never persisted. */
+  availableEdges?: AvailableEdge[];
 }
 
 export interface RebuildMetrics {

@@ -51,6 +51,12 @@ export interface BoundingBox {
   max: [number, number, number];
 }
 
+/** Native-validated original extrusion boundary; no topology handles cross workers. */
+export interface AvailableCapEdge {
+  role: "startCapPerimeter" | "endCapPerimeter";
+  sourceEntityId?: string;
+}
+
 export interface KernelAdapter {
   createBox(width: number, height: number, depth: number): KernelShape;
   extrudeProfile(
@@ -74,6 +80,8 @@ export interface KernelAdapter {
   ): KernelShape;
   /** Require one finite native planar face matching an authored plane role. */
   validatePlanarFace?(shape: KernelShape, plane: SketchPlaneTransform): void;
+  /** Only complete, unique, sharp original cap edges are returned. */
+  availableExtrudeCapEdges?(shape: KernelShape): AvailableCapEdge[];
   cut(base: KernelShape, tool: KernelShape): KernelShape;
   cutAll(base: KernelShape, tools: KernelShape[]): KernelShape;
   /** Each tool must hit some target, and every target must lose volume; outputs publish atomically. */

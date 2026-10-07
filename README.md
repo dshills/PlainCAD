@@ -241,8 +241,10 @@ pockets on supported retained planar extrusion faces. Placement must clear the
 actual face boundary and existing openings. Sampled curved boundaries use a
 conservative clearance allowance. Extrude/Fillet/Chamfer operation tokens also
 support drag, click, and keyboard target cards. The edge token picker is limited
-to untouched distance/New Body Extrude caps and complete authored cap edges;
-arbitrary BRep edges, vertical sides, and boolean-created topology are unavailable.
+to native distance/New Body Extrude caps and unchanged authored cap edges,
+including retained edges after supported Cut/Join. Whole-perimeter groups require
+every original edge; individual picks cannot spread onto other contour edges.
+Arbitrary BRep edges, vertical sides, and boolean-created topology are unavailable.
 
 Use source-linked Issues and the Inspector to repair references. Timeline moves
 preserve IDs and reject dependency violations. Failed operations retain upstream

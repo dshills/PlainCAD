@@ -73,6 +73,11 @@ export function profileOperationGeometry(
     ),
   };
 }
+function requireAvailableCap(ownerId: string, end: boolean, result: RebuildResult, sourceEntityId?: string) {
+  if (result.availableEdges && !result.availableEdges.some((edge) => edge.featureId === ownerId && edge.role === (end ? "endCapPerimeter" : "startCapPerimeter") && edge.sourceEntityId === sourceEntityId))
+    throw new Error("This edge is lost, split, smooth or ambiguous. Choose a highlighted native-validated original edge.");
+}
+
 export function capOperationGeometry(
   ownerId: string,
   end: boolean,
@@ -83,6 +88,7 @@ export function capOperationGeometry(
   const owner = document.features.find((f) => f.id === ownerId);
   if (owner?.type !== "extrude")
     throw new Error("The cap perimeter owner is unavailable.");
+  requireAvailableCap(ownerId, end, result);
   const transform = result.sketchPlanes?.[owner.sketchId];
   const distance = evaluateExpressionRef(owner.distance, {
     parameters: evaluateParameters(document.parameters).values,
@@ -153,6 +159,7 @@ export function individualCapOperationGeometry(ownerId: string, end: boolean, so
     throw new Error("This edge is split, changed or not a complete authored cap boundary. Choose a supported edge.");
   const loop = [profile.outerLoop, ...profile.innerLoops].find((item) => item.entityIds.includes(sourceEntityId));
   if (!loop) throw new Error("The authored edge boundary is unavailable. Rebuild or choose a supported edge.");
+  requireAvailableCap(ownerId, end, result, sourceEntityId);
   const segment = loop.segments?.find((item) => item.id === sourceEntityId);
   const local = loop.type === "circle" ? loopPoints(loop, profile) : segment?.type === "arc" ? sampleArc(segment) : segment ? [segment.start, segment.end] : [];
   if (!local.length || local.length > maxVertices) throw new Error("This edge exceeds the viewer overlay budget. Use its explicit card.");

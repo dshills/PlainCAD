@@ -12,7 +12,6 @@ import {
   createExtrudeEdgeRef,
   type SupportedEdgeRole,
 } from "../../cad/features/topologyRefs";
-import { faceOwnerModifiedBefore } from "../../cad/sketch/planes";
 import { useCadStore, type CadStore } from "../../state/useCadStore";
 import { useViewerState, hiddenViewerBodies } from "../../state/viewerState";
 import { beginExtrudeCreation, useExtrudeDraft } from "./extrudeCommand";
@@ -152,38 +151,41 @@ export function operationDropTargets(
         owner.suppressed ||
         owner.operation !== "newBody" ||
         (owner.termination && owner.termination.type !== "distance") ||
-        featureComponentId(document, owner) !== state.activeComponentId ||
-        faceOwnerModifiedBefore(document, owner.id, {})
+        featureComponentId(document, owner) !== state.activeComponentId
       )
         continue;
       const bodyId = stableBodyIdForFeature(owner.id);
       const mesh = result.meshes.find((m) => m.bodyId === bodyId);
       if (
         hidden.includes(bodyId) ||
-        mesh?.kernelOperation !== "extrusion" ||
-        !mesh.geometryAssertions?.valid
+        mesh?.geometrySource !== "opencascade" ||
+        !mesh.geometryAssertions?.valid ||
+        !["extrusion", "cut", "fuse"].includes(mesh.kernelOperation ?? "")
       )
         continue;
-      const roles = ([
-        ["endCapPerimeter", "endCap", "end cap perimeter"],
-        ["startCapPerimeter", "startCap", "start cap perimeter"],
-      ] as const).filter(([, face]) => result.availableFaces?.some((f) => f.id === `extrude:${owner.id}:${face}`));
-      if (!roles.length) continue;
+      const edges = result.availableEdges?.filter((edge) => edge.featureId === owner.id && edge.bodyId === bodyId && (edge.role === "startCapPerimeter" || edge.role === "endCapPerimeter")) ?? [];
+      if (!edges.length) continue;
       const sourceIds = individualTargets.length < 128 ? capEdgeSourceIds(owner.id, document, result) : [];
-      for (const [role, , label] of roles) {
-        targets.push({
-          id: `edge:${owner.id}:${role}`,
-          kind: "edge",
-          label: `${owner.name} — ${label} (all original edges)`,
-          ownerId: owner.id,
-          bodyId,
-          role,
-        });
-        if (targets.length === 128) return targets;
+      for (const [role, label] of [
+        ["endCapPerimeter", "end cap"],
+        ["startCapPerimeter", "start cap"],
+      ] as const) {
+        if (edges.some((edge) => edge.role === role && edge.sourceEntityId === undefined)) {
+          targets.push({
+            id: `edge:${owner.id}:${role}`,
+            kind: "edge",
+            label: `${owner.name} — ${label} perimeter (all original edges)`,
+            ownerId: owner.id,
+            bodyId,
+            role,
+          });
+          if (targets.length === 128) return targets;
+        }
         for (const [index, sourceEntityId] of sourceIds.entries()) {
           if (individualTargets.length === 128) break;
+          if (!edges.some((edge) => edge.role === role && edge.sourceEntityId === sourceEntityId)) continue;
           individualTargets.push({ id: `edge:${owner.id}:${role}:${sourceEntityId}`, kind: "edge",
-            label: `${owner.name} — ${label.replace(" perimeter", "")} edge ${index + 1} (${document.sketches[owner.sketchId]?.entities[sourceEntityId]?.type ?? "curve"})`,
+            label: `${owner.name} — ${label} edge ${index + 1} (${document.sketches[owner.sketchId]?.entities[sourceEntityId]?.type ?? "curve"})`,
             ownerId: owner.id, bodyId, role, sourceEntityId });
         }
       }
@@ -223,7 +225,7 @@ export function beginOperationDrop(operation?: DropOperation, handoffSketchId?: 
     !canBeginOperationDrop(state, selected)
   )
     throw new Error(
-      "Finish or cancel the current task and choose an available closed profile or untouched native distance-extrusion cap perimeter.",
+      "Finish or cancel the current task and choose an available closed profile or native-validated original distance-extrusion edge.",
     );
   useOperationDrop.setState({
     frame: {
@@ -331,7 +333,7 @@ export function chooseOperationDropTarget(
       );
   } else
     throw new Error(
-      "Use Extrude on a closed profile, or Fillet/Chamfer on an original supported cap perimeter.",
+      "Use Extrude on a closed profile, or Fillet/Chamfer on an unchanged original supported cap edge or perimeter.",
     );
   cancelOperationDrop();
 }

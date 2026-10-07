@@ -9,14 +9,14 @@ missing or the count cannot be determined, establish a baseline with the full ga
 ## Last successful full gate
 
 - Date: 2026-10-07.
-- Change: Direct Finish Sketch preview and clear startup canvas (including the additional starter-card removal).
+- Change: Direct Finish Sketch preview and clear startup canvas, commit `3f5987f` (including the additional starter-card removal).
 - Result: type checks, build/bundle budget, 1032 unit/component tests,
   all 242 development browser cases verified, and 30 production browser tests passed.
   The development run had 240 passes and two outdated test steps; both corrected
   files passed their 3-case rerun. Production completed separately after that fix.
   Only test steps changed; runtime sources stayed frozen throughout validation.
-- Completed items since that full gate: **0**.
-- Next full gate: item **5**, after five more completed items.
+- Completed items since that full gate: **1**.
+- Next full gate: item **5**, after four more completed items.
 
 ## Completed batch
 
@@ -75,3 +75,13 @@ Fabrication test fixup: Prism `f74c1d464c683faa5d4328937254bead` reviewed the Ca
 Prism `e71f5f90769510418b97423827ad1a88` covered the complete 24-file first-part change. Its missing-helper medium finding is false: `e2e/newPartWorkflow.ts` was already tracked by preceding commit `1e1d469`, and all importing browser cases ran successfully. Native details expose their expanded state automatically; nested example disclosure state is retained deliberately. Current commands dispatch immediately and shared enablement defines all prerequisite keys. Earlier actionable error/enablement findings were fixed. Prism `c256122939a5946ce1dcaba063d23aa3` reviewed the remaining automatic-preview test step; its low note describes the intended new behavior.
 
 The initial `release:check` invocation passed lint, all units and the build, then ended with 240 development passes and the two outdated keyboard/Finish test steps. After test-only corrections, lint and both affected files (3 cases) passed; all 30 production cases passed. All distinct tests of the full gate are therefore verified on unchanged runtime sources. This completed checkpoint resets cadence, and covers both first-part workflow requests. CI still executes the complete release command from a clean checkout.
+
+## Current batch
+
+| Item | Requested change | Prism review | Reduced gate | Full gate |
+| --- | --- | --- | --- | --- |
+| 1 | Direct native-validated retained cap-edge picks after Cut/Join | Anthropic `claude-sonnet-5-5`; no high findings; two medium policy/performance notes assessed and documented | Shared frozen-checkout gate passed: 1032 units, type checks, build/bundle budget, 5 development and 14 production smoke tests; 26 focused native geometry tests | All five new browser cases and existing treatment/reference cases passed in the completed checkpoint |
+
+Prism `e4592bc940d0129a9d09ff794b185ad5` reviewed all twelve native-edge implementation/documentation files. Earlier contour-state, propagated-edge, unexpected-error, STL-bound and session-currency findings were fixed. Unsupported adapters intentionally get an authoritative empty target list: geometry without a native proof cannot authorize a pick. The shipped OpenCascade adapter implements the probe; fallback results omit native metadata. The medium eager-proof note is an accepted worker-rebuild tradeoff, measured by total `durationMs`/rebuild telemetry: small controlled workload p95 117.2ms, and the 64-edge chain case about 1.3s. Larger-part latency is not established; this limit is documented in the capability matrix.
+
+Low findings were assessed: native fixture lookups are fixed analytic geometry and passed across all planes; a probe exception exits the entire owner scope before any builder could be reused; all scoped disposals passed resource assertions. Prototype spies are restored in the existing afterEach. Native viewer picks verify actual changed fillet/chamfer volume, orientation, parameter edits, split/smooth exclusions, same-ID stale rejection, save/open and positive STL volume. Runtime edge proofs never enter project JSON. This parallel item completed after the full checkpoint, so it begins the new cadence at item 1.
