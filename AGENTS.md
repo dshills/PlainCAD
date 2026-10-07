@@ -25,9 +25,21 @@ that a capability works end to end.
 - Run focused tests with `npm test -- src/tests/document.test.ts` (substitute
   the relevant file).
 - `npm run build` checks TypeScript and creates `dist/`.
-- Run `npm run release:check` before a code-change handoff or commit. It runs
-  type checking, unit/component tests, the production build, development browser
-  tests, and the built-app production CSP browser test.
+- Run `npm run check:item` and Prism for every completed item before handoff or
+  commit. The reduced gate runs type checking, all unit/component tests, the
+  production build and bundle-size budget, development native modeling/stale-result
+  smoke tests, and focused built-app modeling/AI/CSP browser tests. Add focused
+  tests for affected behavior that the smoke set does not cover.
+- Run `npm run release:check` after every fifth completed item, before handing off
+  or committing that fifth item. It runs the complete development and production
+  browser suites as well as type checking, unit/component tests, and build.
+  The full gate includes the reduced checks, so it satisfies both test gates for
+  that item; Prism review is still required.
+  Track completed items and the last successful full gate in
+  `specs/working-cad/VALIDATION_LOG.md`; an item is a completed requested change,
+  not each fixup commit. Update the log with each item; reset the count only after a
+  successful full gate. If the count is missing or uncertain, run the full gate
+  to establish a new baseline. A failed gate must be fixed before proceeding.
 - Install Chromium once with `npx playwright install chromium`. `npm run test:browser`
   runs real-kernel acceptance tests using a dedicated server on port 5279.
   Screenshots/downloads/traces are in ignored `test-results/`. Run `npm run build`
@@ -36,8 +48,8 @@ that a capability works end to end.
   The development suite also writes a controlled native benchmark `performance.json`
   with timing/resource samples; see `specs/working-cad/PERFORMANCE.md` for its scope.
 
-The production build may warn about large chunks from the CAD kernel and viewer.
-Report relevant warnings, but do not treat that warning alone as a failed build.
+The production build enforces a 500 kB uncompressed JavaScript bundle budget,
+including workers. Report relevant warnings and fix bundle-budget failures.
 Do not commit generated `dist/`, `node_modules/`, `*.tsbuildinfo`, or emitted Vite
 configuration files. Keep `package-lock.json` consistent with dependency changes.
 
@@ -122,8 +134,9 @@ exists. Documentation-only changes generally need a diff review.
 
 jsdom tests and fallback rebuilds do not establish that WebAssembly, WebGL, or
 OpenCascade geometry works in a browser. For changes to the worker/kernel/viewer
-or modeling UI, run the browser acceptance suite and smoke-test additional
-affected behavior when possible:
+or modeling UI, run the reduced native browser suite for each item and focused
+acceptance tests for additional affected behavior; run the complete browser
+suite on the five-item cadence above. Smoke-test affected workflows when possible:
 create or load a model, edit a parameter, rebuild, inspect the geometry, save/open,
 and export STL. Report any browser validation that was not performed.
 

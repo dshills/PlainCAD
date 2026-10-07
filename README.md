@@ -353,18 +353,32 @@ remain runtime data.
 | `npm test` / `npm run test:watch` | Vitest unit/component tests, once or in watch mode. |
 | `npm run build` | TypeScript checks and production output in `dist/`. |
 | `npm run preview` | Local production preview, strict port 5280. |
+| `npm run check:item` | Per-item reduced gate: type checks, all unit/component tests, build/bundle budget, development native modeling/stale-result smoke tests, and focused production modeling/AI/CSP tests. |
 | `npm run release:check` | Type checking, unit/component tests, build, development Chromium acceptance, and built-app production CSP acceptance. |
 | `npm run test:browser` | Native development Chromium suite, strict port 5279. |
+| `npm run test:browser:smoke` | Development non-template modeling and stale-worker-result smoke tests, strict port 5279. |
 | `npm run test:production` | Built-app Chromium CSP suite, strict port 5280; build first. |
+| `npm run test:production:smoke` | Production CSP, Focused workspace, Workbench, and AI drawer smoke tests, strict port 5280; build first. |
 | `npm run test:cross-browser` | Build plus production Chromium/Firefox/WebKit workflow and compact-layout checks, strict port 5281. |
 | `npm run test:ai:browser` | Controlled AI corpus and Focused workflows on all three engines, development server on strict port 5281. |
 | `npm run test:ai:live` | Opt-in live provider checks, strict port 5291. |
 
-Install Chromium before the release gate:
+Every completed item requires Prism review with Anthropic `claude-sonnet-5-5`
+and `npm run check:item`, plus focused tests for affected behavior outside the
+smoke set. After every **five completed items**, run `npm run release:check`
+before committing or handing off the fifth item. Count requested changes rather
+than fixup commits, and record the count and check results in
+[the validation log](specs/working-cad/VALIDATION_LOG.md). Reset the count only
+after a successful full gate. A missing or uncertain count requires a full gate
+to establish a baseline; failed checks must be fixed before moving on. The full
+gate already includes the reduced checks, so item five needs one full run and
+Prism review rather than two test runs.
+
+Install Chromium before the per-item gate:
 
 ```sh
 npx playwright install chromium
-npm run release:check
+npm run check:item
 ```
 
 For the additional three-engine suites:
@@ -377,7 +391,7 @@ npm run test:ai:browser
 
 Run focused tests with `npm test -- src/tests/document.test.ts`. Test suites own
 their server ports and do not reuse an already-running server. Stop `npm run preview`
-on 5280 before `test:production` or `release:check`; the two suites on 5281 must run
+on 5280 before production tests, `check:item`, or `release:check`; the two suites on 5281 must run
 separately. Screenshots/downloads/traces go to ignored `test-results/`;
 use `npx playwright show-trace <trace.zip>` for a retained failure trace.
 

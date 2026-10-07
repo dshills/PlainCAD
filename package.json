@@ -9,10 +9,13 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "tsc -b --noEmit && tsc -p tsconfig.e2e.json",
+    "check:item": "npm run lint && npm test && npm run build && npm run test:browser:smoke && npm run test:production:smoke",
     "release:check": "npm run lint && npm test && npm run build && npm run test:browser && npm run test:production",
     "test:browser": "playwright test",
+    "test:browser:smoke": "playwright test e2e/modeling.spec.ts e2e/stale-results.spec.ts",
     "preview": "vite preview",
     "test:production": "playwright test -c playwright.production.config.ts",
+    "test:production:smoke": "playwright test -c playwright.production.config.ts production-e2e/csp.spec.ts production-e2e/focused-workspace.spec.ts production-e2e/workbench.spec.ts production-e2e/ai-drawer.spec.ts",
     "test:ai:browser": "playwright test -c playwright.ai.config.ts",
     "test:ai:live": "playwright test -c playwright.ai-live.config.ts",
     "test:cross-browser": "npm run build && playwright test -c playwright.cross-browser.config.ts"
