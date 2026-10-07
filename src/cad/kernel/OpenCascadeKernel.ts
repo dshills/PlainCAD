@@ -56,6 +56,9 @@ import {
 } from "./occtGeometry";
 
 const BOOLEAN_FALLBACK_EPSILON = KERNEL_LINEAR_TOLERANCE;
+const MAX_EDGE_PROOF_HISTORY_NODES = 512;
+const MAX_EDGE_PROOF_SIGNATURE_CHARS = 262144;
+class EdgeProofSignatureUnavailable extends Error {}
 
 type KernelHandle =
   | {
@@ -646,6 +649,30 @@ export class OpenCascadeKernel implements KernelAdapter {
       throw new Error(
         `${operation} failed: ${error instanceof Error ? error.message : "OpenCascade rejected the size or edge configuration. Reduce the size or repair the edge references."}`,
       );
+    }
+  }
+
+  edgeProofSignature(shape: KernelShape): string | undefined {
+    let nodes = 0;
+    const describe = (handle: KernelHandle): unknown => {
+      if (++nodes > MAX_EDGE_PROOF_HISTORY_NODES) throw new EdgeProofSignatureUnavailable("Proof history is too large to cache.");
+      switch (handle.kind) {
+        case "box": return [handle.kind, handle.width, handle.height, handle.depth];
+        case "extrusion": return [handle.kind, handle.profile, handle.distance, handle.transform];
+        case "boolean": return [handle.kind, handle.operation, describe(handle.base), describe(handle.tool)];
+        // These handles intentionally do not retain all their construction inputs.
+        default: throw new EdgeProofSignatureUnavailable("Proof history cannot be represented exactly.");
+      }
+    };
+    try {
+      const signature = JSON.stringify(describe(shape.kernelHandle as KernelHandle), (_key, value: unknown) => {
+        if (typeof value === "number" && !Number.isFinite(value)) throw new EdgeProofSignatureUnavailable("Nonfinite proof input.");
+        return value;
+      });
+      return signature.length <= MAX_EDGE_PROOF_SIGNATURE_CHARS ? signature : undefined;
+    } catch (error) {
+      if (!(error instanceof EdgeProofSignatureUnavailable)) throw error;
+      return undefined;
     }
   }
 

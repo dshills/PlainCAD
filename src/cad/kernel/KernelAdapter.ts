@@ -82,6 +82,8 @@ export interface KernelAdapter {
   validatePlanarFace?(shape: KernelShape, plane: SketchPlaneTransform): void;
   /** Only complete, unique, sharp original cap edges are returned. */
   availableExtrudeCapEdges?(shape: KernelShape): AvailableCapEdge[];
+  /** Exact construction inputs for reusable proofs; absent for unsupported histories. No native handles. */
+  edgeProofSignature?(shape: KernelShape): string | undefined;
   cut(base: KernelShape, tool: KernelShape): KernelShape;
   cutAll(base: KernelShape, tools: KernelShape[]): KernelShape;
   /** Each tool must hit some target, and every target must lose volume; outputs publish atomically. */

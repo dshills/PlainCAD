@@ -1,4 +1,5 @@
 import { currentNativeEdges } from "./nativeEdgeTargets";
+import { NativeEdgeProofCache } from "./nativeEdgeProofCache";
 import { currentNativeFaces, nativeSketchPlaneValidator } from "./nativeSketchPlanes";
 import { absorbedBodyIds, targetBodyIds } from "../document/bodyScopes";
 import { extrusionSweep, throughAllDistance } from "./extrusionSweep";
@@ -39,6 +40,7 @@ import { resolveRevolveAxis } from "./revolveAxis";
 import { resolveSupportedEdgeRefs } from "./topologyRefs";
 
 const kernel = new OpenCascadeKernel();
+const edgeProofCache = new NativeEdgeProofCache();
 let seedDocumentId: string | undefined;
 const sketchSeeds = new Map<
   string,
@@ -211,6 +213,7 @@ export function rebuildDocument(
   };
   const featureStarted = performance.now();
   const failedBodies = new Set<string>();
+  edgeProofCache.begin(document.id, kernel);
   const nativePlanes = nativeReferences
     ? nativeSketchPlaneValidator(document, planes, kernel, runtimeBodies, failedBodies, errors)
     : undefined;
@@ -525,7 +528,9 @@ export function rebuildDocument(
         "Model exceeds the total triangle resource limit. Simplify or suppress bodies.",
     });
   const availableFaces = nativeReferences ? currentNativeFaces(planes.faces, kernel, runtimeBodies, failedBodies) : undefined;
-  const availableEdges = nativeReferences ? currentNativeEdges(document, kernel, runtimeBodies, failedBodies, warnings) : undefined;
+  const edgeProofStarted = performance.now();
+  const availableEdges = nativeReferences ? currentNativeEdges(document, kernel, runtimeBodies, failedBodies, warnings, edgeProofCache) : undefined;
+  const nativeEdgeProofMs = performance.now() - edgeProofStarted;
   let disposalFailures = 0;
   shapesToDispose.forEach((shape) => {
     try {
@@ -559,6 +564,9 @@ export function rebuildDocument(
       sketchSolveMs,
       profileDetectionMs,
       featureRebuildMs,
+      nativeEdgeProofMs,
+      nativeEdgeProofCacheHits: edgeProofCache.hits,
+      nativeEdgeProofCacheMisses: edgeProofCache.misses,
       operationCount,
       cacheSize: runtimeBodies.size,
       wasmHeapCapacityBytes: kernel.getWasmHeapCapacityBytes?.(),

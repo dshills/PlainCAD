@@ -740,6 +740,8 @@ it("never offers a smooth internal cap seam preserved by a coplanar Join", async
 
 it("reports unexpected native edge probe errors without invalidating validated geometry", async () => {
   const { document, result, feature } = await fixture();
+  // Force a fresh proof so this failure-path test cannot reuse fixture()'s successful proof.
+  vi.spyOn(OpenCascadeKernel.prototype, "edgeProofSignature").mockReturnValue(undefined);
   vi.spyOn(OpenCascadeKernel.prototype, "availableExtrudeCapEdges").mockImplementation(() => { throw new Error("Native contour probe failed"); });
   const probed = rebuildDocument(document);
   expect(probed.success).toBe(true);

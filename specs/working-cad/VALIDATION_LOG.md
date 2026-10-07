@@ -15,8 +15,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
   The development run had 240 passes and two outdated test steps; both corrected
   files passed their 3-case rerun. Production completed separately after that fix.
   Only test steps changed; runtime sources stayed frozen throughout validation.
-- Completed items since that full gate: **1**.
-- Next full gate: item **5**, after four more completed items.
+- Completed items since that full gate: **2**.
+- Next full gate: item **5**, after three more completed items.
 
 ## Completed batch
 
@@ -85,3 +85,9 @@ The initial `release:check` invocation passed lint, all units and the build, the
 Prism `e4592bc940d0129a9d09ff794b185ad5` reviewed all twelve native-edge implementation/documentation files. Earlier contour-state, propagated-edge, unexpected-error, STL-bound and session-currency findings were fixed. Unsupported adapters intentionally get an authoritative empty target list: geometry without a native proof cannot authorize a pick. The shipped OpenCascade adapter implements the probe; fallback results omit native metadata. The medium eager-proof note is an accepted worker-rebuild tradeoff, measured by total `durationMs`/rebuild telemetry: small controlled workload p95 117.2ms, and the 64-edge chain case about 1.3s. Larger-part latency is not established; this limit is documented in the capability matrix.
 
 Low findings were assessed: native fixture lookups are fixed analytic geometry and passed across all planes; a probe exception exits the entire owner scope before any builder could be reused; all scoped disposals passed resource assertions. Prototype spies are restored in the existing afterEach. Native viewer picks verify actual changed fillet/chamfer volume, orientation, parameter edits, split/smooth exclusions, same-ID stale rejection, save/open and positive STL volume. Runtime edge proofs never enter project JSON. This parallel item completed after the full checkpoint, so it begins the new cadence at item 1.
+
+### Item 2: exact native edge-proof reuse
+
+Prism `c8def01f3505d513a07de65794432267` reviewed all eleven isolated implementation/test/documentation files with Anthropic `claude-sonnet-5-5`: no high or medium findings. Its earlier stale-result benchmark finding was fixed by waiting for changed native volume and the edited expression. The remaining low cold-counter note was assessed against the deliberately fresh document/worker setup; cold probes and warm reuse are both independently asserted.
+
+The exact commit checkout passed `npm run check:item`: type checks, 1036 unit/component tests, build/bundle budget (largest 417.91 kB), 5 development and 14 production smoke tests. Its additional 6 native cases passed: the 40-body cache benchmark, XY/XZ/YZ retained-edge treatments, split exclusions, and same-ID stale-preview rejection. The first temporary-checkout test attempt used a dependency symlink that Vite refused; local dependency paths fixed that test environment, then the complete gate passed. No runtime behavior was changed to relax those checks.

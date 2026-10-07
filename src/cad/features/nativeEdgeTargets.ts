@@ -2,6 +2,7 @@ import type { CadDocument } from "../document/schema";
 import type { KernelAdapter, KernelShape, RenderMesh } from "../kernel/KernelAdapter";
 import type { AvailableEdge, RebuildWarning } from "../worker/workerProtocol";
 import { stableBodyIdForFeature } from "./featureGraph";
+import type { NativeEdgeProofCache } from "./nativeEdgeProofCache";
 
 /** Offer only original edges proven against the final native body.
  * Runtime metadata is bounded by document resource limits; the UI caps targets
@@ -12,6 +13,7 @@ export function currentNativeEdges(
   bodies: ReadonlyMap<string, { shape: KernelShape; mesh?: RenderMesh }>,
   failedBodies: ReadonlySet<string>,
   warnings: RebuildWarning[] = [],
+  cache?: NativeEdgeProofCache,
 ): AvailableEdge[] {
   if (!kernel.availableExtrudeCapEdges) return [];
   const groups: AvailableEdge[] = [], individual: AvailableEdge[] = [];
@@ -20,7 +22,7 @@ export function currentNativeEdges(
     const bodyId = stableBodyIdForFeature(owner.id), body = bodies.get(bodyId);
     if (!body || failedBodies.has(bodyId) || body.mesh?.geometrySource !== "opencascade" || !body.mesh.geometryAssertions?.valid || !["extrusion", "cut", "fuse"].includes(body.mesh.kernelOperation ?? "")) continue;
     try {
-      for (const edge of kernel.availableExtrudeCapEdges(body.shape)) {
+      for (const edge of cache ? cache.read(kernel, body.shape) : kernel.availableExtrudeCapEdges(body.shape)) {
         const target = { ...edge, featureId: owner.id, bodyId };
         if (edge.sourceEntityId) {
           individual.push(target);

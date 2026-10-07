@@ -2,6 +2,11 @@
 
 ## Docked Workbench workflow improvements
 
+- Native cap-edge eligibility uses bounded, handle-free exact-input proof reuse.
+  Changed source identities, geometry and boolean tools invalidate the relevant
+  signature; unsupported histories are rechecked. A 40-body fixture verifies
+  unchanged native geometry, dimension-edit invalidation and disposal.
+  This does not cache entire native feature rebuilds. See [performance scope](PERFORMANCE.md).
 - Task guidance uses current worker sketch profiles/diagnostics and distinguishes
   empty/open/closed/broken sketches, failed rebuilds and native/fallback solids.
   Disabled actions show prerequisites; diagnostics retain explicit source repair.

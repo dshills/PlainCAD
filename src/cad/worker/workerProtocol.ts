@@ -43,6 +43,9 @@ export interface RebuildMetrics {
   sketchSolveMs: number;
   profileDetectionMs: number;
   featureRebuildMs: number;
+  nativeEdgeProofMs?: number;
+  nativeEdgeProofCacheHits?: number;
+  nativeEdgeProofCacheMisses?: number;
   operationCount: number;
   cacheSize: number;
   disposalFailures: number;
