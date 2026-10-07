@@ -5,6 +5,34 @@ import { stlSignedVolume } from "../e2e/aiAcceptanceHelpers";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
+test("built workbench loads editors on demand and retains the AI draft across hiding", async ({ page }) => {
+  const requests: string[] = [], errors: string[] = [];
+  page.on("request", (request) => requests.push(new URL(request.url()).pathname));
+  page.on("pageerror", (error) => errors.push(error.message));
+  const chunks = (name: string) => requests.filter((path) => new RegExp(`/assets/${name}-[^/]+\\.js$`).test(path));
+  await page.goto("/");
+  await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+  expect(chunks("AiDrawer")).toHaveLength(0);
+  expect(chunks("SketchCanvasPanel")).toHaveLength(0);
+  await page.getByRole("button", { name: "Open AI drawer", exact: true }).click();
+  const prompt = page.getByLabel("What would you like to make?", { exact: true });
+  await prompt.fill("A small instrument housing");
+  expect(chunks("AiDrawer")).toHaveLength(1);
+  await page.getByRole("button", { name: "Close AI drawer", exact: true }).click();
+  await expect(prompt).toBeHidden();
+  await page.getByRole("button", { name: "Open AI drawer", exact: true }).click();
+  await expect(prompt).toHaveValue("A small instrument housing");
+  expect(chunks("AiDrawer")).toHaveLength(1);
+  await page.getByRole("button", { name: "Close AI drawer", exact: true }).click();
+  await page.getByRole("button", { name: "Draw a shape", exact: true }).click();
+  await page.getByRole("button", { name: "Sketch on Front (XZ) plane", exact: true }).click();
+  await expect(page.getByRole("group", { name: "Sketch drawing canvas", exact: true })).toBeVisible();
+  expect(chunks("SketchCanvasPanel")).toHaveLength(1);
+  await page.getByRole("button", { name: "Finish Sketch", exact: true }).click();
+  await expect(page.getByRole("group", { name: "Sketch drawing canvas", exact: true })).toBeHidden();
+  expect(errors).toEqual([]);
+});
+
 async function openFileMenu(page: Page) {
   const menu = page.locator(".file-menu");
   if (await menu.getAttribute("open") === null) await menu.locator("summary").click();

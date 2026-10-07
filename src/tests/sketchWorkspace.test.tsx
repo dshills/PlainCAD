@@ -44,7 +44,7 @@ it("edits inline, blocks competing creation commands, and returns to the same mo
   act(() => {
     runCommand("sketch.editCanvas");
   });
-  const canvas = screen.getByRole("region", { name: "Sketch canvas" });
+  const canvas = await screen.findByRole("region", { name: "Sketch canvas" });
   expect(screen.queryByRole("dialog")).toBeNull();
   expect(canvas.closest("main")).not.toBeNull();
   expect(

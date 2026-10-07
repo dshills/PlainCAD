@@ -23,13 +23,13 @@ import type { CSSProperties } from "react";
 import { useSketchCanvas } from "../ui/commands/sketchCanvasCommand";
 import { ExtrudeCreationPanel } from "../ui/panels/ExtrudeCreationPanel";
 import { ProjectWorkflowPanel } from "../ui/panels/ProjectWorkflowPanel";
-import { SketchCanvasPanel } from "../ui/panels/SketchCanvasPanel";
+import { RetainedPanel } from "../ui/workspace/RetainedPanel";
 import { ThemeSelector } from "../ui/themes/ThemeSelector";
 import { useCommandEnablement } from "../ui/commands/useCommandEnablement";
 import { RecoveryPanel } from "../ui/panels/RecoveryPanel";
 import { FabricationPanel } from "../ui/panels/FabricationPanel";
 import { HoleCreationPanel } from "../ui/panels/HoleCreationPanel";
-import { useEffect, useMemo, useRef } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef } from "react";
 import { CadViewer } from "../viewer/CadViewer";
 import {
   CommandContext,
@@ -40,6 +40,10 @@ import { CommandPalette } from "../ui/commands/CommandPalette";
 import { FeatureTimeline } from "../ui/panels/FeatureTimeline";
 import { SketchPanel } from "../ui/panels/SketchPanel";
 import { useCadStore } from "../state/useCadStore";
+
+const SketchCanvasPanel = lazy(() =>
+  import("../ui/panels/SketchCanvasPanel").then((module) => ({ default: module.SketchCanvasPanel })),
+);
 
 type ToolbarButton = {
   command: string;
@@ -584,7 +588,11 @@ export function App() {
             !aiOpen ? (
               <ProjectStart context={commandContext} />
             ) : null}
-            <SketchCanvasPanel />
+            <RetainedPanel visible={Boolean(sketchActive)}>
+              <Suspense fallback={<p role="status">Loading sketch editor…</p>}>
+                <SketchCanvasPanel />
+              </Suspense>
+            </RetainedPanel>
           </section>
           {!workbench ? (
             <div

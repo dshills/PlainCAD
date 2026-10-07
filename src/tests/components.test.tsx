@@ -315,7 +315,7 @@ describe("component project ownership", () => {
         name: "Sketch on Front (XZ) plane",
       }),
     );
-    const canvas = screen.getByRole("region", { name: "Sketch canvas" });
+    const canvas = await screen.findByRole("region", { name: "Sketch canvas" });
     expect(canvas).toHaveTextContent("XZ");
     await act(async () => {
       await runCommand("sketch.addCenterRectangle");

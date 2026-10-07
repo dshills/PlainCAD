@@ -435,8 +435,14 @@ the source and preserve upstream previews for repair.
   resource limits. The current project remains intact after a failed import.
 - **AI unavailable:** configure server-side keys, restart Vite, and check the chosen
   model's account access. Static hosting has no local gateway.
-- **Large build chunks:** the CAD kernel/viewer bundle can trigger Vite's chunk-size
-  warning; that warning alone does not fail the build.
+- **Bundle size:** React, Three.js core/renderer, CAD logic, and the OpenCascade
+  loader use separate production chunks. In the default Workbench, the sketch
+  editor and AI drawer load when first opened and retain drafts when hidden.
+  Legacy layouts load the AI drawer's separate chunk immediately to show its
+  built-in toggle. `npm run build` enforces a
+  500 kB uncompressed budget for every JavaScript bundle, including workers;
+  Vite's default warning threshold remains unchanged. The kernel's separate
+  WebAssembly asset is outside this JavaScript budget.
 
 ## Further Reading
 

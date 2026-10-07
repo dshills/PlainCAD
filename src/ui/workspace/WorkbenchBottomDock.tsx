@@ -1,10 +1,9 @@
 import { useShallow } from "zustand/react/shallow";
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { useWorkbenchState } from "../../state/useWorkbenchState";
 import { useAiDrawer } from "../commands/aiCommand";
 import { runCommand, type CommandContext } from "../commands/commandRegistry";
 import { useCadStore } from "../../state/useCadStore";
-import { AiDrawer } from "../panels/AiDrawer";
 import { FeatureTimeline } from "../panels/FeatureTimeline";
 import { RebuildErrorsPanel } from "../panels/RebuildErrorsPanel";
 import {
@@ -15,6 +14,10 @@ import {
 } from "../design-system/Icons";
 import { RetainedPanel } from "./RetainedPanel";
 import { DockResize } from "./DockResize";
+const AiDrawer = lazy(() =>
+  import("../panels/AiDrawer").then((module) => ({ default: module.AiDrawer })),
+);
+
 export function WorkbenchBottomDock({
   context,
   enabled,
@@ -43,6 +46,8 @@ export function WorkbenchBottomDock({
   }, [enabled, aiOpen]);
   const tab = aiOpen ? "ai" : dock.bottomTab;
   const open = aiOpen || dock.bottomOpen;
+  // Legacy layouts keep the drawer's own toggle visible even while closed.
+  const aiVisible = !enabled || (open && tab === "ai");
   const close = () => {
     if (aiOpen) void runCommand("ai.toggle");
     useWorkbenchState.setState({ bottomOpen: false });
@@ -153,8 +158,12 @@ export function WorkbenchBottomDock({
           {open ? <DockResize dock="bottom" /> : null}
         </>
       ) : null}
-      <div hidden={enabled && (!open || tab !== "ai")}>
-        <AiDrawer embedded={enabled} />
+      <div hidden={!aiVisible}>
+        <RetainedPanel visible={aiVisible}>
+          <Suspense fallback={<p role="status">Loading AI drawer…</p>}>
+            <AiDrawer embedded={enabled} />
+          </Suspense>
+        </RetainedPanel>
       </div>
     </section>
   );
