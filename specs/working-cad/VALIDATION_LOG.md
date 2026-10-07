@@ -12,8 +12,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Change: bundle splitting, commit `f12e025`.
 - Result: type checks, build/bundle budget, 960 unit/component tests,
   224 development browser tests, and 29 production browser tests passed.
-- Completed items since that full gate: **2**.
-- Next full gate: item **5**, after three more completed items.
+- Completed items since that full gate: **3**.
+- Next full gate: item **5**, after two more completed items.
 
 ## Current batch
 
@@ -21,6 +21,7 @@ missing or the count cannot be determined, establish a baseline with the full ga
 | --- | --- | --- | --- | --- |
 | 1 | Five-item full gate and per-item reduced gate | Anthropic `claude-sonnet-5-5`; no high/medium findings; two low notes assessed | Passed: type checks, build/bundle budget, 960 unit tests, 5 development and 14 production smoke tests | Not due |
 | 2 | Keep fitted models and previews visible through dock/canvas resize | Anthropic `claude-sonnet-5-5`; no high/medium findings; actionable fit findings fixed | Passed: type checks, build/bundle budget, 966 unit tests, 5 development and 14 production smoke tests; 7 additional native viewport/preview tests | Not due |
+| 3 | Clear success feedback and readable parameter editing | Anthropic `claude-sonnet-5-5`; no high/medium findings; four low notes assessed | Passed: type checks, build/bundle budget, 975 unit tests, 5 development and 14 production smoke tests; 6 native parameter/status/deformation tests | Not due |
 
 Prism review `dc636fab53dbe0066d9b0f92d040fda1` covered all four changed files.
 Its low notes concern explicit smoke-file lists and manual cadence tracking.
@@ -38,3 +39,5 @@ inputs emit the controls start event, keyboard controls are not enabled, and
 Record completed results before committing. On item 5, record the successful full
 gate as the new baseline and begin the next batch at item 1. CI continues to run
 the complete release gate on pull requests and pushes to `main`.
+
+Prism review `ab638806e8e44e075ef9714fe7f9f474` covered all eighteen item-3 files. Low notes were checked: held worker delivery and its replacement queue are explicitly asserted before release, cache validity is checked during render and its empty error array is stable, and TypeScript verifies the result narrowing. The small rename setup remains local to each existing spec helper to avoid unrelated test refactoring.

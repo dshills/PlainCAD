@@ -1,0 +1,29 @@
+.parameter-card .parameter-name-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.parameter-card .parameter-name {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.parameter-card .parameter-name-row button {
+  flex-shrink: 0;
+}
+.parameter-card .parameter-expression-label {
+  display: grid;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+  color: var(--muted);
+}
+.parameter-card input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.parameter-card .parameter-value {
+  display: block;
+  margin-top: 0.4rem;
+  overflow-wrap: anywhere;
+}

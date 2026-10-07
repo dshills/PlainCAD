@@ -27,6 +27,10 @@ async function ready(page: Page, check: (state: State) => void = () => {}) {
   }).toPass({ timeout: 20000 });
 }
 async function commit(page: Page, label: string, value: string) {
+  if (label.startsWith("Parameter ") && label.endsWith(" name")) {
+    const parameter = label.slice("Parameter ".length, -" name".length);
+    await page.getByRole("button", { name: `Rename parameter ${parameter}`, exact: true }).click();
+  }
   const input = page.getByLabel(label, { exact: true });
   await input.fill(value);
   await input.press("Enter");

@@ -14,6 +14,7 @@ import {
 } from "../design-system/Icons";
 import { RetainedPanel } from "./RetainedPanel";
 import { DockResize } from "./DockResize";
+import { actionableIssueCount } from "./diagnosticPresentation";
 const AiDrawer = lazy(() =>
   import("../panels/AiDrawer").then((module) => ({ default: module.AiDrawer })),
 );
@@ -34,9 +35,12 @@ export function WorkbenchBottomDock({
   );
   const aiOpen = useAiDrawer((state) => state.open);
   const rebuild = useCadStore((state) => state.rebuild);
-  const issues =
-    (rebuild.result?.errors.length ?? 0) +
-    (rebuild.result?.warnings.length ?? 0);
+  const documentId = useCadStore((state) => state.history.present.id);
+  const fileError = useCadStore((state) => state.fileError);
+  const settled = rebuild.status === "succeeded" || rebuild.status === "failed";
+  const issues = (settled && rebuild.result?.documentId === documentId
+    ? actionableIssueCount(rebuild.result) : 0) + (fileError ? 1 : 0) +
+    (rebuild.status === "failed" && !rebuild.result ? 1 : 0);
   // Commands elsewhere (e.g. start screen or palette) open this same AI surface.
   useEffect(() => {
     if (!enabled) return;

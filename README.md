@@ -21,6 +21,12 @@ cable guide to a 40-part rotary fixture, with editable files, native PNG preview
 [geometry validation](docs/examples/VALIDATION.json), and a
 [workflow usability audit](docs/examples/WORKFLOW_AUDIT.md).
 
+Successful builds show underconstrained-sketch freedom as optional guidance in
+Issues. Kernel, profile, parameter, and worker problems remain prominent.
+Parameters show their full names with a deliberate Rename action. While a rebuild
+is pending, a previous value is explicitly labeled stale; invalid values show
+Unavailable and cannot authorize export.
+
 ## Features
 
 - One local project file containing components, sketches, parameters, and a feature timeline.

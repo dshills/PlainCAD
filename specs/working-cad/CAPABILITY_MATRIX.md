@@ -1011,3 +1011,13 @@ geometry, PNG decoding/nonblank pixels, dimension visibility, hidden-body export
 and unchanged camera/visibility/clipping/history. The built-app CSP suite exercises
 all three scopes without widening its image policy. Unit tests cover stale/canceled
 jobs, encoding failure, command availability, session replacement and size limits.
+
+## Success feedback and parameters
+
+A successful build with only sketch degree-of-freedom notices has no Issues badge.
+Those notices remain available under Optional sketch guidance. Other warnings,
+errors, and worker failures remain actionable issues. Parameter readouts explicitly
+label previous values stale while updating, clear invalid values, and reset across
+project sessions. Names wrap in full; Rename opens the name editor deliberately.
+Native acceptance covers a free rectangle, valid/invalid edits, held worker delivery,
+export availability, and same-ID project replacement.

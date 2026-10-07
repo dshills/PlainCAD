@@ -24,6 +24,10 @@ async function ready(page: Page) {
   }).toPass();
 }
 async function commit(page: Page, name: string, value: string) {
+  if (name.startsWith("Parameter ") && name.endsWith(" name")) {
+    const parameter = name.slice("Parameter ".length, -" name".length);
+    await page.getByRole("button", { name: `Rename parameter ${parameter}`, exact: true }).click();
+  }
   const input = page.getByRole("textbox", { name, exact: true });
   await input.fill(value);
   await input.press("Enter");

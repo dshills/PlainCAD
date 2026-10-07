@@ -53,6 +53,7 @@ test("dependency navigation traces current authored inputs, downstream changes, 
   );
   expect((await snapshot()).past).toBe(baseline.past);
   expect((await snapshot()).document).toEqual(baseline.document);
+  await page.getByRole("button", { name: "Rename parameter width", exact: true }).click();
   await page.getByLabel("Parameter width name").fill("span");
   await page.getByLabel("Parameter width name").press("Enter");
   await expect.poll(async () => (await snapshot()).status).toBe("succeeded");

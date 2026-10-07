@@ -5,6 +5,7 @@ import { useWorkspaceState } from "../../state/useWorkspaceState";
 import { useCadStore } from "../../state/useCadStore";
 import { TASK_PANELS } from "./WorkspacePanels";
 import { activeComponentId } from "../commands/projectWorkflowCommand";
+import { actionableIssueCount } from "./diagnosticPresentation";
 
 export function WorkspaceControls() {
   const layout = useWorkspaceState((state) => state.layout);
@@ -41,9 +42,9 @@ function LegacyWorkspaceControls() {
   const document = useCadStore((s) => s.history.present);
   const componentId = useCadStore(activeComponentId);
   const rebuild = useCadStore((s) => s.rebuild);
-  const count =
-    (rebuild.result?.errors.length ?? 0) +
-    (rebuild.result?.warnings.length ?? 0);
+  const count = rebuild.result?.documentId === document.id &&
+    (rebuild.status === "succeeded" || rebuild.status === "failed")
+    ? actionableIssueCount(rebuild.result) : 0;
   return (
     <div className="workspace-controls">
       <label>

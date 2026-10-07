@@ -33,6 +33,10 @@ async function ready(page: Page, width: number) {
   }).toPass({ timeout: 20000 });
 }
 async function edit(page: Page, label: string, text: string) {
+  if (label.startsWith("Parameter ") && label.endsWith(" name")) {
+    const parameter = label.slice("Parameter ".length, -" name".length);
+    await page.getByRole("button", { name: `Rename parameter ${parameter}`, exact: true }).click();
+  }
   await page.getByLabel(label, { exact: true }).fill(text);
   await page.getByLabel(label, { exact: true }).press("Enter");
 }

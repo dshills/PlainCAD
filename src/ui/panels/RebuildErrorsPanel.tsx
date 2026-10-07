@@ -4,6 +4,7 @@ import { useCommandEnablement } from "../commands/useCommandEnablement";
 import { runCommand } from "../commands/commandRegistry";
 import { repairGuidance, selectionForRepairIssue, useRepairFocus, type RepairIssue } from "../commands/repairCommand";
 import { useSketchCanvas } from "../commands/sketchCanvasCommand";
+import { isOptionalSketchGuidance } from "../workspace/diagnosticPresentation";
 
 export function RebuildErrorsPanel() {
   const rebuild = useCadStore((state) => state.rebuild);
@@ -17,6 +18,8 @@ export function RebuildErrorsPanel() {
   const [actionError, setActionError] = useState<{ document: typeof document; message: string }>();
   const result = rebuild.result;
   const current = result?.documentId === document.id && (rebuild.status === "succeeded" || rebuild.status === "failed");
+  const guidance = current ? result.warnings.filter(isOptionalSketchGuidance) : [];
+  const warnings = current ? result.warnings.filter((warning) => !isOptionalSketchGuidance(warning)) : [];
   const issueCard = (issue: RepairIssue, warning = false) => {
     if (!result) return null;
     const advice = current ? repairGuidance(issue, document, result) : undefined;
@@ -49,8 +52,15 @@ export function RebuildErrorsPanel() {
     <p className="muted">Status {rebuild.status}{result ? `, ${result.durationMs.toFixed(1)}ms, ${result.meshes.length} mesh(es)` : ""}</p>
     {fileError ? <button className="item-card error-text" onClick={() => setFileError(undefined)}>File: {fileError}</button> : null}
     {actionError?.document === document ? <p role="alert" className="error-text">{actionError.message}</p> : null}
-    {result?.errors.map((issue) => issueCard(issue))}
-    {result?.warnings.map((issue) => issueCard(issue, true))}
-    {result && !result.errors.length && !result.warnings.length && !fileError ? <p className="muted">No rebuild issues.</p> : null}
+    {!current && rebuild.status !== "failed" ? <p role="status">Updating model diagnostics…</p> : null}
+    {rebuild.status === "failed" && !current ? <p role="alert" className="error-text">{rebuild.message ?? "Rebuild failed. Try rebuilding again to obtain model diagnostics."}</p> : null}
+    {current ? result.errors.map((issue) => issueCard(issue)) : null}
+    {warnings.map((issue) => issueCard(issue, true))}
+    {current && result.success && !result.errors.length && !warnings.length && !fileError ? <p className="muted">No rebuild issues.</p> : null}
+    {guidance.length ? <details className="sketch-guidance">
+      <summary>Optional sketch guidance ({guidance.length})</summary>
+      <p className="muted">These sketches can still move. You can model from a closed outline now, or add dimensions and constraints when you need precise control.</p>
+      {guidance.map((issue) => <p key={issue.id}>{document.sketches[issue.sourceId ?? ""]?.name ?? "Sketch"}: {issue.message}</p>)}
+    </details> : null}
   </section>;
 }

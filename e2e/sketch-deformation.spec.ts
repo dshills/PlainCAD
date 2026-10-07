@@ -105,6 +105,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     await page
       .getByRole("button", { name: "Add Parameter", exact: true })
       .click();
+    await page.getByRole("button", { name: "Rename parameter param_1", exact: true }).click();
     await page
       .getByLabel("Parameter param_1 name", { exact: true })
       .fill("width");
