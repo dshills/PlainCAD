@@ -106,6 +106,7 @@ test("world measurements follow native sketch edits, units, analytic curves and 
   });
   await ready(page);
   const panel = page.getByRole("region", { name: "Measurements" });
+  await panel.getByText("Choose sketch geometry by name", { exact: true }).click();
   await panel
     .getByLabel("Measurement first point")
     .selectOption({ label: "XY — point 1" });

@@ -1,3 +1,6 @@
+import { addMeasurementOverlays, installMeasurementPicking, visibleMeasurementTargets, resolvedMeasurementSelection } from "./measurementPicking";
+import { measureModelTargets } from "../cad/inspection/modelMeasurements";
+import { ModelMeasurementReadout } from "./ModelMeasurementReadout";
 import { createPresentationLights } from "./presentationLights";
 import { DemandRenderer } from "./demandRenderer";
 import { fitCameraBounds } from "./cameraFit";
@@ -103,6 +106,9 @@ export function CadViewer() {
   const view = useViewerState();
   const presentationMode = view.session === session ? view.presentationMode : "model";
   const inspection = useInspectionState();
+  useEffect(() => {
+    if (inspection.picking && inspection.session !== session) inspection.setPicking(session, false);
+  }, [inspection.picking, inspection.session, session]);
   const section = useSectionState();
   const clippingRef = useRef<THREE.Plane | undefined>(undefined);
   const hidden = useMemo(() => hiddenViewerBodies(document, meshes.map(mesh => mesh.bodyId), session, { session: view.session, hiddenBodyIds: view.hiddenBodyIds, hiddenComponentIds: view.hiddenComponentIds }), [document, meshes, session, view.session, view.hiddenBodyIds, view.hiddenComponentIds]);
@@ -389,6 +395,7 @@ export function CadViewer() {
     renderer.domElement.addEventListener("webglcontextrestored", invalidate);
     invalidate();
 
+    const uninstallMeasurementPicking = installMeasurementPicking(renderer.domElement, camera, modelGroup, () => clippingRef.current);
     const uninstallPlanePicking = installSketchPlanePicking(scene, renderer, camera, modelGroup, () => clippingRef.current, invalidate);
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
@@ -405,6 +412,7 @@ export function CadViewer() {
     renderer.domElement.addEventListener("click", click);
 
     return () => {
+      uninstallMeasurementPicking();
       uninstallPlanePicking();
       operationPicking.dispose();
       unregisterDiagnostics?.();
@@ -511,6 +519,24 @@ export function CadViewer() {
     disposeObject3D(group);
     group.clear();
     runtime.invalidate();
+    if (inspection.session === session && inspection.picking && rebuild.status === "succeeded" && rebuild.result?.success && !fileBusy) {
+      const targets = visibleMeasurementTargets();
+      if (inspection.document && (inspection.document !== document || inspection.result !== rebuild.result)) inspection.clearModel();
+      const selected = resolvedMeasurementSelection(document, rebuild.result, inspection, targets);
+      addMeasurementOverlays(group, targets, selected.map((target) => target.id));
+      if (selected.length === 2) try {
+        const measurement = measureModelTargets(selected[0], selected[1]);
+        if (measurement.length !== undefined && measurement.paths[0]?.length === 2) {
+          const geometry = new THREE.BufferGeometry().setFromPoints(measurement.paths[0].map((point) => new THREE.Vector3(point.x, point.y, point.z)));
+          group.add(new THREE.Line(geometry, new THREE.LineBasicMaterial({ color: "#b52977", depthTest: false })));
+        }
+      } catch (error) {
+        if (!(error instanceof MeasurementError)) console.error("Measurement overlay failed", error);
+      }
+      applyClipping(group, clippingRef.current);
+      return;
+    }
+    if (inspection.document && (inspection.document !== document || inspection.result !== rebuild.result || rebuild.status !== "succeeded" || fileBusy)) inspection.clearModel();
     if (inspection.session !== session || !inspection.first || !inspection.second || rebuild.status !== "succeeded" || !rebuild.result?.success || rebuild.result.documentId !== document.id) return;
     try {
       const points = [inspection.first,inspection.second].map((ref) => measureWorldPoint(document,rebuild.result!,ref));
@@ -523,7 +549,7 @@ export function CadViewer() {
       // Expected lost references have a diagnostic in the measurement panel.
       if (!(error instanceof MeasurementError)) console.error("Measurement overlay failed", error);
     }
-  }, [inspection.session, inspection.first, inspection.second, session, document, rebuild.result, rebuild.status]);
+  }, [inspection.session, inspection.first, inspection.second, inspection.picking, inspection.targetIds, inspection.document, inspection.result, session, document, rebuild.result, rebuild.status, fileBusy, view.hiddenBodyIds, view.hiddenComponentIds, view.hiddenSketchIds, view.session, presentationMode]);
 
   useEffect(() => {
     const runtime = runtimeRef.current;
@@ -545,7 +571,7 @@ export function CadViewer() {
     if (runtime) { applySelection(runtime.modelGroup, selectedBodyId, highlightedBodyIdsRef.current); runtime.invalidate(); }
   }, [selectedBodyId, currentHighlight]);
 
-  return <div ref={hostRef} className="viewer-canvas">{presentationMode === "model" ? <SolidDimensionOverlay dimensions={dimensions} project={dimensionProjector.current} subscribeFrames={subscribeFrames.current} /> : null}<ViewerToolbar hasGeometry={meshes.some((mesh) => !hidden.includes(mesh.bodyId))} /></div>;
+  return <div ref={hostRef} className="viewer-canvas">{presentationMode === "model" ? <ModelMeasurementReadout project={dimensionProjector.current} subscribeFrames={subscribeFrames.current} /> : null}{presentationMode === "model" && !inspection.picking ? <SolidDimensionOverlay dimensions={dimensions} project={dimensionProjector.current} subscribeFrames={subscribeFrames.current} /> : null}<ViewerToolbar hasGeometry={meshes.some((mesh) => !hidden.includes(mesh.bodyId))} /></div>;
 }
 
 function applyClipping(group: THREE.Group, plane: THREE.Plane | undefined) {

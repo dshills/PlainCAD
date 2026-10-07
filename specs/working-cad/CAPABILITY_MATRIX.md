@@ -7,6 +7,11 @@
   signature; unsupported histories are rechecked. A 40-body fixture verifies
   unchanged native geometry, dimension-edit invalidation and disposal.
   This does not cache entire native feature rebuilds. See [performance scope](PERFORMANCE.md).
+- Click-to-measure offers current analytic authored cap edges/endpoints and
+  native-validated planar faces, plus visible solved sketch geometry. Point pairs,
+  straight-edge angles and planar-face angle/separation are supported. General
+  BRep topology and arbitrary curved-distance pairs remain unavailable.
+  See [click measurement limits](CLICK_MEASURE.md).
 - Task guidance uses current worker sketch profiles/diagnostics and distinguishes
   empty/open/closed/broken sketches, failed rebuilds and native/fallback solids.
   Disabled actions show prerequisites; diagnostics retain explicit source repair.

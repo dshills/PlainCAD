@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useInspectionState } from "../../state/inspectionState";
 import type { SolidDimensionEditFrame } from "./solidDimensionCommand";
 import type { SketchRefinementFrame } from "./sketchRefinementCommand";
 import type { ContextualConstraintFrame } from "./contextualConstraintCommand";
@@ -21,6 +22,7 @@ export type InteractionDraftOwner = "solidDimension" | "sketchRefinement" | "con
 /** Each draft can inspect competing owners without counting its own frame. */
 export function interactionDraftBusy(owner?: InteractionDraftOwner) {
   return Boolean(
+    useInspectionState.getState().picking ||
     (owner !== "solidDimension" && useSolidDimensionEdit.getState().frame) ||
     (owner !== "sketchRefinement" && useSketchRefinement.getState().frame) ||
     (owner !== "constraint" && useContextualConstraintDraft.getState().frame) ||

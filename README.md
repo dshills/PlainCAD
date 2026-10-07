@@ -59,6 +59,7 @@ their existing constraints; free Corner rectangles retain their positional freed
 - Unit-aware parameter expressions, stable bindings, undo/redo, timeline ordering, and explicit reference repair.
 - Docked Workbench, Minimal and Full layouts, and Light, Dark, and Saturn Command themes.
 - Body visibility, named camera views, section previews, sketch measurements, and linked diagnostics.
+- Click-to-measure supported model edges, endpoints and planar faces, with analytic values.
 - Editable `.pcaddoc`/JSON files, autosave/recovery, and validated single- or multi-body STL export.
 - PNG downloads of the current 3D view, an isolated selected body, or a sketch with its visible dimensions.
 - AI part creation, bounded existing-part edits/additions, and conversational sketch refinement.
@@ -109,6 +110,12 @@ Components currently share the project origin. Modeling targets stay within thei
 component; supported face-plane references can use another component's upstream
 geometry. Nested assemblies, placement transforms, joints, and linked designs
 remain planned.
+
+Open **Measure → Pick in model** to click supported native authored edges,
+endpoints or planar faces. Values are analytic; pair measurements support point
+distance, straight-edge angles and planar-face angle/separation. A keyboard target
+list and advanced sketch selectors remain available. Pending edits invalidate
+old picks. See [measurement limits](specs/working-cad/CLICK_MEASURE.md).
 
 ### Make your first part
 

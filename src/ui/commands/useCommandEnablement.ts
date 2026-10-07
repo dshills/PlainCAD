@@ -1,3 +1,4 @@
+import { useInspectionState } from "../../state/inspectionState";
 import { useFacePocket } from "./facePocketCommand";
 import { useSketchReplication } from "./sketchReplicationState";
 import { useSketchOffset } from "./sketchOffsetState";
@@ -21,6 +22,7 @@ import { selectCommandEnablement } from "./commandRegistry";
 import { useTargetScopeCapture } from "./targetScopeCaptureCommand";
 
 export function useCommandEnablement() {
+  useInspectionState((state) => state.picking);
   useSketchCanvas((state) => state.selection);
   useSketchReplication((state) => state.frame);
   useSketchOffset((state) => state.frame);

@@ -15,8 +15,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
   The development run had 240 passes and two outdated test steps; both corrected
   files passed their 3-case rerun. Production completed separately after that fix.
   Only test steps changed; runtime sources stayed frozen throughout validation.
-- Completed items since that full gate: **2**.
-- Next full gate: item **5**, after three more completed items.
+- Completed items since that full gate: **3**.
+- Next full gate: item **5**, after two more completed items.
 
 ## Completed batch
 
@@ -91,3 +91,9 @@ Low findings were assessed: native fixture lookups are fixed analytic geometry a
 Prism `c8def01f3505d513a07de65794432267` reviewed all eleven isolated implementation/test/documentation files with Anthropic `claude-sonnet-5-5`: no high or medium findings. Its earlier stale-result benchmark finding was fixed by waiting for changed native volume and the edited expression. The remaining low cold-counter note was assessed against the deliberately fresh document/worker setup; cold probes and warm reuse are both independently asserted.
 
 The exact commit checkout passed `npm run check:item`: type checks, 1036 unit/component tests, build/bundle budget (largest 417.91 kB), 5 development and 14 production smoke tests. Its additional 6 native cases passed: the 40-body cache benchmark, XY/XZ/YZ retained-edge treatments, split exclusions, and same-ID stale-preview rejection. The first temporary-checkout test attempt used a dependency symlink that Vite refused; local dependency paths fixed that test environment, then the complete gate passed. No runtime behavior was changed to relax those checks.
+
+### Item 3: click-to-measure current model geometry
+
+Prism `ad4c2f2881b5b2d2fba834629e0bad63` covered the isolated measurement implementation; fixup reviews `210fd6571b86261f3509666c58e2b05b` and `8f3f702fa1f50cc3d81d0a3d67c57571` covered its final guards and tests. All used Anthropic `claude-sonnet-5-5`. Actionable session reset, hidden-pair resolution, stale overlays, missing-path and positive-test findings were fixed. Final fixup review has no high/medium findings. Competing drafts are already excluded through `targetPickerActive`, which includes `interactionDraftBusy`; that medium note was a false positive. Low notes concern the documented bounded target set, ordered analytic fixtures, and placement helpers whose expected lost/budget errors use plain Error. Unexpected subclasses now propagate and a ReferenceError regression proves this.
+
+The exact commit checkout verified every `check:item` stage: type checks, 1050 unit/component tests, build/bundle budget (largest 429.60 kB), 5 development and 14 production smoke tests. Both additional native click-measure cases passed, proving edge/endpoint/circle/plane values, units and stale handling. A concurrent development run initially cleared production trace artifacts during cleanup; the complete 14-case production smoke set then passed sequentially on unchanged runtime sources. Future browser runs remain serial within a checkout.

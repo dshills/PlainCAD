@@ -72,6 +72,7 @@ test("controlled native rebuild/export timings and bounded viewer/WASM resource 
   await ready(page, doc.id, 60);
   const coldLoadToFirstModelMs = performance.now() - coldStart;
   const measurements = page.getByRole("region", { name: "Measurements" });
+  await measurements.getByText("Choose sketch geometry by name", { exact: true }).click();
   await measurements
     .getByLabel("Measurement first point")
     .selectOption({ label: "Benchmark base — point 1" });
