@@ -218,6 +218,7 @@ describe("component navigation", () => {
     );
     expect(track).toHaveTextContent("Cover solid");
     expect(track).not.toHaveTextContent("Bracket solid");
+    fireEvent.click(screen.getByLabelText("Actions for component Cover"));
     fireEvent.click(
       screen.getByRole("button", { name: "Isolate component Cover" }),
     );
@@ -237,6 +238,94 @@ describe("component navigation", () => {
     expect(useCadStore.getState().activeComponentId).toBe(
       document.rootComponentId,
     );
+  });
+  it("uses inline component navigation, keeps empty root content quiet and reveals matching sketch descendants", () => {
+    const { document, a, b } = project();
+    useCadStore.setState({ rebuild: {
+      status: "succeeded", kernelReady: true, result: rebuildDocument(document),
+    } });
+    render(<SketchPanel compact />);
+    const root = screen.getByRole("button", { name: "Activate component Root Component" }).closest(".component-node")!;
+    expect(root.querySelector(".browser-folder")).toBeNull();
+    expect(screen.queryByText("Origin", { exact: true })).toBeNull();
+    const bracket = screen.getByRole("button", { name: "Activate component Bracket" });
+    const heading = bracket.closest(".component-heading")!;
+    expect(within(heading as HTMLElement).getByLabelText("Show component Bracket")).toBeChecked();
+    expect(heading.querySelector(".component-actions")).toBeInTheDocument();
+    fireEvent.click(bracket);
+    expect(useCadStore.getState().activeComponentId).toBe(a.id);
+    expect(bracket).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Bracket" })).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Search project"), { target: { value: "cover section" } });
+    expect(screen.getByRole("button", { name: /Cover section/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Activate component Cover" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Activate component Bracket" })).toBeNull();
+    expect(useCadStore.getState().activeComponentId).toBe(a.id);
+    act(() => useCadStore.getState().setDocument(document));
+    expect(screen.getByLabelText("Search project")).toHaveValue("");
+    expect(screen.getByRole("button", { name: "Activate component Cover" })).toBeInTheDocument();
+    expect(useCadStore.getState().history.past).toEqual([]);
+    expect(document.components[b.id].name).toBe("Cover");
+  });
+  it("keeps rename inside contextual actions and preserves component identity with undo", () => {
+    const { a } = project();
+    act(() => useCadStore.getState().activateComponent(a.id));
+    render(<SketchPanel compact />);
+    const menu = screen.getByLabelText("Actions for component Bracket").closest("details")!;
+    menu.open = true;
+    const input = within(menu).getByLabelText("Component name");
+    (input as HTMLInputElement).focus();
+    fireEvent.change(input, { target: { value: "Bracket revised" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+    expect(useCadStore.getState().history.present.components[a.id].name).toBe("Bracket revised");
+    expect(useCadStore.getState().activeComponentId).toBe(a.id);
+    menu.open = true;
+    fireEvent.keyDown(menu, { key: "Escape" });
+    expect(menu).not.toHaveAttribute("open");
+    expect(screen.getByLabelText("Actions for component Bracket revised")).toHaveFocus();
+    act(() => useCadStore.getState().undo());
+    expect(screen.getByRole("button", { name: "Activate component Bracket" })).toBeInTheDocument();
+  });
+  it("commits a pending rename before outside dismissal while internal focus keeps actions open", () => {
+    const { a } = project();
+    act(() => useCadStore.getState().activateComponent(a.id));
+    render(<SketchPanel compact />);
+    const summary = screen.getByLabelText("Actions for component Bracket");
+    const menu = summary.closest("details")!;
+    menu.open = true;
+    fireEvent(menu, new Event("toggle"));
+    const input = within(menu).getByLabelText("Component name") as HTMLInputElement;
+    act(() => input.focus());
+    fireEvent.change(input, { target: { value: "Renamed by leaving" } });
+    fireEvent.pointerDown(summary);
+    expect(menu.open).toBe(true);
+    expect(useCadStore.getState().history.present.components[a.id].name).toBe("Bracket");
+    fireEvent.pointerDown(screen.getByLabelText("Search project"));
+    expect(menu.open).toBe(false);
+    expect(useCadStore.getState().history.present.components[a.id].name).toBe("Renamed by leaving");
+    expect(useCadStore.getState().history.past).toHaveLength(1);
+    expect(useCadStore.getState().activeComponentId).toBe(a.id);
+    menu.open = true;
+    fireEvent(menu, new Event("toggle"));
+    act(() => input.focus());
+    fireEvent.change(input, { target: { value: "Escaped draft" } });
+    fireEvent.keyDown(input, { key: "Escape" });
+    expect(menu.open).toBe(false);
+    expect(useCadStore.getState().history.present.components[a.id].name).toBe("Renamed by leaving");
+    expect(useCadStore.getState().history.past).toHaveLength(1);
+  });
+  it("allows Escape to reach workspace shortcuts when contextual actions are closed", () => {
+    project();
+    let escaped = 0;
+    render(<div onKeyDown={(event) => { if (event.key === "Escape") escaped++; }}><SketchPanel compact /></div>);
+    const summary = screen.getByLabelText("Actions for component Root Component");
+    const menu = summary.closest("details")!;
+    fireEvent.keyDown(summary, { key: "Escape" });
+    expect(escaped).toBe(1);
+    menu.open = true;
+    fireEvent.keyDown(summary, { key: "Escape" });
+    expect(escaped).toBe(1);
+    expect(menu).not.toHaveAttribute("open");
   });
   it("opens used sketches hidden, keeps unused/suppressed sources visible and resets same-ID sessions", () => {
     const { document, session } = project();

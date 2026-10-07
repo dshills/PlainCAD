@@ -1,3 +1,4 @@
+import "./PartsBrowser.css";
 import { CaretDownIcon, CaretRightIcon } from "../design-system/Icons";
 import { useViewerState } from "../../state/viewerState";
 import { bodyDisplayNames } from "../../cad/document/bodyDisplayNames";
@@ -7,11 +8,12 @@ import { runCommand } from "../commands/commandRegistry";
 import { activeComponentId } from "../commands/projectWorkflowCommand";
 import {
   bodyComponentId,
+  featureComponentId,
   sketchComponentId,
 } from "../../cad/document/components";
 import { SketchTools } from "./SketchTools";
 import { BodyPanel } from "./BodyPanel";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useCadStore } from "../../state/useCadStore";
 import { orderedSketches } from "../../state/selectors";
 import { evaluateParameters } from "../../cad/parameters/expressionEvaluator";
@@ -22,10 +24,15 @@ import { sketchPlaneLabel } from "../../cad/sketch/planes";
 export function SketchPanel({ compact = false }: { compact?: boolean }) {
   const [search, setSearch] = useState("");
   const filter = compact ? search.trim().toLocaleLowerCase() : "";
-  const bodies = useCadStore((state) => state.rebuild.result?.bodies);
+  const bodies = useCadStore((state) =>
+    state.rebuild.result?.documentId === state.history.present.id
+      ? state.rebuild.result.bodies
+      : undefined,
+  );
   const document = useCadStore((state) => state.history.present);
   const componentId = useCadStore(activeComponentId);
   const session = useCadStore((state) => state.documentSession);
+  useEffect(() => setSearch(""), [session]);
   const view = useViewerState();
   const hiddenSketches = view.session === session ? view.hiddenSketchIds : [];
   const hidden = view.session === session ? view.hiddenComponentIds : [];
@@ -63,7 +70,7 @@ export function SketchPanel({ compact = false }: { compact?: boolean }) {
   }, [activeSketch, evaluatedParameters.values]);
   return (
     <section
-      className={`panel browser-panel${compact ? " compact-browser" : ""}`}
+      className={`panel browser-panel parts-browser${compact ? " compact-browser" : ""}`}
     >
       <h2>Browser</h2>
       {compact ? (
@@ -139,25 +146,32 @@ export function SketchPanel({ compact = false }: { compact?: boolean }) {
                   sketchComponentId(document, sketch.id) === component.id,
               );
               const active = component.id === componentId;
+              const ownedBodies = bodies?.filter(
+                (body) => bodyComponentId(document, body.id) === component.id,
+              ) ?? [];
+              const emptyRoot =
+                component.id === document.rootComponentId &&
+                !owned.length && !ownedBodies.length &&
+                !document.features.some((feature) =>
+                  featureComponentId(document, feature) === component.id,
+                );
               return (
                 <ComponentFolder
-                  key={component.id}
+                  key={`${session}:${component.id}`}
                   hidden={
                     Boolean(filter) &&
                     ![
                       component.name,
                       ...owned.map((sketch) => sketch.name),
-                      ...(bodies
-                        ?.filter(
-                          (body) =>
-                            bodyComponentId(document, body.id) === component.id,
-                        )
-                        .map((body) => names[body.id]) ?? []),
+                      ...ownedBodies.map((body) => names[body.id] ?? body.name),
                     ].some((name) => name.toLocaleLowerCase().includes(filter))
                   }
                   name={component.name}
+                  forceExpanded={Boolean(filter)}
+                  partCount={ownedBodies.length}
+                  sketchCount={owned.length}
                   active={active}
-                  root={!compact && component.id === document.rootComponentId}
+                  root={component.id === document.rootComponentId}
                   canActivate={enablement.editProject}
                   visible={!hidden.includes(component.id)}
                   onVisibility={() =>
@@ -177,10 +191,8 @@ export function SketchPanel({ compact = false }: { compact?: boolean }) {
                       componentId: component.id,
                     })
                   }
-                >
-                  {active ? (
-                    <details open={!compact}>
-                      <summary>Component settings</summary>
+                  settings={active ? (
+                    <div className="component-settings">
                       <label className="component-name">
                         Component name
                         <CommitInput
@@ -193,75 +205,80 @@ export function SketchPanel({ compact = false }: { compact?: boolean }) {
                           }
                         />
                       </label>
-                    </details>
-                  ) : null}
-                  <div className="browser-folder">
-                    <span className="folder-label">Origin</span>
-                    <span className="muted">XY, XZ, YZ · project origin</span>
-                  </div>
-                  <BodyPanel
-                    componentId={component.id}
-                    controls={active}
-                    compact={compact}
-                  />
-                  <div className="browser-folder">
-                    <span className="folder-label">Sketches</span>
-                    <span className="muted">{owned.length} sketches</span>
-                  </div>
-                  {owned.map((sketch) => (
-                    <div className="sketch-browser-row" key={sketch.id}>
-                      <button
-                        className={`item-card ${activeSketch?.id === sketch.id ? "selected" : ""}`}
-                        onClick={() =>
-                          select({
-                            kind: "sketch",
-                            id: sketch.id,
-                            documentId: document.id,
-                          })
-                        }
-                        onDoubleClick={() => {
-                          select({
-                            kind: "sketch",
-                            id: sketch.id,
-                            documentId: document.id,
-                          });
-                          void runCommand("sketch.editCanvas");
-                        }}
-                      >
-                        <strong>{sketch.name}</strong>
-                        <span className="muted">
-                          {" "}
-                          {sketchPlaneLabel(sketch.plane)} plane,{" "}
-                          {Object.keys(sketch.entities).length} entities
-                        </span>
-                      </button>
-                      <label>
-                        <input
-                          type="checkbox"
-                          aria-label={`Show sketch ${sketch.name} in 3D`}
-                          checked={
-                            !hidden.includes(component.id) &&
-                            !hiddenSketches.includes(sketch.id)
-                          }
-                          disabled={hidden.includes(component.id)}
-                          title={
-                            hidden.includes(component.id)
-                              ? "Show the component to change sketch visibility."
-                              : "3D overlay visibility; Edit Sketch keeps the canvas visible."
-                          }
-                          onChange={() =>
-                            void runCommand("sketch.toggleVisibility", {
-                              sketchId: sketch.id,
-                              documentSession: session,
-                            })
-                          }
-                        />
-                        3D
-                      </label>
                     </div>
-                  ))}
-                  {!owned.length ? (
-                    <p className="muted">Create a sketch in this component.</p>
+                  ) : undefined}
+                >
+                  {!emptyRoot ? (
+                    <>
+                      {!compact ? <div className="browser-folder">
+                        <span className="folder-label">Origin</span>
+                        <span className="muted">XY, XZ, YZ · project origin</span>
+                      </div> : null}
+                      <BodyPanel
+                        componentId={component.id}
+                        controls={active && !compact}
+                        compact={compact}
+                      />
+                      <div className="browser-folder">
+                        <span className="folder-label">Sketches</span>
+                        <span className="muted">{owned.length} {owned.length === 1 ? "sketch" : "sketches"}</span>
+                      </div>
+                      {owned.map((sketch) => (
+                        <div className="sketch-browser-row" key={sketch.id}>
+                          <button
+                            className={`item-card ${activeSketch?.id === sketch.id ? "selected" : ""}`}
+                            onClick={() =>
+                              select({
+                                kind: "sketch",
+                                id: sketch.id,
+                                documentId: document.id,
+                              })
+                            }
+                            onDoubleClick={() => {
+                              select({
+                                kind: "sketch",
+                                id: sketch.id,
+                                documentId: document.id,
+                              });
+                              void runCommand("sketch.editCanvas");
+                            }}
+                          >
+                            <strong>{sketch.name}</strong>
+                            <span className="muted">
+                              {" "}
+                              {sketchPlaneLabel(sketch.plane)} plane,{" "}
+                              {Object.keys(sketch.entities).length} entities
+                            </span>
+                          </button>
+                          <label>
+                            <input
+                              type="checkbox"
+                              aria-label={`Show sketch ${sketch.name} in 3D`}
+                              checked={
+                                !hidden.includes(component.id) &&
+                                !hiddenSketches.includes(sketch.id)
+                              }
+                              disabled={hidden.includes(component.id)}
+                              title={
+                                hidden.includes(component.id)
+                                  ? "Show the component to change sketch visibility."
+                                  : "3D overlay visibility; Edit Sketch keeps the canvas visible."
+                              }
+                              onChange={() =>
+                                void runCommand("sketch.toggleVisibility", {
+                                  sketchId: sketch.id,
+                                  documentSession: session,
+                                })
+                              }
+                            />
+                            <span className={compact ? "sr-only" : undefined}>3D</span>
+                          </label>
+                        </div>
+                      ))}
+                      {!owned.length && !compact ? (
+                        <p className="muted">Create a sketch in this component.</p>
+                      ) : null}
+                    </>
                   ) : null}
                 </ComponentFolder>
               );
@@ -335,34 +352,68 @@ function ComponentFolder({
   name,
   active,
   root,
+  forceExpanded,
+  partCount,
+  sketchCount,
   canActivate,
   onActivate,
   visible,
   onVisibility,
   onIsolate,
+  settings,
   children,
 }: {
   hidden?: boolean;
   name: string;
   active: boolean;
   root: boolean;
+  forceExpanded: boolean;
+  partCount: number;
+  sketchCount: number;
   canActivate: boolean;
   onActivate: () => void;
   visible: boolean;
   onVisibility: () => void;
   onIsolate: () => void;
+  settings?: ReactNode;
   children: ReactNode;
 }) {
   const [expanded, setExpanded] = useState(active);
+  const menuRef = useRef<HTMLDetailsElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  useEffect(() => {
+    const menu = menuRef.current;
+    if (!menuOpen || !menu) return;
+    const closeOutside = (event: Event) => {
+      if (event.target instanceof Node && !menu.contains(event.target)) {
+        // CommitInput applies a pending rename on blur. Hiding the native
+        // disclosure first can suppress that blur in some browsers.
+        const focused = menu.ownerDocument.activeElement;
+        if (focused instanceof HTMLInputElement && menu.contains(focused)) {
+          focused.blur();
+        }
+        menu.open = false;
+      }
+    };
+    const ownerDocument = menu.ownerDocument;
+    ownerDocument.addEventListener("pointerdown", closeOutside);
+    ownerDocument.addEventListener("focusin", closeOutside);
+    return () => {
+      ownerDocument.removeEventListener("pointerdown", closeOutside);
+      ownerDocument.removeEventListener("focusin", closeOutside);
+    };
+  }, [menuOpen]);
   useEffect(() => {
     if (active) setExpanded(true);
   }, [active]);
+  useEffect(() => {
+    if (forceExpanded) setExpanded(true);
+  }, [forceExpanded]);
   return (
     <div className={`component-node ${active ? "active" : ""}`} hidden={hidden}>
       <div className="component-heading">
         <button
           className="component-disclosure"
-          title={name}
           aria-label={`${expanded ? "Collapse" : "Expand"} component ${name}`}
           aria-expanded={expanded}
           onClick={() => setExpanded(!expanded)}
@@ -371,32 +422,57 @@ function ComponentFolder({
             <CaretDownIcon size={14} aria-hidden={true} />
           ) : (
             <CaretRightIcon size={14} aria-hidden={true} />
-          )}{" "}
-          <strong>{name}</strong>
-          {root ? " · Root" : ""}
+          )}
         </button>
         <button
+          className="component-activate"
+          title={`${name}${root ? " · Project root" : ""}${active ? " · Active component" : ""} · ${partCount} ${partCount === 1 ? "part" : "parts"} · ${sketchCount} ${sketchCount === 1 ? "sketch" : "sketches"}`}
           disabled={!canActivate}
           aria-pressed={active}
           aria-label={`Activate component ${name}`}
           onClick={onActivate}
         >
-          {active ? "Active" : "Activate"}
+          <strong>{name}</strong>
+          {active ? (
+            <span className="component-active-mark" aria-hidden="true">●</span>
+          ) : null}
         </button>
-      </div>
-      <div className="component-view-actions">
-        <label>
+        <label className="component-visibility" title={`Show component ${name}`}>
           <input
             type="checkbox"
             aria-label={`Show component ${name}`}
             checked={visible}
             onChange={onVisibility}
-          />{" "}
-          Visible
+          />
+          <span className="sr-only">Visible</span>
         </label>
-        <button aria-label={`Isolate component ${name}`} onClick={onIsolate}>
-          Isolate
-        </button>
+        <details
+          className="component-actions"
+          ref={menuRef}
+          onToggle={(event) => setMenuOpen(event.currentTarget.open)}
+          onKeyDown={(event) => {
+            if (event.key === "Escape" && event.currentTarget.open) {
+              event.stopPropagation();
+              event.currentTarget.open = false;
+              event.currentTarget.querySelector("summary")?.focus();
+            }
+          }}
+        >
+          <summary aria-label={`Actions for component ${name}`} title={`Actions for component ${name}`}>⋯</summary>
+          <div className="component-action-content">
+            <button aria-label={`Isolate component ${name}`} onClick={(event) => {
+              onIsolate();
+              const menu = event.currentTarget.closest("details");
+              if (menu) {
+                menu.open = false;
+                menu.querySelector("summary")?.focus();
+              }
+            }}>
+              Isolate
+            </button>
+            {settings}
+          </div>
+        </details>
       </div>
       {expanded ? children : null}
     </div>

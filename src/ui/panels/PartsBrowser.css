@@ -1,0 +1,139 @@
+/* Keep part navigation compact without hiding keyboard-accessible actions. */
+.parts-browser .component-node {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.parts-browser .component-node > .component-heading {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) 24px 28px;
+  align-items: center;
+  gap: 2px;
+  margin: 0;
+  padding: 2px;
+  border-radius: 4px;
+  background: transparent;
+}
+.parts-browser .component-node.active > .component-heading {
+  background: var(--selected-bg);
+}
+.parts-browser .component-heading > button,
+.parts-browser.compact-browser .component-heading > button {
+  min-height: 32px;
+  padding: 4px;
+  margin: 0;
+  border-color: transparent;
+  background: transparent;
+}
+.parts-browser .component-heading .component-disclosure,
+.parts-browser.compact-browser .component-heading .component-disclosure {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.parts-browser .component-activate {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  min-width: 0;
+  text-align: left;
+}
+.parts-browser .component-activate strong {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.parts-browser .component-active-mark {
+  color: var(--accent);
+  font-size: 8px;
+  flex: none;
+}
+.parts-browser .component-visibility {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0;
+  min-height: 32px;
+}
+.parts-browser .component-visibility input {
+  margin: 0;
+}
+.parts-browser .component-actions {
+  position: relative;
+  margin: 0;
+}
+.parts-browser .component-actions > summary {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  line-height: 1;
+  list-style: none;
+  font-size: 18px;
+  cursor: pointer;
+}
+.parts-browser .component-actions > summary::-webkit-details-marker {
+  display: none;
+}
+.parts-browser .component-action-content {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 10;
+  width: 180px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: 0 4px 16px #0003;
+}
+.parts-browser .component-action-content button {
+  width: 100%;
+  margin: 0;
+}
+.parts-browser .component-settings {
+  margin-top: 8px;
+}
+.parts-browser .component-settings input {
+  width: 100%;
+  min-width: 0;
+}
+.parts-browser.compact-browser .component-tree {
+  gap: 2px;
+}
+.parts-browser.compact-browser .browser-folder {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2px;
+  margin-bottom: 2px;
+  padding: 2px 8px;
+}
+.parts-browser.compact-browser .browser-folder .muted {
+  margin-top: 0;
+}
+.parts-browser.compact-browser .body-row,
+.parts-browser.compact-browser .sketch-browser-row {
+  gap: 4px;
+  padding-right: 32px;
+}
+.parts-browser.compact-browser .body-row .item-card,
+.parts-browser.compact-browser .sketch-browser-row .item-card {
+  min-height: 32px;
+  padding: 4px 8px;
+  margin: 0;
+}
+.parts-browser.compact-browser .sketch-browser-row .item-card .muted {
+  display: none;
+}
+.parts-browser.compact-browser .body-row label input,
+.parts-browser.compact-browser .sketch-browser-row label input {
+  margin: 0;
+}
+.parts-browser .component-actions > summary:focus-visible,
+.parts-browser .component-heading > button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}

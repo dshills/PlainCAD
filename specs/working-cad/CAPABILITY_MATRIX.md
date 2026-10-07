@@ -1069,3 +1069,12 @@ files; a file with separate shells can check cross-part overlaps; native union
 requires full self-intersection validation and may retain disconnected solids.
 Document/session/rebuild checks still reject obsolete tasks. Compact/desktop native
 acceptance covers reachable footer actions, ZIP placement/volume, and stale tasks.
+
+## Compact Parts browser
+
+Part rows separate expansion from activation, expose visibility inline, and keep
+isolation/rename in a dismissible contextual menu. Empty root groups are omitted;
+authored features still count while geometry rebuilds. Search expands matching
+descendants and resets when replacing a project. Current-document filtering keeps
+obsolete rebuild body IDs out of the tree. Native tests cover activation,
+visibility, isolation, search, nested components and compact layout.

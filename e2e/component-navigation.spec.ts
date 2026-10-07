@@ -113,9 +113,11 @@ test("component visibility/isolation filters native bodies, sketch overlays and 
   await expect
     .poll(async () => (await viewer(page)).cameraTarget)
     .toEqual([10, 5, 5]);
+  await page.getByLabel("Actions for component Cover", { exact: true }).click();
   await page
     .getByRole("button", { name: "Isolate component Cover", exact: true })
     .click();
+  await expect(page.getByRole("button", { name: "Isolate component Cover", exact: true })).toBeHidden();
   await expect
     .poll(async () => (await viewer(page)).meshes.map((m) => m.visible))
     .toEqual([false, true]);
@@ -176,6 +178,7 @@ test("component visibility/isolation filters native bodies, sketch overlays and 
     .poll(async () => (await viewer(page)).sketchPoints.length)
     .toBe(0);
   await expect(track.getByRole("listitem")).toHaveCount(4);
+  await page.getByLabel("Actions for component Cover", { exact: true }).click();
   await page.getByRole("button", { name: "Isolate component Cover", exact: true }).click();
   await page.getByRole("button", { name: "Exit isolation", exact: true }).click();
   await expect.poll(async () => (await viewer(page)).meshes.map((mesh) => mesh.visible)).toEqual([true, true]);

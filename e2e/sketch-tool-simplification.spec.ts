@@ -71,7 +71,7 @@ for (const mode of ["corner", "center"] as const) {
       : { min: [20, 10, 0], max: [44, 22, 5] };
     for (const key of ["min", "max"] as const)
       for (let axis = 0; axis < 3; axis++) expect(mesh.bounds[key][axis]).toBeCloseTo(expected[key][axis], 6);
-    await page.getByRole("button", { name: `${sketch.name} XY plane, ${Object.keys(sketch.entities).length} entities`, exact: true }).dblclick();
+    await page.getByRole("button", { name: sketch.name, exact: true }).dblclick();
     const dimension = page.locator(`[data-dimension-id="${sketch.dimensions[0].id}"]`);
     await dimension.press("Enter");
     await page.getByLabel("Sketch size expression", { exact: true }).fill("30mm");

@@ -38,7 +38,7 @@ export function BodyPanel({
     <>
       <div className="browser-folder">
         <span className="folder-label">Bodies</span>
-        <span className="muted">{bodies.length} bodies</span>
+        <span className="muted">{bodies.length} {bodies.length === 1 ? "body" : "bodies"}</span>
       </div>
       {bodies.map((body) => {
         const componentHidden =
@@ -77,7 +77,7 @@ export function BodyPanel({
                   )
                 }
               />
-              Visible
+              <span className={compact ? "sr-only" : undefined}>Visible</span>
             </label>
           </div>
         );

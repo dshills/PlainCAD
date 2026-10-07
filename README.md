@@ -33,6 +33,10 @@ and unsafe filename collisions receive stable suffixes. Root-component projects
 retain their existing part labels. Exit isolation restores component/part visibility
 without revealing hidden source sketches.
 
+The Parts browser uses compact rows with separate expand, activate and visibility
+controls. Each part's menu offers isolation and rename; empty root folders stay
+out of the way. Search includes matching descendants.
+
 The main Rectangle command opens the drawing tool with explicit Corner or Center
 creation modes and optional typed width/height in the sketch properties panel,
 leaving the canvas clear for mouse drawing. Driving dimensions stay visible

@@ -12,8 +12,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Change: Rectangle workflow and selection-based reference dimensions, commit `dbc4dea`.
 - Result: type checks, build/bundle budget, 994 unit/component tests,
   228 development browser tests, and 29 production browser tests passed.
-- Completed items since that full gate: **2**.
-- Next full gate: item **5**, after three more completed items.
+- Completed items since that full gate: **3**.
+- Next full gate: item **5**, after two more completed items.
 
 ## Completed batch
 
@@ -58,3 +58,7 @@ Prism review `9224995a388d49c8a2f70b83670b95e9` covered all twenty-four Rectangl
 Prism review `42e25361187ae950c8a18d6b6c5ac59a` covered the complete fabrication change. Earlier label, bounds and cancellation findings were fixed. The final low note concerns the scroll-container test: compact native coverage actually scrolls options and verifies reachable footer actions; desktop coverage verifies the footer stays outside that container. Separate-file checks now accurately exclude cross-file overlaps. The reduced gate passed on the integrated checkout, with a largest JavaScript bundle of 417.69 kB.
 
 Prism review `9f83a6142b0afbbf57d91bdaaf2059d5` covered all sixteen Render files. The idle observation begins only after frame scheduling settles. Preset snapshots are private to mode switching; active controls use current grid/edge flags, with switch/reset tests. Fixed light counts/order enforce the bounded studio budget. Render grid visibility is intentionally optional and remembered independently. Final integration sources match the native-tested checkout exactly; geometry buffers, camera/picking, idle rendering, movement quality, PNG pixels and unchanged STL were verified. Largest JavaScript bundle is 414.41 kB within the 500 kB budget.
+
+| 3 | Compact Parts browser and contextual actions | Anthropic `claude-sonnet-5-5`; no high/medium findings; final low note assessed | Passed: shared frozen-checkout reduced gate, 1032 unit tests, type checks, build/bundle budget, 5 development and 14 production smoke tests; compact native Parts case | Not due |
+
+Prism review `dba73cb49b64e95fc76221217363bca8` covered all nine Parts files. Outside dismissal now blurs a dirty rename before hiding the disclosure; native checks verify rename, Escape cancellation and Undo. The remaining low note concerns unsupported detached-window DOM constructors; current docks all live in the app document. The reduced gate is shared by the parallel, frozen implementation items so identical broad checks need not be repeated. Largest bundle: 417.91 kB.
