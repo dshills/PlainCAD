@@ -6,7 +6,8 @@
   Changed source identities, geometry and boolean tools invalidate the relevant
   signature; unsupported histories are rechecked. A 40-body fixture verifies
   unchanged native geometry, dimension-edit invalidation and disposal.
-  This does not cache entire native feature rebuilds. See [performance scope](PERFORMANCE.md).
+  Native feature output reuse is also implemented in a bounded worker-owned cache.
+  See [incremental rebuild scope](INCREMENTAL_NATIVE.md).
 - Click-to-measure offers current analytic authored cap edges/endpoints and
   native-validated planar faces, plus visible solved sketch geometry. Point pairs,
   straight-edge angles and planar-face angle/separation are supported. General
@@ -1149,3 +1150,5 @@ the 64-edge tangent-contour regression took about 1.3s. Resource checks passed,
 but these workloads do not establish a latency budget for large parts. Adapters
 without native edge proofs conservatively offer no targets; the shipped native
 adapter implements the probe, and fallback meshes never authorize edge picking.
+
+Validated native feature output reuse uses independently owned OpenCascade copies, with 128-entry/256-shape bounds and a 32 MiB mesh/signature estimate. Document/session/kernel changes clear ownership. Native allocation size is not measured by that estimate; exact BRep validity, volume and shape-count bounds remain authoritative. See [incremental limits](INCREMENTAL_NATIVE.md).

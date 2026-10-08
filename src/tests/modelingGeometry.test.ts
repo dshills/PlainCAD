@@ -552,4 +552,31 @@ describe("native modeling geometry", () => {
     } finally { shapes.forEach((shape) => kernel.disposeShape(shape)); }
   });
 
+  it("keeps cloned native boolean geometry alive after every source shape is disposed", () => {
+    const owned = new Set<ReturnType<OpenCascadeKernel["cloneShape"]>>();
+    const own = (shape: ReturnType<OpenCascadeKernel["cloneShape"]>) => { owned.add(shape); return shape; };
+    const dispose = (shape: ReturnType<OpenCascadeKernel["cloneShape"]>) => { if (owned.delete(shape)) kernel.disposeShape(shape); };
+    try {
+      const base = own(kernel.extrudeProfile(rectangle(20, 10).profile, 5));
+      const tool = own(kernel.extrudeProfile(rectangle(5, 5).profile, 5, { ...sketchPlaneTransform("XY"), origin: { x: 5, y: 2, z: 0 } }));
+      const cut = own(kernel.cut(base, tool));
+      cut.metadata = { labels: ["authored"] };
+      const sourceMesh = kernel.tessellate(cut, options), sourceProof = kernel.edgeProofSignature(cut);
+      const copy = own(kernel.cloneShape(cut));
+      (cut.metadata.labels as string[])[0] = "changed source metadata";
+      dispose(cut); dispose(tool); dispose(base);
+      expect(volume(copy)).toBeCloseTo(875, 6);
+      expect(kernel.tessellate(copy, options).bounds).toEqual(sourceMesh.bounds);
+      expect(kernel.edgeProofSignature(copy)).toBe(sourceProof);
+      expect(copy.metadata).toEqual({ labels: ["authored"] });
+      expect(kernel.availableExtrudeCapEdges(copy).some(edge => edge.role === "endCapPerimeter")).toBe(true);
+      const second = own(kernel.cloneShape(copy));
+      dispose(second);
+      expect(volume(copy)).toBeCloseTo(875, 6);
+    } finally {
+      for (const shape of owned) dispose(shape);
+    }
+  });
+
+
 });

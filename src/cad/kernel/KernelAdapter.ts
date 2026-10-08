@@ -58,6 +58,8 @@ export interface AvailableCapEdge {
 }
 
 export interface KernelAdapter {
+  /** Independent native shape ownership; copied history contains no retained handles. */
+  cloneShape?(shape: KernelShape): KernelShape;
   createBox(width: number, height: number, depth: number): KernelShape;
   extrudeProfile(
     profile: SketchProfile,

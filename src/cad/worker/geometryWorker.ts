@@ -39,7 +39,7 @@ async function handleRequest(request: WorkerRequest) {
         heartbeat("rebuild_init");
         await OpenCascadeKernel.initialize();
         heartbeat("rebuilding");
-        const result = rebuildDocument(request.document as CadDocument);
+        const result = rebuildDocument(request.document as CadDocument, { epoch: request.epoch });
         post({ type: "rebuildResult", requestId: request.requestId, epoch: request.epoch, result });
         return;
       }
@@ -47,7 +47,7 @@ async function handleRequest(request: WorkerRequest) {
         heartbeat("export_init");
         await OpenCascadeKernel.initialize();
         heartbeat("rebuilding");
-        const result = rebuildDocument(request.document as CadDocument);
+        const result = rebuildDocument(request.document as CadDocument, { epoch: request.epoch });
         heartbeat("exporting");
         const bytes = exportMeshesToStl(result.meshes);
         post({ type: "exportResult", requestId: request.requestId, epoch: request.epoch, bytes });

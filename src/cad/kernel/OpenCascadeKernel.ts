@@ -197,6 +197,38 @@ export class OpenCascadeKernel implements KernelAdapter {
   private static openCascade: Record<string, any> | undefined;
   private static initPromise: Promise<Record<string, any>> | undefined;
 
+  private copyHistory(handle: KernelHandle): KernelHandle {
+    let nodes = 0;
+    const history = (source: KernelHandle): KernelHandle => {
+      if (++nodes > 1024) throw new Error("Native shape history exceeds the reusable shape budget.");
+      const { occtShape: _native, ...values } = source;
+      if (source.kind === "boolean") return { kind: source.kind, operation: source.operation, base: history(source.base), tool: history(source.tool) };
+      if (source.kind === "fillet" || source.kind === "chamfer" || source.kind === "toFace") {
+        const { occtShape: _owned, base, ...plain } = source;
+        return { ...structuredClone(plain), base: history(base) };
+      }
+      const result = structuredClone(values) as KernelHandle;
+      return result;
+    };
+    return history(handle);
+  }
+
+  cloneShape(shape: KernelShape): KernelShape {
+    const oc = OpenCascadeKernel.openCascade;
+    const handle = shape.kernelHandle as KernelHandle;
+    if (!oc || !handle.occtShape) throw new Error("Native shape reuse requires initialized OpenCascade geometry.");
+    const copiedHistory = this.copyHistory(handle);
+    return withDisposableScope((scope) => {
+      const copy = scope.use(new oc.BRepBuilderAPI_Copy_2(handle.occtShape, true, true));
+      if (!copy.IsDone()) throw new Error("OpenCascade could not copy validated feature geometry.");
+      const native = scope.use(copy.Shape());
+      const before = this.measureNative(handle.occtShape), after = this.measureNative(native);
+      if (before.solidCount !== after.solidCount || Math.abs(before.volume - after.volume) > volumeTolerance(before.volume))
+        throw new Error("Native feature copy changed its solid count or volume.");
+      return { id: createId("shape"), kernelHandle: { ...copiedHistory, occtShape: scope.release(native) }, ...(shape.metadata ? { metadata: structuredClone(shape.metadata) } : {}) };
+    });
+  }
+
   getWasmHeapCapacityBytes(): number | undefined {
     const bytes = OpenCascadeKernel.openCascade?.HEAPU8?.buffer?.byteLength;
     return typeof bytes === "number" && Number.isSafeInteger(bytes) && bytes > 0 ? bytes : undefined;

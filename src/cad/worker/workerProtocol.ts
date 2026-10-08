@@ -46,6 +46,12 @@ export interface RebuildMetrics {
   nativeEdgeProofMs?: number;
   nativeEdgeProofCacheHits?: number;
   nativeEdgeProofCacheMisses?: number;
+  nativeFeatureCacheHits?: number;
+  nativeFeatureCacheMisses?: number;
+  nativeFeatureCacheEntries?: number;
+  nativeFeatureCacheShapes?: number;
+  nativeFeatureCacheBytes?: number;
+  nativeFeatureCacheDisposalFailures?: number;
   operationCount: number;
   cacheSize: number;
   disposalFailures: number;

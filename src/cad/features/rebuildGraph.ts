@@ -1,3 +1,5 @@
+import { NativeFeatureCache } from "./nativeFeatureCache";
+import { nativeFeatureSignature } from "./nativeFeatureSignature";
 import { currentNativeEdges } from "./nativeEdgeTargets";
 import { NativeEdgeProofCache } from "./nativeEdgeProofCache";
 import { materializeSketchProjections } from "../sketch/sketchProjection";
@@ -46,22 +48,32 @@ import type { FeaturePatternFeature } from "../document/schema";
 
 const kernel = new OpenCascadeKernel();
 const edgeProofCache = new NativeEdgeProofCache();
+const nativeFeatureCache = new NativeFeatureCache();
+
+export function clearNativeFeatureCache() { nativeFeatureCache.clear(); }
 let seedDocumentId: string | undefined;
 const sketchSeeds = new Map<
   string,
   { signature: string; solved: ReturnType<typeof solveSketch> }
 >();
 
-export function rebuildDocument(
-  document: CadDocument,
-  options: {
+interface RebuildOptions {
     exportUnion?: boolean;
     exportBodyIds?: readonly string[];
     captureTargetScopeFeatureId?: string;
-  } = {},
-): RebuildResult {
+    /** Worker session boundary; old-session native handles must not survive. */
+    epoch?: number;
+    /** Controlled cold/native validation; ordinary rebuilds reuse successful outputs. */
+    reuseNativeFeatures?: boolean;
+  }
+export function rebuildDocument(document: CadDocument, options: RebuildOptions = {}): RebuildResult {
+  try { return rebuildDocumentInternal(document, options); }
+  catch (error) { nativeFeatureCache.finish(false); throw error; }
+}
+function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions): RebuildResult {
   const started = performance.now();
   const disposableMetricsStarted = getDisposableScopeMetrics();
+  nativeFeatureCache.begin(document.id, kernel, options.epoch);
   const errors: RebuildError[] = [];
   const warnings: RebuildWarning[] = [];
   let operationCount = 0;
@@ -217,6 +229,8 @@ export function rebuildDocument(
   const meshes = [];
   const shapesToDispose = new Set<KernelShape>();
   const runtimeBodies = new Map<string, RuntimeBody>();
+  const bodyVersions = new Map<string, number>();
+  const canReuseNative = nativeReferences && typeof kernel.cloneShape === "function" && options.reuseNativeFeatures !== false && !options.captureTargetScopeFeatureId;
   let capturedTargetBodyIds: string[] | undefined;
   const captureTargets: ScopeCapture = (tools, targets) => {
     const hasCommon = kernel.hasCommonVolume?.bind(kernel);
@@ -244,7 +258,10 @@ export function rebuildDocument(
       const affectedIds = (feature.type === "extrude" || feature.type === "revolve") && feature.operation === "newBody"
         ? [stableBodyIdForFeature(feature.id)] : targetBodyIds(feature);
       const capture = options.captureTargetScopeFeatureId === feature.id ? captureTargets : undefined;
-      const errorsBefore = errors.length;
+      const errorsBefore: number = errors.length;
+      let cacheKey: string | undefined;
+      let reused = false;
+      let beforeBodies: Map<string, RuntimeBody> | undefined;
       try {
         if (affectedIds.some((id) => id && failedBodies.has(id))) {
           errors.push({
@@ -303,6 +320,30 @@ export function rebuildDocument(
               "Model exceeds the body resource limit. Suppress bodies before rebuilding.",
           });
           continue;
+        }
+        if (canReuseNative) {
+          cacheKey = nativeFeatureSignature(feature, document, solvedSketches, profilesBySketch, planes.transforms, evaluated.values, bodyVersions);
+          if (cacheKey) {
+            let cached: ReturnType<typeof nativeFeatureCache.read>;
+            try { cached = nativeFeatureCache.read(cacheKey); }
+            catch (error) { warnings.push({ id: `feature:${feature.id}:cache`, source: "kernel", sourceId: feature.id, message: `Native feature reuse was skipped: ${error instanceof Error ? error.message : String(error)}` }); }
+            if (cached) {
+              const prospective = new Map(runtimeBodies);
+              for (const id of cached.removedIds) prospective.delete(id);
+              for (const [id, body] of cached.bodies) {
+                shapesToDispose.add(body.shape);
+                prospective.set(id, { ...body, name: document.features.find(item => item.id === body.featureId)?.name ?? body.name });
+              }
+              assertRuntimeTriangleCount([...prospective.values()].reduce((sum, body) => sum + (body.mesh?.indices.length ?? 0) / 3, 0));
+              runtimeBodies.clear();
+              for (const [id, body] of prospective) runtimeBodies.set(id, body);
+              for (const id of cached.removedIds) bodyVersions.delete(id);
+              for (const [id] of cached.bodies) bodyVersions.set(id, cached.version);
+              reused = true;
+              continue;
+            }
+          }
+          beforeBodies = new Map(runtimeBodies);
         }
         operationCount += 1;
         if (feature.type === "pattern") {
@@ -473,6 +514,21 @@ export function rebuildDocument(
           });
         }
       } finally {
+        // Publish cache deltas only after the feature's atomic native publication.
+        if (!reused && beforeBodies && errors.length === errorsBefore) {
+          const changed = [...runtimeBodies].filter(([id, body]) => beforeBodies!.get(id) !== body);
+          const removed = [...beforeBodies.keys()].filter(id => !runtimeBodies.has(id));
+          for (const id of removed) bodyVersions.delete(id);
+          for (const [id] of changed) bodyVersions.delete(id);
+          if (cacheKey && changed.length) {
+            try {
+              const version = nativeFeatureCache.stage(cacheKey, changed, removed);
+              if (version !== undefined) for (const [id] of changed) bodyVersions.set(id, version);
+            } catch (error) {
+              warnings.push({ id: `feature:${feature.id}:cache`, source: "kernel", sourceId: feature.id, message: `Native feature reuse was skipped: ${error instanceof Error ? error.message : String(error)}` });
+            }
+          }
+        }
         // Also runs for every continue above, including invalid face planes.
         if (errors.length > errorsBefore)
           for (const id of affectedIds) if (id) failedBodies.add(id);
@@ -566,6 +622,7 @@ export function rebuildDocument(
     }
   });
 
+  nativeFeatureCache.finish(errors.length === 0);
   const disposableMetricsFinished = getDisposableScopeMetrics();
 
   return {
@@ -593,6 +650,12 @@ export function rebuildDocument(
       nativeEdgeProofMs,
       nativeEdgeProofCacheHits: edgeProofCache.hits,
       nativeEdgeProofCacheMisses: edgeProofCache.misses,
+      nativeFeatureCacheHits: nativeFeatureCache.hits,
+      nativeFeatureCacheMisses: nativeFeatureCache.misses,
+      nativeFeatureCacheEntries: nativeFeatureCache.size,
+      nativeFeatureCacheShapes: nativeFeatureCache.retainedShapes,
+      nativeFeatureCacheBytes: nativeFeatureCache.retainedBytes,
+      nativeFeatureCacheDisposalFailures: nativeFeatureCache.disposalFailures,
       operationCount,
       cacheSize: runtimeBodies.size,
       wasmHeapCapacityBytes: kernel.getWasmHeapCapacityBytes?.(),
@@ -606,7 +669,7 @@ export function rebuildDocument(
         failures: disposableMetricsFinished.failures - disposableMetricsStarted.failures,
       },
       disposalFailures:
-        disposalFailures +
+        disposalFailures + nativeFeatureCache.disposalFailures +
         (disposableMetricsFinished.failures -
           disposableMetricsStarted.failures),
     },
