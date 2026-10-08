@@ -47,6 +47,7 @@ const FabricationPanel = lazy(() => import("../ui/panels/FabricationPanel").then
 const ProjectGalleryPanel = lazy(() => import("../ui/workspace/ProjectGalleryPanel").then(module => ({ default: module.ProjectGalleryPanel })));
 const ModelUpdateFeedback = lazy(() => import("../ui/workspace/ModelUpdateFeedback").then(module => ({ default: module.ModelUpdateFeedback })));
 const CanvasSelectionActions = lazy(() => import("../ui/panels/CanvasSelectionActions").then(module => ({ default: module.CanvasSelectionActions })));
+const ManufacturingCoachPanel = lazy(() => import("../ui/panels/ManufacturingCoachPanel").then(module => ({ default: module.ManufacturingCoachPanel })));
 const FittedPartPanel = lazy(() => import("../ui/panels/FittedPartPanel").then(module => ({ default: module.FittedPartPanel })));
 const ComponentPlacementPanel = lazy(() => import("../ui/panels/ComponentPlacementPanel").then(module => ({ default: module.ComponentPlacementPanel })));
 const PartLibraryPanel = lazy(() => import("../ui/panels/PartLibraryPanel").then(module => ({ default: module.PartLibraryPanel })));
@@ -557,7 +558,7 @@ export function App() {
       <Suspense fallback={null}><FabricationPanel /></Suspense>
       <HoleCreationPanel />
       <Suspense fallback={<p role="status">Loading component controls…</p>}><ComponentPlacementPanel /></Suspense>
-      <Suspense fallback={null}><FittedPartPanel /></Suspense>
+      <Suspense fallback={null}><ManufacturingCoachPanel /><FittedPartPanel /></Suspense>
       <FeaturePatternPanel />
       <SolidDimensionEditor />
       <ExtrudeCreationPanel />

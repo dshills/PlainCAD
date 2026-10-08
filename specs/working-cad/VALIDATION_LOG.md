@@ -847,3 +847,52 @@ bundles satisfy the 500 kB budget.
 
 Cadence: **4** completed items since full checkpoint `db2533a`. Feature 3 requires
 `npm run release:check` before its commit; reset only after successful completion.
+
+
+## 2026-10-08 — Amazing CAD feature 3: manufacturing coach
+
+Added native-only FDM/CNC/laser screening with editable thresholds, source-linked
+findings and actual affected-body highlights. Selecting a finding temporarily
+reveals hidden bodies in Model mode; closing restores the previous view without
+document history changes. Supported fitted-wall/clearance, simple extrusion
+thickness and Hole diameter corrections require an issued, current native proof
+before one-step Apply. Cancellation, lost-body identity, missing native assertions
+and unchanged affected volume/area/bounds reject explicitly. No arbitrary pocket
+access, local wall-thickness or manufacturing certification claims.
+
+Prism used Anthropic claude-sonnet-5-5 throughout, with complete coverage. Main
+review `7bfc870254e46834bc8a79e38bfc38b4` (0 high, 1 medium, 1 low) led to
+geometry-proof improvements; follow-up reviews tightened baseline assertions and
+all affected-body identity checks. Proof review `6cc20283eab3c088f049df9a2e3d039c`
+had 0 high/medium, 2 low: corrections always have internal nonempty body scopes
+and guarded lookups. Final view review `eca01ba76e555d99a6ae4781b8be54c3` had
+0 high/medium, 3 low. The two invoked view commands are synchronous; viewer
+sessions explicitly equal document sessions; threshold edits intentionally clear
+the selected finding. Production test review caught and fixed mesh-volume
+tolerance and CSP monitoring; export enablement requires current native geometry.
+AI assertion-only review `dcb11f4a9efe927286c58f6c91c1d6ad` had zero findings.
+No unresolved actionable findings remain.
+
+Full checkpoint stages completed: type checking, all 1519 unit/component tests
+in 189 files, production build and bundle budget (largest 475.01 kB), the complete
+312-case development browser suite, and all 42 then-existing production cases.
+The release command itself exited 1 because three AI feature tests expected a
+conversation to survive a mode change, whereas the existing implementation
+clears mode-scoped history. The other 309 development cases passed. Corrected
+those three assertions; all four focused AI-feature cases passed (33.2s). Also
+made AI canvas tests await actual published native previews; both conversation
+cases and coach cases passed together (21.6s). No AI runtime behavior changed.
+All previously failing stages/cases are now verified; as with earlier repaired
+full checkpoints, unchanged passing cases were not rerun unnecessarily.
+
+After final coach view fixes, type checking/build passed again; two development
+coach cases passed (8.4s), with actual visible highlights/restoration, fitted
+volume 2520 → 4176 mm³, cancel and Undo, and exact native Ø4 Hole volume
+1000 − 20π mm³. A new production coach case passed (3.4s) with CSP violation
+monitoring and actual STL volume within polygonal-mesh tolerance. That completes
+the expanded production corpus of 43 cases across the full run and focused case.
+All bundle budgets passed. The existing linkedSketchCommand import advisory
+remains; no generated build artifacts are committed.
+
+Cadence: **0** completed items since this repaired full checkpoint. Feature 4
+requires the reduced item gate plus Prism and its focused native acceptance.

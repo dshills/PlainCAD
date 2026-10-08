@@ -67,7 +67,9 @@ for (const [provider, plane] of [["anthropic", "XY"], ["openai", "XZ"], ["google
     await expect(panel.getByRole("button", { name: "Apply AI feature plan" })).toHaveCount(0);
     expect((await aiSnapshot(page)).past).toBe(before.past);
     await generate.click(); await expect(panel.getByRole("status")).toContainText("Native feature preview ready", { timeout: 60000 });
-    expect(requests[2].provider).toBe(provider); expect(requests[2].history).toHaveLength(2);
+    expect(requests[2].provider).toBe(provider);
+    // Leaving the mode clears its scoped conversation; canceled requests add no history.
+    expect(requests[2].history).toEqual([]);
     expect(JSON.stringify(requests[2])).not.toMatch(/schemaVersion|meshes|positions|API_KEY/);
     expect((await aiSnapshot(page)).document).toEqual(before.document);
     await panel.getByRole("button", { name: "Apply AI feature plan" }).click();

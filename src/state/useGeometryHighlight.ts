@@ -9,7 +9,7 @@ import { PROJECT_IMPORT_LIMITS } from "../persistence/importSafety";
 export interface GeometryHighlight {
   document: CadDocument;
   session: number;
-  source: "ai" | "repair" | "operation";
+  source: "ai" | "repair" | "operation" | "manufacturing";
   bodyIds: readonly string[];
   componentId?: string;
   /** Omit only when following the live settled rebuild; capture to bind a specific preview. */

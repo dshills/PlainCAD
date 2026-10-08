@@ -1,3 +1,4 @@
+import { useManufacturingCoach } from "./manufacturingCoachState";
 import { useFittedPart } from "./fittedPartState";
 import { useViewerState } from "../../state/viewerState";
 import { useComponentPlacement } from "./componentPlacementState";
@@ -41,6 +42,7 @@ export function useCommandEnablement() {
   useViewerState(state => state.session);
   useViewerState(state => state.hiddenBodyIds);
   useViewerState(state => state.hiddenComponentIds);
+  useManufacturingCoach(state => state.frame);
   useFittedPart(state => state.frame);
   useComponentPlacement(state => state.frame);
   usePartLibrary(state => state.frame);

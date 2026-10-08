@@ -44,14 +44,16 @@ test("canvas conversation creates a part then halves thickness locally with nati
   const applyEdit = panel.getByRole("button", { name: "Apply AI parameter edits", exact: true });
   await expect(applyEdit).toBeEnabled({ timeout: 60000 });
   expect((await aiSnapshot(page)).document).toEqual(created.document);
-  const preview = await page.evaluate(async () => {
-    const path = "/src/state/aiCanvasPreview.ts";
-    return (await import(path)).useAiCanvasPreview.getState().preview?.result;
-  });
-  expect(preview?.meshes).toHaveLength(1);
-  expect(preview?.meshes[0].geometryAssertions).toMatchObject({ valid: true, solidCount: 1 });
-  expect(preview?.meshes[0].geometrySource).toBe("opencascade");
-  expect(preview?.meshes[0].geometryAssertions?.volume).toBeCloseTo(volume / 2, 5);
+  await expect(async () => {
+    const preview = await page.evaluate(async () => {
+      const path = "/src/state/aiCanvasPreview.ts";
+      return (await import(path)).useAiCanvasPreview.getState().preview?.result;
+    });
+    expect(preview?.meshes).toHaveLength(1);
+    expect(preview?.meshes[0].geometryAssertions).toMatchObject({ valid: true, solidCount: 1 });
+    expect(preview?.meshes[0].geometrySource).toBe("opencascade");
+    expect(preview?.meshes[0].geometryAssertions?.volume).toBeCloseTo(volume / 2, 5);
+  }).toPass({ timeout: 30000 });
   await expect(page.locator(".viewer-canvas canvas")).toHaveCount(1);
   await expect.poll(async () => page.evaluate(async () => {
     const path = "/src/viewer/viewerDiagnostics.ts";

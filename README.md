@@ -658,3 +658,23 @@ Collision analysis exceeding its probe budget or failing native intersection is 
 Select a native part and use **Build a fitted part** in the command palette or active component settings. Choose an open enclosure, L bracket or open adapter sleeve, clearance and wall thickness (values or parameter expressions). Apply requires a validated native preview and creates a separate linked component with one Undo step. **Edit fitted part** repairs references or changes settings. Source size edits rebuild the fit; Follow source position follows its resolved component pose. Turn this off to move the fit independently, use assembly joints or world-space sketch projections.
 
 These styles use the source’s exact native rectangular envelope in local coordinates: enclosure opens along +Z, bracket back is −Y, sleeve is open at both Z ends. Contoured shells, fastener detection and cylindrical adapters are not supplied by this command. If a new source operation comes later in History, move the fitted feature after it; missing or absorbed sources diagnose instead of producing an outdated fit.
+
+### Manufacturing coach
+
+Use **Manufacturing coach** in the command palette or active component settings.
+Choose FDM, CNC or laser and adjust screening thresholds. Findings highlight their
+bodies in the main model view, temporarily revealing hidden parts and restoring
+the prior view on close. Supported thickness, fitted-clearance and hole-size
+corrections preview actual native geometry before one-step Apply; Cancel leaves
+the project unchanged and Undo restores it. Corrections replace a single feature
+expression; they do not silently change shared parameters.
+
+This is bounded screening, not certification. Wall checks cover fitted-wall
+settings and unmodified extrusion depth, not general local wall thickness. CNC
+checks authored Hole diameter against a chosen tool and explicit drilling-depth
+ratios; arbitrary pockets, through-hole reach and complete tool access are manual.
+FDM checks downward facet slopes above each body's lowest world Z (up to 250,000
+triangles); bridges, support spans and strength are not simulated. Laser screening
+requires retained axial extrusion caps and only axial through-cuts, and does not
+convert solids to sheet parts. Assembly interference uses native solid common
+volume. Resource/collision limits explicitly mark analysis incomplete.

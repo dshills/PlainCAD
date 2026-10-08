@@ -1239,3 +1239,23 @@ Complete assembly insertion copies both joint endpoints and remaps joint/compone
 Build a fitted part / Edit fitted part generate a native open enclosure, L bracket or open adapter sleeve from the upstream source body’s optimal native bounding box. Clearance and wall thickness accept length expressions and stable parameter bindings. Native boolean results must be valid, one solid, and match the analytically expected material volume. Independent component and body identities survive save/open and complete project insertion; partial extraction with an outside reference is rejected. Follow source position inherits the resolved pose after assembly placement. Turn it off before independent movement, joining the fitted component to an assembly, or using world-space sketch projections.
 
 The rectangular local envelope is not a contoured offset surface. No fastener inference or cylindrical adapter support. Enclosures open at local +Z; bracket backs are local −Y; sleeves are open at both Z ends. Lost, suppressed, absorbed or downstream sources diagnose. New source modifications must precede the fit in the explicit timeline; an out-of-order fit fails rather than keeping stale geometry. Preview currency and worker-issued proof gate one-step Apply and cancellation.
+
+### Manufacturing coach
+
+Use **Manufacturing coach** in the command palette or active component settings.
+Choose FDM, CNC or laser and adjust screening thresholds. Findings highlight their
+bodies in the main model view, temporarily revealing hidden parts and restoring
+the prior view on close. Supported thickness, fitted-clearance and hole-size
+corrections preview actual native geometry before one-step Apply; Cancel leaves
+the project unchanged and Undo restores it. Corrections replace a single feature
+expression; they do not silently change shared parameters.
+
+This is bounded screening, not certification. Wall checks cover fitted-wall
+settings and unmodified extrusion depth, not general local wall thickness. CNC
+checks authored Hole diameter against a chosen tool and explicit drilling-depth
+ratios; arbitrary pockets, through-hole reach and complete tool access are manual.
+FDM checks downward facet slopes above each body's lowest world Z (up to 250,000
+triangles); bridges, support spans and strength are not simulated. Laser screening
+requires retained axial extrusion caps and only axial through-cuts, and does not
+convert solids to sheet parts. Assembly interference uses native solid common
+volume. Resource/collision limits explicitly mark analysis incomplete.
