@@ -577,3 +577,33 @@ layouts/themes, native editing, stale targets, undo, STL export and lazy loading
 
 Cadence: 2 completed items since the successful full checkpoint. The next full
 gate is due after 3 more requested changes.
+
+
+### Item 2: selected targets and direct native face picking
+
+The embedded assistant follows a single current part, supported feature, sketch
+or planar face, with explicit scope overrides and read-only target highlights.
+Body selection allows only independent drivers affecting that body. Invalid,
+shared, multiple, stale, hidden and unsupported targets fail with clear diagnostics.
+Clicking a supported model face routes bounded additions, retaining fresh sharing
+consent. Captured selection/visibility changes invalidate responses and Apply.
+Starting AI is guarded during manual operations; closing it remains available.
+
+Prism Anthropic `claude-sonnet-5-5` reviewed the final 14-file integration
+(`497e8c003087a851cd330334aeec2c96`), complete coverage. Actionable scope/opening,
+visibility, picking order and stale-test findings were fixed. Two medium reports
+were assessed as false with source evidence: targetPickerActive explicitly includes
+guidedHoleActive; cancel is memoized with useCallback([]), so Follow cannot reset
+on callback identity churn. Low duplicated-reset/catch notes were assessed; initial
+face-status wording is improved by the next canvas-preview change. The sibling
+review independently reported the same two false medium findings.
+
+`npm run check:item` passed on the final frozen source: type checks, 1370
+unit/component tests, build/bundle budget (largest 499.36 kB), 5 development
+native smoke cases and 14 production modeling/AI/CSP cases. Two focused native
+selection cases passed (8.9 s), proving narrow provider context, rejected expanded
+edits, delayed stale-response rejection, and a deliberate face click followed by
+a real native inward cut with unchanged project/history until Apply.
+
+Cadence: 3 completed items since the successful full checkpoint. The next full
+gate is due after 2 more requested changes.

@@ -770,6 +770,8 @@ Deterministic browser tests isolate provider responses while requiring actual
 native BRep geometry, parameter edits, save/open/STL and stale-result rejection;
 live-provider verification is separate from reproducible release checks.
 
+The canvas assistant can follow a single current part, supported feature, sketch, or supported native face. Body targeting narrows eligible parameters to drivers affecting only that body. Face picking uses actual model triangles and authored planar roles; unsupported/multiple/lost targets fail with diagnostics. Explicit scope remains available. Captured selection changes invalidate pending responses and Apply.
+
 **This part** scope supports existing-component parameter edits. Context is
 limited to independent mm/deg parameters used exclusively by the active component;
 transitive sharing, locked/derived/unused parameters and arbitrary feature changes

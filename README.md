@@ -335,6 +335,8 @@ any proposal; clarifications and failed previews do not edit the document.
 | Sketch editing | Local numeric/relation edits, or consent-based provider proposals for bounded dimensions, parameters, relations, and analytic Trim/Extend actions. |
 | Add features to this part | Add up to four bounded hole, rectangular/circular pocket, or listed cap-edge Fillet/Chamfer operations on one explicit supported native face/body. |
 
+The canvas assistant follows one selected part, supported feature, sketch, or planar face. A part selection limits edits to dimensions that affect that part alone. **Choose face on model** picks a supported native plane for holes, pockets, and edge treatments; curved, split, lost, or ambiguous targets produce diagnostics. You can choose an explicit scope or return to **Follow selection**. A selected sketch offers its drawing editor.
+
 Existing-part feature additions preserve existing IDs, parameters, and features.
 Each proposed operation and the complete project must pass private native checks
 before **Apply AI feature plan** creates one Undo edit. Mode changes preserve

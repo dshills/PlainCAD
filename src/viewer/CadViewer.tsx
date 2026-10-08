@@ -412,6 +412,14 @@ export function CadViewer() {
 
     const uninstallMeasurementPicking = installMeasurementPicking(renderer.domElement, camera, modelGroup, () => clippingRef.current);
     const uninstallPlanePicking = installSketchPlanePicking(scene, renderer, camera, modelGroup, () => clippingRef.current, invalidate);
+    let aiFacePickerDisposed = false, uninstallAiFacePicking = () => {};
+    void import("./aiFacePicking").then(({ installAiFacePicking }) => {
+      if (!aiFacePickerDisposed) uninstallAiFacePicking = installAiFacePicking(renderer.domElement, camera, modelGroup, () => clippingRef.current,
+        () => selectCommandEnablement(useCadStore.getState()).measurementPicking && !useInspectionState.getState().picking);
+    }).catch((error) => {
+      console.error("AI face selection failed", error);
+      if (!aiFacePickerDisposed) useCadStore.getState().setFileError("AI face selection could not start. Save your project and reload to retry.");
+    });
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
     const pickBody = (event: MouseEvent) => {
@@ -484,6 +492,8 @@ export function CadViewer() {
     return () => {
       uninstallMeasurementPicking();
       uninstallPlanePicking();
+      aiFacePickerDisposed = true;
+      uninstallAiFacePicking();
       operationPicking.dispose();
       unregisterDiagnostics?.();
       unregisterCamera();

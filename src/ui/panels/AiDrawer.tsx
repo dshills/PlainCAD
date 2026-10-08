@@ -52,6 +52,12 @@ import {
 } from "../commands/aiCommand";
 import { runCommand } from "../commands/commandRegistry";
 import { AiFeatureAdditionPanel } from "./AiFeatureAdditionPanel";
+import { selectionAiTarget, assertSelectionAiPlan, type SelectionAiTarget } from "../../ai/selectionTarget";
+import { facePocketFaces } from "../commands/facePocketCommand";
+import { useAiFacePicking, clearAiFacePicking } from "../../state/aiFacePicking";
+import { useCommandEnablement } from "../commands/useCommandEnablement";
+import { hiddenViewerBodies, useViewerState } from "../../state/viewerState";
+import { useShallow } from "zustand/react/shallow";
 
 interface Proposal {
   frame: AiDraftFrame;
@@ -64,21 +70,30 @@ interface Proposal {
 type Message = AiMessage & { summary?: string; display?: string };
 export function AiDrawer({ embedded = false }: { embedded?: boolean }) {
   const open = useAiDrawer((state) => state.open), canvas = useSketchCanvas((state) => state.active);
-  const [mode, setMode] = useState<"ordinary" | "features">("ordinary");
-  const featureActive = Boolean(open && !canvas && mode === "features");
+  const [mode, setMode] = useState<"auto" | "ordinary" | "features">(embedded ? "auto" : "ordinary");
+  const [followVersion, setFollowVersion] = useState(0);
+  const state = useCadStore(useShallow(state => ({ history: state.history, activeComponentId: state.activeComponentId, selection: state.selection, rebuild: state.rebuild, fileBusy: state.fileBusy, documentSession: state.documentSession })));
+  const visibility = useViewerState(useShallow(state => [state.session, state.hiddenBodyIds, state.hiddenComponentIds]));
+  const target = useMemo(() => selectionAiTarget(state.history.present, state.activeComponentId, state.selection.selectedIds,
+    state.rebuild.status === "succeeded" ? state.rebuild.result : undefined, facePocketFaces(),
+    hiddenViewerBodies(state.history.present, state.rebuild.result?.meshes.map(mesh => mesh.bodyId) ?? [], state.documentSession, useViewerState.getState())),
+    [state.history.present, state.activeComponentId, state.selection, state.rebuild, state.fileBusy, state.documentSession, visibility]);
+  const featureActive = Boolean(open && !canvas && (mode === "features" || (mode === "auto" && target.kind === "face")));
+  useEffect(() => { if (!open) clearAiFacePicking(); }, [open]);
   return <div className="ai-mode-shell">
     {open && !canvas ? <div role="group" aria-label="AI modeling mode" className="ai-actions" title="Descriptions and conversations are kept when switching modes. Pending previews are canceled.">
-      <button type="button" aria-pressed={mode === "ordinary"} onClick={() => setMode("ordinary")}>Describe or edit a part</button>
-      <button type="button" aria-pressed={mode === "features"} onClick={() => setMode("features")}>Add features to this part</button>
+      <button type="button" aria-pressed={!featureActive} onClick={() => setMode("ordinary")}>Describe or edit a part</button>
+      <button type="button" aria-pressed={featureActive} onClick={() => setMode("features")}>Add features to this part</button>
+      {embedded ? <button type="button" onClick={() => { setMode("auto"); setFollowVersion(value => value + 1); }}>Follow current selection</button> : null}
     </div> : null}
     <section hidden={!featureActive} className="ai-drawer open" aria-label="AI modeling assistant">
       {!embedded ? <button type="button" onClick={() => void runCommand("ai.toggle")}>Close AI drawer</button> : null}
-      <AiFeatureAdditionPanel active={featureActive} />
+      <AiFeatureAdditionPanel active={featureActive} targetFaceId={mode === "auto" ? target.faceId : undefined} />
     </section>
-    <div hidden={featureActive} className="ai-mode-pane"><StandardAiDrawer embedded={embedded} active={!featureActive} /></div>
+    <div hidden={featureActive} className="ai-mode-pane"><StandardAiDrawer embedded={embedded} active={!featureActive} target={target} followVersion={followVersion} /></div>
   </div>;
 }
-function StandardAiDrawer({ embedded = false, active = true }: { embedded?: boolean; active?: boolean }) {
+function StandardAiDrawer({ embedded = false, active = true, target, followVersion }: { embedded?: boolean; active?: boolean; target: SelectionAiTarget; followVersion: number }) {
   // Layout seeds the initial disclosure; later layout changes preserve the user’s choice.
   const [settingsOpen, setSettingsOpen] = useState(
     () => useWorkspaceState.getState().layout === "full",
@@ -89,7 +104,11 @@ function StandardAiDrawer({ embedded = false, active = true }: { embedded?: bool
   const document = useCadStore((state) => state.history.present);
   const session = useCadStore((state) => state.documentSession);
   const componentId = useCadStore((state) => state.activeComponentId);
-  const selected = useCadStore((state) => state.selection.selectedIds[0]);
+  const selections = useCadStore((state) => state.selection.selectedIds);
+  const selected = selections[0];
+  const facePicking = useAiFacePicking(state => state.frame);
+  const facePickMessage = useAiFacePicking(state => state.message);
+  const commandEnablement = useCommandEnablement();
   const selectedFeatureId =
     selected?.kind === "feature" && selected.documentId === document.id
       ? selected.id
@@ -123,13 +142,21 @@ function StandardAiDrawer({ embedded = false, active = true }: { embedded?: bool
   const [provider, setProvider] = useState<AiProvider>("anthropic");
   const [model, setModel] = useState("");
   const [prompt, setPrompt] = useState("");
-  const [task, setTask] = useState<AiScope>("create");
+  const [manualScope, setTask] = useState<AiScope | undefined>(embedded ? undefined : "create");
+  const task = manualScope ?? target.scope;
+  const automatic = manualScope === undefined;
   const [chosenTarget, setChosenTarget] = useState<string>();
   const [clarifying, setClarifying] = useState(false);
   const [highlightTarget, setHighlightTarget] = useState<string>();
   const editingFeatureId = task === "feature" ? selectedFeatureId : undefined;
   const editing = useMemo(() => {
     if (task === "create") return {};
+    if (automatic) {
+      if (target.diagnostic) return { error: target.diagnostic };
+      if (target.kind === "sketch") return { error: "Open this sketch to draw or refine its dimensions with AI." };
+      if (target.kind === "face") return { error: "Use Add features to this part for the selected face, or choose a scope explicitly." };
+      if (target.context) return { context: target.context };
+    }
     try {
       return {
         context:
@@ -149,7 +176,7 @@ function StandardAiDrawer({ embedded = false, active = true }: { embedded?: bool
             : "Component parameters are unavailable.",
       };
     }
-  }, [document, componentId, task, editingFeatureId]);
+  }, [document, componentId, task, editingFeatureId, automatic, target]);
   const intent = useMemo(() => {
     try {
       return resolveAiIntent(task, prompt, editing.context, chosenTarget);
@@ -265,6 +292,11 @@ function StandardAiDrawer({ embedded = false, active = true }: { embedded?: bool
     rebuildStatus,
     operationActive,
   ]);
+  useEffect(() => {
+    if (!open || !automatic || clarifying || fileBusy || operationActive || rebuildStatus !== "succeeded" || target.diagnostic) return;
+    if (!target.bodyIds.length && !target.sketchId) return;
+    return showGeometryHighlight({ document, session, componentId, result: rebuildResult, source: "ai", bodyIds: target.bodyIds, sketchId: target.sketchId });
+  }, [open, automatic, clarifying, fileBusy, operationActive, rebuildStatus, target, document, session, componentId, rebuildResult]);
   const requestContext = useMemo(() => {
     if (!editing.context || !intent.target) return editing.context;
     return {
@@ -357,6 +389,11 @@ function StandardAiDrawer({ embedded = false, active = true }: { embedded?: bool
     setChosenTarget(undefined);
     setClarifying(false);
   }, [namedPart, open, document, session, cancel]);
+  useEffect(() => {
+    if (!followVersion) return;
+    cancel("Following the current selected target. Generate a fresh preview.");
+    setTask(undefined); setHistory([]); setReply(undefined); setError(""); setChosenTarget(undefined); setClarifying(false);
+  }, [followVersion, cancel]);
   const current = proposal && currentAiFrame(proposal.frame);
   const canGenerate =
     !busy &&
@@ -430,6 +467,8 @@ function StandardAiDrawer({ embedded = false, active = true }: { embedded?: bool
     session,
     componentId,
     selectedFeatureId,
+    selections,
+    target,
     fileBusy,
     canvasActive,
     operationActive,
@@ -488,6 +527,8 @@ function StandardAiDrawer({ embedded = false, active = true }: { embedded?: bool
       document,
       session,
       componentId,
+      selection: selections.map(item => ({ ...item })),
+      ...(automatic ? { targetBodyIds: target.bodyIds } : {}),
       ...(task === "feature" ? { featureId: selectedFeatureId } : {}),
     };
     frame.current = base;
@@ -524,6 +565,7 @@ function StandardAiDrawer({ embedded = false, active = true }: { embedded?: bool
           ? { ...generated, name: namedPart.name }
           : generated;
       assertAiIntentPlan(intent, plan);
+      if (automatic && task !== "create") assertSelectionAiPlan(target, plan);
       setReply(plan);
       setReplyFrame(base);
       setDimensionDrafts(
@@ -624,6 +666,7 @@ function StandardAiDrawer({ embedded = false, active = true }: { embedded?: bool
     setError("");
     try {
       const plan = reviseAiParameters(reply, dimensionDrafts);
+      if (automatic && task !== "create") assertSelectionAiPlan(target, plan);
       const staged =
         task === "feature"
           ? buildAiFeatureEdit(
@@ -721,6 +764,10 @@ function StandardAiDrawer({ embedded = false, active = true }: { embedded?: bool
     setChosenTarget(undefined);
     setClarifying(false);
   }
+  function followSelection() {
+    cancel("Following the current selected target. Generate a fresh preview.");
+    setTask(undefined); setHistory([]); setReply(undefined); setError(""); setChosenTarget(undefined); setClarifying(false);
+  }
   return (
     <section
       className={`ai-drawer${open ? " open" : ""}`}
@@ -746,6 +793,7 @@ function StandardAiDrawer({ embedded = false, active = true }: { embedded?: bool
           onKeyDown={(event) => {
             if (
               event.key === "Escape" &&
+              !event.nativeEvent.isComposing &&
               !window.document.querySelector("dialog[open]")
             ) {
               event.preventDefault();
@@ -758,18 +806,26 @@ function StandardAiDrawer({ embedded = false, active = true }: { embedded?: bool
           }}
         >
           <div className="ai-composer">
+              {embedded ? <div className="ai-actions" aria-label="AI selected target">
+                <span>Target: <strong>{automatic ? target.label : task === "create" ? "New part" : task === "feature" ? editing.context?.feature?.name ?? "Selected feature" : document.components[componentId]?.name}</strong>{automatic ? " · follows selection" : " · explicit scope"}</span>
+                <button type="button" disabled={busy || !commandEnablement.measurementPicking} onClick={() => void runCommand("ai.pickFace")}>Choose face on model</button>
+                {facePicking ? <button type="button" onClick={() => void runCommand("ai.cancelFacePick")}>Cancel AI face selection</button> : null}
+                {automatic && target.sketchId ? <button type="button" disabled={busy || !commandEnablement.sketchCanvas} onClick={() => void runCommand("sketch.editCanvas")}>Edit selected sketch with AI</button> : null}
+              </div> : null}
+              {facePickMessage ? <p role="status">{facePickMessage}</p> : null}
             <div className="ai-prompt-entry">
               <fieldset className="ai-scope" aria-label="AI scope">
                 <legend>What do you want to work on?</legend>
                 {embedded ? (
                   <select
                     aria-label="AI scope"
-                    value={task}
+                    value={manualScope ?? "auto"}
                     disabled={busy}
                     onChange={(event) =>
-                      changeScope(event.target.value as AiScope)
+                      event.target.value === "auto" ? followSelection() : changeScope(event.target.value as AiScope)
                     }
                   >
+                    <option value="auto">Follow selection</option>
                     <option value="create">New part</option>
                     <option value="edit">This part</option>
                     <option value="feature">Selected feature</option>

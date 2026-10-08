@@ -1,8 +1,9 @@
+import { hiddenViewerBodies, useViewerState } from "../../state/viewerState";
 import { interactionDraftBusy } from "./interactionDraftState";
 import { create } from "zustand";
 import { operationDraftBusy } from "./operationDropCommand";
 import { useGuidedHole } from "./guidedHoleCommand";
-import type { CadDocument } from "../../cad/document/schema";
+import type { CadDocument, SelectionRef } from "../../cad/document/schema";
 import type { RebuildResult } from "../../cad/worker/workerProtocol";
 import { useCadStore } from "../../state/useCadStore";
 import {
@@ -48,6 +49,8 @@ export interface AiDraftFrame {
   session: number;
   componentId: string;
   featureId?: string;
+  selection?: readonly SelectionRef[];
+  targetBodyIds?: readonly string[];
 }
 function competingAiTask() {
   return interactionDraftBusy() || useSketchCanvas.getState().active || operationDraftBusy() || useGuidedHole.getState().draft ||
@@ -59,6 +62,11 @@ export function currentAiFrame(frame: AiDraftFrame) {
     state.history.present === frame.document &&
     state.documentSession === frame.session &&
     state.activeComponentId === frame.componentId &&
+    (!frame.selection || (frame.selection.length === state.selection.selectedIds.length && frame.selection.every((item, index) => {
+      const current = state.selection.selectedIds[index];
+      return current?.id === item.id && current.kind === item.kind && current.documentId === item.documentId;
+    }))) &&
+    (!frame.targetBodyIds || !hiddenViewerBodies(frame.document, [...frame.targetBodyIds], frame.session, useViewerState.getState()).length) &&
     (!frame.featureId ||
       (state.selection.selectedIds[0]?.kind === "feature" &&
         state.selection.selectedIds[0].id === frame.featureId &&

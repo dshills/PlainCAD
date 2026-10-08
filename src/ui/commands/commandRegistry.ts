@@ -1,3 +1,4 @@
+import { beginAiFacePicking, clearAiFacePicking } from "../../state/aiFacePicking";
 import { canNavigateLinkedSketchSource, type LinkedSketchContext } from "./linkedSketchCommand";
 import { beginProjectGallery } from "../workspace/projectGalleryState";
 import { unplacePlane } from "../../cad/document/componentPlacement";
@@ -23,7 +24,7 @@ import { beginModelingCreation, beginModelingEditing, editableModelingFeature, u
 import { beginFeaturePattern, beginFeaturePatternEditing, selectedPattern, selectedPatternSource } from "./featurePatternCommand";
 import { useViewerState } from "../../state/viewerState";
 import { selectedCanvasActionTarget, type CanvasActionTarget } from "./canvasActionTarget";
-import { toggleAiDrawer, beginPartDescription } from "./aiCommand";
+import { toggleAiDrawer, beginPartDescription, useAiDrawer } from "./aiCommand";
 import { activeComponentId, beginPartDrawing, beginProjectWorkflow, finishSketchCanvas, useProjectWorkflow } from "./projectWorkflowCommand";
 import { renameComponent, sketchComponentId } from "../../cad/document/components";
 import { MODEL_RESOURCE_LIMITS } from "../../cad/resourceLimits";
@@ -140,6 +141,7 @@ export interface CadCommand {
 }
 
 export interface CommandEnablement {
+  aiAssistant: boolean;
   linkedSketchShowSource: boolean;
   linkedSketchEditSource: boolean;
   canvasBodyActions: boolean;
@@ -205,6 +207,7 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
   const base = state.history.present.features.find(feature => feature.id === canvasTarget?.featureId);
   const links = state.history.present.sketches[useSketchCanvas.getState().active?.sketchId ?? ""]?.projections ?? [];
   return {
+    aiAssistant: useAiDrawer.getState().open || (!targetPickerActive && !guidedHoleStartBlocked && !scopeCaptureBusy && !state.fileBusy),
     linkedSketchShowSource: !targetPickerActive && !guidedHoleStartBlocked && !state.fileBusy && links.some(link => canNavigateLinkedSketchSource(link.id)),
     linkedSketchEditSource: !targetPickerActive && !guidedHoleStartBlocked && !state.fileBusy && links.some(link => canNavigateLinkedSketchSource(link.id, true)),
     canvasBodyActions,
@@ -313,7 +316,9 @@ export const commands: CadCommand[] = [
   { id: "feature.guidedHole", label: "Place Holes on Face", description: "Choose a supported planar face, place hole centers, and preview a native inward cut.", enablementKey: "createGuidedHole", run: beginGuidedHole },
   { id: "feature.cancelGuidedHole", internal: true, label: "Cancel Guided Holes", alwaysEnabled: true, run: cancelGuidedHole },
   { id: "sketch.entity.delete", internal: true, label: "Delete selected sketch item", enablementKey: "deleteSketchEntity", run: deleteSelectedCanvasEntity },
-  { id: "ai.toggle", label: "Toggle AI Drawer", description: "Describe a part and preview an editable AI component.", enablementKey: "outsideGuidedHole", run: toggleAiDrawer },
+  { id: "ai.pickFace", label: "Choose AI target face", internal: true, enablementKey: "measurementPicking", run: () => { beginAiFacePicking(); } },
+  { id: "ai.cancelFacePick", label: "Cancel AI face selection", internal: true, alwaysEnabled: true, run: clearAiFacePicking },
+  { id: "ai.toggle", label: "Toggle AI assistant", description: "Create or modify editable geometry directly in the main model viewport.", enablementKey: "aiAssistant", run: toggleAiDrawer },
   { id: "feature.edit", label: "Edit Selected Feature", description: "Preview changes to the selected Extrude, Revolve, Fillet, Chamfer, Hole or Pattern and its downstream geometry.", enablementKey: "editFeature", run: () => { if (selectedPattern(useCadStore.getState())) beginFeaturePatternEditing(); else if (editableExtrude(useCadStore.getState())) beginExtrudeEditing(); else if (editableHole(useCadStore.getState())) beginHoleEditing(); else beginModelingEditing(); } },
   { id: "feature.pattern", label: "Repeat Hole or Pocket", description: "Select a single-center Hole or distance Cut Extrude, then create a linked linear or circular native feature pattern.", enablementKey: "createFeaturePattern", run: beginFeaturePattern },
   {

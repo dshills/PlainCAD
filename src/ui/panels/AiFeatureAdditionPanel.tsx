@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fetchAiProviders } from "../../ai/client";
 import { prepareAiFeatureAddRequest, requestAiFeatureAddProposal } from "../../ai/featureAddAiClient";
 import { buildAiFeatureAddition, type AiFeatureAddProposal } from "../../ai/featureAddPlan";
@@ -12,7 +12,7 @@ import { useCommandEnablement } from "../commands/useCommandEnablement";
 import { ExtrudePreview } from "../../viewer/ExtrudePreview";
 import type { RebuildResult } from "../../cad/worker/workerProtocol";
 interface Preview { frame: AiFeatureAdditionFrame; plan: AiFeatureAdditionPlan; result: RebuildResult; volume: number; before: number }
-export function AiFeatureAdditionPanel({ active = true }: { active?: boolean }) {
+export function AiFeatureAdditionPanel({ active = true, targetFaceId }: { active?: boolean; targetFaceId?: string }) {
   const cadDocument = useCadStore((s) => s.history.present), session = useCadStore((s) => s.documentSession), component = useCadStore((s) => s.activeComponentId);
   const rebuild = useCadStore((s) => s.rebuild), fileBusy = useCadStore((s) => s.fileBusy), selection = useCadStore((s) => s.selection);
   const viewerSession = useViewerState((s) => s.session);
@@ -39,14 +39,19 @@ export function AiFeatureAdditionPanel({ active = true }: { active?: boolean }) 
     try { return { value: prepareAiFeatureAddRequest(provider, configuration.model, prompt, messages, context.value), error: "" }; }
     catch (failure) { return { value: undefined, error: failure instanceof Error ? failure.message : "Request exceeds its limit." }; }
   }, [context.value, configuration, provider, prompt, messages]);
-  const release = () => {
+  const release = useCallback(() => {
     controller.current?.abort(); controller.current = undefined;
     if (timer.current !== undefined) clearTimeout(timer.current); timer.current = undefined;
     if (owned.current && useAiFeatureAddition.getState().frame === owned.current) useAiFeatureAddition.setState({ frame: undefined });
     owned.current = undefined;
-  };
-  const cancel = (message = "Feature proposal canceled. The project is unchanged.") => { release(); setPreview(undefined); setBusy(false); setStatus(message); };
+  }, []);
+  const cancel = useCallback((message = "Feature proposal canceled. The project is unchanged.") => { release(); setPreview(undefined); setBusy(false); setStatus(message); }, [release]);
   const reset = () => { cancel(); consentFrame.current = undefined; setConsent(false); setMessages([]); setAnswer(undefined); setError(""); };
+  useEffect(() => {
+    if (!targetFaceId) return;
+    cancel("Selected face changed. Review the new target and allow sharing again.");
+    setFaceId(targetFaceId); consentFrame.current = undefined; setConsent(false); setAnswer(undefined); setError("");
+  }, [targetFaceId, cancel]);
   useEffect(() => {
     if (!active) { cancel("Mode closed. Your description and conversation are kept; generate a fresh preview when you return."); consentFrame.current = undefined; setConsent(false); return; }
     const abort = new AbortController();
@@ -86,7 +91,7 @@ export function AiFeatureAdditionPanel({ active = true }: { active?: boolean }) 
       cancel(); setError(failure instanceof Error ? failure.message : "Feature proposal failed.");
     }
   };
-  return <div className="ai-drawer-content" aria-label="AI feature additions" onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); cancel(); input.current?.focus(); } }}>
+  return <div className="ai-drawer-content" aria-label="AI feature additions" onKeyDown={(event) => { if (event.key === "Escape" && !event.nativeEvent.isComposing) { event.preventDefault(); event.stopPropagation(); cancel(); input.current?.focus(); } }}>
     <div className="ai-composer">
       <h3>Add features to this part</h3>
       <label>Feature target face<select value={faceId} disabled={busy} onChange={(event) => { reset(); setFaceId(event.target.value); }}><option value="">Choose a supported face</option>{choices.map((choice) => <option key={choice.id} value={choice.id}>{choice.label}</option>)}</select></label>

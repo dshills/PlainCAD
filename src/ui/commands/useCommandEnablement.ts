@@ -1,3 +1,5 @@
+import { useAiFacePicking } from "../../state/aiFacePicking";
+import { useAiDrawer } from "./aiCommand";
 import { useViewerState } from "../../state/viewerState";
 import { useComponentPlacement } from "./componentPlacementState";
 import { usePartLibrary } from "./partLibraryState";
@@ -29,6 +31,8 @@ import { selectCommandEnablement } from "./commandRegistry";
 import { useTargetScopeCapture } from "./targetScopeCaptureCommand";
 
 export function useCommandEnablement() {
+  useAiDrawer(state => state.open);
+  useAiFacePicking(state => state.frame);
   useViewerState(state => state.session);
   useViewerState(state => state.hiddenBodyIds);
   useViewerState(state => state.hiddenComponentIds);
