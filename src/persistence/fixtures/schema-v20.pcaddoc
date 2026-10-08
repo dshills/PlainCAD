@@ -1,0 +1,352 @@
+{
+  "schemaVersion": 20,
+  "id": "fixture-v20",
+  "name": "Schema 20 product configurations",
+  "units": "metric",
+  "unitSettings": {
+    "length": "mm",
+    "angle": "deg"
+  },
+  "displayUnits": {
+    "length": "mm",
+    "angle": "deg"
+  },
+  "createdAt": "2025-01-01T00:00:00.000Z",
+  "updatedAt": "2025-01-01T00:00:00.000Z",
+  "timelineCursor": 5,
+  "rootComponentId": "first-component",
+  "components": {
+    "first-component": {
+      "id": "first-component",
+      "name": "First part",
+      "placement": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "second-component": {
+      "id": "second-component",
+      "name": "Second part",
+      "placement": {
+        "translation": [
+          0,
+          0,
+          10
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "fitted-component": {
+      "id": "fitted-component",
+      "name": "Fitted enclosure"
+    }
+  },
+  "parameters": {
+    "width": {
+      "id": "placement-width-parameter",
+      "name": "width",
+      "expression": "20mm",
+      "value": 20,
+      "unit": "mm"
+    }
+  },
+  "sketches": {
+    "first-section": {
+      "id": "first-section",
+      "name": "First rectangle",
+      "componentId": "first-component",
+      "plane": {
+        "type": "origin",
+        "plane": "XY"
+      },
+      "timelineStep": 1,
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "solveMode": "validate",
+      "entities": {
+        "source-p0": {
+          "id": "source-p0",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "construction": false
+        },
+        "source-p1": {
+          "id": "source-p1",
+          "type": "point",
+          "x": {
+            "expression": "width",
+            "unit": "mm",
+            "parameterRefs": {
+              "width": "placement-width-parameter"
+            }
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "construction": false
+        },
+        "source-p2": {
+          "id": "source-p2",
+          "type": "point",
+          "x": {
+            "expression": "width",
+            "unit": "mm",
+            "parameterRefs": {
+              "width": "placement-width-parameter"
+            }
+          },
+          "y": {
+            "expression": "10mm",
+            "unit": "mm"
+          },
+          "construction": false
+        },
+        "source-p3": {
+          "id": "source-p3",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "10mm",
+            "unit": "mm"
+          },
+          "construction": false
+        },
+        "source-l0": {
+          "id": "source-l0",
+          "type": "line",
+          "startPointId": "source-p0",
+          "endPointId": "source-p1",
+          "construction": false
+        },
+        "source-l1": {
+          "id": "source-l1",
+          "type": "line",
+          "startPointId": "source-p1",
+          "endPointId": "source-p2",
+          "construction": false
+        },
+        "source-l2": {
+          "id": "source-l2",
+          "type": "line",
+          "startPointId": "source-p2",
+          "endPointId": "source-p3",
+          "construction": false
+        },
+        "source-l3": {
+          "id": "source-l3",
+          "type": "line",
+          "startPointId": "source-p3",
+          "endPointId": "source-p0",
+          "construction": false
+        }
+      },
+      "constraints": [],
+      "dimensions": []
+    },
+    "second-section": {
+      "id": "second-section",
+      "name": "Second rectangle",
+      "componentId": "second-component",
+      "plane": {
+        "type": "origin",
+        "plane": "XY"
+      },
+      "timelineStep": 3,
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "solveMode": "validate",
+      "entities": {
+        "second-p0": {
+          "id": "second-p0",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "construction": false
+        },
+        "second-p1": {
+          "id": "second-p1",
+          "type": "point",
+          "x": {
+            "expression": "width",
+            "unit": "mm",
+            "parameterRefs": {
+              "width": "placement-width-parameter"
+            }
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "construction": false
+        },
+        "second-p2": {
+          "id": "second-p2",
+          "type": "point",
+          "x": {
+            "expression": "width",
+            "unit": "mm",
+            "parameterRefs": {
+              "width": "placement-width-parameter"
+            }
+          },
+          "y": {
+            "expression": "10mm",
+            "unit": "mm"
+          },
+          "construction": false
+        },
+        "second-p3": {
+          "id": "second-p3",
+          "type": "point",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "10mm",
+            "unit": "mm"
+          },
+          "construction": false
+        },
+        "second-l0": {
+          "id": "second-l0",
+          "type": "line",
+          "startPointId": "second-p0",
+          "endPointId": "second-p1",
+          "construction": false
+        },
+        "second-l1": {
+          "id": "second-l1",
+          "type": "line",
+          "startPointId": "second-p1",
+          "endPointId": "second-p2",
+          "construction": false
+        },
+        "second-l2": {
+          "id": "second-l2",
+          "type": "line",
+          "startPointId": "second-p2",
+          "endPointId": "second-p3",
+          "construction": false
+        },
+        "second-l3": {
+          "id": "second-l3",
+          "type": "line",
+          "startPointId": "second-p3",
+          "endPointId": "second-p0",
+          "construction": false
+        }
+      },
+      "constraints": [],
+      "dimensions": []
+    }
+  },
+  "features": [
+    {
+      "id": "first-solid",
+      "name": "First solid",
+      "type": "extrude",
+      "componentId": "first-component",
+      "sketchId": "first-section",
+      "profileId": "first-section:profile:rectangle",
+      "operation": "newBody",
+      "distance": {
+        "expression": "5mm",
+        "unit": "mm"
+      },
+      "direction": "positive",
+      "timelineStep": 2,
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "second-solid",
+      "name": "Second solid",
+      "type": "extrude",
+      "componentId": "second-component",
+      "sketchId": "second-section",
+      "profileId": "second-section:profile:rectangle",
+      "operation": "newBody",
+      "distance": {
+        "expression": "5mm",
+        "unit": "mm"
+      },
+      "direction": "positive",
+      "timelineStep": 4,
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "fitted-solid",
+      "name": "Fitted enclosure",
+      "type": "fit",
+      "operation": "newBody",
+      "componentId": "fitted-component",
+      "sourceBodyId": "body:first-solid",
+      "style": "enclosure",
+      "clearance": {
+        "expression": "2mm",
+        "unit": "mm"
+      },
+      "wallThickness": {
+        "expression": "2mm",
+        "unit": "mm"
+      },
+      "followSourcePlacement": true,
+      "timelineStep": 5
+    }
+  ],
+  "configurations": [
+    {
+      "id": "configuration-small",
+      "name": "Small",
+      "parameters": [
+        {
+          "parameterId": "placement-width-parameter",
+          "expression": {
+            "expression": "20mm",
+            "unit": "mm"
+          }
+        }
+      ]
+    },
+    {
+      "id": "configuration-large",
+      "name": "Large",
+      "parameters": [
+        {
+          "parameterId": "placement-width-parameter",
+          "expression": {
+            "expression": "30mm",
+            "unit": "mm"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-export const CURRENT_SCHEMA_VERSION = 19;
+export const CURRENT_SCHEMA_VERSION = 20;
 
 export type UnitSystem = "metric" | "imperial";
 
@@ -25,8 +25,16 @@ export interface CadDocument {
   sketches: Record<string, Sketch>;
   features: Feature[];
   assemblyJoints?: AssemblyJoint[];
+  configurations?: ProductConfiguration[];
   viewState?: ViewState;
   metadata?: Record<string, unknown>;
+}
+
+/** Parameter expressions by stable identity; geometry is rebuilt, never persisted. */
+export interface ProductConfiguration {
+  id: string;
+  name: string;
+  parameters: Array<{ parameterId: string; expression: ExpressionRef }>;
 }
 
 /** Rigid placement of the completed component; authored geometry stays in design coordinates. */

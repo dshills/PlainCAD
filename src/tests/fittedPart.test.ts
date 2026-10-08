@@ -1,3 +1,4 @@
+import { CURRENT_SCHEMA_VERSION } from "../cad/document/schema";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { fittedPartPlan, followFittedPlacements } from "../cad/features/fittedPart";
@@ -20,12 +21,12 @@ describe("linked fitted parts", () => {
     expect(() => fittedPartPlan({ ...bounds, max: [1e8, 10, 5] }, 2, 2, "enclosure")).toThrow();
   });
   it("migrates, round trips and copies stable source references; rejects partial extraction", () => {
-    const document = load(); expect(document.schemaVersion).toBe(19); expect(serializeProject(importProjectText(serializeProject(document)))).toBe(serializeProject(document));
+    const document = load(); expect(document.schemaVersion).toBe(CURRENT_SCHEMA_VERSION); expect(serializeProject(importProjectText(serializeProject(document)))).toBe(serializeProject(document));
     const copy = appendProject(createEmptyDocument(), document).document, fit = copy.features.find(feature => feature.type === "fit")!;
     if (fit.type !== "fit") throw new Error("Missing fitted feature");
     expect(fit.sourceBodyId).not.toBe("body:first-solid"); expect(copy.features.some(feature => `body:${feature.id}` === fit.sourceBodyId)).toBe(true);
     expect(() => appendProject(createEmptyDocument(), document, { componentId: "fitted-component" })).toThrow(/outside the selected component/);
-    const legacy = JSON.parse(readFileSync("src/persistence/fixtures/schema-v18.pcaddoc", "utf8")); const upgraded = importProjectText(JSON.stringify(legacy)); expect(upgraded.schemaVersion).toBe(19); expect(upgraded.features.map(feature => feature.id)).toEqual(legacy.features.map((feature: { id: string }) => feature.id)); expect(upgraded.features.some(feature => feature.type === "fit")).toBe(false); expect(upgraded.assemblyJoints).toEqual(legacy.assemblyJoints);
+    const legacy = JSON.parse(readFileSync("src/persistence/fixtures/schema-v18.pcaddoc", "utf8")); const upgraded = importProjectText(JSON.stringify(legacy)); expect(upgraded.schemaVersion).toBe(CURRENT_SCHEMA_VERSION); expect(upgraded.features.map(feature => feature.id)).toEqual(legacy.features.map((feature: { id: string }) => feature.id)); expect(upgraded.features.some(feature => feature.type === "fit")).toBe(false); expect(upgraded.assemblyJoints).toEqual(legacy.assemblyJoints);
   });
   it("follows parent position but does not overwrite saved authored positions", () => {
     const document = withComponentPlacement(load(), "first-component", { translation: [10, 20, 30], rotation: [0, 0, Math.PI / 2] });

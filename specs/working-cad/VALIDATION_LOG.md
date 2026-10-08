@@ -896,3 +896,53 @@ remains; no generated build artifacts are committed.
 
 Cadence: **0** completed items since this repaired full checkpoint. Feature 4
 requires the reduced item gate plus Prism and its focused native acceptance.
+
+
+## 2026-10-08 — Amazing CAD feature 4: product configurations
+
+Added schema-20 named configurations of editable parameter expressions by stable
+parameter ID. Save/edit/recapture/delete are immutable and undoable. Native
+comparison leaves the current model untouched; Apply requires an issued current
+variant and makes one history edit. Derived formulas survive renames. Missing or
+newly locked parameters diagnose per variant; broken inactive expressions do not
+block a valid variant. Legacy absent authored defaults become explicit strict
+defaults on recall so store authoring cannot reinterpret a proven preview.
+
+Separate-part batch STL validates actual mesh topology/orientation/intersections,
+uses collision-safe configuration/part filenames, and includes a native volume/
+bounds manifest. Comparison holds up to eight variants / 250,000 triangles /
+64 MiB; archives cap at 64 MiB and saved projects retain the 5 MiB pretty-printed
+file limit. Cancellation, document replacement and changed accepted results
+invalidate comparisons, Apply and archive download. Inserting reusable geometry
+does not copy the source project's configuration collection.
+
+Prism used Anthropic claude-sonnet-5-5 with complete coverage. Main review
+`55e02b983cdae418a66a988ab480cb57` found 0 high, 1 medium, 1 low; fixed stale
+live expression bindings/defaults and strengthened count-limit tests. Follow-up
+unit-default concern was checked against the existing evaluator: defaults affect
+unitless results, while explicit angles/lengths retain their dimensions. Added
+regressions, active-default diagnostics, batched binding validation, byte limits
+and live edit guards. Final helper review `800e590cc4db4f2cd97fae2bb1f2d5ce`
+and legacy review `6eac1eca100771e0fc9966b3bcca0e3d` had zero findings. Final
+staged review `8f90ad2bfee89f966b59310ca16ebe3f` had 0 high/medium, 1 low
+maintainability concern: configuration click handlers capture immutable objects,
+and configurationDocument explicitly verifies every referenced parameter before
+their lookups. No unresolved actionable correctness findings remain. Production
+review `82fde0078263d532d3c4bb262235123c` had 1 low tolerance concern; this
+rectangular fixture uses integer coordinates, with observed error 1e-12 mm³,
+well below the asserted 5e-5 mm³ tolerance.
+
+`npm run check:item` passed twice; final gate checked 1530 unit/component tests
+in 191 files, types, build/budget (44 bundles, largest 480.69 kB), 5 native smoke
+cases and 14 production modeling/AI/CSP cases. Final strict-default compatibility
+fix passed types, 19 focused configuration/command/fitted tests (including one
+additional regression), build/budget again, two native configuration cases
+(10.9s), and the production archive case (2.9s) with no CSP violations. Native
+comparison verified total volumes 4520/6240/7960 mm³, all six exported part STL
+volumes and filenames, edited saved variants, one-step Apply/Undo, save/open, and
+legacy scalar recall under cm project defaults preserving a 30 mm native width.
+The production assertion was corrected from exact floating-point equality for
+3240.000000000001 to a geometric tolerance. Existing linkedSketchCommand build
+advisory remains; no bundle-budget failures.
+
+Cadence: **1** completed item since the feature-3 full checkpoint.

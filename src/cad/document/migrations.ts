@@ -30,6 +30,7 @@ const migrations = new Map<number, Migration>([
   [16, migrateV16ToV17],
   [17, document => { const { assemblyJoints: _joints, ...legacy } = document; return { ...legacy, schemaVersion: 18 }; }],
   [18, document => ({ ...document, schemaVersion: 19 })],
+  [19, document => { const { configurations: _configurations, ...legacy } = document; return { ...legacy, schemaVersion: 20 }; }],
 ]);
 
 function migrateV16ToV17(document: CadDocument): CadDocument {
@@ -249,6 +250,10 @@ function sanitizeCurrentDocument(input: CadDocument): CadDocument {
     sketches,
     features,
     ...(input.assemblyJoints !== undefined ? { assemblyJoints: Array.isArray(input.assemblyJoints) ? input.assemblyJoints.map(sanitizeAssemblyJoint) : input.assemblyJoints } : {}),
+    ...(input.configurations !== undefined ? { configurations: Array.isArray(input.configurations) ? input.configurations.map(configuration => {
+      if (!isRecord(configuration)) return configuration;
+      return { id: configuration.id, name: configuration.name, parameters: Array.isArray(configuration.parameters) ? configuration.parameters.map((entry: unknown) => isRecord(entry) ? { parameterId: entry.parameterId, expression: sanitizeExpressionRef(entry.expression) } : entry) : configuration.parameters };
+    }) as CadDocument["configurations"] : input.configurations } : {}),
     ...(input.viewState
       ? {
           viewState: {

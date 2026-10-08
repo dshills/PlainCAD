@@ -1,4 +1,5 @@
 import { assemblyJointIssues } from "./assemblyJoints";
+import { configurationIssues } from "./configurationValidation";
 import { componentScopeIssues, featureComponentId, sketchComponentId } from "./components";
 import { validComponentPlacement } from "./componentPlacement";
 
@@ -64,6 +65,7 @@ export function validateDocument(document: CadDocument, mode: "modeling" | "stor
   }
   if (issues.length) return issues;
   issues.push(...assemblyJointIssues(document));
+  issues.push(...configurationIssues(document));
   issues.push(...validatePersistedFields(document));
   if (issues.length > 0) return issues;
 
@@ -80,6 +82,7 @@ export function validateDocument(document: CadDocument, mode: "modeling" | "stor
   addId(document.id, "document");
   for (const component of Object.values(document.components)) addId(component.id, "document");
   for (const joint of document.assemblyJoints ?? []) addId(joint.id, "document");
+  for (const configuration of document.configurations ?? []) addId(configuration.id, "document");
 
   for (const [name, parameter] of Object.entries(document.parameters)) {
     addId(parameter.id, "parameter");

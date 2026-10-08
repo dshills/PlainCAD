@@ -1259,3 +1259,27 @@ triangles); bridges, support spans and strength are not simulated. Laser screeni
 requires retained axial extrusion caps and only axial through-cuts, and does not
 convert solids to sheet parts. Assembly interference uses native solid common
 volume. Resource/collision limits explicitly mark analysis incomplete.
+
+
+### Product configurations
+
+Open **Product configurations** from the command palette or active component
+settings. Save the current editable parameter expressions with a unique name;
+**Edit** changes a saved variant without changing the current model. Select up to
+eight variants and **Compare** to rebuild each with OpenCascade, inspect body
+size/volume, and preview it. **Apply** changes the current model in one Undo step.
+**Download configuration STL archive** validates each part and creates an archive
+with configuration/part filenames plus a manifest of native volumes and bounds.
+Canceling or replacing the project invalidates pending results and downloads.
+
+Configurations persist in schema 20 and keep stable parameter references and
+derived formulas through renames. Unitless edits use the parameter's current
+dimension and project unit defaults; explicit units retain their meaning. Locked
+parameters are excluded; newly added
+parameters inherit current values. A deleted or newly locked target requires
+recapture; a broken inactive variant remains diagnosable without breaking the
+current model. Projects store at most 16 configurations with 500 expressions each.
+Comparison retains at most 250,000 total triangles / 64 MiB; the final archive is
+limited to 64 MiB. Separate part STL files preserve component placement and are
+not unions or print-bed arrangements. Inserting a reusable part copies its current
+authored design, not the source project's configuration collection.
