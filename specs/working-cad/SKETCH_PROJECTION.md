@@ -48,3 +48,32 @@ preview ownership and selection-race coverage is in
 `sketchProjectionCommand.test.ts`. Native browser acceptance is in
 `e2e/sketch-projection.spec.ts`; execution/review status is recorded by the batch
 validation gate.
+
+## Pick a boundary in the source view
+
+While editing a sketch, choose **Project part edges**. The source view shows the
+actual upstream native solid and overlays its complete surviving authored caps.
+Click or tap a cyan outline to select that exact cap group and automatically
+solve its linked preview. Orbit by dragging the part away from an outline, zoom
+with the mouse wheel, or use **Fit sources**. The outlines show through the solid
+so its start and end cap are both selectable. A selected outline turns yellow.
+Tab to an outline and press Enter or Space for the same selection; the named
+**Source part boundary** chooser remains available.
+
+Dashed brown outlines are incompatible with the destination sketch plane. Pick
+one to see a diagnostic explaining the parallel-plane requirement. This does not
+change the project or enable Apply. Named selection offers the same compatibility
+feedback. The SVG outline is a bounded display approximation of authored lines,
+circles and arcs; projection references and native geometry come from the existing
+complete-cap proof and projection planner, never from arbitrary mesh triangles.
+
+Review the linked outline and native preview, then use **Apply projected boundary**.
+Changing the source, construction option, document, sketch selection or task
+invalidates the preview. A source edit after Apply updates the link at rebuild;
+save/open preserves its stable member identities. Display limits retain the named
+chooser and native Preview/Apply validation.
+
+Source-view outlines use the current posed world coordinates. A new projection
+between components with different placements is refused: align their placements
+first. Existing links follow authored design geometry, while component placement
+positions the finished parts. Moving a component does not deform its sketches.

@@ -4,13 +4,14 @@ import { createEmptyDocument, createExtrudeFeature, upsertFeature, upsertParamet
 import { addCornerRectangle, createSketchOnPlane } from "../src/cad/sketch/SketchModel";
 import { solveSketch } from "../src/cad/sketch/SketchSolver";
 import { detectProfiles } from "../src/cad/sketch/profileDetection";
+import type { OriginPlane } from "../src/cad/document/schema";
 import { aiSnapshot } from "./aiAcceptanceHelpers";
-function fixture(oblique = false) {
-  const sketch = addCornerRectangle(createSketchOnPlane("Source rectangle", "XY"), "width", "20mm");
+function fixture(oblique = false, plane: OriginPlane = "XY") {
+  const sketch = addCornerRectangle(createSketchOnPlane("Source rectangle", plane), "width", "20mm");
   const profile = detectProfiles(solveSketch(sketch, { width: { value: 30, unit: "mm", dimension: "length" } })).profiles[0];
   const feature = createExtrudeFeature({ name: "Reference block", sketchId: sketch.id, profileId: profile.id, operation: "newBody", direction: "positive", distance: { expression: "8mm", unit: "mm" } });
   let document = upsertFeature(upsertSketch(upsertParameter(createEmptyDocument("Linked cover"), { id: "projection_width", name: "width", expression: "30mm", unit: "mm", value: 30 }), sketch), feature);
-  const target = createSketchOnPlane("Cover outline", { type: "offset", base: oblique ? "XZ" : "XY", offset: { expression: "12mm", unit: "mm" } });
+  const target = createSketchOnPlane("Cover outline", { type: "offset", base: oblique ? "XZ" : plane, offset: { expression: "12mm", unit: "mm" } });
   document = upsertSketch(document, target);
   return { document, target, feature };
 }
@@ -30,30 +31,54 @@ async function openCanvas(page: Page, targetId: string) {
   }, targetId);
   await page.getByRole("button", { name: "Edit sketch canvas", exact: true }).click();
 }
-async function configure(page: Page) {
+async function configure(page: Page, picking: "named" | "mouse" | "keyboard" = "named") {
   await page.getByRole("button", { name: "Project part edges into sketch", exact: true }).click();
   const panel = page.getByRole("region", { name: "Project part edges", exact: true });
   await expect(panel.getByLabel("Source part boundary").locator("option")).toHaveCount(3);
   const end = await panel.getByLabel("Source part boundary").locator("option").evaluateAll((options) => options.find((option) => option.textContent?.includes("End cap"))?.getAttribute("value"));
   expect(end, "A native End cap choice must exist").toBeTruthy();
-  await panel.getByLabel("Source part boundary").selectOption(end!);
-  await panel.getByRole("button", { name: "Preview projected boundary" }).click();
+  if (picking === "named") {
+    await panel.getByLabel("Source part boundary").selectOption(end!);
+    await panel.getByRole("button", { name: "Preview projected boundary" }).click();
+  } else {
+    const boundary = panel.getByRole("button", { name: /^Project .*Reference block.*End cap$/ });
+    await expect(boundary).toBeVisible();
+    await boundary.scrollIntoViewIfNeeded();
+    if (picking === "keyboard") { await boundary.focus(); await boundary.press("Enter"); }
+    else {
+      let point: { x: number; y: number } | undefined;
+      await expect(async () => {
+        point = await boundary.locator(".projection-boundary-hit").evaluate((element) => {
+          const path = element as SVGPathElement, button = path.closest('[role="button"]'), matrix = path.getScreenCTM();
+          if (!matrix) return;
+          for (let i = 1; i < 100; i++) {
+            const local = path.getPointAtLength(path.getTotalLength() * i / 100);
+            const screen = new DOMPoint(local.x, local.y).matrixTransform(matrix);
+            if (document.elementFromPoint(screen.x, screen.y)?.closest('[role="button"]') === button) return { x: screen.x, y: screen.y };
+          }
+        });
+        expect(point, "An exposed point on the requested native boundary must receive the pointer").toBeDefined();
+      }).toPass();
+      await page.mouse.click(point!.x, point!.y);
+    }
+    await expect(panel.getByLabel("Source part boundary")).toHaveValue(end!);
+  }
   return panel;
 }
 
-test("projects native authored caps associatively with preview, one Undo, source edit, save/open and break link", async ({ page }, info) => {
+test("clicks and keyboard-picks native authored caps associatively with preview, one Undo, source edit, save/open and break link", async ({ page }, info) => {
   const model = fixture();
   await page.goto("/");
   await page.locator('input[type="file"]').setInputFiles({ name: "projection.pcaddoc", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(model.document)) });
   await native(page, 4800);
   await openCanvas(page, model.target.id);
-  const original = await aiSnapshot(page), panel = await configure(page);
+  const original = await aiSnapshot(page), panel = await configure(page, "mouse");
   await expect(panel.getByRole("button", { name: "Apply projected boundary" })).toBeEnabled();
   await expect(panel.getByRole("img", { name: "Linked projected sketch preview" })).toBeVisible();
   expect((await aiSnapshot(page)).document).toEqual(original.document);
   await panel.getByRole("button", { name: "Cancel projection" }).click();
   expect((await aiSnapshot(page)).past).toBe(original.past);
-  const again = await configure(page);
+  const again = await configure(page, "keyboard");
   await expect(again.getByRole("button", { name: "Apply projected boundary" })).toBeEnabled();
   await again.getByRole("button", { name: "Apply projected boundary" }).click();
   await native(page, 4800);
@@ -131,4 +156,24 @@ test("repairs the same authored cap role without new member IDs and removes a lo
   const removed = await aiSnapshot(page);
   expect(removed.document.sketches[model.target.id].projections ?? []).toEqual([]);
   expect(removed.document.sketches[model.target.id].entities).toEqual({});
+});
+
+
+test("click projection preserves YZ coordinate orientation in native source and linked target", async ({ page }) => {
+  const model = fixture(false, "YZ");
+  await page.goto("/");
+  await page.locator('input[type="file"]').setInputFiles({ name: "yz-projection.pcaddoc", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(model.document)) });
+  await native(page, 4800); await openCanvas(page, model.target.id);
+  const before = await aiSnapshot(page), panel = await configure(page, "mouse");
+  await expect(panel.getByRole("button", { name: "Apply projected boundary" })).toBeEnabled();
+  expect((await aiSnapshot(page)).document).toEqual(before.document);
+  await panel.getByRole("button", { name: "Apply projected boundary" }).click(); await native(page, 4800);
+  const snapshot = await aiSnapshot(page), result = snapshot.result!;
+  expect(snapshot.document.sketches[model.target.id].projections![0]).toMatchObject({ sourceFeatureId: model.feature.id, role: "endCapPerimeter" });
+  result.meshes[0].bounds.min.forEach((value) => expect(value).toBeCloseTo(0, 7));
+  result.meshes[0].bounds.max.forEach((value, axis) => expect(value).toBeCloseTo([8, 30, 20][axis], 7));
+  expect(result.sketchPlanes![model.target.id]).toMatchObject({ origin: { x: 12, y: 0, z: 0 }, u: { x: 0, y: 1, z: 0 }, v: { x: 0, y: 0, z: 1 } });
+  const points = Object.values(result.solvedSketches![model.target.id].points);
+  expect(Math.max(...points.map((point) => point.x))).toBeCloseTo(30, 8);
+  expect(Math.max(...points.map((point) => point.y))).toBeCloseTo(20, 8);
 });

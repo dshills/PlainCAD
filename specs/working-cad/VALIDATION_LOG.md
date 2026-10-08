@@ -140,3 +140,13 @@ Low notes were checked against snapped trigonometric values, bounded handle rend
 The final isolated checkout passed `npm run check:item`: type checks, 1150 unit/component tests, production build/bundle budget (largest 465.38 kB), 5 development and 14 production native smoke tests. The final pointer/keyboard placement acceptance case passed, including Escape, exact translation/Z rotation, unchanged native BRep volume, one Undo/Redo, save/open, parameter edits and positive-winding STL bounds. Two focused production cases passed: schema16 two-body X/Y/Z poses and the migrated schema15 associative cover, including IDs, geometry, save/open and multibody STL. Earlier failures were stale body-label/schema-version test expectations, corrected before the successful final gate.
 
 Cadence: 3 completed items since the last successful full checkpoint; full gate is due after 2 more requested changes.
+
+### Item 4: click-to-project native cap boundaries (2026-10-08)
+
+Prism `c862f80d140b6815a5e5da9fa56bdd2e` reviewed the complete isolated picker change with Anthropic `claude-sonnet-5-5`. Final fixup review `6eafa0da6df028c8b3288e711bf08cb0` has no high/medium findings. Resize now preserves the fitted/orbited camera; empty bounds are ignored, frame paths avoid unchanged updates and lookups use a map, and compatible sources receive the bounded display budget before incompatible diagnostic outlines. Initial native mouse tests clicked clipped outlines; they now scroll the actual target into view and require elementFromPoint to prove it receives the real mouse click.
+
+Remaining low notes were assessed: unposed design planes are required for compatibility with the design-coordinate projection planner, rather than comparing a posed proof normal against an unposed destination; native complete-cap choices have unique feature/role IDs. The exposed-point retry is bounded by the browser test timeout and passed in the actual mouse workflow. Unsupported oblique/fragmented sources remain explicitly diagnostic; display curves never authorize Apply without native proof.
+
+The exact isolated checkout passed `npm run check:item`: type checks, 1163 unit/component tests, production build/bundle budget (largest 465.42 kB), 5 development and 14 production native smoke tests. All 4 additional native projection cases passed (23.5s), including mouse/keyboard choices, one Undo, source edits, save/open, repair/remove/break links, unsupported oblique refusal and YZ native coordinate orientation. Unit regressions cover camera preservation and eligible sources after 170 incompatible sources.
+
+Cadence: 4 completed items since the last successful full checkpoint. The next requested item requires the full release gate before its commit.

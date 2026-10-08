@@ -555,3 +555,5 @@ the source and preserve upstream previews for repair.
 - [Original MVP specification](specs/initial/SPEC.md), [completion review](specs/initial/MVP_COMPLETION.md), and [deployment guide](deployment/README.md).
 
 Native rebuilds reuse validated feature outputs within bounded worker-owned caches. Changed solved geometry and dependent body versions invalidate reuse; failed rebuilds never admit partial results. See [incremental native rebuilds](specs/working-cad/INCREMENTAL_NATIVE.md).
+
+**Project sketch edges** offers mouse/touch/keyboard picks of complete supported cap boundaries in a native source preview. A named chooser remains available. Pick, inspect the native projection preview, then Apply. Oblique or incompatible placed components show explicit reasons. See [projection limits](specs/working-cad/SKETCH_PROJECTION.md).

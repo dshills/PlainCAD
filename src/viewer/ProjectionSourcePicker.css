@@ -1,0 +1,11 @@
+.projection-source-frame { position: relative; width: 100%; min-height: 260px; }
+.projection-source-canvas { width: 100%; height: 260px; }
+.projection-source-canvas canvas { display: block; }
+.projection-source-overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; }
+.projection-boundary { outline: none; cursor: pointer; }
+.projection-boundary-hit { fill: none; stroke: transparent; stroke-width: 20px; pointer-events: stroke; touch-action: manipulation; }
+.projection-boundary-line { fill: none; stroke: #2edbe0; stroke-width: 2.5px; pointer-events: none; }
+.projection-boundary.selected .projection-boundary-line, .projection-boundary:focus .projection-boundary-line, .projection-boundary:hover .projection-boundary-line { stroke: #ffe079; stroke-width: 4px; }
+.projection-boundary.incompatible .projection-boundary-line { stroke: #bd8d74; stroke-dasharray: 5 4; }
+.projection-boundary.incompatible { cursor: help; }
+.projection-boundary[aria-disabled="true"] { cursor: wait; }
