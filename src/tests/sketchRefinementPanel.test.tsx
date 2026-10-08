@@ -1,3 +1,5 @@
+import { clearAiSketchCanvasPreview, useAiSketchCanvasPreview } from "../ui/commands/aiSketchCanvasPreview";
+import { useAiDrawer } from "../ui/commands/aiCommand";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { SketchRefinementPanel } from "../ui/panels/SketchRefinementPanel";
@@ -17,6 +19,7 @@ beforeEach(() => {
   const state = useCadStore.getState();
   useCadStore.setState({ rebuild: { ...state.rebuild, kernelReady: true } });
   useSketchCanvas.setState({ active: { documentId: state.history.present.id, session: state.documentSession, sketchId: sketch.id }, selection: undefined });
+  useAiDrawer.setState({ open: true });
   useSketchRefinement.setState({ frame: undefined });
   mocks.preview.mockReset();
   mocks.preview.mockImplementation(rebuildDocument);
@@ -26,7 +29,8 @@ it("previews a solved sketch without editing history, cancels, and applies one u
   fireEvent.change(screen.getByLabelText("Sketch refinement request"), { target: { value: "make this rectangle 60 x 40 mm" } });
   fireEvent.click(screen.getByRole("button", { name: "Preview sketch refinement" }));
   await waitFor(() => expect(screen.getByLabelText("Sketch refinement status")).toHaveTextContent("No solid was modeled"));
-  expect(screen.getByRole("img", { name: "Solved sketch refinement preview" })).toBeInTheDocument();
+  expect(screen.queryByRole("img", { name: "Solved sketch refinement preview" })).toBeNull();
+  expect(useAiSketchCanvasPreview.getState().proposal?.solved.lines).toHaveLength(4);
   const original = useCadStore.getState().history.present;
   expect(useCadStore.getState().history.past).toHaveLength(0);
   expect(useSketchRefinement.getState().frame).toBeDefined();
@@ -58,6 +62,26 @@ it("reports unsupported requests without worker calls and ignores late previews 
   expect(screen.getByRole("button", { name: "Apply sketch refinement" })).toBeDisabled();
   expect(useCadStore.getState().history.past).toHaveLength(0);
   expect(useSketchRefinement.getState().frame).toBeUndefined();
+});
+
+it("requires a visible current canvas proposal before enabling Apply", async () => {
+  useAiDrawer.setState({ open: false });
+  render(<SketchRefinementPanel />);
+  fireEvent.change(screen.getByLabelText("Sketch refinement request"), { target: { value: "make this rectangle 60 x 40 mm" } });
+  fireEvent.click(screen.getByRole("button", { name: "Preview sketch refinement" }));
+  await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("AI canvas context changed"));
+  expect(screen.getByRole("button", { name: "Apply sketch refinement" })).toBeDisabled();
+  expect(useCadStore.getState().history.past).toHaveLength(0);
+});
+
+it("disables Apply when the main canvas has disposed its proposal", async () => {
+  render(<SketchRefinementPanel />);
+  fireEvent.change(screen.getByLabelText("Sketch refinement request"), { target: { value: "make this rectangle 60 x 40 mm" } });
+  fireEvent.click(screen.getByRole("button", { name: "Preview sketch refinement" }));
+  await waitFor(() => expect(screen.getByRole("button", { name: "Apply sketch refinement" })).toBeEnabled());
+  act(() => clearAiSketchCanvasPreview());
+  expect(screen.getByRole("button", { name: "Apply sketch refinement" })).toBeDisabled();
+  expect(useCadStore.getState().history.past).toHaveLength(0);
 });
 
 afterEach(() => vi.restoreAllMocks());

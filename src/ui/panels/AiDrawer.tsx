@@ -39,7 +39,8 @@ import {
 } from "../../ai/plan";
 import type { RebuildResult } from "../../cad/worker/workerProtocol";
 import { useCadStore } from "../../state/useCadStore";
-import { ExtrudePreview } from "../../viewer/ExtrudePreview";
+import { clearAiCanvasPreview, currentAiCanvasPreview, publishAiCanvasPreview, useAiCanvasPreview, type AiCanvasPreview } from "../../state/aiCanvasPreview";
+import { AiCanvasPreviewControls } from "./AiCanvasPreviewControls";
 import { useSketchCanvas } from "../commands/sketchCanvasCommand";
 import {
   applyAiPlan,
@@ -59,8 +60,10 @@ import { useCommandEnablement } from "../commands/useCommandEnablement";
 import { hiddenViewerBodies, useViewerState } from "../../state/viewerState";
 import { useShallow } from "zustand/react/shallow";
 
+interface CanvasAiDraftFrame extends AiDraftFrame { beforeResult?: RebuildResult }
 interface Proposal {
-  frame: AiDraftFrame;
+  frame: CanvasAiDraftFrame;
+  canvasPreview: AiCanvasPreview;
   plan: AiPlan;
   staged: AiStaged;
   result: RebuildResult;
@@ -311,7 +314,7 @@ function StandardAiDrawer({ embedded = false, active = true, target, followVersi
   const [dimensionDrafts, setDimensionDrafts] = useState<
     Record<string, string>
   >({});
-  const [replyFrame, setReplyFrame] = useState<AiDraftFrame>();
+  const [replyFrame, setReplyFrame] = useState<CanvasAiDraftFrame>();
   const [proposal, setProposal] = useState<Proposal>();
   useEffect(() => {
     if (!reply) {
@@ -366,9 +369,26 @@ function StandardAiDrawer({ embedded = false, active = true, target, followVersi
   useEffect(() => {
     preference.current = { provider, model };
   }, [provider, model]);
+  const ownedCanvasPreview = useRef<AiCanvasPreview | undefined>(undefined);
+  const canvasPreview = useAiCanvasPreview(state => state.preview);
+  const clearCanvasProposal = useCallback(() => {
+    if (ownedCanvasPreview.current) clearAiCanvasPreview(ownedCanvasPreview.current);
+    ownedCanvasPreview.current = undefined;
+  }, []);
+  useEffect(() => () => clearCanvasProposal(), [clearCanvasProposal]);
+  const displayProposal = (base: CanvasAiDraftFrame, staged: AiStaged, result: RebuildResult) => {
+    if (!publishAiCanvasPreview({ document: base.document, session: base.session, componentId: base.componentId,
+      selection: base.selection, beforeResult: base.beforeResult, result, bodyIds: staged.bodyIds }))
+      throw new Error("Project, selection or accepted geometry changed. Generate a fresh native preview.");
+    const published = useAiCanvasPreview.getState().preview;
+    if (!published) throw new Error("The native canvas preview is unavailable. Generate a fresh preview.");
+    ownedCanvasPreview.current = published;
+    return published;
+  };
   const cancel = useCallback((message = "Request canceled. The project is unchanged.") => {
     controller.current?.abort();
     controller.current = undefined;
+    clearCanvasProposal();
     frame.current = undefined;
     setBusy(false);
     setProposal(undefined);
@@ -394,7 +414,11 @@ function StandardAiDrawer({ embedded = false, active = true, target, followVersi
     cancel("Following the current selected target. Generate a fresh preview.");
     setTask(undefined); setHistory([]); setReply(undefined); setError(""); setChosenTarget(undefined); setClarifying(false);
   }, [followVersion, cancel]);
-  const current = proposal && currentAiFrame(proposal.frame);
+  useEffect(() => {
+    if (proposal && canvasPreview !== proposal.canvasPreview)
+      cancel("The native canvas preview closed. Generate a fresh preview before Apply.");
+  }, [proposal, canvasPreview, cancel]);
+  const current = proposal && currentAiFrame(proposal.frame) && canvasPreview === proposal.canvasPreview && Boolean(currentAiCanvasPreview(useCadStore.getState()));
   const canGenerate =
     !busy &&
     !fileBusy &&
@@ -523,7 +547,8 @@ function StandardAiDrawer({ embedded = false, active = true, target, followVersi
     const abort = new AbortController(),
       timer = window.setTimeout(() => abort.abort(), 120000);
     controller.current = abort;
-    const base: AiDraftFrame = {
+    const base: CanvasAiDraftFrame = {
+      beforeResult: rebuildStatus === "succeeded" ? rebuildResult : undefined,
       document,
       session,
       componentId,
@@ -616,6 +641,7 @@ function StandardAiDrawer({ embedded = false, active = true, target, followVersi
         return;
       const geometry = assertAiGeometry(staged, result);
       setProposal({
+        canvasPreview: displayProposal(base, staged, result),
         frame: base,
         plan,
         staged,
@@ -691,6 +717,7 @@ function StandardAiDrawer({ embedded = false, active = true, target, followVersi
       const geometry = assertAiGeometry(staged, result);
       setReply(plan);
       setProposal({
+        canvasPreview: displayProposal(base, staged, result),
         frame: base,
         plan,
         staged,
@@ -736,6 +763,7 @@ function StandardAiDrawer({ embedded = false, active = true, target, followVersi
         proposal.result,
         proposal.operationResult,
       );
+      clearCanvasProposal();
       setProposal(undefined);
       setStatus(
         proposal.staged.editedFeature
@@ -1308,10 +1336,7 @@ function StandardAiDrawer({ embedded = false, active = true, target, followVersi
                     ))}
                   </ul>
                 ) : null}
-                <ExtrudePreview
-                  meshes={proposal.geometry.meshes}
-                  label="Native AI component preview"
-                />
+                <AiCanvasPreviewControls />
                 <p>
                   {proposal.staged.bodyIds.length} native{" "}
                   {proposal.staged.bodyIds.length === 1 ? "body" : "bodies"} ·{" "}

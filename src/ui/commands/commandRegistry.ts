@@ -1,4 +1,3 @@
-import { beginAiFacePicking, clearAiFacePicking } from "../../state/aiFacePicking";
 import { canNavigateLinkedSketchSource, type LinkedSketchContext } from "./linkedSketchCommand";
 import { beginProjectGallery } from "../workspace/projectGalleryState";
 import { unplacePlane } from "../../cad/document/componentPlacement";
@@ -94,6 +93,8 @@ import { moveTimelineItem, planTimelineMove } from "../../cad/document/timelineE
 import { beginHoleCreation, beginHoleEditing, editableHole, holeCreationContext, useHoleDraft } from "./holeCommand";
 import { prepareProjectDrop, replaceWithDroppedProject, saveAndReplaceDroppedProject } from "./projectDropCommand";
 import { focusRepairIssue, addRepairClosingEdge, type RepairContext } from "./repairCommand";
+import { beginAiFacePicking, clearAiFacePicking } from "../../state/aiFacePicking";
+import { currentAiCanvasPreview, clearAiCanvasPreview } from "../../state/aiCanvasPreview";
 
 async function exportCurrentPng(scope: "project" | "body" | "sketch") {
   const captured = useCadStore.getState(), canvas = useSketchCanvas.getState().active;
@@ -200,30 +201,32 @@ export interface CommandEnablement {
 export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useTargetScopeCapture.getState().busy, canvasActive = Boolean(useSketchCanvas.getState().active), guidedHoleActive = Boolean(useGuidedHole.getState().draft), guidedHoleStartBlocked = Boolean(useExtrudeDraft.getState().draft || useHoleDraft.getState().draft || useModelingDraft.getState().draft || useProjectWorkflow.getState().active), exportDialogOpen = useFileJobs.getState().exportOpen, operationBusy = operationDraftBusy(), operationFrameActive = Boolean(useOperationDrop.getState().frame)): CommandEnablement {
   const refinementBusy = interactionDraftBusy();
   const facePickerActive = Boolean(useFacePocket.getState().frame);
-  const handoffReady = !facePickerActive && !refinementBusy && !guidedHoleActive && !exportDialogOpen && !guidedHoleStartBlocked && !state.fileBusy && canMakeSketchSolid(state);
-  const targetPickerActive = facePickerActive || guidedHoleActive || operationBusy || exportDialogOpen || refinementBusy;
+  const aiPreviewActive = Boolean(currentAiCanvasPreview(state));
+  const handoffReady = !aiPreviewActive && !facePickerActive && !refinementBusy && !guidedHoleActive && !exportDialogOpen && !guidedHoleStartBlocked && !state.fileBusy && canMakeSketchSolid(state);
+  const transientPickerActive = facePickerActive || guidedHoleActive || operationBusy || exportDialogOpen || refinementBusy;
+  const targetPickerActive = transientPickerActive || aiPreviewActive;
   const canvasTarget = selectedCanvasActionTarget(state);
   const canvasBodyActions = Boolean(canvasTarget && !targetPickerActive && !canvasActive && !guidedHoleStartBlocked && !scopeCaptureBusy && !useInspectionState.getState().picking);
   const base = state.history.present.features.find(feature => feature.id === canvasTarget?.featureId);
   const links = state.history.present.sketches[useSketchCanvas.getState().active?.sketchId ?? ""]?.projections ?? [];
   return {
-    aiAssistant: useAiDrawer.getState().open || (!targetPickerActive && !guidedHoleStartBlocked && !scopeCaptureBusy && !state.fileBusy),
+    aiAssistant: useAiDrawer.getState().open || (!transientPickerActive && !guidedHoleStartBlocked && !scopeCaptureBusy && !state.fileBusy),
     linkedSketchShowSource: !targetPickerActive && !guidedHoleStartBlocked && !state.fileBusy && links.some(link => canNavigateLinkedSketchSource(link.id)),
     linkedSketchEditSource: !targetPickerActive && !guidedHoleStartBlocked && !state.fileBusy && links.some(link => canNavigateLinkedSketchSource(link.id, true)),
     canvasBodyActions,
     canvasEditBase: canvasBodyActions && Boolean(base && (base.type === "extrude" || base.type === "revolve")),
     canvasDeleteBase: canvasBodyActions && Boolean(base),
     projectSketchEdges: !targetPickerActive && !guidedHoleStartBlocked && !state.fileBusy && canOpenSketchProjection(state),
-    insertProject: canInsertProject(state),
-    partLibrary: canOpenPartLibrary(state),
-    moveComponent: canBeginComponentPlacement(state),
+    insertProject: !aiPreviewActive && canInsertProject(state),
+    partLibrary: !aiPreviewActive && canOpenPartLibrary(state),
+    moveComponent: !aiPreviewActive && canBeginComponentPlacement(state),
     measurementPicking: state.rebuild.status === "succeeded" && Boolean(state.rebuild.result?.success && state.rebuild.result.documentId === state.history.present.id) && !state.fileBusy && !canvasActive && !guidedHoleStartBlocked && !targetPickerActive && !scopeCaptureBusy,
     createFacePocket: !targetPickerActive && !canvasActive && !guidedHoleStartBlocked && !scopeCaptureBusy && canBeginFacePocket(state),
     removeSketchMaterial: handoffReady && canRemoveSketchMaterial(state),
     trimSketch: !targetPickerActive && canvasActive && !guidedHoleStartBlocked && !state.fileBusy,
     replicateSketch: !targetPickerActive && !guidedHoleStartBlocked && !state.fileBusy && canOpenSketchReplication(),
     offsetSketch: !targetPickerActive && !guidedHoleStartBlocked && !state.fileBusy && canOpenSketchOffset(),
-    editSolidDimension: !facePickerActive && solidDimensionEditingAvailable(state),
+    editSolidDimension: !aiPreviewActive && !facePickerActive && solidDimensionEditingAvailable(state),
     makeSketchSolid: handoffReady,
     saveOrExport: canBeginSaveOrExport(state, saveOrExportBlocked(canvasActive, guidedHoleActive, guidedHoleStartBlocked || operationBusy || refinementBusy, exportDialogOpen, scopeCaptureBusy)),
     repairModel: !scopeCaptureBusy && !targetPickerActive && !guidedHoleStartBlocked && !state.fileBusy,
@@ -245,11 +248,11 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
     document: Boolean(state.history.present),
     saveNamedView: !targetPickerActive && (state.history.present.viewState?.namedViews?.length ?? 0) < MAX_NAMED_VIEWS,
     restoreNamedView: Boolean(state.history.present.viewState?.namedViews?.length),
-    undo: !targetPickerActive && state.history.past.length > 0,
-    redo: !targetPickerActive && state.history.future.length > 0,
-    exportStl: canExportStl(state) && !state.fileBusy && !operationBusy && !refinementBusy,
-    exportStep: canOpenStepExport(state) && !operationBusy && !refinementBusy,
-    exportSelectedBody: canExportStl(state) && !state.fileBusy && !operationBusy && !refinementBusy && Boolean(selectedExportBody(state)),
+    undo: !transientPickerActive && state.history.past.length > 0,
+    redo: !transientPickerActive && state.history.future.length > 0,
+    exportStl: !aiPreviewActive && canExportStl(state) && !state.fileBusy && !operationBusy && !refinementBusy,
+    exportStep: !aiPreviewActive && canOpenStepExport(state) && !operationBusy && !refinementBusy,
+    exportSelectedBody: !aiPreviewActive && canExportStl(state) && !state.fileBusy && !operationBusy && !refinementBusy && Boolean(selectedExportBody(state)),
     exportProjectPng: canExportStl(state) && !state.fileBusy && !targetPickerActive && !guidedHoleStartBlocked && !canvasActive && !scopeCaptureBusy,
     exportBodyPng: canExportStl(state) && !state.fileBusy && !targetPickerActive && !guidedHoleStartBlocked && !canvasActive && !scopeCaptureBusy && Boolean(selectedExportBody(state)),
     exportSketchPng: canvasActive && !state.fileBusy && !targetPickerActive && !guidedHoleStartBlocked && !scopeCaptureBusy,
@@ -568,13 +571,13 @@ export const commands: CadCommand[] = [
     id: "history.undo",
     label: "Undo",
     enablementKey: "undo",
-    run: () => useCadStore.getState().undo(),
+    run: () => { clearAiCanvasPreview(); useCadStore.getState().undo(); },
   },
   {
     id: "history.redo",
     label: "Redo",
     enablementKey: "redo",
-    run: () => useCadStore.getState().redo(),
+    run: () => { clearAiCanvasPreview(); useCadStore.getState().redo(); },
   },
   {
     id: "parameter.add",

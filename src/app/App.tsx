@@ -29,7 +29,7 @@ import { HoleCreationPanel } from "../ui/panels/HoleCreationPanel";
 import { FeaturePatternPanel } from "../ui/panels/FeaturePatternPanel";
 import { lazy, Suspense, useEffect, useMemo, useRef } from "react";
 import { LazyPanelBoundary } from "../ui/design-system/LazyPanelBoundary";
-import { CadViewer } from "../viewer/CadViewer";
+const CadViewer = lazy(() => import("../viewer/CadViewer").then(module => ({ default: module.CadViewer })));
 import {
   CommandContext,
   isCommandEnabledForSnapshot,
@@ -611,7 +611,7 @@ export function App() {
             {!sketchActive ? <><SketchSolidHandoffPanel /><OperationDropPanel /></> : null}
             <Suspense fallback={null}><ModelUpdateFeedback /></Suspense>
             <div className="model-view" hidden={Boolean(sketchActive)}>
-              <CadViewer />
+              <LazyPanelBoundary label="3D viewer"><Suspense fallback={<p role="status">Loading 3D viewer…</p>}><CadViewer /></Suspense></LazyPanelBoundary>
             </div>
             <RetainedPanel visible={Boolean(sketchActive)}>
               <Suspense fallback={<p role="status">Loading sketch editor…</p>}>

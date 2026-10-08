@@ -1,5 +1,3 @@
-import { useAiFacePicking } from "../../state/aiFacePicking";
-import { useAiDrawer } from "./aiCommand";
 import { useViewerState } from "../../state/viewerState";
 import { useComponentPlacement } from "./componentPlacementState";
 import { usePartLibrary } from "./partLibraryState";
@@ -29,8 +27,12 @@ import { useShallow } from "zustand/react/shallow";
 import { useCadStore } from "../../state/useCadStore";
 import { selectCommandEnablement } from "./commandRegistry";
 import { useTargetScopeCapture } from "./targetScopeCaptureCommand";
+import { useAiCanvasPreview } from "../../state/aiCanvasPreview";
+import { useAiFacePicking } from "../../state/aiFacePicking";
+import { useAiDrawer } from "./aiCommand";
 
 export function useCommandEnablement() {
+  useAiCanvasPreview(state => state.preview);
   useAiDrawer(state => state.open);
   useAiFacePicking(state => state.frame);
   useViewerState(state => state.session);

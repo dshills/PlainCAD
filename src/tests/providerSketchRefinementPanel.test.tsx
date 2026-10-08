@@ -1,3 +1,4 @@
+import { useAiDrawer } from "../ui/commands/aiCommand";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { ProviderSketchRefinementPanel } from "../ui/panels/ProviderSketchRefinementPanel";
@@ -32,6 +33,7 @@ function fixture(bound = false) {
   return sketch;
 }
 beforeEach(() => {
+  useAiDrawer.setState({ open: true });
   useCadStore.setState(useCadStore.getInitialState(), true);
   useSketchRefinement.setState({ frame: undefined });
   fixture(); mocks.preview.mockReset(); mocks.preview.mockImplementation(rebuildDocument);

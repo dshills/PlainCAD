@@ -9,9 +9,10 @@ import { useViewerState } from "../../state/viewerState";
 import { facePocketFaces } from "../commands/facePocketCommand";
 import { captureAiFeatureAddition, currentAiFeatureAddition, featureAdditionContext, previewAiFeatureAddition, applyAiFeatureAddition, useAiFeatureAddition, type AiFeatureAdditionFrame, type AiFeatureAdditionPlan } from "../commands/aiFeatureAdditionCommand";
 import { useCommandEnablement } from "../commands/useCommandEnablement";
-import { ExtrudePreview } from "../../viewer/ExtrudePreview";
+import { clearAiCanvasPreview, currentAiCanvasPreview, publishAiCanvasPreview, useAiCanvasPreview, type AiCanvasPreview } from "../../state/aiCanvasPreview";
+import { AiCanvasPreviewControls } from "./AiCanvasPreviewControls";
 import type { RebuildResult } from "../../cad/worker/workerProtocol";
-interface Preview { frame: AiFeatureAdditionFrame; plan: AiFeatureAdditionPlan; result: RebuildResult; volume: number; before: number }
+interface Preview { canvasPreview: AiCanvasPreview; frame: AiFeatureAdditionFrame; plan: AiFeatureAdditionPlan; result: RebuildResult; volume: number; before: number }
 export function AiFeatureAdditionPanel({ active = true, targetFaceId }: { active?: boolean; targetFaceId?: string }) {
   const cadDocument = useCadStore((s) => s.history.present), session = useCadStore((s) => s.documentSession), component = useCadStore((s) => s.activeComponentId);
   const rebuild = useCadStore((s) => s.rebuild), fileBusy = useCadStore((s) => s.fileBusy), selection = useCadStore((s) => s.selection);
@@ -24,6 +25,8 @@ export function AiFeatureAdditionPanel({ active = true, targetFaceId }: { active
   const [consent, setConsent] = useState(false), [prompt, setPrompt] = useState(""), [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("Choose a supported face and review the data before requesting new features."), [error, setError] = useState("");
   const [answer, setAnswer] = useState<AiFeatureAddProposal>(), [preview, setPreview] = useState<Preview>(), [messages, setMessages] = useState<AiMessage[]>([]);
+  const canvasPreview = useAiCanvasPreview(state => state.preview);
+  const ownedCanvasPreview = useRef<AiCanvasPreview | undefined>(undefined);
   const owned = useRef<AiFeatureAdditionFrame | undefined>(undefined), consentFrame = useRef<AiFeatureAdditionFrame | undefined>(undefined);
   const controller = useRef<AbortController | undefined>(undefined), timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const input = useRef<HTMLTextAreaElement>(null);
@@ -41,15 +44,21 @@ export function AiFeatureAdditionPanel({ active = true, targetFaceId }: { active
   }, [context.value, configuration, provider, prompt, messages]);
   const release = useCallback(() => {
     controller.current?.abort(); controller.current = undefined;
+    if (ownedCanvasPreview.current) clearAiCanvasPreview(ownedCanvasPreview.current);
+    ownedCanvasPreview.current = undefined;
     if (timer.current !== undefined) clearTimeout(timer.current); timer.current = undefined;
     if (owned.current && useAiFeatureAddition.getState().frame === owned.current) useAiFeatureAddition.setState({ frame: undefined });
     owned.current = undefined;
   }, []);
   const cancel = useCallback((message = "Feature proposal canceled. The project is unchanged.") => { release(); setPreview(undefined); setBusy(false); setStatus(message); }, [release]);
+  useEffect(() => {
+    if (preview && canvasPreview !== preview.canvasPreview)
+      cancel("The native canvas preview closed. Generate a fresh preview before Apply.");
+  }, [preview, canvasPreview, cancel]);
   const reset = () => { cancel(); consentFrame.current = undefined; setConsent(false); setMessages([]); setAnswer(undefined); setError(""); };
   useEffect(() => {
     if (!targetFaceId) return;
-    cancel("Selected face changed. Review the new target and allow sharing again.");
+    cancel("Selected face ready. Review its target and allow sharing before generating a preview.");
     setFaceId(targetFaceId); consentFrame.current = undefined; setConsent(false); setAnswer(undefined); setError("");
   }, [targetFaceId, cancel]);
   useEffect(() => {
@@ -84,7 +93,13 @@ export function AiFeatureAdditionPanel({ active = true, targetFaceId }: { active
       setStatus("Validating every operation and the complete native part…");
       const geometry = await previewAiFeatureAddition(frame, plan, abort.signal);
       if (controller.current !== abort || abort.signal.aborted || !currentAiFeatureAddition(frame) || useAiFeatureAddition.getState().frame !== frame) return;
-      setPreview({ frame, plan, ...geometry }); setBusy(false); setStatus("Native feature preview ready. Review every operation before Apply.");
+      if (!publishAiCanvasPreview({ document: frame.document, session: frame.session, componentId: frame.componentId,
+        selection: JSON.parse(frame.selection), beforeResult: frame.result, result: geometry.result, bodyIds: [frame.choice.bodyId!] }))
+        throw new Error("Project, face or accepted geometry changed. Generate a fresh native preview.");
+      const published = useAiCanvasPreview.getState().preview;
+      if (!published) throw new Error("The native canvas preview is unavailable. Generate a fresh preview.");
+      ownedCanvasPreview.current = published;
+      setPreview({ frame, plan, ...geometry, canvasPreview: published }); setBusy(false); setStatus("Native feature preview ready. Review every operation before Apply.");
       controller.current = undefined; if (timer.current !== undefined) clearTimeout(timer.current); timer.current = undefined;
     } catch (failure) {
       if (controller.current !== abort) return;
@@ -109,14 +124,16 @@ export function AiFeatureAdditionPanel({ active = true, targetFaceId }: { active
       <button type="button" disabled={busy || !consent || !configuration?.available || !budget.value || Boolean(budget.error) || fileBusy} onClick={() => void generate()}>Generate AI feature preview</button>
       <button type="button" onClick={() => { cancel(); setError(""); input.current?.focus(); }}>Cancel AI feature proposal</button>
       <button type="button" onClick={reset}>Start new feature conversation</button>
-      {preview ? <button type="button" disabled={busy || !currentAiFeatureAddition(preview.frame) || shared !== preview.frame} onClick={() => {
-        try { applyAiFeatureAddition(preview.frame, preview.plan, preview.result); consentFrame.current = undefined; setConsent(false); setMessages([]); setAnswer(undefined); cancel("Feature plan applied in one undo step."); setError(""); input.current?.focus(); }
+      {preview ? <button type="button" disabled={busy || canvasPreview !== preview.canvasPreview || !currentAiCanvasPreview(useCadStore.getState()) || !currentAiFeatureAddition(preview.frame) || shared !== preview.frame} onClick={() => {
+        try {
+          if (canvasPreview !== preview.canvasPreview || !currentAiCanvasPreview(useCadStore.getState())) throw new Error("The native canvas preview is no longer available. Generate a fresh preview.");
+          applyAiFeatureAddition(preview.frame, preview.plan, preview.result); consentFrame.current = undefined; setConsent(false); setMessages([]); setAnswer(undefined); cancel("Feature plan applied in one undo step."); setError(""); input.current?.focus(); }
         catch (failure) { cancel(); setError(failure instanceof Error ? failure.message : "Feature plan could not be applied."); }
       }}>Apply AI feature plan</button> : null}
     </div>
     <div className="ai-result"><p role="status" aria-label="AI feature proposal status">{status}</p>{faceId && context.error ? <p role="alert">{context.error}</p> : null}{error || budget.error ? <p role="alert">{error || budget.error}</p> : null}
       {answer ? <><p>{answer.summary}</p>{answer.warnings.length ? <ul>{answer.warnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul> : null}</> : null}
-      {preview ? <><ol aria-label="Proposed feature operations">{preview.plan.features.map((feature) => <li key={feature.id}>{feature.name} · {feature.type}</li>)}</ol><ExtrudePreview meshes={preview.result.meshes} label="Native AI feature addition preview" /><p>Target volume: {preview.before.toFixed(3)} → {preview.volume.toFixed(3)} mm³</p></> : null}
+      {preview ? <><ol aria-label="Proposed feature operations">{preview.plan.features.map((feature) => <li key={feature.id}>{feature.name} · {feature.type}</li>)}</ol><AiCanvasPreviewControls /><p>Target volume: {preview.before.toFixed(3)} → {preview.volume.toFixed(3)} mm³</p></> : null}
     </div>
   </div>;
 }

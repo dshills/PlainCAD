@@ -747,7 +747,7 @@ Arbitrary BRep edge picking and new post-boolean topology roles remain unavailab
 
 A compact, expandable assistant inside the main canvas offers plain-text descriptions, provider/model settings
 for Anthropic/OpenAI/Google AI, bounded recent conversation, native preview and
-Apply/Cancel. Provider credentials are read only by a loopback-only, same-origin
+Apply/Cancel. Native solid proposals use the existing viewport/camera and full-project geometry, with Before/After comparisons and changed-body highlights. Solved sketch proposals overlay the main drawing canvas. Failed/stale/disposed proposals cannot Apply, and exports/picking remain guarded until Apply/Cancel. Provider credentials are read only by a loopback-only, same-origin
 Node gateway in Vite development/preview; browser/project data never contain keys.
 Static deployment reports a missing AI service without changing ordinary CAD.
 

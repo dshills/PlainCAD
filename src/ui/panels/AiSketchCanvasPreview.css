@@ -1,0 +1,18 @@
+.ai-sketch-comparison {
+  position: absolute;
+  z-index: 4;
+  top: 12px;
+  right: 12px;
+  max-width: calc(100% - 24px);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 12px;
+}
+.ai-sketch-comparison button[aria-pressed="true"] { border-color: var(--accent); }
+.ai-sketch-comparison span { width: 100%; color: var(--muted); }

@@ -607,3 +607,35 @@ a real native inward cut with unchanged project/history until Apply.
 
 Cadence: 3 completed items since the successful full checkpoint. The next full
 gate is due after 2 more requested changes.
+
+
+### Item 3: native proposals in the existing drawing/model viewport
+
+Native AI part and feature proposals now render full-project geometry through the
+existing CadViewer and camera, highlight affected bodies, and offer Before/After.
+Solved sketch proposals overlay the existing drawing coordinates in cyan. Apply
+requires the same displayed proposal and current native frame. Cancel, close,
+selection/project changes and unmount release runtime geometry. Export/picking are
+guarded, including cancellation and immediate PNG capture before buffer disposal.
+The main viewer is lazy-loaded to keep the measured JavaScript budget below 500 kB;
+its identity is retained through sketch/layout transitions.
+
+Prism Anthropic `claude-sonnet-5-5` reviewed the final 26-file integration
+(`dc7bb12c1f79fab841ed3abac3f3dcc2`), complete coverage. Native export-race handling,
+stable ownership callbacks, development subscription cleanup and explicit stale
+sketch status were fixed. The medium body-ID/JSON.parse note was assessed against
+captureAiFeatureAddition: facePocketFaces requires a live bodyId and selection is
+locally captured with JSON.stringify. Low reactive-frame, ownership, per-body
+material, visibility and DEV-only diagnostics notes were assessed against source
+and focused native tests; no unresolved actionable findings remain.
+
+`npm run check:item` passed on final frozen source: type checks, 1396 unit/component
+tests, production build/bundle budget (largest 459.23 kB), 5 development native
+smoke cases and 14 production modeling/AI/CSP cases. Nine focused native AI cases
+passed, including all three provider choices, XY/XZ/YZ feature cuts, actual chamfer,
+camera/orientation checks, cancel/PNG transition, stable IDs, save/open and STL.
+Twenty-six focused sketch/overlay tests passed. An initial parallel test-output
+collision was corrected with separate trace directories before successful reruns.
+
+Cadence: 4 completed items since the successful full checkpoint. The next requested
+change requires the full release gate before commit.

@@ -1,3 +1,6 @@
+import { clearAiSketchCanvasPreview, currentAiSketchCanvasPreview, setAiSketchCanvasMode, useAiSketchCanvasPreview } from "../commands/aiSketchCanvasPreview";
+import { useAiDrawer } from "../commands/aiCommand";
+import "./AiSketchCanvasPreview.css";
 import { BEFORE_LINKED_SOURCE_EDIT_EVENT, CANCEL_SKETCH_GESTURE_EVENT } from "../commands/sketchCanvasEvents";
 import { ContextualSketchConstraints } from "./ContextualSketchConstraints";
 import { registerPngCapture, sketchPng } from "../../persistence/pngCapture";
@@ -309,6 +312,10 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
         previous.focus();
     };
   }, []);
+  const aiProposal = useAiSketchCanvasPreview(state => state.proposal);
+  const aiOpen = useAiDrawer(state => state.open);
+  const visibleAiProposal = aiOpen && aiProposal && currentAiSketchCanvasPreview(aiProposal) ? aiProposal : undefined;
+  useEffect(() => () => clearAiSketchCanvasPreview(), []);
   const [view, setView] = useState(() =>
     context ? fitSketch(context.solved) : INITIAL_VIEW,
   );
@@ -1405,6 +1412,11 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
         </div>
         <div className="sketch-workspace-drawing">
           {dimensions.inlineEditor}
+          {visibleAiProposal ? <div className="ai-sketch-comparison" role="group" aria-label="AI sketch comparison">
+            <button type="button" aria-pressed={visibleAiProposal.mode === "before"} onClick={() => setAiSketchCanvasMode("before")}>Before sketch</button>
+            <button type="button" aria-pressed={visibleAiProposal.mode === "after"} onClick={() => setAiSketchCanvasMode("after")}>After sketch</button>
+            <span>Proposed geometry in cyan · project unchanged until Apply</span>
+          </div> : null}
           <svg
             ref={svgRef}
             className="sketch-canvas"
@@ -1747,6 +1759,11 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
                 </g>
               ) : null}
             </g>
+            {visibleAiProposal?.mode === "after" ? <g transform="scale(1,-1)" aria-label="Proposed AI sketch geometry" pointerEvents="none" fill="none" stroke="#20c9e8" strokeWidth={view.width / 350}>
+              {visibleAiProposal.solved.lines.map(line => <line key={line.id} data-ai-entity-id={line.id} x1={line.start.x} y1={line.start.y} x2={line.end.x} y2={line.end.y} strokeDasharray={line.construction ? `${view.width / 80} ${view.width / 80}` : undefined} />)}
+              {visibleAiProposal.solved.circles.map(circle => <circle key={circle.id} data-ai-entity-id={circle.id} cx={circle.center.x} cy={circle.center.y} r={circle.radius} strokeDasharray={circle.construction ? `${view.width / 80} ${view.width / 80}` : undefined} />)}
+              {visibleAiProposal.solved.arcs.map(arc => <path key={arc.id} data-ai-entity-id={arc.id} d={arcPath(arc.center, arc.start, arc.end, arc.sweep < 0)} strokeDasharray={arc.construction ? `${view.width / 80} ${view.width / 80}` : undefined} />)}
+            </g> : null}
             <g transform="scale(1,-1)"><RepairSketchOverlay solved={context?.solved} span={view.width} /></g>
             {dimensions.overlay}
             {constraints.overlay}

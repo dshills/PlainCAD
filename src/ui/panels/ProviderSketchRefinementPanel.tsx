@@ -1,3 +1,4 @@
+import { canReviewAiSketchCanvasPreview, clearAiSketchCanvasPreview, publishAiSketchCanvasPreview, useAiSketchCanvasPreview } from "../commands/aiSketchCanvasPreview";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchAiProviders } from "../../ai/client";
 import { prepareAiSketchRequest, requestAiSketchProposal } from "../../ai/sketchAiClient";
@@ -11,8 +12,6 @@ import { useCadStore } from "../../state/useCadStore";
 import { useSketchCanvas } from "../commands/sketchCanvasCommand";
 import { applySketchRefinement, captureSketchRefinementFrame, currentSketchRefinementFrame,
   previewSketchRefinement, useSketchRefinement, type SketchRefinementFrame } from "../commands/sketchRefinementCommand";
-import { SketchRefinementPreview } from "./SketchRefinementPreview";
-import { ExtrudePreview } from "../../viewer/ExtrudePreview";
 
 interface Preview {
   frame: SketchRefinementFrame;
@@ -24,6 +23,7 @@ interface Preview {
   solved: ResolvedSketch;
 }
 export function ProviderSketchRefinementPanel({ onCancelReady }: { onCancelReady?: (cancel: (() => void) | undefined) => void } = {}) {
+  const canvasProposal = useAiSketchCanvasPreview(state => state.proposal);
   const document = useCadStore((state) => state.history.present);
   const session = useCadStore((state) => state.documentSession);
   const component = useCadStore((state) => state.activeComponentId);
@@ -69,6 +69,7 @@ export function ProviderSketchRefinementPanel({ onCancelReady }: { onCancelReady
     timer.current = undefined;
     if (ownedFrame.current && useSketchRefinement.getState().frame === ownedFrame.current)
       useSketchRefinement.setState({ frame: undefined });
+    if (ownedFrame.current) clearAiSketchCanvasPreview(ownedFrame.current);
     ownedFrame.current = undefined;
   };
   const cancel = (message = "AI refinement canceled. The project is unchanged.") => {
@@ -136,8 +137,13 @@ export function ProviderSketchRefinementPanel({ onCancelReady }: { onCancelReady
       setStatus("Solving the proposed edits and validating downstream native geometry…");
       const geometry = await previewSketchRefinement(plan, abort.signal);
       if (controller.current !== abort || abort.signal.aborted || !currentSketchRefinementFrame(frame) || useSketchRefinement.getState().frame !== frame) return;
+      if (!publishAiSketchCanvasPreview(frame, geometry.solved)) {
+        cancel("Preview unavailable. The project is unchanged.");
+        setError("The AI canvas context changed. Open AI and preview the current sketch again.");
+        return;
+      }
       setPreview({ frame, plan, proposal, ...geometry }); setBusy(false);
-      setStatus(geometry.native ? "Native AI sketch preview ready. Review every change before Apply." : "Solved AI sketch preview ready. No solid was modeled; Apply changes only the sketch.");
+      setStatus(geometry.native ? "Native AI sketch preview ready. Review cyan changes on the drawing canvas before Apply." : "Solved AI sketch preview ready. No solid was modeled; Apply changes only the sketch.");
       controller.current = undefined;
       if (timer.current !== undefined) clearTimeout(timer.current);
       timer.current = undefined;
@@ -147,6 +153,7 @@ export function ProviderSketchRefinementPanel({ onCancelReady }: { onCancelReady
       setError(failure instanceof Error ? failure.message : "AI sketch refinement failed.");
     }
   };
+  const reviewable = preview && canvasProposal?.frame === preview.frame && canReviewAiSketchCanvasPreview(preview.frame, preview.solved);
   return <div className="ai-drawer-content" aria-label="Provider sketch refinement" onKeyDown={(event) => {
     if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); cancel(); setError(""); promptInput.current?.focus(); }
   }}>
@@ -187,8 +194,9 @@ export function ProviderSketchRefinementPanel({ onCancelReady }: { onCancelReady
       <button type="button" disabled={busy || fileBusy || !kernelReady || !consent || !configuration?.available || !context.value || Boolean(requestReview.error) || !prompt.trim()} onClick={() => void generate()}>Generate AI sketch preview</button>
       <button type="button" onClick={() => { cancel(); setError(""); promptInput.current?.focus(); }}>Cancel AI sketch refinement</button>
       <button type="button" onClick={reset}>Start new sketch conversation</button>
-      {preview ? <button type="button" disabled={busy || !currentSketchRefinementFrame(preview.frame) || sharedFrame !== preview.frame} onClick={() => {
+      {preview ? <button type="button" disabled={busy || canvasProposal?.frame !== preview.frame || !canReviewAiSketchCanvasPreview(preview.frame, preview.solved) || sharedFrame !== preview.frame} onClick={() => {
         try {
+          if (!canReviewAiSketchCanvasPreview(preview.frame, preview.solved)) throw new Error("The canvas proposal is no longer available. Generate a fresh preview.");
           applySketchRefinement(preview.frame, preview.plan, preview.result);
           conversationFrame.current = undefined; consentFrame.current = undefined; setMessages([]); setAnswer(undefined); setConsent(false);
           cancel("AI sketch refinement applied in one undo step."); setError(""); promptInput.current?.focus();
@@ -197,14 +205,13 @@ export function ProviderSketchRefinementPanel({ onCancelReady }: { onCancelReady
       }}>Apply AI sketch refinement</button> : null}
     </div>
     <div className="ai-result">
-      <p role="status" aria-label="Provider sketch refinement status">{status}</p>
+      <p role="status" aria-label="Provider sketch refinement status">{preview && !reviewable ? "The canvas proposal is no longer current. Generate a fresh sketch preview." : status}</p>
       {context.error ? <p role="alert">{context.error}</p> : null}
       {requestReview.error ? <p role="alert">{requestReview.error}</p> : null}
       {error ? <p role="alert">{error}</p> : null}
       {answer ? <><p>{answer.summary}</p>{answer.warnings.length ? <ul aria-label="AI sketch assumptions">{answer.warnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul> : null}</> : null}
-      {preview ? <><ul aria-label="AI proposed sketch changes">{preview.plan.changes.map((change) => <li key={change}>{change}</li>)}</ul>
-        <SketchRefinementPreview solved={preview.solved} />
-        {preview.native ? <><ExtrudePreview meshes={preview.result.meshes} label="Native AI sketch edit preview" /><p>{preview.result.meshes.length} bodies · {preview.volume.toFixed(3)} mm³</p></> : null}</> : null}
+      {reviewable ? <><ul aria-label="AI proposed sketch changes">{preview.plan.changes.map((change) => <li key={change}>{change}</li>)}</ul>
+        {preview.native ? <><p>{preview.result.meshes.length} bodies · {preview.volume.toFixed(3)} mm³</p></> : null}</> : null}
     </div>
   </div>;
 }

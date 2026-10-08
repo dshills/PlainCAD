@@ -40,7 +40,7 @@ it("edits inline, blocks competing creation commands, and returns to the same mo
       documentId: useCadStore.getState().history.present.id,
     });
   render(<App />);
-  const viewer = screen.getByTestId("retained-viewer");
+  const viewer = await screen.findByTestId("retained-viewer");
   act(() => {
     runCommand("sketch.editCanvas");
   });

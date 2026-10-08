@@ -1,3 +1,5 @@
+import { clearAiCanvasPreview, currentAiCanvasPreview, useAiCanvasPreview } from "../state/aiCanvasPreview";
+import type { AiProposalMeshes } from "./aiProposalMeshes";
 import { openCanvasContext, useCanvasContext } from "../ui/commands/canvasContextState";
 import { selectedCanvasActionTarget } from "../ui/commands/canvasActionTarget";
 import { runCommand, selectCommandEnablement } from "../ui/commands/commandRegistry";
@@ -51,6 +53,8 @@ interface ViewerRuntime {
   controls: OrbitControls;
   modelGroup: THREE.Group;
   modelMeshes: ModelMeshes;
+  aiProposal?: AiProposalMeshes;
+  aiOverlayVisibility?: { sketch: boolean; measurement: boolean; mode: PresentationMode };
   refreshQuality(): void;
   invalidate(): void;
   fit(): void;
@@ -95,6 +99,8 @@ export function CadViewer() {
   const documentIdRef = useRef("");
   const meshes = useCadStore((state) => state.rebuild.result?.meshes ?? EMPTY_MESHES);
   const rebuild = useCadStore((state) => state.rebuild);
+  const aiPreview = useAiCanvasPreview((state) => state.preview);
+  const aiPreviewMode = useAiCanvasPreview((state) => state.mode);
   const history = useCadStore((state) => state.history);
   const document = history.present;
   const select = useCadStore((state) => state.select);
@@ -285,6 +291,8 @@ export function CadViewer() {
     };
     runtimeRef.current = { background, grid, camera, controls, applyPose, modelGroup, modelMeshes, refreshQuality, invalidate, fit, sketchGroup, measurementGroup, operationPicking, sketchResources: createSketchOverlayResources() };
     const unregisterPng = registerPngCapture("viewer", (request) => {
+      if (currentAiCanvasPreview(useCadStore.getState()) || runtimeRef.current?.aiProposal)
+        throw new Error("Apply or cancel the AI preview before exporting PNG.");
       if (request.document !== renderedDocumentRef.current || request.result?.meshes !== renderedMeshesRef.current || request.session !== useCadStore.getState().documentSession)
         throw new Error("The drawing view is updating. Wait for the current model, then export PNG again.");
       if (!host.clientWidth || !host.clientHeight)
@@ -358,6 +366,7 @@ export function CadViewer() {
         drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles,
         bufferWidth: renderer.domElement.width, bufferHeight: renderer.domElement.height,
       },
+      aiPreview: runtimeRef.current?.aiProposal ? { mode: useAiCanvasPreview.getState().mode, meshes: runtimeRef.current.aiProposal.inspect() } : undefined,
       presentation: { mode: modelGroup.userData.presentationMode ?? "model", gridVisible: grid.visible, axesVisible: axes.visible, sketchVisible: sketchGroup.visible, measurementVisible: measurementGroup.visible, lights: scene.children.filter((object) => object instanceof THREE.Light && object.visible).length, shadowMaps: renderer.shadowMap.enabled },
       resources: { geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, programs: renderer.info.programs?.length ?? 0 },
       cameraUp: camera.up.toArray(),
@@ -410,19 +419,24 @@ export function CadViewer() {
     renderer.domElement.addEventListener("webglcontextrestored", invalidate);
     invalidate();
 
+    const guardAiPreview = (event: MouseEvent) => {
+      if (currentAiCanvasPreview(useCadStore.getState())) { event.preventDefault(); event.stopImmediatePropagation(); }
+    };
+    renderer.domElement.addEventListener("click", guardAiPreview, true);
     const uninstallMeasurementPicking = installMeasurementPicking(renderer.domElement, camera, modelGroup, () => clippingRef.current);
     const uninstallPlanePicking = installSketchPlanePicking(scene, renderer, camera, modelGroup, () => clippingRef.current, invalidate);
-    let aiFacePickerDisposed = false, uninstallAiFacePicking = () => {};
+    let disposed = false, uninstallAiFacePicking = () => {};
     void import("./aiFacePicking").then(({ installAiFacePicking }) => {
-      if (!aiFacePickerDisposed) uninstallAiFacePicking = installAiFacePicking(renderer.domElement, camera, modelGroup, () => clippingRef.current,
-        () => selectCommandEnablement(useCadStore.getState()).measurementPicking && !useInspectionState.getState().picking);
+      if (!disposed) uninstallAiFacePicking = installAiFacePicking(renderer.domElement, camera, modelGroup, () => clippingRef.current,
+        () => selectCommandEnablement(useCadStore.getState()).measurementPicking && !useInspectionState.getState().picking && !currentAiCanvasPreview(useCadStore.getState()));
     }).catch((error) => {
       console.error("AI face selection failed", error);
-      if (!aiFacePickerDisposed) useCadStore.getState().setFileError("AI face selection could not start. Save your project and reload to retry.");
+      if (!disposed) useCadStore.getState().setFileError("AI face selection could not start. Save your project and reload to retry.");
     });
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
     const pickBody = (event: MouseEvent) => {
+      if (currentAiCanvasPreview(useCadStore.getState())) return undefined;
       const rect = renderer.domElement.getBoundingClientRect();
       pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
@@ -446,6 +460,7 @@ export function CadViewer() {
     };
     const cancelPointer = () => { pendingContext = undefined; press = undefined; dragged = false; };
     const selectBody = (event: MouseEvent) => {
+      if (currentAiCanvasPreview(useCadStore.getState())) return undefined;
       const bodyId = pickBody(event);
       selectRef.current(bodyId ? { kind: "body", id: bodyId, documentId: documentIdRef.current } : undefined);
       return bodyId;
@@ -490,10 +505,11 @@ export function CadViewer() {
     renderer.domElement.addEventListener("keydown", contextKey);
 
     return () => {
+      renderer.domElement.removeEventListener("click", guardAiPreview, true);
+      disposed = true;
+      uninstallAiFacePicking();
       uninstallMeasurementPicking();
       uninstallPlanePicking();
-      aiFacePickerDisposed = true;
-      uninstallAiFacePicking();
       operationPicking.dispose();
       unregisterDiagnostics?.();
       unregisterCamera();
@@ -512,6 +528,8 @@ export function CadViewer() {
       renderer.domElement.removeEventListener("contextmenu", context);
       renderer.domElement.removeEventListener("dblclick", doubleClick);
       renderer.domElement.removeEventListener("keydown", contextKey);
+      runtimeRef.current?.aiProposal?.dispose();
+      clearAiCanvasPreview();
       modelMeshes.dispose();
       scene.remove(modelGroup, sketchGroup);
       if (runtimeRef.current) disposeSketchOverlayObjects(sketchGroup, runtimeRef.current.sketchResources);
@@ -563,6 +581,37 @@ export function CadViewer() {
     applySelection(runtime.modelGroup, selectedBodyIdRef.current, highlightedBodyIdsRef.current);
     runtime.invalidate();
   }, [meshes]);
+
+  useEffect(() => {
+    const runtime = runtimeRef.current;
+    if (!runtime) return;
+    const preview = currentAiCanvasPreview(useCadStore.getState(), aiPreview);
+    let canceled = false;
+    if (!preview) {
+      if (runtime.aiProposal) {
+        runtime.aiProposal.dispose();
+        runtime.aiProposal = undefined;
+        runtime.modelGroup.visible = true;
+        const saved = runtime.aiOverlayVisibility;
+        runtime.sketchGroup.visible = saved?.mode === presentationMode ? saved.sketch : presentationMode === "model";
+        runtime.measurementGroup.visible = saved?.mode === presentationMode ? saved.measurement : presentationMode === "model";
+        runtime.aiOverlayVisibility = undefined;
+        runtime.invalidate();
+      }
+      return;
+    }
+    void import("./aiProposalMeshes").then(({ renderAiProposal }) => {
+      if (canceled || runtimeRef.current !== runtime || !currentAiCanvasPreview(useCadStore.getState(), preview)) return;
+      renderAiProposal(runtime, preview, aiPreviewMode, presentationMode, view.studioMaterial, view.showModelEdges, hidden, clippingRef.current);
+    }).catch((error) => {
+      console.error("AI preview failed", error);
+      if (currentAiCanvasPreview(useCadStore.getState(), preview)) {
+        clearAiCanvasPreview(preview);
+        useCadStore.getState().setFileError("AI preview could not be displayed. Your project was preserved. Try the request again.");
+      }
+    });
+    return () => { canceled = true; };
+  }, [aiPreview, aiPreviewMode, document, session, rebuild.result, rebuild.status, fileBusy, componentId, selection, presentationMode, view.studioMaterial, view.showModelEdges, hidden, section.session, section.axis, section.offset, section.positive]);
 
   useEffect(() => { runtimeRef.current?.refreshQuality(); }, [view.presentationMode, view.studioMaterial, view.studioBackdrop, view.showGrid, view.showModelEdges, view.optimizeWhileMoving, view.session, session]);
 
@@ -643,7 +692,7 @@ export function CadViewer() {
     const axis = section.session === session ? section.axis : undefined;
     const spec = axis ? sectionPlane(axis, section.offset, section.positive) : undefined;
     clippingRef.current = spec ? new THREE.Plane(new THREE.Vector3(...spec.normal), spec.constant) : undefined;
-    for (const group of [runtime.modelGroup, runtime.sketchGroup, runtime.measurementGroup]) applyClipping(group, clippingRef.current);
+    for (const group of [runtime.modelGroup, runtime.sketchGroup, runtime.measurementGroup, ...(runtime.aiProposal ? [runtime.aiProposal.group] : [])]) applyClipping(group, clippingRef.current);
     // The picker must read the newly installed plane, after this effect updates
     // clippingRef; a synchronous section-store subscription reads the old plane.
     runtime.operationPicking.refresh();
@@ -676,7 +725,7 @@ export function CadViewer() {
     const hit = ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 0, 1), 0), new THREE.Vector3());
     if (!hit) { useCadStore.getState().setFileError("This view cannot place a part on the XY ground plane. Use an angled or top view, or Insert at origin."); return; }
     void beginLibraryPlacement(id, { x: hit.x, y: hit.y, z: hit.z });
-  }}>{presentationMode === "model" ? <ModelMeasurementReadout project={dimensionProjector.current} subscribeFrames={subscribeFrames.current} /> : null}{presentationMode === "model" && !inspection.picking ? <SolidDimensionOverlay dimensions={dimensions} project={dimensionProjector.current} subscribeFrames={subscribeFrames.current} /> : null}<ViewerToolbar hasGeometry={meshes.some((mesh) => !hidden.includes(mesh.bodyId))} /></div>;
+  }}>{presentationMode === "model" && (!aiPreview || aiPreviewMode === "before") ? <ModelMeasurementReadout project={dimensionProjector.current} subscribeFrames={subscribeFrames.current} /> : null}{presentationMode === "model" && (!aiPreview || aiPreviewMode === "before") && !inspection.picking ? <SolidDimensionOverlay dimensions={dimensions} project={dimensionProjector.current} subscribeFrames={subscribeFrames.current} /> : null}<ViewerToolbar hasGeometry={meshes.some((mesh) => !hidden.includes(mesh.bodyId))} /></div>;
 }
 
 function applyClipping(group: THREE.Group, plane: THREE.Plane | undefined) {

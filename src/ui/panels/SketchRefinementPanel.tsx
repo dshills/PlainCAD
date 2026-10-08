@@ -1,5 +1,5 @@
+import { canReviewAiSketchCanvasPreview, clearAiSketchCanvasPreview, publishAiSketchCanvasPreview, useAiSketchCanvasPreview } from "../commands/aiSketchCanvasPreview";
 import { ProviderSketchRefinementPanel } from "./ProviderSketchRefinementPanel";
-import { SketchRefinementPreview } from "./SketchRefinementPreview";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { buildSketchRefinement, type SketchRefinement } from "../../ai/sketchRefinement";
 import type { ResolvedSketch } from "../../cad/sketch/SketchSolver";
@@ -8,10 +8,10 @@ import { useCadStore } from "../../state/useCadStore";
 import { useSketchCanvas } from "../commands/sketchCanvasCommand";
 import { applySketchRefinement, previewSketchRefinement, captureSketchRefinementFrame,
   currentSketchRefinementFrame, useSketchRefinement, type SketchRefinementFrame } from "../commands/sketchRefinementCommand";
-import { ExtrudePreview } from "../../viewer/ExtrudePreview";
 
 interface Proposal { frame: SketchRefinementFrame; plan: SketchRefinement; result: RebuildResult; native: boolean; volume: number; solved: ResolvedSketch }
 export function SketchRefinementPanel() {
+  const canvasProposal = useAiSketchCanvasPreview(state => state.proposal);
   const document = useCadStore((s) => s.history.present);
   const session = useCadStore((s) => s.documentSession);
   const component = useCadStore((s) => s.activeComponentId);
@@ -30,14 +30,14 @@ export function SketchRefinementPanel() {
   const controller = useRef<AbortController | undefined>(undefined);
   const request = useRef<SketchRefinementFrame | undefined>(undefined);
   const cancel = (message = "Refinement canceled. The project is unchanged.") => {
-    controller.current?.abort(); controller.current = undefined; request.current = undefined;
+    controller.current?.abort(); controller.current = undefined; if (request.current) clearAiSketchCanvasPreview(request.current); request.current = undefined;
     useSketchRefinement.setState({ frame: undefined }); setBusy(false); setProposal(undefined); setStatus(message);
   };
   useEffect(() => {
     if (request.current && !currentSketchRefinementFrame(request.current))
       cancel("Project, sketch or selection changed. Preview the current sketch again.");
   }, [document, session, component, busyFile, active, selection]);
-  useEffect(() => () => { controller.current?.abort(); controller.current = undefined; request.current = undefined; useSketchRefinement.setState({ frame: undefined }); }, []);
+  useEffect(() => () => { controller.current?.abort(); controller.current = undefined; if (request.current) clearAiSketchCanvasPreview(request.current); request.current = undefined; useSketchRefinement.setState({ frame: undefined }); }, []);
   const preview = async () => {
     if (busy || !kernelReady || busyFile || !prompt.trim()) return;
     cancel(); setError("");
@@ -62,8 +62,13 @@ export function SketchRefinementPanel() {
         cancel("Project, sketch or selection changed. Preview the current sketch again.");
         return;
       }
+      if (!publishAiSketchCanvasPreview(frame, geometry.solved)) {
+        cancel("Preview unavailable. The project is unchanged.");
+        setError("The AI canvas context changed. Open AI and preview the current sketch again.");
+        return;
+      }
       setProposal({ frame, plan, result, ...geometry });
-      setStatus(geometry.native ? "Native refinement preview ready. Review changes, then Apply." : `Sketch refinement preview ready: successful solve, ${plan.profileCount} closed profile(s). No solid was modeled.`);
+      setStatus(geometry.native ? "Native refinement preview ready. Review cyan changes on the drawing canvas, then Apply." : `Sketch refinement preview ready: successful solve, ${plan.profileCount} closed profile(s). No solid was modeled.`);
     } catch (failure) {
       if (abort && controller.current !== abort) return;
       setError(abort?.signal.aborted ? "Refinement timed out. Try a simpler sketch." : failure instanceof Error ? failure.message : "Sketch refinement failed.");
@@ -73,6 +78,7 @@ export function SketchRefinementPanel() {
       if (!abort || controller.current === abort) { controller.current = undefined; setBusy(false); }
     }
   };
+  const reviewable = proposal && canvasProposal?.frame === proposal.frame && canReviewAiSketchCanvasPreview(proposal.frame, proposal.solved);
   const modeChoice = <label>Sketch refinement method<select value={mode} onChange={(event) => { cancel(); setError(""); setMode(event.target.value as "local" | "provider"); }}>
     <option value="local">Local edits · no provider request</option>
     <option value="provider">Conversational AI provider</option>
@@ -96,18 +102,17 @@ export function SketchRefinementPanel() {
       <p>Existing parameter bindings are preserved. Unsupported or conflicting requests produce a diagnostic; no provider request is sent.</p>
       <button type="button" disabled={busy || busyFile || !kernelReady || !prompt.trim()} onClick={() => void preview()}>Preview sketch refinement</button>
       <button type="button" onClick={() => { cancel(); setError(""); }}>Cancel refinement</button>
-      <button type="button" disabled={!proposal || busy || !currentSketchRefinementFrame(proposal.frame)} onClick={() => {
+      <button type="button" disabled={!proposal || busy || canvasProposal?.frame !== proposal.frame || !canReviewAiSketchCanvasPreview(proposal.frame, proposal.solved)} onClick={() => {
         if (!proposal) return;
-        try { applySketchRefinement(proposal.frame, proposal.plan, proposal.result); cancel("Refinement applied in one undo step. Continue drawing or finish the sketch."); setError(""); }
+        try { if (!canReviewAiSketchCanvasPreview(proposal.frame, proposal.solved)) throw new Error("The canvas proposal is no longer available. Generate a fresh preview."); applySketchRefinement(proposal.frame, proposal.plan, proposal.result); cancel("Refinement applied in one undo step. Continue drawing or finish the sketch."); setError(""); }
         catch (failure) { cancel(); setError(failure instanceof Error ? failure.message : "Refinement could not be applied."); }
       }}>Apply sketch refinement</button>
     </div>
     <div className="ai-result">
-      <p role="status" aria-label="Sketch refinement status">{status}</p>
+      <p role="status" aria-label="Sketch refinement status">{proposal && !reviewable ? "The canvas proposal is no longer current. Generate a fresh sketch preview." : status}</p>
       {error ? <p role="alert">{error}</p> : null}
-      {proposal ? <><ul aria-label="Proposed sketch changes">{proposal.plan.changes.map((change) => <li key={change}>{change}</li>)}</ul>
-        <SketchRefinementPreview solved={proposal.solved} />
-        {proposal.native ? <><ExtrudePreview meshes={proposal.result.meshes} label="Native sketch refinement preview" /><p>{proposal.result.meshes.length} native bodies · {proposal.volume.toFixed(3)} mm³</p></> : <p>Review the proposed dimensions and relations above. Apply updates the sketch; it does not create a solid.</p>}</> : null}
+      {reviewable ? <><ul aria-label="Proposed sketch changes">{proposal.plan.changes.map((change) => <li key={change}>{change}</li>)}</ul>
+        {proposal.native ? <><p>{proposal.result.meshes.length} native bodies · {proposal.volume.toFixed(3)} mm³</p></> : <p>Review the proposed dimensions and relations on the drawing canvas. Apply updates the sketch; it does not create a solid.</p>}</> : null}
     </div>
   </div>;
 }

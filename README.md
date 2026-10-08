@@ -337,6 +337,8 @@ any proposal; clarifications and failed previews do not edit the document.
 
 The canvas assistant follows one selected part, supported feature, sketch, or planar face. A part selection limits edits to dimensions that affect that part alone. **Choose face on model** picks a supported native plane for holes, pockets, and edge treatments; curved, split, lost, or ambiguous targets produce diagnostics. You can choose an explicit scope or return to **Follow selection**. A selected sketch offers its drawing editor.
 
+AI part proposals appear as real native geometry in the existing 3D viewport. **Before model** and **After model** keep the same camera; new and changed bodies are highlighted. Sketch proposals appear in cyan directly over the drawing canvas with their own Before/After controls. Cancel restores the accepted model. Proposal geometry is temporary; exports and model picking require Apply or Cancel first. See [canvas proposal behavior](specs/working-cad/AI_CANVAS_PREVIEW.md).
+
 Existing-part feature additions preserve existing IDs, parameters, and features.
 Each proposed operation and the complete project must pass private native checks
 before **Apply AI feature plan** creates one Undo edit. Mode changes preserve

@@ -754,7 +754,7 @@ test("all three provider choices create real native previews; Cancel/Apply, para
       `${(12000 - 20 * Math.PI).toFixed(3)} mm³`,
     );
     await expect(
-      drawer.getByRole("img", { name: "Native AI component preview" }),
+      drawer.getByRole("group", { name: "AI model comparison" }),
     ).toBeVisible();
     expect((await snapshot(page)).document).toEqual(before.document);
     expect((await snapshot(page)).past).toBe(before.past);
