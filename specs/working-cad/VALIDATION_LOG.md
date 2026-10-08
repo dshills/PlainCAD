@@ -162,3 +162,17 @@ The initial full gate passed all unit/build checks and 256 of 257 development br
 The clean `npm run release:check` passed type checks, all 1185 unit/component tests, production build/bundle budget (largest 471.36 kB), all 257 development browser cases and all 33 production cases. The full run also passed both viewer performance cases after the fix.
 
 Cadence: the successful full checkpoint resets the completed-item count to 0.
+
+## Current batch: local part library
+
+### Item 1: persistent reusable parts with native thumbnails and drag/drop (2026-10-08)
+
+Prism reviewed the full isolated library implementation with Anthropic `claude-sonnet-5-5`: initial `5a9eeef4e109efd68a160892b675cefd`, final complete `7462e2b39b860edbbb5323b890a04e93`, and final drop/ray/canvas fixups `1da4a765d346cfb3de5c23afefc53a07`, `e3adbf81238dc4d9e5ebc53a4f0a6767`, `485e7f792d5da95f82238cbd71f1340f`, and `61be6246eb74123ca4d7b86b4ed9445b`. Actionable abort/session handling, quota recovery, cross-tab rename, missing canvas and invalid-origin findings were fixed. The final complete review's two medium notes were false positives: mesh indices are number[] under the adapter contract, and model coordinates are Z-up with an identity model group. Final fixup reviews have no high/medium findings. Remaining low test-tolerance notes were assessed against the controlled viewport, strict screen reprojection bounds and independently asserted native/STL geometry.
+
+The exact final runtime passed `npm run check:item` in an independent local checkout: type checks, all 1214 unit/component tests, build/bundle budget (largest 489.68 kB), 5 development and 14 production native smoke tests. Its isolated servers used ports 5283/5284 to avoid the concurrent full checkpoint; only temporary browser harness origins differed. The first isolated production attempt used old hardcoded storage origins; these fixture origins were corrected and the complete reduced command then passed. A comparison verified all 476 src/server files and the package/build inputs match the final workspace runtime.
+
+All 3 focused native library cases passed on port 5281, and the final owned-canvas pointer locator passed its focused rerun. They verify real 192x192 PNG persistence, reload, drag/drop native preview, cancel without history, independent copied parameter edits, Undo/Redo, save/open and positive STL; storage limits/quota, atomic cross-tab rename, overfilled-store recovery, unsafe JSON rejection, damaged-row deletion and confirmed library-only reset. The 29 focused library unit/component tests passed.
+
+The library is local to this browser and stores bounded independent copies. Saved parts must be self-contained; unsupported external dependencies produce a diagnostic. Drop positions use the owned canvas and XY world plane; Move component provides further placement. No assembly joints or external live links are introduced.
+
+Cadence: 1 completed item since the successful full checkpoint above. The next full gate is due after 4 more requested changes.

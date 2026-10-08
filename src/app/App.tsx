@@ -40,8 +40,10 @@ import { CommandPalette } from "../ui/commands/CommandPalette";
 import { FeatureTimeline } from "../ui/panels/FeatureTimeline";
 import { SketchPanel } from "../ui/panels/SketchPanel";
 import { useCadStore } from "../state/useCadStore";
+import { usePartLibrary } from "../ui/commands/partLibraryState";
 
 const ComponentPlacementPanel = lazy(() => import("../ui/panels/ComponentPlacementPanel").then(module => ({ default: module.ComponentPlacementPanel })));
+const PartLibraryPanel = lazy(() => import("../ui/panels/PartLibraryPanel").then(module => ({ default: module.PartLibraryPanel })));
 
 const SketchCanvasPanel = lazy(() =>
   import("../ui/panels/SketchCanvasPanel").then((module) => ({ default: module.SketchCanvasPanel })),
@@ -312,6 +314,7 @@ const FOCUSED_WHEN_ENABLED = new Set([
 ]);
 
 export function App() {
+  const partLibraryOpen = usePartLibrary(state => Boolean(state.frame));
   const workspace = useWorkspaceState(
     useShallow(({ layout, activePanel, pins, toggleParts }) => ({
       layout,
@@ -590,6 +593,7 @@ export function App() {
           <ProjectWorkflowPanel />
           <GuidedHolePanel />
           <section className="viewer-region" aria-label="3D CAD viewer">
+            {partLibraryOpen ? <Suspense fallback={<p role="status">Loading local parts…</p>}><PartLibraryPanel /></Suspense> : null}
             {!sketchActive ? <><SketchSolidHandoffPanel /><OperationDropPanel /></> : null}
             <div className="model-view" hidden={Boolean(sketchActive)}>
               <CadViewer />

@@ -1,0 +1,96 @@
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { createBoxTemplate } from "../templates/templates";
+import { useCadStore } from "../state/useCadStore";
+import { useInspectionState } from "../state/inspectionState";
+import { useTargetScopeCapture } from "../ui/commands/targetScopeCaptureCommand";
+import { useFileJobs } from "../persistence/fileJobs";
+import * as repository from "../persistence/partLibrary";
+import { PartLibraryPanel } from "../ui/panels/PartLibraryPanel";
+import { beginPartLibrary, cancelPartLibrary, PART_LIBRARY_DRAG_TYPE, usePartLibrary } from "../ui/commands/partLibraryCommand";
+const png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9WlWv4sAAAAASUVORK5CYII=";
+beforeEach(() => {
+  cancelPartLibrary(); useInspectionState.setState({ picking: false }); useTargetScopeCapture.setState({ busy: false }); useFileJobs.getState().cancel();
+  useCadStore.getState().setDocument(createBoxTemplate());
+  const source = createBoxTemplate();
+  vi.spyOn(repository, "listLibrarySnapshot").mockResolvedValue({ entries: [repository.createLibraryEntry(source, source.rootComponentId, "Saved block", png)], damaged: [], limited: false });
+});
+afterEach(() => { cleanup(); cancelPartLibrary(); vi.restoreAllMocks(); useInspectionState.setState({ picking: false }); useTargetScopeCapture.setState({ busy: false }); useCadStore.setState(useCadStore.getInitialState(), true); });
+it("presents accessible nonmodal cards, a native thumbnail, source name and explicit library actions", async () => {
+  await act(() => beginPartLibrary()); render(<PartLibraryPanel/>);
+  expect(screen.getByRole("region", { name: "Local part library" })).toBeVisible();
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(screen.getByRole("img", { name: "Saved block native geometry thumbnail" })).toHaveAttribute("src", png);
+  expect(screen.getByLabelText("Name for active component")).not.toHaveValue("");
+  expect(screen.getByRole("button", { name: "Insert Saved block at origin" })).toBeEnabled();
+  expect(screen.getByRole("button", { name: "Delete saved copy of Saved block" })).toBeEnabled();
+  expect(screen.getByText(/Saved on this browser only/)).toBeVisible();
+  fireEvent.change(screen.getByLabelText("Name for active component"), { target: { value: "" } });
+  expect(screen.getByLabelText("Name for active component")).toHaveValue("");
+  expect(screen.getByRole("button", { name: "Save active component to library" })).toBeDisabled();
+});
+it("uses only a bounded internal library identity in the drag payload and does not mutate the project", async () => {
+  await act(() => beginPartLibrary()); render(<PartLibraryPanel/>);
+  const before = useCadStore.getState().history.present;
+  const setData = vi.fn(), entry = usePartLibrary.getState().frame!.entries[0];
+  fireEvent.dragStart(screen.getByRole("listitem"), { dataTransfer: { setData, effectAllowed: "none" } });
+  expect(setData).toHaveBeenCalledExactlyOnceWith(PART_LIBRARY_DRAG_TYPE, entry.id);
+  expect(useCadStore.getState().history.present).toBe(before);
+});
+it("reactively refuses controls when another interaction task starts or the project changes", async () => {
+  await act(() => beginPartLibrary()); render(<PartLibraryPanel/>);
+  const insert = screen.getByRole("button", { name: "Insert Saved block at origin" });
+  act(() => useInspectionState.setState({ picking: true }));
+  expect(insert).toBeDisabled();
+  act(() => useInspectionState.setState({ picking: false }));
+  expect(insert).toBeEnabled();
+  act(() => useCadStore.getState().updateDocument(document => ({ ...document, name: "Changed" })));
+  expect(insert).toBeDisabled(); expect(screen.getByRole("alert")).toHaveTextContent(/changed/);
+});
+it("closes without replacing the project and reports loading failures", async () => {
+  vi.mocked(repository.listLibrarySnapshot).mockRejectedValue(new Error("Local part storage is unavailable."));
+  await act(() => beginPartLibrary()); render(<PartLibraryPanel/>);
+  const before = useCadStore.getState().history.present;
+  expect(screen.getByRole("alert")).toHaveTextContent(/storage is unavailable/);
+  fireEvent.click(screen.getByRole("button", { name: "Close library" }));
+  await waitFor(() => expect(screen.queryByRole("region")).toBeNull());
+  expect(useCadStore.getState().history.present).toBe(before);
+});
+it("resets the proposed saved name across close/reopen and active component changes while remaining mounted", async () => {
+  await act(() => beginPartLibrary()); render(<PartLibraryPanel/>);
+  const originalName = useCadStore.getState().history.present.name;
+  fireEvent.change(screen.getByLabelText("Name for active component"), { target: { value: "Temporary saved name" } });
+  fireEvent.click(screen.getByRole("button", { name: "Close library" }));
+  await act(() => beginPartLibrary());
+  expect(screen.getByLabelText("Name for active component")).toHaveValue(originalName);
+  fireEvent.change(screen.getByLabelText("Name for active component"), { target: { value: "Another temporary name" } });
+  fireEvent.click(screen.getByRole("button", { name: "Close library" }));
+  act(() => {
+    useCadStore.getState().updateDocument(document => ({ ...document, components: { ...document.components, nextComponent: { id: "nextComponent", name: "Fixture insert" } } }));
+    useCadStore.getState().activateComponent("nextComponent");
+  });
+  await act(() => beginPartLibrary());
+  expect(screen.getByLabelText("Name for active component")).toHaveValue("Fixture insert");
+});
+it("offers explicit damaged-copy recovery and requires confirmation before resetting all local saved copies", async () => {
+  const snapshot = await repository.listLibrarySnapshot();
+  vi.mocked(repository.listLibrarySnapshot).mockResolvedValue({ ...snapshot, damaged: [{ key: "damaged", label: "Damaged saved entry damaged", message: "Project file contains unsafe key __proto__." }, { label: "Unsupported storage key", message: "Stored copy is invalid." }], limited: true });
+  const remove = vi.spyOn(repository, "deleteDamagedLibraryPart").mockResolvedValue();
+  const reset = vi.spyOn(repository, "clearLibraryParts").mockResolvedValue();
+  await act(() => beginPartLibrary()); render(<PartLibraryPanel/>);
+  const before = useCadStore.getState().history.present;
+  expect(screen.getByRole("region", { name: "Local part library" })).toBeVisible();
+  expect(screen.getByRole("button", { name: "Save active component to library" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Insert Saved block at origin" })).toBeEnabled();
+  expect(screen.getByText(/first bounded page/)).toBeVisible();
+  fireEvent.click(screen.getByRole("button", { name: "Delete damaged saved copy Damaged saved entry damaged" }));
+  await waitFor(() => expect(remove).toHaveBeenCalledWith("damaged", expect.any(AbortSignal)));
+  await waitFor(() => expect(usePartLibrary.getState().frame?.busy).toBe(false));
+  const resetButton = screen.getByRole("button", { name: "Delete all saved library copies" });
+  expect(resetButton).toBeDisabled();
+  fireEvent.click(screen.getByRole("checkbox", { name: /Delete all saved library copies permanently/ }));
+  expect(resetButton).toBeEnabled(); fireEvent.click(resetButton);
+  await waitFor(() => expect(reset).toHaveBeenCalledWith(expect.any(AbortSignal)));
+  await waitFor(() => expect(screen.queryByRole("region", { name: "Recover local part library" })).toBeNull());
+  expect(useCadStore.getState().history.present).toBe(before);
+});

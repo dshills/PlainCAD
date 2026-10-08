@@ -1158,3 +1158,5 @@ Schema 16 stores finite rigid component placement: translations within ±100,000
 Projection source picking supports complete retained authored extrusion cap boundaries through mouse, touch and Enter/Space, with native preview before explicit Apply. It does not project arbitrary BRep edges, oblique boundaries, or components with differing placements.
 
 Feature pattern controls offer signed spacing, circular center and sweep pointer handles on a bounded source-plane diagram. Formula replacement requires explicit consent; Escape/pointer cancellation restores the captured expression. Native previews run after release and current geometry is required for Apply.
+
+The local part library saves one self-contained editable component with a bounded native PNG thumbnail. IndexedDB is limited to 50 entries/25 MiB with atomic writes and quota/cancellation diagnostics. Drag insertion uses the viewport ray on XY z=0; keyboard insertion starts at origin. Full candidate native validation precedes one-step Apply. Saved copies remain local to the browser, with independent inserted identities/parameters; external links, joints and automatic source updates are unavailable.

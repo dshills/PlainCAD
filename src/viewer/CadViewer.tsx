@@ -1,3 +1,4 @@
+import { beginLibraryPlacement, libraryFrameCurrent, usePartLibrary, PART_LIBRARY_DRAG_TYPE, readPartLibraryDragId } from "../ui/commands/partLibraryCommand";
 import { addMeasurementOverlays, installMeasurementPicking, visibleMeasurementTargets, resolvedMeasurementSelection } from "./measurementPicking";
 import { measureModelTargets } from "../cad/inspection/modelMeasurements";
 import { ModelMeasurementReadout } from "./ModelMeasurementReadout";
@@ -572,7 +573,26 @@ export function CadViewer() {
     if (runtime) { applySelection(runtime.modelGroup, selectedBodyId, highlightedBodyIdsRef.current); runtime.invalidate(); }
   }, [selectedBodyId, currentHighlight]);
 
-  return <div ref={hostRef} className="viewer-canvas">{presentationMode === "model" ? <ModelMeasurementReadout project={dimensionProjector.current} subscribeFrames={subscribeFrames.current} /> : null}{presentationMode === "model" && !inspection.picking ? <SolidDimensionOverlay dimensions={dimensions} project={dimensionProjector.current} subscribeFrames={subscribeFrames.current} /> : null}<ViewerToolbar hasGeometry={meshes.some((mesh) => !hidden.includes(mesh.bodyId))} /></div>;
+  return <div ref={hostRef} className="viewer-canvas" onDragOver={event => {
+    if (!event.dataTransfer.types.includes(PART_LIBRARY_DRAG_TYPE)) return;
+    const frame = usePartLibrary.getState().frame;
+    event.preventDefault(); event.dataTransfer.dropEffect = presentationMode === "model" && frame && !frame.busy && !frame.placement && libraryFrameCurrent(frame) ? "copy" : "none";
+  }} onDrop={event => {
+    if (!event.dataTransfer.types.includes(PART_LIBRARY_DRAG_TYPE)) return;
+    event.preventDefault(); event.stopPropagation();
+    const frame = usePartLibrary.getState().frame;
+    if (presentationMode !== "model" || !frame || frame.busy || frame.placement || !libraryFrameCurrent(frame)) { useCadStore.getState().setFileError("Open the local part library in Model view with a current rebuilt project before dropping a part."); return; }
+    const id = readPartLibraryDragId(event.dataTransfer.getData(PART_LIBRARY_DRAG_TYPE));
+    const runtime = runtimeRef.current;
+    if (!id || !runtime) { useCadStore.getState().setFileError("This saved-part drag is invalid or the model view is not ready. Try dragging the part again or use Insert at origin."); return; }
+    const rect = event.currentTarget.querySelector<HTMLCanvasElement>("canvas.viewer-canvas")?.getBoundingClientRect();
+    if (!rect || rect.width <= 0 || rect.height <= 0) { useCadStore.getState().setFileError("The model canvas is not ready for part placement. Try again or use Insert at origin."); return; }
+    const pointer = new THREE.Vector2((event.clientX - rect.left) / rect.width * 2 - 1, 1 - (event.clientY - rect.top) / rect.height * 2);
+    const ray = new THREE.Raycaster(); ray.setFromCamera(pointer, runtime.camera);
+    const hit = ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 0, 1), 0), new THREE.Vector3());
+    if (!hit) { useCadStore.getState().setFileError("This view cannot place a part on the XY ground plane. Use an angled or top view, or Insert at origin."); return; }
+    void beginLibraryPlacement(id, { x: hit.x, y: hit.y, z: hit.z });
+  }}>{presentationMode === "model" ? <ModelMeasurementReadout project={dimensionProjector.current} subscribeFrames={subscribeFrames.current} /> : null}{presentationMode === "model" && !inspection.picking ? <SolidDimensionOverlay dimensions={dimensions} project={dimensionProjector.current} subscribeFrames={subscribeFrames.current} /> : null}<ViewerToolbar hasGeometry={meshes.some((mesh) => !hidden.includes(mesh.bodyId))} /></div>;
 }
 
 function applyClipping(group: THREE.Group, plane: THREE.Plane | undefined) {

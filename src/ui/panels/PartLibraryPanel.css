@@ -1,0 +1,27 @@
+.part-library-panel {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 12;
+  width: min(340px, calc(100% - 24px));
+  max-height: calc(100% - 24px);
+  overflow: auto;
+  padding: 16px;
+  background: var(--panel, #f7f9f8);
+  color: var(--text, #203833);
+  border: 1px solid var(--border, #9aaba5);
+  border-radius: var(--radius-panel, 8px);
+  box-shadow: 0 8px 24px #0003;
+}
+.part-library-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.part-library-heading h2 { margin: 0; }
+.part-library-panel p { font-size: 12px; line-height: 1.5; }
+.part-library-panel label { display: grid; gap: 4px; margin: 8px 0; }
+.part-library-panel input { width: 100%; box-sizing: border-box; }
+.part-library-panel input[type="checkbox"] { width: auto; }
+.part-library-panel button { margin: 4px 4px 4px 0; }
+.part-library-list { list-style: none; padding: 0; display: grid; gap: 12px; }
+.part-library-card { border: 1px solid var(--border, #9aaba5); padding: 10px; border-radius: var(--radius-panel, 8px); }
+.part-library-card[draggable="true"] { cursor: grab; }
+.part-library-card img { float: left; margin: 0 8px 8px 0; border-radius: 4px; }
+.part-library-card > button:first-of-type { clear: both; display: block; }

@@ -1,4 +1,5 @@
 import { useComponentPlacement } from "./componentPlacementState";
+import { usePartLibrary } from "./partLibraryState";
 import { useInspectionState } from "../../state/inspectionState";
 import { useSketchProjection } from "./sketchProjectionState";
 import { useReusablePart } from "./reusablePartState";
@@ -27,6 +28,7 @@ import { useTargetScopeCapture } from "./targetScopeCaptureCommand";
 
 export function useCommandEnablement() {
   useComponentPlacement(state => state.frame);
+  usePartLibrary(state => state.frame);
   useFeaturePattern((state) => state.frame);
   useInspectionState((state) => state.picking);
   useSketchProjection((state) => state.frame);

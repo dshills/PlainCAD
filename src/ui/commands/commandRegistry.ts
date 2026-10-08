@@ -1,5 +1,6 @@
 import { unplacePlane } from "../../cad/document/componentPlacement";
 import { beginComponentPlacement, canBeginComponentPlacement } from "./componentPlacementCommand";
+import { beginPartLibrary, canOpenPartLibrary } from "./partLibraryCommand";
 import { useInspectionState } from "../../state/inspectionState";
 import { useWorkspaceState } from "../../state/useWorkspaceState";
 import { canOpenSketchProjection, openSketchProjection } from "./sketchProjectionCommand";
@@ -121,6 +122,7 @@ export interface CadCommand {
 
 export interface CommandEnablement {
   moveComponent: boolean;
+  partLibrary: boolean;
   projectSketchEdges: boolean;
   insertProject: boolean;
   measurementPicking: boolean;
@@ -176,6 +178,7 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
   return {
     projectSketchEdges: !targetPickerActive && !guidedHoleStartBlocked && !state.fileBusy && canOpenSketchProjection(state),
     insertProject: canInsertProject(state),
+    partLibrary: canOpenPartLibrary(state),
     moveComponent: canBeginComponentPlacement(state),
     measurementPicking: state.rebuild.status === "succeeded" && Boolean(state.rebuild.result?.success && state.rebuild.result.documentId === state.history.present.id) && !state.fileBusy && !canvasActive && !guidedHoleStartBlocked && !targetPickerActive && !scopeCaptureBusy,
     createFacePocket: !targetPickerActive && !canvasActive && !guidedHoleStartBlocked && !scopeCaptureBusy && canBeginFacePocket(state),
@@ -364,6 +367,7 @@ export const commands: CadCommand[] = [
   },
   { id: "inspect.pickModel", label: "Measure in Model", description: "Click supported authored points, edges, faces and bodies to inspect their geometry.", enablementKey: "measurementPicking", run: () => { const state = useCadStore.getState(); useInspectionState.getState().setPicking(state.documentSession, true); useViewerState.getState().setPresentationMode(state.documentSession, "model"); useWorkspaceState.getState().setPanel("measure"); } },
   { id: "sketch.projectEdges", label: "Project Edges into Sketch", description: "Link a surviving complete authored cap boundary into a parallel sketch.", enablementKey: "projectSketchEdges", run: () => openSketchProjection() },
+  { id: "partLibrary", label: "Local part library", description: "Save editable components locally and insert independent copies by dragging or at the origin.", enablementKey: "partLibrary", run: beginPartLibrary },
   { id: "file.insertProject", label: "Insert Reusable Part", description: "Copy editable components from a local project at the shared origin without replacing the open project.", enablementKey: "insertProject", run: beginInsertProject },
   {
     id: "file.openProject",
