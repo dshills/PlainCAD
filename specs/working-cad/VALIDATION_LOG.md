@@ -266,3 +266,38 @@ sessions remain unperformed.
 
 Cadence: 2 completed items since the last successful full checkpoint. The full gate
 is due after 3 more requested changes (item 4 of this usability batch).
+
+### Item 2: automatic local sketch previews (2026-10-08)
+
+Prism Anthropic `claude-sonnet-5-5` reviewed the complete panel/helper implementation
+`37da7b835733cd93a7a0ac6e4d7f0167`, final deltas
+`1b70e252d8f0dc4a381a771e508f3d6f` and
+`8984e2dc73d9f15c4801536392289b9f`, and documentation
+`3a6c6993a6bbb0d64fee852c4f4465b7`. Actionable transient-input alerts, unsupported
+automatic projection, proof invalidation, debounce cancellation and display-only
+budget handling were fixed. The final runtime delta and documentation have zero
+findings; all reviews used the requested provider/model.
+
+The ordered isolated snapshot passed `npm run check:item`: type checks, all 1291
+unit/component tests, build/bundle budget (largest 492.44 kB), 5 development native
+smoke cases and 14 production CSP/modeling smoke cases. The 43 focused tests and
+19 distinct native offset/replication/trim/projection workflows passed, including
+automatic native proofs, Apply, cancellation and old repair/orientation regressions.
+The projection-links component is extracted without changing its pre-item-4
+behavior; the next linked-usability item updates it separately.
+
+Concurrent validation exposed a pre-existing STEP test fixture scheduling a real
+debounced rebuild over its fabricated native protocol result. The fixture now
+installs its history/result atomically and explicitly disables its test-owned
+rebuild action; production behavior is unchanged. The final test-only delta passed
+all 5 STEP tests and type checking after the reduced gate, with zero findings from
+Prism `d0087fdeae7dcf222dc2ef7913d3b3b1`. Frozen runtime hashes stayed unchanged.
+
+Offset, Mirror/Pattern, Trim/Extend and projection coalesce valid edits after 250 ms,
+clear old Apply proofs immediately and retain manual Preview retries. Details hides
+less common settings; diagnostics remain visible. These local native previews do
+not contact an AI provider. Unsupported projection choices diagnose; a display-only
+overlay budget does not disable an otherwise valid named boundary.
+
+Cadence: 3 completed items since the successful full checkpoint. The full gate
+is due after 2 more requested changes (item 4 of this usability batch).

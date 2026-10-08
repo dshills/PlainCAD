@@ -104,3 +104,36 @@ it("explains that circles cannot extend without a worker call or document edit",
   expect(mocks.preview).not.toHaveBeenCalled();
   expect(useCadStore.getState().history.past).toHaveLength(0);
 });
+
+it("automatically previews canvas picks and keeps a changed pick unappliable until validated", async () => {
+  render(<SketchTrimExtendPanel />);
+  expect(mocks.preview).not.toHaveBeenCalled();
+  act(() => setSketchTrimExtendPick({ x: 15, y: 0 }));
+  await waitFor(() => expect(screen.getByRole("button", { name: "Apply trim" })).toBeEnabled());
+  expect(screen.getByText("Details · exact pick coordinates").closest("details")).not.toHaveAttribute("open");
+  act(() => setSketchTrimExtendPick({ x: 5, y: 0 }));
+  expect(screen.getByRole("button", { name: "Apply trim" })).toBeDisabled();
+  await waitFor(() => expect(screen.getByRole("button", { name: "Apply trim" })).toBeEnabled());
+  expect(mocks.preview).toHaveBeenCalledTimes(2);
+  expect(useCadStore.getState().history.past).toHaveLength(0);
+});
+
+it("recovers from an unresponsive preview at timeout and ignores its late response", async () => {
+  vi.useFakeTimers();
+  try {
+    let resolve: ((value: Awaited<ReturnType<typeof rebuildDocument>>) => void) | undefined;
+    mocks.preview.mockImplementation(() => new Promise((done) => { resolve = done; }));
+    render(<SketchTrimExtendPanel />);
+    act(() => setSketchTrimExtendPick({ x: 15, y: 0 }));
+    fireEvent.click(screen.getByRole("button", { name: "Preview trim" }));
+    const [candidate, signal] = mocks.preview.mock.calls[0];
+    const result = await rebuildDocument(candidate);
+    act(() => vi.advanceTimersByTime(120000));
+    expect(signal.aborted).toBe(true);
+    expect(screen.getByRole("alert")).toHaveTextContent("timed out");
+    expect(screen.getByRole("button", { name: "Preview trim" })).toBeEnabled();
+    await act(async () => resolve?.(result));
+    expect(screen.getByRole("button", { name: "Apply trim" })).toBeDisabled();
+    expect(useCadStore.getState().history.past).toHaveLength(0);
+  } finally { vi.useRealTimers(); }
+});

@@ -9,6 +9,10 @@
   Stale, hidden and fallback bodies cannot receive part actions.
   See [canvas action scope](CANVAS_ACTIONS.md).
 
+## Automatic local previews
+
+Offset, Mirror/Pattern, Trim/Extend and projection preview automatically after a short pause. Apply stays disabled for unfinished, invalid or stale inputs; Preview remains available for explicit retries. Less common settings are under Details. These previews are local native CAD operations and make no AI provider calls. See [local task previews](LOCAL_TASK_PREVIEWS.md).
+
 ## Component reuse and interoperability
 
 - **Portable part library:** Back up the complete local library as a bounded .pcadlib pack, preview/import it as independent saved copies, or download one editable .pcaddoc. Imports validate every entry and commit atomically; failures/cancellation preserve existing copies and the open project. See [library transfer](PART_LIBRARY.md).

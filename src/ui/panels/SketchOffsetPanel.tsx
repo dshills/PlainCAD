@@ -1,3 +1,4 @@
+import { localPreviewExpressionReady, useLocalTaskPreview } from "./useLocalTaskPreview";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { buildSketchOffset, sketchOffsetProfiles, type SketchOffsetInput, type SketchOffsetPlan } from "../../cad/sketch/sketchOffset";
 import type { ResolvedSketch } from "../../cad/sketch/SketchSolver";
@@ -42,14 +43,14 @@ export function SketchOffsetPanel() {
   const [holes, setHoles] = useState<SketchOffsetInput["holes"]>("reject");
   const [proposal, setProposal] = useState<Proposal>();
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
-  const [status, setStatus] = useState("Choose a closed region, distance and direction. Preview the copied outline before Apply.");
+  const [status, setStatus] = useState("Choose a closed region, distance and direction. Preview updates automatically after you pause.");
   const controller = useRef<AbortController | undefined>(undefined), timer = useRef<number | undefined>(undefined);
   const configuration = useMemo(() => {
     if (!frame) return undefined;
     try { return { value: sketchOffsetProfiles(frame.document, frame.active.sketchId), error: "" }; }
     catch (failure) { return { value: undefined, error: failure instanceof Error ? failure.message : "Closed profiles are unavailable." }; }
   }, [frame]);
-  const invalidate = (message = "Inputs changed. Preview the current copied outline again.") => {
+  const invalidate = (message = "Inputs changed. Preview updates automatically after you pause.") => {
     controller.current?.abort(); controller.current = undefined;
     if (timer.current !== undefined) window.clearTimeout(timer.current);
     timer.current = undefined;
@@ -65,9 +66,11 @@ export function SketchOffsetPanel() {
   }, [frame, configuration]);
   useEffect(() => { if (frame && !currentSketchOffsetFrame(frame)) close(); }, [frame, document, session, component, fileBusy, active, selection]);
   useEffect(() => () => { controller.current?.abort(); if (timer.current !== undefined) window.clearTimeout(timer.current); }, []);
-  if (!frame) return null;
   const chosen = configuration?.value?.profiles.find((profile) => profile.id === profileId);
+  const cancelScheduled = useLocalTaskPreview(frame, JSON.stringify([profileId, distance, direction, holes]), Boolean(frame && kernelReady && !fileBusy && chosen && localPreviewExpressionReady(distance) && (!chosen.innerLoops.length || holes === "outerOnly") && !configuration?.error), () => void preview());
   const preview = async () => {
+    cancelScheduled();
+    if (!frame || !currentSketchOffsetFrame(frame)) return;
     if (busy || !kernelReady || fileBusy) return;
     invalidate(); setError("");
     let abort: AbortController | undefined;
@@ -94,6 +97,7 @@ export function SketchOffsetPanel() {
       }
     }
   };
+  if (!frame) return null;
   return <section className="sketch-trim-extend" aria-label="Offset sketch outline" onKeyDown={(event) => {
     if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); close(); }
   }}>
@@ -107,19 +111,21 @@ export function SketchOffsetPanel() {
     <label>Outline offset direction<select value={direction} onChange={(event) => { invalidate(); setError(""); setDirection(event.target.value as SketchOffsetInput["direction"]); }}>
       <option value="outward">Outward · enlarge the boundary</option><option value="inward">Inward · shrink the boundary</option>
     </select></label>
+    <details open={Boolean(chosen?.innerLoops.length)}><summary>Details</summary>
     <label>Outline holes policy<select value={holes} onChange={(event) => { invalidate(); setError(""); setHoles(event.target.value as SketchOffsetInput["holes"]); }}>
       <option value="reject">Require a region without holes</option><option value="outerOnly">Outer boundary only · keep all existing holes unchanged</option>
     </select></label>
     {chosen?.innerLoops.length ? <p>This region has holes. Choose Outer boundary only explicitly to continue. Their geometry and constraints are preserved.</p> : null}
     <p>{chosen?.outerLoop.type === "circle" ? "Circle copies retain matching radius/center parameter expressions and accept a parameter-based distance. They are independent entities, not an associative offset feature." : "Simple authored line outlines, including concave shapes, and mixed line/analytic arc outlines with tangent arc joins, up to 64 edges. Distance must be literal length arithmetic; the copied shape is independently editable."}</p>
+    </details>
     <p>Original geometry and intent remain intact. The copied contour appears in the accent color. Adding contours can change profile nesting and existing feature geometry.</p>
     <button type="button" disabled={busy || fileBusy || !kernelReady || !chosen || !distance.trim() || Boolean(configuration?.error)} onClick={() => void preview()}>Preview outline offset</button>
-    <button type="button" onClick={close}>Cancel outline offset</button>
     <button type="button" disabled={!proposal || busy || !currentSketchOffsetFrame(frame)} onClick={() => {
       if (!proposal) return;
       try { applySketchOffset(proposal.frame, proposal.plan, proposal.result); restoreFocus(); }
       catch (failure) { invalidate(); setError(failure instanceof Error ? failure.message : "Outline offset could not be applied."); }
     }}>Apply outline offset</button>
+    <button type="button" onClick={close}>Cancel outline offset</button>
     <p role="status" aria-label="Outline offset status">{status}</p>
     {configuration?.error || error ? <p role="alert">{configuration?.error || error}</p> : null}
     {proposal ? <><ul aria-label="Proposed outline offset changes">{proposal.plan.changes.map((change) => <li key={change}>{change}</li>)}</ul><OffsetPreview proposal={proposal} />

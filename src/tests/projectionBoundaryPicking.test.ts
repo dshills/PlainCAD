@@ -4,7 +4,7 @@ import { addCircleAt, addCornerRectangle, createSketchOnPlane } from "../cad/ske
 import { solveSketch } from "../cad/sketch/SketchSolver";
 import { detectProfiles } from "../cad/sketch/profileDetection";
 import { rebuildDocument } from "../cad/features/rebuildGraph";
-import { projectionBoundaryTargets } from "../viewer/projectionBoundaryPicking";
+import { projectionBoundaryBlockingReason, projectionBoundaryTargets } from "../viewer/projectionBoundaryPicking";
 import { placePlane } from "../cad/document/componentPlacement";
 import type { OriginPlane } from "../cad/document/schema";
 function fixture(plane: OriginPlane = "XY", direction: "positive" | "negative" | "symmetric" = "positive", round = false) {
@@ -95,7 +95,15 @@ describe("native authored cap pick targets", () => {
     expect(targets.map((target) => target.id)).toEqual(choices.map((choice) => choice.id));
     expect(targets.slice(-2).every((target) => !target.disabledReason && target.curves[0].length === 97)).toBe(true);
     expect(targets.reduce((total, target) => total + target.curves.reduce((sum, curve) => sum + curve.length, 0), 0)).toBeLessThanOrEqual(32768);
-    expect(targets.slice(0, -2).every((target) => target.disabledReason?.includes("parallel planes"))).toBe(true);
+    expect(targets.slice(0, -2).every((target) => target.disabledReason?.includes("parallel planes") && !target.displayLimited)).toBe(true);
+    const parallelDocument = { ...document, sketches: Object.fromEntries(Object.entries(document.sketches).map(([id, sketch]) => [id, { ...sketch, plane: sketch.plane.type === "origin" ? { type: "origin" as const, plane: "XY" as const } : sketch.plane }])) };
+    const parallelTargets = projectionBoundaryTargets(parallelDocument, f.target.id, proof, choices);
+    const limited = parallelTargets.filter((target) => target.displayLimited);
+    expect(limited.length).toBeGreaterThan(0);
+    expect(limited.every((target) => !target.curves.length && target.disabledReason?.includes("display limit"))).toBe(true);
+    expect(parallelTargets.every((target) => !target.disabledReason || target.displayLimited)).toBe(true);
+    expect(limited.every((target) => projectionBoundaryBlockingReason(target) === undefined)).toBe(true);
+    expect(targets.slice(0, -2).every((target) => projectionBoundaryBlockingReason(target)?.includes("parallel planes"))).toBe(true);
   });
   it("refuses missing native group proof, failed results and foreign document proofs", () => {
     const f = fixture();

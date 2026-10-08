@@ -7,6 +7,7 @@ import { buildSketchOffset, sketchOffsetProfiles } from "../cad/sketch/sketchOff
 import { useCadStore } from "../state/useCadStore";
 import { useSketchCanvas } from "../ui/commands/sketchCanvasCommand";
 import { applySketchOffset, canOpenSketchOffset, openSketchOffset, previewSketchOffset, useSketchOffset } from "../ui/commands/sketchOffsetCommand";
+import { LOCAL_TASK_PREVIEW_DELAY_MS } from "../ui/panels/useLocalTaskPreview";
 import { SketchOffsetPanel } from "../ui/panels/SketchOffsetPanel";
 const mocks = vi.hoisted(() => ({ preview: vi.fn() }));
 vi.mock("../cad/worker/extrudePreviewClient", () => ({ previewModeling: mocks.preview }));
@@ -124,4 +125,55 @@ it("keeps a guarded entry available to show open-outline and open-arc diagnostic
   expect(canOpenSketchOffset()).toBe(true);
   act(() => useCadStore.setState({ fileBusy: true }));
   expect(canOpenSketchOffset()).toBe(false);
+});
+
+it("automatically previews current inputs, clears Apply immediately, and cancels queued work", async () => {
+  const view = render(<SketchOffsetPanel />);
+  const original = useCadStore.getState().history.present;
+  expect(screen.getByRole("button", { name: "Apply outline offset" })).toBeDisabled();
+  await waitFor(() => expect(screen.getByRole("button", { name: "Apply outline offset" })).toBeEnabled());
+  expect(mocks.preview).toHaveBeenCalledTimes(1);
+  expect(useCadStore.getState().history.present).toBe(original);
+  fireEvent.change(screen.getByLabelText("Outline offset distance"), { target: { value: "3mm" } });
+  expect(screen.getByRole("button", { name: "Apply outline offset" })).toBeDisabled();
+  fireEvent.change(screen.getByLabelText("Outline offset distance"), { target: { value: "4mm" } });
+  await waitFor(() => expect(screen.getByRole("button", { name: "Apply outline offset" })).toBeEnabled());
+  expect(mocks.preview).toHaveBeenCalledTimes(2);
+  const draft = mocks.preview.mock.calls[1][0];
+  expect(sketchOffsetProfiles(draft, useSketchCanvas.getState().active!.sketchId).profiles[0].bounds.minX).toBe(-4);
+  fireEvent.change(screen.getByLabelText("Outline offset distance"), { target: { value: "5mm" } });
+  fireEvent.click(screen.getByRole("button", { name: "Cancel outline offset" }));
+  await act(async () => { await new Promise((done) => setTimeout(done, LOCAL_TASK_PREVIEW_DELAY_MS + 100)); });
+  expect(mocks.preview).toHaveBeenCalledTimes(2);
+  expect(useCadStore.getState().history.past).toHaveLength(0);
+  view.unmount();
+});
+it("keeps automatically diagnosed input errors visible outside collapsed Details", async () => {
+  render(<SketchOffsetPanel />);
+  expect(screen.getByText("Details").closest("details")).not.toHaveAttribute("open");
+  fireEvent.change(screen.getByLabelText("Outline offset direction"), { target: { value: "inward" } });
+  fireEvent.change(screen.getByLabelText("Outline offset distance"), { target: { value: "8mm" } });
+  await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent(/collapses|self-intersect/));
+  expect(screen.getByRole("alert").closest("details")).toBeNull();
+  expect(mocks.preview).not.toHaveBeenCalled();
+});
+
+it("aborts an in-flight automatic preview when typing and never reuses its late response", async () => {
+  const pending: Array<(value: Awaited<ReturnType<typeof rebuildDocument>>) => void> = [];
+  mocks.preview.mockImplementation(() => new Promise((done) => { pending.push(done); }));
+  render(<SketchOffsetPanel />);
+  await waitFor(() => expect(mocks.preview).toHaveBeenCalledTimes(1));
+  const [first, firstSignal] = mocks.preview.mock.calls[0];
+  fireEvent.change(screen.getByLabelText("Outline offset distance"), { target: { value: "3mm" } });
+  expect(firstSignal.aborted).toBe(true);
+  expect(screen.getByRole("button", { name: "Apply outline offset" })).toBeDisabled();
+  await waitFor(() => expect(mocks.preview).toHaveBeenCalledTimes(2));
+  await act(async () => pending[0](await rebuildDocument(first)));
+  expect(screen.getByRole("button", { name: "Apply outline offset" })).toBeDisabled();
+  const [second] = mocks.preview.mock.calls[1];
+  await act(async () => pending[1](await rebuildDocument(second)));
+  expect(screen.getByRole("button", { name: "Apply outline offset" })).toBeEnabled();
+  fireEvent.click(screen.getByRole("button", { name: "Apply outline offset" }));
+  expect(sketchOffsetProfiles(useCadStore.getState().history.present, useSketchCanvas.getState().active!.sketchId).profiles[0].bounds.minX).toBe(-3);
+  expect(useCadStore.getState().history.past).toHaveLength(1);
 });

@@ -1,12 +1,13 @@
+import { useLocalTaskPreview } from "./useLocalTaskPreview";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { planSketchProjection } from "../../cad/sketch/sketchProjection";
 import type { RebuildResult } from "../../cad/worker/workerProtocol";
 import type { ResolvedSketch } from "../../cad/sketch/SketchSolver";
 import { useCadStore } from "../../state/useCadStore";
 import { useSketchCanvas } from "../commands/sketchCanvasCommand";
-import { useSketchProjection, canOpenSketchProjection, openSketchProjection, breakCurrentSketchProjection, removeCurrentSketchProjection, cancelSketchProjection, currentSketchProjectionFrame, loadSketchProjectionSources, previewSketchProjection, applySketchProjection, type SketchProjectionPlan, type SketchProjectionChoice } from "../commands/sketchProjectionCommand";
+import { useSketchProjection, cancelSketchProjection, currentSketchProjectionFrame, loadSketchProjectionSources, previewSketchProjection, applySketchProjection, type SketchProjectionPlan, type SketchProjectionChoice } from "../commands/sketchProjectionCommand";
 import { ProjectionSourcePicker } from "../../viewer/ProjectionSourcePicker";
-import { projectionBoundaryTargets } from "../../viewer/projectionBoundaryPicking";
+import { projectionBoundaryBlockingReason, projectionBoundaryTargets } from "../../viewer/projectionBoundaryPicking";
 import { ExtrudePreview } from "../../viewer/ExtrudePreview";
 import "./SketchTrimExtendPanel.css";
 
@@ -31,13 +32,13 @@ export function SketchProjectionPanel() {
   const [sourceId, setSourceId] = useState(""), [construction, setConstruction] = useState(false);
   const [proposal, setProposal] = useState<{ plan: SketchProjectionPlan; result: RebuildResult; solved: ResolvedSketch }>();
   const [busy, setBusy] = useState(false), [error, setError] = useState(""), [status, setStatus] = useState("Checking supported part boundaries…");
-  const controller = useRef<AbortController | undefined>(undefined);
-  const invalidate = () => { controller.current?.abort(); controller.current = undefined; setBusy(false); setProposal(undefined); };
+  const controller = useRef<AbortController | undefined>(undefined), timer = useRef<number | undefined>(undefined);
+  const invalidate = () => { if (timer.current !== undefined) window.clearTimeout(timer.current); timer.current = undefined; controller.current?.abort(); controller.current = undefined; setBusy(false); setProposal(undefined); };
   const close = () => { invalidate(); cancelSketchProjection(); window.requestAnimationFrame(() => window.document.querySelector<HTMLButtonElement>('button[aria-label="Project part edges into sketch"]')?.focus()); };
   useEffect(() => {
     invalidate(); setSources(undefined); setSourceId(""); setError("");
     if (!frame) return;
-    const request = new AbortController(); controller.current = request; setBusy(true); setStatus("Checking native boundaries before this sketch…");
+    const request = new AbortController(); controller.current = request; timer.current = window.setTimeout(() => { if (controller.current !== request) return; invalidate(); setError("Projection preview timed out. Try a simpler source."); setStatus("The project is unchanged."); }, 120000); setBusy(true); setStatus("Checking native boundaries before this sketch…");
     void loadSketchProjectionSources(frame, request.signal).then((sources) => {
       if (controller.current !== request || !currentSketchProjectionFrame(frame)) return;
       setSources(sources);
@@ -45,44 +46,54 @@ export function SketchProjectionPanel() {
       const prior = previous && sources.choices.find((choice) => choice.featureId === previous.sourceFeatureId && choice.role === previous.role);
       setSourceId(prior?.id ?? (sources.choices.length === 1 ? sources.choices[0].id : ""));
       setConstruction(previous?.construction ?? false);
-      setStatus(sources.choices.length ? "Choose a complete cap boundary. Preview the linked sketch before Apply." : "No supported upstream cap survived. Create a distance extrusion before this sketch or repair the source.");
-    }).catch((failure: unknown) => { if (controller.current === request) setError(failure instanceof Error ? failure.message : String(failure)); }).finally(() => { if (controller.current === request) { controller.current = undefined; setBusy(false); } });
-    return () => { request.abort(); };
+      setStatus(sources.choices.length ? "Choose a complete cap boundary. Preview updates automatically after you pause." : "No supported upstream cap survived. Create a distance extrusion before this sketch or repair the source.");
+    }).catch((failure: unknown) => { if (controller.current === request) setError(failure instanceof Error ? failure.message : String(failure)); }).finally(() => { if (controller.current === request) { if (timer.current !== undefined) window.clearTimeout(timer.current); timer.current = undefined; controller.current = undefined; setBusy(false); } });
+    return () => { request.abort(); if (timer.current !== undefined) window.clearTimeout(timer.current); };
   }, [frame]);
   useEffect(() => { if (frame && !currentSketchProjectionFrame(frame)) close(); }, [frame, document, session, component, fileBusy, active, selection]);
-  useEffect(() => () => controller.current?.abort(), []);
+  useEffect(() => () => { controller.current?.abort(); if (timer.current !== undefined) window.clearTimeout(timer.current); }, []);
   const targets = useMemo(() => frame && sources ? projectionBoundaryTargets(frame.document, frame.active.sketchId, sources.proof, sources.choices, frame.replaceProjectionId) : [], [frame, sources]);
-  if (!frame) return null;
-  const legacyRepair = frame.replaceProjectionId && frame.document.sketches[frame.active.sketchId].projections?.some(link => link.id === frame.replaceProjectionId && link.coordinateSpace !== "world");
+  const legacyRepair = frame?.replaceProjectionId && frame.document.sketches[frame.active.sketchId].projections?.some(link => link.id === frame.replaceProjectionId && link.coordinateSpace !== "world");
   const chosen = sources?.choices.find((choice) => choice.id === sourceId);
+  const selectedTarget = chosen && targets.find((target) => target.id === chosen.id);
+  const incompatible = projectionBoundaryBlockingReason(selectedTarget || undefined);
+  const cancelScheduled = useLocalTaskPreview(frame, JSON.stringify([sourceId, construction]), Boolean(frame && sources && chosen && !incompatible && !fileBusy), () => void preview());
   const preview = async (choice = chosen) => {
-    if (!sources || !choice || busy || !currentSketchProjectionFrame(frame)) return;
+    cancelScheduled();
+    if (!frame) return;
+    if (!sources || !choice || !currentSketchProjectionFrame(frame)) return;
     invalidate(); setError("");
-    const request = new AbortController(); controller.current = request; setBusy(true); setStatus("Solving the linked boundary and validating native geometry…");
+    const target = targets.find((target) => target.id === choice.id);
+    const blocking = projectionBoundaryBlockingReason(target);
+    if (blocking) { setError(blocking); setStatus("Choose a compatible boundary or repair the sketch plane. The project is unchanged."); return; }
+    const request = new AbortController(); controller.current = request; timer.current = window.setTimeout(() => { if (controller.current !== request) return; invalidate(); setError("Projection preview timed out. Try a simpler source."); setStatus("The project is unchanged."); }, 120000); setBusy(true); setStatus("Solving the linked boundary and validating native geometry…");
     try {
       const plan = planSketchProjection(frame.document, frame.active.sketchId, choice.featureId, choice.role, construction, sources.proof, frame.replaceProjectionId);
       const geometry = await previewSketchProjection(frame, plan, request.signal);
       if (controller.current !== request || !currentSketchProjectionFrame(frame)) return;
       setProposal({ plan, ...geometry }); setStatus("Linked projection preview ready. Apply adds one undo step.");
     } catch (failure) { if (controller.current === request) { setError(failure instanceof Error ? failure.message : String(failure)); setStatus("The project is unchanged."); } }
-    finally { if (controller.current === request) { controller.current = undefined; setBusy(false); } }
+    finally { if (controller.current === request) { if (timer.current !== undefined) window.clearTimeout(timer.current); timer.current = undefined; controller.current = undefined; setBusy(false); } }
   };
+  if (!frame) return null;
   return <section className="sketch-trim-extend" aria-label="Project part edges" onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); close(); } }}>
     <h3>{frame.replaceProjectionId ? "Repair projected boundary" : "Project part edges"}</h3>
     <p>Reuse a complete earlier cap boundary on this parallel sketch plane. New links follow source dimensions and component placement. Existing design links keep their original association.</p>
     {legacyRepair ? <p>Repairing a legacy design link. The source view shows the placed part; compatibility and the linked outline use authored design coordinates.</p> : null}
-    {sources ? <ProjectionSourcePicker meshes={sources.proof.meshes} targets={targets} selectedId={sourceId} disabled={busy} onChoose={(target) => {
-      if (busy || !currentSketchProjectionFrame(frame)) return;
+    {sources ? <ProjectionSourcePicker meshes={sources.proof.meshes} targets={targets} selectedId={sourceId} disabled={!sources} onChoose={(target) => {
+      if (!currentSketchProjectionFrame(frame)) return;
+      const blocking = projectionBoundaryBlockingReason(target);
+      if (target.id === sourceId && !blocking) { if (!proposal && !busy) void preview(target); return; }
       invalidate(); setSourceId(target.id); setError("");
-      if (target.disabledReason) { setError(target.disabledReason); setStatus("Choose a compatible boundary or repair the sketch plane. The project is unchanged."); return; }
-      void preview(target);
+      if (blocking) { setError(blocking); setStatus("Choose a compatible boundary or repair the sketch plane. The project is unchanged."); return; }
+      setStatus("Boundary picked. Preview updates automatically after you pause.");
     }} /> : null}
-    <label>Source part boundary<select aria-label="Source part boundary" value={sourceId} disabled={busy} onChange={(event) => { invalidate(); setError(""); setSourceId(event.target.value); setStatus("Source changed. Preview the linked boundary before Apply."); }}>
+    <label>Source part boundary<select aria-label="Source part boundary" value={sourceId} disabled={!sources} onChange={(event) => { invalidate(); const target = targets.find((target) => target.id === event.target.value); const reason = projectionBoundaryBlockingReason(target); setError(reason ?? ""); setSourceId(event.target.value); setStatus(reason ? "Choose a compatible boundary or repair the sketch plane. The project is unchanged." : "Source changed. Preview updates automatically after you pause."); }}>
       <option value="">Choose an earlier part boundary</option>{sources?.choices.map((choice) => <option key={choice.id} value={choice.id}>{choice.label}</option>)}
     </select></label>
     {chosen ? <p aria-label="Projection compatibility">{targets.find((target) => target.id === chosen.id)?.disabledReason ?? "Compatible parallel sketch plane. Preview validates the linked native boundary before Apply."}</p> : null}
-    <label><input type="checkbox" checked={construction} disabled={busy} onChange={(event) => { invalidate(); setError(""); setConstruction(event.target.checked); setStatus("Construction option changed. Preview the linked boundary before Apply."); }} />Construction reference only</label>
-    <p>Projected items are read-only. Edit the source, break the link for independent geometry, or remove the projection to choose a different boundary.</p>
+    <details><summary>Details</summary><label><input type="checkbox" checked={construction} disabled={!sources} onChange={(event) => { invalidate(); setError(""); setConstruction(event.target.checked); setStatus("Construction option changed. Preview updates automatically after you pause."); }} />Construction reference only</label>
+    <p>Projected items are read-only. Edit the source, break the link for independent geometry, or remove the projection to choose a different boundary.</p></details>
     <button type="button" disabled={busy || !chosen} onClick={() => void preview()}>Preview projected boundary</button>
     <button type="button" disabled={busy || !proposal || !currentSketchProjectionFrame(frame)} onClick={() => {
       if (!proposal) return;
@@ -97,21 +108,4 @@ export function SketchProjectionPanel() {
   </section>;
 }
 
-export function SketchProjectionLinks() {
-  const document = useCadStore((state) => state.history.present), rebuild = useCadStore((state) => state.rebuild), active = useSketchCanvas((state) => state.active);
-  const selection = useSketchCanvas((state) => state.selection);
-  const [error, setError] = useState("");
-  const links = active ? document.sketches[active.sketchId]?.projections ?? [] : [];
-  const selected = selection?.document === document && links.some((link) => link.members.some((member) => selection.entityIds.includes(member.targetEntityId)));
-  if (!links.length) return null;
-  return <section aria-label="Linked projected boundaries"><h3>Projected boundaries</h3>{selected ? <p role="status">Selected geometry is linked and read-only. Edit its source or break its link before moving or dimensioning it.</p> : null}
-    {links.map((link) => {
-      const source = document.features.find((feature) => feature.id === link.sourceFeatureId);
-      return <div key={link.id} className="item-card"><strong>{source?.name ?? "Missing source"} · {link.role === "endCapPerimeter" ? "End cap" : "Start cap"}</strong><span className="muted">{link.coordinateSpace === "world" ? "Placed geometry link" : "Legacy design link"} · {link.members.length} linked items · {link.construction ? "Construction reference" : "Profile geometry"}</span>
-        <button type="button" disabled={!canOpenSketchProjection()} onClick={() => { try { openSketchProjection(link.id); setError(""); } catch (failure) { setError(failure instanceof Error ? failure.message : String(failure)); } }}>Reselect projected boundary</button>
-        <button type="button" disabled={!canOpenSketchProjection() || rebuild.status !== "succeeded" || !rebuild.result?.success} onClick={() => { try { breakCurrentSketchProjection(link.id); setError(""); } catch (failure) { setError(failure instanceof Error ? failure.message : String(failure)); } }}>Break projection link</button>
-        <button type="button" disabled={!canOpenSketchProjection()} onClick={() => { try { removeCurrentSketchProjection(link.id); setError(""); } catch (failure) { setError(failure instanceof Error ? failure.message : String(failure)); } }}>Remove projection and geometry</button>
-      </div>;
-    })}<p>Reselect preserves linked members only for the same authored boundary. To switch to a different shape, remove this projection and project the new boundary; repair downstream references explicitly.</p>{error ? <p role="alert">{error}</p> : null}
-  </section>;
-}
+export { SketchProjectionLinks } from "./SketchProjectionLinks";

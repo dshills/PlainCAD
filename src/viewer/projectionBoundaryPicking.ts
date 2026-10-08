@@ -10,7 +10,13 @@ import type { SketchProjectionChoice } from "../ui/commands/sketchProjectionComm
 export interface ProjectionBoundaryTarget extends SketchProjectionChoice {
   curves: Point3[][];
   disabledReason?: string;
+  /** Only the sampled picking overlay is unavailable; a named boundary remains modelable. */
+  displayLimited?: boolean;
 }
+export function projectionBoundaryBlockingReason(target: ProjectionBoundaryTarget | undefined) {
+  return target?.displayLimited ? undefined : target?.disabledReason;
+}
+
 /** Sampled lines are display/pick affordances only. Native complete-cap proof
  * and the projection planner remain authoritative for geometry and Apply. */
 export function projectionBoundaryTargets(document: CadDocument, sketchId: string, proof: RebuildResult, choices: readonly SketchProjectionChoice[], replaceProjectionId?: string): ProjectionBoundaryTarget[] {
@@ -65,7 +71,7 @@ export function projectionBoundaryTargets(document: CadDocument, sketchId: strin
       const arc = source.arcs.find((item) => item.id === id);
       return total + (arc ? Math.max(8, Math.ceil(Math.abs(arc.sweep) / (Math.PI * 2) * 96)) + 1 : 97);
     }, 0);
-    if (vertexCount + count > 32768) return { ...target, curves: [], disabledReason: target.disabledReason ?? "Source preview has reached its display limit. Choose this boundary by name." };
+    if (vertexCount + count > 32768) return { ...target, curves: [], displayLimited: !target.disabledReason, disabledReason: target.disabledReason ?? "Source preview has reached its display limit. Choose this boundary by name." };
     for (const id of ids) {
       const line = source.lines.find((item) => item.id === id);
       if (line) target.curves.push([transformPoint(cap, line.start.x, line.start.y), transformPoint(cap, line.end.x, line.end.y)]);

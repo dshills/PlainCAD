@@ -20,10 +20,11 @@ function prepared(): NativeStepExport {
 beforeEach(() => {
   cancelStepExport(); useFileJobs.getState().cancel(); useFileJobs.setState({ exportOpen: false });
   useInspectionState.setState({ picking: false }); useTargetScopeCapture.setState({ busy: false });
-  useCadStore.getState().setDocument(createBoxTemplate());
-  const document = useCadStore.getState().history.present, result = rebuildDocument(document);
+  // This fixture supplies native protocol data. Do not schedule a real store
+  // rebuild that can replace the mock result while the async export runs.
+  const document = createBoxTemplate(), result = rebuildDocument(document);
   vi.stubGlobal("Worker", class { postMessage() {} terminate() {} });
-  useCadStore.setState({ rebuild: { status: "succeeded", kernelReady: true, result: { ...result, stepExportAvailable: true, meshes: result.meshes.map(mesh => ({ ...mesh, geometrySource: "opencascade", geometryAssertions: { valid: true, volume: 80000, surfaceArea: 14000, solidCount: 1 } })) } } });
+  useCadStore.setState({ rebuildNow: vi.fn(), history: { past: [], present: document, future: [] }, documentSession: useCadStore.getState().documentSession + 1, activeComponentId: document.rootComponentId, selection: { selectedIds: [] }, fileBusy: false, rebuild: { status: "succeeded", kernelReady: true, result: { ...result, stepExportAvailable: true, meshes: result.meshes.map(mesh => ({ ...mesh, geometrySource: "opencascade", geometryAssertions: { valid: true, volume: 80000, surfaceArea: 14000, solidCount: 1 } })) } } });
   vi.spyOn(client, "exportStepDocument").mockResolvedValue(prepared());
   vi.spyOn(downloads, "downloadArrayBuffer").mockImplementation(() => undefined);
 });

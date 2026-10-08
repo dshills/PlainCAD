@@ -79,3 +79,34 @@ it("updates shared copy command availability when canvas selection alone changes
   act(() => useSketchCanvas.setState({ selection: undefined }));
   expect(result.current.replicateSketch).toBe(false);
 });
+
+it("automatically previews pattern changes without adding history and applies only the latest proof", async () => {
+  openSketchReplication("linear"); render(<SketchReplicationPanel />);
+  const original = useCadStore.getState().history.present;
+  await waitFor(() => expect(screen.getByRole("button", { name: "Apply copies" })).toBeEnabled());
+  fireEvent.change(screen.getByLabelText("Pattern spacing"), { target: { value: "6mm" } });
+  expect(screen.getByRole("button", { name: "Apply copies" })).toBeDisabled();
+  await waitFor(() => expect(screen.getByRole("button", { name: "Apply copies" })).toBeEnabled());
+  expect(useCadStore.getState().history.present).toBe(original);
+  fireEvent.click(screen.getByRole("button", { name: "Apply copies" }));
+  expect(useCadStore.getState().history.past).toHaveLength(1);
+});
+
+it("recovers from a worker that ignores timeout cancellation and rejects its late proof", async () => {
+  vi.useFakeTimers();
+  try {
+    let resolve: ((value: RebuildResult) => void) | undefined;
+    mocks.preview.mockImplementation(() => new Promise<RebuildResult>((done) => { resolve = done; }));
+    openSketchReplication("linear"); render(<SketchReplicationPanel />);
+    fireEvent.click(screen.getByRole("button", { name: "Preview copies" }));
+    const [candidate, signal] = mocks.preview.mock.calls[0];
+    const result = await rebuildDocument(candidate);
+    act(() => vi.advanceTimersByTime(120000));
+    expect(signal.aborted).toBe(true);
+    expect(screen.getByRole("alert")).toHaveTextContent("timed out");
+    expect(screen.getByRole("button", { name: "Preview copies" })).toBeEnabled();
+    await act(async () => resolve?.(result));
+    expect(screen.getByRole("button", { name: "Apply copies" })).toBeDisabled();
+    expect(useCadStore.getState().history.past).toHaveLength(0);
+  } finally { vi.useRealTimers(); }
+});
