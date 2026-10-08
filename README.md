@@ -193,7 +193,7 @@ unsaved-project protection as dropping a project file. The gallery stays out of
 the modeling canvas until you open it.
 
 The default **Docked Workbench** places Project/Parameters on the left,
-Task/Properties on the right, and History/AI/Issues at the bottom. **Draw**, **Solid**,
+Task/Properties on the right, and History/Issues at the bottom. **AI** opens a compact assistant over the main canvas without resizing the docks. **Draw**, **Solid**,
 and **Inspect** change the context toolbar. **Project** and **Details** reopen docks;
 drag their boundaries or use focused arrow-key controls to resize them.
 
@@ -324,7 +324,7 @@ previews while blocking dependent modeling and STL until repaired or suppressed.
 ## AI Assistance
 
 AI is optional; ordinary drawing, modeling, and file commands work without a
-provider. Open the bottom **AI drawer**. Review native geometry before applying
+provider. Open **AI** on the canvas or use the bottom AI launcher. The assistant expands inside the modeling viewport in every layout, retains descriptions when closed, and leaves dock sizes unchanged. Review native geometry before applying
 any proposal; clarifications and failed previews do not edit the document.
 
 | Mode/scope | What it can do |
@@ -596,9 +596,8 @@ the source and preserve upstream previews for repair.
   model's account access. Static hosting has no local gateway.
 - **Bundle size:** React, Three.js core/renderer, CAD logic, and the OpenCascade
   loader use separate production chunks. In the default Workbench, the sketch
-  editor and AI drawer load when first opened and retain drafts when hidden.
-  Legacy layouts load the AI drawer's separate chunk immediately to show its
-  built-in toggle. `npm run build` enforces a
+  editor and expanded AI assistant load when first opened and retain drafts when hidden.
+  The compact canvas launcher works in all layouts. `npm run build` enforces a
   500 kB uncompressed budget for every JavaScript bundle, including workers;
   Vite's default warning threshold remains unchanged. The kernel's separate
   WebAssembly asset is outside this JavaScript budget.

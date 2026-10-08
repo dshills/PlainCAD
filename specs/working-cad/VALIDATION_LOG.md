@@ -549,3 +549,31 @@ shadow maps or additional render passes; see PHOTO_STUDIO.md.
 
 Cadence: 1 completed item since the successful full checkpoint. The next full
 gate is due after 4 more requested changes.
+
+
+## AI canvas workflow batch (2026-10-08)
+
+### Item 1: assistant inside the modeling canvas
+
+The compact AI launcher and expandable assistant now live inside the main viewport
+in Workbench, Minimal and Full layouts. Opening it preserves camera, geometry and
+dock sizes; hiding it retains descriptions while pending native work is canceled.
+The bottom AI control is a launcher. Lazy assistant failures are contained and
+command failures report an actionable diagnostic.
+
+Prism Anthropic `claude-sonnet-5-5` reviewed the final 20-file integration
+(`6acfe986f5caa0e50fd853952c213c53`), complete coverage, no high/medium findings.
+The missing outer lazy-chunk boundary was fixed. Two low notes were assessed:
+focus occurs after the lazy textarea commits and existing child focus effects
+cover reopening; the two small entry-point error handlers intentionally contain
+failures independently. Earlier isolated browser-runner origin configuration was
+corrected before the successful gate; failed runs are not counted.
+
+`npm run check:item` passed: type checks, 1364 unit/component tests, production
+build/bundle budget (largest 497.24 kB), 5 development native modeling/stale-result
+cases and 14 production modeling/AI/CSP cases. Five focused native cases and two
+production canvas-shell cases also passed, covering retained drafts, three
+layouts/themes, native editing, stale targets, undo, STL export and lazy loading.
+
+Cadence: 2 completed items since the successful full checkpoint. The next full
+gate is due after 3 more requested changes.

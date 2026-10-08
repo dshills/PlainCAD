@@ -19,7 +19,7 @@ for (const provider of ["anthropic", "openai", "google"]) test(`${provider} sket
   await expect(async () => expect((await aiSnapshot(page)).result?.meshes[0].geometryAssertions?.volume).toBeCloseTo(3072, 5)).toPass();
   await page.getByRole("button", { name: "Section XY plane, 8 entities", exact: true }).click();
   await page.getByRole("button", { name: "Edit sketch canvas", exact: true }).click();
-  await page.getByRole("button", { name: "Open AI drawer", exact: true }).click();
+  await page.getByRole("button", { name: "Open AI assistant", exact: true }).click();
   await page.getByLabel("Sketch refinement method").selectOption("provider");
   const panel = page.getByLabel("Provider sketch refinement", { exact: true });
   await panel.getByLabel("Sketch AI provider").selectOption(provider);
@@ -60,7 +60,7 @@ for (const provider of ["anthropic", "openai", "google"]) test(`${provider} sket
     expect(mesh!.bounds.max[2] - mesh!.bounds.min[2]).toBeCloseTo(8, 5);
     expect(current.document.features[0].id).toBe(before.document.features[0].id);
   }).toPass();
-  await page.getByRole("button", { name: "Close AI drawer", exact: true }).click();
+  await page.getByRole("button", { name: "Close AI assistant", exact: true }).click();
   await page.getByRole("button", { name: "Finish Sketch", exact: true }).click();
   await page.getByRole("button", { name: "Undo", exact: true }).click();
   await expect(async () => expect((await aiSnapshot(page)).result?.meshes[0].geometryAssertions?.volume).toBeCloseTo(3072, 5)).toPass();
@@ -94,7 +94,7 @@ test("provider shared-parameter edits require explicit choice and preserve sketc
   await expect(async () => expect((await aiSnapshot(page)).result?.meshes[0].geometryAssertions?.volume).toBeCloseTo(3072, 5)).toPass();
   await page.getByRole("button", { name: "Section XY plane, 8 entities", exact: true }).click();
   await page.getByRole("button", { name: "Edit sketch canvas", exact: true }).click();
-  await page.getByRole("button", { name: "Open AI drawer", exact: true }).click();
+  await page.getByRole("button", { name: "Open AI assistant", exact: true }).click();
   await page.getByLabel("Sketch refinement method").selectOption("provider");
   const panel = page.getByLabel("Provider sketch refinement", { exact: true });
   await panel.getByLabel("Provider sketch request").fill("Change shared width to 36mm");

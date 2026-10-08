@@ -92,7 +92,7 @@ test("contextual scope, exact local feature sizing, native preview, stale select
   const before = await snapshot(page),
     feature = before.document.features[0];
   await page
-    .getByRole("button", { name: "Open AI drawer", exact: true })
+    .getByRole("button", { name: "Open AI assistant", exact: true })
     .click();
   const drawer = page.getByRole("region", { name: "AI modeling assistant" });
   await drawer
@@ -104,8 +104,7 @@ test("contextual scope, exact local feature sizing, native preview, stale select
   );
   expect(requests).toBe(0);
   await drawer
-    .getByRole("button", { name: "Selected feature", exact: true })
-    .click();
+    .getByRole("combobox", { name: "AI scope", exact: true }).selectOption("feature");
   await expect(drawer.getByLabel("AI edit target")).toContainText(
     `${feature.name} → distance`,
   );

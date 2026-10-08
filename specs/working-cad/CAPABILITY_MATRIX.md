@@ -745,7 +745,7 @@ Arbitrary BRep edge picking and new post-boolean topology roles remain unavailab
 
 ### AI component generation
 
-A collapsible bottom drawer offers plain-text descriptions, provider/model choices
+A compact, expandable assistant inside the main canvas offers plain-text descriptions, provider/model settings
 for Anthropic/OpenAI/Google AI, bounded recent conversation, native preview and
 Apply/Cancel. Provider credentials are read only by a loopback-only, same-origin
 Node gateway in Vite development/preview; browser/project data never contain keys.

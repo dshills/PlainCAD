@@ -389,8 +389,8 @@ test("AI settings, full access, pins and layout persistence preserve the current
   ).toBeVisible();
   await drawer.getByText("AI settings", { exact: true }).click();
   await expect(drawer.getByLabel("AI provider", { exact: true })).toBeVisible();
-  await drawer
-    .getByRole("button", { name: "Close AI drawer", exact: true })
+  await page
+    .getByRole("button", { name: "Close AI assistant", exact: true })
     .click();
   await page.getByLabel("Task panel").selectOption("parameters");
   await page.getByRole("button", { name: "Pin Parameters panel" }).click();

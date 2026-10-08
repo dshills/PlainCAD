@@ -16,7 +16,7 @@ test("local sketch refinement previews native downstream geometry, Cancel, one U
   }).toPass();
   await page.getByRole("button", { name: "Section XY plane, 8 entities", exact: true }).click();
   await page.getByRole("button", { name: "Edit sketch canvas", exact: true }).click();
-  await page.getByRole("button", { name: "Open AI drawer", exact: true }).click();
+  await page.getByRole("button", { name: "Open AI assistant", exact: true }).click();
   const panel = page.getByLabel("Sketch refinement", { exact: true });
   const request = panel.getByLabel("Sketch refinement request");
   await request.fill("make a rocket");
@@ -67,7 +67,7 @@ test("local sketch refinement previews native downstream geometry, Cancel, one U
     expect(mesh.bounds.max[1] - mesh.bounds.min[1]).toBeCloseTo(40, 5);
     expect(mesh.bounds.max[2] - mesh.bounds.min[2]).toBeCloseTo(8, 5);
   }).toPass({ timeout: 30000 });
-  await page.getByRole("button", { name: "Close AI drawer", exact: true }).click();
+  await page.getByRole("button", { name: "Close AI assistant", exact: true }).click();
   await page.getByRole("button", { name: "Finish Sketch", exact: true }).click();
   await page.getByRole("button", { name: "Undo", exact: true }).click();
   await expect(async () => expect((await aiSnapshot(page)).result?.meshes[0].geometryAssertions?.volume).toBeCloseTo(3072, 5)).toPass();

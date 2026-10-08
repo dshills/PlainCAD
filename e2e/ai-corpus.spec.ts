@@ -35,7 +35,7 @@ for (const example of aiAcceptanceCorpus)
       .getByRole("button", { name: "New project", exact: true })
       .click();
     await page
-      .getByRole("button", { name: "Open AI drawer", exact: true })
+      .getByRole("button", { name: "Open AI assistant", exact: true })
       .click();
     const drawer = page.getByRole("region", { name: "AI modeling assistant" }),
       before = await aiSnapshot(page);

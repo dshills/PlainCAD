@@ -63,7 +63,7 @@ async function setup(page: Page) {
   await page.getByRole("button", { name: "New project", exact: true }).click();
   await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
   await page
-    .getByRole("button", { name: "Open AI drawer", exact: true })
+    .getByRole("button", { name: "Open AI assistant", exact: true })
     .click();
   const drawer = page.getByRole("region", { name: "AI modeling assistant" });
   await expect(drawer.getByLabel("AI model", { exact: true })).toHaveValue(
@@ -169,7 +169,7 @@ test("AI cap/straight-side sketches and to-face extrusion produce native geometr
         page.getByRole("button", { name: "Export STL", exact: true }),
       ).toBeDisabled();
       await page
-        .getByRole("button", { name: "Close AI drawer", exact: true })
+        .getByRole("button", { name: "Close AI assistant", exact: true })
         .click();
       await page.locator(".sketch-chip").nth(1).click();
       await page
@@ -208,7 +208,7 @@ test("AI cap/straight-side sketches and to-face extrusion produce native geometr
       await (await exported).saveAs(stlPath);
       expect((await readFile(stlPath)).readUInt32LE(80)).toBeGreaterThan(0);
       await page
-        .getByRole("button", { name: "Open AI drawer", exact: true })
+        .getByRole("button", { name: "Open AI assistant", exact: true })
         .click();
     } else {
       expect(
@@ -443,7 +443,7 @@ test("AI-generated driving dimensions are visible and editable in the drawing an
     )
     .toBeCloseTo(12000 - 20 * Math.PI, 4);
   await page
-    .getByRole("button", { name: "Close AI drawer", exact: true })
+    .getByRole("button", { name: "Close AI assistant", exact: true })
     .click();
   await page.locator(".sketch-chip").first().click();
   await page
@@ -538,8 +538,7 @@ test("selected-feature AI edits change native Extrude/Hole geometry, preserve ID
       });
     }, feature.id);
     await drawer
-      .getByRole("button", { name: "Selected feature", exact: true })
-      .click();
+      .getByRole("combobox", { name: "AI scope", exact: true }).selectOption("feature");
     await drawer
       .getByLabel("What would you like to make?")
       .fill(`Change ${name} using ${value}mm`);
@@ -658,8 +657,7 @@ test("selected Revolve angle edits retain the axis and native geometry through u
     state.select({ kind: "feature", id, documentId: state.history.present.id });
   }, feature.id);
   await drawer
-    .getByRole("button", { name: "Selected feature", exact: true })
-    .click();
+    .getByRole("combobox", { name: "AI scope", exact: true }).selectOption("feature");
   plan = {
     name: "Quarter ring",
     summary: "90 degree sweep",
@@ -788,7 +786,7 @@ test("all three provider choices create real native previews; Cancel/Apply, para
     expect(mesh.bounds.min[axis]).toBeCloseTo([-30, -20, 0][axis], 5);
     expect(mesh.bounds.max[axis]).toBeCloseTo([30, 20, 5][axis], 5);
   }
-  await drawer.getByRole("button", { name: "Close AI drawer" }).click();
+  await page.getByRole("button", { name: "Close AI assistant" }).click();
   const thickness = page.getByLabel("Parameter ai_1_thickness expression", {
     exact: true,
   });
@@ -1141,7 +1139,7 @@ test("AI parameter edits preserve existing component/feature/body IDs, preview b
   await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
   const before = await snapshot(page);
   edit = true;
-  await drawer.getByRole("button", { name: "This part", exact: true }).click();
+  await drawer.getByRole("combobox", { name: "AI scope", exact: true }).selectOption("edit");
   await drawer
     .getByLabel("What would you like to make?")
     .fill("Make this plate 8mm thick");
@@ -1290,7 +1288,7 @@ test("AI failures, unsupported operations and stale same-ID project responses ca
   expect((await snapshot(page)).document.features).toHaveLength(0);
   await drawer.getByLabel("What would you like to make?").press("Escape");
   await expect(
-    page.getByRole("button", { name: "Open AI drawer" }),
+    page.getByRole("button", { name: "Open AI assistant" }),
   ).toBeFocused();
 });
 test("AI recipes generate real XZ offset extrusions, cap treatments and origin-axis revolves with exact native volumes", async ({

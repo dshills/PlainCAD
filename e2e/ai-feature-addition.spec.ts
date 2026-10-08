@@ -43,7 +43,7 @@ for (const [provider, plane] of [["anthropic", "XY"], ["openai", "XZ"], ["google
     await page.goto("/");
     const ownerId = await seedAiPlate(page, plane);
     await ready(page, 12000);
-    await page.getByRole("button", { name: "Open AI drawer", exact: true }).click();
+    await page.getByRole("button", { name: "Open AI assistant", exact: true }).click();
     await page.getByRole("button", { name: "Add features to this part", exact: true }).click();
     const panel = page.getByLabel("AI feature additions", { exact: true });
     await panel.getByLabel("Feature target face").selectOption(`extrude:${ownerId}:endCap`);
@@ -104,7 +104,7 @@ test("AI adds one authored cap chamfer through a native private preview, cancel 
   });
   await page.goto("/");
   const ownerId = await seedAiPlate(page, "XY"); await ready(page, 12000);
-  await page.getByRole("button", { name: "Open AI drawer", exact: true }).click();
+  await page.getByRole("button", { name: "Open AI assistant", exact: true }).click();
   await page.getByRole("button", { name: "Add features to this part", exact: true }).click();
   const panel = page.getByLabel("AI feature additions", { exact: true });
   await panel.getByLabel("Feature target face").selectOption(`extrude:${ownerId}:endCap`);

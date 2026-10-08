@@ -116,7 +116,7 @@ it("defaults to stable docks and keeps layout, tab switches and resizing out of 
   expect(screen.getByRole("button", { name: "Parts" })).toHaveFocus();
   expect(left).not.toBeVisible();
 });
-it("switches bottom surfaces, closes AI once, and restores its keyboard return target", async () => {
+it("keeps AI on the canvas without changing bottom surfaces and restores its keyboard return target", async () => {
   vi.stubGlobal(
     "fetch",
     vi
@@ -124,11 +124,15 @@ it("switches bottom surfaces, closes AI once, and restores its keyboard return t
       .mockResolvedValue({ ok: true, json: async () => ({ providers: [] }) }),
   );
   render(<App />);
-  fireEvent.click(screen.getByRole("button", { name: "Open AI drawer" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Open AI assistant" }));
   await waitFor(() =>
     expect(screen.getByLabelText("What would you like to make?")).toBeVisible(),
   );
-  fireEvent.click(screen.getByRole("button", { name: "Close AI drawer" }));
+  expect(useWorkbenchState.getState().bottomOpen).toBe(false);
+  const prompt = screen.getByLabelText("What would you like to make?");
+  expect(prompt.closest(".viewer-region")).toBeInTheDocument();
+  fireEvent.change(prompt, { target: { value: "A small instrument housing" } });
+  fireEvent.click(screen.getByRole("button", { name: "Close AI assistant" }));
   expect(useAiDrawer.getState().open).toBe(false);
   fireEvent.click(screen.getByRole("button", { name: "History" }));
   expect(
@@ -139,11 +143,14 @@ it("switches bottom surfaces, closes AI once, and restores its keyboard return t
   expect(
     screen.queryByRole("heading", { name: "Parametric Timeline" }),
   ).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole("button", { name: "Open AI drawer" }));
+  fireEvent.click(screen.getByRole("button", { name: "Open AI assistant" }));
+  expect(screen.getByLabelText("What would you like to make?")).toHaveValue("A small instrument housing");
+  expect(useWorkbenchState.getState().bottomTab).toBe("issues");
+  expect(useWorkbenchState.getState().bottomOpen).toBe(true);
   fireEvent.keyDown(screen.getByLabelText("What would you like to make?"), {
     key: "Escape",
   });
-  expect(screen.getByRole("button", { name: "Open AI drawer" })).toHaveFocus();
+  expect(screen.getByRole("button", { name: "Open AI assistant" })).toHaveFocus();
 });
 it("bounds persisted sizes and rejects unsafe or unknown layout data", () => {
   values.set(

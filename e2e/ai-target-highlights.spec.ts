@@ -92,10 +92,10 @@ test("AI ambiguous dimensions highlight distinct native solids, preserve selecti
   const before = await snapshot(page),
     ids = before.result.meshes.map((m) => m.bodyId);
   await page
-    .getByRole("button", { name: "Open AI drawer", exact: true })
+    .getByRole("button", { name: "Open AI assistant", exact: true })
     .click();
   const drawer = page.getByRole("region", { name: "AI modeling assistant" });
-  await drawer.getByRole("button", { name: "This part", exact: true }).click();
+  await drawer.getByRole("combobox", { name: "AI scope", exact: true }).selectOption("edit");
   await drawer
     .getByLabel("What would you like to make?")
     .fill("Make this thicker to 8 mm");
@@ -115,8 +115,8 @@ test("AI ambiguous dimensions highlight distinct native solids, preserve selecti
   expect((await snapshot(page)).document).toEqual(before.document);
   expect((await snapshot(page)).past).toBe(before.past);
   await expect(
-    drawer.getByRole("button", { name: "This part", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
+    drawer.getByRole("combobox", { name: "AI scope", exact: true }),
+  ).toHaveValue("edit");
   // Busy/open-file context clears the rendered hint and does not revive it afterward.
   await page.evaluate(async () => {
     const path = "/src/state/useCadStore.ts";

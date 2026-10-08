@@ -12,7 +12,6 @@ import { WorkspacePanels, PinPanel } from "../ui/workspace/WorkspacePanels";
 import { WorkspaceControls } from "../ui/workspace/WorkspaceControls";
 import { ProjectStart } from "../ui/workspace/ProjectStart";
 import { ProjectFileDrop } from "../ui/workspace/ProjectFileDrop";
-import { useAiDrawer } from "../ui/commands/aiCommand";
 import { ModelingCreationPanel } from "../ui/panels/ModelingCreationPanel";
 import { WorkbenchBottomDock } from "../ui/workspace/WorkbenchBottomDock";
 import { WorkbenchHeader } from "../ui/workspace/WorkbenchHeader";
@@ -29,6 +28,7 @@ import { RecoveryPanel } from "../ui/panels/RecoveryPanel";
 import { HoleCreationPanel } from "../ui/panels/HoleCreationPanel";
 import { FeaturePatternPanel } from "../ui/panels/FeaturePatternPanel";
 import { lazy, Suspense, useEffect, useMemo, useRef } from "react";
+import { LazyPanelBoundary } from "../ui/design-system/LazyPanelBoundary";
 import { CadViewer } from "../viewer/CadViewer";
 import {
   CommandContext,
@@ -44,6 +44,7 @@ import { useStepExport } from "../ui/commands/stepExportState";
 import { useProjectGallery } from "../ui/workspace/projectGalleryState";
 
 const FabricationPanel = lazy(() => import("../ui/panels/FabricationPanel").then(module => ({ default: module.FabricationPanel })));
+const AiCanvasAssistant = lazy(() => import("../ui/workspace/AiCanvasAssistant").then(module => ({ default: module.AiCanvasAssistant })));
 const ProjectGalleryPanel = lazy(() => import("../ui/workspace/ProjectGalleryPanel").then(module => ({ default: module.ProjectGalleryPanel })));
 const ModelUpdateFeedback = lazy(() => import("../ui/workspace/ModelUpdateFeedback").then(module => ({ default: module.ModelUpdateFeedback })));
 const CanvasSelectionActions = lazy(() => import("../ui/panels/CanvasSelectionActions").then(module => ({ default: module.CanvasSelectionActions })));
@@ -355,7 +356,6 @@ export function App() {
   const setPaletteOpen = useCadStore((s) => s.setPaletteOpen);
   const { full, partsVisible, historyVisible } =
     useWorkspacePresentation();
-  const aiOpen = useAiDrawer((s) => s.open);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const hasCanvasSelection = useCadStore(state => Boolean(state.selection.selectedIds.length));
   const hasSketchSelection = useSketchCanvas(state => Boolean(state.selection?.entityIds.length));
@@ -392,7 +392,6 @@ export function App() {
     dock.rightWidth,
     dock.bottomHeight,
     dock.bottomOpen,
-    aiOpen,
   ]);
 
   useEffect(() => {
@@ -604,6 +603,7 @@ export function App() {
           <ProjectWorkflowPanel />
           <GuidedHolePanel />
           <section className="viewer-region" aria-label="3D CAD viewer">
+            <LazyPanelBoundary label="AI assistant"><Suspense fallback={null}><AiCanvasAssistant /></Suspense></LazyPanelBoundary>
             {galleryOpen ? <Suspense fallback={<p role="status">Loading project gallery…</p>}><ProjectGalleryPanel /></Suspense> : null}
             {(hasCanvasSelection || hasSketchSelection) && <Suspense fallback={null}><CanvasSelectionActions /></Suspense>}
             {partLibraryOpen ? <Suspense fallback={<p role="status">Loading local parts…</p>}><PartLibraryPanel /></Suspense> : null}

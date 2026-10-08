@@ -57,7 +57,7 @@ test("built AI drawer fetches real gateway status under CSP; fixed AI recipes pr
   await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
   await page.getByRole("button", { name: "New project", exact: true }).click();
   await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
-  await page.getByRole("button", { name: "Open AI drawer" }).click();
+  await page.getByRole("button", { name: "Open AI assistant" }).click();
   const drawer = page.getByRole("region", { name: "AI modeling assistant" });
   await drawer
     .getByLabel("What would you like to make?")
