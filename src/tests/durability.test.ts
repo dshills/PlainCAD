@@ -118,6 +118,7 @@ describe("durability and resource boundaries", () => {
       /too many constraints/,
     );
     const base = document.features[0];
+    if (base.type !== "extrude") throw new Error("Expected box extrusion");
     const features = [
       base,
       ...Array.from(

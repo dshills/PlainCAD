@@ -404,7 +404,7 @@ Edited projects autosave to IndexedDB after 500 ms idle. Recovery retains up to
 five projects with latest, previous, and last manually saved snapshots; startup
 recovery is explicit. Storage/quota errors leave the in-memory project intact.
 Download project files regularly: termination can lose edits before a completed
-storage transaction. Current schema is 17, with checked-in schema 1–17 regression
+storage transaction. Current schema is 19, with checked-in schema 1–19 regression
 fixtures and migrations.
 
 **File → Save or export…** brings editable projects, printing STL, other-CAD
@@ -652,3 +652,9 @@ Collision checks use native OpenCascade common volume, with a 256 overlapping bo
 Remove joint in component settings also repairs a broken mating reference: a current native pose is retained; after a failed rebuild the component returns to its authored pose. Undo restores the removed joint.
 
 Collision analysis exceeding its probe budget or failing native intersection is explicitly incomplete, with a warning. Modeling and export remain available; the UI does not report verified clearance for an incomplete analysis.
+
+### Build a fitted part
+
+Select a native part and use **Build a fitted part** in the command palette or active component settings. Choose an open enclosure, L bracket or open adapter sleeve, clearance and wall thickness (values or parameter expressions). Apply requires a validated native preview and creates a separate linked component with one Undo step. **Edit fitted part** repairs references or changes settings. Source size edits rebuild the fit; Follow source position follows its resolved component pose. Turn this off to move the fit independently, use assembly joints or world-space sketch projections.
+
+These styles use the source’s exact native rectangular envelope in local coordinates: enclosure opens along +Z, bracket back is −Y, sleeve is open at both Z ends. Contoured shells, fastener detection and cylindrical adapters are not supplied by this command. If a new source operation comes later in History, move the fitted feature after it; missing or absorbed sources diagnose instead of producing an outdated fit.

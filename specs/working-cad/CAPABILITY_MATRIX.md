@@ -1233,3 +1233,9 @@ Remove joint in component settings also repairs a broken mating reference: a cur
 Collision analysis exceeding its probe budget or failing native intersection is explicitly incomplete, with a warning. Modeling and export remain available; the UI does not report verified clearance for an incomplete analysis.
 
 Complete assembly insertion copies both joint endpoints and remaps joint/component/feature/face IDs independently. Selecting a single component whose joint partner is outside the set is rejected; detach the joint first or insert all source components. A part-library entry remains one self-contained component.
+
+## Linked fitted parts (schema 19)
+
+Build a fitted part / Edit fitted part generate a native open enclosure, L bracket or open adapter sleeve from the upstream source body’s optimal native bounding box. Clearance and wall thickness accept length expressions and stable parameter bindings. Native boolean results must be valid, one solid, and match the analytically expected material volume. Independent component and body identities survive save/open and complete project insertion; partial extraction with an outside reference is rejected. Follow source position inherits the resolved pose after assembly placement. Turn it off before independent movement, joining the fitted component to an assembly, or using world-space sketch projections.
+
+The rectangular local envelope is not a contoured offset surface. No fastener inference or cylindrical adapter support. Enclosures open at local +Z; bracket backs are local −Y; sleeves are open at both Z ends. Lost, suppressed, absorbed or downstream sources diagnose. New source modifications must precede the fit in the explicit timeline; an out-of-order fit fails rather than keeping stale geometry. Preview currency and worker-issued proof gate one-step Apply and cancellation.

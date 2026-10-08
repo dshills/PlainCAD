@@ -1,3 +1,4 @@
+import { featureComponentId } from "../document/components";
 import { stableBodyIdForFeature } from "../document/ids";
 export { stableBodyIdForFeature } from "../document/ids";
 import { targetBodyIds } from "../document/bodyScopes";
@@ -41,6 +42,13 @@ export function planFeatureGraph(document: CadDocument): FeatureGraphPlan {
   }
 
   for (const feature of orderedFeatures) {
+    if (feature.type === "fit" && !feature.suppressed) {
+      const source = document.features.find(item => stableBodyIdForFeature(item.id) === feature.sourceBodyId);
+      const rank = featureRanks.get(feature.id)!;
+      if (!source || (featureRanks.get(source.id) ?? Infinity) >= rank || document.features.some(item => !item.suppressed && featureRanks.get(item.id)! > rank && targetBodyIds(item).includes(feature.sourceBodyId)))
+        errors.push({ id: `feature:${feature.id}:fit-order`, source: "feature", sourceId: feature.id, message: "Fitted part must follow its source body's operations. Restore the source or move this fitted feature after its source edits." });
+      if (source && featureComponentId(document, source) === featureComponentId(document, feature)) errors.push({ id: `feature:${feature.id}:fit-owner`, source: "feature", sourceId: feature.id, message: "Fitted part must use a different component from its reference." });
+    }
     if (feature.type === "pattern") {
       const sourceIndex = featureRanks.get(feature.sourceFeatureId);
       if (sourceIndex === undefined || sourceIndex >= featureRanks.get(feature.id)!)
@@ -107,6 +115,7 @@ export function planFeatureGraph(document: CadDocument): FeatureGraphPlan {
     if (feature.suppressed) continue;
     const targets = targetBodyIds(feature);
     let depth = 1;
+    if (feature.type === "fit") depth = Math.max(depth, 1 + (bodyDepths.get(feature.sourceBodyId) ?? 0));
     if (feature.type === "pattern") depth = Math.max(depth, 1 + (featureDepths.get(feature.sourceFeatureId) ?? 0));
     for (const id of targets)
       depth = Math.max(depth, 1 + (bodyDepths.get(id) ?? 0));
@@ -130,7 +139,7 @@ export function planFeatureGraph(document: CadDocument): FeatureGraphPlan {
       );
     featureDepths.set(feature.id, depth);
     if (
-      (feature.type === "extrude" || feature.type === "revolve") &&
+      (feature.type === "extrude" || feature.type === "revolve" || feature.type === "fit") &&
       feature.operation === "newBody"
     )
       bodyDepths.set(stableBodyIdForFeature(feature.id), depth);

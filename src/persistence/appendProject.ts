@@ -66,7 +66,7 @@ export function appendProject(target: CadDocument, source: CadDocument, options:
     return newId(prefix, id);
   };
   const body = (id: string) => {
-    const owner = features.find((f) => stableBodyIdForFeature(f.id) === id && (f.type === "extrude" || f.type === "revolve") && f.operation === "newBody");
+    const owner = features.find((f) => stableBodyIdForFeature(f.id) === id && (f.type === "extrude" || f.type === "revolve" || f.type === "fit") && f.operation === "newBody");
     if (!owner)
       throw new Error(`Source body ${id} is missing or outside the selected component. Choose all components or repair the source project.`);
     return stableBodyIdForFeature(remap(owner.id));
@@ -139,6 +139,7 @@ export function appendProject(target: CadDocument, source: CadDocument, options:
   const mappedFeatures = features.map((f): Feature => {
     const base = { ...f, id: remap(f.id), componentId: remap(featureComponentId(bound, f)) };
     switch (f.type) {
+      case "fit": return { ...f, id: base.id, componentId: base.componentId, sourceBodyId: body(f.sourceBodyId) };
       case "extrude": return { ...base, ...f, id: base.id, componentId: base.componentId, sketchId: remap(f.sketchId), profileId: profile(f.sketchId, f.profileId), ...(f.targetBodyIds ? { targetBodyIds: f.targetBodyIds.map(body) } : {}), ...(f.termination?.type === "toFace" ? { termination: { ...f.termination, faceRef: topology(f.termination.faceRef) } } : {}) };
       case "revolve": return { ...f, id: base.id, componentId: base.componentId, sketchId: remap(f.sketchId), profileId: profile(f.sketchId, f.profileId), axis: f.axis.type === "sketchLine" ? { ...f.axis, sketchId: remap(f.axis.sketchId), lineId: remap(f.axis.lineId) } : f.axis, ...(f.targetBodyIds ? { targetBodyIds: f.targetBodyIds.map(body) } : {}) };
       case "hole": return { ...f, id: base.id, componentId: base.componentId, sketchId: remap(f.sketchId), centerPointIds: f.centerPointIds.map(remap), ...(f.targetFeatureId ? { targetFeatureId: remap(f.targetFeatureId) } : {}), ...(f.targetBodyId ? { targetBodyId: body(f.targetBodyId) } : {}), ...(f.targetBodyIds ? { targetBodyIds: f.targetBodyIds.map(body) } : {}) };
@@ -241,6 +242,7 @@ function occupiedDocumentIds(document: CadDocument): Set<string> {
       case "revolve": if (feature.axis.type === "sketchLine") { ids.add(feature.axis.sketchId); ids.add(feature.axis.lineId); } break;
       case "hole": feature.centerPointIds.forEach((id) => ids.add(id)); if (feature.targetFeatureId) ids.add(feature.targetFeatureId); if (feature.targetBodyId) addBody(feature.targetBodyId); break;
       case "fillet": case "chamfer": feature.targetEdgeRefs.forEach(addTopology); break;
+      case "fit": addBody(feature.sourceBodyId); break;
       case "pattern": ids.add(feature.sourceFeatureId); break;
       default: { const exhaustive: never = feature; return exhaustive; }
     }

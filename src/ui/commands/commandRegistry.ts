@@ -1,3 +1,4 @@
+import { beginFit, canBuildFit } from "./fittedPartCommand";
 import { canNavigateLinkedSketchSource, type LinkedSketchContext } from "./linkedSketchCommand";
 import { beginProjectGallery } from "../workspace/projectGalleryState";
 import { unplacePlane, positionedDocument, withComponentPlacement } from "../../cad/document/componentPlacement";
@@ -144,6 +145,8 @@ export interface CadCommand {
 }
 
 export interface CommandEnablement {
+  createFit: boolean;
+  editFit: boolean;
   aiAssistant: boolean;
   linkedSketchShowSource: boolean;
   linkedSketchEditSource: boolean;
@@ -226,6 +229,8 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
     insertProject: !aiPreviewActive && canInsertProject(state),
     partLibrary: !aiPreviewActive && canOpenPartLibrary(state),
     removeJoint: !state.fileBusy && !targetPickerActive && !guidedHoleStartBlocked && !canvasActive && !scopeCaptureBusy && Boolean(state.history.present.assemblyJoints?.some(joint => joint.childComponentId === state.activeComponentId)),
+    createFit: !scopeCaptureBusy && !targetPickerActive && Boolean(canBuildFit(state)),
+    editFit: !scopeCaptureBusy && !targetPickerActive && Boolean(canBuildFit(state, true)),
     assemblyMotion: !aiPreviewActive && canBeginAssemblyMotion(state),
     moveComponent: !aiPreviewActive && canBeginComponentPlacement(state),
     measurementPicking: state.rebuild.status === "succeeded" && Boolean(state.rebuild.result?.success && state.rebuild.result.documentId === state.history.present.id) && !state.fileBusy && !canvasActive && !guidedHoleStartBlocked && !targetPickerActive && !scopeCaptureBusy,
@@ -351,6 +356,8 @@ export const commands: CadCommand[] = [
     const posed = placement ? withComponentPlacement(document, joint.childComponentId, placement) : document;
     state.updateDocument(current => current !== document ? current : { ...posed, assemblyJoints: document.assemblyJoints!.filter(item => item.id !== joint.id) });
   } },
+  { id: "fit.create", label: "Build a fitted part", description: "Create a linked enclosure, L bracket or open adapter sleeve around a native part.", enablementKey: "createFit", run: () => beginFit() },
+  { id: "fit.edit", label: "Edit fitted part", description: "Repair the reference or edit clearance, wall thickness and fitted style.", enablementKey: "editFit", run: () => beginFit(true) },
   { id: "assembly.motion", label: "Assembly motion", description: "Move hinge and slider joints, inspect native collisions, or detach a joint.", enablementKey: "assemblyMotion", run: () => beginAssemblyMotion() },
   { id: "component.move", label: "Move component", description: "Move or rotate the active component with mouse handles or precise numeric coordinates, then apply a validated native preview.", enablementKey: "moveComponent", run: ({ componentId }) => beginComponentPlacement(componentId) },
   { id: "component.create", label: "New Component", enablementKey: "newComponent", run: () => beginProjectWorkflow("component") },

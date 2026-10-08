@@ -29,11 +29,12 @@ export function placedProjectionConsumerBodies(document: CadDocument, movedCompo
     const targets = targetBodyIds(feature);
     const affected = ("sketchId" in feature && sketches.has(feature.sketchId)) || targets.some(id => bodies.has(id)) ||
       (feature.type === "pattern" && features.has(feature.sourceFeatureId)) ||
+      (feature.type === "fit" && bodies.has(feature.sourceBodyId)) ||
       ((feature.type === "fillet" || feature.type === "chamfer") && feature.targetEdgeRefs.some(ref => features.has(ref.featureId))) ||
       (feature.type === "extrude" && feature.termination?.type === "toFace" && features.has(feature.termination.faceRef.featureId));
     if (!affected) continue;
     features.add(feature.id);
-    if ((feature.type === "extrude" || feature.type === "revolve") && feature.operation === "newBody") bodies.add(stableBodyIdForFeature(feature.id));
+    if ((feature.type === "extrude" || feature.type === "revolve" || feature.type === "fit") && feature.operation === "newBody") bodies.add(stableBodyIdForFeature(feature.id));
     for (const id of targets) bodies.add(id);
   }
   return bodies;

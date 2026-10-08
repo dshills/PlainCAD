@@ -1,4 +1,4 @@
-export const CURRENT_SCHEMA_VERSION = 18;
+export const CURRENT_SCHEMA_VERSION = 19;
 
 export type UnitSystem = "metric" | "imperial";
 
@@ -265,7 +265,8 @@ export type Feature =
   | HoleFeature
   | FilletFeature
   | ChamferFeature
-  | FeaturePatternFeature;
+  | FeaturePatternFeature
+  | FittedPartFeature;
 
 export interface TopologyRef {
   featureId: string;
@@ -331,4 +332,14 @@ export interface AssemblyJoint {
   value: number;
   minimum: number;
   maximum: number;
+}
+
+export interface FittedPartFeature extends FeatureBase {
+  type: "fit";
+  operation: "newBody";
+  sourceBodyId: string;
+  style: "enclosure" | "bracket" | "adapter";
+  clearance: ExpressionRef;
+  wallThickness: ExpressionRef;
+  followSourcePlacement: boolean;
 }

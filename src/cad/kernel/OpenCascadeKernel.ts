@@ -194,6 +194,18 @@ export class OpenCascadeKernel implements KernelAdapter {
     return measured;
   }
 
+  nativeBounds(shape: KernelShape): import("./KernelAdapter").BoundingBox {
+    const oc = OpenCascadeKernel.openCascade, native = (shape.kernelHandle as KernelHandle | undefined)?.occtShape;
+    if (!oc || !native || typeof oc.Bnd_Box_1 !== "function" || typeof oc.BRepBndLib?.AddOptimal !== "function") throw new Error("Fitted parts require native OpenCascade solid bounds; this kernel or source cannot supply them.");
+    this.measureNative(native);
+    return withDisposableScope(scope => {
+      const box = scope.use(new oc.Bnd_Box_1()); oc.BRepBndLib.AddOptimal(native, box, false, false);
+      const bounds = { min: [box.GetXmin(), box.GetYmin(), box.GetZmin()] as [number, number, number], max: [box.GetXmax(), box.GetYmax(), box.GetZmax()] as [number, number, number] };
+      if (![...bounds.min, ...bounds.max].every(Number.isFinite) || bounds.min.some((n, i) => n >= bounds.max[i])) throw new Error("Reference solid has invalid native bounds.");
+      return bounds;
+    });
+  }
+
   private readonly planarReferenceCache = new WeakMap<KernelShape, NativePlanarFaceMeasurement[]>();
 
   private static openCascade: Record<string, any> | undefined;

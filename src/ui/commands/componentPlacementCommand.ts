@@ -35,7 +35,7 @@ function idle(state: CadStore, own = false) {
 }
 export function canBeginComponentPlacement(state = useCadStore.getState()) {
   const document = state.history.present, result = state.rebuild.result;
-  if (document.assemblyJoints?.some(joint => joint.childComponentId === state.activeComponentId) || !idle(state) || !document.components[state.activeComponentId] || state.rebuild.status !== "succeeded" || !result?.success || result.documentId !== document.id) return false;
+  if (document.features.some(feature => feature.type === "fit" && !feature.suppressed && feature.followSourcePlacement && feature.componentId === state.activeComponentId) || document.assemblyJoints?.some(joint => joint.childComponentId === state.activeComponentId) || !idle(state) || !document.components[state.activeComponentId] || state.rebuild.status !== "succeeded" || !result?.success || result.documentId !== document.id) return false;
   return result.meshes.some((mesh) => bodyComponentId(document, mesh.bodyId) === state.activeComponentId && mesh.geometrySource === "opencascade" && mesh.geometryAssertions?.valid);
 }
 export function beginComponentPlacement(componentId = useCadStore.getState().activeComponentId) {

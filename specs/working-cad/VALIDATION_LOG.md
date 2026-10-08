@@ -799,3 +799,51 @@ remain planned. Collision analysis is bounded and can explicitly be incomplete.
 
 Cadence: **3** completed items since full checkpoint `db2533a`. The full gate is due
 after two more items (feature 3 of this five-feature batch).
+
+## CAD feature 2 of 5 · Linked fitted parts (2026-10-08)
+
+Schema 19 adds native rectangular-envelope enclosures, L brackets and open adapter
+sleeves. A separate component/body stays linked to an upstream native source;
+clearance/wall expressions, stable parameter bindings and source references survive
+save/open and complete insertion. Source size changes rebuild the fit; optional
+position following inherits the resolved source pose. Edit fitted part repairs
+lost references. Apply requires a current issued worker proof, and cancellation,
+same-ID session changes and competing modeling/file/scope tasks cannot publish it.
+Out-of-order source modifications fail explicitly; move the fit after them.
+Following fits cannot own assembly endpoints or world projections involving their
+component. Unrelated projections remain available. Suppression repairs broken fits.
+
+Prism Anthropic `claude-sonnet-5-5` reviewed 31 files with complete coverage
+(`f0b84309b98423f43bfecd70c78db15d`): 0 high, 2 medium, 12 low. Both medium findings
+were fixed (scope/operation ownership and stale Apply errors). Other fixes include
+one tessellation, missing-handle diagnostics, suppressed-reference handling,
+explicit component ownership, accurate edit messages and stronger migration/order
+coverage. Complete delta reviews `8b4098a28a18bf76018a2c0db8df0f97`,
+`0864354f0b5969e92abf7e61908f93d2` and `1f9fb53bd5da67b0b31695694dd73f06` assessed
+all changes. The projection restriction was scoped and moved to modeling validation
+so broken references can reopen. The remaining medium migration note does not
+apply: fit is introduced in this unreleased schema-19 change, and no released
+schema-18 document supports fit. Low output-registration concern is covered by
+Fit's required literal operation=newBody; indexed projection lookups skip independent
+fits. Component/feature names stay independently renameable after custom naming.
+The built-test review `906bfeae0228d721530d4f1bbeb1e352` had 0 high/medium, 1 low;
+CSP enforcement is covered by the existing dedicated production suite. No unresolved
+actionable findings remain.
+
+`npm run check:item` passed: type checks, 1510 unit/component tests in 187 files,
+build/bundle budget (largest 471.33 kB), 5 native development smoke tests and 14
+production modeling/AI/CSP tests. Final indexed-guard changes passed 22 focused
+unit/schema tests and type checking. The final native fitted workflow passed
+(12.6s), asserting all three styles' exact BRep volumes (2520/1400/1512 mm³), bounds,
+invalid walls, cancellation, source width edits (3240 mm³), rotated/translated
+placement, Undo/Redo, save/open and actual STL volume. It caught and fixed the
+centered-XY createBox origin convention. The built fitted-part palette/preview/
+save/STL test passed under production headers (4.1s), with volume 2520 mm³.
+
+Limits: rectangular native envelopes only, no contoured shells, cylindrical
+adapters or fastener inference. New source operations must precede the fit in
+History. The linkedSketchCommand static/dynamic-import advisory remains; all JS
+bundles satisfy the 500 kB budget.
+
+Cadence: **4** completed items since full checkpoint `db2533a`. Feature 3 requires
+`npm run release:check` before its commit; reset only after successful completion.

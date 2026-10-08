@@ -23,6 +23,7 @@ export function nativeFeatureSignature(
   const solved = sketchId ? sketches.get(sketchId) : undefined;
   if (sketchId && (!solved || solved.errors.length || !planes.has(sketchId))) return undefined;
   const dependencies = new Set(targetBodyIds(feature));
+  if (feature.type === "fit") dependencies.add(feature.sourceBodyId);
   if (feature.type === "extrude" && feature.termination?.type === "toFace") dependencies.add(stableBodyIdForFeature(feature.termination.faceRef.featureId));
   for (const id of dependencies) if (!bodyVersions.has(id)) return undefined;
   try {

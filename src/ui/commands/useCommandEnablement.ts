@@ -1,3 +1,4 @@
+import { useFittedPart } from "./fittedPartState";
 import { useViewerState } from "../../state/viewerState";
 import { useComponentPlacement } from "./componentPlacementState";
 import { usePartLibrary } from "./partLibraryState";
@@ -40,6 +41,7 @@ export function useCommandEnablement() {
   useViewerState(state => state.session);
   useViewerState(state => state.hiddenBodyIds);
   useViewerState(state => state.hiddenComponentIds);
+  useFittedPart(state => state.frame);
   useComponentPlacement(state => state.frame);
   usePartLibrary(state => state.frame);
   useStepExport(state => state.frame);

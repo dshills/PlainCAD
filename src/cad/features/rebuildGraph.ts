@@ -1,3 +1,4 @@
+import { createFittedPartShape, followFittedPlacements } from "./fittedPart";
 import { resolveAssemblyPlacements } from "../document/assemblyJoints";
 import { assemblyCollisions } from "./assemblyCollisions";
 import { NativeFeatureCache } from "./nativeFeatureCache";
@@ -261,7 +262,7 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
       if (feature.suppressed) continue;
       // Supported edge roles belong to a new-body extrusion, so this is the
       // same stable target ID used by rebuildEdgeTreatmentFeature below.
-      const affectedIds = (feature.type === "extrude" || feature.type === "revolve") && feature.operation === "newBody"
+      const affectedIds = (feature.type === "extrude" || feature.type === "revolve" || feature.type === "fit") && feature.operation === "newBody"
         ? [stableBodyIdForFeature(feature.id)] : targetBodyIds(feature);
       const capture = options.captureTargetScopeFeatureId === feature.id ? captureTargets : undefined;
       const errorsBefore: number = errors.length;
@@ -352,6 +353,16 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
           beforeBodies = new Map(runtimeBodies);
         }
         operationCount += 1;
+        if (feature.type === "fit") {
+          try {
+            const source = runtimeBodies.get(feature.sourceBodyId);
+            if (!source || failedBodies.has(feature.sourceBodyId)) throw new Error("Fitted part source was lost, suppressed or failed. Select a surviving upstream body.");
+            const fitted = createFittedPartShape(feature, source.shape, kernel, evaluated.values, shapesToDispose);
+            const shape = fitted.shape, bodyId = stableBodyIdForFeature(feature.id), mesh = withStableBodyId(fitted.mesh, bodyId);
+            setRuntimeBody(runtimeBodies, bodyId, { shape, mesh, featureId: feature.id, name: feature.name, planeKey: "" });
+          } catch (error) { errors.push({ id: `feature:${feature.id}:fit`, source: "feature", sourceId: feature.id, message: error instanceof Error ? error.message : String(error) }); }
+          continue;
+        }
         if (feature.type === "pattern") {
           rebuildPatternFeature(feature, document, profilesBySketch, solvedSketches, planes.transforms, evaluated.values, runtimeBodies, shapesToDispose, errors);
           continue;
@@ -550,6 +561,10 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
       if (!nativeReferences) throw new Error("Assembly joints require native OpenCascade geometry.");
       document = resolveAssemblyPlacements(document, currentNativeFaces(planes.faces, kernel, runtimeBodies, failedBodies));
     } catch (error) { errors.push({ id: "assembly:joints", source: "kernel", message: error instanceof Error ? error.message : String(error) }); }
+  }
+  if (!errors.length) {
+    try { document = followFittedPlacements(document); }
+    catch (error) { errors.push({ id: "fit:placement", source: "kernel", message: error instanceof Error ? error.message : String(error) }); }
   }
   const placedPlanes = placeDocumentPlanes(document, planes);
   if (!errors.length) {

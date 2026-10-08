@@ -73,7 +73,7 @@ function twoParts() {
     a: a.component,
     b: b.component,
     sketch,
-    base: document.features[0],
+    base: { ...base, componentId: a.component.id },
   };
 }
 

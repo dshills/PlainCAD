@@ -115,7 +115,7 @@ export function buildDependencyGraph(document: CadDocument): DependencyGraph {
     document.features
       .filter(
         (f) =>
-          (f.type === "extrude" || f.type === "revolve") &&
+          (f.type === "extrude" || f.type === "revolve" || f.type === "fit") &&
           f.operation === "newBody",
       )
       .map((f) => [stableBodyIdForFeature(f.id), f]),
@@ -145,6 +145,7 @@ export function buildDependencyGraph(document: CadDocument): DependencyGraph {
       to = dependencyKey("feature", f.id);
     if ("sketchId" in f)
       connect(reference("sketch", f.sketchId), to, "Source sketch");
+    if (f.type === "fit") { const owner = owners.get(f.sourceBodyId); connect(reference("feature", bodyWriters.get(f.sourceBodyId) ?? owner?.id ?? f.sourceBodyId), to, "Fitted reference envelope"); }
     if (f.type === "pattern")
       connect(reference("feature", f.sourceFeatureId), to, "Pattern source feature");
     if (f.type === "revolve" && f.axis.type === "sketchLine")
@@ -183,7 +184,7 @@ export function buildDependencyGraph(document: CadDocument): DependencyGraph {
     // Suppressed operations retain authored edges but never become an active writer.
     if (!f.suppressed) {
       if (
-        (f.type === "extrude" || f.type === "revolve") &&
+        (f.type === "extrude" || f.type === "revolve" || f.type === "fit") &&
         f.operation === "newBody"
       )
         bodyWriters.set(stableBodyIdForFeature(f.id), f.id);

@@ -65,6 +65,7 @@ export interface KernelAdapter {
   cloneShape?(shape: KernelShape): KernelShape;
   /** Rigidly position a complete component with independent native ownership. */
   placeShape?(shape: KernelShape, placement: ComponentPlacement): KernelShape;
+  nativeBounds?(shape: KernelShape): BoundingBox;
   createBox(width: number, height: number, depth: number): KernelShape;
   extrudeProfile(
     profile: SketchProfile,

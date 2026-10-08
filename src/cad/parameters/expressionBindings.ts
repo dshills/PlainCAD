@@ -68,6 +68,7 @@ export function mapDocumentExpressions(
   const features = document.features.map((f): Feature => {
     const read = (v: ExpressionRef, field: string) =>
       visit(v, "feature", f.id, field) as ExpressionRef;
+    if (f.type === "fit") return { ...f, clearance: read(f.clearance, "clearance"), wallThickness: read(f.wallThickness, "wallThickness") };
     if (f.type === "extrude")
       return {
         ...f,

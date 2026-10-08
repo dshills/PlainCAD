@@ -1,5 +1,5 @@
 import { assemblyJointIssues } from "./assemblyJoints";
-import { componentScopeIssues } from "./components";
+import { componentScopeIssues, featureComponentId, sketchComponentId } from "./components";
 import { validComponentPlacement } from "./componentPlacement";
 
 import { targetBodyIds } from "./bodyScopes";
@@ -423,6 +423,18 @@ export function validateDocument(document: CadDocument, mode: "modeling" | "stor
     // Well-typed broken references must survive open/recovery so the inspector can repair them.
     // Modeling still rejects them below; malformed fields and duplicate IDs always fail.
     if (mode === "storage") continue;
+    if (feature.type === "fit" && !feature.suppressed) {
+      const component = featureComponentId(document, feature);
+      const sourceFeatures = feature.followSourcePlacement ? new Map(document.features.map(item => [item.id, item])) : undefined;
+      const placedProjection = feature.followSourcePlacement && Object.values(document.sketches).some(sketch => sketch.projections?.some(projection => {
+        if (projection.coordinateSpace !== "world") return false;
+        const source = sourceFeatures!.get(projection.sourceFeatureId);
+        return sketchComponentId(document, sketch.id) === component || Boolean(source && featureComponentId(document, source) === component);
+      }));
+      if (feature.followSourcePlacement && placedProjection) issues.push({ source: "feature", sourceId: feature.id, message: "Turn off Follow source position before projecting to or from this fitted component in world coordinates." });
+      const owner = document.features.find(item => `body:${item.id}` === feature.sourceBodyId);
+      if (!owner || owner.suppressed || !((owner.type === "extrude" || owner.type === "revolve" || owner.type === "fit") && owner.operation === "newBody")) issues.push({ source: "feature", sourceId: feature.id, message: "Fitted reference body was lost, suppressed or changed. Select a surviving source body." });
+    }
     if (feature.type === "pattern") {
       const source = document.features.find(item => item.id === feature.sourceFeatureId);
       if (!source || source.suppressed || !((source.type === "hole" && source.centerPointIds.length === 1) || (source.type === "extrude" && source.operation === "cut" && (!source.termination || source.termination.type === "distance"))))
@@ -687,6 +699,12 @@ function validatePersistedFields(document: CadDocument): ValidationIssue[] {
         typeof feature.sketchId === "string",
         "Sketch reference must be an ID.",
       );
+    if (feature.type === "fit") {
+      checkFeature(typeof feature.componentId === "string" && feature.componentId !== document.rootComponentId, "A fitted part requires its own explicit non-root component.");
+      checkFeature(typeof feature.sourceBodyId === "string" && feature.sourceBodyId.startsWith("body:") && feature.sourceBodyId.length <= 320 && ["enclosure", "bracket", "adapter"].includes(feature.style) && feature.operation === "newBody" && expression(feature.clearance) && expression(feature.wallThickness) && typeof feature.followSourcePlacement === "boolean", "Malformed fitted part. Choose a source body, supported style, clearance and wall expressions.");
+      checkFeature(!document.features.some(item => item.id !== feature.id && item.type === "fit" && featureComponentId(document, item) === featureComponentId(document, feature)), "A fitted part needs its own component.");
+      checkFeature(!feature.followSourcePlacement || !document.assemblyJoints?.some(joint => joint.childComponentId === featureComponentId(document, feature) || joint.parentComponentId === featureComponentId(document, feature)), "Turn off Follow source position before using a fitted component in assembly joints.");
+    }
     if (feature.type === "extrude" || feature.type === "revolve") {
       checkFeature(
         typeof feature.profileId === "string" &&

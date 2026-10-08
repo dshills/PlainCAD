@@ -20,6 +20,7 @@ export function featureComponentId(
   feature: Feature,
 ): string {
   if (feature.componentId) return feature.componentId;
+  if (feature.type === "fit") return document.rootComponentId;
   if ("sketchId" in feature)
     return sketchComponentId(document, feature.sketchId);
   const ownerId = feature.type === "pattern" ? feature.sourceFeatureId : feature.targetEdgeRefs[0]?.featureId;

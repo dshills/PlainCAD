@@ -58,6 +58,7 @@ export async function previewSolidDimensionEdit(frame: SolidDimensionEditFrame, 
   const document = buildSolidDimensionEdit(frame.document, frame.dimension.featureId, frame.field, target, expression);
   const feature = document.features.find((item) => item.id === frame.dimension.featureId)!;
   if (feature.type === "pattern") throw new Error("Use Edit Feature to change pattern settings.");
+  if (feature.type === "fit") throw new Error("Use Edit fitted part to change fitted part settings.");
   const operation = await previewModeling(documentAtFeature(document, feature.id, true), signal);
   if (feature.type === "extrude") assertNativeExtrudePreview(operation, document.id, feature);
   else if (feature.type === "hole") assertNativeHolePreview(operation, document.id, feature);
