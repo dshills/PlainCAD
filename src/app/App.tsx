@@ -45,6 +45,7 @@ import { useProjectGallery } from "../ui/workspace/projectGalleryState";
 
 const FabricationPanel = lazy(() => import("../ui/panels/FabricationPanel").then(module => ({ default: module.FabricationPanel })));
 const ProjectGalleryPanel = lazy(() => import("../ui/workspace/ProjectGalleryPanel").then(module => ({ default: module.ProjectGalleryPanel })));
+const ModelUpdateFeedback = lazy(() => import("../ui/workspace/ModelUpdateFeedback").then(module => ({ default: module.ModelUpdateFeedback })));
 const CanvasSelectionActions = lazy(() => import("../ui/panels/CanvasSelectionActions").then(module => ({ default: module.CanvasSelectionActions })));
 const ComponentPlacementPanel = lazy(() => import("../ui/panels/ComponentPlacementPanel").then(module => ({ default: module.ComponentPlacementPanel })));
 const PartLibraryPanel = lazy(() => import("../ui/panels/PartLibraryPanel").then(module => ({ default: module.PartLibraryPanel })));
@@ -608,6 +609,7 @@ export function App() {
             {partLibraryOpen ? <Suspense fallback={<p role="status">Loading local parts…</p>}><PartLibraryPanel /></Suspense> : null}
             {stepExportOpen ? <Suspense fallback={<p role="status">Loading STEP export…</p>}><StepExportPanel /></Suspense> : null}
             {!sketchActive ? <><SketchSolidHandoffPanel /><OperationDropPanel /></> : null}
+            <Suspense fallback={null}><ModelUpdateFeedback /></Suspense>
             <div className="model-view" hidden={Boolean(sketchActive)}>
               <CadViewer />
             </div>

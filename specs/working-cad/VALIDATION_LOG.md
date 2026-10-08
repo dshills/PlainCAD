@@ -9,10 +9,10 @@ missing or the count cannot be determined, establish a baseline with the full ga
 ## Last successful full gate
 
 - Date: 2026-10-08.
-- Change: linked sketch provenance and source controls, including the preceding contextual actions, automatic local previews and two-pick alignment items (commit `47df069`).
-- Result: type checks, 1301 unit/component tests, build/bundle budget (largest 496.15 kB), all 283 development native browser cases and all 35 production cases passed.
-- Completed items since that full gate: **4**.
-- Next full gate: after **1** more completed items.
+- Change: inviting visual workbench through purposeful motion: project gallery, Saturn instrument styling, native build stories and edit confirmation, including the preceding export hub item.
+- Result: type checks, 1343 unit/component tests, build/bundle budget (largest 498.48 kB), all 288 development native browser cases and all 38 production cases passed.
+- Completed items since that full gate: **0**.
+- Next full gate: after **5** more completed items.
 
 ## Completed batch
 
@@ -487,3 +487,33 @@ adds one independently passing test without runtime/build changes.
 
 Cadence: 4 completed items since the successful full checkpoint. The next item
 requires the full release gate before its commit.
+
+### Item 4: purposeful workbench motion and native confirmation (2026-10-08)
+
+Docks, selected History steps and contextual controls use short 120–140 ms arrival
+transitions. Reduced motion disables effects. The brief “Model updated” notice
+requires changed, accepted native positions/indices and valid positive-volume
+solids; failed/fallback results, draft clicks, metadata-only changes and project
+replacement cannot claim a geometry update. Feedback changes no history/camera
+and schedules no idle WebGL frames.
+
+Prism Anthropic `claude-sonnet-5-5` reviewed the final motion change with complete
+coverage (`362ea2278b04503fd90e0d190db25146`), no high/medium findings. Its low
+notes concern transient UI-test timing and lazy motion styles: native acceptance
+passes with a settled renderer before idle assertions, component tests prove the
+notice lifetime, and optional motion shares the always-mounted feedback chunk to
+preserve the initial bundle budget. Earlier native reviews and final idle-readiness
+changes were also reviewed; the development source imports are deliberate test
+instrumentation with separate built-app acceptance.
+
+`npm run release:check` passed: type checks, 1343 unit/component tests,
+production build/bundle budget (largest 498.48 kB), all 288 development native
+browser cases and all 38 production cases. This includes gallery, Saturn, native
+History previews, reduced-motion confirmation, idle renderer/resource checks,
+project compatibility, save/open and fabrication. Native confirmation proved an
+80000→100000 mm³ edit and no idle-frame churn. Studio was developed and validated
+in a separate frozen prefix while this checkpoint ran. The interrupted temporary
+run was not counted; these are results from the completed fresh full gate.
+
+Cadence: the successful full checkpoint resets the count to 0. The next full gate
+is due after 5 more completed requested changes.

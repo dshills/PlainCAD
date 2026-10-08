@@ -215,6 +215,10 @@ isolated previews use current parameters at that timeline step and leave the
 project and camera unchanged. Escape dismisses the preview; edits cancel stale
 results. See [Build stories](specs/working-cad/TIMELINE_BUILD_STORY.md) for preview limits.
 
+Dock and selection feedback uses short transitions, disabled by the system's
+reduced-motion preference. “Model updated” appears briefly only after changed,
+validated native geometry reaches the model, including undo/redo; failed rebuilds
+and draft previews never show it.
 
 Save/export keeps its completion buttons visible while options scroll. For STL,
 **Output files → One file per part** produces separate STL files (a ZIP for multiple

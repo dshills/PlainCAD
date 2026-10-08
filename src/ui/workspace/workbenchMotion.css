@@ -1,0 +1,43 @@
+/* Animate appearance, never dock dimensions or the WebGL render loop. */
+@media (prefers-reduced-motion: no-preference) {
+  .workbench-dock:not([hidden]) .dock-body,
+  .workbench-bottom.expanded .dock-body {
+    animation: workbench-arrive 140ms ease-out;
+  }
+  .timeline-chip.selected,
+  .canvas-selection-actions,
+  .model-update-confirmation {
+    animation: workbench-arrive 120ms ease-out;
+  }
+  .docked-workbench button {
+    transition: background-color 100ms ease-out, border-color 100ms ease-out;
+  }
+}
+@keyframes workbench-arrive {
+  from { opacity: 0.55; transform: translateY(3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.model-update-feedback {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  z-index: 7;
+  pointer-events: none;
+}
+.model-update-confirmation {
+  display: block;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 2px 10px #0002;
+  font-size: 13px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .docked-workbench *, .model-update-feedback * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
