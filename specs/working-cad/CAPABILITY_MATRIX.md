@@ -25,10 +25,10 @@
   360-degree layouts avoid a duplicate endpoint. Overlaps and no-op/missing cuts
   diagnose; native outputs publish atomically. See [pattern limits](FEATURE_PATTERNS.md).
 - Reusable-part insertion copies all source components or one explicitly chosen
-  component at the shared origin through the safe import codec, with independent
+  component with its saved placement through the safe import codec, with independent
   parameter names/bindings and remapped geometry/profile/topology identities.
   Outside-scope dependencies, missing references, stale tasks and combined
-  portable-file/resource excesses reject insertion. Assembly placement and linked
+  portable-file/resource excesses reject insertion. Saved rigid placement is supported; joints and linked
   external designs remain unavailable. See [insertion limits](REUSABLE_PARTS.md).
 
 - Task guidance uses current worker sketch profiles/diagnostics and distinguishes
@@ -147,16 +147,16 @@ See `DESIGN_SYSTEM.md` and `design-qa.md` for design rules and comparison eviden
 
 - React/Vite/TypeScript UI, Three.js viewer, Zustand document history and undo/redo.
 - Serializable document with stable IDs, deterministic JSON, schema migrations
-  through version 13, and validation before imported state is accepted.
+  through version 16, and validation before imported state is accepted.
 - Import unsafe-key rejection, nesting/node limits, and component/parameter/sketch/entity/
   constraint/feature count limits; unknown and runtime fields stripped by migration.
 - Local project files contain a root component and up to 99 additional internal
   components with stable ownership of sketches/features/bodies. Browser activation,
   component naming, Create Sketch → origin plane → canvas → Finish Sketch → Extrude,
   undo/redo, legacy migration and native save/open/STL are covered. Modeling targets
-  and source sketch choices are scoped to the owning component. All components
-  share the project origin; the parameter table and timeline remain project-wide.
-  Nested assemblies, placements, joints and linked external components are unavailable.
+  and source sketch choices are scoped to the owning component. Components have independent saved rigid placement;
+  the parameter table and timeline remain project-wide.
+  Saved rigid placement is supported. Nested assemblies, joints and linked external components are unavailable.
 - Parameter expressions, dependency ordering/cycle errors, compatible unit
   conversion, dimensional arithmetic, CAD math functions, and expression limits.
 - Schema 10 captures per-expression bare-number length/angle defaults, saved display
@@ -575,7 +575,7 @@ Timeline chips label their component owner, with an optional active-component
 filter that follows activation. Timeline movement still validates the full
 project order. These are runtime view preferences, reset when replacing/opening
 a project and excluded from undo history and project JSON. Components remain
-flat parts at a shared origin; assembly placements and joints are unavailable.
+flat parts with optional saved rigid placement; joints are unavailable.
 
 
 ### Retained references after booleans
@@ -869,7 +869,7 @@ the existing import limits, validation and migrations. A nonempty current projec
 gets a replacement confirmation with keep/save/open options. Invalid files,
 multiple-file drops, active tasks and stale import/confirmation contexts leave the
 current project intact. Native browser acceptance covers parameter edits, save,
-reopen and STL after a drop. Part append and assembly placement remain unavailable.
+reopen and STL after a drop. Independent part append and rigid component placement are supported; joints remain unavailable.
 
 
 ### Sketch multi-selection and bulk deletion
@@ -1152,3 +1152,5 @@ without native edge proofs conservatively offer no targets; the shipped native
 adapter implements the probe, and fallback meshes never authorize edge picking.
 
 Validated native feature output reuse uses independently owned OpenCascade copies, with 128-entry/256-shape bounds and a 32 MiB mesh/signature estimate. Document/session/kernel changes clear ownership. Native allocation size is not measured by that estimate; exact BRep validity, volume and shape-count bounds remain authoritative. See [incremental limits](INCREMENTAL_NATIVE.md).
+
+Schema 16 stores finite rigid component placement: translations within ±100,000,000 mm and Euler rotations within ±360 degrees. Move component offers pointer/keyboard handles and numeric fields; Apply requires an exact current native candidate with unchanged body IDs, volumes and solid counts. Completed native BReps and mesh normals/vertices are positioned together. Existing face/projection associations stay in design coordinates; new cross-component projections and face choices require matching placements. Hierarchical assemblies and joints are unavailable.

@@ -1,4 +1,5 @@
 import { componentScopeIssues } from "./components";
+import { validComponentPlacement } from "./componentPlacement";
 
 import { targetBodyIds } from "./bodyScopes";
 import { MAX_NAMED_VIEWS, validCameraPose } from "../inspection/cameraViews";
@@ -57,6 +58,8 @@ export function validateDocument(document: CadDocument, mode: "modeling" | "stor
   for (const [id, component] of Object.entries(document.components)) {
     if (!component || typeof component !== "object" || Array.isArray(component) || component.id !== id || typeof component.name !== "string" || !component.name.trim() || component.name.length > 120)
       issues.push({ source: "document", sourceId: id, message: "Component must have a matching ID and a name of 1–120 characters." });
+    if (component?.placement !== undefined && !validComponentPlacement(component.placement))
+      issues.push({ source: "document", sourceId: id, message: "Component placement needs three finite millimeter translations (at most 100000000) and three radian rotations (at most 360 degrees)." });
   }
   if (issues.length) return issues;
   issues.push(...validatePersistedFields(document));

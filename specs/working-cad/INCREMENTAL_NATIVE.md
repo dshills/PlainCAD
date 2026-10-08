@@ -12,6 +12,8 @@ quantities, resolved sketch geometry and profiles with their authored identities
 resolved design planes, pattern source inputs, and exact upstream body versions.
 To-face termination also includes its target-face owner's body version. Sketch
 solving and native plane/projection validation still run before feature reuse.
+Component placement is applied after modeling, so rigid placement alone does not
+invalidate an unchanged feature's design geometry.
 
 Only successful native outputs with geometry assertions are admitted. Failed
 rebuilds discard pending admissions. Scope probes bypass reuse so native overlap
@@ -35,8 +37,8 @@ failures skip reuse, dispose partial copies, and issue a diagnostic warning.
 Runtime metrics expose hits, misses, retained entries/shapes/estimated bytes and
 cache disposal failures. `operationCount` counts executed modeling operations,
 so a completely reusable rename has zero modeling operations. Native face
-proofs, shape-copy validation, sketch solving, resource checks
-and native proof work can still take time; a cache hit does not mean zero work.
+proofs, shape-copy validation, sketch solving, resource checks and component pose
+work can still take time; a cache hit does not mean zero work.
 
 Validation includes unit checks for independent ownership, failed transactions,
 namespace/epoch invalidation, partial native-copy failure, exact input signatures

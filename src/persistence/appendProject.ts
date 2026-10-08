@@ -158,7 +158,7 @@ export function appendProject(target: CadDocument, source: CadDocument, options:
       name = `${baseName.slice(0, 120 - suffix.length)}${suffix}`;
     }
     names.add(name);
-    return [remap(id), { id: remap(id), name }];
+    return [remap(id), { id: remap(id), name, ...(original.placement ? { placement: { translation: [...original.placement.translation] as [number, number, number], rotation: [...original.placement.rotation] as [number, number, number] } } : {}) }];
   }));
   let imported: CadDocument = { ...selected, components: mappedComponents, parameters, sketches: Object.fromEntries(mappedSketches.map((s) => [s.id, s])), features: mappedFeatures };
   const forbiddenNames = new Set(Object.keys(target.parameters));

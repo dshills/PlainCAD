@@ -21,7 +21,7 @@ import { create } from "zustand";
 import { useCadStore, type CadStore } from "../../state/useCadStore";
 import { upsertSketch } from "../../cad/document/CadDocument";
 import { evaluateParameters } from "../../cad/parameters/expressionEvaluator";
-import { resolveDocumentPlanes } from "../../cad/sketch/planes";
+import { resolvePlacedDocumentPlanes } from "../../cad/sketch/planes";
 import { solveSketch } from "../../cad/sketch/SketchSolver";
 import {
   type CanvasPoint,
@@ -275,7 +275,7 @@ export function canvasContext(
     (rebuild.status === "succeeded" || rebuild.status === "failed") &&
     rebuild.result?.documentId === document.id;
   const solvedSketches = current ? rebuild.result?.solvedSketches : undefined;
-  const planes = resolveDocumentPlanes(
+  const planes = resolvePlacedDocumentPlanes(
     document,
     evaluation.values,
     solvedSketches ? new Map(Object.entries(solvedSketches)) : undefined,

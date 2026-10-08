@@ -2,6 +2,8 @@ import type { CadDocument, Sketch, SketchEntity, SketchProjection, ExpressionRef
 import type { ResolvedSketch } from "./SketchSolver";
 import type { SketchProfile } from "./profileDetection";
 import type { RebuildResult } from "../worker/workerProtocol";
+import { componentPlacementsEqual } from "../document/componentPlacement";
+import { featureComponentId, sketchComponentId } from "../document/components";
 import { createId } from "../document/ids";
 import { deleteSketchEntities } from "./entityDeletion";
 import { documentTimeline, timelineItemId } from "../document/timelineOrdering";
@@ -91,6 +93,8 @@ export function planSketchProjection(document: CadDocument, sketchId: string, so
   if (!target || (!replaceProjectionId && (target.projections?.length ?? 0) >= 32)) throw new Error("Projection destination is unavailable or has reached its limit.");
   const source = document.features.find((feature) => feature.id === sourceFeatureId);
   if (!source || source.type !== "extrude") throw new Error("Choose a supported extrusion cap.");
+  if (!replaceProjectionId && !componentPlacementsEqual(document, featureComponentId(document, source), sketchComponentId(document, sketchId)))
+    throw new Error("Components have different placements; align them before projecting. Existing links follow authored design geometry.");
   const sourceSketch = document.sketches[source.sketchId];
   const profile = result.profiles?.[source.sketchId]?.find((p) => p.id === source.profileId || p.alternateIds?.includes(source.profileId));
   if (!profile) throw new Error("Source profile is unavailable.");

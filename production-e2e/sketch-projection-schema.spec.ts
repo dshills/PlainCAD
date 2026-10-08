@@ -1,3 +1,4 @@
+import { CURRENT_SCHEMA_VERSION } from "../src/cad/document/schema";
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
@@ -52,7 +53,7 @@ test("schema 15 preserves linked cover dimensions through native parameter edit,
   const download = page.waitForEvent("download"); await page.getByRole("button", { name: "Save project", exact: true }).click();
   const savedPath = info.outputPath("linked-cover-v15.pcaddoc"); await (await download).saveAs(savedPath);
   const saved = JSON.parse(await readFile(savedPath, "utf8")) as CadDocument;
-  expect(saved.schemaVersion).toBe(15); expect(saved.id).toBe(original.id);
+  expect(saved.schemaVersion).toBe(CURRENT_SCHEMA_VERSION); expect(saved.id).toBe(original.id);
   expect(saved.parameters.width.id).toBe(original.parameters.width.id);
   expect(saved.parameters.width.expression).toBe("42mm");
   expect(saved.features.map((feature) => feature.id)).toEqual(["base", "cover"]);

@@ -41,6 +41,8 @@ import { FeatureTimeline } from "../ui/panels/FeatureTimeline";
 import { SketchPanel } from "../ui/panels/SketchPanel";
 import { useCadStore } from "../state/useCadStore";
 
+const ComponentPlacementPanel = lazy(() => import("../ui/panels/ComponentPlacementPanel").then(module => ({ default: module.ComponentPlacementPanel })));
+
 const SketchCanvasPanel = lazy(() =>
   import("../ui/panels/SketchCanvasPanel").then((module) => ({ default: module.SketchCanvasPanel })),
 );
@@ -541,6 +543,7 @@ export function App() {
       <RecoveryPanel />
       <FabricationPanel />
       <HoleCreationPanel />
+      <Suspense fallback={<p role="status">Loading component controls…</p>}><ComponentPlacementPanel /></Suspense>
       <FeaturePatternPanel />
       <SolidDimensionEditor />
       <ExtrudeCreationPanel />

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { CadDocument } from "../cad/document/schema";
 import { createBoxTemplate } from "../templates/templates";
 import { upsertSketch } from "../cad/document/CadDocument";
 import { createSketchOnPlane } from "../cad/sketch/SketchModel";
@@ -64,6 +65,22 @@ describe("linked complete cap sketch projections", () => {
     expect(() => materializeSketchProjections(f.plan.document, wrong, new Map(Object.entries(f.result.solvedSketches!)), new Map(Object.entries(f.result.profiles!).map(([id, profiles]) => [id, { profiles }])), f.result.parameterValues!)).toThrow("boundary changed");
   });
 
+  it("refuses new cross-component links at different placements without changing existing design associations", () => {
+    const f = fixture(), componentId = "cover_component";
+    const aligned: CadDocument = { ...f.document, components: { ...f.document.components, [componentId]: { id: componentId, name: "Cover" } }, sketches: { ...f.document.sketches, [f.target.id]: { ...f.target, componentId } } };
+    const plan = planSketchProjection(aligned, f.target.id, f.owner.id, "endCapPerimeter", false, f.result);
+    const placement = { translation: [50, 20, 10] as [number, number, number], rotation: [0, 0, Math.PI / 2] as [number, number, number] };
+    const moved = { ...plan.document, components: { ...plan.document.components, [f.document.rootComponentId]: { ...plan.document.components[f.document.rootComponentId], placement } } };
+    expect(() => planSketchProjection(moved, f.target.id, f.owner.id, "endCapPerimeter", false, f.result)).toThrow("different placements");
+    const before = solveSketch(plan.document.sketches[f.target.id], f.result.parameterValues ?? {});
+    const materialized = materializeSketchProjections(moved, moved.sketches[f.target.id], new Map(Object.entries(f.result.solvedSketches!)), new Map(Object.entries(f.result.profiles!).map(([id, profiles]) => [id, { profiles }])), f.result.parameterValues!);
+    expect(solveSketch(materialized, f.result.parameterValues ?? {}).points).toEqual(before.points);
+    expect(materialized.projections![0]).toEqual(plan.projection);
+    const repaired = planSketchProjection(moved, f.target.id, f.owner.id, "startCapPerimeter", false, { ...f.result, availableEdges: [...f.result.availableEdges!, { featureId: f.owner.id, bodyId: `body:${f.owner.id}`, role: "startCapPerimeter" }] }, plan.projection.id);
+    expect(repaired.projection.members).toEqual(plan.projection.members);
+    const shared = { ...aligned, components: { ...aligned.components, [componentId]: { ...aligned.components[componentId], placement }, [f.document.rootComponentId]: { ...aligned.components[f.document.rootComponentId], placement } } };
+    expect(planSketchProjection(shared, f.target.id, f.owner.id, "endCapPerimeter", false, f.result).projection.members).toHaveLength(plan.projection.members.length);
+  });
   it("checks surviving native boundaries at the sketch timeline and blocks lost references", () => {
     const f = fixture(), errors: Parameters<typeof nativeProjectionValidator>[4] = [];
     const kernel = { availableExtrudeCapEdges: () => [] } as unknown as KernelAdapter;

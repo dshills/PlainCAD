@@ -1,3 +1,4 @@
+import { CURRENT_SCHEMA_VERSION } from "../cad/document/schema";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { importProjectText } from "../persistence/importProject";
@@ -10,9 +11,11 @@ import { materializeSketchProjections } from "../cad/sketch/sketchProjection";
 
 describe("schema 15 linked cover fixture", () => {
   it("roundtrips stable link/member/feature IDs and follows source width instead of copied coordinates", () => {
-    const document = importProjectText(readFileSync("src/persistence/fixtures/schema-v15.pcaddoc", "utf8"));
+    const fixture = readFileSync("src/persistence/fixtures/schema-v15.pcaddoc", "utf8");
+    expect(JSON.parse(fixture).schemaVersion).toBe(15);
+    const document = importProjectText(fixture);
     expect(validateDocument(document)).toEqual([]);
-    expect(document.schemaVersion).toBe(15);
+    expect(document.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
     const text = serializeProject(document), reopened = importProjectText(text);
     expect(serializeProject(reopened)).toBe(text);
     expect(reopened.features.map((feature) => feature.id)).toEqual(["base", "cover"]);

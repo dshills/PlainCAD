@@ -1,10 +1,11 @@
+import { withComponentPlacement } from "../../cad/document/componentPlacement";
 import {
   currentPlaneChoices,
   alignToSketchPlane,
   useSketchPlanePicker,
 } from "./sketchPlanePicker";
-import { evaluateParameters } from "../../cad/parameters/expressionEvaluator";
-import { sketchPlaneTransform } from "../../cad/sketch/planes";
+import { evaluateExpressionRef, evaluateParameters } from "../../cad/parameters/expressionEvaluator";
+import { transformPoint } from "../../cad/sketch/planes";
 import type { SketchPlaneReference, FacePlaneReference } from "../../cad/document/schema";
 import { create } from "zustand";
 import { useCadStore, type CadStore } from "../../state/useCadStore";
@@ -113,7 +114,9 @@ export function finishProjectWorkflow(
       // Millimeters are canonical; authoredUnit supplies the meaning of bare numbers.
       reference = { type: "offset", base: choice.reference, offset: { expression: offset, unit: "mm", authoredUnit: state.history.present.unitSettings.length } };
       // Resolve with the selected native face's measured basis, preserving its normal.
-      transform = sketchPlaneTransform(reference, evaluation.values, new Map([[choice.id, choice.transform]]));
+      const evaluated = evaluateExpressionRef(reference.offset, { parameters: evaluation.values });
+      if (evaluated.error || evaluated.quantity?.dimension !== "length") throw new Error(evaluated.error ?? "Offset must resolve to a length.");
+      transform = { ...choice.transform, origin: transformPoint(choice.transform, 0, 0, evaluated.quantity.value) };
     }
     const initialPart = active.partName
       ? createPartSketch(state.history.present, active.partName, reference)
@@ -129,7 +132,11 @@ export function finishProjectWorkflow(
     // Store edits bind offset parameter tokens to stable IDs before publication.
     state.updateDocument((document) => {
       if (document !== before) return document;
-      return initialPart?.document ?? upsertSketch(document, sketch);
+      if (initialPart) {
+        const placement = document.components[active.componentId]?.placement;
+        return placement ? withComponentPlacement(initialPart.document, initialPart.sketch.componentId!, placement) : initialPart.document;
+      }
+      return upsertSketch(document, sketch);
     });
     const published = useCadStore.getState().history.present;
     if (

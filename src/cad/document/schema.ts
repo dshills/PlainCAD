@@ -1,4 +1,4 @@
-export const CURRENT_SCHEMA_VERSION = 15;
+export const CURRENT_SCHEMA_VERSION = 16;
 
 export type UnitSystem = "metric" | "imperial";
 
@@ -28,10 +28,17 @@ export interface CadDocument {
   metadata?: Record<string, unknown>;
 }
 
-/** Internal parts share the project origin; assembly transforms are not supported. */
+/** Rigid placement of the completed component; authored geometry stays in design coordinates. */
+export interface ComponentPlacement {
+  translation: [number, number, number];
+  /** Radians, applied about design X, then Y, then Z (Rz * Ry * Rx). */
+  rotation: [number, number, number];
+}
+
 export interface CadComponent {
   id: string;
   name: string;
+  placement?: ComponentPlacement;
 }
 
 export interface CadParameter {

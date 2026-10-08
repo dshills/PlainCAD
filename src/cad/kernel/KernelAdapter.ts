@@ -1,4 +1,4 @@
-import { RevolveAxisReference, TopologyRef } from "../document/schema";
+import { ComponentPlacement, RevolveAxisReference, TopologyRef } from "../document/schema";
 import { Point3, SketchPlaneTransform } from "../sketch/planes";
 import { SketchProfile } from "../sketch/profileDetection";
 
@@ -60,6 +60,8 @@ export interface AvailableCapEdge {
 export interface KernelAdapter {
   /** Independent native shape ownership; copied history contains no retained handles. */
   cloneShape?(shape: KernelShape): KernelShape;
+  /** Rigidly position a complete component with independent native ownership. */
+  placeShape?(shape: KernelShape, placement: ComponentPlacement): KernelShape;
   createBox(width: number, height: number, depth: number): KernelShape;
   extrudeProfile(
     profile: SketchProfile,

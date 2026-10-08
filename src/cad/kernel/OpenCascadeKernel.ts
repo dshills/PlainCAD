@@ -2,7 +2,8 @@ import { assertMeshBudget } from "../resourceLimits";
 import initOpenCascadeModule from "opencascade.js/dist/opencascade.wasm.js";
 import openCascadeWasmUrl from "opencascade.js/dist/opencascade.wasm.wasm?url";
 import { createId } from "../document/ids";
-import { RevolveAxisReference, TopologyRef } from "../document/schema";
+import { ComponentPlacement, RevolveAxisReference, TopologyRef } from "../document/schema";
+import { placePlane, placementTransform } from "../document/componentPlacement";
 import {
   HoleScopeError,
   KernelAdapter,
@@ -197,7 +198,7 @@ export class OpenCascadeKernel implements KernelAdapter {
   private static openCascade: Record<string, any> | undefined;
   private static initPromise: Promise<Record<string, any>> | undefined;
 
-  private copyHistory(handle: KernelHandle): KernelHandle {
+  private copyHistory(handle: KernelHandle, placement?: ComponentPlacement): KernelHandle {
     let nodes = 0;
     const history = (source: KernelHandle): KernelHandle => {
       if (++nodes > 1024) throw new Error("Native shape history exceeds the reusable shape budget.");
@@ -208,6 +209,7 @@ export class OpenCascadeKernel implements KernelAdapter {
         return { ...structuredClone(plain), base: history(base) };
       }
       const result = structuredClone(values) as KernelHandle;
+      if (placement && (result.kind === "extrusion" || result.kind === "revolve")) result.transform = placePlane(result.transform ?? sketchPlaneTransform("XY"), placement);
       return result;
     };
     return history(handle);
@@ -217,7 +219,7 @@ export class OpenCascadeKernel implements KernelAdapter {
     const oc = OpenCascadeKernel.openCascade;
     const handle = shape.kernelHandle as KernelHandle;
     if (!oc || !handle.occtShape) throw new Error("Native shape reuse requires initialized OpenCascade geometry.");
-    const copiedHistory = this.copyHistory(handle);
+    const copiedHistory = this.copyHistory(handle), metadata = shape.metadata ? structuredClone(shape.metadata) : undefined;
     return withDisposableScope((scope) => {
       const copy = scope.use(new oc.BRepBuilderAPI_Copy_2(handle.occtShape, true, true));
       if (!copy.IsDone()) throw new Error("OpenCascade could not copy validated feature geometry.");
@@ -225,7 +227,23 @@ export class OpenCascadeKernel implements KernelAdapter {
       const before = this.measureNative(handle.occtShape), after = this.measureNative(native);
       if (before.solidCount !== after.solidCount || Math.abs(before.volume - after.volume) > volumeTolerance(before.volume))
         throw new Error("Native feature copy changed its solid count or volume.");
-      return { id: createId("shape"), kernelHandle: { ...copiedHistory, occtShape: scope.release(native) }, ...(shape.metadata ? { metadata: structuredClone(shape.metadata) } : {}) };
+      return { id: createId("shape"), kernelHandle: { ...copiedHistory, occtShape: scope.release(native) }, ...(metadata ? { metadata } : {}) };
+    });
+  }
+
+  placeShape(shape: KernelShape, placement: ComponentPlacement): KernelShape {
+    const oc = OpenCascadeKernel.openCascade, handle = shape.kernelHandle as KernelHandle;
+    if (!oc || !handle.occtShape) throw new Error("Native component placement requires initialized OpenCascade geometry.");
+    const frame = placementTransform(placement), copiedHistory = this.copyHistory(handle, placement), metadata = shape.metadata ? structuredClone(shape.metadata) : undefined;
+    return withDisposableScope(scope => {
+      const transform = scope.use(new oc.gp_Trsf_1());
+      transform.SetValues(frame.u.x, frame.v.x, frame.normal.x, frame.origin.x, frame.u.y, frame.v.y, frame.normal.y, frame.origin.y, frame.u.z, frame.v.z, frame.normal.z, frame.origin.z);
+      const builder = scope.use(new oc.BRepBuilderAPI_Transform_2(handle.occtShape, transform, true));
+      if (!builder.IsDone()) throw new Error("OpenCascade could not position this component.");
+      const native = scope.use(builder.Shape()), before = this.measureNative(handle.occtShape), after = this.measureNative(native);
+      if (before.solidCount !== after.solidCount || Math.abs(before.volume - after.volume) > volumeTolerance(before.volume))
+        throw new Error("Component placement changed native solid count or volume.");
+      return { id: createId("shape"), kernelHandle: { ...copiedHistory, occtShape: scope.release(native) }, ...(metadata ? { metadata } : {}) };
     });
   }
 

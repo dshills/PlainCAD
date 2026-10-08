@@ -1,3 +1,5 @@
+import { placePlane, componentPlacementsEqual } from "../../cad/document/componentPlacement";
+import { featureComponentId } from "../../cad/document/components";
 import { create } from "zustand";
 import {
   sketchPlaneChoices,
@@ -16,7 +18,12 @@ export function currentPlaneChoices(state: CadStore = useCadStore.getState()) {
     state.rebuild.result?.documentId === state.history.present.id
       ? state.rebuild.result
       : undefined;
-  return sketchPlaneChoices(state.history.present, result);
+  const document = state.history.present;
+  return sketchPlaneChoices(document, result).filter(choice => {
+    if (typeof choice.reference === "string") return true;
+    const feature = document.features.find(item => item.id === (typeof choice.reference === "string" ? "" : choice.reference.featureId));
+    return feature && componentPlacementsEqual(document, featureComponentId(document, feature), state.activeComponentId);
+  }).map(choice => typeof choice.reference === "string" ? { ...choice, transform: placePlane(choice.transform, document.components[state.activeComponentId]?.placement) } : choice);
 }
 export function alignToSketchPlane(choice: SketchPlaneChoice) {
   const current = captureCamera(),

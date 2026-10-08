@@ -1,0 +1,10 @@
+.component-placement-frame { position: relative; width: 100%; min-height: 320px; }
+.component-placement-canvas { width: 100%; height: 320px; }
+.component-placement-canvas canvas { display: block; }
+.component-placement-overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; }
+.component-placement-handle { position: absolute; transform: translate(-50%, -50%); width: 40px; height: 40px; padding: 0; border: 2px solid; border-radius: 50%; background: #10222a; color: #fff; cursor: grab; touch-action: none; }
+.component-placement-handle:disabled { cursor: not-allowed; opacity: 0.45; }
+
+.component-placement-panel.sketch-trim-extend { max-height: none; overflow: visible; }
+
+.component-placement-panel .component-placement-handle { margin: 0; }

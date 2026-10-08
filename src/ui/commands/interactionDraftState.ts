@@ -1,3 +1,4 @@
+import { useComponentPlacement } from "./componentPlacementState";
 import { create } from "zustand";
 import { useInspectionState } from "../../state/inspectionState";
 import { useSketchProjection } from "./sketchProjectionState";
@@ -22,10 +23,11 @@ export const useSketchTrimExtend = create<{ frame?: SketchTrimExtendFrame; mode:
 export const useFacePocket = create<{ frame?: FacePocketFrame }>(() => ({}));
 export const useFeaturePattern = create<{ frame?: FeaturePatternFrame }>(() => ({}));
 
-export type InteractionDraftOwner = "solidDimension" | "sketchRefinement" | "constraint" | "trimExtend" | "facePocket" | "replication" | "featureAddition" | "offset" | "reusablePart" | "pattern" | "projection";
+export type InteractionDraftOwner = "solidDimension" | "sketchRefinement" | "constraint" | "trimExtend" | "facePocket" | "replication" | "featureAddition" | "offset" | "reusablePart" | "pattern" | "projection" | "componentPlacement";
 /** Each draft can inspect competing owners without counting its own frame. */
 export function interactionDraftBusy(owner?: InteractionDraftOwner) {
   return Boolean(
+    (owner !== "componentPlacement" && useComponentPlacement.getState().frame) ||
     (owner !== "projection" && useSketchProjection.getState().frame) ||
     (owner !== "pattern" && useFeaturePattern.getState().frame) ||
     useInspectionState.getState().picking ||

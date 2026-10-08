@@ -7,7 +7,7 @@ import type { RebuildResult } from "../worker/workerProtocol";
 import { evaluateParameters } from "../parameters/expressionEvaluator";
 import {
   faceOwnerModifiedBefore,
-  resolveDocumentPlanes,
+  resolvePlacedDocumentPlanes,
   sketchPlaneTransform,
   type Point3,
   type SketchPlaneTransform,
@@ -48,7 +48,7 @@ export function sketchPlaneChoices(
       )
       .map((mesh) => mesh.bodyId),
   );
-  const planes = resolveDocumentPlanes(
+  const planes = resolvePlacedDocumentPlanes(
     document,
     evaluateParameters(document.parameters).values,
     new Map(Object.entries(result.solvedSketches ?? {})),

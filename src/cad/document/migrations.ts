@@ -23,6 +23,10 @@ const migrations = new Map<number, Migration>([
     const { projections: _projections, ...legacy } = sketch;
     return [id, legacy];
   })) })],
+  [15, (document) => ({ ...document, schemaVersion: 16, components: Object.fromEntries(Object.entries(document.components).map(([id, component]) => {
+    const { placement: _placement, ...legacy } = component;
+    return [id, legacy];
+  })) })],
 ]);
 
 function migrateV12ToV13(document: CadDocument): CadDocument {
@@ -223,7 +227,7 @@ function sanitizeCurrentDocument(input: CadDocument): CadDocument {
     updatedAt: input.updatedAt,
     ...(input.timelineCursor !== undefined ? { timelineCursor: input.timelineCursor } : {}),
     rootComponentId: input.rootComponentId,
-    components: isRecord(input.components) ? Object.fromEntries(Object.entries(input.components).map(([id, component]) => [id, isRecord(component) ? { id: component.id, name: component.name } : component])) : input.components,
+    components: isRecord(input.components) ? Object.fromEntries(Object.entries(input.components).map(([id, component]) => [id, isRecord(component) ? { id: component.id, name: component.name, ...(component.placement !== undefined ? { placement: isRecord(component.placement) ? { translation: component.placement.translation, rotation: component.placement.rotation } : component.placement } : {}) } : component])) : input.components,
     parameters,
     sketches,
     features,

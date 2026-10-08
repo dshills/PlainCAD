@@ -1,3 +1,5 @@
+import { placePlane } from "../cad/document/componentPlacement";
+import type { ComponentPlacement } from "../cad/document/schema";
 import { validateMesh } from "../fabrication/meshValidation";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { OpenCascadeKernel } from "../cad/kernel/OpenCascadeKernel";
@@ -578,5 +580,51 @@ describe("native modeling geometry", () => {
     }
   });
 
+  it("rejects noncloneable metadata before allocating native clone or placement handles", () => {
+    const base = kernel.extrudeProfile(rectangle(20, 10).profile, 5);
+    try {
+      base.metadata = { unsupported: () => undefined };
+      const before = getDisposableScopeMetrics();
+      expect(() => kernel.cloneShape(base)).toThrow();
+      expect(() => kernel.placeShape(base, { translation: [1, 2, 3], rotation: [0, 0, 0] })).toThrow();
+      expect(getDisposableScopeMetrics()).toEqual(before);
+      expect(volume(base)).toBeCloseTo(1000, 6);
+    } finally { kernel.disposeShape(base); }
+  });
+
+  it("places real solids with X then Y then Z rotation and unchanged exact native volume", () => {
+    const base = kernel.extrudeProfile(rectangle(20, 10).profile, 5);
+    const placement: ComponentPlacement = { translation: [7, 11, -3], rotation: [Math.PI / 2, Math.PI / 2, Math.PI / 2] };
+    const placed = kernel.placeShape(base, placement);
+    try {
+      expect(volume(base)).toBeCloseTo(1000, 6);
+      expect(volume(placed)).toBeCloseTo(1000, 6);
+      const source = kernel.tessellate(base, options), output = kernel.tessellate(placed, options);
+      expect(source.bounds.min).toEqual([0, 0, 0]); expect(source.bounds.max).toEqual([20, 10, 5]);
+      for (const [actual, expected] of output.bounds.min.map((n, i) => [n, [7, 11, -23][i]])) expect(actual).toBeCloseTo(expected, 6);
+      for (const [actual, expected] of output.bounds.max.map((n, i) => [n, [12, 21, -3][i]])) expect(actual).toBeCloseTo(expected, 6);
+      expect(output.geometryAssertions!.surfaceArea).toBeCloseTo(source.geometryAssertions!.surfaceArea, 6);
+      kernel.disposeShape(base);
+      expect(volume(placed)).toBeCloseTo(1000, 6);
+    } finally { kernel.disposeShape(placed); kernel.disposeShape(base); }
+  });
+
+  it("preserves native planar cap and edge identity after component translation and rotation", () => {
+    const profile = rectangle(20, 10).profile, base = kernel.extrudeProfile(profile, 5);
+    const placement: ComponentPlacement = { translation: [30, -7, 4], rotation: [0, 0, Math.PI / 2] };
+    const placed = kernel.placeShape(base, placement);
+    try {
+      const end = { ...sketchPlaneTransform("XY"), origin: { x: 0, y: 0, z: 5 } };
+      expect(() => kernel.validatePlanarFace(placed, placePlane(end, placement))).not.toThrow();
+      expect(kernel.availableExtrudeCapEdges(placed)).toEqual(kernel.availableExtrudeCapEdges(base));
+      const treated = kernel.chamfer(placed, [createExtrudeEdgeRef("owner", "endCapPerimeter", profile.outerLoop.segments![0].id)], 1);
+      try { expect(volume(treated)).toBeLessThan(1000); } finally { kernel.disposeShape(treated); }
+      expect(volume(base)).toBeCloseTo(1000, 6);
+      const output = kernel.tessellate(placed, options);
+      expect(output.bounds.min[0]).toBeCloseTo(20, 6); expect(output.bounds.max[0]).toBeCloseTo(30, 6);
+      expect(output.bounds.min[1]).toBeCloseTo(-7, 6); expect(output.bounds.max[1]).toBeCloseTo(13, 6);
+      expect(output.bounds.min[2]).toBeCloseTo(4, 6); expect(output.bounds.max[2]).toBeCloseTo(9, 6);
+    } finally { kernel.disposeShape(placed); kernel.disposeShape(base); }
+  });
 
 });

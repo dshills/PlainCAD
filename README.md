@@ -109,10 +109,13 @@ A **project** is one local CAD file. A **component** organizes a part's sketches
 bodies, and features. A **sketch** contains editable geometry and design intent on
 a plane. Parameters and timeline ordering belong to the whole project.
 
-Components currently share the project origin. Modeling targets stay within their
-component; supported face-plane references can use another component's upstream
-geometry. Nested assemblies, placement transforms, joints, and linked designs
-remain planned.
+Components have optional saved rigid placement. Activate a component, then choose
+**Parts → component actions → Move component** or the command palette. Drag an axis
+or rotation handle, or enter exact position in mm and rotation in degrees. Apply
+requires a current native preview and saves one undo step. Rotation uses the design
+origin in X, then Y, then Z order. Sketch and feature geometry remain in authored
+design coordinates; the finished component, measurements and exports use its
+placement. Nested assemblies, joints, and linked external designs remain planned.
 
 **New part → Insert a reusable part** copies all components or a selected component
 from a local project into the open project at its original coordinates. Imported

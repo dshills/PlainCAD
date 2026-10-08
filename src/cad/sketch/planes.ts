@@ -6,6 +6,8 @@ import { Quantity } from "../parameters/units";
 import { solveSketch } from "./SketchSolver";
 import { detectProfiles } from "./profileDetection";
 import { orientedSegments } from "../kernel/profileMesh";
+import { featureComponentId, sketchComponentId } from "../document/components";
+import { placePlane } from "../document/componentPlacement";
 import {
   CadDocument,
   FacePlaneReference,
@@ -305,6 +307,22 @@ export function resolveDocumentPlanes(
       }
     }
   return { transforms, errors, faces };
+}
+
+/** Viewer/inspection coordinates; feature evaluation retains authored design coordinates. */
+export function placeDocumentPlanes(document: CadDocument, planes: ReturnType<typeof resolveDocumentPlanes>): ReturnType<typeof resolveDocumentPlanes> {
+  return {
+    ...planes,
+    transforms: new Map([...planes.transforms].map(([id, plane]) => [id, placePlane(plane, document.components[sketchComponentId(document, id)]?.placement)])),
+    faces: planes.faces.map(face => {
+      const owner = document.features.find(feature => feature.id === face.featureId);
+      return { ...face, transform: placePlane(face.transform, owner ? document.components[featureComponentId(document, owner)]?.placement : undefined) };
+    }),
+  };
+}
+
+export function resolvePlacedDocumentPlanes(document: CadDocument, parameters: Record<string, Quantity>, solvedSketches?: Map<string, ReturnType<typeof solveSketch>>, allowModifiedFaces = false): ReturnType<typeof resolveDocumentPlanes> {
+  return placeDocumentPlanes(document, resolveDocumentPlanes(document, parameters, solvedSketches, allowModifiedFaces));
 }
 function scale(p: Point3, s: number): Point3 {
   return { x: p.x * s, y: p.y * s, z: p.z * s };

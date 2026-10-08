@@ -33,7 +33,7 @@ import { CadDocument } from "../cad/document/schema";
 import { evaluateParameters } from "../cad/parameters/expressionEvaluator";
 import { sampleArc } from "../cad/sketch/profileDetection";
 import { solveSketch } from "../cad/sketch/SketchSolver";
-import { resolveDocumentPlanes, transformPoint } from "../cad/sketch/planes";
+import { resolvePlacedDocumentPlanes, transformPoint } from "../cad/sketch/planes";
 import { currentGeometryHighlight, useGeometryHighlight } from "../state/useGeometryHighlight";
 import { solidDimensions } from "../cad/inspection/solidDimensions";
 import { SolidDimensionOverlay, type DimensionProjection } from "./SolidDimensionOverlay";
@@ -690,7 +690,7 @@ function updateSketchOverlay(
   const points: SketchMarker[] = [], errorPoints: SketchMarker[] = [];
   const planes = result?.sketchPlanes
     ? { transforms: new Map(Object.entries(result.sketchPlanes)) }
-    : resolveDocumentPlanes(document, evaluated.values);
+    : resolvePlacedDocumentPlanes(document, evaluated.values);
   for (const sketch of Object.values(document.sketches)) {
     if (hiddenSketches.includes(sketch.id) || hiddenComponents.includes(sketchComponentId(document, sketch.id))) continue;
     const transform = planes.transforms.get(sketch.id);

@@ -6,9 +6,9 @@ components or one component. **Insert components** creates one undoable edit in
 the open project. Cancel discards the staged file; opening a project still replaces
 it through the separate Open workflow.
 
-Inserted components retain their source coordinates at the shared project origin.
+Inserted components retain their authored source coordinates and optional saved rigid placement. Move component can reposition a copied component after insertion.
 They can overlap existing bodies. This is an editable copy, not a linked external
-assembly: positioning transforms, mates, and external updates remain unavailable.
+hierarchical assembly: mates, nested placement chains, and external updates remain unavailable.
 The imported root component uses the source project name; repeated component names
 receive a suffix. The destination project ID, root, camera views, display units,
 metadata, and history remain its own.

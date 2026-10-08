@@ -1,3 +1,5 @@
+import { unplacePlane } from "../../cad/document/componentPlacement";
+import { beginComponentPlacement, canBeginComponentPlacement } from "./componentPlacementCommand";
 import { useInspectionState } from "../../state/inspectionState";
 import { useWorkspaceState } from "../../state/useWorkspaceState";
 import { canOpenSketchProjection, openSketchProjection } from "./sketchProjectionCommand";
@@ -118,6 +120,7 @@ export interface CadCommand {
 }
 
 export interface CommandEnablement {
+  moveComponent: boolean;
   projectSketchEdges: boolean;
   insertProject: boolean;
   measurementPicking: boolean;
@@ -173,6 +176,7 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
   return {
     projectSketchEdges: !targetPickerActive && !guidedHoleStartBlocked && !state.fileBusy && canOpenSketchProjection(state),
     insertProject: canInsertProject(state),
+    moveComponent: canBeginComponentPlacement(state),
     measurementPicking: state.rebuild.status === "succeeded" && Boolean(state.rebuild.result?.success && state.rebuild.result.documentId === state.history.present.id) && !state.fileBusy && !canvasActive && !guidedHoleStartBlocked && !targetPickerActive && !scopeCaptureBusy,
     createFacePocket: !targetPickerActive && !canvasActive && !guidedHoleStartBlocked && !scopeCaptureBusy && canBeginFacePocket(state),
     removeSketchMaterial: handoffReady && canRemoveSketchMaterial(state),
@@ -275,6 +279,7 @@ export const commands: CadCommand[] = [
       state.updateDocument(document => document.name === name ? document : { ...document, name, updatedAt: new Date().toISOString() });
     },
   },
+  { id: "component.move", label: "Move component", description: "Move or rotate the active component with mouse handles or precise numeric coordinates, then apply a validated native preview.", enablementKey: "moveComponent", run: ({ componentId }) => beginComponentPlacement(componentId) },
   { id: "component.create", label: "New Component", enablementKey: "newComponent", run: () => beginProjectWorkflow("component") },
   {
     id: "component.rename", internal: true, label: "Rename Active Component", enablementKey: "editProject",
@@ -910,14 +915,12 @@ function defaultRevolveAxis(state: CadStore): RevolveAxisReference | undefined {
   );
   if (cache.has(key)) return cache.get(key);
   try {
-    const transform =
-      analysis?.sketchPlanes?.[match.sketch.id] ??
-      (!usesWorkerAnalysis(state)
-        ? resolveDocumentPlanes(
-            document,
-            evaluateParameters(document.parameters).values,
-          ).transforms.get(match.sketch.id)
-        : undefined);
+    const posed = analysis?.sketchPlanes?.[match.sketch.id];
+    const transform = posed
+      ? unplacePlane(posed, document.components[sketchComponentId(document, match.sketch.id)]?.placement)
+      : !usesWorkerAnalysis(state)
+        ? resolveDocumentPlanes(document, evaluateParameters(document.parameters).values).transforms.get(match.sketch.id)
+        : undefined;
     if (transform) {
       const lines = Object.values(match.sketch.entities).filter(
         (e) => e.type === "line",

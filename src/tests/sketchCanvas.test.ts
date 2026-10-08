@@ -1,3 +1,4 @@
+import { withComponentPlacement } from "../cad/document/componentPlacement";
 import { beforeEach, describe, expect, it } from "vitest";
 import { createEmptyDocument, upsertSketch } from "../cad/document/CadDocument";
 import { createXySketch } from "../cad/sketch/SketchModel";
@@ -261,4 +262,22 @@ describe("canvas sketch authoring", () => {
       "reference lost",
     );
   });
+  it("opens pending sketch canvas in the component's posed frame without changing authored drawing coordinates", () => {
+    let document = createEmptyDocument();
+    const sketch = createXySketch();
+    document = upsertSketch(document, sketch);
+    document = withComponentPlacement(document, document.rootComponentId, { translation: [30, -7, 4], rotation: [Math.PI / 2, 0, 0] });
+    useCadStore.getState().setDocument(document);
+    useCadStore.getState().select({ kind: "sketch", id: sketch.id, documentId: document.id });
+    beginSketchCanvas();
+    const active = useSketchCanvas.getState().active!, state = useCadStore.getState();
+    const context = canvasContext(active, { ...state, rebuild: { ...state.rebuild, status: "queued", result: undefined } });
+    expect(context.plane.origin).toEqual({ x: 30, y: -7, z: 4 });
+    expect(context.plane.normal).toEqual({ x: 0, y: -1, z: 0 });
+    commitCanvasGeometry(active, state.history.present, "point", [{ x: 8, y: 3 }], false, false);
+    const solved = solveSketch(useCadStore.getState().history.present.sketches[sketch.id], {});
+    expect(Object.values(solved.points)).toEqual([expect.objectContaining({ x: 8, y: 3 })]);
+    expect(useCadStore.getState().history.present.components[document.rootComponentId].placement).toEqual(document.components[document.rootComponentId].placement);
+  });
+
 });

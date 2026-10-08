@@ -7,17 +7,23 @@ construction inputs, including source entity IDs and all represented boolean
 tools. The cache retains at most 64 signatures and approximately 4 MiB of strings
 and values; changing the document ID or adapter clears it. Unsupported histories
 (including Revolve and to-face tools), oversized signatures, and failed probes
-are checked again. Native modeling, validity, volume and face validation still
-run on every rebuild. The cache never retains a shape or WebAssembly handle.
+are checked again. This edge-proof cache never retains a shape or WebAssembly
+handle. Native plane validation continues; a separate bounded native feature
+output cache now skips reusable modeling operations while independently
+validating copied BReps. See [native feature reuse](INCREMENTAL_NATIVE.md).
 
 `e2e/edge-proof-performance.spec.ts` exercises the 40-body rotary fixture, checks
 unchanged native geometry after a rename, then edits platter thickness and checks
 fresh changed volume, affected-proof invalidation and zero disposal failures.
-One local Chromium run measured edge proofs at 237.5 ms cold, 19.6 ms on rename
+Before native feature output reuse was introduced, one local Chromium run measured edge proofs at 237.5 ms cold, 19.6 ms on rename
 (37 hits / 2 uncacheable misses), and 212.3 ms after thickness changed
 (12 hits / 27 misses). Total rebuilds were 3899.9, 3487.3 and 3691.1 ms respectively.
 These are three individual observations, not percentile estimates or a general
-speed guarantee. Solid modeling remains the dominant cost in that fixture.
+speed guarantee. Those historical totals include rebuilding every native feature.
+The current 40-body test additionally asserts zero modeling operations on a warm
+rename and fewer operations after a dependency edit. It records current cold,
+warm and changed-input timings; copied-shape validation and plane/projection
+proofs continue to contribute to total rebuild time.
 
 Run `npm run test:browser -- e2e/performance.spec.ts` after installing Chromium.
 The release gate includes this test. Playwright writes `performance.json` under

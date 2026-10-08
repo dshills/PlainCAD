@@ -193,6 +193,7 @@ export function SketchPanel({ compact = false }: { compact?: boolean }) {
                   }
                   settings={active ? (
                     <div className="component-settings">
+                      <button type="button" disabled={!enablement.moveComponent} onClick={() => void runCommand("component.move", { componentId: component.id })}>Move component</button>
                       <label className="component-name">
                         Component name
                         <CommitInput
@@ -212,7 +213,7 @@ export function SketchPanel({ compact = false }: { compact?: boolean }) {
                     <>
                       {!compact ? <div className="browser-folder">
                         <span className="folder-label">Origin</span>
-                        <span className="muted">XY, XZ, YZ · project origin</span>
+                        <span className="muted">XY, XZ, YZ · component frame</span>
                       </div> : null}
                       <BodyPanel
                         componentId={component.id}

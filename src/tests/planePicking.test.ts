@@ -1,3 +1,4 @@
+import { withComponentPlacement } from "../cad/document/componentPlacement";
 import { describe, expect, it } from "vitest";
 import {
   createEmptyDocument,
@@ -107,4 +108,17 @@ describe("supported sketch-plane picking", () => {
     });
     expect(sketchPlaneChoices(modified, result)).toHaveLength(3);
   });
+  it("picks a posed cap in displayed coordinates when native face metadata is absent", () => {
+    const { document, feature } = fixture();
+    const posed = withComponentPlacement(document, document.rootComponentId, { translation: [30, -7, 4], rotation: [Math.PI / 2, 0, 0] });
+    const result = rebuildDocument(posed);
+    result.meshes.forEach(mesh => { mesh.geometrySource = "opencascade"; mesh.geometryAssertions = { valid: true, volume: 2000, surfaceArea: 1000, solidCount: 1 }; });
+    const choices = sketchPlaneChoices(posed, result), bodyId = `body:${feature.id}`;
+    const selected = faceChoiceAt(choices, bodyId, { x: 30, y: -17, z: 4 }, { x: 0, y: -1, z: 0 });
+    expect(selected?.label).toBe("Base — end cap");
+    expect(selected?.transform.origin).toEqual({ x: 30, y: -17, z: 4 });
+    expect(selected?.transform.normal).toEqual({ x: 0, y: -1, z: 0 });
+    expect(faceChoiceAt(choices, bodyId, { x: 0, y: 0, z: 10 }, { x: 0, y: 0, z: 1 })).toBeUndefined();
+  });
+
 });

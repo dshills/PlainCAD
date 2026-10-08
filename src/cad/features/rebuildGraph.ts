@@ -1,4 +1,5 @@
 import { NativeFeatureCache } from "./nativeFeatureCache";
+import { applyComponentPlacements } from "./componentPlacement";
 import { nativeFeatureSignature } from "./nativeFeatureSignature";
 import { currentNativeEdges } from "./nativeEdgeTargets";
 import { NativeEdgeProofCache } from "./nativeEdgeProofCache";
@@ -39,7 +40,7 @@ import {
 } from "../kernel/KernelAdapter";
 import { TESSELLATION_LOD } from "../kernel/tessellationCache";
 import { getDisposableScopeMetrics } from "../kernel/disposableScope";
-import { resolveDocumentPlanes, SketchPlaneTransform } from "../sketch/planes";
+import { placeDocumentPlanes, resolveDocumentPlanes, SketchPlaneTransform } from "../sketch/planes";
 import { planFeatureGraph, stableBodyIdForFeature } from "./featureGraph";
 import { resolveRevolveAxis } from "./revolveAxis";
 import { resolveSupportedEdgeRefs } from "./topologyRefs";
@@ -537,6 +538,14 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
     nativePlanes?.finish();
     nativeProjections.finish();
   }
+  const placedPlanes = placeDocumentPlanes(document, planes);
+  if (!errors.length) {
+    try { applyComponentPlacements(document, kernel, runtimeBodies, shapesToDispose); }
+    catch (error) {
+      errors.push({ id: "component:placement", source: "kernel", message: `Component placement failed: ${error instanceof Error ? error.message : String(error)}` });
+      for (const id of runtimeBodies.keys()) failedBodies.add(id);
+    }
+  }
   if (options.exportUnion && options.exportBodyIds && !errors.length) {
     const ids = options.exportBodyIds;
     if (!ids.length || ids.length > MODEL_RESOURCE_LIMITS.maxBodies || new Set(ids).size !== ids.length || ids.some((id) => !runtimeBodies.has(id))) {
@@ -609,7 +618,7 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
       message:
         "Model exceeds the total triangle resource limit. Simplify or suppress bodies.",
     });
-  const availableFaces = nativeReferences ? currentNativeFaces(planes.faces, kernel, runtimeBodies, failedBodies) : undefined;
+  const availableFaces = nativeReferences ? currentNativeFaces(placedPlanes.faces, kernel, runtimeBodies, failedBodies) : undefined;
   const edgeProofStarted = performance.now();
   const availableEdges = nativeReferences ? currentNativeEdges(document, kernel, runtimeBodies, failedBodies, warnings, edgeProofCache) : undefined;
   const nativeEdgeProofMs = performance.now() - edgeProofStarted;
@@ -637,7 +646,7 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
     profiles: Object.fromEntries(
       [...profilesBySketch].map(([id, detected]) => [id, detected.profiles]),
     ),
-    sketchPlanes: Object.fromEntries(planes.transforms),
+    sketchPlanes: Object.fromEntries(placedPlanes.transforms),
     ...(availableFaces !== undefined ? { availableFaces } : {}),
     ...(availableEdges !== undefined ? { availableEdges } : {}),
     parameterValues: evaluated.values,
