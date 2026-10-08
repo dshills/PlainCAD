@@ -8,12 +8,11 @@ missing or the count cannot be determined, establish a baseline with the full ga
 
 ## Last successful full gate
 
-- Date: 2026-10-07.
-- Change: Associative native sketch projection, including the preceding edge-proof cache, click measurement and feature-pattern items.
-- Result: type checks, 1071 unit/component tests, build/bundle budget (largest 445.60 kB), all 251 development browser cases and all 32 production browser cases verified.
-  The complete release invocation passed development and initially had two production test-step failures. After test-only fixes, the complete production rerun passed 31 cases; the remaining projection case passed its final focused rerun (3.9s). Final type checks passed. Application sources remained unchanged throughout these runs.
-- Completed items since that full gate: **1**.
-- Next full gate: after **4** more completed items.
+- Date: 2026-10-08.
+- Change: linked sketch provenance and source controls, including the preceding contextual actions, automatic local previews and two-pick alignment items (commit `47df069`).
+- Result: type checks, 1301 unit/component tests, build/bundle budget (largest 496.15 kB), all 283 development native browser cases and all 35 production cases passed.
+- Completed items since that full gate: **2**.
+- Next full gate: after **3** more completed items.
 
 ## Completed batch
 
@@ -401,3 +400,34 @@ does not introduce editable import or assembly joints.
 
 Cadence: 1 completed item since the successful full checkpoint above. The next
 full gate is due after 4 more requested changes.
+
+## Current batch: inviting visual workbench
+
+### Item 1: real project gallery (2026-10-08)
+
+File → Project gallery and New part → examples open a searchable gallery with ten
+actual native example images, complexity labels, recent manual-save copies and
+optional five-second rotating native previews. Loading retains project replacement
+protection. Covers are bounded, hash-matched to the saved copy and optional; damaged
+recent copies remain diagnosed through Recovery. The shared cover projection now
+matches the modeling viewport's +X/-Y/+Z isometric frame.
+
+Prism Anthropic `claude-sonnet-5-5` reviewed the complete gallery integration
+(`1b5ca5b6ac086a3c51b07988599133ca`) with no high/medium findings. Earlier
+geometry/orientation, stale-load, resource and cache findings were fixed. Its two
+remaining low notes concern awaiting an optional cover and silently declining an
+unavailable cover; these keep manual-save/gallery completion deterministic and
+preserve the downloaded editable file. Final cover/test review
+`201b1dcc07baaf1771c0138bf8105a81` has complete coverage and zero findings.
+
+`npm run check:item` passed: type checks, 1328 unit/component tests, production
+build and bundle budget (largest 497.49 kB), 5 development native smoke cases and
+14 production CSP/modeling cases. The final overlapping-triangle test was added
+after the gate without runtime/build changes; all 14 gallery/cover tests then
+passed. The exact integration additionally passed four native gallery/library
+workflows and a production gallery CSP/PNG workflow. Recent covers use the actual
+native tessellation, not the current studio finish. Browser storage retains at
+most five manual copies; downloaded project files remain the portable source.
+
+Cadence: 2 completed items since the successful full checkpoint above. The next
+full gate is due after 3 more requested changes.

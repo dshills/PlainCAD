@@ -1,0 +1,32 @@
+import { test, expect } from "@playwright/test";
+import { readFile } from "node:fs/promises";
+
+test.use({ storageState: { cookies: [], origins: [] } });
+test("built gallery serves native assets, previews under CSP, opens an editable example and downloads its actual model PNG", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.addInitScript(() => { (window as unknown as { violations: string[] }).violations = []; document.addEventListener("securitypolicyviolation", event => (window as unknown as { violations: string[] }).violations.push(`${event.violatedDirective}:${event.blockedURI}`)); });
+  await page.goto("/"); await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+  await page.getByText("File", { exact: true }).click(); await page.getByRole("button", { name: "Project gallery", exact: true }).click();
+  const gallery = page.getByRole("dialog", { name: "Project gallery", exact: true });
+  await expect(gallery.getByRole("img")).toHaveCount(10);
+  await expect(async () => expect(await gallery.getByRole("img").first().evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(100)).toPass();
+  await gallery.getByLabel("Live native previews").check();
+  await gallery.getByRole("button", { name: "Preview Cable guide mount", exact: true }).focus();
+  const canvas = gallery.getByLabel("Native rotating preview of Cable guide mount");
+  await expect(canvas).toBeVisible({ timeout: 40000 });
+  const frame = await canvas.evaluate((canvas: HTMLCanvasElement) => canvas.toDataURL());
+  await expect(async () => expect(await canvas.evaluate((canvas: HTMLCanvasElement) => canvas.toDataURL())).not.toBe(frame)).toPass();
+  await gallery.getByRole("button", { name: "Open Cable guide mount", exact: true }).click();
+  await expect(gallery).toBeHidden();
+  await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+  await expect(page.getByText("Cable guide mount", { exact: true }).first()).toBeVisible();
+  await page.getByText("File", { exact: true }).click();
+  const downloaded = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download project view PNG", exact: true }).click();
+  const download = await downloaded;
+  const path = await download.path(); if (!path) throw new Error("Project PNG download was unavailable.");
+  const bytes = await readFile(path); expect(bytes.subarray(0, 8)).toEqual(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])); expect(bytes.length).toBeGreaterThan(1000);
+  expect(await page.evaluate(() => (window as unknown as { violations: string[] }).violations)).toEqual([]);
+  expect(errors).toEqual([]);
+});

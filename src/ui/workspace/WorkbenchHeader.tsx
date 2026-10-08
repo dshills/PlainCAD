@@ -95,6 +95,7 @@ export function WorkbenchHeader({ context }: { context: CommandContext }) {
                 label="Open project"
                 context={context}
               />
+              <CommandButton command="file.projectGallery" label="Project gallery" context={context} />
               <CommandButton
                 command="file.saveOrExport"
                 label="Save or export"

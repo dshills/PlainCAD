@@ -99,6 +99,7 @@ export function ProjectStart({ context }: { context: CommandContext }) {
         </button>
         <details>
           <summary>Start from example</summary>
+          <button type="button" disabled={!enabled.outsideGuidedHole} onClick={() => void start("file.projectGallery")}>Browse project gallery</button>
           <button
             type="button"
             aria-label="Load mounting plate template"

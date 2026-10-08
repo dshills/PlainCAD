@@ -11,7 +11,7 @@ export async function libraryThumbnail(meshes: RenderMesh[]): Promise<string> {
   canvas.width = canvas.height = 192;
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Browser thumbnail rendering is unavailable.");
-  const project = (x: number, y: number, z: number) => ({ x: (x - y) * Math.SQRT1_2, y: (x + y) / Math.sqrt(6) - z * Math.sqrt(2 / 3), depth: (x + y + z) / Math.sqrt(3) });
+  const project = (x: number, y: number, z: number) => ({ x: (x + y) * Math.SQRT1_2, y: (x - y) / Math.sqrt(6) - z * Math.sqrt(2 / 3), depth: (x - y + z) / Math.sqrt(3) });
   const faces: Array<{ points: ReturnType<typeof project>[]; depth: number; shade: number }> = [];
   for (const mesh of meshes) for (let index = 0; index < mesh.indices.length; index += 3) {
     const points = mesh.indices.slice(index, index + 3).map(vertex => project(mesh.positions[vertex * 3], mesh.positions[vertex * 3 + 1], mesh.positions[vertex * 3 + 2]));

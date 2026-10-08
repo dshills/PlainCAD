@@ -1,0 +1,46 @@
+import { test, expect } from "@playwright/test";
+import { aiSnapshot } from "./aiAcceptanceHelpers";
+import { createBoxTemplate } from "../src/templates/templates";
+
+test.use({ storageState: { cookies: [], origins: [] } });
+test("gallery previews actual example geometry without mutating the project, protects replacement and keeps saved native covers", async ({ page }) => {
+  const errors: string[] = []; page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/"); await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+  const box = createBoxTemplate();
+  await page.locator('input[type="file"]').first().setInputFiles({ name: "box.pcaddoc", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(box)) });
+  await expect(async () => { const snapshot = await aiSnapshot(page); expect(snapshot.status).toBe("succeeded"); expect(snapshot.result?.meshes[0].geometryAssertions?.volume).toBeCloseTo(80000, 6); }).toPass();
+  const before = await aiSnapshot(page);
+  // Test the shared command entry through the File menu, rather than mounting a harness.
+  await page.getByText("File", { exact: true }).click();
+  await page.getByRole("button", { name: "Project gallery", exact: true }).click();
+  const gallery = page.getByRole("dialog", { name: "Project gallery", exact: true });
+  await expect(gallery).toBeVisible();
+  await expect(gallery.getByRole("img")).toHaveCount(10);
+  const cover = gallery.getByRole("img", { name: "Cable guide mount actual native CAD geometry" });
+  await expect(async () => expect(await cover.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(100)).toPass();
+  await gallery.getByLabel("Live native previews").check();
+  await gallery.getByRole("button", { name: "Preview Cable guide mount", exact: true }).focus();
+  const canvas = gallery.getByLabel("Native rotating preview of Cable guide mount");
+  await expect(canvas).toBeVisible({ timeout: 40000 });
+  const first = await canvas.evaluate((element: HTMLCanvasElement) => element.toDataURL());
+  await expect(async () => expect(await canvas.evaluate((element: HTMLCanvasElement) => element.toDataURL())).not.toBe(first)).toPass();
+  const unchanged = await aiSnapshot(page);
+  expect(unchanged.document).toEqual(before.document); expect(unchanged.past).toBe(before.past); expect(unchanged.session).toBe(before.session); expect(unchanged.result).toEqual(before.result);
+  await gallery.getByRole("button", { name: "Open Cable guide mount", exact: true }).click();
+  await expect(gallery).toBeHidden();
+  await expect(page.getByRole("dialog", { name: /dropped project/i })).toBeVisible();
+  expect((await aiSnapshot(page)).document.id).toBe(box.id);
+  await page.getByRole("button", { name: /keep current/i }).click();
+  const saved = page.waitForEvent("download");
+  await page.evaluate(async () => { const path = "/src/ui/commands/commandRegistry.ts"; await (await import(path)).runCommand("file.saveProject", {}); });
+  await saved;
+  await page.getByText("File", { exact: true }).click(); await page.getByRole("button", { name: "Project gallery", exact: true }).click();
+  const recent = gallery.getByRole("region", { name: "Recent saved projects" });
+  await expect(recent.getByRole("img")).toHaveCount(1);
+  await expect(async () => expect(await recent.getByRole("img").evaluate((image: HTMLImageElement) => image.naturalWidth)).toBe(192)).toPass();
+  await gallery.getByRole("button", { name: "Close gallery", exact: true }).click();
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.getByText("File", { exact: true }).click(); await page.getByRole("button", { name: "Project gallery", exact: true }).click();
+  await expect(gallery.getByLabel("Live native previews")).toBeDisabled();
+  expect(errors).toEqual([]);
+});

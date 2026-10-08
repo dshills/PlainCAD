@@ -184,6 +184,14 @@ result invalidate Apply. Finish or cancel an active task before starting another
 
 ### Workspace and themes
 
+Open **File → Project gallery** to browse ten editable examples with real model
+images, part/feature counts and complexity labels. Enable live previews, then hover or focus a card to
+inspect a bounded native rotation; reduced-motion settings keep it still. Recently
+saved projects are the last five local manual-save copies in browser recovery
+storage, with native cover images where available. Opening a card uses the same
+unsaved-project protection as dropping a project file. The gallery stays out of
+the modeling canvas until you open it.
+
 The default **Docked Workbench** places Project/Parameters on the left,
 Task/Properties on the right, and History/AI/Issues at the bottom. **Draw**, **Solid**,
 and **Inspect** change the context toolbar. **Project** and **Details** reopen docks;

@@ -1,4 +1,5 @@
 import { canNavigateLinkedSketchSource, type LinkedSketchContext } from "./linkedSketchCommand";
+import { beginProjectGallery } from "../workspace/projectGalleryState";
 import { unplacePlane } from "../../cad/document/componentPlacement";
 import { beginComponentPlacement, canBeginComponentPlacement } from "./componentPlacementCommand";
 import { beginPartLibrary, canOpenPartLibrary } from "./partLibraryCommand";
@@ -358,6 +359,7 @@ export const commands: CadCommand[] = [
   },
   { id: "view.model", label: "Model View", description: "Restore modeling lighting, overlays and your modeling edge/grid preferences.", enablementKey: "document", run: (context) => { const state = useCadStore.getState(); if (context.documentSession !== undefined && context.documentSession !== state.documentSession) return; useViewerState.getState().setPresentationMode(state.documentSession, "model"); } },
   { id: "view.render", label: "Render View", description: "Present the current native model with smooth shading, studio lighting and clean PNG exports.", enablementKey: "document", run: (context) => { const state = useCadStore.getState(); if (context.documentSession !== undefined && context.documentSession !== state.documentSession) return; useViewerState.getState().setPresentationMode(state.documentSession, "render"); } },
+  { id: "file.projectGallery", label: "Project gallery", description: "Browse real example parts and recently saved local projects.", enablementKey: "outsideGuidedHole", run: () => beginProjectGallery() },
   { id: "view.toggleGrid", label: "Toggle Ground Grid", description: "Show or hide the ground grid in the current view preset and project PNG images.", enablementKey: "document", run: (context) => { const state = useCadStore.getState(); if (context.documentSession !== undefined && context.documentSession !== state.documentSession) return; useViewerState.getState().toggleGrid(state.documentSession); } },
   { id: "view.toggleModelEdges", label: "Toggle Model Edges", description: "Show or hide solid edge lines in the 3D view and PNG images.", enablementKey: "document", run: () => useViewerState.getState().toggleModelEdges(useCadStore.getState().documentSession) },
   { id: "view.toggleMovingQuality", label: "Toggle Movement Optimization", description: "Use lower resolution and hide model edges while moving the camera, then restore detail promptly after input ends.", enablementKey: "document", run: () => useViewerState.getState().toggleMovingQuality(useCadStore.getState().documentSession) },
@@ -467,6 +469,15 @@ export const commands: CadCommand[] = [
         state.setFileError(undefined);
         try {
           await saveRecovery(document, true);
+          const current = useCadStore.getState();
+          if (current.history.present === document && current.documentSession === state.documentSession && current.rebuild.status === "succeeded") {
+            const result = current.rebuild.result;
+            // Covers are optional; a successful project download remains successful.
+            try {
+              const { rememberGalleryProject } = await import("../../persistence/projectGallery");
+              await rememberGalleryProject(document, result);
+            } catch { /* The saved editable project does not depend on its optional cover. */ }
+          }
         } catch (error) {
           state.setFileError(
             `Project download started, but its recovery save marker could not be stored: ${error instanceof Error ? error.message : String(error)}`,
