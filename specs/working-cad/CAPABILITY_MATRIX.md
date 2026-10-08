@@ -34,7 +34,7 @@ See [export hub scope](EXPORT_HUB.md).
 
 - **Portable part library:** Back up the complete local library as a bounded .pcadlib pack, preview/import it as independent saved copies, or download one editable .pcaddoc. Imports validate every entry and commit atomically; failures/cancellation preserve existing copies and the open project. See [library transfer](PART_LIBRARY.md).
 - **Placed-component projections:** New schema-17 links project retained native cap boundaries in world coordinates into parallel placed sketch planes. Source/target movement updates linked geometry; legacy links preserve their authored-coordinate behavior. Oblique, lost or unsupported references diagnose and block Apply. See [projection scope](SKETCH_PROJECTION.md).
-- **Component alignment:** Move component can match native endpoints, straight-edge midpoints/directions, or supported planar face planes with signed clearance. Preview/Apply saves a static rigid pose in one Undo step; curved/general boolean topology, collision avoidance and assembly joints remain unavailable. See [alignment scope](COMPONENT_ALIGNMENT.md).
+- **Component alignment:** Move component can match native endpoints, straight-edge midpoints/directions, or supported planar face planes with signed clearance. Preview/Apply saves a static rigid pose in one Undo step; curved/general boolean topology and automatic collision avoidance remain unavailable; supported rigid/hinge/slider joints provide native collision feedback. See [alignment scope](COMPONENT_ALIGNMENT.md).
 
 
 ## Docked Workbench workflow improvements
@@ -65,7 +65,7 @@ See [export hub scope](EXPORT_HUB.md).
   component with its saved placement through the safe import codec, with independent
   parameter names/bindings and remapped geometry/profile/topology identities.
   Outside-scope dependencies, missing references, stale tasks and combined
-  portable-file/resource excesses reject insertion. Saved rigid placement is supported; joints and linked
+  portable-file/resource excesses reject insertion. Saved rigid placement and complete assembly-joint insertion are supported; linked
   external designs remain unavailable. See [insertion limits](REUSABLE_PARTS.md).
 
 - Task guidance uses current worker sketch profiles/diagnostics and distinguishes
@@ -185,7 +185,7 @@ See `DESIGN_SYSTEM.md` and `design-qa.md` for design rules and comparison eviden
 
 - React/Vite/TypeScript UI, Three.js viewer, Zustand document history and undo/redo.
 - Serializable document with stable IDs, deterministic JSON, schema migrations
-  through version 17, and validation before imported state is accepted.
+  through version 18, and validation before imported state is accepted.
 - Import unsafe-key rejection, nesting/node limits, and component/parameter/sketch/entity/
   constraint/feature count limits; unknown and runtime fields stripped by migration.
 - Local project files contain a root component and up to 99 additional internal
@@ -194,7 +194,7 @@ See `DESIGN_SYSTEM.md` and `design-qa.md` for design rules and comparison eviden
   undo/redo, legacy migration and native save/open/STL are covered. Modeling targets
   and source sketch choices are scoped to the owning component. Components have independent saved rigid placement;
   the parameter table and timeline remain project-wide.
-  Saved rigid placement is supported. Nested assemblies, joints and linked external components are unavailable.
+  Saved rigid placement is supported. Nested project hierarchies and linked external components are unavailable; supported assembly joints connect project components.
 - Parameter expressions, dependency ordering/cycle errors, compatible unit
   conversion, dimensional arithmetic, CAD math functions, and expression limits.
 - Schema 10 captures per-expression bare-number length/angle defaults, saved display
@@ -613,7 +613,7 @@ Timeline chips label their component owner, with an optional active-component
 filter that follows activation. Timeline movement still validates the full
 project order. These are runtime view preferences, reset when replacing/opening
 a project and excluded from undo history and project JSON. Components remain
-flat parts with optional saved rigid placement; joints are unavailable.
+flat components with saved rigid placement and supported assembly joints.
 
 
 ### Retained references after booleans
@@ -928,7 +928,7 @@ the existing import limits, validation and migrations. A nonempty current projec
 gets a replacement confirmation with keep/save/open options. Invalid files,
 multiple-file drops, active tasks and stale import/confirmation contexts leave the
 current project intact. Native browser acceptance covers parameter edits, save,
-reopen and STL after a drop. Independent part append and rigid component placement are supported; joints remain unavailable.
+reopen and STL after a drop. Independent part append and rigid component placement are supported; supported joints are described below.
 
 
 ### Sketch multi-selection and bulk deletion
@@ -1212,12 +1212,24 @@ adapter implements the probe, and fallback meshes never authorize edge picking.
 
 Validated native feature output reuse uses independently owned OpenCascade copies, with 128-entry/256-shape bounds and a 32 MiB mesh/signature estimate. Document/session/kernel changes clear ownership. Native allocation size is not measured by that estimate; exact BRep validity, volume and shape-count bounds remain authoritative. See [incremental limits](INCREMENTAL_NATIVE.md).
 
-Schema 16 stores finite rigid component placement: translations within ±100,000,000 mm and Euler rotations within ±360 degrees. Move component offers pointer/keyboard handles and numeric fields; Apply requires an exact current native candidate with unchanged body IDs and solid counts. Independent moved bodies retain exact volume; traced consumers of schema-17 world projections may change geometry under normal native validity checks. Completed native BReps and mesh normals/vertices are positioned together. Legacy projections stay in authored coordinates; new links follow source/target world placement on parallel planes. Face-based creation retains its documented matching-placement scope. Hierarchical assemblies and joints are unavailable.
+Schema 16 stores finite rigid component placement: translations within ±100,000,000 mm and Euler rotations within ±360 degrees. Move component offers pointer/keyboard handles and numeric fields; Apply requires an exact current native candidate with unchanged body IDs and solid counts. Independent moved bodies retain exact volume; traced consumers of schema-17 world projections may change geometry under normal native validity checks. Completed native BReps and mesh normals/vertices are positioned together. Legacy projections stay in authored coordinates; new links follow source/target world placement on parallel planes. Face-based creation retains its documented matching-placement scope. Schema-18 rigid/hinge/slider joints support an acyclic one-parent component graph; nested project hierarchies remain unavailable. See the assembly section below.
 
 Projection source picking supports complete retained authored extrusion cap boundaries through mouse, touch and Enter/Space, with native preview before explicit Apply. Schema-17 links support differently placed components when source and target planes are parallel. Arbitrary BRep edges, oblique boundaries and lost references remain diagnostic.
 
 Feature pattern controls offer signed spacing, circular center and sweep pointer handles on a bounded source-plane diagram. Formula replacement requires explicit consent; Escape/pointer cancellation restores the captured expression. Native previews run after release and current geometry is required for Apply.
 
-The local part library saves one self-contained editable component with a bounded native PNG thumbnail. IndexedDB is limited to 50 entries/25 MiB with atomic writes and quota/cancellation diagnostics. Drag insertion uses the viewport ray on XY z=0; keyboard insertion starts at origin. Full candidate native validation precedes one-step Apply. Saved copies remain local to the browser, with independent inserted identities/parameters; external links, joints and automatic source updates are unavailable.
+The local part library saves one self-contained editable component with a bounded native PNG thumbnail. IndexedDB is limited to 50 entries/25 MiB with atomic writes and quota/cancellation diagnostics. Drag insertion uses the viewport ray on XY z=0; keyboard insertion starts at origin. Full candidate native validation precedes one-step Apply. Saved copies remain local to the browser, with independent inserted identities/parameters; external links and automatic source updates are unavailable. Inserted components can be connected with supported assembly joints.
 
 Native STEP export uses a disposable OpenCascade worker to rebuild selected bodies at saved world poses, write real STEP solids and reimport the actual file. Download requires current matching native BRep validity, solid/root counts, exact volumes, bounds and millimetre units. Separate bodies remain separate; editable history, labels and assembly structure are retained in project files. Cancellation, changed documents, missing bindings and native failures produce diagnostics without authorizing stale downloads. See [STEP export](STEP_EXPORT.md).
+
+## Assembly joints (schema 18)
+
+Working: face-picked rigid, hinge and slider joints; native posed BReps with unchanged exact volumes/solid counts; parent pose propagation; current supported mating-plane resolution; bounded numeric/range motion preview, cancel, one-step Apply/Undo, detach preserving pose, save/open and positioned STL/STEP. At most 32 joints, one incoming joint per component, acyclic graph. Native common-volume collision checks reject broad-phase false positives, highlight colliders orange and report body IDs. At most 256 overlapping pair probes.
+
+Limits: hinge pivot is the parent face origin; axis is its normal. Only native-validated authored extrusion flat face roles are supported. Lost/modified/absorbed face roles fail with a repair diagnostic. Joints cannot coexist with world-space sketch projections. Collision checks examine a position, not a swept motion path or physical dynamics. No arbitrary cylindrical/concentric mates, gear coupling, external assembly links or STEP joint metadata. Older schema files migrate without acquiring joints.
+
+Remove joint in component settings also repairs a broken mating reference: a current native pose is retained; after a failed rebuild the component returns to its authored pose. Undo restores the removed joint.
+
+Collision analysis exceeding its probe budget or failing native intersection is explicitly incomplete, with a warning. Modeling and export remain available; the UI does not report verified clearance for an incomplete analysis.
+
+Complete assembly insertion copies both joint endpoints and remaps joint/component/feature/face IDs independently. Selecting a single component whose joint partner is outside the set is rejected; detach the joint first or insert all source components. A part-library entry remains one self-contained component.

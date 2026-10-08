@@ -1,7 +1,7 @@
 import { canNavigateLinkedSketchSource, type LinkedSketchContext } from "./linkedSketchCommand";
 import { beginProjectGallery } from "../workspace/projectGalleryState";
-import { unplacePlane } from "../../cad/document/componentPlacement";
-import { beginComponentPlacement, canBeginComponentPlacement } from "./componentPlacementCommand";
+import { unplacePlane, positionedDocument, withComponentPlacement } from "../../cad/document/componentPlacement";
+import { beginComponentPlacement, canBeginComponentPlacement, beginAssemblyMotion, canBeginAssemblyMotion } from "./componentPlacementCommand";
 import { beginPartLibrary, canOpenPartLibrary } from "./partLibraryCommand";
 import { useInspectionState } from "../../state/inspectionState";
 import { useWorkspaceState } from "../../state/useWorkspaceState";
@@ -151,6 +151,8 @@ export interface CommandEnablement {
   canvasEditBase: boolean;
   canvasDeleteBase: boolean;
   moveComponent: boolean;
+  assemblyMotion: boolean;
+  removeJoint: boolean;
   partLibrary: boolean;
   projectSketchEdges: boolean;
   insertProject: boolean;
@@ -223,6 +225,8 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
     projectSketchEdges: !targetPickerActive && !guidedHoleStartBlocked && !state.fileBusy && canOpenSketchProjection(state),
     insertProject: !aiPreviewActive && canInsertProject(state),
     partLibrary: !aiPreviewActive && canOpenPartLibrary(state),
+    removeJoint: !state.fileBusy && !targetPickerActive && !guidedHoleStartBlocked && !canvasActive && !scopeCaptureBusy && Boolean(state.history.present.assemblyJoints?.some(joint => joint.childComponentId === state.activeComponentId)),
+    assemblyMotion: !aiPreviewActive && canBeginAssemblyMotion(state),
     moveComponent: !aiPreviewActive && canBeginComponentPlacement(state),
     measurementPicking: state.rebuild.status === "succeeded" && Boolean(state.rebuild.result?.success && state.rebuild.result.documentId === state.history.present.id) && !state.fileBusy && !canvasActive && !guidedHoleStartBlocked && !targetPickerActive && !scopeCaptureBusy,
     createFacePocket: !targetPickerActive && !canvasActive && !guidedHoleStartBlocked && !scopeCaptureBusy && canBeginFacePocket(state),
@@ -340,6 +344,14 @@ export const commands: CadCommand[] = [
       state.updateDocument(document => document.name === name ? document : { ...document, name, updatedAt: new Date().toISOString() });
     },
   },
+  { id: "assembly.removeJoint", label: "Remove active component joint", description: "Detach an active component, including a broken mating reference. Keeps its accepted pose when current native geometry is available; otherwise restores its authored pose.", enablementKey: "removeJoint", run: () => {
+    const state = useCadStore.getState(), document = state.history.present;
+    const joint = document.assemblyJoints?.find(item => item.childComponentId === state.activeComponentId); if (!joint) return;
+    const placement = state.rebuild.status === "succeeded" && state.rebuild.result?.success && state.rebuild.result.documentId === document.id ? state.rebuild.result.componentPlacements?.[joint.childComponentId] : undefined;
+    const posed = placement ? withComponentPlacement(document, joint.childComponentId, placement) : document;
+    state.updateDocument(current => current !== document ? current : { ...posed, assemblyJoints: document.assemblyJoints!.filter(item => item.id !== joint.id) });
+  } },
+  { id: "assembly.motion", label: "Assembly motion", description: "Move hinge and slider joints, inspect native collisions, or detach a joint.", enablementKey: "assemblyMotion", run: () => beginAssemblyMotion() },
   { id: "component.move", label: "Move component", description: "Move or rotate the active component with mouse handles or precise numeric coordinates, then apply a validated native preview.", enablementKey: "moveComponent", run: ({ componentId }) => beginComponentPlacement(componentId) },
   { id: "component.create", label: "New Component", enablementKey: "newComponent", run: () => beginProjectWorkflow("component") },
   {
@@ -1032,7 +1044,7 @@ function defaultRevolveAxis(state: CadStore): RevolveAxisReference | undefined {
   try {
     const posed = analysis?.sketchPlanes?.[match.sketch.id];
     const transform = posed
-      ? unplacePlane(posed, document.components[sketchComponentId(document, match.sketch.id)]?.placement)
+      ? unplacePlane(posed, positionedDocument(document, analysis).components[sketchComponentId(document, match.sketch.id)]?.placement)
       : !usesWorkerAnalysis(state)
         ? resolveDocumentPlanes(document, evaluateParameters(document.parameters).values).transforms.get(match.sketch.id)
         : undefined;

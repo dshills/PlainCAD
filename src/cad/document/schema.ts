@@ -1,4 +1,4 @@
-export const CURRENT_SCHEMA_VERSION = 17;
+export const CURRENT_SCHEMA_VERSION = 18;
 
 export type UnitSystem = "metric" | "imperial";
 
@@ -24,6 +24,7 @@ export interface CadDocument {
   parameters: Record<string, CadParameter>;
   sketches: Record<string, Sketch>;
   features: Feature[];
+  assemblyJoints?: AssemblyJoint[];
   viewState?: ViewState;
   metadata?: Record<string, unknown>;
 }
@@ -312,4 +313,22 @@ export interface SelectionRef {
     | "sketch";
   id: string;
   documentId: string;
+}
+
+/** Acyclic, one-parent assembly; degrees for hinges, millimeters for sliders. */
+export interface AssemblyJoint {
+  id: string;
+  name: string;
+  type: "rigid" | "hinge" | "slider";
+  parentComponentId: string;
+  childComponentId: string;
+  sourceFaceId: string;
+  targetFaceId: string;
+  parentRest: ComponentPlacement;
+  childRest: ComponentPlacement;
+  opposite: boolean;
+  gap: number;
+  value: number;
+  minimum: number;
+  maximum: number;
 }

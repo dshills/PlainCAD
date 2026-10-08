@@ -193,6 +193,8 @@ export function SketchPanel({ compact = false }: { compact?: boolean }) {
                   }
                   settings={active ? (
                     <div className="component-settings">
+                      <button type="button" disabled={!enablement.removeJoint} onClick={() => void runCommand("assembly.removeJoint")}>Remove joint</button>
+                      <button type="button" disabled={!enablement.assemblyMotion} onClick={() => void runCommand("assembly.motion")}>Assembly motion</button>
                       <button type="button" disabled={!enablement.moveComponent} onClick={() => void runCommand("component.move", { componentId: component.id })}>Move component</button>
                       <label className="component-name">
                         Component name

@@ -33,6 +33,8 @@ export interface RenderMesh {
   normals: ArrayLike<number>;
   indices: number[];
   color?: string;
+  /** Runtime-only exact assembly collision highlight. */
+  assemblyCollision?: boolean;
   geometrySource?: "opencascade" | "fallback";
   kernelOperation?:
     | "box"

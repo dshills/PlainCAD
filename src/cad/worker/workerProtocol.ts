@@ -1,3 +1,4 @@
+import type { ComponentPlacement } from "../document/schema";
 import type { SketchProfile } from "../sketch/profileDetection";
 import type { ResolvedSketch } from "../sketch/SketchSolver";
 import type { AvailableFace, SketchPlaneTransform } from "../sketch/planes";
@@ -26,6 +27,9 @@ export interface RebuildResult {
   errors: RebuildError[];
   warnings: RebuildWarning[];
   durationMs: number;
+  componentPlacements?: Record<string, ComponentPlacement>;
+  assemblyCollisions?: [string, string][];
+  assemblyCollisionStatus?: "complete" | "incomplete";
   metrics?: RebuildMetrics;
   /** Runtime-only result of an explicit scope probe, never used by ordinary rebuilds. */
   capturedTargetBodyIds?: string[];

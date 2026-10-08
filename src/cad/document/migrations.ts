@@ -28,6 +28,7 @@ const migrations = new Map<number, Migration>([
     return [id, legacy];
   })) })],
   [16, migrateV16ToV17],
+  [17, document => { const { assemblyJoints: _joints, ...legacy } = document; return { ...legacy, schemaVersion: 18 }; }],
 ]);
 
 function migrateV16ToV17(document: CadDocument): CadDocument {
@@ -246,6 +247,7 @@ function sanitizeCurrentDocument(input: CadDocument): CadDocument {
     parameters,
     sketches,
     features,
+    ...(input.assemblyJoints !== undefined ? { assemblyJoints: Array.isArray(input.assemblyJoints) ? input.assemblyJoints.map(sanitizeAssemblyJoint) : input.assemblyJoints } : {}),
     ...(input.viewState
       ? {
           viewState: {
@@ -638,4 +640,12 @@ function normalizePlaneReference(value: unknown): Sketch["plane"] {
   return value === undefined
     ? { type: "origin", plane: "XY" }
     : ({ type: "origin", plane: "invalid" } as unknown as Sketch["plane"]);
+}
+
+function sanitizeAssemblyJoint(value: unknown): NonNullable<CadDocument["assemblyJoints"]>[number] {
+  if (!isRecord(value)) return value as NonNullable<CadDocument["assemblyJoints"]>[number];
+  return Object.fromEntries(["id", "name", "type", "parentComponentId", "childComponentId", "sourceFaceId", "targetFaceId", "parentRest", "childRest", "opposite", "gap", "value", "minimum", "maximum"].map(key => {
+    const field = value[key];
+    return [key, ["parentRest", "childRest"].includes(key) && isRecord(field) ? { translation: field.translation, rotation: field.rotation } : field];
+  })) as unknown as NonNullable<CadDocument["assemblyJoints"]>[number];
 }

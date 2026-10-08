@@ -1,4 +1,5 @@
 import type { CadDocument, FacePlaneReference, Feature, Sketch, SketchEntity, SketchPlaneReference, TopologyRef } from "../cad/document/schema";
+import { stableFaceId } from "../cad/sketch/planes";
 import { createId, stableBodyIdForFeature } from "../cad/document/ids";
 import { documentTimeline, timelineItemId } from "../cad/document/timelineOrdering";
 import { featureComponentId, sketchComponentId } from "../cad/document/components";
@@ -30,6 +31,8 @@ export function appendProject(target: CadDocument, source: CadDocument, options:
     throw new Error(`Repair source parameter references before insertion: ${bindingIssues[0].message}`);
   const componentIds = Object.keys(source.components).filter((id) => !options.componentId || id === options.componentId);
   const components = new Set(componentIds);
+  const joints = (source.assemblyJoints ?? []).filter(joint => components.has(joint.childComponentId) || components.has(joint.parentComponentId));
+  if (joints.some(joint => !components.has(joint.childComponentId) || !components.has(joint.parentComponentId))) throw new Error("Assembly joint references outside the selected component. Detach the joint or choose all source components.");
   const sketches = Object.values(bound.sketches).filter((s) => components.has(sketchComponentId(bound, s.id)));
   const features = bound.features.filter((f) => components.has(featureComponentId(bound, f)));
   if (!sketches.length && !features.length)
@@ -42,7 +45,7 @@ export function appendProject(target: CadDocument, source: CadDocument, options:
     return e;
   });
   const selected: CadDocument = { ...bound, sketches: Object.fromEntries(sketches.map((s) => [s.id, s])), features };
-  const ids = new Set<string>([...componentIds, ...Object.values(bound.parameters).map((p) => p.id), ...sketches.flatMap((s) => [s.id, ...Object.keys(s.entities), ...s.constraints.map((c) => c.id), ...s.dimensions.map((d) => d.id), ...(s.projections ?? []).flatMap((p) => [p.id, projectionConstraintId(p.id)])]), ...features.map((f) => f.id)]);
+  const ids = new Set<string>([...componentIds, ...joints.map(joint => joint.id), ...Object.values(bound.parameters).map((p) => p.id), ...sketches.flatMap((s) => [s.id, ...Object.keys(s.entities), ...s.constraints.map((c) => c.id), ...s.dimensions.map((d) => d.id), ...(s.projections ?? []).flatMap((p) => [p.id, projectionConstraintId(p.id)])]), ...features.map((f) => f.id)]);
   const occupied = occupiedDocumentIds(target);
   // One prefix preserves ordering within the solver and gives repeated insertions independent identities.
   const generatedConstraints = new Map(sketches.flatMap((s) => (s.projections ?? []).map((p) => [projectionConstraintId(p.id), p.id] as const)));
@@ -160,7 +163,16 @@ export function appendProject(target: CadDocument, source: CadDocument, options:
     names.add(name);
     return [remap(id), { id: remap(id), name, ...(original.placement ? { placement: { translation: [...original.placement.translation] as [number, number, number], rotation: [...original.placement.rotation] as [number, number, number] } } : {}) }];
   }));
-  let imported: CadDocument = { ...selected, components: mappedComponents, parameters, sketches: Object.fromEntries(mappedSketches.map((s) => [s.id, s])), features: mappedFeatures };
+  const jointFace = (id: string, componentId: string) => {
+    const owners = features.filter(feature => feature.type === "extrude" && featureComponentId(bound, feature) === componentId && (
+      id === stableFaceId(feature.id, "startCap") || id === stableFaceId(feature.id, "endCap") ||
+      Object.keys(bound.sketches[feature.sketchId]?.entities ?? {}).some(entityId => id === stableFaceId(feature.id, "side", entityId))
+    ));
+    if (owners.length !== 1) throw new Error("Assembly mating face is missing, ambiguous or outside its component. Repair it before insertion.");
+    return stable(id, owners[0].id);
+  };
+  const mappedJoints = joints.map(joint => ({ ...joint, id: remap(joint.id), parentComponentId: remap(joint.parentComponentId), childComponentId: remap(joint.childComponentId), sourceFaceId: jointFace(joint.sourceFaceId, joint.childComponentId), targetFaceId: jointFace(joint.targetFaceId, joint.parentComponentId) }));
+  let imported: CadDocument = { ...selected, components: mappedComponents, assemblyJoints: mappedJoints, parameters, sketches: Object.fromEntries(mappedSketches.map((s) => [s.id, s])), features: mappedFeatures };
   const forbiddenNames = new Set(Object.keys(target.parameters));
   // Avoid capturing unresolved target symbols when a new parameter is introduced.
   mapDocumentExpressions(target, (e) => {
@@ -184,7 +196,7 @@ export function appendProject(target: CadDocument, source: CadDocument, options:
   imported = refreshBoundNames(imported);
   const targetTimeline = documentTimeline(target), importedTimeline = documentTimeline(imported);
   const steps = new Map([...targetTimeline, ...importedTimeline].map((item, index) => [timelineItemId(item), index + 1]));
-  const merged: CadDocument = { ...target, timelineCursor: steps.size, updatedAt: new Date().toISOString(), components: { ...target.components, ...imported.components }, parameters: { ...target.parameters, ...imported.parameters }, sketches: Object.fromEntries([...Object.values(target.sketches), ...Object.values(imported.sketches)].map((s) => [s.id, { ...s, timelineStep: steps.get(s.id)! }])), features: [...target.features, ...imported.features].map((f) => ({ ...f, timelineStep: steps.get(f.id)! })) };
+  const merged: CadDocument = { ...target, ...((target.assemblyJoints?.length || mappedJoints.length) ? { assemblyJoints: [...(target.assemblyJoints ?? []), ...mappedJoints] } : {}), timelineCursor: steps.size, updatedAt: new Date().toISOString(), components: { ...target.components, ...imported.components }, parameters: { ...target.parameters, ...imported.parameters }, sketches: Object.fromEntries([...Object.values(target.sketches), ...Object.values(imported.sketches)].map((s) => [s.id, { ...s, timelineStep: steps.get(s.id)! }])), features: [...target.features, ...imported.features].map((f) => ({ ...f, timelineStep: steps.get(f.id)! })) };
   // Check the combined portable file budget, as well as counts/depth, before changing history.
   const serialized = JSON.stringify(merged, null, 2);
   assertProjectJsonShape(parseProjectJson(serialized));
@@ -195,7 +207,7 @@ export function appendProject(target: CadDocument, source: CadDocument, options:
 }
 /** Reserve authored identities and dangling references so insertion cannot repair them by accident. */
 function occupiedDocumentIds(document: CadDocument): Set<string> {
-  const ids = new Set<string>([document.id, document.rootComponentId, ...Object.keys(document.components), ...Object.values(document.parameters).map((p) => p.id), ...(document.viewState?.namedViews ?? []).map((v) => v.id)]);
+  const ids = new Set<string>([document.id, document.rootComponentId, ...(document.assemblyJoints ?? []).map(joint => joint.id), ...Object.keys(document.components), ...Object.values(document.parameters).map((p) => p.id), ...(document.viewState?.namedViews ?? []).map((v) => v.id)]);
   const addBody = (id: string) => { ids.add(id); if (id.startsWith("body:")) ids.add(id.slice(5)); };
   const addTopology = (ref: TopologyRef) => {
     ids.add(ref.featureId); ids.add(ref.transientId);

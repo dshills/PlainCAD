@@ -1,0 +1,46 @@
+import { test, expect } from "@playwright/test";
+import { readFile } from "node:fs/promises";
+import { stlSignedVolume } from "../e2e/aiAcceptanceHelpers";
+
+test("built assembly controls apply native collision motion and retain positioned solids under CSP", async ({ page }, info) => {
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/");
+  await page.locator('input[type="file"]').first().setInputFiles("src/persistence/fixtures/schema-v18.pcaddoc");
+  await page.keyboard.press("ControlOrMeta+k");
+  const palette = page.getByRole("dialog", { name: "Command Palette", exact: true });
+  await palette.getByLabel("Filter commands").fill("Assembly motion");
+  await expect(palette.getByRole("button", { name: /^Assembly motion/ })).toBeEnabled();
+  await palette.getByRole("button", { name: /^Assembly motion/ }).click();
+  const dialog = page.getByRole("dialog", { name: "Assembly motion", exact: true });
+  await dialog.getByLabel("Exact motion").fill("-3");
+  await dialog.getByLabel("Exact motion").press("Enter");
+  await expect(dialog.getByRole("status")).toContainText("1 native collision pairs");
+  await expect(dialog.getByRole("button", { name: "Apply joint motion" })).toBeEnabled();
+  await dialog.getByRole("button", { name: "Apply joint motion" }).click();
+  await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+  const saving = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  const path = info.outputPath("assembly.pcaddoc");
+  await (await saving).saveAs(path);
+  const saved = JSON.parse(await readFile(path, "utf8"));
+  expect(saved.assemblyJoints[0].value).toBe(-3);
+  await page.screenshot({ path: info.outputPath("assembly-built.png") });
+  // A selected native body can be exported through the normal fabrication dialog.
+  await page.getByRole("button", { name: "Export STL", exact: true }).click();
+  const exportDialog = page.getByRole("dialog", { name: /STL/i });
+  await expect(exportDialog).toBeVisible();
+  await exportDialog.getByRole("button", { name: "Clear body selection" }).click();
+  await exportDialog.getByRole("checkbox", { name: "Export body Second part", exact: true }).check();
+  const exporting = page.waitForEvent("download");
+  await exportDialog.getByRole("button", { name: "Generate STL", exact: true }).click();
+  const stlPath = info.outputPath("assembly.stl");
+  await (await exporting).saveAs(stlPath);
+  const bytes = await readFile(stlPath);
+  expect(stlSignedVolume(bytes)).toBeCloseTo(1000, 6);
+  const z: number[] = [];
+  for (let offset = 84; offset < bytes.length; offset += 50) for (const vertex of [0, 1, 2]) z.push(bytes.readFloatLE(offset + 20 + vertex * 12));
+  expect(Math.min(...z)).toBeCloseTo(2, 6);
+  expect(Math.max(...z)).toBeCloseTo(7, 6);
+  expect(errors).toEqual([]);
+});

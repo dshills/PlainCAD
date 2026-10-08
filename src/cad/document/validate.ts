@@ -1,3 +1,4 @@
+import { assemblyJointIssues } from "./assemblyJoints";
 import { componentScopeIssues } from "./components";
 import { validComponentPlacement } from "./componentPlacement";
 
@@ -62,6 +63,7 @@ export function validateDocument(document: CadDocument, mode: "modeling" | "stor
       issues.push({ source: "document", sourceId: id, message: "Component placement needs three finite millimeter translations (at most 100000000) and three radian rotations (at most 360 degrees)." });
   }
   if (issues.length) return issues;
+  issues.push(...assemblyJointIssues(document));
   issues.push(...validatePersistedFields(document));
   if (issues.length > 0) return issues;
 
@@ -77,6 +79,7 @@ export function validateDocument(document: CadDocument, mode: "modeling" | "stor
   };
   addId(document.id, "document");
   for (const component of Object.values(document.components)) addId(component.id, "document");
+  for (const joint of document.assemblyJoints ?? []) addId(joint.id, "document");
 
   for (const [name, parameter] of Object.entries(document.parameters)) {
     addId(parameter.id, "parameter");

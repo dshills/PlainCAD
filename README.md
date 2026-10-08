@@ -114,7 +114,7 @@ See [canvas action scope](specs/working-cad/CANVAS_ACTIONS.md).
 
 Offset, Mirror/Pattern, Trim/Extend and projection preview automatically after a short pause. Apply stays disabled for unfinished, invalid or stale inputs; Preview remains available for explicit retries. Less common settings are under Details. These previews are local native CAD operations and make no AI provider calls. See [local task previews](specs/working-cad/LOCAL_TASK_PREVIEWS.md).
 
-Move component guides two picks: source, then destination. Destination, Gap and Flip update its native preview; exact numeric poses remain under Details. Supported geometry markers and named lists remain available. Apply saves one static placement in one Undo step. See [guided alignment](specs/working-cad/GUIDED_COMPONENT_ALIGNMENT.md).
+Move component guides two picks: source, then destination. Destination, Gap and Flip update its native preview; exact numeric poses remain under Details. Supported geometry markers and named lists remain available. Placement only saves one static pose in one Undo step. Keep connected creates rigid, hinge or slider joints from two supported flat faces; Assembly motion previews motion and highlights native collisions before Apply. See [guided alignment](specs/working-cad/GUIDED_COMPONENT_ALIGNMENT.md).
 
 Linked curves have dashed styling and badges. Source provenance, Show/Edit source, Repair link and Make independent explain where geometry comes from. Showing a source preserves the destination component/sketch; opening its drawing protects unfinished mouse input. See [linked sketch controls](specs/working-cad/LINKED_SKETCH_USABILITY.md).
 
@@ -130,7 +130,7 @@ or rotation handle, or enter exact position in mm and rotation in degrees. Apply
 requires a current native preview and saves one undo step. Rotation uses the design
 origin in X, then Y, then Z order. Sketch and feature geometry remain in authored
 design coordinates; the finished component, measurements and exports use its
-placement. Nested assemblies, joints, and linked external designs remain planned.
+placement. Nested project hierarchies and linked external designs remain planned. Schema-18 joints connect local components.
 
 **New part → Insert a reusable part** copies all components or a selected component
 from a local project into the open project at its original coordinates. Imported
@@ -596,7 +596,7 @@ validation, and commit workflow.
 
 ## Limits and Troubleshooting
 
-Assemblies/joints, CAM, simulation, sheet metal, loft/sweep/shell/thread modeling,
+Dynamic simulation, CAM, sheet metal, loft/sweep/shell/thread modeling,
 general surface modeling, and arbitrary topological naming remain unavailable. Existing constraints, face/edge references, and AI recipes have the
 supported scopes documented in the capability matrix. Native failures report
 the source and preserve upstream previews for repair.
@@ -637,6 +637,18 @@ Native rebuilds reuse validated feature outputs within bounded worker-owned cach
 
 **New part → Local part library** saves one self-contained editable component with a native thumbnail in this browser. Drag a card onto the XY ground plane or choose Insert at origin, inspect the full native candidate preview, then Apply. Inserted copies have independent parameters and one-step undo. Rename/delete affects saved copies. Storage is bounded to 50 parts/25 MiB; download project files for portable backups. Cross-component dependencies must be repaired before saving one component. See [library limits](specs/working-cad/PART_LIBRARY.md).
 
-- **Component alignment:** Move component can match native endpoints, straight-edge midpoints/directions, or supported planar face planes with signed clearance. Preview/Apply saves a static rigid pose in one Undo step; curved/general boolean topology, collision avoidance and assembly joints remain unavailable. See [alignment scope](specs/working-cad/COMPONENT_ALIGNMENT.md).
+- **Component alignment:** Move component can match native endpoints, straight-edge midpoints/directions, or supported planar face planes with signed clearance. Preview/Apply saves a static rigid pose in one Undo step; curved/general boolean topology and automatic collision avoidance remain unavailable; supported rigid/hinge/slider joints provide native collision feedback. See [alignment scope](specs/working-cad/COMPONENT_ALIGNMENT.md).
 - **Placed-component projections:** New schema-17 links project retained native cap boundaries in world coordinates into parallel placed sketch planes. Source/target movement updates linked geometry; legacy links preserve their authored-coordinate behavior. Oblique, lost or unsupported references diagnose and block Apply. See [projection scope](specs/working-cad/SKETCH_PROJECTION.md).
 - **Portable part library:** Back up the complete local library as a bounded .pcadlib pack, preview/import it as independent saved copies, or download one editable .pcaddoc. Imports validate every entry and commit atomically; failures/cancellation preserve existing copies and the open project. See [library transfer](specs/working-cad/PART_LIBRARY.md).
+
+### Assembly joints and motion
+
+Activate a moving component and choose Move component. Set Keep connected to Rigid, Hinge or Slider, pick its source flat face and a parent flat face, then Apply the native preview. Assembly motion is available in component settings and the command palette. Drag its motion slider or enter an exact value; Apply saves one Undo step. Detach joint keeps the accepted world position. A component with a joint uses Assembly motion rather than free placement.
+
+Schema 18 saves at most 32 joints in an acyclic graph, with one parent per moving component. Parents may themselves have joints. Rigid joints follow the parent; hinge angles use degrees around the parent face origin/normal; sliders move in millimeters along that normal. Parent placement and mating-plane changes rebuild the children. Missing, absorbed or unsupported mating faces require deleting and recreating the joint. World-space sketch projection links cannot coexist with joints yet.
+
+Collision checks use native OpenCascade common volume, with a 256 overlapping body-pair budget. Colliding bodies turn orange and produce diagnostics. Touching faces are not volumetric collisions. These checks examine the current position; swept-path simulation, contact dynamics, arbitrary cylindrical mates and joint export in STEP remain future work. STL/STEP exports contain actual positioned solids.
+
+Remove joint in component settings also repairs a broken mating reference: a current native pose is retained; after a failed rebuild the component returns to its authored pose. Undo restores the removed joint.
+
+Collision analysis exceeding its probe budget or failing native intersection is explicitly incomplete, with a warning. Modeling and export remain available; the UI does not report verified clearance for an incomplete analysis.

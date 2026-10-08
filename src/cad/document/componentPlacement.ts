@@ -66,3 +66,10 @@ export function withComponentPlacement(document: CadDocument, componentId: strin
   const { placement: _old, ...component } = document.components[componentId];
   return { ...document, components: { ...document.components, [componentId]: { ...component, ...(identity ? {} : { placement: { translation: [...placement.translation], rotation: [...placement.rotation] } }) } } };
 }
+
+export function positionedDocument(document: CadDocument, result?: { documentId?: string; success?: boolean; componentPlacements?: Record<string, ComponentPlacement> }): CadDocument {
+  if (!result?.success || result.documentId !== document.id || !result.componentPlacements) return document;
+  let positioned = document;
+  for (const [id, placement] of Object.entries(result.componentPlacements)) if (Object.hasOwn(document.components, id)) positioned = withComponentPlacement(positioned, id, placement);
+  return positioned;
+}

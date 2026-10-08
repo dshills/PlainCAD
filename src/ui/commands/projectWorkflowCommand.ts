@@ -1,4 +1,4 @@
-import { withComponentPlacement } from "../../cad/document/componentPlacement";
+import { withComponentPlacement, positionedDocument } from "../../cad/document/componentPlacement";
 import {
   currentPlaneChoices,
   alignToSketchPlane,
@@ -133,7 +133,9 @@ export function finishProjectWorkflow(
     state.updateDocument((document) => {
       if (document !== before) return document;
       if (initialPart) {
-        const placement = document.components[active.componentId]?.placement;
+        const live = useCadStore.getState();
+        const result = live.history.present === document && live.rebuild.status === "succeeded" ? live.rebuild.result : undefined;
+        const placement = positionedDocument(document, result).components[active.componentId]?.placement;
         return placement ? withComponentPlacement(initialPart.document, initialPart.sketch.componentId!, placement) : initialPart.document;
       }
       return upsertSketch(document, sketch);

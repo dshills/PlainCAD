@@ -1,3 +1,5 @@
+import { resolveAssemblyPlacements } from "../document/assemblyJoints";
+import { assemblyCollisions } from "./assemblyCollisions";
 import { NativeFeatureCache } from "./nativeFeatureCache";
 import type { NativeStepExport } from "../kernel/nativeStep";
 import { applyComponentPlacements } from "./componentPlacement";
@@ -541,6 +543,14 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
     nativePlanes?.finish();
     nativeProjections.finish();
   }
+  let collisions: [string, string][] = [];
+  let assemblyCollisionStatus: "complete" | "incomplete" = document.assemblyJoints?.length ? "incomplete" : "complete";
+  if (!errors.length && document.assemblyJoints?.length) {
+    try {
+      if (!nativeReferences) throw new Error("Assembly joints require native OpenCascade geometry.");
+      document = resolveAssemblyPlacements(document, currentNativeFaces(planes.faces, kernel, runtimeBodies, failedBodies));
+    } catch (error) { errors.push({ id: "assembly:joints", source: "kernel", message: error instanceof Error ? error.message : String(error) }); }
+  }
   const placedPlanes = placeDocumentPlanes(document, planes);
   if (!errors.length) {
     try { applyComponentPlacements(document, kernel, runtimeBodies, shapesToDispose); }
@@ -548,6 +558,17 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
       errors.push({ id: "component:placement", source: "kernel", message: `Component placement failed: ${error instanceof Error ? error.message : String(error)}` });
       for (const id of runtimeBodies.keys()) failedBodies.add(id);
     }
+  }
+  if (!errors.length && document.assemblyJoints?.length) {
+    try {
+      const report = assemblyCollisions(document, kernel, runtimeBodies);
+      collisions = report.pairs;
+      assemblyCollisionStatus = report.complete ? "complete" : "incomplete";
+      if (!report.complete) { assemblyCollisionStatus = "incomplete"; warnings.push({ id: "assembly:collision-limit", source: "kernel", message: "Collision analysis incomplete: exceeded 256 overlapping body-pair probes. Simplify the assembly; clearance is not verified." }); }
+      const affected = new Set(collisions.flat());
+      for (const [id, body] of runtimeBodies) if (affected.has(id) && body.mesh) body.mesh = { ...body.mesh, color: "#e96848", assemblyCollision: true };
+      for (const [a, b] of collisions) warnings.push({ id: `assembly:collision:${a}:${b}`, source: "kernel", sourceId: a, message: `Native collision between ${a} and ${b}. Move the joint or adjust its clearance.` });
+    } catch (error) { assemblyCollisionStatus = "incomplete"; warnings.push({ id: "assembly:collision", source: "kernel", message: `Collision analysis incomplete: ${error instanceof Error ? error.message : String(error)} Clearance is not verified.` }); }
   }
   if (options.exportUnion && options.exportBodyIds && !errors.length) {
     const ids = options.exportBodyIds;
@@ -657,6 +678,9 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
     errors,
     warnings,
     durationMs: performance.now() - started,
+    assemblyCollisions: collisions,
+    assemblyCollisionStatus,
+    componentPlacements: Object.fromEntries(Object.values(document.components).map(component => [component.id, component.placement ?? { translation: [0, 0, 0], rotation: [0, 0, 0] }])),
     solvedSketches: Object.fromEntries(solvedSketches),
     profiles: Object.fromEntries(
       [...profilesBySketch].map(([id, detected]) => [id, detected.profiles]),

@@ -81,7 +81,7 @@ function shortestRotation(first: Point3, second: Point3): (p: Point3) => Point3 
   const n = sine < 1e-12 ? unit(cross(a, Math.abs(a.x) < 0.8 ? { x: 1, y: 0, z: 0 } : { x: 0, y: 1, z: 0 })) : scale(axis, 1 / sine);
   return p => add(add(scale(p, cosine), scale(cross(n, p), sine)), scale(n, dot(n, p) * (1 - cosine)));
 }
-function euler(u: Point3, v: Point3, normal: Point3): ComponentPlacement["rotation"] {
+export function placementEuler(u: Point3, v: Point3, normal: Point3): ComponentPlacement["rotation"] {
   const y = Math.asin(Math.max(-1, Math.min(1, -u.z)));
   const values: ComponentPlacement["rotation"] = Math.abs(Math.cos(y)) > 1e-10
     ? [Math.atan2(v.z, normal.z), y, Math.atan2(u.y, u.x)]
@@ -101,7 +101,7 @@ export function alignComponentGeometry(source: ComponentAlignmentTarget, target:
   if (source.kind !== "point") {
     if (!moved.direction || !target.direction) throw new Error("Alignment needs two supported native directions.");
     const rotate = shortestRotation(moved.direction, scale(target.direction, opposite ? -1 : 1)), frame = placementTransform(current);
-    rotation = euler(rotate(frame.u), rotate(frame.v), rotate(frame.normal));
+    rotation = placementEuler(rotate(frame.u), rotate(frame.v), rotate(frame.normal));
   }
   const rotated: ComponentPlacement = { translation: [...current.translation], rotation: [...rotation] };
   const point = placedAlignmentTarget(source, captured, rotated).point;

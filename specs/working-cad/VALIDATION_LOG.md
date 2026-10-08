@@ -745,3 +745,57 @@ Full release checks are not due at this item.
 
 Cadence: **2** completed items since full checkpoint `db2533a`. Run the next full
 gate after three more completed items.
+
+## CAD feature 1 of 5 · Native assembly joints and motion (2026-10-08)
+
+Schema 18 stores up to 32 rigid/hinge/slider joints in an acyclic one-parent graph.
+Move component creates joints from two current native extrusion face roles;
+Assembly motion previews signed slider/hinge movement before one-step Apply.
+Parents and supported mating planes drive rebuilt child poses. Colliding solids
+are orange in both the preview and accepted viewer, with native common-volume
+body-pair diagnostics. Touching faces and overlapping boxes alone do not qualify.
+Collision checks have a 256 overlapping-pair budget and explicitly report incomplete
+analysis on limits/native failure; they never claim verified clearance in that case.
+Remove joint also repairs lost references and retains a current accepted pose (or
+returns to authored placement after failed geometry). Complete-project insertion
+remaps joints and endpoints; partial extraction rejects external joint references.
+Saved project JSON keeps design poses/joints rather than runtime geometry/handles.
+
+Prism Anthropic `claude-sonnet-5-5` reviewed 25 files with complete coverage
+(`df48df33875dc557a76b22d5b1b88274`): zero high, one medium and nine low findings.
+The medium projection-consumer finding does not apply: assembly validation rejects
+world-space projections, while authored projections ignore placement. Retaining
+exact unchanged volume checks is appropriate. Actionable earlier findings were
+fixed: current-result/active-component/native enablement guards, Apply failure
+reporting, stable panel identity, advisory collision limits, precise face ownership
+in insertion, normalized axes, nonaliasing poses, stale new-part placement,
+null-safe imported sketch inspection and matching availability documentation.
+Other low notes were checked against final placement validation, independently
+cloned cache records, caller currency checks and the repository fixture convention.
+A complete delta review (`89eb7bc45584e02351fbe27f12b82000`) covered the final import
+guard and production acceptance test: zero high/medium, one low STL parsing note.
+The preceding volume helper already verifies the binary header count and complete
+buffer length. No unresolved actionable findings remain.
+
+`npm run check:item` passed: type checks, 1499 unit/component tests in 185 files,
+build/500 kB budget (largest 466.21 kB), five development native modeling/stale-result
+checks and fourteen built modeling/AI/CSP checks. Twenty-one focused final tests
+passed after the import guard. Focused tests covered rigid-joint math. Six native assembly/alignment/placement
+checks passed: face-picked slider, exact collision volume presence,
+hinge orientation and parent following, box-overlap false positives, broken-reference
+repair, cancel/Undo/Redo, mouse placement, parameter edits, save/open and positioned
+STL. The new built-app assembly test passed (3.9s) through the command palette,
+native collision preview/Apply, saved joint value and actual STL volume 1000 mm³
+with Z bounds 2–7 mm. Screenshot inspection confirmed orange accepted colliders.
+Additional final native highlighting checks cover clearing collision color after
+Undo. Final build passed after the guard, with the same 466.21 kB largest bundle.
+The existing linkedSketchCommand static/dynamic import advisory remains; no bundle
+budget failure. Full release checks are not due for this item.
+
+Scope limits: no swept collision simulation/contact physics or cylindrical mates;
+only supported authored extrusion planar faces; world-space projections cannot
+coexist with joints; project hierarchy/external linking and STEP joint metadata
+remain planned. Collision analysis is bounded and can explicitly be incomplete.
+
+Cadence: **3** completed items since full checkpoint `db2533a`. The full gate is due
+after two more items (feature 3 of this five-feature batch).

@@ -103,7 +103,7 @@ export function ComponentPlacementControls({ meshes, meshPlacement, placement, b
     clear(state.group);
     for (const mesh of meshes) {
       const geometry = new THREE.BufferGeometry(); geometry.setAttribute("position", new THREE.Float32BufferAttribute(mesh.positions, 3)); geometry.setAttribute("normal", new THREE.Float32BufferAttribute(mesh.normals, 3)); geometry.setIndex(mesh.indices);
-      const selected = bodyIds.includes(mesh.bodyId), object = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: selected ? "#39c8e7" : "#779398", roughness: 0.65 }));
+      const selected = bodyIds.includes(mesh.bodyId), object = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: mesh.assemblyCollision ? "#e96848" : selected ? "#39c8e7" : (mesh.color ?? "#779398"), roughness: 0.65 }));
       object.userData.selected = selected; object.matrixAutoUpdate = false; state.group.add(object);
     }
   }, [meshes, bodyIds]);
