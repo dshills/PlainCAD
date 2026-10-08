@@ -1,5 +1,6 @@
 import { beginCoach, canCoach } from "./manufacturingCoachCommand";
 import { beginFamily, canOpenFamily } from "./productFamilyCommand";
+import { beginDrawing, canOpenDrawing } from "./shopDrawingCommand";
 import { beginFit, canBuildFit } from "./fittedPartCommand";
 import { canNavigateLinkedSketchSource, type LinkedSketchContext } from "./linkedSketchCommand";
 import { beginProjectGallery } from "../workspace/projectGalleryState";
@@ -147,6 +148,7 @@ export interface CadCommand {
 }
 
 export interface CommandEnablement {
+  shopDrawing: boolean;
   productFamily: boolean;
   manufacturingCoach: boolean;
   createFit: boolean;
@@ -235,6 +237,7 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
     removeJoint: !state.fileBusy && !targetPickerActive && !guidedHoleStartBlocked && !canvasActive && !scopeCaptureBusy && Boolean(state.history.present.assemblyJoints?.some(joint => joint.childComponentId === state.activeComponentId)),
     manufacturingCoach: !scopeCaptureBusy && !targetPickerActive && Boolean(canCoach(state)),
     productFamily: !scopeCaptureBusy && !targetPickerActive && canOpenFamily(state),
+    shopDrawing: !scopeCaptureBusy && !targetPickerActive && canOpenDrawing(state),
     createFit: !scopeCaptureBusy && !targetPickerActive && Boolean(canBuildFit(state)),
     editFit: !scopeCaptureBusy && !targetPickerActive && Boolean(canBuildFit(state, true)),
     assemblyMotion: !aiPreviewActive && canBeginAssemblyMotion(state),
@@ -364,6 +367,7 @@ export const commands: CadCommand[] = [
   } },
   { id: "manufacturing.coach", label: "Manufacturing coach", description: "Screen printing, CNC or laser concerns; highlight bodies and preview supported corrections.", enablementKey: "manufacturingCoach", run: () => beginCoach() },
   { id: "family.manage", label: "Product configurations", description: "Save named parameter sets, compare native variants and batch-export part STL files.", enablementKey: "productFamily", run: () => beginFamily() },
+  { id: "drawing.open", label: "Shop drawing", description: "Generate current native part dimensions, bore callouts, orthographic/section SVG and a parts list.", enablementKey: "shopDrawing", run: () => beginDrawing() },
   { id: "fit.create", label: "Build a fitted part", description: "Create a linked enclosure, L bracket or open adapter sleeve around a native part.", enablementKey: "createFit", run: () => beginFit() },
   { id: "fit.edit", label: "Edit fitted part", description: "Repair the reference or edit clearance, wall thickness and fitted style.", enablementKey: "editFit", run: () => beginFit(true) },
   { id: "assembly.motion", label: "Assembly motion", description: "Move hinge and slider joints, inspect native collisions, or detach a joint.", enablementKey: "assemblyMotion", run: () => beginAssemblyMotion() },

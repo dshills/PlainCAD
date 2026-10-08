@@ -1,0 +1,9 @@
+import { test, expect } from "@playwright/test";
+import { readFile } from "node:fs/promises";
+test("built native shop drawing exports current dimensions and bore callouts under CSP", async ({ page }, info) => {
+  const errors: string[] = [], violations: string[] = []; page.on("pageerror", error => errors.push(error.message));
+  await page.exposeFunction("drawingCspViolation", (directive: string) => violations.push(directive)); await page.addInitScript(() => document.addEventListener("securitypolicyviolation", event => { void (window as unknown as { drawingCspViolation: (directive: string) => Promise<void> }).drawingCspViolation(event.violatedDirective); }));
+  await page.goto("/"); await page.locator('input[type="file"]').first().setInputFiles("src/persistence/fixtures/schema-v13.pcaddoc"); await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+  await page.keyboard.press("ControlOrMeta+k"); const palette = page.getByRole("dialog", { name: "Command Palette", exact: true }); await palette.getByLabel("Filter commands").fill("Shop drawing"); await palette.getByRole("button", { name: /^Shop drawing/ }).click(); const dialog = page.getByRole("dialog", { name: "Shop drawing", exact: true }); await expect(dialog.getByRole("status")).toHaveText("Native drawing ready", { timeout: 60000 });
+  const downloading = page.waitForEvent("download"); await dialog.getByRole("button", { name: "Download drawing SVG" }).click(); const path = info.outputPath("native-drawing.svg"); await (await downloading).saveAs(path); const svg = await readFile(path, "utf8"); expect(svg).toContain("X 20.000 mm"); expect(svg).toContain("Z 5.000 mm"); expect(svg).toContain("Ø2.000 mm"); expect(svg).toContain('fill-rule="evenodd"'); expect(svg).not.toContain("<script"); expect(errors).toEqual([]); expect(violations).toEqual([]);
+});

@@ -49,6 +49,7 @@ const ModelUpdateFeedback = lazy(() => import("../ui/workspace/ModelUpdateFeedba
 const CanvasSelectionActions = lazy(() => import("../ui/panels/CanvasSelectionActions").then(module => ({ default: module.CanvasSelectionActions })));
 const ManufacturingCoachPanel = lazy(() => import("../ui/panels/ManufacturingCoachPanel").then(module => ({ default: module.ManufacturingCoachPanel })));
 const ProductFamilyPanel = lazy(() => import("../ui/panels/ProductFamilyPanel").then(module => ({ default: module.ProductFamilyPanel })));
+const ShopDrawingPanel = lazy(() => import("../ui/panels/ShopDrawingPanel").then(module => ({ default: module.ShopDrawingPanel })));
 const FittedPartPanel = lazy(() => import("../ui/panels/FittedPartPanel").then(module => ({ default: module.FittedPartPanel })));
 const ComponentPlacementPanel = lazy(() => import("../ui/panels/ComponentPlacementPanel").then(module => ({ default: module.ComponentPlacementPanel })));
 const PartLibraryPanel = lazy(() => import("../ui/panels/PartLibraryPanel").then(module => ({ default: module.PartLibraryPanel })));
@@ -559,7 +560,7 @@ export function App() {
       <Suspense fallback={null}><FabricationPanel /></Suspense>
       <HoleCreationPanel />
       <Suspense fallback={<p role="status">Loading component controls…</p>}><ComponentPlacementPanel /></Suspense>
-      <Suspense fallback={null}><ProductFamilyPanel /><ManufacturingCoachPanel /><FittedPartPanel /></Suspense>
+      <Suspense fallback={null}><ShopDrawingPanel /><ProductFamilyPanel /><ManufacturingCoachPanel /><FittedPartPanel /></Suspense>
       <FeaturePatternPanel />
       <SolidDimensionEditor />
       <ExtrudeCreationPanel />

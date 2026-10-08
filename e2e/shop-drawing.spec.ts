@@ -1,0 +1,57 @@
+import { test, expect, type Page } from "@playwright/test";
+import { readFile } from "node:fs/promises";
+import { aiSnapshot } from "./aiAcceptanceHelpers";
+import { loadStepFixture, expectedStepProofs } from "./stepExportHelpers";
+async function openDrawing(page: Page) { await page.keyboard.press("ControlOrMeta+k"); const palette = page.getByRole("dialog", { name: "Command Palette", exact: true }); await palette.getByLabel("Filter commands").fill("Shop drawing"); await palette.getByRole("button", { name: /^Shop drawing/ }).click(); return page.getByRole("dialog", { name: "Shop drawing", exact: true }); }
+test("native drawing dimensions, inward bores, section and BOM regenerate on edits and save/open", async ({ page }, info) => {
+  await page.goto("/"); await page.locator('input[type="file"]').first().setInputFiles("src/persistence/fixtures/schema-v13.pcaddoc"); await expect.poll(async () => (await aiSnapshot(page)).status).toBe("succeeded"); const before = await aiSnapshot(page);
+  let dialog = await openDrawing(page); await expect(dialog.getByRole("status")).toHaveText("Native drawing ready", { timeout: 60000 });
+  const sheet = dialog.locator(".drawing-preview svg"); await expect(sheet).toContainText("X 20.000 mm"); await expect(sheet).toContainText("Y 10.000 mm"); await expect(sheet).toContainText("Z 5.000 mm"); await expect(sheet).toContainText("Ø2.000 mm"); await expect(sheet).toContainText("Cylindrical wall length 5.000 mm");
+  for (const name of ["TOP · XY · from +Z", "FRONT · XZ · from −Y", "RIGHT · YZ · from +X"]) await expect(sheet.locator(`g[aria-label="${name}"] path[stroke="#172f39"]`)).toHaveAttribute("d", /M.+L/);
+  await expect(sheet.locator('path[fill-rule="evenodd"]')).toHaveAttribute("d", /M.+Z.*M.+Z/);
+  const area = await dialog.getByText(/^Section area:/).textContent(), match = /Section area: ([\d.]+)/.exec(area ?? "");
+  expect(match, "The drawing must show a numeric section area").not.toBeNull(); expect(Number(match?.[1])).toBeCloseTo(200 - Math.PI, 1);
+  expect((await aiSnapshot(page)).document).toEqual(before.document); await page.screenshot({ path: info.outputPath("shop-drawing.png"), fullPage: true });
+  const downloading = page.waitForEvent("download"); await dialog.getByRole("button", { name: "Download drawing SVG" }).click(); const svgPath = info.outputPath("part.svg"); await (await downloading).saveAs(svgPath); expect(await readFile(svgPath, "utf8")).toContain("Ø2.000 mm");
+  const parts = page.waitForEvent("download"); await dialog.getByRole("button", { name: "Download parts list CSV" }).click(); const csvPath = info.outputPath("parts.csv"); await (await parts).saveAs(csvPath); const csv = await readFile(csvPath, "utf8"); expect(csv).toContain('"body:base"'); expect(csv.trim().split("\r\n")).toHaveLength(2); expect(Number(csv.trim().split("\r\n")[1].split(",")[3])).toBeCloseTo(1000 - 5 * Math.PI, 3);
+  await page.evaluate(async () => { const path = "/src/state/useCadStore.ts", { useCadStore } = await import(path); useCadStore.getState().updateDocument((document: import("../src/cad/document/schema").CadDocument) => ({ ...document, parameters: { ...document.parameters, thickness: { ...document.parameters.thickness, expression: "8mm" } }, features: document.features.map(feature => feature.type === "hole" ? { ...feature, diameter: { expression: "4mm", unit: "mm" } } : feature) })); });
+  await expect(dialog.getByRole("status")).toHaveText("Native drawing ready", { timeout: 60000 }); await expect(sheet).toContainText("Z 8.000 mm"); await expect(sheet).toContainText("Ø4.000 mm"); await expect(sheet).toContainText("Cylindrical wall length 8.000 mm");
+  await dialog.getByLabel("Section height (world Z, mm)").fill("100"); await expect(dialog.getByRole("alert")).toContainText("strictly between"); await expect(dialog.getByRole("button", { name: "Download drawing SVG" })).toBeDisabled(); await dialog.getByLabel("Section height (world Z, mm)").fill(""); await expect(dialog.getByRole("status")).toHaveText("Native drawing ready");
+  await dialog.getByRole("button", { name: "Close shop drawing" }).click(); const saving = page.waitForEvent("download"); await page.getByRole("button", { name: "Save project", exact: true }).click(); const saved = info.outputPath("drawn.pcaddoc"); await (await saving).saveAs(saved); const session = (await aiSnapshot(page)).session;
+  await page.locator('input[type="file"]').first().setInputFiles(saved); await expect.poll(async () => (await aiSnapshot(page)).session).toBeGreaterThan(session); await expect.poll(async () => (await aiSnapshot(page)).status).toBe("succeeded"); dialog = await openDrawing(page); await expect(dialog.getByRole("status")).toHaveText("Native drawing ready"); await expect(dialog.locator(".drawing-preview svg")).toContainText("Ø4.000 mm");
+});
+test("placed assembly drawings use native world bounds, bore axes and the actual two-body BOM", async ({ page }, info) => {
+  const model = await loadStepFixture(page);
+  const dialog = await openDrawing(page);
+  await dialog.getByRole("combobox", { name: "Drawing part", exact: true }).selectOption(model.plateId);
+  await expect(dialog.getByRole("status")).toHaveText("Native drawing ready", { timeout: 60000 });
+  const sheet = dialog.locator(".drawing-preview svg");
+  for (const label of ["X 10.000 mm", "Y 8.000 mm", "Z 20.000 mm", "Ø4.000 mm", "Cylindrical wall length 8.000 mm", "Axis 0.000, -1.000, 0.000"]) await expect(sheet).toContainText(label);
+  await expect(dialog.getByText(/2 current bodies in the parts list/)).toBeVisible();
+  const downloading = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: "Download parts list CSV" }).click();
+  const path = info.outputPath("assembly.csv"); await (await downloading).saveAs(path);
+  const lines = (await readFile(path, "utf8")).trim().split("\r\n"); expect(lines).toHaveLength(3);
+  expectedStepProofs().forEach((proof, index) => expect(Number(lines[index + 1].split(",")[3])).toBeCloseTo(proof.volume, 3));
+});
+test("drawing workers terminate on cancel and same-ID replacement invalidates pending and prepared exports", async ({ page }) => {
+  await page.goto("/"); await page.locator('input[type="file"]').first().setInputFiles("src/persistence/fixtures/schema-v13.pcaddoc");
+  await expect.poll(async () => (await aiSnapshot(page)).status).toBe("succeeded");
+  const downloads: string[] = []; page.on("download", value => downloads.push(value.suggestedFilename()));
+  let creation = page.waitForEvent("worker", { predicate: worker => worker.url().includes("drawingWorker") });
+  let dialog = await openDrawing(page), worker = await creation, closed = worker.waitForEvent("close");
+  await expect(dialog.getByRole("button", { name: "Download drawing SVG" })).toBeDisabled();
+  await dialog.getByRole("button", { name: "Close shop drawing" }).click(); await closed; await expect(dialog).toBeHidden();
+  creation = page.waitForEvent("worker", { predicate: next => next.url().includes("drawingWorker") });
+  dialog = await openDrawing(page); worker = await creation; closed = worker.waitForEvent("close");
+  await page.evaluate(async () => { const path = "/src/state/useCadStore.ts", { useCadStore } = await import(path); useCadStore.getState().setDocument({ ...useCadStore.getState().history.present }); });
+  await closed; await expect(dialog.getByRole("status")).toContainText("Project replaced");
+  await expect(dialog.getByRole("button", { name: "Download drawing SVG" })).toBeDisabled();
+  await dialog.getByRole("button", { name: "Close shop drawing" }).click();
+  await expect.poll(async () => (await aiSnapshot(page)).status).toBe("succeeded");
+  dialog = await openDrawing(page); await expect(dialog.getByRole("status")).toHaveText("Native drawing ready", { timeout: 60000 });
+  await page.evaluate(async () => { const path = "/src/state/useCadStore.ts", { useCadStore } = await import(path); useCadStore.getState().setDocument({ ...useCadStore.getState().history.present }); });
+  await expect(dialog.locator(".drawing-preview svg")).toHaveCount(0);
+  await expect(dialog.getByRole("button", { name: "Download drawing SVG" })).toBeDisabled();
+  await expect(dialog.getByRole("button", { name: "Download parts list CSV" })).toBeDisabled(); expect(downloads).toEqual([]);
+});

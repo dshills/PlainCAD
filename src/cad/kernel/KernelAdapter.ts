@@ -2,6 +2,7 @@ import { ComponentPlacement, RevolveAxisReference, TopologyRef } from "../docume
 import { Point3, SketchPlaneTransform } from "../sketch/planes";
 import { SketchProfile } from "../sketch/profileDetection";
 import type { NativeStepExport } from "./nativeStep";
+import type { NativeDrawingGeometry } from "./nativeDrawing";
 
 export interface KernelShape {
   id: string;
@@ -66,6 +67,7 @@ export interface KernelAdapter {
   /** Rigidly position a complete component with independent native ownership. */
   placeShape?(shape: KernelShape, placement: ComponentPlacement): KernelShape;
   nativeBounds?(shape: KernelShape): BoundingBox;
+  nativeDrawingGeometry?(shape: KernelShape): NativeDrawingGeometry;
   createBox(width: number, height: number, depth: number): KernelShape;
   extrudeProfile(
     profile: SketchProfile,

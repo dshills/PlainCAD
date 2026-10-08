@@ -1,4 +1,5 @@
 import { assertMeshBudget } from "../resourceLimits";
+import { measureNativeBores } from "./nativeDrawing";
 import { exportNativeStep, stepBindingDiagnostic } from "./nativeStep";
 import initOpenCascadeModule from "opencascade.js/dist/opencascade.wasm.js";
 import openCascadeWasmUrl from "opencascade.js/dist/opencascade.wasm.wasm?url";
@@ -204,6 +205,13 @@ export class OpenCascadeKernel implements KernelAdapter {
       if (![...bounds.min, ...bounds.max].every(Number.isFinite) || bounds.min.some((n, i) => n >= bounds.max[i])) throw new Error("Reference solid has invalid native bounds.");
       return bounds;
     });
+  }
+
+  nativeDrawingGeometry(shape: KernelShape) {
+    const oc = OpenCascadeKernel.openCascade, native = (shape.kernelHandle as KernelHandle | undefined)?.occtShape;
+    if (!oc || !native || typeof globalThis.document !== "undefined") throw new Error("Shop drawings require current native geometry in an isolated worker.");
+    this.measureNative(native);
+    return { bounds: this.nativeBounds(shape), ...measureNativeBores(oc, native) };
   }
 
   private readonly planarReferenceCache = new WeakMap<KernelShape, NativePlanarFaceMeasurement[]>();

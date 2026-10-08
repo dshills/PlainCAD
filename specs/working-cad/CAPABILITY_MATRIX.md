@@ -1283,3 +1283,27 @@ Comparison retains at most 250,000 total triangles / 64 MiB; the final archive i
 limited to 64 MiB. Separate part STL files preserve component placement and are
 not unions or print-bed arrangements. Inserting a reusable part copies its current
 authored design, not the source project's configuration collection.
+
+
+### Associative shop drawings
+
+Open **Shop drawing** in the command palette or active component settings. Choose
+an actual native part to generate Top, Front and Right views, native overall
+X/Y/Z dimensions, verified complete internal cylindrical bore callouts, a
+horizontal section and the project's current-body parts list. Change the world-Z
+section height or leave it blank for the middle. **Download drawing SVG** saves
+an editable vector sheet; **Download parts list CSV** includes complete part
+names, stable body IDs, quantities and exact native volumes. Geometry edits
+regenerate the sheet. Closing or replacing the project cancels pending work and
+invalidates exports; drawings do not add document data or Undo steps.
+
+Views use world coordinates and fit independently. Outlines, hidden-edge
+visibility and sections use the native tessellation; they are illustrations, not
+exact BRep curves. Dimensions describe the native bounding box, and bore lengths
+describe complete cylindrical walls rather than drilling depths. Trimmed
+cylinders require manual dimensions. The BOM has one row per current body with
+quantity one; it does not infer repeated part identities or materials. Add
+machining details, tolerances and GD&T separately. PDF/DXF export is not included.
+Limits are 20,000 triangles per selected part, 4,096 inspected native faces,
+64 bore callouts, an 8 MiB SVG and a 128 KiB CSV. Ambiguous/coplanar sections and
+resource limits produce diagnostics rather than an incomplete downloadable sheet.

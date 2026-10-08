@@ -946,3 +946,74 @@ The production assertion was corrected from exact floating-point equality for
 advisory remains; no bundle-budget failures.
 
 Cadence: **1** completed item since the feature-3 full checkpoint.
+
+
+## 2026-10-08 — Amazing CAD feature 5: associative shop drawings
+
+Shop drawing is available through shared command enablement in the palette and
+active component settings. A disposable native worker rebuilds the current
+project at actual component/assembly poses, inspects the selected final BRep,
+and captures native optimal bounds and complete inward cylindrical walls before
+shape disposal. Bore classification combines native surface derivatives with
+face orientation, including reversed drilling; authored Hole metadata alone is
+not used. Scoped native handles are disposed on success and failure.
+
+A wide drawing preview regenerates on geometry edits and contains Top/Front/
+Right world-coordinate outlines, native overall dimensions, cylindrical-wall
+callouts, an adjustable horizontal section and one BOM row per actual current
+body (quantity one, native volume and solid count). SVG and CSV downloads require
+an issued worker result matching the current document, session and accepted
+rebuild. Cancellation, same-ID replacement, lost parts and pending rebuilds
+invalidate previews/exports without editing history or persisting runtime data.
+Schema 20 remains unchanged.
+
+Native dimensions and bore walls are exact measurements; outlines, hidden-edge
+visibility and section contours are tessellated illustrations with independently
+fitted views. No authored manufacturing tolerances, GD&T, exact BRep hidden-line
+curves, PDF/DXF, repeated-part grouping, mass or material inference. Trimmed
+internal cylinders are omitted with a manual-dimension warning. Resource limits
+are 20,000 selected-part triangles, 4,096 native faces, 64 bore callouts, an 8 MiB
+SVG and a 128 KiB CSV; raster work is also bounded. Coplanar/ambiguous sections
+produce actionable errors instead of a downloadable incomplete sheet.
+
+Prism used Anthropic claude-sonnet-5-5 with complete coverage. Main review
+`97148ee2db1b14b701e126927b2d4bf0` reviewed all 26 changed files (0 high/medium,
+4 low). Addressed clearer test failures, independent exported-helper validation,
+surface-plane depth comparison at edge samples, and duplicate worker-message
+handling. Follow-up `2876f729a3e87348287c1ab67d568964` (0 high/medium, 1 low)
+led to neighbor-cell welding of near-coincident vertices/intersection points.
+Final geometry review `c7f7b477b73c2660beb89f69cf7ede68` had 0 high/medium
+and one low test-serialization finding; changed that regression to compare parsed
+segment endpoints within a tolerance in either direction.
+Test review `661923fc07b0e711b3125a3c79055382` had two low robustness
+comments; added explicit segment parsing diagnostics and tolerance-derived
+fixtures covering both grid boundaries. Final test review
+`41a6da6a58505ff6e57c23ce1c63c26f` had 0 high/medium and two low comments;
+used a tolerant baseline area assertion and explained why grid snapping preserves
+this integer-mm fixture. All six geometry tests and final type checking passed.
+No unresolved actionable findings remain.
+The steep-face regression fails with the old pixel-centre comparison and passes
+with plane evaluation. An isolated comparison using the old rounding-only weld
+reports an open section; neighbor-cell welding yields 199.999999995 mm² for the
+same nominal 200 mm² section.
+
+The reduced item gate passed twice. Final gate: types, all 1,545 unit/component
+tests in 195 files, production build/budget (48 bundles, largest 484.41 kB),
+5 development native modeling/stale-result cases (35.7s), and 14 production
+modeling/AI/CSP cases (52.7s). The subsequent isolated welding fix passed types,
+all 15 focused drawing/native-inspection/worker/command tests (one additional
+regression), build/budget again, all 3 focused native browser cases (14.1s), and
+production drawing export (2.8s) without page errors or CSP violations.
+
+Native acceptance verifies Ø2 / 5 mm stock and section area near 200 − π mm²;
+parameter edits regenerate Ø4 / 8 mm stock; SVG/CSV downloads and save/open retain
+geometry. A posed two-body assembly verifies world dimensions 10/8/20 mm,
+actual bore axis −Y, 8 mm cylindrical wall length, and both native BOM volumes.
+Browser cancellation terminates actual workers, and same-ID replacement rejects
+pending and prepared exports. Visual inspection verified clean outlines and
+readable dimensions/section hatching. The placed-bore test expectation was
+corrected from +Y to −Y to match its original −Z cut under component rotation;
+CSV volume assertions use the documented three-decimal output precision.
+Existing linkedSketchCommand import advisory remains; no bundle-budget failures.
+
+Cadence: **2** completed items since the feature-3 full checkpoint.

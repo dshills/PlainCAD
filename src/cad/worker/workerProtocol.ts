@@ -5,6 +5,7 @@ import type { AvailableFace, SketchPlaneTransform } from "../sketch/planes";
 import { RenderMesh, type AvailableCapEdge } from "../kernel/KernelAdapter";
 import type { Quantity } from "../parameters/units";
 import type { NativeStepExport } from "../kernel/nativeStep";
+import type { NativeDrawingGeometry } from "../kernel/nativeDrawing";
 
 export interface CadBody {
   id: string;
@@ -46,6 +47,8 @@ export interface RebuildResult {
   stepExportDiagnostic?: string;
   /** Explicit STEP export rebuilds only; native handles never cross the worker. */
   nativeStepExport?: NativeStepExport;
+  /** Explicit disposable drawing rebuild only; native handles never cross workers. */
+  nativeDrawingGeometry?: NativeDrawingGeometry;
 }
 
 export interface RebuildMetrics {

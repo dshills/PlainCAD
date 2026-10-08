@@ -195,6 +195,7 @@ export function SketchPanel({ compact = false }: { compact?: boolean }) {
                     <div className="component-settings">
                       <button type="button" disabled={!enablement.manufacturingCoach} onClick={() => void runCommand("manufacturing.coach")}>Manufacturing coach</button>
                       <button type="button" disabled={!enablement.productFamily} onClick={() => void runCommand("family.manage")}>Product configurations</button>
+                      <button type="button" disabled={!enablement.shopDrawing} onClick={() => void runCommand("drawing.open")}>Shop drawing</button>
                       <button type="button" disabled={!enablement.createFit} onClick={() => void runCommand("fit.create")}>Build a fitted part</button>
                       <button type="button" disabled={!enablement.editFit} onClick={() => void runCommand("fit.edit")}>Edit fitted part</button>
                       <button type="button" disabled={!enablement.removeJoint} onClick={() => void runCommand("assembly.removeJoint")}>Remove joint</button>

@@ -65,6 +65,7 @@ const sketchSeeds = new Map<
 interface RebuildOptions {
     /** Export current world-positioned native solids before their ownership ends. */
     exportStepBodyIds?: readonly string[];
+    captureDrawingBodyId?: string;
     exportUnion?: boolean;
     exportBodyIds?: readonly string[];
     captureTargetScopeFeatureId?: string;
@@ -662,6 +663,14 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
   const availableEdges = nativeReferences ? currentNativeEdges(document, kernel, runtimeBodies, failedBodies, warnings, edgeProofCache) : undefined;
   const nativeEdgeProofMs = performance.now() - edgeProofStarted;
   let nativeStepExport: NativeStepExport | undefined;
+  let nativeDrawingGeometry: RebuildResult["nativeDrawingGeometry"];
+  if (options.captureDrawingBodyId && !errors.length) {
+    try {
+      const body = runtimeBodies.get(options.captureDrawingBodyId);
+      if (!body || !kernel.nativeDrawingGeometry) throw new Error("Drawing source is lost or the kernel cannot supply native drawing measurements. Reselect a current part.");
+      nativeDrawingGeometry = kernel.nativeDrawingGeometry(body.shape);
+    } catch (error) { errors.push({ id: "export:drawing", source: "export", message: error instanceof Error ? error.message : "Native drawing inspection failed." }); }
+  }
   if (options.exportStepBodyIds && !errors.length) {
     try {
       const ids = options.exportStepBodyIds;
@@ -707,6 +716,7 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
     stepExportAvailable: nativeReferences && !stepDiagnostic,
     ...(stepDiagnostic ? { stepExportDiagnostic: stepDiagnostic } : {}),
     ...(nativeStepExport ? { nativeStepExport } : {}),
+    ...(nativeDrawingGeometry ? { nativeDrawingGeometry } : {}),
     ...(capturedTargetBodyIds !== undefined ? { capturedTargetBodyIds } : {}),
     metrics: {
       parameterEvaluationMs,
