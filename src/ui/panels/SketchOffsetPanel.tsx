@@ -23,7 +23,7 @@ function OffsetPreview({ proposal }: { proposal: Proposal }) {
     <g fill="none">
       {solved.lines.map((line) => <line key={line.id} x1={line.start.x} y1={-line.start.y} x2={line.end.x} y2={-line.end.y} {...style(line.id)} strokeDasharray={line.construction ? `${span / 60} ${span / 60}` : undefined} data-offset-copy={copied.has(line.id)} />)}
       {solved.circles.map((circle) => <circle key={circle.id} cx={circle.center.x} cy={-circle.center.y} r={circle.radius} {...style(circle.id)} strokeDasharray={circle.construction ? `${span / 60} ${span / 60}` : undefined} data-offset-copy={copied.has(circle.id)} />)}
-      {solved.arcs.map((arc) => <path key={arc.id} d={`M ${arc.start.x} ${-arc.start.y} A ${arc.radius} ${arc.radius} 0 ${Math.abs(arc.sweep) > Math.PI ? 1 : 0} ${arc.sweep < 0 ? 1 : 0} ${arc.end.x} ${-arc.end.y}`} {...style(arc.id)} strokeDasharray={arc.construction ? `${span / 60} ${span / 60}` : undefined} />)}
+      {solved.arcs.map((arc) => <path key={arc.id} d={`M ${arc.start.x} ${-arc.start.y} A ${arc.radius} ${arc.radius} 0 ${Math.abs(arc.sweep) > Math.PI ? 1 : 0} ${arc.sweep < 0 ? 1 : 0} ${arc.end.x} ${-arc.end.y}`} {...style(arc.id)} strokeDasharray={arc.construction ? `${span / 60} ${span / 60}` : undefined} data-offset-copy={copied.has(arc.id)} />)}
     </g>
   </svg>;
 }
@@ -111,7 +111,7 @@ export function SketchOffsetPanel() {
       <option value="reject">Require a region without holes</option><option value="outerOnly">Outer boundary only · keep all existing holes unchanged</option>
     </select></label>
     {chosen?.innerLoops.length ? <p>This region has holes. Choose Outer boundary only explicitly to continue. Their geometry and constraints are preserved.</p> : null}
-    <p>{chosen?.outerLoop.type === "circle" ? "Circle copies retain matching radius/center parameter expressions and accept a parameter-based distance. They are independent entities, not an associative offset feature." : "Convex authored line outlines only, up to 64 edges. Polygon distance must be a literal length or literal arithmetic; its shape and distance are captured as independently editable points."}</p>
+    <p>{chosen?.outerLoop.type === "circle" ? "Circle copies retain matching radius/center parameter expressions and accept a parameter-based distance. They are independent entities, not an associative offset feature." : "Simple authored line outlines, including concave shapes, and mixed line/analytic arc outlines with tangent arc joins, up to 64 edges. Distance must be literal length arithmetic; the copied shape is independently editable."}</p>
     <p>Original geometry and intent remain intact. The copied contour appears in the accent color. Adding contours can change profile nesting and existing feature geometry.</p>
     <button type="button" disabled={busy || fileBusy || !kernelReady || !chosen || !distance.trim() || Boolean(configuration?.error)} onClick={() => void preview()}>Preview outline offset</button>
     <button type="button" onClick={close}>Cancel outline offset</button>
@@ -124,6 +124,6 @@ export function SketchOffsetPanel() {
     {configuration?.error || error ? <p role="alert">{configuration?.error || error}</p> : null}
     {proposal ? <><ul aria-label="Proposed outline offset changes">{proposal.plan.changes.map((change) => <li key={change}>{change}</li>)}</ul><OffsetPreview proposal={proposal} />
       {proposal.result.meshes.length ? <><ExtrudePreview meshes={proposal.result.meshes} label="Native outline offset preview" /><p>{proposal.result.meshes.reduce((sum, mesh) => sum + (mesh.geometryAssertions?.volume ?? 0), 0).toFixed(3)} mm³</p></> : null}</> : null}
-    <p>Concave polygons, analytic arcs, mixed/fragmented boundaries, collapsed contours and intersections with existing outlines are diagnosed explicitly.</p>
+    <p>Fragmented boundaries, nonsmooth arc joins, collapsed contours and intersections with existing outlines are diagnosed explicitly. Arcs remain analytic; no sampled outline is created.</p>
   </section>;
 }

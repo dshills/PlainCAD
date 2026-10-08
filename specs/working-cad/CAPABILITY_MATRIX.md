@@ -97,11 +97,12 @@
   remapped supported internal constraints/dimensions and shared parameter bindings.
   Cross-selection intent and ambiguous profile repair are diagnosed. They are not
   associative pattern features. See [copy limits](SKETCH_MIRROR_PATTERNS.md).
-- Outline Offset creates convex authored-line or analytic-circle copies. Polygon
-  distance uses literal lengths and solved snapshots; circles can retain matching
-  source/distance expressions. Concave, mixed-arc, open or collapsed outlines
-  diagnose. Existing holes require explicit outer-only scope. See
-  [offset limits](SKETCH_OUTLINE_OFFSET.md).
+- Outline Offset creates simple concave/convex whole-line and tangent mixed
+  line/arc copies with exact analytic arcs and mitered line corners. Polygon/mixed
+  distances use literal lengths and solved snapshots; circles can retain matching
+  source/distance expressions. Fragmented, nonsmooth, open, crossing or collapsed
+  contours diagnose; concave results must remain one simple contour. Existing
+  holes require explicit outer-only scope. See [offset limits](SKETCH_OUTLINE_OFFSET.md).
 - AI feature additions append bounded holes, pockets and supported cap treatments
   on one explicit current face/body, after consent, operation-by-operation native
   validation, full native preview and one Apply. Existing parameters/features are
@@ -154,7 +155,7 @@ See `DESIGN_SYSTEM.md` and `design-qa.md` for design rules and comparison eviden
 
 - React/Vite/TypeScript UI, Three.js viewer, Zustand document history and undo/redo.
 - Serializable document with stable IDs, deterministic JSON, schema migrations
-  through version 16, and validation before imported state is accepted.
+  through version 17, and validation before imported state is accepted.
 - Import unsafe-key rejection, nesting/node limits, and component/parameter/sketch/entity/
   constraint/feature count limits; unknown and runtime fields stripped by migration.
 - Local project files contain a root component and up to 99 additional internal
@@ -1160,9 +1161,9 @@ adapter implements the probe, and fallback meshes never authorize edge picking.
 
 Validated native feature output reuse uses independently owned OpenCascade copies, with 128-entry/256-shape bounds and a 32 MiB mesh/signature estimate. Document/session/kernel changes clear ownership. Native allocation size is not measured by that estimate; exact BRep validity, volume and shape-count bounds remain authoritative. See [incremental limits](INCREMENTAL_NATIVE.md).
 
-Schema 16 stores finite rigid component placement: translations within ±100,000,000 mm and Euler rotations within ±360 degrees. Move component offers pointer/keyboard handles and numeric fields; Apply requires an exact current native candidate with unchanged body IDs, volumes and solid counts. Completed native BReps and mesh normals/vertices are positioned together. Existing face/projection associations stay in design coordinates; new cross-component projections and face choices require matching placements. Hierarchical assemblies and joints are unavailable.
+Schema 16 stores finite rigid component placement: translations within ±100,000,000 mm and Euler rotations within ±360 degrees. Move component offers pointer/keyboard handles and numeric fields; Apply requires an exact current native candidate with unchanged body IDs and solid counts. Independent moved bodies retain exact volume; traced consumers of schema-17 world projections may change geometry under normal native validity checks. Completed native BReps and mesh normals/vertices are positioned together. Legacy projections stay in authored coordinates; new links follow source/target world placement on parallel planes. Face-based creation retains its documented matching-placement scope. Hierarchical assemblies and joints are unavailable.
 
-Projection source picking supports complete retained authored extrusion cap boundaries through mouse, touch and Enter/Space, with native preview before explicit Apply. It does not project arbitrary BRep edges, oblique boundaries, or components with differing placements.
+Projection source picking supports complete retained authored extrusion cap boundaries through mouse, touch and Enter/Space, with native preview before explicit Apply. Schema-17 links support differently placed components when source and target planes are parallel. Arbitrary BRep edges, oblique boundaries and lost references remain diagnostic.
 
 Feature pattern controls offer signed spacing, circular center and sweep pointer handles on a bounded source-plane diagram. Formula replacement requires explicit consent; Escape/pointer cancellation restores the captured expression. Native previews run after release and current geometry is required for Apply.
 

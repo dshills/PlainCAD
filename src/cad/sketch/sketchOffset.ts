@@ -7,7 +7,7 @@ import { evaluateExpressionRef, evaluateParameters } from "../parameters/express
 import { solveSketch, type ResolvedSketch } from "./SketchSolver";
 import { detectProfiles, type SketchProfile } from "./profileDetection";
 import { MIN_ENTITY_SIZE, SKETCH_TOLERANCE as EPS } from "./tolerances";
-import type { CanvasPoint } from "./canvasGeometry";
+import { offsetAuthoredContour, offsetCurvesTouch, type OffsetCurve } from "./offsetContour";
 
 export interface SketchOffsetInput {
   distance: string;
@@ -23,11 +23,6 @@ export interface SketchOffsetPlan {
   profileCount: number;
   changes: string[];
 }
-const subtract = (a: CanvasPoint, b: CanvasPoint) => ({ x: a.x - b.x, y: a.y - b.y });
-const cross = (a: CanvasPoint, b: CanvasPoint) => a.x * b.y - a.y * b.x;
-const dot = (a: CanvasPoint, b: CanvasPoint) => a.x * b.x + a.y * b.y;
-const length = (point: CanvasPoint) => Math.hypot(point.x, point.y);
-const separation = (a: CanvasPoint, b: CanvasPoint) => length(subtract(a, b));
 function mm(value: number) {
   const text = String(Number(value.toPrecision(15)));
   if (!text.includes("e")) return `${text}mm`;
@@ -39,86 +34,22 @@ function mm(value: number) {
   return `${negative ? "-" : ""}${decimal}mm`;
 }
 const ref = (value: number): ExpressionRef => ({ expression: mm(value), unit: "mm", authoredUnit: "mm" });
-function checked(point: CanvasPoint) {
-  if (![point.x, point.y].every((value) => Number.isFinite(value) && Math.abs(value) <= 1e8))
-    throw new Error("Offset coordinates exceed the supported ±100,000,000 mm range. Reduce the distance.");
-  return point;
+function verifyContacts(copied: OffsetCurve[], solved: ResolvedSketch) {
+  const existing: OffsetCurve[] = [
+    ...solved.lines.filter((curve) => !curve.construction).map((curve) => ({ ...curve, type: "line" as const })),
+    ...solved.circles.filter((curve) => !curve.construction).map((curve) => ({ ...curve, type: "circle" as const })),
+    ...solved.arcs.filter((curve) => !curve.construction).map((curve) => ({ ...curve, type: "arc" as const })),
+  ];
+  if (copied.some((curve) => existing.some((source) => offsetCurvesTouch(curve, source))))
+    throw new Error("Offset intersects or touches existing outline geometry, an arc, circle or opening. Reduce the distance; existing holes are not resized.");
 }
-function pointOnSegment(point: CanvasPoint, a: CanvasPoint, b: CanvasPoint) {
-  const r = subtract(b, a), q = subtract(point, a), size = length(r);
-  return size > EPS && Math.abs(cross(q, r)) <= EPS * size && dot(q, r) >= -EPS * size && dot(q, r) <= dot(r, r) + EPS * size;
-}
-function segmentsTouch(a: CanvasPoint, b: CanvasPoint, c: CanvasPoint, d: CanvasPoint) {
-  if ([c, d].some((point) => pointOnSegment(point, a, b)) || [a, b].some((point) => pointOnSegment(point, c, d))) return true;
-  const r = subtract(b, a), s = subtract(d, c), q = subtract(c, a), determinant = cross(r, s);
-  if (Math.abs(determinant) <= Number.EPSILON * length(r) * length(s) * 32) return false;
-  const t = cross(q, s) / determinant, u = cross(q, r) / determinant;
-  return t > 0 && t < 1 && u > 0 && u < 1;
-}
-function circleTouchesLine(center: CanvasPoint, radius: number, start: CanvasPoint, end: CanvasPoint) {
-  const r = subtract(end, start), square = dot(r, r);
-  if (square <= EPS * EPS) return Math.abs(separation(center, start) - radius) <= EPS;
-  const t = Math.max(0, Math.min(1, dot(subtract(center, start), r) / square));
-  const nearest = separation(center, { x: start.x + r.x * t, y: start.y + r.y * t });
-  const farthest = Math.max(separation(center, start), separation(center, end));
-  return nearest <= radius + EPS && farthest >= radius - EPS;
-}
-function verifyContacts(points: CanvasPoint[] | undefined, circle: { center: CanvasPoint; radius: number } | undefined, solved: ResolvedSketch) {
-  const edges = points?.map((start, index) => ({ start, end: points[(index + 1) % points.length] })) ?? [];
-  if (edges.some((edge) => solved.lines.some((line) => !line.construction && segmentsTouch(edge.start, edge.end, line.start, line.end))))
-    throw new Error("Offset intersects or touches existing outline geometry. Reduce the distance or use a separate sketch.");
-  if (edges.some((edge) => solved.circles.some((curve) => !curve.construction && circleTouchesLine(curve.center, curve.radius, edge.start, edge.end))))
-    throw new Error("Offset intersects an existing circle or opening. Reduce the distance; existing holes are not resized.");
-  if (circle) {
-    if (solved.lines.some((line) => !line.construction && circleTouchesLine(circle.center, circle.radius, line.start, line.end)))
-      throw new Error("Offset circle intersects or touches existing lines. Reduce the distance.");
-    if (solved.circles.some((curve) => {
-      if (curve.construction) return false;
-      const distance = separation(circle.center, curve.center);
-      return distance <= circle.radius + curve.radius + EPS && distance >= Math.abs(circle.radius - curve.radius) - EPS;
-    })) throw new Error("Offset circle intersects or touches an existing circle. Reduce the distance.");
-  }
-}
-function polygonOffset(profile: SketchProfile, sketch: CadDocument["sketches"][string], distance: number) {
+function authoredContour(profile: SketchProfile, sketch: CadDocument["sketches"][string], solved: ResolvedSketch) {
   const segments = profile.outerLoop.segments;
-  if (!segments?.length || segments.length > 64 || segments.some((segment) => segment.type !== "line" || sketch.entities[segment.id]?.type !== "line" || (segment.sourceEntityId && segment.sourceEntityId !== segment.id)))
-    throw new Error("Outline offset supports at most 64 authored straight edges. Arc, mixed and fragmented outlines are unsupported; choose a simple convex line outline or circle.");
-  const points = segments.map((segment) => segment.start);
-  if (segments.some((segment, index) => separation(segment.end, points[(index + 1) % points.length]) > EPS))
-    throw new Error("Outline is not a single continuous closed boundary. Repair its connections first.");
-  const relative = points.map((point) => subtract(point, points[0]));
-  const area = relative.reduce((sum, point, index) => sum + cross(point, relative[(index + 1) % relative.length]), 0) / 2;
-  if (Math.abs(area) <= MIN_ENTITY_SIZE * MIN_ENTITY_SIZE) throw new Error("The source outline is collapsed or too small to offset.");
-  const orientation = area > 0 ? 1 : -1;
-  const edges = points.map((point, index) => subtract(points[(index + 1) % points.length], point));
-  const normals = edges.map((edge) => {
-    const size = length(edge);
-    if (size <= MIN_ENTITY_SIZE) throw new Error("The source outline has a zero-length or undersized edge. Repair it first.");
-    return { x: orientation * edge.y / size, y: -orientation * edge.x / size };
-  });
-  for (let index = 0; index < edges.length; index++) {
-    const previous = edges[(index + edges.length - 1) % edges.length], current = edges[index];
-    if (orientation * cross(previous, current) < -Number.EPSILON * length(previous) * length(current) * 64)
-      throw new Error("Concave outlines are not supported by the current miter offset. Use a convex outline or circle; no self-intersecting approximation is created.");
-  }
-  const copied = points.map((point, index) => {
-    const previous = normals[(index + normals.length - 1) % normals.length], current = normals[index];
-    const denominator = 1 + dot(previous, current);
-    if (denominator < 1e-8) throw new Error("An acute or reversing corner needs an unsupported miter. Simplify the outline.");
-    return checked({ x: point.x + distance * (previous.x + current.x) / denominator,
-      y: point.y + distance * (previous.y + current.y) / denominator });
-  });
-  for (let index = 0; index < copied.length; index++) {
-    const edge = subtract(copied[(index + 1) % copied.length], copied[index]);
-    if (dot(edge, edges[index]) <= MIN_ENTITY_SIZE * length(edges[index]))
-      throw new Error("Inward offset collapses or reverses an edge. Reduce the distance; no collapsed or self-intersecting contour is created.");
-    for (let other = index + 1; other < copied.length; other++) {
-      if (other === index + 1 || (index === 0 && other === copied.length - 1)) continue;
-      if (segmentsTouch(copied[index], copied[(index + 1) % copied.length], copied[other], copied[(other + 1) % copied.length]))
-        throw new Error("Offset would self-intersect. Reduce the distance or simplify the outline.");
-    }
-  }
-  return copied;
+  if (!segments?.length || segments.length > 64 || new Set(segments.map((segment) => segment.id)).size !== segments.length || segments.some((segment) =>
+    sketch.entities[segment.id]?.type !== segment.type || (segment.type === "line" && segment.sourceEntityId && segment.sourceEntityId !== segment.id) ||
+    (segment.type === "arc" && !solved.arcs.some((arc) => arc.id === segment.id && Math.abs(Math.abs(arc.sweep) - Math.abs(segment.sweep)) * arc.radius <= EPS))))
+    throw new Error("Outline offset supports at most 64 whole authored lines and analytic arcs. Fragmented boundaries are unsupported; choose a complete authored outline.");
+  return segments;
 }
 export function sketchOffsetProfiles(document: CadDocument, sketchId: string) {
   const sketch = document.sketches[sketchId];
@@ -127,7 +58,6 @@ export function sketchOffsetProfiles(document: CadDocument, sketchId: string) {
   const evaluation = evaluateParameters(document.parameters);
   if (evaluation.errors.length) throw new Error("Repair project parameters before offsetting an outline.");
   const solved = solveSketch(sketch, evaluation.values), detected = detectProfiles(solved);
-  if (solved.arcs.some((arc) => !arc.construction)) throw new Error("Outline offset currently supports straight line outlines and circles. Analytic arc offsets are unavailable; no sampled approximation is created.");
   if (solved.errors.some((error) => error.severity === "error") || detected.errors.length)
     throw new Error("Repair sketch constraints and closed profiles before offsetting an outline.");
   if (!detected.profiles.length) throw new Error("Draw a closed outline before using outline offset. Sketch-plane offset is a different command.");
@@ -153,7 +83,7 @@ export function buildSketchOffset(document: CadDocument, sketchId: string, profi
     const radius = circle.radius + signed;
     if (radius <= MIN_ENTITY_SIZE) throw new Error("Inward offset collapses the circle. Use a distance smaller than its radius.");
     if (radius > 1e8) throw new Error("Offset circle radius exceeds 100,000,000 mm. Reduce the distance.");
-    verifyContacts(undefined, { center: circle.center, radius }, solved);
+    verifyContacts([{ type: "circle", id: "offset-circle", center: circle.center, radius }], solved);
     const center = sketch.entities[source.centerPointId];
     if (center?.type !== "point") throw new Error("Circle center reference is missing. Repair it first.");
     const preserve = (expression: ExpressionRef, value: number) => {
@@ -179,12 +109,20 @@ export function buildSketchOffset(document: CadDocument, sketchId: string, profi
       expression: `(${baseRadius.expression}) ${input.direction === "outward" ? "+" : "-"} (${normalizedDistance})`, unit: "mm", authoredUnit: "mm" } });
     changes.push("Added an independently editable circle. Matching source radius/center parameter expressions and the distance expression remain bound; later source entity or constraint edits are not associative.");
   } else {
-    if (distance.dependencies.length) throw new Error("Polygon outline offsets currently require a literal length or literal arithmetic. Parameter-bound distance is supported for circles; use a circle or re-offset the polygon after editing its dimensions.");
-    const points = polygonOffset(profile, sketch, signed);
-    verifyContacts(points, undefined, solved);
-    const pointIds = points.map((point) => { const id = createId("point"); add({ id, type: "point", x: ref(point.x), y: ref(point.y) }); return id; });
-    for (let index = 0; index < pointIds.length; index++) add({ id: createId("line"), type: "line", startPointId: pointIds[index], endPointId: pointIds[(index + 1) % pointIds.length] });
-    changes.push("Added a convex miter contour with new IDs, capturing the current source shape and distance. The polygon copy is independently editable and does not follow later source or distance parameter edits.");
+    if (distance.dependencies.length) throw new Error("Line/arc outline offsets currently require a literal length or literal arithmetic. Parameter-bound distance is supported for circles; use a circle or re-offset the outline after editing its dimensions.");
+    const segments = offsetAuthoredContour(authoredContour(profile, sketch, solved), signed);
+    verifyContacts(segments, solved);
+    const pointIds = segments.map((segment) => { const id = createId("point"); add({ id, type: "point", x: ref(segment.start.x), y: ref(segment.start.y) }); return id; });
+    for (let index = 0; index < segments.length; index++) {
+      const segment = segments[index], startPointId = pointIds[index], endPointId = pointIds[(index + 1) % pointIds.length];
+      if (segment.type === "line") add({ id: createId("line"), type: "line", startPointId, endPointId });
+      else {
+        const centerPointId = createId("point");
+        add({ id: centerPointId, type: "point", x: ref(segment.center.x), y: ref(segment.center.y) });
+        add({ id: createId("arc"), type: "arc", centerPointId, startPointId, endPointId, clockwise: segment.sweep < 0 });
+      }
+    }
+    changes.push("Added an exact analytic contour with new IDs: mitered line corners and tangent arc joins. Current solved coordinates, arc centers/radii and distance are captured; the independent copy does not follow later source or distance parameter edits.");
   }
   if (Object.keys(entities).length > 512) throw new Error("Offset would exceed the 512-entity editing limit. Use a smaller sketch.");
   const next = bindDocumentExpressions(upsertSketch(document, { ...sketch, entities, solveRevision: (sketch.solveRevision ?? 0) + 1 }), document);
@@ -192,7 +130,7 @@ export function buildSketchOffset(document: CadDocument, sketchId: string, profi
   if (issues.length) throw new Error(issues.map((issue) => issue.message).join(" "));
   const rebuilt = solveSketch(next.sketches[sketchId], evaluation.values), detected = detectProfiles(rebuilt);
   if (rebuilt.errors.some((error) => error.severity === "error") || detected.errors.length || !detected.profiles.length)
-    throw new Error(`The copied outline did not produce a valid closed profile. Reduce its distance or repair the source sketch. ${rebuilt.errors.filter((error) => error.severity === "error").map((error) => error.message).join(" ")}`);
+    throw new Error(`The copied outline did not produce a valid closed profile. Reduce its distance or repair the source sketch. ${[...detected.errors, ...rebuilt.errors.filter((error) => error.severity === "error").map((error) => error.message)].join(" ")}`);
   const copiedCurves = copiedEntityIds.filter((id) => entities[id].type !== "point");
   if (!detected.profiles.some((item) => [item.outerLoop, ...item.innerLoops].some((loop) => copiedCurves.every((id) => loop.entityIds.includes(id)))))
     throw new Error("Offset merged or fragmented the copied contour. Use a smaller distance or separate sketch.");

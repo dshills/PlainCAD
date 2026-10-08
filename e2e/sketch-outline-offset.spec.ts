@@ -143,3 +143,71 @@ for (const direction of ["inward", "outward"] as const) test(`circle ${direction
   expect(bounds.min[2]).toBeCloseTo(0, 6); expect(bounds.max[2]).toBeCloseTo(5, 6);
   await saveOpenExport(page, info, `circle-${direction}`, changedVolume, 0.01);
 });
+
+for (const kind of ["concaveXY", "capsuleXZ", "capsuleYZ"] as const) test(`analytic ${kind} outline copies exact geometry through native extrusion, Undo, save/open and STL`, async ({ page }, info) => {
+  await page.goto("/"); await ready(page);
+  const ids = await page.evaluate(async (kind) => {
+    const docPath = "/src/cad/document/CadDocument.ts", modelPath = "/src/cad/sketch/SketchModel.ts", storePath = "/src/state/useCadStore.ts";
+    const doc = await import(docPath), model = await import(modelPath), { useCadStore } = await import(storePath);
+    let sketch = model.createSketchOnPlane("Analytic offset acceptance", kind === "concaveXY" ? "XY" : kind === "capsuleXZ" ? "XZ" : "YZ");
+    const vertices = kind === "concaveXY" ? [[0, 0], [20, 0], [20, 5], [5, 5], [5, 20], [0, 20]] : [[-10, -5], [10, -5], [10, 5], [-10, 5], [10, 0], [-10, 0]];
+    const pointIds: string[] = [];
+    for (const [x, y] of vertices) { const added = model.addPoint(sketch, `${x}mm`, `${y}mm`); sketch = added.sketch; pointIds.push(added.pointId); }
+    if (kind === "concaveXY") for (let i = 0; i < pointIds.length; i++) sketch = model.addLine(sketch, pointIds[i], pointIds[(i + 1) % pointIds.length]).sketch;
+    else {
+      sketch = model.addLine(sketch, pointIds[0], pointIds[1]).sketch;
+      sketch = model.addArc(sketch, pointIds[4], pointIds[1], pointIds[2]).sketch;
+      sketch = model.addLine(sketch, pointIds[2], pointIds[3]).sketch;
+      sketch = model.addArc(sketch, pointIds[5], pointIds[3], pointIds[0]).sketch;
+    }
+    const document = doc.upsertSketch(doc.createEmptyDocument("General offset acceptance"), sketch);
+    useCadStore.getState().setDocument(document);
+    useCadStore.getState().select({ kind: "sketch", id: sketch.id, documentId: document.id });
+    return { sketchId: sketch.id, sourceIds: Object.keys(sketch.entities) };
+  }, kind);
+  await ready(page); await page.getByRole("button", { name: "Edit sketch canvas", exact: true }).click();
+  const before = await aiSnapshot(page), direction = kind === "capsuleYZ" ? "inward" : "outward";
+  await page.getByRole("button", { name: "Offset sketch outline", exact: true }).click();
+  const panel = page.getByRole("region", { name: "Offset sketch outline", exact: true });
+  await panel.getByLabel("Outline offset direction").selectOption("inward");
+  await panel.getByLabel("Outline offset distance").fill(kind === "concaveXY" ? "3mm" : "5mm");
+  await panel.getByRole("button", { name: "Preview outline offset", exact: true }).click();
+  await expect(panel.getByRole("alert")).toContainText(/collapses|self-intersect/);
+  expect((await aiSnapshot(page)).document).toEqual(before.document);
+  await panel.getByLabel("Outline offset direction").selectOption(direction);
+  await panel.getByLabel("Outline offset distance").fill("1mm");
+  await panel.getByRole("button", { name: "Preview outline offset", exact: true }).click();
+  await expect(panel.getByRole("button", { name: "Apply outline offset", exact: true })).toBeEnabled();
+  expect((await aiSnapshot(page)).past).toBe(before.past);
+  await panel.getByRole("button", { name: "Cancel outline offset", exact: true }).click();
+  expect((await aiSnapshot(page)).document).toEqual(before.document);
+  await page.getByRole("button", { name: "Offset sketch outline", exact: true }).click();
+  await panel.getByLabel("Outline offset direction").selectOption(direction);
+  await panel.getByLabel("Outline offset distance").fill("1mm");
+  await panel.getByRole("button", { name: "Preview outline offset", exact: true }).click();
+  await expect(panel.getByRole("button", { name: "Apply outline offset", exact: true })).toBeEnabled();
+  await panel.getByRole("button", { name: "Apply outline offset", exact: true }).click();
+  await closedOutlineReady(page, ids.sketchId, true);
+  const applied = await aiSnapshot(page); expect(applied.past).toBe(before.past + 1);
+  for (const id of ids.sourceIds) expect(applied.document.sketches[ids.sketchId].entities[id]).toEqual(before.document.sketches[ids.sketchId].entities[id]);
+  if (kind !== "concaveXY") {
+    const arcs = applied.result!.solvedSketches![ids.sketchId].arcs.filter((arc) => !ids.sourceIds.includes(arc.id));
+    expect(arcs).toHaveLength(2);
+    for (const arc of arcs) { expect(arc.radius).toBeCloseTo(direction === "inward" ? 4 : 6, 12); expect(Math.abs(arc.sweep)).toBeCloseTo(Math.PI, 12); }
+    expect(Object.values(applied.document.sketches[ids.sketchId].entities).filter((entity) => entity.type === "arc")).toHaveLength(4);
+  }
+  await page.getByRole("button", { name: "Finish Sketch", exact: true }).click();
+  await page.getByRole("button", { name: "Undo", exact: true }).click(); await closedOutlineReady(page, ids.sketchId, false);
+  expect((await aiSnapshot(page)).document.sketches).toEqual(before.document.sketches);
+  await page.getByRole("button", { name: "Redo", exact: true }).click(); await closedOutlineReady(page, ids.sketchId, true);
+  await page.getByRole("button", { name: "Extrude selected sketch", exact: true }).click();
+  await page.getByLabel("Extrude distance", { exact: true }).fill("5mm"); await applyExtrusion(page);
+  // L areas: 175 → 259 mm². Capsule area: 40r + πr², r: 5 → 6 or 4 mm.
+  // Extrude the difference between the two nested boundaries by 5 mm.
+  const volume = kind === "concaveXY" ? (259 - 175) * 5 : (40 + (direction === "outward" ? 11 : 9) * Math.PI) * 5;
+  await ready(page, volume);
+  const bounds = (await aiSnapshot(page)).result!.meshes[0].bounds;
+  const expected = kind === "concaveXY" ? { min: [-1, -1, 0], max: [21, 21, 5] } : kind === "capsuleXZ" ? { min: [-16, -5, -6], max: [16, 0, 6] } : { min: [0, -15, -5], max: [5, 15, 5] };
+  for (const side of ["min", "max"] as const) expected[side].forEach((value, index) => expect(Math.abs(bounds[side][index] - value)).toBeLessThan(kind === "concaveXY" ? 1e-6 : 0.05));
+  await saveOpenExport(page, info, kind, volume, kind === "concaveXY" ? 1e-6 : 0.01);
+});

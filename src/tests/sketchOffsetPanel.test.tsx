@@ -100,7 +100,7 @@ it("aborts canceled requests and discards their late response", async () => {
   expect(useCadStore.getState().history.past).toHaveLength(0);
   expect(useSketchOffset.getState().frame).toBeUndefined();
 });
-it("keeps a guarded entry available to show open-outline and unsupported-arc diagnostics", () => {
+it("keeps a guarded entry available to show open-outline and open-arc diagnostics", () => {
   function open(sketch: ReturnType<typeof createXySketch>) {
     useSketchOffset.setState({ frame: undefined });
     useCadStore.getState().setDocument(upsertSketch(createEmptyDocument(), sketch));
@@ -117,7 +117,7 @@ it("keeps a guarded entry available to show open-outline and unsupported-arc dia
   const center = addPoint(createXySketch(), "0mm", "0mm"), start = addPoint(center.sketch, "10mm", "0mm"), end = addPoint(start.sketch, "0mm", "10mm");
   open(addArc(end.sketch, center.pointId, start.pointId, end.pointId).sketch);
   render(<SketchOffsetPanel />);
-  expect(screen.getByRole("alert")).toHaveTextContent("Analytic arc offsets are unavailable");
+  expect(screen.getByRole("alert")).toHaveTextContent("Repair sketch constraints and closed profiles");
   expect(screen.getByRole("button", { name: "Preview outline offset" })).toBeDisabled();
   expect(mocks.preview).not.toHaveBeenCalled();
   act(() => useSketchOffset.setState({ frame: undefined }));

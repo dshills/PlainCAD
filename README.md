@@ -214,11 +214,13 @@ Ambiguous overlaps and edits that would break protected intent are diagnosed.
 Copies preserve supported internal constraints, dimensions, and parameter bindings,
 but are independently editable rather than associative pattern features.
 
-**Offset** supports analytic circles and convex straight-line outlines. Circle
-copies can retain supported expressions; polygon copies use a literal length and
-a solved snapshot. Concave, mixed-arc, open, or collapsed outlines are diagnosed.
-Existing openings require explicit **Outer boundary only**. These are ordinary
-sketch copies rather than associative offset features.
+**Offset** supports analytic circles, simple concave or convex straight-line
+outlines, and mixed line/arc outlines with tangent joins involving arcs. Circle
+copies can retain supported expressions; other copies capture literal distances
+and solved geometry, with exact analytic arcs and mitered line corners. Open,
+fragmented, self-intersecting or collapsed outlines and nonsmooth arc joins produce
+diagnostics. Existing openings require explicit **Outer boundary only**. Copies
+are ordinary editable sketch geometry; see [offset limits](specs/working-cad/SKETCH_OUTLINE_OFFSET.md).
 
 ### Edit parameters
 
@@ -350,7 +352,7 @@ Edited projects autosave to IndexedDB after 500 ms idle. Recovery retains up to
 five projects with latest, previous, and last manually saved snapshots; startup
 recovery is explicit. Storage/quota errors leave the in-memory project intact.
 Download project files regularly: termination can lose edits before a completed
-storage transaction. Current schema is 13, with checked-in schema 1–13 regression
+storage transaction. Current schema is 17, with checked-in schema 1–17 regression
 fixtures and migrations.
 
 **File → Save or export…** separates editable projects from printable STL. STL

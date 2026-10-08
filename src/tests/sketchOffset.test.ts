@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 import { createEmptyDocument, upsertSketch } from "../cad/document/CadDocument";
-import { addArc, addCircleAt, addCornerRectangle, addPoint, createXySketch } from "../cad/sketch/SketchModel";
+import { addArc, addCircleAt, addCornerRectangle, addLine, addPoint, createSketchOnPlane, createXySketch } from "../cad/sketch/SketchModel";
 import { addCanvasGeometry } from "../cad/sketch/canvasGeometry";
 import { solveSketch } from "../cad/sketch/SketchSolver";
 import { detectProfiles } from "../cad/sketch/profileDetection";
@@ -43,7 +43,7 @@ it("keeps circle radius and distance parameter bindings editable and naturally d
   const collapsed = { ...edited, parameters: { ...edited.parameters, wall: { ...edited.parameters.wall, expression: "11mm" } } };
   expect(solveSketch(collapsed.sketches[sketch.id], evaluateParameters(collapsed.parameters).values).errors.some((error) => error.severity === "error")).toBe(true);
 });
-it("rejects concave or collapsed copies instead of generating an approximation", () => {
+it("supports concave miter contours and rejects collapsed copies", () => {
   const { document, sketch, profile } = fixture();
   expect(() => buildSketchOffset(document, sketch.id, profile.id, { direction: "inward", distance: "8mm", holes: "reject" })).toThrow(/collapses|self-intersect/);
   const base = createXySketch("Concave");
@@ -51,13 +51,19 @@ it("rejects concave or collapsed copies instead of generating an approximation",
   const points = [{ x: 0, y: 0 }, { x: 20, y: 0 }, { x: 20, y: 5 }, { x: 5, y: 5 }, { x: 5, y: 20 }, { x: 0, y: 20 }];
   for (let index = 0; index < points.length; index++) next = addCanvasGeometry(next, solveSketch(next, {}), "line", [points[index], points[(index + 1) % points.length]]).sketch;
   const source = upsertSketch(createEmptyDocument(), next), chosen = detectProfiles(solveSketch(next, {})).profiles[0];
-  expect(() => buildSketchOffset(source, next.id, chosen.id, { direction: "outward", distance: "1mm", holes: "reject" })).toThrow(/Concave/);
+  for (const direction of ["inward", "outward"] as const) {
+    const plan = buildSketchOffset(source, next.id, chosen.id, { direction, distance: "1mm", holes: "reject" });
+    const copied = solveSketch(plan.document.sketches[next.id], {}).lines.filter((line) => plan.copiedEntityIds.includes(line.id));
+    expect(copied.map((line) => [line.start.x, line.start.y]).sort()).toEqual((direction === "outward" ? [[-1, -1], [21, -1], [21, 6], [6, 6], [6, 21], [-1, 21]] : [[1, 1], [19, 1], [19, 4], [4, 4], [4, 19], [1, 19]]).sort());
+    expect(detectProfiles(solveSketch(plan.document.sketches[next.id], {})).profiles[0].innerLoops).toHaveLength(1);
+  }
+  expect(() => buildSketchOffset(source, next.id, chosen.id, { direction: "inward", distance: "3mm", holes: "reject" })).toThrow(/collapses|self-intersect/);
 });
-it("diagnoses analytic arcs explicitly while preserving unrelated construction arcs", () => {
+it("diagnoses an unrelated open analytic arc while preserving construction arcs", () => {
   const { document, sketch, profile } = fixture();
   const center = addPoint(sketch, "50mm", "0mm"), start = addPoint(center.sketch, "60mm", "0mm"), end = addPoint(start.sketch, "50mm", "10mm");
   const arc = addArc(end.sketch, center.pointId, start.pointId, end.pointId);
-  expect(() => sketchOffsetProfiles(upsertSketch(document, arc.sketch), sketch.id)).toThrow(/Analytic arc offsets are unavailable/);
+  expect(() => sketchOffsetProfiles(upsertSketch(document, arc.sketch), sketch.id)).toThrow(/Repair sketch/);
   const construction = { ...arc.sketch, entities: { ...arc.sketch.entities, [arc.arcId]: { ...arc.sketch.entities[arc.arcId], construction: true } } };
   const plan = buildSketchOffset(upsertSketch(document, construction), sketch.id, profile.id, { direction: "outward", distance: "2mm", holes: "reject" });
   expect(plan.document.sketches[sketch.id].entities[arc.arcId]).toEqual(construction.entities[arc.arcId]);
@@ -123,4 +129,73 @@ it("writes tiny numeric coordinates as parser-supported decimal literals", () =>
   if (copy.type !== "point") throw new Error("Missing copied point");
   expect(copy.x.expression).not.toMatch(/e[+-]\d/);
   expect(solveSketch(plan.document.sketches[sketch.id], {}).errors.filter((error) => error.severity === "error")).toEqual([]);
+});
+
+function capsule(plane: "XY" | "XZ" | "YZ", clockwise = false) {
+  let sketch = createSketchOnPlane("Analytic capsule", plane);
+  const ids: string[] = [];
+  for (const [x, y] of [[-10, -5], [10, -5], [10, 5], [-10, 5], [10, 0], [-10, 0]]) {
+    const added = addPoint(sketch, `${x}mm`, `${y}mm`); sketch = added.sketch; ids.push(added.pointId);
+  }
+  sketch = addLine(sketch, clockwise ? ids[1] : ids[0], clockwise ? ids[0] : ids[1]).sketch;
+  sketch = addArc(sketch, ids[4], clockwise ? ids[2] : ids[1], clockwise ? ids[1] : ids[2], clockwise).sketch;
+  sketch = addLine(sketch, clockwise ? ids[3] : ids[2], clockwise ? ids[2] : ids[3]).sketch;
+  sketch = addArc(sketch, ids[5], clockwise ? ids[0] : ids[3], clockwise ? ids[3] : ids[0], clockwise).sketch;
+  return sketch;
+}
+it("copies analytic mixed contours in every principal plane and preserves exact circular supports, source intent and file round trips", () => {
+  for (const plane of ["XY", "XZ", "YZ"] as const) for (const clockwise of [false, true]) for (const direction of ["inward", "outward"] as const) {
+    const sketch = capsule(plane, clockwise), document = upsertSketch(createEmptyDocument(), sketch);
+    const profile = sketchOffsetProfiles(document, sketch.id).profiles[0];
+    const plan = buildSketchOffset(document, sketch.id, profile.id, { direction, distance: "1mm", holes: "reject" });
+    const solved = solveSketch(plan.document.sketches[sketch.id], {});
+    const arcs = solved.arcs.filter((arc) => plan.copiedEntityIds.includes(arc.id));
+    expect(arcs).toHaveLength(2); expect(plan.copiedEntityIds).toHaveLength(10);
+    for (const arc of arcs) {
+      expect(arc.radius).toBeCloseTo(direction === "outward" ? 6 : 4, 12);
+      expect(Math.abs(arc.sweep)).toBeCloseTo(Math.PI, 12);
+      expect(arc.center.y).toBeCloseTo(0, 12); expect(Math.abs(arc.center.x)).toBeCloseTo(10, 12);
+    }
+    expect(solved.lines.filter((line) => plan.copiedEntityIds.includes(line.id))).toHaveLength(2);
+    expect(detectProfiles(solved).profiles[0].innerLoops).toHaveLength(1);
+    expect(plan.document.sketches[sketch.id].plane).toEqual(sketch.plane);
+    for (const [id, entity] of Object.entries(sketch.entities)) expect(plan.document.sketches[sketch.id].entities[id]).toEqual(entity);
+    expect(JSON.parse(serializeProject(plan.document)).sketches[sketch.id]).toEqual(plan.document.sketches[sketch.id]);
+  }
+});
+it("diagnoses collapsed analytic radii and nonsmooth arc corners without adding approximate geometry", () => {
+  const sketch = capsule("XY"), document = upsertSketch(createEmptyDocument(), sketch), profile = sketchOffsetProfiles(document, sketch.id).profiles[0];
+  expect(() => buildSketchOffset(document, sketch.id, profile.id, { direction: "inward", distance: "5mm", holes: "reject" })).toThrow(/arc radius/);
+  let nonsmooth = createXySketch("Semicircle");
+  const a = addPoint(nonsmooth, "0mm", "-5mm"), b = addPoint(a.sketch, "0mm", "5mm"), center = addPoint(b.sketch, "0mm", "0mm");
+  nonsmooth = addArc(center.sketch, center.pointId, a.pointId, b.pointId).sketch;
+  nonsmooth = addLine(nonsmooth, b.pointId, a.pointId).sketch;
+  const other = upsertSketch(createEmptyDocument(), nonsmooth), chosen = sketchOffsetProfiles(other, nonsmooth.id).profiles[0];
+  expect(() => buildSketchOffset(other, nonsmooth.id, chosen.id, { direction: "outward", distance: "1mm", holes: "reject" })).toThrow(/tangent joins/);
+});
+it("ignores an intersecting construction arc and rejects the same disconnected authored arc", () => {
+  const { document, sketch, profile } = fixture();
+  const a = addPoint(sketch, "26mm", "0mm"), b = addPoint(a.sketch, "26mm", "16mm"), center = addPoint(b.sketch, "26mm", "8mm");
+  const arc = addArc(center.sketch, center.pointId, b.pointId, a.pointId).sketch;
+  const construction = { ...arc, entities: { ...arc.entities, [Object.values(arc.entities).find((entity) => entity.type === "arc")!.id]: { ...Object.values(arc.entities).find((entity) => entity.type === "arc")!, construction: true } } };
+  // Construction arc is ignored; authored disconnected arc remains an explicit invalid sketch.
+  expect(buildSketchOffset(upsertSketch(document, construction), sketch.id, profile.id, { direction: "outward", distance: "2mm", holes: "reject" }).copiedEntityIds).toHaveLength(8);
+  expect(() => sketchOffsetProfiles(upsertSketch(document, arc), sketch.id)).toThrow(/Repair sketch/);
+});
+it("rejects contacts with a separate authored analytic arc loop using finite curves", () => {
+  const { document, sketch } = fixture(), extra = capsule("XY"), solved = solveSketch(extra, {});
+  const translated = Object.fromEntries(Object.entries(extra.entities).map(([id, entity]) => [id, entity.type === "point" ? { ...entity, x: { expression: `${solved.points[id].x + 40}mm`, authoredUnit: "mm" as const, unit: "mm" as const }, y: { expression: `${solved.points[id].y + 8}mm`, authoredUnit: "mm" as const, unit: "mm" as const } } : entity]));
+  const combined = { ...sketch, entities: { ...sketch.entities, ...translated } }, source = upsertSketch(document, combined);
+  const chosen = sketchOffsetProfiles(source, sketch.id).profiles.find((profile) => profile.bounds.minX === 0)!;
+  expect(() => buildSketchOffset(source, sketch.id, chosen.id, { direction: "outward", distance: "2mm", holes: "reject" })).toThrow(/intersects or touches/);
+  expect(buildSketchOffset(source, sketch.id, chosen.id, { direction: "outward", distance: "0.5mm", holes: "reject" }).copiedEntityIds).toHaveLength(8);
+});
+it("retains tangent joins between two whole analytic arcs sharing a circular support", () => {
+  const center = addPoint(createXySketch("Two arc circle"), "0mm", "0mm"), a = addPoint(center.sketch, "5mm", "0mm"), b = addPoint(a.sketch, "-5mm", "0mm");
+  let sketch = addArc(b.sketch, center.pointId, a.pointId, b.pointId).sketch;
+  sketch = addArc(sketch, center.pointId, b.pointId, a.pointId).sketch;
+  const document = upsertSketch(createEmptyDocument(), sketch), profile = sketchOffsetProfiles(document, sketch.id).profiles[0];
+  const plan = buildSketchOffset(document, sketch.id, profile.id, { direction: "outward", distance: "1mm", holes: "reject" });
+  expect(solveSketch(plan.document.sketches[sketch.id], {}).arcs.filter((arc) => plan.copiedEntityIds.includes(arc.id)).map((arc) => arc.radius)).toEqual([6, 6]);
+  expect(sketchOffsetProfiles(plan.document, sketch.id).profiles[0].innerLoops).toHaveLength(1);
 });

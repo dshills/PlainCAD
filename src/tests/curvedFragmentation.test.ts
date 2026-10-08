@@ -1,6 +1,8 @@
+import { fragmentCurvedProfiles } from "../cad/sketch/curvedFragmentation";
 import { describe, expect, it } from "vitest";
 import {
   detectProfiles,
+  sampleArc,
   type SketchProfile,
 } from "../cad/sketch/profileDetection";
 import {
@@ -922,4 +924,28 @@ describe("partial arc/arc dividers", () => {
       8,
     );
   });
+});
+
+
+it("distinguishes supporting-circle crossings outside a finite arc from real near tangencies and endpoint contacts", () => {
+  const rightArc: ResolvedArc = { ...circle("right", 6, 10), start: { id: "a", x: 10, y: -6 }, end: { id: "b", x: 10, y: 6 }, startAngle: -Math.PI / 2, sweep: Math.PI };
+  const key = (point: { x: number; y: number }) => `${point.x}:${point.y}`;
+  const outside = fragmentCurvedProfiles([line("outside", -10, 5, 10, 5)], [], [rightArc], key, sampleArc);
+  expect(outside.errors).toEqual([]); expect(outside.handled).toBe(false);
+  const nearTangent = fragmentCurvedProfiles([line("near", 5, 6 + 0.5e-8, 15, 6 + 0.5e-8)], [], [rightArc], key, sampleArc);
+  expect(nearTangent.errors.join(" ")).toMatch(/tangential|ambiguous/);
+  const endpoint = fragmentCurvedProfiles([line("endpoint", 0, 0, 16, 0)], [], [rightArc], key, sampleArc);
+  // A line ending inside the arc span splits the semicircle into two exact quarters.
+  expect(endpoint.handled).toBe(true); expect(endpoint.errors).toEqual([]);
+  // The runtime map has one entry per sampled graph edge, intentionally sharing
+  // the complete analytic piece under several keys. Count the analytic IDs.
+  const pieces = [...new Map([...endpoint.arcs.values()].map((arc) => [arc.id, arc])).values()].sort((a, b) => a.startAngle - b.startAngle);
+  expect(pieces).toHaveLength(2);
+  for (const [index, coordinates] of [[10, -6, 16, 0], [16, 0, 10, 6]].entries()) {
+    const piece = pieces[index];
+    [piece.start.x, piece.start.y, piece.end.x, piece.end.y].forEach((value, axis) => expect(value).toBeCloseTo(coordinates[axis], 12));
+  }
+  expect(pieces[0].startAngle).toBeCloseTo(-Math.PI / 2, 12);
+  expect(pieces[1].startAngle).toBeCloseTo(0, 12);
+  for (const piece of pieces) expect(piece.sweep).toBeCloseTo(Math.PI / 2, 12);
 });

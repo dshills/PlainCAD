@@ -232,18 +232,16 @@ export function fragmentCurvedProfiles(
       }
       const nearestRoot = Math.max(0, Math.min(length, along));
       const nearest = Math.hypot(px + nearestRoot * ux, py + nearestRoot * uy);
-      const farthest = Math.max(
-        Math.hypot(px, py),
-        Math.hypot(end.x - circle.center.x, end.y - circle.center.y),
-      );
       const nearestPoint = {
         x: start.x + nearestRoot * ux,
         y: start.y + nearestRoot * uy,
       };
+      // A supporting circle may cross a line outside the authored arc span.
+      // With no finite analytic root, only a genuinely near contact is ambiguous.
       const closeToBoundary =
-        (nearest <= circle.radius + EPS &&
-          farthest >= circle.radius - EPS &&
+        (Math.abs(nearest - circle.radius) <= EPS &&
           (!isArc(circle) || onArc(nearestPoint, circle))) ||
+        [start, end].some((point) => Math.abs(distance(point, circle.center) - circle.radius) <= EPS && (!isArc(circle) || onArc(point, circle))) ||
         (isArc(circle) &&
           [circle.start, circle.end].some(
             (p) => pointLineDistance(p, line) <= EPS,

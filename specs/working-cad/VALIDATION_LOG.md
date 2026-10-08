@@ -208,3 +208,13 @@ The frozen independent checkout passed `npm run check:item`: type checks, all 12
 Complete `.pcadlib` backups validate every stored entry before download; imports preview and atomically add fresh independent entries. Individual downloads remain editable `.pcaddoc` projects. Corrupt or overfilled libraries cannot silently produce partial backups. Transfer payloads preserve existing project safety checks and resource limits.
 
 Cadence: 4 completed items since the successful full checkpoint. The next requested item requires the full release gate before its commit.
+
+### Item 5: exact concave and tangent line/arc outline offsets (2026-10-08)
+
+Prism reviewed the complete isolated change with Anthropic `claude-sonnet-5-5`: initial `bc53a2c11e7c9fdd4c5df05329572fb6`, complete final `ea37260327164bed08829baa62917763` and final delta `17fbee059f9f534d1774dd3334a30707`. Actionable finite-arc contact, provenance, limits and diagnostic findings were fixed. The complete final review has no high/medium findings; the final delta has no findings. Remaining closure-tolerance notes were checked against the actual 1e-8 endpoint epsilon and mandatory full solve/native preview.
+
+All 65 focused unit/component tests passed. The final isolated `npm run release:check` passed type checking, all 1263 unit/component tests across 157 files, build/bundle budget (largest 495.48 kB), all 272 development browser cases (29.9m) and all 34 production cases (2.8m). All 7 offset acceptance cases passed in that full run: original convex/circle cases and new concave XY plus exact tangent line/arc XZ/YZ contours, native extrusion, history, parameter behavior, save/open, STL and collapse diagnostics. Earlier focused checks also passed all 7 native cases and all 3 new cases after final runtime fixes. An initial browser-copy run encountered Vite reload/recovery interference; the frozen final checkout and full gate passed cleanly. Both unchanged viewer performance assertions passed; full-quality restoration measured 491.2ms and zoom restoration 68ms against the unchanged 500ms limit.
+
+Simple concave whole-line outlines now use exact miters; mixed whole-line/arc contours retain analytic arcs at tangent arc joins. Fragmented, nonsmooth, crossing, collapsed or disconnected results fail explicitly. Copies remain ordinary editable geometry with bounded source/solver limits, rather than associative offset features. The finite-arc fragmentation guard now rejects actual finite contacts without treating supporting-circle crossings outside an arc as geometry contacts. Documentation also corrects obsolete matching-placement summaries and records schema 17 fixtures.
+
+Cadence: the successful full checkpoint resets the completed-item count to 0.
