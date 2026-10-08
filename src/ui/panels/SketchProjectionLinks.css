@@ -1,0 +1,12 @@
+.projection-link-badge {
+  display: inline-block;
+  padding: 0.1em 0.45em;
+  margin-right: 0.35em;
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  font-size: 0.8em;
+  font-weight: 600;
+}
+.projection-link-selected { outline: 2px solid var(--accent); }
+.projection-link-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.sketch-canvas .canvas-linked { stroke-dasharray: 3 2; }

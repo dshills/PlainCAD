@@ -1,3 +1,4 @@
+import { canNavigateLinkedSketchSource, type LinkedSketchContext } from "./linkedSketchCommand";
 import { unplacePlane } from "../../cad/document/componentPlacement";
 import { beginComponentPlacement, canBeginComponentPlacement } from "./componentPlacementCommand";
 import { beginPartLibrary, canOpenPartLibrary } from "./partLibraryCommand";
@@ -107,6 +108,7 @@ async function exportCurrentPng(scope: "project" | "body" | "sketch") {
 
 export interface CommandContext {
   canvasTarget?: CanvasActionTarget;
+  linkedSketchTarget?: LinkedSketchContext;
   dimension?: SolidDimension;
   operation?: DropOperation;
   operationFrame?: OperationDropFrame;
@@ -136,6 +138,8 @@ export interface CadCommand {
 }
 
 export interface CommandEnablement {
+  linkedSketchShowSource: boolean;
+  linkedSketchEditSource: boolean;
   canvasBodyActions: boolean;
   canvasEditBase: boolean;
   canvasDeleteBase: boolean;
@@ -197,7 +201,10 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
   const canvasTarget = selectedCanvasActionTarget(state);
   const canvasBodyActions = Boolean(canvasTarget && !targetPickerActive && !canvasActive && !guidedHoleStartBlocked && !scopeCaptureBusy && !useInspectionState.getState().picking);
   const base = state.history.present.features.find(feature => feature.id === canvasTarget?.featureId);
+  const links = state.history.present.sketches[useSketchCanvas.getState().active?.sketchId ?? ""]?.projections ?? [];
   return {
+    linkedSketchShowSource: !targetPickerActive && !guidedHoleStartBlocked && !state.fileBusy && links.some(link => canNavigateLinkedSketchSource(link.id)),
+    linkedSketchEditSource: !targetPickerActive && !guidedHoleStartBlocked && !state.fileBusy && links.some(link => canNavigateLinkedSketchSource(link.id, true)),
     canvasBodyActions,
     canvasEditBase: canvasBodyActions && Boolean(base && (base.type === "extrude" || base.type === "revolve")),
     canvasDeleteBase: canvasBodyActions && Boolean(base),
@@ -268,6 +275,8 @@ export const commands: CadCommand[] = [
   { id: "file.exportProjectPng", label: "Download project view PNG", description: "Capture the current 3D camera, visible bodies and section view without sketch or selection overlays.", enablementKey: "exportProjectPng", run: () => exportCurrentPng("project") },
   { id: "file.exportBodyPng", label: "Download selected part PNG", description: "Select a body, then download a fitted image of that body alone.", enablementKey: "exportBodyPng", run: () => exportCurrentPng("body") },
   { id: "file.exportSketchPng", label: "Download sketch PNG", description: "Open a sketch, then capture the drawing with its visible dimensions and constraints.", enablementKey: "exportSketchPng", run: () => exportCurrentPng("sketch") },
+  { id: "sketch.link.showSource", internal: true, label: "Show linked sketch source", enablementKey: "linkedSketchShowSource", run: async ({ linkedSketchTarget }) => { const module = await import("./linkedSketchCommand"); module.showLinkedSketchSource(linkedSketchTarget); } },
+  { id: "sketch.link.editSource", internal: true, label: "Edit linked sketch source", enablementKey: "linkedSketchEditSource", run: async ({ linkedSketchTarget }) => { const module = await import("./linkedSketchCommand"); module.editLinkedSketchSource(linkedSketchTarget); } },
   ...(["edit", "delete", "hide", "isolate"] as const).map((action): CadCommand => ({
     id: `canvas.${action}Body`, internal: true,
     label: action === "edit" ? "Edit part base feature" : action === "delete" ? "Delete part base feature" : action === "hide" ? "Hide selected part" : "Isolate selected part",

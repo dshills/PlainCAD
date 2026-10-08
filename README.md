@@ -116,6 +116,8 @@ Offset, Mirror/Pattern, Trim/Extend and projection preview automatically after a
 
 Move component guides two picks: source, then destination. Destination, Gap and Flip update its native preview; exact numeric poses remain under Details. Supported geometry markers and named lists remain available. Apply saves one static placement in one Undo step. See [guided alignment](specs/working-cad/GUIDED_COMPONENT_ALIGNMENT.md).
 
+Linked curves have dashed styling and badges. Source provenance, Show/Edit source, Repair link and Make independent explain where geometry comes from. Showing a source preserves the destination component/sketch; opening its drawing protects unfinished mouse input. See [linked sketch controls](specs/working-cad/LINKED_SKETCH_USABILITY.md).
+
 ## Project → Component → Sketch
 
 A **project** is one local CAD file. A **component** organizes a part's sketches,

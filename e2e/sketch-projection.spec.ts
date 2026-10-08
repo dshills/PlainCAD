@@ -107,7 +107,7 @@ test("clicks and keyboard-picks native authored caps associatively with preview,
   await expect.poll(async () => (await aiSnapshot(page)).session).toBeGreaterThan(savedSession);
   await native(page, 6720);
   await openCanvas(page, model.target.id);
-  await page.getByRole("button", { name: "Break projection link", exact: true }).click(); await native(page, 6720);
+  await page.getByRole("button", { name: "Make independent", exact: true }).click(); await native(page, 6720);
   expect((await aiSnapshot(page)).document.sketches[model.target.id].projections ?? []).toEqual([]);
   await page.getByRole("button", { name: "Finish Sketch", exact: true }).click();
   await width.fill("50mm"); await width.press("Enter"); await native(page, 8000);
@@ -132,7 +132,7 @@ test("repairs the same authored cap role without new member IDs and removes a lo
   const panel = await configure(page); await expect(panel.getByRole("button", { name: "Apply projected boundary" })).toBeEnabled();
   await panel.getByRole("button", { name: "Apply projected boundary" }).click(); await native(page, 4800);
   const before = await aiSnapshot(page), previous = before.document.sketches[model.target.id].projections![0];
-  await page.getByRole("button", { name: "Reselect projected boundary", exact: true }).click();
+  await page.getByRole("button", { name: "Repair link", exact: true }).click();
   const repair = page.getByRole("region", { name: "Project part edges", exact: true });
   await expect(repair.getByLabel("Source part boundary").locator("option")).toHaveCount(3);
   const start = await repair.getByLabel("Source part boundary").locator("option").evaluateAll((options) => options.find((option) => option.textContent?.includes("Start cap"))?.getAttribute("value"));
@@ -150,7 +150,7 @@ test("repairs the same authored cap role without new member IDs and removes a lo
   }, model.feature.id);
   await expect.poll(async () => (await aiSnapshot(page)).status).toBe("failed");
   expect((await aiSnapshot(page)).result!.errors.some((error) => error.sourceId === model.target.id && /missing|unsupported/i.test(error.message))).toBe(true);
-  await expect(page.getByRole("button", { name: "Break projection link", exact: true })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Make independent", exact: true })).toBeDisabled();
   await page.getByRole("button", { name: "Remove projection and geometry", exact: true }).click();
   await expect.poll(async () => (await aiSnapshot(page)).status).toBe("succeeded");
   const removed = await aiSnapshot(page);

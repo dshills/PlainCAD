@@ -44,7 +44,7 @@ export interface CadStore {
   deleteParameter(name: string): void;
   undo(): void;
   redo(): void;
-  select(selection: SelectionState["selectedIds"][number] | undefined): void;
+  select(selection: SelectionState["selectedIds"][number] | undefined, options?: { preserveActiveComponent?: boolean }): void;
   initializeKernel(): void;
   rebuildNow(): void;
 }
@@ -225,8 +225,8 @@ export const useCadStore = create<CadStore>((set, get) => ({
     });
     get().rebuildNow();
   },
-  select: (selection) => set({
-    activeComponentId: selectionComponentId(get().history.present, selection) ?? get().activeComponentId,
+  select: (selection, options) => set({
+    activeComponentId: options?.preserveActiveComponent ? get().activeComponentId : selectionComponentId(get().history.present, selection) ?? get().activeComponentId,
     selection: { selectedIds: selection ? [selection] : [] },
   }),
   initializeKernel: () => {

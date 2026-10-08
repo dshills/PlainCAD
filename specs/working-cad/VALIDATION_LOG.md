@@ -327,3 +327,39 @@ collision avoidance and assembly joints remain outside this picker.
 
 Cadence: 4 completed items since the successful full checkpoint. The next requested
 item requires the full release gate before commit.
+
+### Item 4: linked sketch provenance and source controls (2026-10-08)
+
+Prism Anthropic `claude-sonnet-5-5` reviewed the complete source/UI change
+`4abeee3cfcbc09aa6072607be8c85c47` and final complete shared-command integration
+`dc458351a26f8fb995c3142f125f3f56`. Final reviews have no high/medium findings.
+Actionable cross-component selection, unfinished-input preservation, source-opening
+ordering, native-highlight proof, accessible labels and fixture assertions were
+fixed. The remaining low notes concern intentional component-preserving selection
+and bounded per-link enablement work. Individual cards check their precise link,
+and handlers revalidate the captured document/session/link; a broad shared
+capability flag does not select a different source.
+
+The frozen ordered checkpoint passed `npm run release:check`: type checks, all
+1301 unit/component tests across 163 files, build/bundle budget (largest 496.15 kB),
+all 283 development native browser cases (31.6 minutes) and all 35 production cases
+(2.9 minutes). This includes every new canvas/automatic-preview/alignment/link
+workflow, existing sketch/geometry/worker/resource regressions, schema migrations,
+security headers, production PNG and native STEP. All 636 captured source/test/
+configuration files remained unchanged during the gate; temporary origins used
+ports 5292/5293. All 13 focused linked tests and 7 additional native source/repair
+workflows also passed.
+
+The already-reviewed STEP fixture from item 2 was copied into the checkpoint only
+after its successful full run; all 5 focused STEP tests and type checks then passed.
+This was a test-only follow-up, with no runtime changes. README/capability updates
+received the complete integration review.
+
+Linked curves show dashed styling, badges and source provenance. Show source
+retains the destination component/drawing; Edit source opens its authoring sketch
+and protects incomplete drawing/drag/inline-edit input. Repair link and Make
+independent retain explicit native/solver guards, while whole-link removal explains
+downstream repair. Lost/unsupported references diagnose rather than guessing.
+
+Cadence: 0 completed items since this successful full checkpoint. The next full
+gate is due after 5 more requested changes.

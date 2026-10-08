@@ -1,3 +1,4 @@
+import { BEFORE_LINKED_SOURCE_EDIT_EVENT, CANCEL_SKETCH_GESTURE_EVENT } from "../commands/sketchCanvasEvents";
 import { ContextualSketchConstraints } from "./ContextualSketchConstraints";
 import { registerPngCapture, sketchPng } from "../../persistence/pngCapture";
 import { SketchTrimExtendPanel } from "./SketchTrimExtendPanel";
@@ -252,6 +253,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     const sketch = document.sketches[active.sketchId];
     return sketch?.projections?.map((projection) => ({ members: new Set(projection.members.map((member) => member.targetEntityId)), curves: projection.members.filter((member) => sketch.entities[member.targetEntityId]?.type !== "point").map((member) => member.targetEntityId) })) ?? [];
   }, [document.sketches, active.sketchId]);
+  const linkedEntityIds = useMemo(() => new Set(projectedGroups.flatMap((group) => [...group.members])), [projectedGroups]);
   const selectedProjected = projectedGroups.some((group) => selectedIds.some((id) => group.members.has(id)));
   const selectedSet = new Set(selectedIds);
   const partialProjectedSelection = projectedGroups.some((group) => selectedIds.some((id) => group.members.has(id)) && !group.curves.every((id) => selectedSet.has(id)));
@@ -380,12 +382,20 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
     releasePrimitiveGesture();
     drag.cancel();
   };
+  useEffect(() => {
+    const protectDrawing = (event: Event) => {
+      if (draft.length || drag.inProgress || panning || selectionBox || primitiveGesture.current || panGesture.current || boxGesture.current || svgRef.current?.closest(".sketch-workspace")?.querySelector(".canvas-inline-dimension"))
+        event.preventDefault();
+    };
+    window.addEventListener(BEFORE_LINKED_SOURCE_EDIT_EVENT, protectDrawing);
+    return () => window.removeEventListener(BEFORE_LINKED_SOURCE_EDIT_EVENT, protectDrawing);
+  }, [draft.length, drag.inProgress, panning, selectionBox]);
   const cancelGestureRef = useRef(cancel);
   useLayoutEffect(() => { cancelGestureRef.current = cancel; });
   useEffect(() => {
     const cancelGesture = () => cancelGestureRef.current();
-    window.addEventListener("plaincad:cancel-sketch-gesture", cancelGesture);
-    return () => window.removeEventListener("plaincad:cancel-sketch-gesture", cancelGesture);
+    window.addEventListener(CANCEL_SKETCH_GESTURE_EVENT, cancelGesture);
+    return () => window.removeEventListener(CANCEL_SKETCH_GESTURE_EVENT, cancelGesture);
   }, []);
   useEffect(() => {
     if (active.requestedTool) {
@@ -1007,7 +1017,7 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
               {Object.values(sketch.entities).map((entity) => (
                 <option key={entity.id} value={entity.id}>
                   {entity.construction ? "Construction " : ""}
-                  {entity.type} · {entity.id}
+                  {entity.type}{linkedEntityIds.has(entity.id) ? " · Linked" : ""} · {entity.id}
                 </option>
               ))}
             </select>
@@ -1553,7 +1563,8 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
                     (l.construction
                       ? "canvas-construction"
                       : "canvas-geometry") +
-                    (highlightedIds.has(l.id) ? " canvas-entity-selected" : "")
+                    (highlightedIds.has(l.id) ? " canvas-entity-selected" : "") +
+                    (linkedEntityIds.has(l.id) ? " canvas-linked" : "")
                   }
                   x1={l.start.x}
                   y1={l.start.y}
@@ -1569,7 +1580,8 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
                     (c.construction
                       ? "canvas-construction"
                       : "canvas-geometry") +
-                    (highlightedIds.has(c.id) ? " canvas-entity-selected" : "")
+                    (highlightedIds.has(c.id) ? " canvas-entity-selected" : "") +
+                    (linkedEntityIds.has(c.id) ? " canvas-linked" : "")
                   }
                   cx={c.center.x}
                   cy={c.center.y}
@@ -1584,7 +1596,8 @@ function SketchCanvas({ active }: { active: CanvasSession }) {
                     (a.construction
                       ? "canvas-construction"
                       : "canvas-geometry") +
-                    (highlightedIds.has(a.id) ? " canvas-entity-selected" : "")
+                    (highlightedIds.has(a.id) ? " canvas-entity-selected" : "") +
+                    (linkedEntityIds.has(a.id) ? " canvas-linked" : "")
                   }
                   d={arcPath(a.center, a.start, a.end, a.sweep < 0)}
                 />
