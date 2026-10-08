@@ -1,0 +1,74 @@
+import { test, expect } from "@playwright/test";
+import { readFile } from "node:fs/promises";
+import { SECURITY_HEADERS, CONTENT_SECURITY_POLICY } from "../deployment/securityHeaders";
+import { assertStepProofs, expectedStepProofs, generatePublicStep, loadStepFixture, observeStepProofs, stepTranscripts } from "../e2e/stepExportHelpers";
+test("built STEP export reimports posed analytic and drilled solids under CSP with exact native proofs and saved parameter edits", async ({ page }, info) => {
+  const violations: string[] = [], errors: string[] = [], workers: string[] = [], headers: Array<Promise<string | undefined>> = [];
+  page.on("pageerror", error => errors.push(error.message));
+  page.on("worker", worker => workers.push(worker.url()));
+  page.on("response", response => { if (response.url().includes("/assets/"))
+    headers.push(response.allHeaders().then(value => value["content-security-policy"])); });
+  await page.exposeFunction("plaincadStepCspViolation", (directive: string) => violations.push(directive));
+  await page.addInitScript(() => document.addEventListener("securitypolicyviolation", event => {
+    void (window as unknown as {
+      plaincadStepCspViolation(directive: string): Promise<void>;
+    }).plaincadStepCspViolation(event.effectiveDirective);
+  }));
+  await observeStepProofs(page);
+  const response = await page.goto("/");
+  for (const [name, value] of Object.entries(SECURITY_HEADERS))
+    expect(response!.headers()[name.toLowerCase()]).toBe(value);
+  const model = await loadStepFixture(page);
+  await page.getByRole("button", { name: "Export STEP", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Export STEP", exact: true });
+  await expect(dialog.getByRole("checkbox")).toHaveCount(2);
+  await dialog.getByRole("checkbox", { name: "Arc rim", exact: true }).uncheck();
+  await dialog.getByRole("button", { name: "Generate validated STEP", exact: true }).click();
+  await expect(dialog.getByRole("button", { name: "Download STEP file", exact: true })).toBeEnabled();
+  assertStepProofs((await stepTranscripts(page)).at(-1)!, [expectedStepProofs()[1]]);
+  await dialog.getByRole("button", { name: "Select all STEP bodies", exact: true }).click();
+  await expect(dialog.getByRole("button", { name: "Download STEP file", exact: true })).toBeDisabled();
+  await dialog.getByRole("button", { name: "Generate validated STEP", exact: true }).click();
+  await expect(dialog.getByRole("button", { name: "Download STEP file", exact: true })).toBeEnabled();
+  const proof = (await stepTranscripts(page)).at(-1)!;
+  assertStepProofs(proof);
+  expect(proof.bodyIds).toEqual([model.rimId, model.plateId]);
+  await expect(dialog.getByRole("status")).toContainText("Verified 2 body roots and 2 valid native solids");
+  let downloading = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: "Download STEP file", exact: true }).click();
+  let path = info.outputPath("production-posed.step");
+  await (await downloading).saveAs(path);
+  const text = await readFile(path, "utf8");
+  expect(text).toMatch(/^ISO-10303-21;/);
+  expect(text).toContain("CYLINDRICAL_SURFACE");
+  expect(text).toContain("CIRCLE");
+  expect(text.trimEnd()).toMatch(/END-ISO-10303-21;$/);
+  const depth = page.getByLabel("Parameter depth expression", { exact: true });
+  await depth.fill("7mm");
+  await depth.press("Enter");
+  await expect(page.getByRole("button", { name: "Export STEP", exact: true })).toBeEnabled();
+  await page.getByRole("button", { name: "Undo", exact: true }).click();
+  await expect(depth).toHaveValue("5mm");
+  await page.getByRole("button", { name: "Redo", exact: true }).click();
+  await expect(depth).toHaveValue("7mm");
+  await expect(page.getByRole("button", { name: "Export STEP", exact: true })).toBeEnabled();
+  downloading = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Save project", exact: true }).click();
+  path = info.outputPath("production-step.pcaddoc");
+  await (await downloading).saveAs(path);
+  expect(JSON.parse(await readFile(path, "utf8")).parameters.depth.expression).toBe("7mm");
+  await page.locator('input[type="file"]').first().setInputFiles(path);
+  await expect(depth).toHaveValue("7mm");
+  const final = await generatePublicStep(page);
+  assertStepProofs((await stepTranscripts(page)).at(-1)!, expectedStepProofs(7));
+  downloading = page.waitForEvent("download");
+  await final.getByRole("button", { name: "Download STEP file", exact: true }).click();
+  path = info.outputPath("production-edited.step");
+  await (await downloading).saveAs(path);
+  expect(await readFile(path, "utf8")).toMatch(/^ISO-10303-21;/);
+  expect(workers.some(url => /\/assets\/stepExportWorker-[^/]+\.js$/.test(url))).toBe(true);
+  expect(violations).toEqual([]);
+  expect(errors).toEqual([]);
+  for (const value of await Promise.all(headers))
+    expect(value).toBe(CONTENT_SECURITY_POLICY);
+});

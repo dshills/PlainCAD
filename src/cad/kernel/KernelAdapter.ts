@@ -1,6 +1,7 @@
 import { ComponentPlacement, RevolveAxisReference, TopologyRef } from "../document/schema";
 import { Point3, SketchPlaneTransform } from "../sketch/planes";
 import { SketchProfile } from "../sketch/profileDetection";
+import type { NativeStepExport } from "./nativeStep";
 
 export interface KernelShape {
   id: string;
@@ -111,7 +112,7 @@ export interface KernelAdapter {
   disposeShape?(shape: KernelShape): void;
   /** Allocated WASM memory capacity, not live allocations or process memory. */
   getWasmHeapCapacityBytes?(): number | undefined;
-  exportStep?(shape: KernelShape): ArrayBuffer;
+  exportStep?(shapes: readonly KernelShape[]): NativeStepExport;
 }
 
 export class HoleScopeError extends Error {

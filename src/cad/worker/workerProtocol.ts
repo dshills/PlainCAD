@@ -3,6 +3,7 @@ import type { ResolvedSketch } from "../sketch/SketchSolver";
 import type { AvailableFace, SketchPlaneTransform } from "../sketch/planes";
 import { RenderMesh, type AvailableCapEdge } from "../kernel/KernelAdapter";
 import type { Quantity } from "../parameters/units";
+import type { NativeStepExport } from "../kernel/nativeStep";
 
 export interface CadBody {
   id: string;
@@ -36,6 +37,11 @@ export interface RebuildResult {
   availableFaces?: AvailableFace[];
   /** Native-validated current sharp authored edges, never persisted. */
   availableEdges?: AvailableEdge[];
+  /** Actual loaded native STEP bindings; not inferred from optional adapter types. */
+  stepExportAvailable?: boolean;
+  stepExportDiagnostic?: string;
+  /** Explicit STEP export rebuilds only; native handles never cross the worker. */
+  nativeStepExport?: NativeStepExport;
 }
 
 export interface RebuildMetrics {

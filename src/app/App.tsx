@@ -41,9 +41,11 @@ import { FeatureTimeline } from "../ui/panels/FeatureTimeline";
 import { SketchPanel } from "../ui/panels/SketchPanel";
 import { useCadStore } from "../state/useCadStore";
 import { usePartLibrary } from "../ui/commands/partLibraryState";
+import { useStepExport } from "../ui/commands/stepExportState";
 
 const ComponentPlacementPanel = lazy(() => import("../ui/panels/ComponentPlacementPanel").then(module => ({ default: module.ComponentPlacementPanel })));
 const PartLibraryPanel = lazy(() => import("../ui/panels/PartLibraryPanel").then(module => ({ default: module.PartLibraryPanel })));
+const StepExportPanel = lazy(() => import("../ui/panels/StepExportPanel").then(module => ({ default: module.StepExportPanel })));
 
 const SketchCanvasPanel = lazy(() =>
   import("../ui/panels/SketchCanvasPanel").then((module) => ({ default: module.SketchCanvasPanel })),
@@ -102,6 +104,7 @@ const toolbarGroups: ToolbarGroup[] = [
         title: "Export the current rebuilt model as STL",
         ariaLabel: "Export STL",
       },
+      { command: "file.exportStep", label: "STEP", icon: "STEP", title: "Export separate native solids with verified STEP round trip", ariaLabel: "Export STEP" },
       { command: "file.exportProjectPng", label: "Project PNG", icon: "PNG", title: "Download the current 3D view", ariaLabel: "Download project view PNG" },
       { command: "file.exportBodyPng", label: "Part PNG", icon: "PNG", title: "Select a body to download its image alone", ariaLabel: "Download selected part PNG" },
       { command: "file.exportSketchPng", label: "Sketch PNG", icon: "PNG", title: "Open a sketch to download its drawing", ariaLabel: "Download sketch PNG" },
@@ -315,6 +318,7 @@ const FOCUSED_WHEN_ENABLED = new Set([
 
 export function App() {
   const partLibraryOpen = usePartLibrary(state => Boolean(state.frame));
+  const stepExportOpen = useStepExport(state => Boolean(state.frame));
   const workspace = useWorkspaceState(
     useShallow(({ layout, activePanel, pins, toggleParts }) => ({
       layout,
@@ -594,6 +598,7 @@ export function App() {
           <GuidedHolePanel />
           <section className="viewer-region" aria-label="3D CAD viewer">
             {partLibraryOpen ? <Suspense fallback={<p role="status">Loading local parts…</p>}><PartLibraryPanel /></Suspense> : null}
+            {stepExportOpen ? <Suspense fallback={<p role="status">Loading STEP export…</p>}><StepExportPanel /></Suspense> : null}
             {!sketchActive ? <><SketchSolidHandoffPanel /><OperationDropPanel /></> : null}
             <div className="model-view" hidden={Boolean(sketchActive)}>
               <CadViewer />

@@ -213,7 +213,7 @@ See `DESIGN_SYSTEM.md` and `design-qa.md` for design rules and comparison eviden
 | Hole | Up to 64 explicit saved target IDs and 64 sketch point centers; native aggregate cylindrical tools; every center must cut some target, every target must lose exact volume; atomic output publication; positive blind depths or through-all, with positive/negative sketch-normal direction; empty/duplicate/lost centers/targets and no-op cuts diagnosed | Native preview-and-Apply creation and editing; fresh upstream choices, separate edited-operation/downstream checks, source/center/target repair, stable IDs and one undo; direct repair inspector |
 | Fillet/chamfer | Real native geometry on feature-owned cap perimeters, individual complete line/arc/circle cap edges, or a source line’s two extrusion-direction corners; BRep/solid-count/volume-or-surface-change checks; retained authored edges also work after native booleans; grouped perimeters require every original edge and exclude new Cut/Join edges; lost/trimmed/ambiguous edges fail | Native preview-and-Apply creation dialogs with size/role/source/owner choices; repair inspector |
 | Offset/face sketch planes | Expression-driven origin/face offsets; upstream distance-extrusion caps and straight outer sides; retained native faces after Cut/Join supported at the sketch’s timeline position; removed/split/ambiguous/suppressed/missing faces require repair | Create Sketch with signed expression-driven origin/face offsets; Sketch tools with explicit replacement selection; lost planes fail rebuild |
-| STEP | Optional adapter interface only; no implemented exporter | Hidden |
+| STEP | Native writer/reader round trip validates selected world-positioned BReps, solid/root counts, exact volume, bounds and millimetres; separate solids, no assembly/history export; 64 bodies/32 MiB/60 seconds | Export STEP body selection; Generate validated STEP; current proof required before Download |
 
 Failed operations retain upstream preview bodies but fail rebuild and disable STL.
 Downstream modifiers on a failed body are blocked. Suppression permits recovery.
@@ -482,8 +482,8 @@ original edge; arbitrary transient BRep edge picks are unavailable.
 
 Assemblies/mates, CAM, simulation, sheet metal, generative design, collaboration,
 cloud sync, mobile-first editing, plugins, unrestricted AI generation, and general cross-feature
-topological naming remain outside the working-CAD target. STEP can remain hidden
-until validated support exists.
+topological naming remain outside the working-CAD target. STEP geometry export is
+available within the validated native scope in [STEP export](STEP_EXPORT.md).
 
 ### AI selected-feature dimensions
 
@@ -1168,3 +1168,5 @@ Projection source picking supports complete retained authored extrusion cap boun
 Feature pattern controls offer signed spacing, circular center and sweep pointer handles on a bounded source-plane diagram. Formula replacement requires explicit consent; Escape/pointer cancellation restores the captured expression. Native previews run after release and current geometry is required for Apply.
 
 The local part library saves one self-contained editable component with a bounded native PNG thumbnail. IndexedDB is limited to 50 entries/25 MiB with atomic writes and quota/cancellation diagnostics. Drag insertion uses the viewport ray on XY z=0; keyboard insertion starts at origin. Full candidate native validation precedes one-step Apply. Saved copies remain local to the browser, with independent inserted identities/parameters; external links, joints and automatic source updates are unavailable.
+
+Native STEP export uses a disposable OpenCascade worker to rebuild selected bodies at saved world poses, write real STEP solids and reimport the actual file. Download requires current matching native BRep validity, solid/root counts, exact volumes, bounds and millimetre units. Separate bodies remain separate; editable history, labels and assembly structure are retained in project files. Cancellation, changed documents, missing bindings and native failures produce diagnostics without authorizing stale downloads. See [STEP export](STEP_EXPORT.md).

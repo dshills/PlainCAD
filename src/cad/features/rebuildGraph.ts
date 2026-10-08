@@ -1,4 +1,5 @@
 import { NativeFeatureCache } from "./nativeFeatureCache";
+import type { NativeStepExport } from "../kernel/nativeStep";
 import { applyComponentPlacements } from "./componentPlacement";
 import { nativeFeatureSignature } from "./nativeFeatureSignature";
 import { currentNativeEdges } from "./nativeEdgeTargets";
@@ -59,6 +60,8 @@ const sketchSeeds = new Map<
 >();
 
 interface RebuildOptions {
+    /** Export current world-positioned native solids before their ownership ends. */
+    exportStepBodyIds?: readonly string[];
     exportUnion?: boolean;
     exportBodyIds?: readonly string[];
     captureTargetScopeFeatureId?: string;
@@ -622,6 +625,17 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
   const edgeProofStarted = performance.now();
   const availableEdges = nativeReferences ? currentNativeEdges(document, kernel, runtimeBodies, failedBodies, warnings, edgeProofCache) : undefined;
   const nativeEdgeProofMs = performance.now() - edgeProofStarted;
+  let nativeStepExport: NativeStepExport | undefined;
+  if (options.exportStepBodyIds && !errors.length) {
+    try {
+      const ids = options.exportStepBodyIds;
+      if (!ids.length || ids.length > MODEL_RESOURCE_LIMITS.maxBodies || new Set(ids).size !== ids.length || ids.some(id => !runtimeBodies.has(id))) throw new Error("STEP body selection is empty, duplicated or no longer available. Select export bodies again.");
+      if (!kernel.exportStep) throw new Error("The active kernel does not support native STEP export.");
+      nativeStepExport = kernel.exportStep(ids.map(id => runtimeBodies.get(id)!.shape));
+    } catch (error) {
+      errors.push({ id: "export:step", source: "export", message: error instanceof Error ? error.message : "Native STEP export failed." });
+    }
+  }
   let disposalFailures = 0;
   shapesToDispose.forEach((shape) => {
     try {
@@ -633,6 +647,7 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
 
   nativeFeatureCache.finish(errors.length === 0);
   const disposableMetricsFinished = getDisposableScopeMetrics();
+  const stepDiagnostic = OpenCascadeKernel.stepExportDiagnostic();
 
   return {
     documentId: document.id,
@@ -650,6 +665,9 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
     ...(availableFaces !== undefined ? { availableFaces } : {}),
     ...(availableEdges !== undefined ? { availableEdges } : {}),
     parameterValues: evaluated.values,
+    stepExportAvailable: nativeReferences && !stepDiagnostic,
+    ...(stepDiagnostic ? { stepExportDiagnostic: stepDiagnostic } : {}),
+    ...(nativeStepExport ? { nativeStepExport } : {}),
     ...(capturedTargetBodyIds !== undefined ? { capturedTargetBodyIds } : {}),
     metrics: {
       parameterEvaluationMs,

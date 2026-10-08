@@ -41,6 +41,7 @@ import {
 import { saveRecovery } from "../../persistence/autosave";
 import { RefObject } from "react";
 import { CadStore, useCadStore } from "../../state/useCadStore";
+import { canOpenStepExport, openStepExport } from "./stepExportCommand";
 import {
   createBoxTemplate,
   createMountingPlateTemplate,
@@ -145,6 +146,7 @@ export interface CommandEnablement {
   redo: boolean;
   saveOrExport: boolean;
   exportStl: boolean;
+  exportStep: boolean;
   exportSelectedBody: boolean;
   exportProjectPng: boolean;
   exportBodyPng: boolean;
@@ -211,6 +213,7 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
     undo: !targetPickerActive && state.history.past.length > 0,
     redo: !targetPickerActive && state.history.future.length > 0,
     exportStl: canExportStl(state) && !state.fileBusy && !operationBusy && !refinementBusy,
+    exportStep: canOpenStepExport(state) && !operationBusy && !refinementBusy,
     exportSelectedBody: canExportStl(state) && !state.fileBusy && !operationBusy && !refinementBusy && Boolean(selectedExportBody(state)),
     exportProjectPng: canExportStl(state) && !state.fileBusy && !targetPickerActive && !guidedHoleStartBlocked && !canvasActive && !scopeCaptureBusy,
     exportBodyPng: canExportStl(state) && !state.fileBusy && !targetPickerActive && !guidedHoleStartBlocked && !canvasActive && !scopeCaptureBusy && Boolean(selectedExportBody(state)),
@@ -483,6 +486,7 @@ export const commands: CadCommand[] = [
       else await runFabrication();
     },
   },
+  { id: "file.exportStep", label: "Export STEP", description: "Export selected native solids at their world positions, verified by native STEP reimport; bodies remain separate.", enablementKey: "exportStep", run: openStepExport },
   {
     id: "history.undo",
     label: "Undo",

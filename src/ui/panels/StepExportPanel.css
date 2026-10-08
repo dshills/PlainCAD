@@ -1,0 +1,5 @@
+.step-export-dialog { padding: 20px; width: min(500px, calc(100vw - 40px)); max-height: 80vh; overflow: auto; background: var(--panel, #f7f9f8); color: var(--text, #203833); border: 1px solid var(--border, #9aaba5); border-radius: var(--radius-panel, 8px); }
+.step-export-dialog p { line-height: 1.5; }
+.step-export-dialog fieldset { display: grid; gap: 8px; max-height: 30vh; overflow: auto; }
+.step-export-dialog fieldset label { display: flex; align-items: center; gap: 8px; }
+.step-export-dialog button { margin: 4px 8px 4px 0; }

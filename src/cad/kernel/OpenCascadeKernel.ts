@@ -1,4 +1,5 @@
 import { assertMeshBudget } from "../resourceLimits";
+import { exportNativeStep, stepBindingDiagnostic } from "./nativeStep";
 import initOpenCascadeModule from "opencascade.js/dist/opencascade.wasm.js";
 import openCascadeWasmUrl from "opencascade.js/dist/opencascade.wasm.wasm?url";
 import { createId } from "../document/ids";
@@ -254,6 +255,19 @@ export class OpenCascadeKernel implements KernelAdapter {
 
   static isInitialized(): boolean {
     return OpenCascadeKernel.openCascade !== undefined;
+  }
+  static stepExportDiagnostic(): string | undefined {
+    return stepBindingDiagnostic(OpenCascadeKernel.openCascade);
+  }
+  exportStep(shapes: readonly KernelShape[]) {
+    const oc = OpenCascadeKernel.openCascade;
+    if (!oc || typeof globalThis.document !== "undefined") throw new Error("Native STEP export requires an isolated browser worker.");
+    const native = shapes.map(shape => {
+      const handle = shape.kernelHandle as KernelHandle;
+      if (!handle.occtShape) throw new Error("STEP export accepts native solids only; fallback geometry cannot be exported.");
+      return handle.occtShape;
+    });
+    return exportNativeStep(oc, native);
   }
 
   validatePlanarFace(shape: KernelShape, plane: SketchPlaneTransform): void {

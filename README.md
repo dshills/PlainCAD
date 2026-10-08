@@ -62,7 +62,7 @@ their existing constraints; free Corner rectangles retain their positional freed
 - Docked Workbench, Minimal and Full layouts, and Light, Dark, and Saturn Command themes.
 - Body visibility, named camera views, section previews, sketch measurements, and linked diagnostics.
 - Click-to-measure supported model edges, endpoints and planar faces, with analytic values.
-- Editable `.pcaddoc`/JSON files, autosave/recovery, and validated single- or multi-body STL export.
+- Editable `.pcaddoc`/JSON files, autosave/recovery, validated STL, and native STEP export.
 - Reusable-part insertion with independent parameters and safe reference remapping.
 - PNG downloads of the current 3D view, an isolated selected body, or a sketch with its visible dimensions.
 - AI part creation, bounded existing-part edits/additions, and conversational sketch refinement.
@@ -341,7 +341,7 @@ See [AI feature additions](specs/working-cad/AI_FEATURE_ADDITIONS.md) and the
 [capability matrix's AI sections](specs/working-cad/CAPABILITY_MATRIX.md#ai-component-generation)
 for per-mode limits.
 
-## Save, Recovery, STL, and Images
+## Save, Recovery, STL, STEP, and Images
 
 **Save** downloads one deterministic `.pcaddoc` with durable CAD intent. **Export
 Project JSON** creates a `.json` copy. **Open** or a single project-file drop uses
@@ -367,6 +367,15 @@ manifoldness, winding, shell/native volume, and bounded intersections. Combined
 modes require acknowledgement of applicable warnings. Expensive checks may be
 skipped outside union with a diagnostic. These checks cover supported meshes and
 numerical tolerances; changed or stale results cannot be downloaded.
+
+**Export STEP** lets you select current native bodies, **Generate validated STEP**,
+then **Download STEP file**. The native writer exports separate solids at their
+saved world positions in millimetres. A native reader verifies the actual output's
+BRep validity, solid counts, exact volumes and bounds before download becomes
+available. Cancellation or a changed model invalidates prepared output. STEP
+contains geometric solids; editable history and component hierarchy stay in the
+project file. Exports are limited to 64 bodies, 32 MiB and 60 seconds. See
+[STEP export](specs/working-cad/STEP_EXPORT.md) for binding and geometry limits.
 
 The viewport and native previews expose **Fit model** / **Fit preview** at compact
 widths. Fitted views keep the complete model visible when docks or the canvas
@@ -521,8 +530,7 @@ validation, and commit workflow.
 ## Limits and Troubleshooting
 
 Assemblies/joints, CAM, simulation, sheet metal, loft/sweep/shell/thread modeling,
-STEP export, general surface modeling, and arbitrary topological naming remain
-unavailable. Existing constraints, face/edge references, and AI recipes have the
+general surface modeling, and arbitrary topological naming remain unavailable. Existing constraints, face/edge references, and AI recipes have the
 supported scopes documented in the capability matrix. Native failures report
 the source and preserve upstream previews for repair.
 
