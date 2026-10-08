@@ -382,8 +382,7 @@ raster view with no ray tracing or shadow passes and retains demand rendering an
 movement optimization.
 
 The 3D view defaults to **Optimize while moving**: orbit, pan and zoom use at most
-1× pixel density and hide model edge lines, then restore display detail about 100 ms after
-the last camera input, without waiting for the damping tail. Turn this off in **Views** to keep full detail during
+1× pixel density and hide model edge lines, then schedule sharp detail after 50 ms of idle input, without waiting for the damping tail. Actual restoration also includes the full-resolution frame time. Turn this off in **Views** to keep full detail during
 movement. **Show model edges** controls solid edge lines independently. These
 choices are temporary view settings and reset when a project opens. Unchanged
 bodies reuse viewer buffers and cached edge lines across rebuilds; changed or
@@ -557,3 +556,5 @@ the source and preserve upstream previews for repair.
 Native rebuilds reuse validated feature outputs within bounded worker-owned caches. Changed solved geometry and dependent body versions invalidate reuse; failed rebuilds never admit partial results. See [incremental native rebuilds](specs/working-cad/INCREMENTAL_NATIVE.md).
 
 **Project sketch edges** offers mouse/touch/keyboard picks of complete supported cap boundaries in a native source preview. A named chooser remains available. Pick, inspect the native projection preview, then Apply. Oblique or incompatible placed components show explicit reasons. See [projection limits](specs/working-cad/SKETCH_PROJECTION.md).
+
+**Repeat a hole or pocket** includes a source-plane diagram with draggable spacing, center and sweep handles. Exact fields remain available. Formula fields require explicit consent before a drag replaces the formula with a literal; Escape cancels a gesture. Native validation runs after release. See [pattern controls](specs/working-cad/PATTERN_CONTROLS.md).

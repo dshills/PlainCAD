@@ -50,3 +50,8 @@ relative tolerance of 1e-8 for floating-point integration; the production UI
 readout is checked at its displayed three-decimal precision. Exported triangle
 volume separately allows 0.1% curved-surface chord error and requires outward
 triangle winding.
+
+The arrangement plan also offers direct spacing, center and signed sweep handles.
+Numeric fields remain available, and formulas require explicit replacement
+consent before dragging. See [direct pattern controls](PATTERN_CONTROLS.md) for
+gesture behavior and limits.

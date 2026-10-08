@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ModalDialog } from "../ModalDialog";
+import { PatternControls } from "../../viewer/PatternControls";
+import { patternControlModel } from "../../cad/features/patternManipulation";
 import { ExtrudePreview } from "../../viewer/ExtrudePreview";
 import { useCadStore } from "../../state/useCadStore";
 import { documentAtFeature } from "../../cad/document/featureStage";
@@ -32,9 +34,12 @@ function PatternDialog({ frame }: { frame: FeaturePatternFrame }) {
   }, [frame]);
   const [preview, setPreview] = useState<{ input: FeaturePatternInput; value?: FeaturePatternPreview; error?: string }>();
   const [applyError, setApplyError] = useState("");
+  const [dragging, setDragging] = useState(false);
+  const [lastPreview, setLastPreview] = useState<FeaturePatternPreview>();
+  const sourceResult = useCadStore(state => state.rebuild.status === "succeeded" && state.rebuild.result?.success ? state.rebuild.result : undefined);
   useEffect(() => {
     setApplyError("");
-    if (!current) return;
+    if (!current || dragging) return;
     const controller = new AbortController();
     const timer = setTimeout(() => {
       void previewFeaturePattern(frame, input, controller.signal)
@@ -42,8 +47,18 @@ function PatternDialog({ frame }: { frame: FeaturePatternFrame }) {
         .catch(error => { if (!controller.signal.aborted && currentPatternFrame(frame)) setPreview({ input, error: error instanceof Error ? error.message : String(error) }); });
     }, 180);
     return () => { clearTimeout(timer); controller.abort(); };
-  }, [frame, input, current]);
-  const shown = current && preview?.input === input ? preview : undefined;
+  }, [frame, input, current, dragging]);
+  const shown = current && !dragging && preview?.input === input ? preview : undefined;
+  useEffect(() => { if (shown?.value) setLastPreview(shown.value); }, [shown?.value]);
+  const retainedPreview = current && lastPreview?.input.sourceFeatureId === input.sourceFeatureId ? lastPreview : undefined;
+  const geometry = retainedPreview?.operation ?? (current && input.sourceFeatureId === frame.sourceFeatureId && sourceResult?.documentId === frame.document.id ? sourceResult : undefined);
+  const displayedPreview = shown?.value ?? retainedPreview;
+  const controls = useMemo(() => {
+    try {
+      if (!geometry) return { error: "Wait for the selected source geometry." };
+      return { model: patternControlModel(frame.document, input, geometry, settings) };
+    } catch (error) { return { error: error instanceof Error ? error.message : String(error) }; }
+  }, [frame, input, settings, geometry]);
   const source = frame.document.features.find(feature => feature.id === input.sourceFeatureId),
     sketch = source && "sketchId" in source ? frame.document.sketches[source.sketchId] : undefined;
   return <ModalDialog className="file-dialog model-dialog extrude-dialog" label={frame.feature ? "Edit feature pattern" : "Create feature pattern"} onDismiss={cancelFeaturePattern}>
@@ -79,9 +94,11 @@ function PatternDialog({ frame }: { frame: FeaturePatternFrame }) {
           <p className="muted">Count accepts scalar parameters (2–{MAX_FEATURE_PATTERN_COUNT}). Other settings accept expressions and units. Overlapping instances and copies that miss the body fail explicitly.</p>
         </details>
       </div><div>
-        <ExtrudePreview meshes={shown?.value?.result.meshes ?? EMPTY_MESHES} label="Native feature pattern geometry preview" />
+        {controls.model ? <PatternControls key={`${input.sourceFeatureId}:${input.type}:${input.direction}`} model={controls.model} input={input} disabled={!current} onChange={patch} onDragging={setDragging} /> : <p className="muted">{controls.error} Use the numeric fields to repair settings or wait for the source preview.</p>}
+        <ExtrudePreview meshes={displayedPreview?.result.meshes ?? EMPTY_MESHES} label="Native feature pattern geometry preview" />
+        {displayedPreview && !shown?.value ? <p className="muted">Showing the last validated native preview. It does not yet match the current arrangement.</p> : null}
         <p role="status" aria-label="Pattern preview status" className={shown?.value ? "preview-ready" : "preview-pending"}>
-          {!current ? "Project or component changed. Close and reopen Pattern." : shown?.error ? "Preview failed" : shown?.value ? `Native preview ready · ${shown.value.result.meshes.reduce((sum, mesh) => sum + mesh.geometryAssertions!.volume, 0).toFixed(3)} mm³` : "Building native pattern preview…"}
+          {!current ? "Project or component changed. Close and reopen Pattern." : shown?.error ? "Preview failed" : shown?.value ? `Native preview ready · ${shown.value.result.meshes.reduce((sum, mesh) => sum + mesh.geometryAssertions!.volume, 0).toFixed(3)} mm³` : dragging ? "Dragging arrangement · native validation waits for release" : "Building native pattern preview…"}
         </p>
         {shown?.error || applyError ? <p role="alert">{applyError || shown?.error}</p> : null}
       </div></div>

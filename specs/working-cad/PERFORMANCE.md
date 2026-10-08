@@ -121,7 +121,7 @@ app; longer sessions, complex parts and other browsers remain open.
 
 `e2e/viewer-performance.spec.ts` loads the real ORBIT housing and 40-body rotary
 fixture. At DPR 2 it verifies reduced resolution and fewer draw calls during an
-actual pointer orbit, restored sharp detail about 100ms after input ends (independent of damping), full-resolution PNG
+actual pointer orbit, sharp detail scheduled after 50ms of idle input (independent of damping), full-resolution PNG
 export during an active gesture, independent edge/optimization controls, and
 same-ID reopen reset. It checks that an edited native body replaces its buffers
 while unchanged bodies retain their geometry identities; Undo and reopen must
@@ -162,8 +162,9 @@ batching described below.
 ## Idle rendering and sketch marker batches
 
 The viewer coalesces scene changes into requested frames. Camera changes keep it
-active through OrbitControls damping; full resolution still returns about 100ms
-after the last input, independent of damping. Once settled it releases the RAF
+active through OrbitControls damping; sharp detail is scheduled after 50ms of idle
+input, independent of damping. Actual restoration includes the full-resolution
+frame time. Once settled it releases the RAF
 loop. Model changes, theme, resize/layout, selection/highlights, visibility,
 measurements, section clipping, picker hover/previews, camera commands, and
 restored WebGL contexts request a fresh frame. Solid driving-dimension labels

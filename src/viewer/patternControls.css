@@ -1,0 +1,13 @@
+.pattern-controls { margin-top: 1rem; border: 1px solid var(--border, #536873); border-radius: var(--radius, 4px); padding: .65rem; }
+.pattern-controls > p { font-size: .85rem; margin: .3rem 0 .6rem; }
+.pattern-controls svg { display: block; width: 100%; aspect-ratio: 1; background: var(--canvas-bg, #14232d); border-radius: 3px; touch-action: none; }
+.pattern-control-source polygon { stroke: #9de4f0; fill: #9de4f033; }
+.pattern-control-copy polygon { stroke: #a1b9ce; fill: #a1b9ce22; }
+.pattern-controls polygon, .pattern-control-guide { vector-effect: non-scaling-stroke; stroke-width: 1.5px; }
+.pattern-controls text { fill: #e2edf5; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.pattern-control-guide { stroke: #e8bc69; stroke-dasharray: 4 3; }
+.pattern-control-handle { fill: #f9cb7a; stroke: #17232d; cursor: grab; }
+.pattern-control-handle:active { cursor: grabbing; }
+.pattern-control-handle.locked { fill: #7b8b99; cursor: not-allowed; }
+.pattern-controls > label { display: flex; align-items: center; gap: .5rem; font-size: .82rem; margin-top: .6rem; }
+.pattern-controls > label input { width: auto; }

@@ -150,3 +150,15 @@ Remaining low notes were assessed: unposed design planes are required for compat
 The exact isolated checkout passed `npm run check:item`: type checks, 1163 unit/component tests, production build/bundle budget (largest 465.42 kB), 5 development and 14 production native smoke tests. All 4 additional native projection cases passed (23.5s), including mouse/keyboard choices, one Undo, source edits, save/open, repair/remove/break links, unsupported oblique refusal and YZ native coordinate orientation. Unit regressions cover camera preservation and eligible sources after 170 incompatible sources.
 
 Cadence: 4 completed items since the last successful full checkpoint. The next requested item requires the full release gate before its commit.
+
+### Item 5: direct pattern arrangement controls (2026-10-08)
+
+Prism reviewed the complete isolated change with Anthropic `claude-sonnet-5-5`. Initial review `cfe61b7967ea021253b1c78d7d4d5094` identified render-time ref mutation, which was replaced with committed preview state. Final complete review `09b180f70062156772af0ba8cf58ede3`, gesture fixup `03758fcfe8087b01d4ee09564d5353ed`, browser typing fixup `f7c8db83984ff8e6feb085c82dce9ce3`, and viewer restoration review `ceb1a993a3337014cf90fb5a99c010b8` had no high/medium findings. Remaining low notes were assessed against the frozen drag transform, angular-delta grab preservation, current native preview identity, and fixed browser viewport; geometry checks independently validate hole walls rather than assuming tessellation seam angles.
+
+Pattern spacing, circular center and sweep now support direct pointer arrangement with parameter-expression protection, cancellation, stale preview labeling and native proof before Apply. The 22 focused pattern tests and both native pattern cases passed, proving a substantive 18mm spacing change, signed YZ sweep, native cylindrical boundaries, exact saved expressions and durable geometry. Browser mesh access now respects the ArrayLike contract.
+
+The initial full gate passed all unit/build checks and 256 of 257 development browser cases, but full-quality restoration took 511.5ms against the unchanged 500ms limit. A focused repeat measured 513.1ms. Reducing the idle scheduling delay from 100ms to 50ms fixed both viewer performance cases; actual sharp restoration also includes full-resolution frame time. This change retains input/damping guards and does not relax the assertion. The clean full release rerun then passed on the frozen final checkout.
+
+The clean `npm run release:check` passed type checks, all 1185 unit/component tests, production build/bundle budget (largest 471.36 kB), all 257 development browser cases and all 33 production cases. The full run also passed both viewer performance cases after the fix.
+
+Cadence: the successful full checkpoint resets the completed-item count to 0.

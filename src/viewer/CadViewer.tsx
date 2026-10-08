@@ -67,7 +67,8 @@ interface SketchOverlayResources {
 }
 
 const EMPTY_MESHES: RenderMesh[] = [];
-const MOVEMENT_RESTORE_DELAY_MS = 100;
+// Debounce short input gaps without adding a long wait before the sharp frame.
+const MOVEMENT_RESTORE_DELAY_MS = 50;
 
 export function CadViewer() {
   const theme = useThemeState((state) => state.theme);
