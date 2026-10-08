@@ -18,7 +18,7 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("Model and Render presets", () => {
-  it("routes both controls through commands and preserves independent appearance and visibility without document edits", () => {
+  it("routes both controls through commands and preserves independent appearance and visibility without document edits", async () => {
     const state = useCadStore.getState(), doc = state.history.present, session = state.documentSession;
     const view = useViewerState.getState();
     view.toggleBody(session, "kept-hidden", ["kept-hidden"]);
@@ -27,6 +27,7 @@ describe("Model and Render presets", () => {
     render(<><ViewerToolbar hasGeometry /><ViewPanel /></>);
     const toolbar = within(screen.getByRole("group", { name: "Viewport controls" }));
     expect(toolbar.getByRole("button", { name: "Model view" })).toHaveAttribute("aria-pressed", "true");
+    await screen.findByLabelText("Show model edges");
     fireEvent.click(screen.getByLabelText("Show model edges"));
     fireEvent.click(screen.getByLabelText("Show ground grid"));
     fireEvent.click(toolbar.getByRole("button", { name: "Render view" }));

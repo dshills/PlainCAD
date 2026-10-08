@@ -68,7 +68,7 @@ afterEach(() => {
   if (originalStorage)
     Object.defineProperty(window, "localStorage", originalStorage);
 });
-it("defaults to stable docks and keeps layout, tab switches and resizing out of document history", () => {
+it("defaults to stable docks and keeps layout, tab switches and resizing out of document history", async () => {
   render(<App />);
   expect(readWorkspacePreferences().layout).toBe("workbench");
   const before = useCadStore.getState();
@@ -80,6 +80,14 @@ it("defaults to stable docks and keeps layout, tab switches and resizing out of 
   fireEvent.click(screen.getByRole("button", { name: "Add Parameter" }));
   const input = screen.getByLabelText("Parameter param_1 expression");
   fireEvent.change(input, { target: { value: "22mm" } });
+  // The 22mm text is an uncommitted editor draft; Add Parameter retains its
+  // default 10mm document value. Let that committed edit settle before
+  // proving subsequent lazy panel/tab/layout actions do not rebuild it.
+  await waitFor(() => {
+    const state = useCadStore.getState();
+    expect(state.rebuild.status).toBe("succeeded");
+    expect(state.rebuild.result?.parameterValues?.param_1?.value).toBe(10);
+  });
   const afterAdd = useCadStore.getState();
   fireEvent.click(within(left).getByRole("button", { name: "Project" }));
   expect(input).not.toBeVisible();
@@ -90,7 +98,7 @@ it("defaults to stable docks and keeps layout, tab switches and resizing out of 
   fireEvent.change(screen.getByLabelText("Task panel"), {
     target: { value: "views" },
   });
-  expect(screen.getByRole("heading", { name: "Views" })).toBeVisible();
+  expect(await screen.findByRole("heading", { name: "Views" })).toBeVisible();
   expect(
     screen.queryByRole("heading", { name: "Inspector" }),
   ).not.toBeInTheDocument();

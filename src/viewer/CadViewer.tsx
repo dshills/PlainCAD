@@ -6,6 +6,7 @@ import { addMeasurementOverlays, installMeasurementPicking, visibleMeasurementTa
 import { measureModelTargets } from "../cad/inspection/modelMeasurements";
 import { ModelMeasurementReadout } from "./ModelMeasurementReadout";
 import { createPresentationLights } from "./presentationLights";
+import { studioBackground } from "./studioAppearance";
 import { DemandRenderer } from "./demandRenderer";
 import { fitCameraBounds } from "./cameraFit";
 import { ViewerToolbar } from "./ViewerToolbar";
@@ -28,7 +29,7 @@ import type { CameraPose } from "../cad/document/schema";
 import { useInspectionState } from "../state/inspectionState";
 import { MeasurementError, measureWorldPoint } from "../cad/inspection/measurements";
 import { sketchComponentId } from "../cad/document/components";
-import { hiddenViewerBodies, useViewerState, type PresentationMode } from "../state/viewerState";
+import { hiddenViewerBodies, useViewerState, type PresentationMode, type StudioMaterial } from "../state/viewerState";
 import { useCadStore } from "../state/useCadStore";
 import { SelectionRef } from "../cad/document/schema";
 import { RenderMesh } from "../cad/kernel/KernelAdapter";
@@ -183,6 +184,8 @@ export function CadViewer() {
     let keepFitted = false;
     let edgesVisible = true;
     let appliedPresentationMode: PresentationMode | undefined;
+    let appliedStudioMaterial: StudioMaterial | undefined;
+    let appliedBackground: string | undefined;
     const frames = new DemandRenderer(() => {
       if (!host.clientWidth || !host.clientHeight || renderer.getContext().isContextLost()) return false;
       const changed = controls.update();
@@ -201,13 +204,20 @@ export function CadViewer() {
       const optimize = !current || view.optimizeWhileMoving;
       const showEdges = !current || view.showModelEdges;
       const mode = current ? view.presentationMode : "model";
-      if (mode !== appliedPresentationMode) {
-        modelMeshes.setPresentationMode(mode);
+      const material = current ? view.studioMaterial : "original";
+      const nextBackground = studioBackground(mode, current ? view.studioBackdrop : "theme", viewerThemeColors[useThemeState.getState().theme].background);
+      if (nextBackground !== appliedBackground) {
+        background.set(nextBackground);
+        appliedBackground = nextBackground;
+      }
+      if (mode !== appliedPresentationMode || material !== appliedStudioMaterial) {
+        modelMeshes.setPresentationMode(mode, material);
         lights.setMode(mode);
         axes.visible = mode === "model";
         sketchGroup.visible = measurementGroup.visible = mode === "model";
         applySelection(modelGroup, selectedBodyIdRef.current, highlightedBodyIdsRef.current);
         appliedPresentationMode = mode;
+        appliedStudioMaterial = material;
       }
       grid.visible = !current || view.showGrid;
       const reduced = moving && optimize && !sharp;
@@ -365,7 +375,7 @@ export function CadViewer() {
           object.localToWorld(point.fromBufferAttribute(attribute, index));
           point.toArray(positions, index * 3);
         }
-        return { bodyId: object.userData.bodyId as string, geometryId: object.geometry.uuid, visible: object.visible, highlighted: object.userData.highlighted === true, clippingEnabled: object.material instanceof THREE.MeshStandardMaterial && Boolean(object.material.clippingPlanes?.length), normals: Array.from(object.geometry.getAttribute("normal").array), appearance: object.material instanceof THREE.MeshStandardMaterial ? { roughness: object.material.roughness, metalness: object.material.metalness, flatShading: object.material.flatShading } : undefined, positions, indices: Array.from(object.geometry.index?.array ?? []) };
+        return { bodyId: object.userData.bodyId as string, geometryId: object.geometry.uuid, visible: object.visible, highlighted: object.userData.highlighted === true, clippingEnabled: object.material instanceof THREE.MeshStandardMaterial && Boolean(object.material.clippingPlanes?.length), normals: Array.from(object.geometry.getAttribute("normal").array), appearance: object.material instanceof THREE.MeshStandardMaterial ? { roughness: object.material.roughness, metalness: object.material.metalness, flatShading: object.material.flatShading, color: object.material.color.getHexString() } : undefined, positions, indices: Array.from(object.geometry.index?.array ?? []) };
       }),
       measurementLine: measurementGroup.children[0] instanceof THREE.Line ? Array.from(measurementGroup.children[0].geometry.getAttribute("position").array) : [],
       sketchPoints: inspectSketchMarkers(sketchGroup),
@@ -509,7 +519,6 @@ export function CadViewer() {
     const runtime = runtimeRef.current;
     if (!runtime) return;
     const colors = viewerThemeColors[theme];
-    runtime.background.set(colors.background);
     const positions = runtime.grid.geometry.getAttribute("position");
     const attribute = runtime.grid.geometry.getAttribute("color");
     const major = new THREE.Color(colors.gridMajor), minor = new THREE.Color(colors.gridMinor);
@@ -528,7 +537,7 @@ export function CadViewer() {
     resources.errorLineMaterial.color.set(colors.error);
     resources.errorPointMaterial.color.set(colors.error);
     resources.circleMaterial.color.set(colors.circle);
-    runtime.invalidate();
+    runtime.refreshQuality();
   }, [theme]);
 
   useEffect(() => {
@@ -545,7 +554,7 @@ export function CadViewer() {
     runtime.invalidate();
   }, [meshes]);
 
-  useEffect(() => { runtimeRef.current?.refreshQuality(); }, [view.presentationMode, view.showGrid, view.showModelEdges, view.optimizeWhileMoving, view.session, session]);
+  useEffect(() => { runtimeRef.current?.refreshQuality(); }, [view.presentationMode, view.studioMaterial, view.studioBackdrop, view.showGrid, view.showModelEdges, view.optimizeWhileMoving, view.session, session]);
 
   useEffect(() => {
     const runtime = runtimeRef.current;
@@ -930,7 +939,7 @@ function applySelection(
       const suggested = highlighted.has(child.userData.bodyId as string);
       child.userData.highlighted = suggested;
       child.material.color.set(
-        selected ? "#f2c14e" : suggested ? "#32cee0" : (child.userData.baseColor ?? "#8fb7b4"),
+        selected ? "#f2c14e" : suggested ? "#32cee0" : (child.userData.presentationColor ?? child.userData.baseColor ?? "#8fb7b4"),
       );
       child.material.emissive.set(selected ? "#3a2500" : suggested ? "#003c44" : "#000000");
       child.material.emissiveIntensity = selected || suggested ? 0.18 : 0;

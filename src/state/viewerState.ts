@@ -3,6 +3,10 @@ import type { CadDocument } from "../cad/document/schema";
 import { bodyComponentId } from "../cad/document/components";
 
 export type PresentationMode = "model" | "render";
+export const STUDIO_MATERIAL_IDS = ["original", "metal", "powder"] as const;
+export const STUDIO_BACKDROP_IDS = ["theme", "neutral", "warm", "dark"] as const;
+export type StudioMaterial = typeof STUDIO_MATERIAL_IDS[number];
+export type StudioBackdrop = typeof STUDIO_BACKDROP_IDS[number];
 interface AppearancePreferences { showModelEdges: boolean; showGrid: boolean; }
 
 interface ViewerState {
@@ -12,12 +16,15 @@ interface ViewerState {
   hiddenSketchIds: string[];
   activeComponentTimeline: boolean;
   presentationMode: PresentationMode;
+  studioMaterial: StudioMaterial;
+  studioBackdrop: StudioBackdrop;
   modelPreferences: AppearancePreferences;
   renderPreferences: AppearancePreferences;
   showGrid: boolean;
   showModelEdges: boolean;
   optimizeWhileMoving: boolean;
   setPresentationMode(session: number, mode: PresentationMode): void;
+  setStudioAppearance(session: number, change: { material?: StudioMaterial; backdrop?: StudioBackdrop }): void;
   toggleGrid(session: number): void;
   toggleModelEdges(session: number): void;
   toggleMovingQuality(session: number): void;
@@ -52,6 +59,8 @@ const defaults = {
   hiddenSketchIds: [] as string[],
   activeComponentTimeline: false,
   presentationMode: "model" as PresentationMode,
+  studioMaterial: "original" as StudioMaterial,
+  studioBackdrop: "theme" as StudioBackdrop,
   modelPreferences: { showModelEdges: true, showGrid: true },
   renderPreferences: { showModelEdges: false, showGrid: false },
   showGrid: true,
@@ -83,6 +92,16 @@ export const useViewerState = create<ViewerState>((set, get) => {
       set({ ...view, session, presentationMode: mode,
         ...(view.presentationMode === "model" ? { modelPreferences: saved } : { renderPreferences: saved }),
         ...next });
+    },
+    setStudioAppearance: (session, change) => {
+      const view = get();
+      if (view.session !== session || view.presentationMode !== "render") return;
+      if (change.material !== undefined && !STUDIO_MATERIAL_IDS.includes(change.material)) return;
+      if (change.backdrop !== undefined && !STUDIO_BACKDROP_IDS.includes(change.backdrop)) return;
+      set({
+        ...(change.material === undefined ? {} : { studioMaterial: change.material }),
+        ...(change.backdrop === undefined ? {} : { studioBackdrop: change.backdrop }),
+      });
     },
     toggleGrid: (session) => {
       const view = current(session);

@@ -18,7 +18,7 @@ export interface ViewerSnapshot {
   cameraTarget: number[];
   measurementLine: number[];
   gridNormal: number[];
-  meshes: Array<{ bodyId: string; geometryId?: string; visible: boolean; highlighted?: boolean; clippingEnabled: boolean; positions: number[]; normals?: number[]; appearance?: { roughness: number; metalness: number; flatShading: boolean }; indices: number[] }>;
+  meshes: Array<{ bodyId: string; geometryId?: string; visible: boolean; highlighted?: boolean; clippingEnabled: boolean; positions: number[]; normals?: number[]; appearance?: { roughness: number; metalness: number; flatShading: boolean; color?: string }; indices: number[] }>;
   sketchPoints: Array<{ id: string; position: number[] }>;
   sketchCircles: Array<{ id: string; normal: number[] }>;
 }

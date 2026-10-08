@@ -1,5 +1,6 @@
 import * as THREE from "three";
-import type { PresentationMode } from "../state/viewerState";
+import type { PresentationMode, StudioMaterial } from "../state/viewerState";
+import { STUDIO_MATERIALS } from "./studioAppearance";
 import type { RenderMesh } from "../cad/kernel/KernelAdapter";
 
 interface RenderedBody {
@@ -47,6 +48,7 @@ function disposeBody({ object, edges }: RenderedBody) {
 export class ModelMeshes {
   private bodies = new Map<string, RenderedBody>();
   private mode: PresentationMode = "model";
+  private studioMaterial: StudioMaterial = "original";
   readonly group = new THREE.Group();
 
   update(sources: readonly RenderMesh[]) {
@@ -80,16 +82,21 @@ export class ModelMeshes {
   }
 
   /** Appearance never changes the native mesh buffers or durable geometry. */
-  setPresentationMode(mode: PresentationMode) {
+  setPresentationMode(mode: PresentationMode, material: StudioMaterial = "original") {
     this.mode = mode;
+    this.studioMaterial = material;
     this.group.userData.presentationMode = mode;
     for (const body of this.bodies.values()) this.applyAppearance(body);
   }
 
   private applyAppearance(body: RenderedBody) {
     const material = body.object.material;
-    material.roughness = this.mode === "render" ? 0.32 : 0.55;
-    material.metalness = this.mode === "render" ? 0.22 : 0.05;
+    const appearance = this.mode === "render" ? STUDIO_MATERIALS[this.studioMaterial] : { roughness: 0.55, metalness: 0.05 };
+    material.roughness = appearance.roughness;
+    material.metalness = appearance.metalness;
+    body.object.userData.presentationColor = this.mode === "render" && this.studioMaterial === "metal"
+      ? "#bbc4cc" : body.object.userData.baseColor;
+    material.color.set(body.object.userData.presentationColor);
     // Interpolate the existing per-face native vertex normals. Keep hard-edge
     // splits, positions and triangulation intact; STL still uses native data.
     material.flatShading = false;

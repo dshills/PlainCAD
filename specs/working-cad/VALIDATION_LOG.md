@@ -9,10 +9,10 @@ missing or the count cannot be determined, establish a baseline with the full ga
 ## Last successful full gate
 
 - Date: 2026-10-08.
-- Change: inviting visual workbench through purposeful motion: project gallery, Saturn instrument styling, native build stories and edit confirmation, including the preceding export hub item.
+- Change: inviting visual workbench through purposeful motion: project gallery, Saturn instrument styling, native build stories and edit confirmation, including the preceding export hub item (commit `c25a8f1`).
 - Result: type checks, 1343 unit/component tests, build/bundle budget (largest 498.48 kB), all 288 development native browser cases and all 38 production cases passed.
-- Completed items since that full gate: **0**.
-- Next full gate: after **5** more completed items.
+- Completed items since that full gate: **1**.
+- Next full gate: after **4** more completed items.
 
 ## Completed batch
 
@@ -517,3 +517,35 @@ run was not counted; these are results from the completed fresh full gate.
 
 Cadence: the successful full checkpoint resets the count to 0. The next full gate
 is due after 5 more completed requested changes.
+
+### Item 5: product photo studio (2026-10-08)
+
+Render opens a collapsible Photo studio with original, metal and powder-coat
+approximate finishes; theme, neutral, warm and midnight backdrops; standard CAD
+camera compositions; and full-resolution native project PNG export. Display
+settings reuse geometry buffers/materials and stay outside project JSON/history.
+Model restores source colors; reopening resets session settings. Studio and Views
+load lazily with contained panel failures. Camera and command-load failures produce
+specific diagnostics without applying stale settings to another project.
+
+Prism Anthropic `claude-sonnet-5-5` reviewed the final integration with complete
+coverage (`78b891d1e24018c8c3aa89382e43b7cf`), no high/medium findings. Earlier
+camera-read, command-error and reopen-readiness findings were fixed and tested.
+Remaining low notes were assessed: the bounded PNG corner readers are duplicated;
+PNG capture synchronously refreshes current appearance at full resolution before
+encoding; rejected stale/internal controls deliberately leave the new context
+unchanged; Model-mode finish commands are guarded before applying display state.
+Native tests additionally verify different rejected finish values. The compact
+panel was visually checked and its explanatory copy shortened.
+
+`npm run check:item` passed: type checks, 1356 unit/component tests, production
+build/bundle budget (largest 497.44 kB), 5 native development smoke tests and 14
+production CSP/modeling smoke tests. Six focused native Render/Studio/motion cases
+and two production Render/Studio cases passed. They prove changed PNG pixels,
+CAD camera axes, native geometry preservation, stale-control rejection, unchanged
+history/camera/resources, idle rendering, save/open resets and reduced-motion
+keyboard operation. The approximate metal finish has no directional brush texture,
+shadow maps or additional render passes; see PHOTO_STUDIO.md.
+
+Cadence: 1 completed item since the successful full checkpoint. The next full
+gate is due after 4 more requested changes.

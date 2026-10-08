@@ -97,9 +97,10 @@ describe("component navigation", () => {
     expect(useCadStore.getState().history.present.features[0].name).toBe("Bracket solid");
     expect(useCadStore.getState().history.past).toEqual([]);
   });
-  it("routes edge and movement preferences through shared commands without adding history or project data", () => {
+  it("routes edge and movement preferences through shared commands without adding history or project data", async () => {
     const { document } = project();
     render(<ViewPanel />);
+    await screen.findByLabelText("Show model edges");
     expect(screen.getByLabelText("Show model edges")).toBeChecked();
     expect(screen.getByLabelText("Optimize while moving")).toBeChecked();
     fireEvent.click(screen.getByLabelText("Show model edges"));

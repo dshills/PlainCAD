@@ -3,3 +3,4 @@
 .preview-fit { position: absolute; top: 8px; right: 8px; z-index: 6; }
 .viewer-controls button[aria-pressed="true"] { border-color: var(--accent); background: var(--selected-bg); }
 .viewer-controls { max-width: calc(100% - 24px); flex-wrap: wrap; }
+.studio-controls[role="alert"] { position: absolute; top: 12px; right: 12px; z-index: 6; width: 272px; max-width: calc(100% - 24px); padding: 12px; background: var(--panel); color: var(--text); border: 1px solid var(--border); font-size: 12px; }

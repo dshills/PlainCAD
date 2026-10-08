@@ -122,6 +122,7 @@ export interface CommandContext {
   viewName?: string;
   viewId?: string;
   documentSession?: number;
+  studio?: import("./studioCommand").StudioCommandContext;
   fileInputRef?: RefObject<HTMLInputElement | null>;
   file?: File;
 }
@@ -359,6 +360,28 @@ export const commands: CadCommand[] = [
   },
   { id: "view.model", label: "Model View", description: "Restore modeling lighting, overlays and your modeling edge/grid preferences.", enablementKey: "document", run: (context) => { const state = useCadStore.getState(); if (context.documentSession !== undefined && context.documentSession !== state.documentSession) return; useViewerState.getState().setPresentationMode(state.documentSession, "model"); } },
   { id: "view.render", label: "Render View", description: "Present the current native model with smooth shading, studio lighting and clean PNG exports.", enablementKey: "document", run: (context) => { const state = useCadStore.getState(); if (context.documentSession !== undefined && context.documentSession !== state.documentSession) return; useViewerState.getState().setPresentationMode(state.documentSession, "render"); } },
+  { id: "view.studioAppearance", label: "Studio appearance", internal: true, enablementKey: "document", run: async (context) => {
+    const captured = useCadStore.getState();
+    const reportFailure = (message: string) => {
+      const current = useCadStore.getState(), view = useViewerState.getState();
+      if (current.history.present === captured.history.present && current.documentSession === captured.documentSession &&
+          view.session === captured.documentSession && view.presentationMode === "render") current.setFileError(message);
+    };
+    let apply: typeof import("./studioCommand").setStudioAppearance;
+    try {
+      ({ setStudioAppearance: apply } = await import("./studioCommand"));
+    } catch (error) {
+      console.error("Studio command could not load.", error);
+      reportFailure("Studio controls could not load. Save your project and reload to retry.");
+      return;
+    }
+    try {
+      await apply(context.studio, captured);
+    } catch (error) {
+      console.error("Studio settings could not be applied.", error);
+      reportFailure("Studio settings could not be applied. Try choosing the finish or view again.");
+    }
+  } },
   { id: "file.projectGallery", label: "Project gallery", description: "Browse real example parts and recently saved local projects.", enablementKey: "outsideGuidedHole", run: () => beginProjectGallery() },
   { id: "view.toggleGrid", label: "Toggle Ground Grid", description: "Show or hide the ground grid in the current view preset and project PNG images.", enablementKey: "document", run: (context) => { const state = useCadStore.getState(); if (context.documentSession !== undefined && context.documentSession !== state.documentSession) return; useViewerState.getState().toggleGrid(state.documentSession); } },
   { id: "view.toggleModelEdges", label: "Toggle Model Edges", description: "Show or hide solid edge lines in the 3D view and PNG images.", enablementKey: "document", run: () => useViewerState.getState().toggleModelEdges(useCadStore.getState().documentSession) },

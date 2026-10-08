@@ -133,7 +133,8 @@ test("Render survives a native parameter rebuild and sharp PNG during motion, th
     expect(state.result!.meshes[0].geometryAssertions!.volume).toBeCloseTo(90000, 5);
     expect(rebuilt.meshes[0].geometryId).not.toBe(before.meshes[0].geometryId);
     expect(rebuilt.meshes[0].bodyId).toBe(before.meshes[0].bodyId);
-    expect(rebuilt.meshes[0].appearance).toEqual({ roughness: 0.32, metalness: 0.22, flatShading: false });
+    expect(before.meshes[0].appearance?.color).toBeDefined();
+    expect(rebuilt.meshes[0].appearance).toEqual({ roughness: 0.32, metalness: 0.22, flatShading: false, color: before.meshes[0].appearance?.color });
     expect(rebuilt.meshes[0].positions).toEqual(Array.from(new Float32Array(Array.from(state.result!.meshes[0].positions))));
     expect(rebuilt.presentation?.mode).toBe("render");
   }).toPass();

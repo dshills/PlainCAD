@@ -436,6 +436,13 @@ project and selected-part PNG downloads match the current preset. Render is a li
 raster view with no ray tracing or shadow passes and retains demand rendering and
 movement optimization.
 
+Render also opens a collapsible **Photo studio** with metal and powder-coat display
+finishes, theme/neutral/warm/midnight backdrops, and Hero/Top/Front/Right camera
+compositions. **Download studio PNG** captures the actual model at full resolution.
+Finishes are visual approximations; the metal preset uses rough metallic shading
+without directional brush textures. Settings last for the project session and
+preserve native geometry and idle rendering. See [Photo studio](specs/working-cad/PHOTO_STUDIO.md).
+
 The 3D view defaults to **Optimize while moving**: orbit, pan and zoom use at most
 1× pixel density and hide model edge lines, then schedule sharp detail after 50 ms of idle input, without waiting for the damping tail. Actual restoration also includes the full-resolution frame time. Turn this off in **Views** to keep full detail during
 movement. **Show model edges** controls solid edge lines independently. These
