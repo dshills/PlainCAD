@@ -1,3 +1,4 @@
+import { canUndoAiChange, recordAiHistoryChange } from "../ui/commands/aiHistoryState";
 import { useAiDrawer } from "../ui/commands/aiCommand";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
@@ -138,6 +139,8 @@ it("requires explicit shared parameter choice, preserves the formula and disclos
   await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("explicitly"));
   expect(mocks.preview).not.toHaveBeenCalled();
   fireEvent.change(screen.getByLabelText("AI sketch binding policy"), { target: { value: "parameter:width_parameter" } });
+  expect(screen.getByRole("checkbox")).not.toBeChecked();
+  fireEvent.click(screen.getByRole("checkbox"));
   fireEvent.click(screen.getByRole("button", { name: "Generate AI sketch preview" }));
   await waitFor(() => expect(screen.getByRole("button", { name: "Apply AI sketch refinement" })).toBeEnabled());
   expect(screen.getByLabelText("AI proposed sketch changes")).toHaveTextContent("Shared parameter width");
@@ -200,6 +203,8 @@ it("requires explicit dimension-formula replacement and leaves its shared projec
   fireEvent.click(screen.getByRole("button", { name: "Generate AI sketch preview" }));
   await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("parameter-bound"));
   fireEvent.change(screen.getByLabelText("AI sketch binding policy"), { target: { value: "replace" } });
+  expect(screen.getByRole("checkbox")).not.toBeChecked();
+  fireEvent.click(screen.getByRole("checkbox"));
   fireEvent.click(screen.getByRole("button", { name: "Generate AI sketch preview" }));
   await waitFor(() => expect(screen.getByRole("button", { name: "Apply AI sketch refinement" })).toBeEnabled());
   expect(mocks.request.mock.calls[1][2].sketchContext.bindingPolicy).toBe("replace");
@@ -276,4 +281,176 @@ it("cancels a pending provider request when Escape is pressed on the method sele
   await act(async () => resolve?.({ proposal: resize }));
   expect(mocks.preview).not.toHaveBeenCalled();
   expect(screen.queryByRole("button", { name: "Apply AI sketch refinement" })).toBeNull();
+});
+
+it("retains complete turns after its own Apply and requires fresh consent for updated sketch context", async () => {
+  render(<ProviderSketchRefinementPanel />); await allow();
+  fireEvent.click(screen.getByRole("button", { name: "Generate AI sketch preview" }));
+  await waitFor(() => expect(screen.getByRole("button", { name: "Apply AI sketch refinement" })).toBeEnabled());
+  fireEvent.click(screen.getByRole("button", { name: "Apply AI sketch refinement" }));
+  expect(screen.getByRole("checkbox")).not.toBeChecked();
+  fireEvent.change(screen.getByLabelText("Provider sketch request"), { target: { value: "Now make it 70 x 40 mm" } });
+  expect(screen.getByRole("button", { name: "Generate AI sketch preview" })).toBeDisabled();
+  expect(mocks.request).toHaveBeenCalledTimes(1);
+  fireEvent.click(screen.getByRole("checkbox"));
+  fireEvent.click(screen.getByRole("button", { name: "Generate AI sketch preview" }));
+  await waitFor(() => expect(mocks.request).toHaveBeenCalledTimes(2));
+  expect(mocks.request.mock.calls[1][2].history).toHaveLength(2);
+  expect(mocks.request.mock.calls[1][2].history[0].content).toContain("60 x 40");
+  expect(mocks.request.mock.calls[1][2].sketchContext).not.toEqual(mocks.request.mock.calls[0][2].sketchContext);
+});
+it("clarifies short repair requests without a current failure or provider consent", async () => {
+  render(<ProviderSketchRefinementPanel />);
+  fireEvent.change(screen.getByLabelText("Provider sketch request"), { target: { value: "fix that" } });
+  fireEvent.click(screen.getByRole("button", { name: "Generate AI sketch preview" }));
+  expect(screen.getByLabelText("Provider sketch refinement status")).toHaveTextContent("Which issue should I fix");
+  expect(mocks.request).not.toHaveBeenCalled();
+});
+it("uses the current failed native request and bounded diagnostic for repair without applying automatically", async () => {
+  mocks.preview.mockRejectedValueOnce(new Error("Native downstream body is invalid"));
+  render(<ProviderSketchRefinementPanel />); await allow();
+  const original = useCadStore.getState().history.present;
+  fireEvent.click(screen.getByRole("button", { name: "Generate AI sketch preview" }));
+  await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("Native downstream body is invalid"));
+  fireEvent.change(screen.getByLabelText("Provider sketch request"), { target: { value: "repair this" } });
+  fireEvent.click(screen.getByRole("button", { name: "Generate AI sketch preview" }));
+  await waitFor(() => expect(screen.getByRole("button", { name: "Apply AI sketch refinement" })).toBeEnabled());
+  expect(mocks.request.mock.calls[1][2].prompt).toContain("Make the rectangle 60 x 40 mm");
+  expect(mocks.request.mock.calls[1][2].prompt).toContain("Native downstream body is invalid");
+  expect(useCadStore.getState().history.present).toBe(original);
+  expect(useCadStore.getState().history.past).toHaveLength(0);
+});
+it("forgets failed repair context after external sketch replacement", async () => {
+  mocks.preview.mockRejectedValueOnce(new Error("Bad native profile"));
+  render(<ProviderSketchRefinementPanel />); await allow();
+  fireEvent.click(screen.getByRole("button", { name: "Generate AI sketch preview" }));
+  await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("Bad native profile"));
+  act(() => useCadStore.getState().setDocument({ ...useCadStore.getState().history.present }));
+  fireEvent.change(screen.getByLabelText("Provider sketch request"), { target: { value: "fix that" } });
+  fireEvent.click(screen.getByRole("button", { name: "Generate AI sketch preview" }));
+  expect(screen.getByLabelText("Provider sketch refinement status")).toHaveTextContent("Which issue should I fix");
+  expect(mocks.request).toHaveBeenCalledTimes(1);
+});
+
+it("expires repair context and sharing consent when the canvas assistant is hidden", async () => {
+  mocks.preview.mockRejectedValueOnce(new Error("Bad native profile"));
+  render(<ProviderSketchRefinementPanel />); await allow();
+  fireEvent.click(screen.getByRole("button", { name: "Generate AI sketch preview" }));
+  await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("Bad native profile"));
+  act(() => useAiDrawer.setState({ open: false }));
+  act(() => useAiDrawer.setState({ open: true }));
+  expect(screen.getByRole("checkbox")).not.toBeChecked();
+  fireEvent.change(screen.getByLabelText("Provider sketch request"), { target: { value: "repair this" } });
+  fireEvent.click(screen.getByRole("button", { name: "Generate AI sketch preview" }));
+  expect(screen.getByLabelText("Provider sketch refinement status")).toHaveTextContent("Which issue should I fix");
+  expect(mocks.request).toHaveBeenCalledTimes(1);
+});
+
+it("reports successful Apply separately when a changed canvas prevents retaining the conversation", async () => {
+  render(<ProviderSketchRefinementPanel />); await allow();
+  fireEvent.click(screen.getByRole("button", { name: "Generate AI sketch preview" }));
+  await waitFor(() => expect(screen.getByRole("button", { name: "Apply AI sketch refinement" })).toBeEnabled());
+  const original = useCadStore.getState().history.present;
+  const unsubscribe = useCadStore.subscribe(state => {
+    if (state.history.present !== original) useSketchCanvas.setState({ active: undefined });
+  });
+  try {
+    fireEvent.click(screen.getByRole("button", { name: "Apply AI sketch refinement" }));
+    expect(useCadStore.getState().history.present).not.toBe(original);
+    expect(useCadStore.getState().history.past).toHaveLength(1);
+    expect(screen.getByLabelText("Provider sketch refinement status")).toHaveTextContent("applied in one undo step");
+    expect(screen.getByLabelText("Provider sketch refinement status")).toHaveTextContent("conversation was reset");
+    expect(screen.getByRole("checkbox")).not.toBeChecked();
+  } finally { unsubscribe(); }
+});
+
+it("repeated repair uses the original request and latest diagnostic without nesting diagnostics", async () => {
+  mocks.preview.mockRejectedValueOnce(new Error("First invalid face")).mockRejectedValueOnce(new Error("Second invalid profile"));
+  render(<ProviderSketchRefinementPanel />); await allow();
+  fireEvent.click(screen.getByRole("button", { name: "Generate AI sketch preview" }));
+  await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("First invalid face"));
+  fireEvent.change(screen.getByLabelText("Provider sketch request"), { target: { value: "fix that" } });
+  fireEvent.click(screen.getByRole("button", { name: "Generate AI sketch preview" }));
+  await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("Second invalid profile"));
+  fireEvent.change(screen.getByLabelText("Provider sketch request"), { target: { value: "repair this" } });
+  fireEvent.click(screen.getByRole("button", { name: "Generate AI sketch preview" }));
+  await waitFor(() => expect(screen.getByRole("button", { name: "Apply AI sketch refinement" })).toBeEnabled());
+  expect(mocks.request.mock.calls[2][2].prompt).toContain("Make the rectangle 60 x 40 mm");
+  expect(mocks.request.mock.calls[2][2].prompt).toContain("Second invalid profile");
+  expect(mocks.request.mock.calls[2][2].prompt).not.toContain("First invalid face");
+});
+
+it("replaces a failed repair context when the provider successfully asks for clarification", async () => {
+  mocks.preview.mockRejectedValueOnce(new Error("Invalid original native body"));
+  mocks.request.mockResolvedValueOnce({ proposal: resize }).mockResolvedValueOnce({ proposal: { summary: "Which rectangle dimension should change?", warnings: [], actions: [] } });
+  render(<ProviderSketchRefinementPanel />); await allow();
+  fireEvent.click(screen.getByRole("button", { name: "Generate AI sketch preview" }));
+  await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("Invalid original native body"));
+  fireEvent.change(screen.getByLabelText("Provider sketch request"), { target: { value: "repair this" } });
+  fireEvent.click(screen.getByRole("button", { name: "Generate AI sketch preview" }));
+  await waitFor(() => expect(screen.getByLabelText("Provider sketch refinement status")).toHaveTextContent("needs clarification"));
+  expect(screen.getByText("Which rectangle dimension should change?")).toBeVisible();
+  fireEvent.change(screen.getByLabelText("Provider sketch request"), { target: { value: "fix that" } });
+  fireEvent.click(screen.getByRole("button", { name: "Generate AI sketch preview" }));
+  expect(screen.getByLabelText("Provider sketch refinement status")).toHaveTextContent("There is no current failed AI proposal");
+  expect(mocks.request).toHaveBeenCalledTimes(2);
+  expect(mocks.preview).toHaveBeenCalledTimes(1);
+  expect(useCadStore.getState().history.past).toHaveLength(0);
+});
+
+it("blocks keyboard history and repair shortcuts during a file operation", async () => {
+  render(<ProviderSketchRefinementPanel />);
+  await waitFor(() => expect(screen.getByText("Configured model: configured-anthropic")).toBeVisible());
+  act(() => {
+    const state = useCadStore.getState(), original = state.history.present;
+    state.updateDocument(document => ({ ...document, name: "Applied AI edit" }));
+    recordAiHistoryChange(original, state.documentSession, "Applied AI edit");
+    useSketchCanvas.setState({ active: undefined });
+  });
+  expect(canUndoAiChange(useCadStore.getState())).toBe(true);
+  act(() => useCadStore.setState({ fileBusy: true }));
+  const history = useCadStore.getState().history;
+  const prompt = screen.getByLabelText("Provider sketch request");
+  for (const text of ["undo that", "fix that"]) {
+    fireEvent.change(prompt, { target: { value: text } });
+    const status = screen.getByLabelText("Provider sketch refinement status").textContent;
+    expect(screen.getByRole("button", { name: "Generate AI sketch preview" })).toBeDisabled();
+    fireEvent.keyDown(prompt, { key: "Enter", ctrlKey: true });
+    expect(screen.getByLabelText("Provider sketch refinement status").textContent).toBe(status);
+    expect(useCadStore.getState().history).toBe(history);
+  }
+  expect(mocks.request).not.toHaveBeenCalled();
+  expect(mocks.preview).not.toHaveBeenCalled();
+});
+
+it("does not reuse an earlier failure after a new provider request times out", async () => {
+  let expire: (() => void) | undefined;
+  const schedule = globalThis.setTimeout.bind(globalThis);
+  vi.spyOn(globalThis, "setTimeout").mockImplementation((handler, delay, ...args) => {
+    if (delay === 120000) {
+      expire = () => { if (typeof handler === "function") handler(...args); };
+      return schedule(() => {}, 0);
+    }
+    return schedule(handler, delay, ...args);
+  });
+  mocks.preview.mockRejectedValueOnce(new Error("Previous invalid native body"));
+  mocks.request.mockResolvedValueOnce({ proposal: resize }).mockImplementationOnce(() => new Promise(() => {}));
+  render(<ProviderSketchRefinementPanel />); await allow();
+  fireEvent.click(screen.getByRole("button", { name: "Generate AI sketch preview" }));
+  await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("Previous invalid native body"));
+  fireEvent.change(screen.getByLabelText("Provider sketch request"), { target: { value: "Now make the height 45mm" } });
+  fireEvent.click(screen.getByRole("button", { name: "Generate AI sketch preview" }));
+  expect(mocks.request).toHaveBeenCalledTimes(2);
+  expect(expire).toBeDefined();
+  await act(async () => { expire?.(); await Promise.resolve(); });
+  expect(screen.getByRole("alert")).toHaveTextContent("timed out");
+  fireEvent.change(screen.getByLabelText("Provider sketch request"), { target: { value: "fix that" } });
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "Generate AI sketch preview" }));
+    await Promise.resolve();
+  });
+  expect(screen.getByLabelText("Provider sketch refinement status")).toHaveTextContent("There is no current failed AI proposal");
+  expect(mocks.request).toHaveBeenCalledTimes(2);
+  expect(mocks.preview).toHaveBeenCalledTimes(1);
+  expect(useCadStore.getState().history.past).toHaveLength(0);
 });

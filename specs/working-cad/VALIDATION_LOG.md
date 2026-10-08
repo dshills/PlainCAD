@@ -11,8 +11,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Date: 2026-10-08.
 - Change: guarded AI canvas undo/redo, including the preceding canvas assistant, selection targeting and native proposal items.
 - Result: type checks, 1411 unit/component tests, build/bundle budget (largest 460.61 kB), all 301 development native browser cases and all 40 production cases passed.
-- Completed items since that full gate: **0**.
-- Next full gate: after **5** more completed items.
+- Completed items since that full gate: **1**.
+- Next full gate: after **4** more completed items.
 
 ## Completed batch
 
@@ -669,3 +669,43 @@ the successful full run. Controlled provider responses test modeling behavior;
 Prism uses the requested live Anthropic model.
 
 Cadence: **0** completed items since this successful full checkpoint.
+
+## AI canvas item 5 — contextual follow-ups and proposal repair (2026-10-08)
+
+After Apply, canvas conversations retain bounded complete turns and refresh the
+current editable target. Automatic selection follows a single new body; explicit
+scope choices remain explicit. Exact relative requests such as “make it half as
+thick” or “increase width by 2mm” resolve current parameter values, require a clear
+target and preserve stable IDs. Compound/negated requests are not partially applied.
+“Fix that” carries the original failed request and latest bounded diagnostic,
+without nesting older repairs or changing the project before explicit Apply.
+Project/selection/source changes expire failure context. Sketch and face follow-ups
+require fresh sharing consent and current native geometry; lost faces ask for a
+new target. New requests clear older failures, including when the new request
+times out; timeouts require a fresh description rather than replaying stale repair
+context. Runtime conversation/provenance data stays out of project JSON.
+
+Prism Anthropic `claude-sonnet-5-5` reviewed the final 18-file delta
+(`7c8f6d117e3933166d6831205ce654cb`), complete coverage: no high findings, one medium
+and ten low notes assessed. Its medium component-mocking note is covered by
+separate real capture/currentness/Apply command tests and native same-face
+hole→pocket acceptance. The timeout stale-failure issue found during the earlier
+review was reproduced and fixed in both panels, with regression tests; file-busy
+history coverage now seeds an actual reversible AI transaction. The memo catch
+uses its explicit follow-up input. Other notes concern intentional DEV-only test
+imports, current store subscriptions, timer cleanup, fixture isolation, optional
+refactoring and retaining existing CAD precision rather than silently rounding
+persisted dimensions. No unresolved actionable findings remain.
+
+`npm run check:item` passed on final frozen source: type checks, 1484 unit/component
+tests, production build/bundle budget (largest 460.61 kB), 5 development native
+modeling/stale-result smoke tests and 14 production modeling/AI/CSP cases. Eight
+focused native follow-up/repair cases passed (44.5 seconds), including actual
+OpenCascade volumes, stable IDs, one-step undo/redo, original-request diagnostics,
+same-face and same-sketch follow-ups, fresh consent, all three provider choices
+and shared bindings. Component timeout regressions verify no unintended provider
+call or document mutation. Provider responses are controlled in browser tests;
+Prism used the requested live Anthropic model.
+
+Cadence: **1** completed item since the full release checkpoint recorded for
+AI canvas item 4 (commit `db2533a`). Run the next full gate after four more items.

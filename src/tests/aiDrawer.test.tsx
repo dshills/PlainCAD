@@ -583,3 +583,55 @@ it("waits for the current accepted source before generating a new native proposa
   expect(generate).toBeEnabled();
   expect(screen.queryByLabelText("AI source readiness")).toBeNull();
 });
+
+it("does not pair an old failed request with a later timeout diagnostic", async () => {
+  let expire: (() => void) | undefined;
+  const schedule = window.setTimeout.bind(window);
+  const timer = vi.spyOn(window, "setTimeout").mockImplementation((handler, delay, ...args) => {
+    if (delay === 120000) expire = () => { if (typeof handler === "function") handler(...args); };
+    return schedule(handler, delay, ...args) as unknown as ReturnType<typeof window.setTimeout>;
+  });
+  try {
+    mocks.request.mockRejectedValueOnce(new Error("First invalid profile"));
+    render(<AiDrawer />);
+    const input = screen.getByLabelText("What would you like to make?");
+    fireEvent.change(input, { target: { value: "Make an old bracket" } });
+    await waitFor(() => expect(screen.getByRole("button", { name: "Generate preview" })).toBeEnabled());
+    fireEvent.click(screen.getByRole("button", { name: "Generate preview" }));
+    await screen.findByText("First invalid profile");
+    mocks.request.mockImplementation((_provider, _model, _prompt, _history, signal: AbortSignal) =>
+      new Promise((_resolve, reject) => signal.addEventListener("abort", () => reject(new DOMException("Canceled", "AbortError")), { once: true })));
+    fireEvent.change(input, { target: { value: "Make a new gear" } });
+    fireEvent.click(screen.getByRole("button", { name: "Generate preview" }));
+    await waitFor(() => expect(mocks.request).toHaveBeenCalledTimes(2));
+    await act(async () => expire?.());
+    await screen.findByText("AI request timed out. Try a simpler description.");
+    fireEvent.change(input, { target: { value: "fix that" } });
+    fireEvent.click(screen.getByRole("button", { name: "Generate preview" }));
+    expect(screen.getByLabelText("AI clarification")).toHaveTextContent("There is no current failed AI proposal to repair");
+    expect(mocks.request).toHaveBeenCalledTimes(2);
+  } finally { timer.mockRestore(); }
+});
+
+it("keeps the original request and latest diagnostic after a repair-button retry fails", async () => {
+  mocks.preview.mockRejectedValueOnce(new Error("First invalid profile"))
+    .mockRejectedValueOnce(new Error("Second invalid profile"))
+    .mockRejectedValueOnce(new Error("Third invalid profile"));
+  render(<AiDrawer />);
+  const input = screen.getByLabelText("What would you like to make?");
+  fireEvent.change(input, { target: { value: "Make the original bracket" } });
+  await waitFor(() => expect(screen.getByRole("button", { name: "Generate preview" })).toBeEnabled());
+  fireEvent.click(screen.getByRole("button", { name: "Generate preview" }));
+  await screen.findByText("First invalid profile");
+  fireEvent.click(screen.getByRole("button", { name: "Use preview diagnostic in next description" }));
+  fireEvent.click(screen.getByRole("button", { name: "Generate preview" }));
+  await screen.findByText("Second invalid profile");
+  fireEvent.change(input, { target: { value: "fix that" } });
+  fireEvent.click(screen.getByRole("button", { name: "Generate preview" }));
+  await screen.findByText("Third invalid profile");
+  const repair = mocks.request.mock.calls[2][2];
+  expect(repair).toContain("Make the original bracket");
+  expect(repair).toContain("Second invalid profile");
+  expect(repair).not.toContain("First invalid profile");
+  expect(useCadStore.getState().history.past).toHaveLength(0);
+});

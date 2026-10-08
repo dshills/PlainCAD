@@ -1,6 +1,8 @@
 import { aiHistoryIntent, handleAiHistoryPrompt } from "../commands/aiHistoryPrompt";
 import { canReviewAiSketchCanvasPreview, clearAiSketchCanvasPreview, publishAiSketchCanvasPreview, useAiSketchCanvasPreview } from "../commands/aiSketchCanvasPreview";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useAiDrawer } from "../commands/aiCommand";
+import { resolveAiFollowUp, type FailedAiRequest } from "../../ai/followUp";
 import { fetchAiProviders } from "../../ai/client";
 import { prepareAiSketchRequest, requestAiSketchProposal } from "../../ai/sketchAiClient";
 import { aiSketchContext, buildAiSketchEdit, type AiSketchProposal, type SketchBindingPolicy } from "../../ai/sketchEditPlan";
@@ -24,6 +26,7 @@ interface Preview {
   solved: ResolvedSketch;
 }
 export function ProviderSketchRefinementPanel({ onCancelReady }: { onCancelReady?: (cancel: (() => void) | undefined) => void } = {}) {
+  const assistantOpen = useAiDrawer(state => state.open);
   const canvasProposal = useAiSketchCanvasPreview(state => state.proposal);
   const document = useCadStore((state) => state.history.present);
   const session = useCadStore((state) => state.documentSession);
@@ -49,6 +52,7 @@ export function ProviderSketchRefinementPanel({ onCancelReady }: { onCancelReady
   const ownedFrame = useRef<SketchRefinementFrame | undefined>(undefined);
   const consentFrame = useRef<SketchRefinementFrame | undefined>(undefined);
   const conversationFrame = useRef<SketchRefinementFrame | undefined>(undefined);
+  const [lastFailure, setLastFailure] = useState<(FailedAiRequest & { frame: SketchRefinementFrame })>();
   const promptInput = useRef<HTMLTextAreaElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const configuration = providers.find((item) => item.id === provider);
@@ -59,11 +63,12 @@ export function ProviderSketchRefinementPanel({ onCancelReady }: { onCancelReady
       return { value: aiSketchContext(frame.document, frame.active.sketchId, frame.selectedIds, policy), error: "" };
     } catch (failure) { return { value: undefined, error: failure instanceof Error ? failure.message : "Sketch context is unavailable." }; }
   }, [document, session, component, active, selection, fileBusy, policy]);
+  const followUp = resolveAiFollowUp(prompt, lastFailure && currentSketchRefinementFrame(lastFailure.frame) ? lastFailure : undefined);
   const requestReview = useMemo(() => {
     if (!context.value || !configuration || !prompt.trim()) return { value: undefined, error: "" };
-    try { return { value: prepareAiSketchRequest(provider, configuration.model, prompt, messages, context.value), error: "" }; }
+    try { return { value: prepareAiSketchRequest(provider, configuration.model, followUp.prompt, messages, context.value), error: "" }; }
     catch (failure) { return { value: undefined, error: failure instanceof Error ? failure.message : "Request exceeds its limits." }; }
-  }, [context.value, configuration, provider, prompt, messages]);
+  }, [context.value, configuration, provider, followUp.prompt, messages]);
   const release = () => {
     controller.current?.abort(); controller.current = undefined;
     if (timer.current !== undefined) clearTimeout(timer.current);
@@ -78,7 +83,7 @@ export function ProviderSketchRefinementPanel({ onCancelReady }: { onCancelReady
   };
   const reset = () => {
     cancel("Conversation reset. The project is unchanged.");
-    conversationFrame.current = undefined; setMessages([]); setAnswer(undefined); setError("");
+    conversationFrame.current = undefined; setLastFailure(undefined); setMessages([]); setAnswer(undefined); setError("");
   };
   useEffect(() => {
     onCancelReady?.(() => { cancel(); setError(""); promptInput.current?.focus(); });
@@ -100,14 +105,14 @@ export function ProviderSketchRefinementPanel({ onCancelReady }: { onCancelReady
     return () => { abort.abort(); release(); };
   }, []);
   useEffect(() => {
-    const sourceChanged = (conversationFrame.current && !currentSketchRefinementFrame(conversationFrame.current)) ||
+    const sourceChanged = (!assistantOpen && Boolean(conversationFrame.current || consentFrame.current || lastFailure)) || (conversationFrame.current && !currentSketchRefinementFrame(conversationFrame.current)) ||
       (consentFrame.current && !currentSketchRefinementFrame(consentFrame.current));
     const draftChanged = ownedFrame.current && useSketchRefinement.getState().frame !== ownedFrame.current;
     if (sourceChanged || draftChanged) {
       reset(); consentFrame.current = undefined; setConsent(false);
       setStatus("Project, sketch or selection changed. Start a fresh conversation and allow sharing the current context.");
     }
-  }, [document, session, component, active, selection, fileBusy, sharedFrame]);
+  }, [document, session, component, active, selection, fileBusy, sharedFrame, assistantOpen]);
   const generate = async () => {
     if (busy || fileBusy) return;
     if (aiHistoryIntent(prompt)) {
@@ -116,13 +121,15 @@ export function ProviderSketchRefinementPanel({ onCancelReady }: { onCancelReady
       setStatus(outcome?.message ?? "AI history is unavailable.");
       return;
     }
+    if (followUp.clarification) { cancel(followUp.clarification); setError(""); setAnswer(undefined); return; }
     if (busy || fileBusy || !kernelReady || !consent || !consentFrame.current || !currentSketchRefinementFrame(consentFrame.current) || !configuration?.available || !prompt.trim() || !context.value || requestReview.error) return;
-    cancel(); setError(""); setAnswer(undefined);
+    cancel(); setError(""); setAnswer(undefined); setLastFailure(undefined);
     const abort = new AbortController(); controller.current = abort;
     timer.current = setTimeout(() => {
       if (controller.current !== abort) return;
       cancel("The project is unchanged."); setError("AI refinement timed out. Try a simpler request.");
     }, 120000);
+    let capturedFrame: SketchRefinementFrame | undefined;
     try {
       window.dispatchEvent(new Event("plaincad:cancel-sketch-gesture"));
       const frame = captureSketchRefinementFrame();
@@ -130,13 +137,14 @@ export function ProviderSketchRefinementPanel({ onCancelReady }: { onCancelReady
       if (frame.document !== document || frame.active !== active || frame.session !== session || frame.componentId !== component ||
           JSON.stringify(captured) !== JSON.stringify(context.value))
         throw new Error("The sketch context changed. Review its current data and allow sharing before trying again.");
-      ownedFrame.current = frame; conversationFrame.current = frame;
+      capturedFrame = frame; ownedFrame.current = frame; conversationFrame.current = frame;
       useSketchRefinement.setState({ frame }); setBusy(true);
       setStatus("Asking the selected provider for bounded sketch edits…");
-      const proposal = await requestAiSketchProposal(provider, configuration.model, prompt, messages, captured, abort.signal);
+      const proposal = await requestAiSketchProposal(provider, configuration.model, followUp.prompt, messages, captured, abort.signal);
       if (controller.current !== abort || abort.signal.aborted || !currentSketchRefinementFrame(frame) || useSketchRefinement.getState().frame !== frame) return;
+      setLastFailure(undefined);
       setAnswer(proposal);
-      setMessages([...messages, { role: "user", content: prompt.trim() }, { role: "assistant", content: JSON.stringify(proposal) }].slice(-AI_LIMITS.transcriptMessages) as AiMessage[]);
+      setMessages([...messages, { role: "user", content: followUp.prompt }, { role: "assistant", content: JSON.stringify(proposal) }].slice(-AI_LIMITS.transcriptMessages) as AiMessage[]);
       if (!proposal.actions.length) {
         release(); setBusy(false); setStatus("AI needs clarification. Answer below; no edit has been proposed or applied.");
         return;
@@ -150,6 +158,7 @@ export function ProviderSketchRefinementPanel({ onCancelReady }: { onCancelReady
         setError("The AI canvas context changed. Open AI and preview the current sketch again.");
         return;
       }
+      setLastFailure(undefined);
       setPreview({ frame, plan, proposal, ...geometry }); setBusy(false);
       setStatus(geometry.native ? "Native AI sketch preview ready. Review cyan changes on the drawing canvas before Apply." : "Solved AI sketch preview ready. No solid was modeled; Apply changes only the sketch.");
       controller.current = undefined;
@@ -157,8 +166,10 @@ export function ProviderSketchRefinementPanel({ onCancelReady }: { onCancelReady
       timer.current = undefined;
     } catch (failure) {
       if (controller.current !== abort) return;
+      const diagnostic = failure instanceof Error ? failure.message : "AI sketch refinement failed.";
+      if (capturedFrame && currentSketchRefinementFrame(capturedFrame)) setLastFailure({ frame: capturedFrame, prompt: followUp.prompt === prompt.trim() ? followUp.prompt : lastFailure?.prompt ?? followUp.prompt, diagnostic });
       cancel("The project is unchanged.");
-      setError(failure instanceof Error ? failure.message : "AI sketch refinement failed.");
+      setError(diagnostic);
     }
   };
   const reviewable = preview && canvasProposal?.frame === preview.frame && canReviewAiSketchCanvasPreview(preview.frame, preview.solved);
@@ -171,7 +182,7 @@ export function ProviderSketchRefinementPanel({ onCancelReady }: { onCancelReady
         {providers.length ? providers.map((item) => <option key={item.id} value={item.id} disabled={!item.available}>{item.label}{item.available ? "" : " · not configured"}</option>) : <option value="anthropic">{providersLoaded ? "Provider configuration unavailable" : "Checking providers…"}</option>}
       </select></label>
       {configuration ? <p className="muted">Configured model: {configuration.model}</p> : null}
-      <label>AI sketch binding policy<select value={policy} disabled={busy} onChange={(event) => { reset(); setPolicy(event.target.value as SketchBindingPolicy); }}>
+      <label>AI sketch binding policy<select value={policy} disabled={busy} onChange={(event) => { reset(); consentFrame.current = undefined; setConsent(false); setPolicy(event.target.value as SketchBindingPolicy); }}>
         <option value="preserve">Preserve existing parameter bindings</option>
         <option value="replace">Explicitly replace sketch dimension expressions</option>
         {context.value?.parameters.map((parameter) => <option key={parameter.id} value={`parameter:${parameter.id}`} disabled={!parameter.editable}>Change shared parameter: {parameter.name}{parameter.editable ? "" : " · locked or derived"}</option>)}
@@ -199,15 +210,18 @@ export function ProviderSketchRefinementPanel({ onCancelReady }: { onCancelReady
       <label>Provider sketch request<textarea ref={promptInput} value={prompt} rows={3} maxLength={AI_LIMITS.promptCharacters} placeholder="Make these two selected lines perpendicular"
         onChange={(event) => { cancel("Request changed. Generate a fresh preview before Apply."); setError(""); setPrompt(event.target.value); }}
         onKeyDown={(event) => { if ((event.ctrlKey || event.metaKey) && event.key === "Enter") { event.preventDefault(); void generate(); } }} /></label>
-      <button type="button" disabled={busy || fileBusy || !prompt.trim() || (!aiHistoryIntent(prompt) && (fileBusy || !kernelReady || !consent || !configuration?.available || !context.value || Boolean(requestReview.error)))} onClick={() => void generate()}>Generate AI sketch preview</button>
+      <button type="button" disabled={busy || fileBusy || !prompt.trim() || (!aiHistoryIntent(prompt) && !followUp.clarification && (fileBusy || !kernelReady || !consent || !configuration?.available || !context.value || Boolean(requestReview.error)))} onClick={() => void generate()}>Generate AI sketch preview</button>
       <button type="button" onClick={() => { cancel(); setError(""); promptInput.current?.focus(); }}>Cancel AI sketch refinement</button>
       <button type="button" onClick={reset}>Start new sketch conversation</button>
       {preview ? <button type="button" disabled={busy || canvasProposal?.frame !== preview.frame || !canReviewAiSketchCanvasPreview(preview.frame, preview.solved) || sharedFrame !== preview.frame} onClick={() => {
         try {
           if (!canReviewAiSketchCanvasPreview(preview.frame, preview.solved)) throw new Error("The canvas proposal is no longer available. Generate a fresh preview.");
           applySketchRefinement(preview.frame, preview.plan, preview.result);
-          conversationFrame.current = undefined; consentFrame.current = undefined; setMessages([]); setAnswer(undefined); setConsent(false);
-          cancel("AI sketch refinement applied in one undo step."); setError(""); promptInput.current?.focus();
+          consentFrame.current = undefined; setLastFailure(undefined); setAnswer(undefined); setConsent(false);
+          let retained = true;
+          try { conversationFrame.current = captureSketchRefinementFrame(); }
+          catch { conversationFrame.current = undefined; setMessages([]); retained = false; }
+          cancel(`AI sketch refinement applied in one undo step.${retained ? " Review the updated context and allow sharing for a follow-up." : " The sketch context changed, so the conversation was reset."}`); setError(""); promptInput.current?.focus();
         }
         catch (failure) { cancel(); setError(failure instanceof Error ? failure.message : "AI sketch edit could not be applied."); promptInput.current?.focus(); }
       }}>Apply AI sketch refinement</button> : null}

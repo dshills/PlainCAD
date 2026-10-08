@@ -341,6 +341,16 @@ AI part proposals appear as real native geometry in the existing 3D viewport. **
 
 Each successful AI Apply creates one ordinary project history step. Canvas controls offer project Undo/Redo and a guarded latest-AI action. Exact requests such as **undo that** and **redo that** run locally without provider calls or new sharing consent. An intervening manual edit blocks the guarded AI action and explains how to use project history; opening another project clears AI action provenance.
 
+After Apply, the assistant keeps recent complete conversation turns and refreshes
+its editable target. When following selection, a single created or edited body
+becomes the next target; an explicit scope remains explicit. Exact requests such as **halve thickness**, **double width**,
+or **increase width by 10%** resolve current allowed dimensions locally and still
+require native preview and Apply. Ambiguous dimensions ask for a choice. **Fix that**
+uses the original failed request and latest diagnostic; changing projects or targets
+clears that repair context. Sketch and same-face feature follow-ups require fresh
+sharing consent and updated native context; a lost face requires a new target.
+See [relative edit limits](specs/working-cad/AI_RELATIVE_EDITS.md).
+
 Existing-part feature additions preserve existing IDs, parameters, and features.
 Each proposed operation and the complete project must pass private native checks
 before **Apply AI feature plan** creates one Undo edit. Mode changes preserve

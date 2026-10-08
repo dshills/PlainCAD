@@ -1,3 +1,4 @@
+import { parseRelativeDimension, relativeDimensionValue } from "./relativeDimension";
 import { validateAiPlan, type AiEditContext, type AiPlan } from "./plan";
 
 export type AiScope = "create" | "edit" | "feature";
@@ -18,6 +19,8 @@ export function resolveAiIntent(
   chosenTarget?: string,
 ): AiIntent {
   const text = prompt.trim();
+  const relative = parseRelativeDimension(text);
+  const chosenReference = relative && /^(?:it|this|that)$/i.test(relative.target);
   const thickness = /\b(thick|thicker|thinner|thickness)\b/i.test(text);
   const referringEdit =
     /\b(this|it|that)\b/i.test(text) &&
@@ -27,10 +30,10 @@ export function resolveAiIntent(
   if (scope === "create") {
     return {
       prompt: text,
-      ...(referringEdit &&
+      ...(relative || (referringEdit &&
       /^(?:please\s+|can you\s+|could you\s+)?(?:make|change|set|increase|decrease|resize)\s+(?:this|it|that)\b/i.test(
         text,
-      )
+      ))
         ? {
             clarification:
               "To change an existing part, choose This part or Selected feature first.",
@@ -49,7 +52,9 @@ export function resolveAiIntent(
   };
   const friendlyName = (name: string) => name.replace(/^ai_\d+_/, "");
   const named = parameters.filter(
-    (p) => mentions(p.name) || mentions(friendlyName(p.name)),
+    (p) => chosenReference ? false : relative
+      ? [p.name, friendlyName(p.name)].some((name) => name.toLowerCase() === relative.target.toLowerCase())
+      : mentions(p.name) || mentions(friendlyName(p.name)),
   );
   const explicitMultiple =
     named.length > 1 &&
@@ -59,6 +64,22 @@ export function resolveAiIntent(
     chosenTarget && parameters.some((p) => p.name === chosenTarget)
       ? chosenTarget
       : undefined;
+  if (relative && target && named.length > 0 && !named.some((parameter) => parameter.name === target)) {
+    return { prompt: text, clarification: `This request names ${relative.target}, but ${target} is selected. Choose the requested dimension first.`, choices: parameters };
+  }
+  if (relative && target && !chosenReference && !named.length && !/^(?:thick|thickness)$/i.test(relative.target)) {
+    return { prompt: text, clarification: `The requested dimension ${relative.target} is unavailable in this scope. Choose an editable dimension first.`, choices: parameters };
+  }
+  if (relative && target && !named.length && /^(?:thick|thickness)$/i.test(relative.target)) {
+    const allowed = scope === "feature" && context.feature?.type === "extrude"
+      ? parameters.filter((parameter) => parameter.name === "distance")
+      : parameters.filter((parameter) => /(?:^|_)thickness(?:_\d+)?$/i.test(parameter.name));
+    if (!allowed.some((parameter) => parameter.name === target))
+      return { prompt: text, clarification: "Thickness needs a matching editable length dimension. Choose the extrusion distance, or name the dimension to change explicitly.", choices: allowed };
+  }
+  if (!target && relative && named.length > 1) {
+    return { prompt: text, clarification: "Which dimension should change? Choose an editable dimension, or select the feature you mean.", choices: parameters };
+  }
   if (!target && explicitMultiple) return { prompt: text, context };
   if (!target && named.length === 1) target = named[0].name;
   if (!target && thickness) {
@@ -68,7 +89,7 @@ export function resolveAiIntent(
         : parameters.filter((p) => /(?:^|_)thickness(?:_\d+)?$/i.test(p.name));
     if (candidates.length === 1) target = candidates[0].name;
   }
-  if (!target && (thickness || referringEdit || named.length > 1)) {
+  if (!target && (relative || thickness || referringEdit || named.length > 1)) {
     return {
       prompt: text,
       clarification:
@@ -80,9 +101,25 @@ export function resolveAiIntent(
   const parameter = parameters.find((p) => p.name === target)!;
   const scopedContext = { ...context, parameters: [parameter] };
   const resolvedPrompt = `${text}\nEdit only ${parameter.name} of ${context.feature?.name ?? context.componentName}; its current value is ${parameter.value}${parameter.unit}.`;
-  // An absolute numeric assignment is safe locally. Relative edits and general
-  // language stay with the provider; they are never interpreted as absolute values.
-  const numeric = /\b(and|or|then|by)\b/i.test(text)
+  if (relative) {
+    try {
+      if (/^(?:thick|thickness)$/i.test(relative.target) && parameter.unit !== "mm")
+        throw new Error("Thickness needs a length dimension. Choose an editable length first.");
+      const value = relativeDimensionValue(relative, parameter);
+      const localPlan = validateAiPlan({ name: context.feature?.name ?? context.componentName,
+        summary: `Change ${parameter.name} from ${parameter.value}${parameter.unit} to ${value}${parameter.unit}.`,
+        warnings: [], parameters: [{ name: parameter.name, value, unit: parameter.unit }], steps: [] });
+      return { target, context: scopedContext, prompt: resolvedPrompt, localPlan };
+    } catch (failure) {
+      return { target, context: scopedContext, prompt: resolvedPrompt,
+        clarification: failure instanceof Error ? failure.message : `Enter a valid change for ${target}.` };
+    }
+  }
+  // Absolute assignments remain separate from the exact relative grammar;
+  // general language and compound requests stay with the provider.
+  const mixedRelative = /\b(?:halve|double|half|twice)\b/i.test(text) &&
+    !/^(?:(?:please|can you|could you)\s+)?(?:set|change|resize|make)\s+(?:the\s+)?[A-Za-z_]\w*\s+to\b/i.test(text);
+  const numeric = mixedRelative || /\b(and|or|then|by)\b/i.test(text)
     ? null
     : text.match(
         /\bto\s+([+-]?(?:\d+\.?\d*|\.\d+))\s*(mm|deg)\s*(?:please)?[.!]?\s*$/i,

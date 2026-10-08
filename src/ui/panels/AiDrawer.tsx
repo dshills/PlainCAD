@@ -1,3 +1,4 @@
+import { resolveAiFollowUp, type FailedAiRequest } from "../../ai/followUp";
 import { aiHistoryIntent, handleAiHistoryPrompt } from "../commands/aiHistoryPrompt";
 import { AiCanvasHistoryControls } from "./AiCanvasHistoryControls";
 import { useSolidDimensionEdit } from "../commands/solidDimensionCommand";
@@ -20,6 +21,7 @@ import {
   assertAiIntentPlan,
   resolveAiIntent,
   type AiScope,
+  type AiIntent,
 } from "../../ai/contextualIntent";
 import {
   aiClarificationTargets,
@@ -154,6 +156,14 @@ function StandardAiDrawer({ embedded = false, active = true, target, followVersi
   const [chosenTarget, setChosenTarget] = useState<string>();
   const [clarifying, setClarifying] = useState(false);
   const [highlightTarget, setHighlightTarget] = useState<string>();
+  const [failedRequest, setFailedRequest] = useState<{ frame: CanvasAiDraftFrame; request: FailedAiRequest }>();
+  const continuedApply = useRef<{ document: CanvasAiDraftFrame["document"]; session: number; componentId: string; selection: string; scope: AiScope; featureId?: string } | undefined>(undefined);
+  const followUp = useMemo(() => resolveAiFollowUp(prompt,
+    failedRequest && currentAiFrame(failedRequest.frame) && rebuildResult === failedRequest.frame.beforeResult
+      ? failedRequest.request : undefined), [prompt, failedRequest, document, session, componentId, selections, operationActive, rebuildResult, rebuildStatus]);
+  useEffect(() => {
+    if (failedRequest && (!currentAiFrame(failedRequest.frame) || rebuildResult !== failedRequest.frame.beforeResult)) setFailedRequest(undefined);
+  }, [failedRequest, document, session, componentId, selections, operationActive, rebuildResult]);
   const editingFeatureId = task === "feature" ? selectedFeatureId : undefined;
   const editing = useMemo(() => {
     if (task === "create") return {};
@@ -183,19 +193,19 @@ function StandardAiDrawer({ embedded = false, active = true, target, followVersi
       };
     }
   }, [document, componentId, task, editingFeatureId, automatic, target]);
-  const intent = useMemo(() => {
+  const intent = useMemo<AiIntent>(() => {
     try {
-      return resolveAiIntent(task, prompt, editing.context, chosenTarget);
+      return followUp.clarification ? followUp : resolveAiIntent(task, followUp.prompt, editing.context, chosenTarget);
     } catch (failure) {
       return {
-        prompt,
+        prompt: followUp.prompt,
         clarification:
           failure instanceof Error
             ? failure.message
             : "Describe a valid dimension.",
       };
     }
-  }, [task, prompt, editing.context, chosenTarget]);
+  }, [task, followUp, editing.context, chosenTarget]);
   const clarification = useMemo(() => {
     if (!clarifying || !intent.choices) return { targets: [] };
     try {
@@ -498,17 +508,32 @@ function StandardAiDrawer({ embedded = false, active = true, target, followVersi
     setHistory([]);
     setReply(undefined);
     setError("");
+    setFailedRequest(undefined);
+    continuedApply.current = undefined;
     setChosenTarget(undefined);
     setClarifying(false);
   }, [session]);
+  const conversationSelection = automatic ? JSON.stringify(selections) : undefined;
+  const previousConversation = useRef({ componentId, task, editingFeatureId, selection: conversationSelection });
   useEffect(() => {
-    if (task !== "create") {
+    const continued = continuedApply.current;
+    continuedApply.current = undefined;
+    const ownApply = continued?.document === document && continued.session === session &&
+      continued.componentId === componentId && continued.scope === task && continued.featureId === editingFeatureId &&
+      continued.selection === JSON.stringify(selections);
+    const previous = previousConversation.current;
+    const contextChanged = previous.componentId !== componentId || previous.task !== task ||
+      previous.editingFeatureId !== editingFeatureId || previous.selection !== conversationSelection;
+    previousConversation.current = { componentId, task, editingFeatureId, selection: conversationSelection };
+    if (contextChanged && !ownApply && task !== "create") {
       setHistory([]);
       setReply(undefined);
     }
-    setChosenTarget(undefined);
-    setClarifying(false);
-  }, [componentId, task, editingFeatureId]);
+    if (contextChanged || ownApply) {
+      setChosenTarget(undefined);
+      setClarifying(false);
+    }
+  }, [document, session, componentId, task, editingFeatureId, conversationSelection, selections]);
   useEffect(() => {
     if (
       chosenTarget &&
@@ -562,6 +587,7 @@ function StandardAiDrawer({ embedded = false, active = true, target, followVersi
     frame.current = base;
     setBusy(true);
     setError("");
+    setFailedRequest(undefined);
     setReply(undefined);
     setStatus(
       intent.localPlan
@@ -569,6 +595,9 @@ function StandardAiDrawer({ embedded = false, active = true, target, followVersi
         : "Asking AI to propose your part…",
     );
     const description = prompt.trim();
+    const originalRequest = failedRequest && (followUp.prompt !== description ||
+      description === prepareAiRepairPrompt(failedRequest.request.prompt, failedRequest.request.diagnostic).text)
+      ? failedRequest.request.prompt : description;
     try {
       const generated =
         intent.localPlan ??
@@ -643,6 +672,7 @@ function StandardAiDrawer({ embedded = false, active = true, target, followVersi
       )
         return;
       const geometry = assertAiGeometry(staged, result);
+      setFailedRequest(undefined);
       setProposal({
         canvasPreview: displayProposal(base, staged, result),
         frame: base,
@@ -659,13 +689,14 @@ function StandardAiDrawer({ embedded = false, active = true, target, followVersi
       );
     } catch (failure) {
       if (controller.current !== abort || !currentAiFrame(base)) return;
-      setError(
-        abort.signal.aborted
-          ? "AI request timed out. Try a simpler description."
-          : failure instanceof Error
-            ? failure.message
-            : "AI generation failed.",
-      );
+      const diagnostic = abort.signal.aborted ? "AI request timed out. Try a simpler description."
+        : failure instanceof Error ? failure.message : "AI generation failed.";
+      setError(diagnostic);
+      if (abort.signal.aborted) setFailedRequest(undefined);
+      else setFailedRequest({ frame: base, request: {
+        prompt: originalRequest,
+        diagnostic,
+      } });
       setStatus("The project is unchanged.");
     } finally {
       window.clearTimeout(timer);
@@ -766,6 +797,18 @@ function StandardAiDrawer({ embedded = false, active = true, target, followVersi
         proposal.result,
         proposal.operationResult,
       );
+      const applied = useCadStore.getState();
+      if (embedded && automatic && !proposal.staged.editedFeature) {
+        const bodyId = proposal.staged.bodyIds.length === 1 ? proposal.staged.bodyIds[0] : undefined;
+        applied.select(bodyId ? { kind: "body", id: bodyId, documentId: applied.history.present.id } : undefined);
+        setTask(bodyId ? undefined : "edit");
+      }
+      const after = useCadStore.getState();
+      const nextScope = embedded && automatic && !proposal.staged.editedFeature ? "edit" : task;
+      continuedApply.current = { document: after.history.present, session: after.documentSession,
+        componentId: after.activeComponentId, selection: JSON.stringify(after.selection.selectedIds), scope: nextScope,
+        featureId: nextScope === "feature" ? after.selection.selectedIds[0]?.id : undefined };
+      setFailedRequest(undefined);
       clearCanvasProposal();
       setProposal(undefined);
       setStatus(
@@ -786,6 +829,7 @@ function StandardAiDrawer({ embedded = false, active = true, target, followVersi
   };
   const selectedProvider = providers.find((p) => p.id === provider);
   function changeScope(scope: AiScope) {
+    continuedApply.current = undefined; setFailedRequest(undefined);
     cancel("Scope changed. Generate a fresh preview.");
     setTask(scope);
     useAiDrawer.setState({ namedPart: undefined });
@@ -796,6 +840,7 @@ function StandardAiDrawer({ embedded = false, active = true, target, followVersi
     setClarifying(false);
   }
   function followSelection() {
+    continuedApply.current = undefined; setFailedRequest(undefined);
     cancel("Following the current selected target. Generate a fresh preview.");
     setTask(undefined); setHistory([]); setReply(undefined); setError(""); setChosenTarget(undefined); setClarifying(false);
   }
@@ -1267,7 +1312,7 @@ function StandardAiDrawer({ embedded = false, active = true, target, followVersi
               <button
                 type="button"
                 onClick={() => {
-                  const repair = prepareAiRepairPrompt(prompt, error);
+                  const repair = prepareAiRepairPrompt(failedRequest?.request.prompt ?? prompt, failedRequest?.request.diagnostic ?? error);
                   cancel(repair.notice);
                   setPrompt(repair.text);
                   setError("");

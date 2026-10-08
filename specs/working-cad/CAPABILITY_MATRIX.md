@@ -789,11 +789,29 @@ AI polygon/wire profiles use at most 32 shared vertices with explicit outgoing
 line/arc edges; points-only sketches support native Hole features with up to 64
 indexed centers and explicit live body targets. Arc radius/winding, closed profile,
 pattern participation and exact native geometry are validated before Apply.
-The drawer displays up to 16 local conversation turns with summaries/assumptions.
+The canvas assistant displays up to 16 local conversation turns with summaries/assumptions.
 Provider context is bounded to three complete recent turns and 32000 UTF-8 request
 bytes, dropping only whole older turns with a visible notice. An oversized latest
 proposal blocks follow-up with local-edit/reset guidance. Preview diagnostics can
 be included in a reviewed next description; no automatic retries incur provider calls.
+
+### AI follow-ups and repair
+
+Successful Apply retains bounded complete turns for the same evolving target.
+When following selection, a single created/edited body becomes the automatic
+follow-up target. Explicit scope choices remain explicit. Exact leading
+halve/double and increase/decrease-by requests resolve current allowed length/angle
+values locally, including percentages; positivity, units, limits and no-op checks
+remain enforced. Ambiguous or unavailable dimensions require a choice; compound,
+conditional and negated text is never executed as a partial local request.
+
+Exact short **fix that** / **repair that** uses the captured original request and
+latest diagnostic only while its document/session/component/selection and accepted
+result remain current. There are no automatic provider retries. Failed native
+proposals do not change history. Changing project or target clears repair context.
+Sketch follow-ups refresh bounded context and sharing consent after Apply. Same-face
+feature follow-ups wait for newly accepted native geometry and fresh consent;
+lost or modified unsupported faces require a new explicit target.
 
 ### AI sketch design intent
 

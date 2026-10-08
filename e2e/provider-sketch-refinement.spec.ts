@@ -104,6 +104,7 @@ test("provider shared-parameter edits require explicit choice and preserve sketc
   await expect(panel.getByRole("alert")).toContainText("explicitly");
   expect((await aiSnapshot(page)).document).toEqual(before.document);
   await panel.getByLabel("AI sketch binding policy").selectOption("parameter:width_parameter");
+  await panel.getByRole("checkbox", { name: /^Allow sending/ }).check();
   await panel.getByRole("button", { name: "Generate AI sketch preview" }).click();
   await expect(panel.getByLabel("Provider sketch refinement status")).toContainText("Native AI sketch preview ready");
   await expect(panel.getByLabel("AI proposed sketch changes")).toContainText("sketch:");
