@@ -45,6 +45,7 @@ test("moves and rotates native components with mouse cancellation, exact fields,
   await dialog.getByRole("button", { name: "Cancel placement" }).click();
   expect((await aiSnapshot(page)).past).toBe(before.past); expect((await aiSnapshot(page)).document).toEqual(before.document);
   const again = await open(page);
+  await again.getByText("Details · exact placement", { exact: true }).click();
   for (const [name, value] of [["Position X (mm)", "50"], ["Position Y (mm)", "20"], ["Position Z (mm)", "10"], ["Rotation Z (deg)", "90"]]) {
     const field = again.getByLabel(name); await field.fill(value); await field.press("Enter");
   }

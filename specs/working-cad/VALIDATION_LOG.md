@@ -301,3 +301,29 @@ overlay budget does not disable an otherwise valid named boundary.
 
 Cadence: 3 completed items since the successful full checkpoint. The full gate
 is due after 2 more requested changes (item 4 of this usability batch).
+
+### Item 3: two-pick component alignment (2026-10-08)
+
+Prism Anthropic `claude-sonnet-5-5` reviewed the complete final alignment change
+`539672dc1958c8b60222db3fef94b646` and documentation
+`c2638b719f5ccb91823026374b1c33da`, both with zero findings. Earlier preview
+invalidation, unavailable-target, marker-visibility and numeric-details findings
+were addressed before the final review.
+
+The ordered isolated snapshot passed `npm run check:item`: type checks, all 1294
+unit/component tests, build/bundle budget (largest 492.44 kB), 5 development native
+smoke cases and 14 production CSP/modeling smoke cases. All 16 focused tests and
+3 native placement/alignment workflows passed. The full checkpoint also passed
+those native workflows with the other new usability controls present. Final
+alignment files and source/runtime hashes matched the reviewed/tested bytes; only
+temporary harness origins differed.
+
+Pick source geometry, then destination. The destination pick, signed Gap and Flip
+refresh the native placement preview automatically. Exact numeric pose controls
+remain under Details; supported visible geometry has source/destination markers
+and named keyboard lists remain available. Cancel edits nothing; Apply saves one
+validated static rigid pose in one Undo step. Arbitrary curved/boolean topology,
+collision avoidance and assembly joints remain outside this picker.
+
+Cadence: 4 completed items since the successful full checkpoint. The next requested
+item requires the full release gate before commit.

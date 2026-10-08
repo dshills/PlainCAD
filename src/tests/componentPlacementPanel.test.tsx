@@ -11,7 +11,7 @@ import { appendProject } from "../persistence/appendProject";
 import { withComponentPlacement } from "../cad/document/componentPlacement";
 import { componentAlignmentTargets } from "../cad/inspection/componentAlignment";
 vi.mock("../cad/worker/extrudePreviewClient", () => ({ previewModeling: vi.fn() }));
-vi.mock("../viewer/ComponentPlacementControls", () => ({ ComponentPlacementControls: ({ onChange, onDragging }: { onChange: (placement: ComponentPlacement) => void; onDragging: (value: boolean) => void }) => <div><button onClick={() => { onDragging(true); onChange({ translation: [15, 0, 0], rotation: [0, 0, 0] }); }}>Begin move gesture</button><button onClick={() => onDragging(false)}>Finish move gesture</button></div> }));
+vi.mock("../viewer/ComponentPlacementControls", () => ({ ComponentPlacementControls: ({ onChange, onDragging, alignmentTargets, alignmentPicking, onAlignmentPick }: { onChange: (placement: ComponentPlacement) => void; onDragging: (value: boolean) => void; alignmentTargets: { id: string; label: string }[]; alignmentPicking?: string; onAlignmentPick: (id: string) => void }) => <div>{alignmentTargets.map(target => <button key={target.id} onClick={() => onAlignmentPick(target.id)}>{`Pick ${alignmentPicking}: ${target.label}`}</button>)}<button onClick={() => { onDragging(true); onChange({ translation: [15, 0, 0], rotation: [0, 0, 0] }); }}>Begin move gesture</button><button onClick={() => onDragging(false)}>Finish move gesture</button></div> }));
 const worker = vi.mocked(previewModeling);
 function native(document: CadDocument) {
   const result = rebuildDocument(document);
@@ -56,7 +56,7 @@ it("closes on document currency changes and ignores a late worker result", async
   await act(async () => { deliver(native(document)); await Promise.resolve(); });
   expect(useCadStore.getState().history.present).toBe(document); expect(useCadStore.getState().history.past).toHaveLength(0);
 });
-it("requires explicit alignment before Apply and saves one native-validated rigid pose", async () => {
+it("automatically previews selected alignment before Apply and saves one native-validated rigid pose", async () => {
   const document = setup(true), targets = componentAlignmentTargets(document, useCadStore.getState().rebuild.result!);
   const source = targets.find(target => target.componentId === document.rootComponentId && target.id.endsWith(":endCap"))!;
   const target = targets.find(target => target.componentId !== document.rootComponentId && target.id.endsWith(":startCap"))!;
@@ -64,12 +64,12 @@ it("requires explicit alignment before Apply and saves one native-validated rigi
   fireEvent.change(screen.getByRole("combobox", { name: "Source geometry" }), { target: { value: source.id } });
   fireEvent.change(screen.getByRole("combobox", { name: "Target geometry" }), { target: { value: target.id } });
   expect(screen.getByRole("button", { name: "Apply component placement" })).toBeDisabled();
-  fireEvent.click(screen.getByRole("button", { name: "Align selected geometry" })); await flush();
+  await flush();
   expect(screen.getByLabelText("Position X (mm)")).toHaveValue("50"); expect(screen.getByLabelText("Position Z (mm)")).toHaveValue("40");
   expect(screen.getByRole("button", { name: "Apply component placement" })).toBeEnabled(); expect(useCadStore.getState().history.present).toBe(document);
-  fireEvent.click(screen.getByRole("checkbox", { name: "Oppose face normals" }));
-  expect(screen.getByRole("button", { name: "Align selected geometry" })).toBeEnabled(); expect(screen.getByRole("button", { name: "Apply component placement" })).toBeDisabled();
-  fireEvent.click(screen.getByRole("button", { name: "Align selected geometry" })); await flush();
+  fireEvent.click(screen.getByRole("checkbox", { name: "Flip direction" }));
+  expect(screen.getByRole("button", { name: "Apply component placement" })).toBeDisabled();
+  await flush();
   fireEvent.click(screen.getByRole("button", { name: "Apply component placement" })); expect(useCadStore.getState().history.past).toEqual([document]);
   expect(useCadStore.getState().history.present.components[document.rootComponentId].placement).toEqual({ translation: [50, 0, 80], rotation: [Math.PI, 0, Math.PI] });
   const other = Object.keys(document.components).find(id => id !== document.rootComponentId)!;
@@ -77,7 +77,41 @@ it("requires explicit alignment before Apply and saves one native-validated rigi
 });
 it("invalid clearance cannot reuse an old placement proof and Cancel writes no history", async () => {
   const document = setup(true); field("50"); await flush();
-  const input = screen.getByLabelText("Face clearance (mm)"); fireEvent.change(input, { target: { value: "NaN" } }); fireEvent.blur(input);
-  expect(screen.getByRole("alert")).toHaveTextContent("finite face clearance"); expect(screen.getByRole("button", { name: "Apply component placement" })).toBeDisabled();
+  const input = screen.getByLabelText("Gap (mm)"); fireEvent.change(input, { target: { value: "NaN" } }); fireEvent.blur(input);
+  expect(screen.getByRole("alert")).toHaveTextContent("finite gap"); expect(screen.getByRole("button", { name: "Apply component placement" })).toBeDisabled();
   fireEvent.click(screen.getByRole("button", { name: "Cancel placement" })); expect(useCadStore.getState().history.present).toBe(document); expect(useCadStore.getState().history.past).toHaveLength(0);
+});
+
+it("advances two preview picks automatically and blocks dirty gap until native proof", async () => {
+  const document = setup(true);
+  fireEvent.click(screen.getByRole("button", { name: /Pick source:.*end cap/i }));
+  expect(screen.getByRole("button", { name: /Pick target:.*start cap/i })).toBeEnabled();
+  fireEvent.click(screen.getByRole("button", { name: /Pick target:.*start cap/i }));
+  expect(screen.getByRole("button", { name: "Apply component placement" })).toBeDisabled();
+  await flush(); expect(screen.getByRole("button", { name: "Apply component placement" })).toBeEnabled();
+  const gap = screen.getByLabelText("Gap (mm)"); fireEvent.change(gap, { target: { value: "3" } });
+  expect(screen.getByRole("button", { name: "Apply component placement" })).toBeDisabled();
+  fireEvent.blur(gap); await flush();
+  expect(screen.getByLabelText("Position Z (mm)")).toHaveValue("37");
+  fireEvent.click(screen.getByRole("button", { name: "Apply component placement" }));
+  expect(useCadStore.getState().history.past).toEqual([document]);
+  expect(useCadStore.getState().history.present.components[document.rootComponentId].placement!.translation).toEqual([0, 0, 37]);
+});
+
+it("changing alignment type and clearing choices preserves a current native free-movement proof", async () => {
+  setup(true); field("50"); await flush();
+  fireEvent.change(screen.getByRole("combobox", { name: "Alignment geometry" }), { target: { value: "edge" } });
+  expect(screen.getByRole("button", { name: "Pick source in preview" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Apply component placement" })).toBeEnabled();
+  fireEvent.click(screen.getByRole("button", { name: "Clear alignment choices" }));
+  expect(screen.getByRole("button", { name: "Apply component placement" })).toBeEnabled();
+  expect(worker).toHaveBeenCalledOnce();
+});
+
+it("unused Gap and Flip settings preserve a validated free-movement preview", async () => {
+  setup(true); field("50"); await flush();
+  const gap = screen.getByLabelText("Gap (mm)"); fireEvent.change(gap, { target: { value: "3" } }); fireEvent.blur(gap);
+  fireEvent.click(screen.getByRole("checkbox", { name: "Flip direction" }));
+  expect(screen.getByRole("button", { name: "Apply component placement" })).toBeEnabled();
+  expect(worker).toHaveBeenCalledOnce();
 });

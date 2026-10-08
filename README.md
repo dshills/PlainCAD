@@ -114,6 +114,8 @@ See [canvas action scope](specs/working-cad/CANVAS_ACTIONS.md).
 
 Offset, Mirror/Pattern, Trim/Extend and projection preview automatically after a short pause. Apply stays disabled for unfinished, invalid or stale inputs; Preview remains available for explicit retries. Less common settings are under Details. These previews are local native CAD operations and make no AI provider calls. See [local task previews](specs/working-cad/LOCAL_TASK_PREVIEWS.md).
 
+Move component guides two picks: source, then destination. Destination, Gap and Flip update its native preview; exact numeric poses remain under Details. Supported geometry markers and named lists remain available. Apply saves one static placement in one Undo step. See [guided alignment](specs/working-cad/GUIDED_COMPONENT_ALIGNMENT.md).
+
 ## Project → Component → Sketch
 
 A **project** is one local CAD file. A **component** organizes a part's sketches,
