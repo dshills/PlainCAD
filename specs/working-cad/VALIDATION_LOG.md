@@ -11,8 +11,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Date: 2026-10-08.
 - Change: linked sketch provenance and source controls, including the preceding contextual actions, automatic local previews and two-pick alignment items (commit `47df069`).
 - Result: type checks, 1301 unit/component tests, build/bundle budget (largest 496.15 kB), all 283 development native browser cases and all 35 production cases passed.
-- Completed items since that full gate: **2**.
-- Next full gate: after **3** more completed items.
+- Completed items since that full gate: **3**.
+- Next full gate: after **2** more completed items.
 
 ## Completed batch
 
@@ -431,3 +431,26 @@ most five manual copies; downloaded project files remain the portable source.
 
 Cadence: 2 completed items since the successful full checkpoint above. The next
 full gate is due after 3 more requested changes.
+
+### Item 2: Saturn instrument-console identity (2026-10-08)
+
+Saturn adds restrained machining, illuminated active controls and numeric readout
+treatments to the same workbench layout. Rebuild states use real current success,
+working and failure styling; themes do not change geometry or control positions.
+No JavaScript, animation or rendering passes are added. Forced-colors removes
+custom shadows and textures while preserving usable controls.
+
+Prism Anthropic `claude-sonnet-5-5` reviewed the final change
+(`72cf52dcd97d3b2a5a4fdad9de9cf7f9`): complete coverage, no high/medium findings.
+The forced-colors specificity finding was fixed; a remaining low scope concern
+was disproven by application structure and real computed-style checks.
+
+`npm run check:item` passed: type checks, 1328 unit/component tests, build and
+bundle budget (largest 497.49 kB), 5 development native smoke cases and 14
+production cases. Focused native acceptance proved actual 80000→failed invalid
+parameter→100000 mm³ geometry, unchanged theme layout, keyboard focus, reduced
+motion and forced-colors behavior. Visual screenshot inspection passed. The
+additional gallery cover unit added afterwards changes no runtime/build bytes.
+
+Cadence: 3 completed items since the successful full checkpoint. The next full
+gate is due after 2 more requested changes.

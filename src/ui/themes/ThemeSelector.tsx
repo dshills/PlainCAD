@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useThemeState } from "../../state/useThemeState";
 import { applyTheme, isThemeId, themes } from "./themes";
+import "./saturnCommand.css";
 
 export function ThemeSelector() {
   const { theme, setTheme, persistenceError } = useThemeState();

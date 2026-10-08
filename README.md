@@ -203,7 +203,9 @@ panels. Open the command palette with `Cmd/Ctrl+K` to find commands and see why
 an unavailable action is disabled.
 
 Choose Light, Dark, or Saturn Command with **Theme**. Saturn Command uses dark
-instrument panels, cyan readouts, monospaced labels, and illuminated controls.
+instrument panels, cyan readouts, monospaced labels, restrained machining details
+and illuminated active controls. Its live rebuild readout distinguishes valid,
+rebuilding and failed geometry; themes keep the same control positions.
 Layout, theme, visibility, and isolation are browser/session preferences rather
 than CAD geometry. Named camera poses are saved explicitly in the project.
 
