@@ -103,6 +103,15 @@ npm run preview
 Preview uses strict port 5280. Static deployment, CSP, worker, and WebAssembly
 hosting requirements are documented in [deployment/README.md](deployment/README.md).
 
+## Canvas shortcuts
+
+Select a native part for contextual Edit base feature, Hide, Isolate and Draw on
+face controls. Right-click or focus the canvas and press Shift+F10 for a menu;
+double-click an eligible Extrude/Revolve part to edit its base feature. Deleting
+the base feature asks for confirmation, keeps its sketch, and supports Undo.
+Selected sketch geometry has Offset, Mirror, Pattern and Delete shortcuts.
+See [canvas action scope](specs/working-cad/CANVAS_ACTIONS.md).
+
 ## Project → Component → Sketch
 
 A **project** is one local CAD file. A **component** organizes a part's sketches,

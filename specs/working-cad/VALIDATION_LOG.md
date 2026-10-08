@@ -230,3 +230,39 @@ All 13 focused STEP tests passed, including actual installed-WASM curved subtrac
 STEP exports 1–64 selected native bodies as separate solids in millimetres at saved world positions. Actual reimport must preserve native validity, solid/root counts, exact volume and bounds before Download is enabled. The installed filename-binding incompatibility uses bounded synchronous task-owned filesystem routing in the disposable worker, with restored hooks and no substituted geometry. Files are limited to 32 MiB and 60 seconds. Component labels, assembly hierarchy and editable history remain in the project file; STEP import is not exposed.
 
 Cadence: 1 completed item since the successful full checkpoint above; the next full gate is due after 4 more requested changes.
+
+## Current batch: usability consistency
+
+### Item 1: contextual canvas actions (2026-10-08)
+
+Prism Anthropic `claude-sonnet-5-5` reviewed the complete canvas implementation,
+initial `6e9900ab2c38f4e988640b56b2b93d15`, final complete
+`6b286294eb766bfde1ece657d6bcda46`, and documentation
+`27ba2431bced5bc1c6a3afac1628e080`. Whole-store rerenders, pointer drag lifetime,
+right-button pan timing, ambiguous multi-selection, stale menus and disabled-command
+handoff were fixed. Final reviews have no high/medium findings. Two low notes were
+assessed: selecting the intended feature remains useful when its editor reports an
+error, and the explicit keyboard handler prevents its native default; the verified
+Chromium Shift+F10 path preserves the selected body and restores focus.
+
+The frozen isolated checkout passed `npm run check:item`: type checks, all 1281
+unit/component tests, build/bundle budget (largest 492.44 kB), 5 development native
+smoke cases and 14 production CSP/modeling smoke cases. Five focused canvas tests
+and the final native context-menu/drag/double-click/edit/delete/Undo case passed.
+Two existing native PNG cases passed, including clean ORBIT exports. Native volume
+was restored after Undo, and Hide preserved the document/history.
+
+Earlier validation attempts exposed a duplicate lazy declaration and bundle excess,
+both fixed. Sandbox loopback restrictions required the normal escalated gate.
+Changing a running Vite snapshot caused a transient page error; overlapping browser
+runs also collided in trace artifacts. The final successful gate used frozen source
+and a single browser run. The export panel and PNG implementation load as separate
+chunks, preserving the 500 kB budget.
+
+Canvas actions edit or remove the creating feature; deleting it preserves the source
+sketch and can require dependent-feature repair. Arbitrary topology editing is not
+inferred. Keyboard/pointer acceptance was performed in Chromium; human usability
+sessions remain unperformed.
+
+Cadence: 2 completed items since the last successful full checkpoint. The full gate
+is due after 3 more requested changes (item 4 of this usability batch).

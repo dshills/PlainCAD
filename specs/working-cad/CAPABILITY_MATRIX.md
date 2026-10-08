@@ -1,5 +1,14 @@
 # Working CAD Capability Matrix
 
+## Canvas action workflow
+
+- Contextual native-part controls share command guards with the rest of the UI.
+  Edit opens the creating Extrude/Revolve; deletion removes that feature, preserves
+  its sketch and can require downstream reference repair. View-only Hide/Isolate,
+  sketch transformation/deletion shortcuts and keyboard context menus are supported.
+  Stale, hidden and fallback bodies cannot receive part actions.
+  See [canvas action scope](CANVAS_ACTIONS.md).
+
 ## Component reuse and interoperability
 
 - **Portable part library:** Back up the complete local library as a bounded .pcadlib pack, preview/import it as independent saved copies, or download one editable .pcaddoc. Imports validate every entry and commit atomically; failures/cancellation preserve existing copies and the open project. See [library transfer](PART_LIBRARY.md).

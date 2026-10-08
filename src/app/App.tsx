@@ -26,7 +26,6 @@ import { RetainedPanel } from "../ui/workspace/RetainedPanel";
 import { ThemeSelector } from "../ui/themes/ThemeSelector";
 import { useCommandEnablement } from "../ui/commands/useCommandEnablement";
 import { RecoveryPanel } from "../ui/panels/RecoveryPanel";
-import { FabricationPanel } from "../ui/panels/FabricationPanel";
 import { HoleCreationPanel } from "../ui/panels/HoleCreationPanel";
 import { FeaturePatternPanel } from "../ui/panels/FeaturePatternPanel";
 import { lazy, Suspense, useEffect, useMemo, useRef } from "react";
@@ -43,6 +42,8 @@ import { useCadStore } from "../state/useCadStore";
 import { usePartLibrary } from "../ui/commands/partLibraryState";
 import { useStepExport } from "../ui/commands/stepExportState";
 
+const FabricationPanel = lazy(() => import("../ui/panels/FabricationPanel").then(module => ({ default: module.FabricationPanel })));
+const CanvasSelectionActions = lazy(() => import("../ui/panels/CanvasSelectionActions").then(module => ({ default: module.CanvasSelectionActions })));
 const ComponentPlacementPanel = lazy(() => import("../ui/panels/ComponentPlacementPanel").then(module => ({ default: module.ComponentPlacementPanel })));
 const PartLibraryPanel = lazy(() => import("../ui/panels/PartLibraryPanel").then(module => ({ default: module.PartLibraryPanel })));
 const StepExportPanel = lazy(() => import("../ui/panels/StepExportPanel").then(module => ({ default: module.StepExportPanel })));
@@ -352,6 +353,8 @@ export function App() {
     useWorkspacePresentation();
   const aiOpen = useAiDrawer((s) => s.open);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const hasCanvasSelection = useCadStore(state => Boolean(state.selection.selectedIds.length));
+  const hasSketchSelection = useSketchCanvas(state => Boolean(state.selection?.entityIds.length));
   const sketchActive = useSketchCanvas((state) => state.active);
   const documentName = useCadStore(
     (state) => state.history.present?.name ?? "Untitled",
@@ -548,7 +551,7 @@ export function App() {
         </div>
       ) : null}
       <RecoveryPanel />
-      <FabricationPanel />
+      <Suspense fallback={null}><FabricationPanel /></Suspense>
       <HoleCreationPanel />
       <Suspense fallback={<p role="status">Loading component controls…</p>}><ComponentPlacementPanel /></Suspense>
       <FeaturePatternPanel />
@@ -597,6 +600,7 @@ export function App() {
           <ProjectWorkflowPanel />
           <GuidedHolePanel />
           <section className="viewer-region" aria-label="3D CAD viewer">
+            {(hasCanvasSelection || hasSketchSelection) && <Suspense fallback={null}><CanvasSelectionActions /></Suspense>}
             {partLibraryOpen ? <Suspense fallback={<p role="status">Loading local parts…</p>}><PartLibraryPanel /></Suspense> : null}
             {stepExportOpen ? <Suspense fallback={<p role="status">Loading STEP export…</p>}><StepExportPanel /></Suspense> : null}
             {!sketchActive ? <><SketchSolidHandoffPanel /><OperationDropPanel /></> : null}

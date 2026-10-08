@@ -1,0 +1,7 @@
+.canvas-selection-actions { position: absolute; z-index: 18; left: 50%; bottom: 68px; transform: translateX(-50%); display: flex; align-items: center; gap: 5px; max-width: calc(100% - 24px); padding: 7px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); box-shadow: 0 4px 18px #0003; flex-wrap: wrap; justify-content: center; }
+.canvas-selection-actions span { max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .8rem; }
+.canvas-selection-actions button { font-size: .78rem; padding: 5px 8px; }
+.canvas-context-menu { position: fixed; z-index: 90; width: 220px; padding: 5px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 5px 20px #0004; }
+.canvas-context-menu button { display: block; width: 100%; text-align: left; padding: 8px; margin: 2px 0; }
+.canvas-delete-dialog { max-width: 420px; color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 8px; }
+@media (max-width: 700px) { .canvas-selection-actions { bottom: 56px; width: calc(100% - 24px); } }

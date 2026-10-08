@@ -1,3 +1,6 @@
+import { openCanvasContext, useCanvasContext } from "../ui/commands/canvasContextState";
+import { selectedCanvasActionTarget } from "../ui/commands/canvasActionTarget";
+import { runCommand, selectCommandEnablement } from "../ui/commands/commandRegistry";
 import { beginLibraryPlacement, libraryFrameCurrent, usePartLibrary, PART_LIBRARY_DRAG_TYPE, readPartLibraryDragId } from "../ui/commands/partLibraryCommand";
 import { addMeasurementOverlays, installMeasurementPicking, visibleMeasurementTargets, resolvedMeasurementSelection } from "./measurementPicking";
 import { measureModelTargets } from "../cad/inspection/modelMeasurements";
@@ -401,17 +404,72 @@ export function CadViewer() {
     const uninstallPlanePicking = installSketchPlanePicking(scene, renderer, camera, modelGroup, () => clippingRef.current, invalidate);
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
-    const click = (event: MouseEvent) => {
-      if (event.button !== 0) return;
+    const pickBody = (event: MouseEvent) => {
       const rect = renderer.domElement.getBoundingClientRect();
       pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
       raycaster.setFromCamera(pointer, camera);
       const hit = raycaster.intersectObjects(modelGroup.children.filter((object) => object.visible), true).find((item) => item.object instanceof THREE.Mesh && (!clippingRef.current || clippingRef.current.distanceToPoint(item.point) >= 0));
       const bodyId = hit ? findBodyId(hit.object) : undefined;
-      selectRef.current(bodyId ? { kind: "body", id: bodyId, documentId: documentIdRef.current } : undefined);
+      return bodyId;
     };
+    let press: { x: number; y: number; button: number } | undefined, dragged = false;
+    const down = (event: PointerEvent) => { pendingContext = undefined; press = { x: event.clientX, y: event.clientY, button: event.button }; dragged = false; };
+    const move = (event: PointerEvent) => { if (press && event.buttons !== 0 && Math.hypot(event.clientX - press.x, event.clientY - press.y) > 4) dragged = true; };
+    let pendingContext: MouseEvent | undefined;
+    const openPointerContext = (event: MouseEvent) => {
+      if (useInspectionState.getState().picking || !selectCommandEnablement(useCadStore.getState()).measurementPicking || window.document.querySelector("dialog[open]")) return;
+      selectBody(event);
+      if (selectCommandEnablement(useCadStore.getState()).canvasBodyActions) openCanvasContext(event.clientX, event.clientY);
+    };
+    const up = (event: PointerEvent) => {
+      if (pendingContext && press && event.button === press.button && event.target === renderer.domElement && !dragged) openPointerContext(pendingContext);
+      pendingContext = undefined; press = undefined;
+    };
+    const cancelPointer = () => { pendingContext = undefined; press = undefined; dragged = false; };
+    const selectBody = (event: MouseEvent) => {
+      const bodyId = pickBody(event);
+      selectRef.current(bodyId ? { kind: "body", id: bodyId, documentId: documentIdRef.current } : undefined);
+      return bodyId;
+    };
+    const click = (event: MouseEvent) => { if (event.button === 0 && !dragged) selectBody(event); };
+    const context = (event: MouseEvent) => {
+      event.preventDefault();
+      if (!press && event.clientX === 0 && event.clientY === 0) {
+        if (!window.document.querySelector("dialog[open]") && selectCommandEnablement(useCadStore.getState()).canvasBodyActions) openCanvasContext(event.clientX, event.clientY);
+        return;
+      }
+      // macOS/Linux may dispatch contextmenu before the right-button drag begins.
+      if (press) { pendingContext = event; return; }
+      if (!dragged) openPointerContext(event);
+    };
+    const doubleClick = (event: MouseEvent) => {
+      if (dragged || useInspectionState.getState().picking || !selectCommandEnablement(useCadStore.getState()).measurementPicking || window.document.querySelector("dialog[open]")) return;
+      selectBody(event);
+      const state = useCadStore.getState(), target = selectedCanvasActionTarget(state);
+      if (!selectCommandEnablement(state).canvasEditBase || !target) return;
+      useCanvasContext.setState({ menu: undefined });
+      void (async () => {
+        try { await runCommand("canvas.editBody", { canvasTarget: target }); }
+        catch (error) { useCadStore.getState().setFileError(error instanceof Error ? error.message : "Could not edit this part."); }
+      })();
+    };
+    const contextKey = (event: KeyboardEvent) => {
+      if (window.document.querySelector("dialog[open]")) return;
+      if (event.key !== "ContextMenu" && !(event.shiftKey && event.key === "F10")) return;
+      if (!selectCommandEnablement(useCadStore.getState()).canvasBodyActions) return;
+      event.preventDefault(); const rect = renderer.domElement.getBoundingClientRect(); openCanvasContext(rect.left + 30, rect.top + 30);
+    };
+    renderer.domElement.tabIndex = 0;
+    renderer.domElement.setAttribute("aria-label", "3D modeling canvas");
     renderer.domElement.addEventListener("click", click);
+    renderer.domElement.addEventListener("pointerdown", down);
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", cancelPointer);
+    renderer.domElement.addEventListener("contextmenu", context);
+    renderer.domElement.addEventListener("dblclick", doubleClick);
+    renderer.domElement.addEventListener("keydown", contextKey);
 
     return () => {
       uninstallMeasurementPicking();
@@ -427,6 +485,13 @@ export function CadViewer() {
       window.removeEventListener("plaincad:fit-view", fit);
       window.removeEventListener("plaincad:reset-camera", reset);
       renderer.domElement.removeEventListener("click", click);
+      renderer.domElement.removeEventListener("pointerdown", down);
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", cancelPointer);
+      renderer.domElement.removeEventListener("contextmenu", context);
+      renderer.domElement.removeEventListener("dblclick", doubleClick);
+      renderer.domElement.removeEventListener("keydown", contextKey);
       modelMeshes.dispose();
       scene.remove(modelGroup, sketchGroup);
       if (runtimeRef.current) disposeSketchOverlayObjects(sketchGroup, runtimeRef.current.sketchResources);

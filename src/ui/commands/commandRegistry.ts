@@ -20,7 +20,7 @@ import { beginExtrudeCreation, beginExtrudeEditing, editableExtrude, useExtrudeD
 import { beginModelingCreation, beginModelingEditing, editableModelingFeature, useModelingDraft } from "./modelingDraftCommand";
 import { beginFeaturePattern, beginFeaturePatternEditing, selectedPattern, selectedPatternSource } from "./featurePatternCommand";
 import { useViewerState } from "../../state/viewerState";
-import { exportPng } from "../../persistence/exportPng";
+import { selectedCanvasActionTarget, type CanvasActionTarget } from "./canvasActionTarget";
 import { toggleAiDrawer, beginPartDescription } from "./aiCommand";
 import { activeComponentId, beginPartDrawing, beginProjectWorkflow, finishSketchCanvas, useProjectWorkflow } from "./projectWorkflowCommand";
 import { renameComponent, sketchComponentId } from "../../cad/document/components";
@@ -92,7 +92,21 @@ import { beginHoleCreation, beginHoleEditing, editableHole, holeCreationContext,
 import { prepareProjectDrop, replaceWithDroppedProject, saveAndReplaceDroppedProject } from "./projectDropCommand";
 import { focusRepairIssue, addRepairClosingEdge, type RepairContext } from "./repairCommand";
 
+async function exportCurrentPng(scope: "project" | "body" | "sketch") {
+  const captured = useCadStore.getState(), canvas = useSketchCanvas.getState().active;
+  const { exportPng } = await import("../../persistence/exportPng");
+  const current = useCadStore.getState();
+  if (current.history.present !== captured.history.present || current.documentSession !== captured.documentSession ||
+      current.rebuild.result !== captured.rebuild.result || current.selection !== captured.selection ||
+      useSketchCanvas.getState().active !== canvas || current.fileBusy) {
+    current.setFileError("Project or image selection changed. Request the current PNG again.");
+    return;
+  }
+  await exportPng(scope);
+}
+
 export interface CommandContext {
+  canvasTarget?: CanvasActionTarget;
   dimension?: SolidDimension;
   operation?: DropOperation;
   operationFrame?: OperationDropFrame;
@@ -122,6 +136,9 @@ export interface CadCommand {
 }
 
 export interface CommandEnablement {
+  canvasBodyActions: boolean;
+  canvasEditBase: boolean;
+  canvasDeleteBase: boolean;
   moveComponent: boolean;
   partLibrary: boolean;
   projectSketchEdges: boolean;
@@ -177,7 +194,13 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
   const facePickerActive = Boolean(useFacePocket.getState().frame);
   const handoffReady = !facePickerActive && !refinementBusy && !guidedHoleActive && !exportDialogOpen && !guidedHoleStartBlocked && !state.fileBusy && canMakeSketchSolid(state);
   const targetPickerActive = facePickerActive || guidedHoleActive || operationBusy || exportDialogOpen || refinementBusy;
+  const canvasTarget = selectedCanvasActionTarget(state);
+  const canvasBodyActions = Boolean(canvasTarget && !targetPickerActive && !canvasActive && !guidedHoleStartBlocked && !scopeCaptureBusy && !useInspectionState.getState().picking);
+  const base = state.history.present.features.find(feature => feature.id === canvasTarget?.featureId);
   return {
+    canvasBodyActions,
+    canvasEditBase: canvasBodyActions && Boolean(base && (base.type === "extrude" || base.type === "revolve")),
+    canvasDeleteBase: canvasBodyActions && Boolean(base),
     projectSketchEdges: !targetPickerActive && !guidedHoleStartBlocked && !state.fileBusy && canOpenSketchProjection(state),
     insertProject: canInsertProject(state),
     partLibrary: canOpenPartLibrary(state),
@@ -242,9 +265,15 @@ export function isCommandEnabledForSnapshot(
 }
 
 export const commands: CadCommand[] = [
-  { id: "file.exportProjectPng", label: "Download project view PNG", description: "Capture the current 3D camera, visible bodies and section view without sketch or selection overlays.", enablementKey: "exportProjectPng", run: () => exportPng("project") },
-  { id: "file.exportBodyPng", label: "Download selected part PNG", description: "Select a body, then download a fitted image of that body alone.", enablementKey: "exportBodyPng", run: () => exportPng("body") },
-  { id: "file.exportSketchPng", label: "Download sketch PNG", description: "Open a sketch, then capture the drawing with its visible dimensions and constraints.", enablementKey: "exportSketchPng", run: () => exportPng("sketch") },
+  { id: "file.exportProjectPng", label: "Download project view PNG", description: "Capture the current 3D camera, visible bodies and section view without sketch or selection overlays.", enablementKey: "exportProjectPng", run: () => exportCurrentPng("project") },
+  { id: "file.exportBodyPng", label: "Download selected part PNG", description: "Select a body, then download a fitted image of that body alone.", enablementKey: "exportBodyPng", run: () => exportCurrentPng("body") },
+  { id: "file.exportSketchPng", label: "Download sketch PNG", description: "Open a sketch, then capture the drawing with its visible dimensions and constraints.", enablementKey: "exportSketchPng", run: () => exportCurrentPng("sketch") },
+  ...(["edit", "delete", "hide", "isolate"] as const).map((action): CadCommand => ({
+    id: `canvas.${action}Body`, internal: true,
+    label: action === "edit" ? "Edit part base feature" : action === "delete" ? "Delete part base feature" : action === "hide" ? "Hide selected part" : "Isolate selected part",
+    enablementKey: action === "edit" ? "canvasEditBase" : action === "delete" ? "canvasDeleteBase" : "canvasBodyActions",
+    run: async ({ canvasTarget }) => (await import("./canvasActionCommand")).runCanvasBodyAction(action, canvasTarget),
+  })),
   { id: "sketch.facePocket", label: "Draw on face", enablementKey: "createFacePocket", run: () => beginFacePocket() },
   { id: "sketch.removeMaterial", label: "Remove material", enablementKey: "removeSketchMaterial", run: () => removeSketchMaterial() },
   { id: "sketch.trim", label: "Trim sketch curves", enablementKey: "trimSketch", run: () => openSketchTrimExtend("trim") },

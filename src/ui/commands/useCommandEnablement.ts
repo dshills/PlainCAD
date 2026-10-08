@@ -1,3 +1,4 @@
+import { useViewerState } from "../../state/viewerState";
 import { useComponentPlacement } from "./componentPlacementState";
 import { usePartLibrary } from "./partLibraryState";
 import { useStepExport } from "./stepExportState";
@@ -28,6 +29,9 @@ import { selectCommandEnablement } from "./commandRegistry";
 import { useTargetScopeCapture } from "./targetScopeCaptureCommand";
 
 export function useCommandEnablement() {
+  useViewerState(state => state.session);
+  useViewerState(state => state.hiddenBodyIds);
+  useViewerState(state => state.hiddenComponentIds);
   useComponentPlacement(state => state.frame);
   usePartLibrary(state => state.frame);
   useStepExport(state => state.frame);
