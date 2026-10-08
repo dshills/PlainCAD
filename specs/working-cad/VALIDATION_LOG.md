@@ -11,8 +11,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Date: 2026-10-08.
 - Change: linked sketch provenance and source controls, including the preceding contextual actions, automatic local previews and two-pick alignment items (commit `47df069`).
 - Result: type checks, 1301 unit/component tests, build/bundle budget (largest 496.15 kB), all 283 development native browser cases and all 35 production cases passed.
-- Completed items since that full gate: **3**.
-- Next full gate: after **2** more completed items.
+- Completed items since that full gate: **4**.
+- Next full gate: after **1** more completed items.
 
 ## Completed batch
 
@@ -454,3 +454,36 @@ additional gallery cover unit added afterwards changes no runtime/build bytes.
 
 Cadence: 3 completed items since the successful full checkpoint. The next full
 gate is due after 2 more requested changes.
+
+### Item 3: native before/after build stories (2026-10-08)
+
+History hover/focus shows immutable native timeline prefixes with a shared
+isometric frame, changed/removed parts, solid counts and native material-volume
+changes. A bounded isolated worker rasterizes depth-correct thumbnails using
+OffscreenCanvas; the main document/history/result/camera remain unchanged.
+Current parameters are used at each step. Edits, leaving and Escape invalidate
+old proof. Native/OffscreenCanvas, first-160-step, 25000-triangle/frame and 30-second
+limits are documented in TIMELINE_BUILD_STORY.md.
+
+Prism Anthropic `claude-sonnet-5-5` reviewed all source files with complete
+coverage (`1778021a8d7a98073ecf4797ed670989`), and the final fixes with zero findings
+(`24be26016652503161511bdb0406ccfc`). Native orientation, cavity visibility,
+resource limits, cancellation and unknown-feature descriptions were corrected.
+Final integration review `bb81ac14434fa6d43c5faeaf95eafd79` has no high/medium
+findings; its two low notes concern compact event-handler formatting and a
+non-null Map iterator guarded by a four-entry minimum. README/guide links and
+limits were checked against source. Saturn integration supplemental review
+`526b451c6f84c7f9894dcb8dc91ba9c1` has no high/medium findings; its low styling notes
+are intentional theme decoration/forced-color overrides and representative
+computed-style coverage backed by the universal reset.
+
+`npm run check:item` passed: type checks, 1338 unit/component tests, build/bundle
+budget (largest 498.19 kB), 5 development native smoke cases and 14 production
+cases. Ten focused story tests and native/deployed CSP cases passed, proving an
+asymmetric 80×50 box and off-center bore at (+20,-10), actual cylindrical vertices,
+volume reduction, PNG pixels, stale-proof rejection and unchanged project/camera.
+Thumbnail screenshots were visually inspected. The final gallery overlap unit
+adds one independently passing test without runtime/build changes.
+
+Cadence: 4 completed items since the successful full checkpoint. The next item
+requires the full release gate before its commit.

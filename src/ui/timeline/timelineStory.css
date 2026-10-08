@@ -1,0 +1,21 @@
+.timeline-story { margin: 8px 0 0; padding: 12px; border: 1px solid var(--border); border-radius: 4px; background: var(--panel); max-width: 550px; }
+.timeline-story-heading { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.timeline-story-heading span, .timeline-story small { color: var(--muted); }
+.timeline-story-frames { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+.timeline-story-frames figure { margin: 0; flex: 1; min-width: 0; }
+.timeline-story-frames img { display: block; width: 100%; height: auto; border-radius: 3px; }
+.timeline-story-frames figcaption { margin-top: 5px; font-size: 11px; font-variant-numeric: tabular-nums; }
+.timeline-story-arrow { font-size: 22px; color: var(--accent); }
+.timeline-story-summary { margin: 8px 0 4px; font-size: 12px; }
+.timeline-story small { font-size: 11px; }
+@media (min-width: 1000px) {
+  .timeline-panel:has(.timeline-story) { display: grid; grid-template-columns: minmax(0, 1fr) 370px; grid-template-rows: auto auto; column-gap: 12px; align-items: start; }
+  .timeline-panel:has(.timeline-story) > .timeline-header, .timeline-panel:has(.timeline-story) > .timeline-track, .timeline-panel:has(.timeline-story) > p { grid-column: 1; }
+  .timeline-panel:has(.timeline-story) > .timeline-story { grid-column: 2; grid-row: 1 / span 4; margin: 0; padding: 8px; }
+  .timeline-story-heading { font-size: 11px; gap: 6px; }
+  .timeline-story-frames { margin-top: 4px; gap: 4px; }
+  .timeline-story-frames img { max-height: 68px; object-fit: contain; }
+  .timeline-story-frames figcaption { font-size: 10px; }
+  .timeline-story-summary { font-size: 10px; margin-top: 4px; }
+  .timeline-story small { font-size: 10px; }
+}

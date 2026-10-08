@@ -2,7 +2,7 @@ import { featureComponentId, sketchComponentId } from "../../cad/document/compon
 import { activeComponentId } from "../commands/projectWorkflowCommand";
 import { useViewerState } from "../../state/viewerState";
 import { useCommandEnablement } from "../commands/useCommandEnablement";
-import { useMemo } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import { useCadStore } from "../../state/useCadStore";
 import { orderedFeatures, orderedSketches } from "../../state/selectors";
 import { CommandContext, isCommandEnabledForSnapshot, runCommand, } from "../commands/commandRegistry";
@@ -16,9 +16,11 @@ interface FeatureTimelineProps {
 }
 
 const emptyCommandContext: CommandContext = {};
+const TimelineStoryPreview = lazy(() => import("../timeline/TimelineStoryPreview"));
 
 export function FeatureTimeline({ commandContext = emptyCommandContext }: FeatureTimelineProps) {
   const document = useCadStore((state) => state.history.present);
+  const [storyFeatureId, setStoryFeatureId] = useState<string>();
   const session = useCadStore(state => state.documentSession);
   const componentId = useCadStore(activeComponentId);
   const view = useViewerState();
@@ -35,7 +37,7 @@ export function FeatureTimeline({ commandContext = emptyCommandContext }: Featur
   const selectedSketchId = selection?.kind === "sketch" ? selection.id : undefined;
 
   return (
-    <section className="timeline-panel" aria-labelledby="timeline-heading">
+    <section className="timeline-panel" aria-labelledby="timeline-heading" onMouseLeave={() => setStoryFeatureId(focusedStoryFeatureId())} onKeyDown={(event) => { if (event.key === "Escape") setStoryFeatureId(undefined); }} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setStoryFeatureId(undefined); }}>
       <div className="timeline-header">
         <h2 id="timeline-heading">Parametric Timeline</h2>
         <label className="timeline-filter"><input type="checkbox" aria-label="Timeline: active component only" checked={filtered} onChange={() => void runCommand("timeline.toggleComponentFilter")} /> Active component only</label>
@@ -81,6 +83,9 @@ export function FeatureTimeline({ commandContext = emptyCommandContext }: Featur
               <button
                 className={`timeline-chip feature-chip ${selectedFeatureId === feature.id ? "selected" : ""}`}
                 onClick={() => select({ kind: "feature", id: feature.id, documentId: document.id })}
+                data-story-feature={feature.id}
+                onMouseEnter={() => setStoryFeatureId(feature.id)}
+                onFocus={() => setStoryFeatureId(feature.id)}
                 onDoubleClick={() => { select({ kind: "feature", id: feature.id, documentId: document.id }); void runCommand("feature.edit", commandContext); }}
               >
                 <span className="timeline-glyph">{featureGlyph(feature)}</span>
@@ -93,6 +98,7 @@ export function FeatureTimeline({ commandContext = emptyCommandContext }: Featur
         })}
         {timelineItems.length === 0 ? <p className="muted">Create a sketch, add geometry, then extrude a profile.</p> : null}
       </div>
+      {storyFeatureId && document.features.some(feature => feature.id === storyFeatureId) ? <Suspense fallback={<p role="status">Loading build story…</p>}><TimelineStoryPreview document={document} featureId={storyFeatureId} /></Suspense> : null}
     </section>
   );
 }
@@ -104,4 +110,9 @@ function featureGlyph(feature: Feature): string {
   if (feature.type === "fillet") return "F";
   if (feature.type === "chamfer") return "C";
   return "F";
+}
+
+function focusedStoryFeatureId(): string | undefined {
+  const active = globalThis.document.activeElement;
+  return active instanceof HTMLElement ? active.dataset.storyFeature : undefined;
 }

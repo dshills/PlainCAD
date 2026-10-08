@@ -209,6 +209,13 @@ rebuilding and failed geometry; themes keep the same control positions.
 Layout, theme, visibility, and isolation are browser/session preferences rather
 than CAD geometry. Named camera poses are saved explicitly in the project.
 
+Hover or focus a modeling step in **History** to see its real before/after build
+story with changed parts, solid counts and exact material-volume changes. These
+isolated previews use current parameters at that timeline step and leave the
+project and camera unchanged. Escape dismisses the preview; edits cancel stale
+results. See [Build stories](specs/working-cad/TIMELINE_BUILD_STORY.md) for preview limits.
+
+
 Save/export keeps its completion buttons visible while options scroll. For STL,
 **Output files → One file per part** produces separate STL files (a ZIP for multiple
 parts). Advanced checks explain whether they validate individual parts or overlaps
