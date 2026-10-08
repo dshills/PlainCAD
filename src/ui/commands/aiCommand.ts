@@ -45,6 +45,8 @@ export function beginPartDescription(name: string) {
 }
 export const toggleAiDrawer = () =>
   useAiDrawer.setState((state) => ({ open: !state.open, namedPart: undefined }));
+export const closeAiDrawer = () =>
+  useAiDrawer.setState({ open: false, namedPart: undefined });
 export interface AiDraftFrame {
   document: CadDocument;
   session: number;

@@ -44,7 +44,6 @@ import { useStepExport } from "../ui/commands/stepExportState";
 import { useProjectGallery } from "../ui/workspace/projectGalleryState";
 
 const FabricationPanel = lazy(() => import("../ui/panels/FabricationPanel").then(module => ({ default: module.FabricationPanel })));
-const AiCanvasAssistant = lazy(() => import("../ui/workspace/AiCanvasAssistant").then(module => ({ default: module.AiCanvasAssistant })));
 const ProjectGalleryPanel = lazy(() => import("../ui/workspace/ProjectGalleryPanel").then(module => ({ default: module.ProjectGalleryPanel })));
 const ModelUpdateFeedback = lazy(() => import("../ui/workspace/ModelUpdateFeedback").then(module => ({ default: module.ModelUpdateFeedback })));
 const CanvasSelectionActions = lazy(() => import("../ui/panels/CanvasSelectionActions").then(module => ({ default: module.CanvasSelectionActions })));
@@ -443,7 +442,7 @@ export function App() {
               "--right-width": `${dock.rightWidth}px`,
               "--bottom-height": `${dock.bottomHeight}px`,
             } as CSSProperties)
-          : undefined
+          : ({ "--bottom-height": `${dock.bottomHeight}px` } as CSSProperties)
       }
     >
       {workbench ? (
@@ -603,7 +602,6 @@ export function App() {
           <ProjectWorkflowPanel />
           <GuidedHolePanel />
           <section className="viewer-region" aria-label="3D CAD viewer">
-            <LazyPanelBoundary label="AI assistant"><Suspense fallback={null}><AiCanvasAssistant /></Suspense></LazyPanelBoundary>
             {galleryOpen ? <Suspense fallback={<p role="status">Loading project gallery…</p>}><ProjectGalleryPanel /></Suspense> : null}
             {(hasCanvasSelection || hasSketchSelection) && <Suspense fallback={null}><CanvasSelectionActions /></Suspense>}
             {partLibraryOpen ? <Suspense fallback={<p role="status">Loading local parts…</p>}><PartLibraryPanel /></Suspense> : null}

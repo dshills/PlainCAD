@@ -23,7 +23,7 @@ import { beginModelingCreation, beginModelingEditing, editableModelingFeature, u
 import { beginFeaturePattern, beginFeaturePatternEditing, selectedPattern, selectedPatternSource } from "./featurePatternCommand";
 import { useViewerState } from "../../state/viewerState";
 import { selectedCanvasActionTarget, type CanvasActionTarget } from "./canvasActionTarget";
-import { toggleAiDrawer, beginPartDescription, useAiDrawer } from "./aiCommand";
+import { toggleAiDrawer, closeAiDrawer, beginPartDescription, useAiDrawer } from "./aiCommand";
 import { activeComponentId, beginPartDrawing, beginProjectWorkflow, finishSketchCanvas, useProjectWorkflow } from "./projectWorkflowCommand";
 import { renameComponent, sketchComponentId } from "../../cad/document/components";
 import { MODEL_RESOURCE_LIMITS } from "../../cad/resourceLimits";
@@ -327,7 +327,8 @@ export const commands: CadCommand[] = [
   { id: "sketch.entity.delete", internal: true, label: "Delete selected sketch item", enablementKey: "deleteSketchEntity", run: deleteSelectedCanvasEntity },
   { id: "ai.pickFace", label: "Choose AI target face", internal: true, enablementKey: "measurementPicking", run: () => { beginAiFacePicking(); } },
   { id: "ai.cancelFacePick", label: "Cancel AI face selection", internal: true, alwaysEnabled: true, run: clearAiFacePicking },
-  { id: "ai.toggle", label: "Toggle AI assistant", description: "Create or modify editable geometry directly in the main model viewport.", enablementKey: "aiAssistant", run: toggleAiDrawer },
+  { id: "ai.close", label: "Close AI assistant", internal: true, alwaysEnabled: true, run: closeAiDrawer },
+  { id: "ai.toggle", label: "Toggle AI assistant", description: "Open the bottom AI dock to describe changes and review geometry in the main viewport.", enablementKey: "aiAssistant", run: toggleAiDrawer },
   { id: "feature.edit", label: "Edit Selected Feature", description: "Preview changes to the selected Extrude, Revolve, Fillet, Chamfer, Hole or Pattern and its downstream geometry.", enablementKey: "editFeature", run: () => { if (selectedPattern(useCadStore.getState())) beginFeaturePatternEditing(); else if (editableExtrude(useCadStore.getState())) beginExtrudeEditing(); else if (editableHole(useCadStore.getState())) beginHoleEditing(); else beginModelingEditing(); } },
   { id: "feature.pattern", label: "Repeat Hole or Pocket", description: "Select a single-center Hole or distance Cut Extrude, then create a linked linear or circular native feature pattern.", enablementKey: "createFeaturePattern", run: beginFeaturePattern },
   {

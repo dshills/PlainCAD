@@ -193,7 +193,7 @@ unsaved-project protection as dropping a project file. The gallery stays out of
 the modeling canvas until you open it.
 
 The default **Docked Workbench** places Project/Parameters on the left,
-Task/Properties on the right, and History/Issues at the bottom. **AI** opens a compact assistant over the main canvas without resizing the docks. **Draw**, **Solid**,
+Task/Properties on the right, and History/AI/Issues in a shared resizable bottom dock. AI input and responses stay in that dock; proposed geometry appears in the main canvas. **Draw**, **Solid**,
 and **Inspect** change the context toolbar. **Project** and **Details** reopen docks;
 drag their boundaries or use focused arrow-key controls to resize them.
 
@@ -324,7 +324,7 @@ previews while blocking dependent modeling and STL until repaired or suppressed.
 ## AI Assistance
 
 AI is optional; ordinary drawing, modeling, and file commands work without a
-provider. Open **AI** on the canvas or use the bottom AI launcher. The assistant expands inside the modeling viewport in every layout, retains descriptions when closed, and leaves dock sizes unchanged. Review native geometry before applying
+provider. Open the bottom **AI** tab. Its descriptions, input and responses stay inside the resizable bottom dock in every layout. In Workbench, AI shares the dock with History and Issues; switching tabs or closing the dock cancels pending proposals and retains descriptions. Review native geometry before applying
 any proposal; clarifications and failed previews do not edit the document.
 
 | Mode/scope | What it can do |
@@ -335,11 +335,11 @@ any proposal; clarifications and failed previews do not edit the document.
 | Sketch editing | Local numeric/relation edits, or consent-based provider proposals for bounded dimensions, parameters, relations, and analytic Trim/Extend actions. |
 | Add features to this part | Add up to four bounded hole, rectangular/circular pocket, or listed cap-edge Fillet/Chamfer operations on one explicit supported native face/body. |
 
-The canvas assistant follows one selected part, supported feature, sketch, or planar face. A part selection limits edits to dimensions that affect that part alone. **Choose face on model** picks a supported native plane for holes, pockets, and edge treatments; curved, split, lost, or ambiguous targets produce diagnostics. You can choose an explicit scope or return to **Follow selection**. A selected sketch offers its drawing editor.
+The docked assistant follows one selected part, supported feature, sketch, or planar face. A part selection limits edits to dimensions that affect that part alone. **Choose face on model** picks a supported native plane for holes, pockets, and edge treatments; curved, split, lost, or ambiguous targets produce diagnostics. You can choose an explicit scope or return to **Follow selection**. A selected sketch offers its drawing editor.
 
 AI part proposals appear as real native geometry in the existing 3D viewport. **Before model** and **After model** keep the same camera; new and changed bodies are highlighted. Sketch proposals appear in cyan directly over the drawing canvas with their own Before/After controls. Cancel restores the accepted model. Proposal geometry is temporary; exports and model picking require Apply or Cancel first. See [canvas proposal behavior](specs/working-cad/AI_CANVAS_PREVIEW.md).
 
-Each successful AI Apply creates one ordinary project history step. Canvas controls offer project Undo/Redo and a guarded latest-AI action. Exact requests such as **undo that** and **redo that** run locally without provider calls or new sharing consent. An intervening manual edit blocks the guarded AI action and explains how to use project history; opening another project clears AI action provenance.
+Each successful AI Apply creates one ordinary project history step. AI dock controls offer project Undo/Redo and a guarded latest-AI action. Exact requests such as **undo that** and **redo that** run locally without provider calls or new sharing consent. An intervening manual edit blocks the guarded AI action and explains how to use project history; opening another project clears AI action provenance.
 
 After Apply, the assistant keeps recent complete conversation turns and refreshes
 its editable target. When following selection, a single created or edited body

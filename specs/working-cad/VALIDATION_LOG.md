@@ -11,8 +11,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Date: 2026-10-08.
 - Change: guarded AI canvas undo/redo, including the preceding canvas assistant, selection targeting and native proposal items.
 - Result: type checks, 1411 unit/component tests, build/bundle budget (largest 460.61 kB), all 301 development native browser cases and all 40 production cases passed.
-- Completed items since that full gate: **1**.
-- Next full gate: after **4** more completed items.
+- Completed items since that full gate: **2**.
+- Next full gate: after **3** more completed items.
 
 ## Completed batch
 
@@ -709,3 +709,39 @@ Prism used the requested live Anthropic model.
 
 Cadence: **1** completed item since the full release checkpoint recorded for
 AI canvas item 4 (commit `db2533a`). Run the next full gate after four more items.
+
+## Docked AI text and controls (2026-10-08)
+
+AI now uses the shared resizable bottom dock in Workbench, alongside History and
+Issues. Focused and Full layouts expose the same docked AI content. Descriptions,
+input, responses, settings and history controls stay inside the scrolling dock;
+geometry proposals still use the existing model/sketch canvas. One retained editor
+preserves descriptions across closing, tab switching and layout changes. Switching
+away or collapsing cancels previews and requests. Opening focuses the visible
+input; closing restores the tab focus. Shared idempotent ai.close prevents repeated
+close requests from reopening AI. Hidden content is guarded in all three layouts.
+
+Prism Anthropic `claude-sonnet-5-5` reviewed the final change with complete coverage
+(`6931a9ba3895458db411d7943d7f59e1`): no high/medium findings, five low notes assessed.
+Earlier actionable findings were fixed: one reconciliation effect, idempotent
+close, focus keyed on actual dock visibility, hidden-panel styles, deterministic
+late-response checks and resize assertions based on initial values. Remaining
+notes concern isolated route teardown, clearer test preconditions, the existing
+command-error channel and optional store consolidation. All three panel wrappers
+use bottom-dock-body; ai.close and runCommand perform synchronous store edits.
+No unresolved actionable findings remain.
+
+`npm run check:item` passed: type checks, 1487 unit/component tests, production
+build/bundle budget (largest 461.86 kB), 5 development native modeling/stale-result
+smoke tests and 14 production modeling/AI/CSP cases. Twelve focused native AI
+checks passed (51.5s): all layout/theme combinations, containment/resizing, retained
+input/focus, cancelled native proposal and delayed-response rejection, actual
+OpenCascade create/relative edit/undo/repair, selected-body/native-face targeting,
+and all three provider sketch paths. Four final layout/cancellation checks passed
+again after the final hidden-style adjustment. The extra built-app dock/CSP test
+passed with actual STL volume 3072 mm³ and preserved input. Provider replies in
+these browser tests are controlled; Prism uses the requested live Anthropic model.
+Full release checks are not due at this item.
+
+Cadence: **2** completed items since full checkpoint `db2533a`. Run the next full
+gate after three more completed items.

@@ -217,7 +217,7 @@ export function TaskGuide() {
       </details>
       <div className="task-guide-note">
         <strong>Prefer to describe it?</strong>
-        <p>Open AI on the canvas. Review its geometry and dimensions before applying.</p>
+        <p>Open the bottom AI tab. Review its geometry and dimensions before applying.</p>
       </div>
     </section>
   );

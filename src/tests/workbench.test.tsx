@@ -116,7 +116,7 @@ it("defaults to stable docks and keeps layout, tab switches and resizing out of 
   expect(screen.getByRole("button", { name: "Parts" })).toHaveFocus();
   expect(left).not.toBeVisible();
 });
-it("keeps AI on the canvas without changing bottom surfaces and restores its keyboard return target", async () => {
+it("keeps AI in the shared bottom dock and restores its keyboard return target", async () => {
   vi.stubGlobal(
     "fetch",
     vi
@@ -128,9 +128,9 @@ it("keeps AI on the canvas without changing bottom surfaces and restores its key
   await waitFor(() =>
     expect(screen.getByLabelText("What would you like to make?")).toBeVisible(),
   );
-  expect(useWorkbenchState.getState().bottomOpen).toBe(false);
+  expect(useWorkbenchState.getState().bottomOpen).toBe(true);
   const prompt = screen.getByLabelText("What would you like to make?");
-  expect(prompt.closest(".viewer-region")).toBeInTheDocument();
+  expect(prompt.closest(".bottom-dock-body")).toBeInTheDocument();
   fireEvent.change(prompt, { target: { value: "A small instrument housing" } });
   fireEvent.click(screen.getByRole("button", { name: "Close AI assistant" }));
   expect(useAiDrawer.getState().open).toBe(false);
@@ -145,7 +145,7 @@ it("keeps AI on the canvas without changing bottom surfaces and restores its key
   ).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Open AI assistant" }));
   expect(screen.getByLabelText("What would you like to make?")).toHaveValue("A small instrument housing");
-  expect(useWorkbenchState.getState().bottomTab).toBe("issues");
+  expect(useWorkbenchState.getState().bottomTab).toBe("ai");
   expect(useWorkbenchState.getState().bottomOpen).toBe(true);
   fireEvent.keyDown(screen.getByLabelText("What would you like to make?"), {
     key: "Escape",
