@@ -65,21 +65,30 @@ describe("linked complete cap sketch projections", () => {
     expect(() => materializeSketchProjections(f.plan.document, wrong, new Map(Object.entries(f.result.solvedSketches!)), new Map(Object.entries(f.result.profiles!).map(([id, profiles]) => [id, { profiles }])), f.result.parameterValues!)).toThrow("boundary changed");
   });
 
-  it("refuses new cross-component links at different placements without changing existing design associations", () => {
+  it("follows relative placed source and target movement while preserving legacy design links", () => {
     const f = fixture(), componentId = "cover_component";
     const aligned: CadDocument = { ...f.document, components: { ...f.document.components, [componentId]: { id: componentId, name: "Cover" } }, sketches: { ...f.document.sketches, [f.target.id]: { ...f.target, componentId } } };
     const plan = planSketchProjection(aligned, f.target.id, f.owner.id, "endCapPerimeter", false, f.result);
+    expect(plan.projection.coordinateSpace).toBe("world");
     const placement = { translation: [50, 20, 10] as [number, number, number], rotation: [0, 0, Math.PI / 2] as [number, number, number] };
     const moved = { ...plan.document, components: { ...plan.document.components, [f.document.rootComponentId]: { ...plan.document.components[f.document.rootComponentId], placement } } };
-    expect(() => planSketchProjection(moved, f.target.id, f.owner.id, "endCapPerimeter", false, f.result)).toThrow("different placements");
-    const before = solveSketch(plan.document.sketches[f.target.id], f.result.parameterValues ?? {});
-    const materialized = materializeSketchProjections(moved, moved.sketches[f.target.id], new Map(Object.entries(f.result.solvedSketches!)), new Map(Object.entries(f.result.profiles!).map(([id, profiles]) => [id, { profiles }])), f.result.parameterValues!);
-    expect(solveSketch(materialized, f.result.parameterValues ?? {}).points).toEqual(before.points);
-    expect(materialized.projections![0]).toEqual(plan.projection);
-    const repaired = planSketchProjection(moved, f.target.id, f.owner.id, "startCapPerimeter", false, { ...f.result, availableEdges: [...f.result.availableEdges!, { featureId: f.owner.id, bodyId: `body:${f.owner.id}`, role: "startCapPerimeter" }] }, plan.projection.id);
-    expect(repaired.projection.members).toEqual(plan.projection.members);
+    const materialize = (document: CadDocument) => materializeSketchProjections(document, document.sketches[f.target.id], new Map(Object.entries(f.result.solvedSketches!)), new Map(Object.entries(f.result.profiles!).map(([id, profiles]) => [id, { profiles }])), f.result.parameterValues!);
+    const points = Object.values(solveSketch(materialize(moved), f.result.parameterValues!).points);
+    expect(Math.min(...points.map(p => p.x))).toBeCloseTo(25, 8);
+    expect(Math.max(...points.map(p => p.x))).toBeCloseTo(75, 8);
+    expect(Math.min(...points.map(p => p.y))).toBeCloseTo(-20, 8);
+    expect(Math.max(...points.map(p => p.y))).toBeCloseTo(60, 8);
+    const legacy = { ...moved, sketches: { ...moved.sketches, [f.target.id]: { ...moved.sketches[f.target.id], projections: [{ ...plan.projection, coordinateSpace: undefined }] } } };
+    expect(solveSketch(materialize(legacy), f.result.parameterValues!).points).toEqual(solveSketch(plan.document.sketches[f.target.id], f.result.parameterValues!).points);
+    const repaired = planSketchProjection(legacy, f.target.id, f.owner.id, "startCapPerimeter", false, { ...f.result, availableEdges: [...f.result.availableEdges!, { featureId: f.owner.id, bodyId: `body:${f.owner.id}`, role: "startCapPerimeter" }] }, plan.projection.id);
+    expect(repaired.projection.coordinateSpace).toBeUndefined(); expect(repaired.projection.members).toEqual(plan.projection.members);
+    const targetMoved = { ...moved, components: { ...moved.components, [componentId]: { ...moved.components[componentId], placement: { translation: [5, 7, 2] as [number, number, number], rotation: [0, 0, 0] as [number, number, number] } } } };
+    const targetPoints = Object.values(solveSketch(materialize(targetMoved), f.result.parameterValues!).points);
+    expect(Math.min(...targetPoints.map(p => p.x))).toBeCloseTo(20, 8); expect(Math.max(...targetPoints.map(p => p.y))).toBeCloseTo(53, 8);
     const shared = { ...aligned, components: { ...aligned.components, [componentId]: { ...aligned.components[componentId], placement }, [f.document.rootComponentId]: { ...aligned.components[f.document.rootComponentId], placement } } };
-    expect(planSketchProjection(shared, f.target.id, f.owner.id, "endCapPerimeter", false, f.result).projection.members).toHaveLength(plan.projection.members.length);
+    const sharedPoints = Object.values(solveSketch(planSketchProjection(shared, f.target.id, f.owner.id, "endCapPerimeter", false, f.result).document.sketches[f.target.id], f.result.parameterValues!).points).sort((a, b) => Math.round(a.x * 1e8) - Math.round(b.x * 1e8) || Math.round(a.y * 1e8) - Math.round(b.y * 1e8));
+    const originalPoints = Object.values(solveSketch(plan.document.sketches[f.target.id], f.result.parameterValues!).points).sort((a, b) => Math.round(a.x * 1e8) - Math.round(b.x * 1e8) || Math.round(a.y * 1e8) - Math.round(b.y * 1e8));
+    sharedPoints.forEach((point, index) => { expect(point.x).toBeCloseTo(originalPoints[index].x, 10); expect(point.y).toBeCloseTo(originalPoints[index].y, 10); });
   });
   it("checks surviving native boundaries at the sketch timeline and blocks lost references", () => {
     const f = fixture(), errors: Parameters<typeof nativeProjectionValidator>[4] = [];

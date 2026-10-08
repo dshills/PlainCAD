@@ -27,7 +27,22 @@ const migrations = new Map<number, Migration>([
     const { placement: _placement, ...legacy } = component;
     return [id, legacy];
   })) })],
+  [16, migrateV16ToV17],
 ]);
+
+function migrateV16ToV17(document: CadDocument): CadDocument {
+  const sketches = Object.fromEntries(Object.entries(document.sketches).map(([id, sketch]) => {
+    if (!sketch.projections) return [id, sketch];
+    if (!Array.isArray(sketch.projections) || sketch.projections.length > 32) throw new Error("Malformed or excessive sketch projections.");
+    const projections = sketch.projections.map((projection) => {
+      // Schema 16 associations ignore placement; unknown older fields cannot change their meaning.
+      const { coordinateSpace: _space, ...legacy } = projection;
+      return legacy;
+    });
+    return [id, { ...sketch, projections }];
+  }));
+  return { ...document, schemaVersion: 17, sketches };
+}
 
 function migrateV12ToV13(document: CadDocument): CadDocument {
   return {
@@ -321,10 +336,11 @@ function sanitizeProjections(value: unknown): NonNullable<Sketch["projections"]>
     if (!isRecord(projection) || typeof projection.id !== "string" || !projection.id ||
       typeof projection.sourceFeatureId !== "string" || !projection.sourceFeatureId ||
       !["startCapPerimeter", "endCapPerimeter"].includes(projection.role) || typeof projection.construction !== "boolean" ||
+      (projection.coordinateSpace !== undefined && projection.coordinateSpace !== "world") ||
       !Array.isArray(projection.members) || !projection.members.length || projection.members.length > 256)
       throw new Error("Malformed sketch projection. Reselect a complete supported cap boundary.");
     return { id: projection.id, sourceFeatureId: projection.sourceFeatureId, role: projection.role,
-      construction: projection.construction, members: projection.members.map((member: unknown) => {
+      construction: projection.construction, ...(projection.coordinateSpace === "world" ? { coordinateSpace: "world" as const } : {}), members: projection.members.map((member: unknown) => {
         if (!isRecord(member) || typeof member.sourceEntityId !== "string" || !member.sourceEntityId || typeof member.targetEntityId !== "string" || !member.targetEntityId)
           throw new Error("Malformed sketch projection member.");
         return { sourceEntityId: member.sourceEntityId, targetEntityId: member.targetEntityId };

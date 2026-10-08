@@ -1,5 +1,6 @@
 import type { CadDocument, ComponentPlacement } from "../../cad/document/schema";
 import type { RebuildResult } from "../../cad/worker/workerProtocol";
+import { placedProjectionConsumerBodies } from "../../cad/features/placedProjectionDependencies";
 import { bodyComponentId } from "../../cad/document/components";
 import { IDENTITY_PLACEMENT, validComponentPlacement, withComponentPlacement } from "../../cad/document/componentPlacement";
 import { previewModeling } from "../../cad/worker/extrudePreviewClient";
@@ -61,10 +62,11 @@ export interface ComponentPlacementPreview { frame: ComponentPlacementFrame; doc
 const proven = new WeakSet<ComponentPlacementPreview>();
 function assertPlacementGeometry(frame: ComponentPlacementFrame, result: RebuildResult) {
   assertNativeSolidPreview(result, frame.document.id);
+  const consumers = placedProjectionConsumerBodies(frame.document, frame.componentId);
   if (result.meshes.length !== frame.result.meshes.length || frame.result.meshes.some((before) => {
     const after = result.meshes.find((mesh) => mesh.bodyId === before.bodyId), a = after?.geometryAssertions, b = before.geometryAssertions;
-    return !a || !b || a.solidCount !== b.solidCount || Math.abs(a.volume - b.volume) > Math.max(1e-8, Math.abs(b.volume) * 1e-9);
-  })) throw new Error("Placement changed body identity or volume. Review native diagnostics before applying.");
+    return !a || !b || !Number.isFinite(a.volume) || !Number.isFinite(b.volume) || a.solidCount !== b.solidCount || (!consumers.has(before.bodyId) && Math.abs(a.volume - b.volume) > Math.max(1e-8, Math.abs(b.volume) * 1e-9));
+  })) throw new Error("Placement changed body identity, solid count or an independent solid volume. Review native diagnostics before applying.");
 }
 export async function previewComponentPlacement(frame: ComponentPlacementFrame, placement: ComponentPlacement, signal: AbortSignal): Promise<ComponentPlacementPreview> {
   const document = stageComponentPlacement(frame, placement);

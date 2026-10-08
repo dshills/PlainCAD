@@ -2,7 +2,7 @@ import type { CadDocument, Sketch, SketchEntity, SketchProjection, ExpressionRef
 import type { ResolvedSketch } from "./SketchSolver";
 import type { SketchProfile } from "./profileDetection";
 import type { RebuildResult } from "../worker/workerProtocol";
-import { componentPlacementsEqual } from "../document/componentPlacement";
+import { placePlane } from "../document/componentPlacement";
 import { featureComponentId, sketchComponentId } from "../document/components";
 import { createId } from "../document/ids";
 import { deleteSketchEntities } from "./entityDeletion";
@@ -24,6 +24,8 @@ export function projectionSource(document: CadDocument, target: Sketch, projecti
   const source = document.features.find((feature) => feature.id === projection.sourceFeatureId);
   if (!source || source.type !== "extrude" || source.suppressed || source.operation !== "newBody" || (source.termination && source.termination.type !== "distance"))
     throw new Error("Projected boundary owner is missing or unsupported. Reselect an upstream distance-extruded cap or remove the projection.");
+  if (featureComponentId(document, source) !== sketchComponentId(document, source.sketchId))
+    throw new Error("Projected source feature and sketch must belong to the same component. Repair source ownership before projecting.");
   const timeline = documentTimeline(document).map(timelineItemId);
   if (timeline.indexOf(source.id) >= timeline.indexOf(target.id) || source.sketchId === target.id)
     throw new Error("A projection must reference an earlier feature. Move the sketch after its source or reselect a source.");
@@ -37,8 +39,8 @@ export function materializeSketchProjections(
 ): Sketch {
   if (!target.projections?.length) return target;
   const planes = resolveDocumentPlanes(document, parameters, solved, true);
-  const targetPlane = planes.transforms.get(target.id);
-  if (!targetPlane) throw new Error(planes.errors.get(target.id) ?? "Projection destination plane is unavailable.");
+  const authoredTargetPlane = planes.transforms.get(target.id);
+  if (!authoredTargetPlane) throw new Error(planes.errors.get(target.id) ?? "Projection destination plane is unavailable.");
   const entities = { ...target.entities };
   let constraints = [...target.constraints];
   for (const projection of target.projections) {
@@ -46,14 +48,18 @@ export function materializeSketchProjections(
     const sourceSketch = document.sketches[source.sketchId], sourceSolved = solved.get(source.sketchId);
     const profile = profiles.get(source.sketchId)?.profiles.find((p) => p.id === source.profileId || p.alternateIds?.includes(source.profileId));
     if (!sourceSolved || sourceSolved.errors.length || !profile) throw new Error("Projected source profile is lost. Repair its sketch or reselect the boundary.");
-    const sourcePlane = planes.transforms.get(source.sketchId);
-    if (!sourcePlane) throw new Error("Projected source plane is unavailable. Repair its plane reference.");
+    const authoredSourcePlane = planes.transforms.get(source.sketchId);
+    if (!authoredSourcePlane) throw new Error("Projected source plane is unavailable. Repair its plane reference.");
+    // Both planes must live in the same coordinate space. Generated entity values
+    // remain destination-local, so downstream native modeling stays authored-local.
+    const sourcePlane = projection.coordinateSpace === "world" ? placePlane(authoredSourcePlane, document.components[featureComponentId(document, source)]?.placement) : authoredSourcePlane;
+    const targetPlane = projection.coordinateSpace === "world" ? placePlane(authoredTargetPlane, document.components[sketchComponentId(document, target.id)]?.placement) : authoredTargetPlane;
     const evaluated = evaluateExpressionRef(source.termination?.type === "distance" && source.termination.distance ? source.termination.distance : source.distance, { parameters });
     if (evaluated.error || evaluated.quantity?.dimension !== "length") throw new Error(evaluated.error ?? "Projection source distance must be a length.");
     const sweep = extrusionSweep(sourcePlane, evaluated.quantity.value, source.direction);
     const cap = projection.role === "endCapPerimeter" ? { ...sweep, origin: transformPoint(sweep, 0, 0, evaluated.quantity.value) } : sweep;
     const alignment = dot(cap.normal, targetPlane.normal);
-    if (Math.abs(Math.abs(alignment) - 1) > 1e-7) throw new Error("Project edges currently requires parallel planes. Choose a parallel origin, offset or cap plane.");
+    if (Math.abs(Math.abs(alignment) - 1) > 1e-7) throw new Error("Project edges currently requires parallel planes in its association coordinate space. Rotate the source or destination component to parallel planes, repair the plane reference, or remove the link. Oblique circles and arcs are not approximated.");
     const sourceCurveIds = [...profile.outerLoop.entityIds, ...profile.innerLoops.flatMap((loop) => loop.entityIds)];
     if (sourceCurveIds.some((id) => !sourceSketch.entities[id] || sourceSketch.entities[id].type === "point"))
       throw new Error("Fragmented boundaries cannot be projected. Choose a complete authored cap.");
@@ -93,8 +99,6 @@ export function planSketchProjection(document: CadDocument, sketchId: string, so
   if (!target || (!replaceProjectionId && (target.projections?.length ?? 0) >= 32)) throw new Error("Projection destination is unavailable or has reached its limit.");
   const source = document.features.find((feature) => feature.id === sourceFeatureId);
   if (!source || source.type !== "extrude") throw new Error("Choose a supported extrusion cap.");
-  if (!replaceProjectionId && !componentPlacementsEqual(document, featureComponentId(document, source), sketchComponentId(document, sketchId)))
-    throw new Error("Components have different placements; align them before projecting. Existing links follow authored design geometry.");
   const sourceSketch = document.sketches[source.sketchId];
   const profile = result.profiles?.[source.sketchId]?.find((p) => p.id === source.profileId || p.alternateIds?.includes(source.profileId));
   if (!profile) throw new Error("Source profile is unavailable.");
@@ -105,7 +109,7 @@ export function planSketchProjection(document: CadDocument, sketchId: string, so
   const previous = replaceProjectionId ? target.projections?.find((p) => p.id === replaceProjectionId) : undefined;
   if (replaceProjectionId && (!previous || previous.members.length !== sourceIds.length || sourceIds.some((id) => !previous.members.some((m) => m.sourceEntityId === id))))
     throw new Error("Replacement has different authored entities. Delete this projection, project the new boundary, then explicitly repair downstream profile references.");
-  const projection: SketchProjection = { id: previous?.id ?? createId("projection"), sourceFeatureId, role, construction, members: previous?.members ?? sourceIds.map((sourceEntityId) => ({ sourceEntityId, targetEntityId: createId("entity") })) };
+  const projection: SketchProjection = { ...(!previous || previous.coordinateSpace === "world" ? { coordinateSpace: "world" as const } : {}), id: previous?.id ?? createId("projection"), sourceFeatureId, role, construction, members: previous?.members ?? sourceIds.map((sourceEntityId) => ({ sourceEntityId, targetEntityId: createId("entity") })) };
   const map = new Map(projection.members.map((member) => [member.sourceEntityId, member.targetEntityId]));
   const placeholders = Object.fromEntries(projection.members.map(({ sourceEntityId, targetEntityId }) => {
     const entity = sourceSketch.entities[sourceEntityId];

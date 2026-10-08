@@ -51,8 +51,9 @@ export function SketchProjectionPanel() {
   }, [frame]);
   useEffect(() => { if (frame && !currentSketchProjectionFrame(frame)) close(); }, [frame, document, session, component, fileBusy, active, selection]);
   useEffect(() => () => controller.current?.abort(), []);
-  const targets = useMemo(() => frame && sources ? projectionBoundaryTargets(frame.document, frame.active.sketchId, sources.proof, sources.choices) : [], [frame, sources]);
+  const targets = useMemo(() => frame && sources ? projectionBoundaryTargets(frame.document, frame.active.sketchId, sources.proof, sources.choices, frame.replaceProjectionId) : [], [frame, sources]);
   if (!frame) return null;
+  const legacyRepair = frame.replaceProjectionId && frame.document.sketches[frame.active.sketchId].projections?.some(link => link.id === frame.replaceProjectionId && link.coordinateSpace !== "world");
   const chosen = sources?.choices.find((choice) => choice.id === sourceId);
   const preview = async (choice = chosen) => {
     if (!sources || !choice || busy || !currentSketchProjectionFrame(frame)) return;
@@ -68,7 +69,8 @@ export function SketchProjectionPanel() {
   };
   return <section className="sketch-trim-extend" aria-label="Project part edges" onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); close(); } }}>
     <h3>{frame.replaceProjectionId ? "Repair projected boundary" : "Project part edges"}</h3>
-    <p>Reuse a complete earlier cap boundary on this parallel sketch plane. Linked geometry follows its source dimensions.</p>
+    <p>Reuse a complete earlier cap boundary on this parallel sketch plane. New links follow source dimensions and component placement. Existing design links keep their original association.</p>
+    {legacyRepair ? <p>Repairing a legacy design link. The source view shows the placed part; compatibility and the linked outline use authored design coordinates.</p> : null}
     {sources ? <ProjectionSourcePicker meshes={sources.proof.meshes} targets={targets} selectedId={sourceId} disabled={busy} onChoose={(target) => {
       if (busy || !currentSketchProjectionFrame(frame)) return;
       invalidate(); setSourceId(target.id); setError("");
@@ -105,7 +107,7 @@ export function SketchProjectionLinks() {
   return <section aria-label="Linked projected boundaries"><h3>Projected boundaries</h3>{selected ? <p role="status">Selected geometry is linked and read-only. Edit its source or break its link before moving or dimensioning it.</p> : null}
     {links.map((link) => {
       const source = document.features.find((feature) => feature.id === link.sourceFeatureId);
-      return <div key={link.id} className="item-card"><strong>{source?.name ?? "Missing source"} · {link.role === "endCapPerimeter" ? "End cap" : "Start cap"}</strong><span className="muted">{link.members.length} linked items · {link.construction ? "Construction reference" : "Profile geometry"}</span>
+      return <div key={link.id} className="item-card"><strong>{source?.name ?? "Missing source"} · {link.role === "endCapPerimeter" ? "End cap" : "Start cap"}</strong><span className="muted">{link.coordinateSpace === "world" ? "Placed geometry link" : "Legacy design link"} · {link.members.length} linked items · {link.construction ? "Construction reference" : "Profile geometry"}</span>
         <button type="button" disabled={!canOpenSketchProjection()} onClick={() => { try { openSketchProjection(link.id); setError(""); } catch (failure) { setError(failure instanceof Error ? failure.message : String(failure)); } }}>Reselect projected boundary</button>
         <button type="button" disabled={!canOpenSketchProjection() || rebuild.status !== "succeeded" || !rebuild.result?.success} onClick={() => { try { breakCurrentSketchProjection(link.id); setError(""); } catch (failure) { setError(failure instanceof Error ? failure.message : String(failure)); } }}>Break projection link</button>
         <button type="button" disabled={!canOpenSketchProjection()} onClick={() => { try { removeCurrentSketchProjection(link.id); setError(""); } catch (failure) { setError(failure instanceof Error ? failure.message : String(failure)); } }}>Remove projection and geometry</button>

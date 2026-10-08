@@ -1,3 +1,4 @@
+import { CURRENT_SCHEMA_VERSION } from "../cad/document/schema";
 import { describe, expect, it, vi } from "vitest";
 import { createEmptyDocument, createExtrudeFeature, upsertFeature, upsertSketch } from "../cad/document/CadDocument";
 import { addComponent } from "../cad/document/components";
@@ -125,17 +126,17 @@ describe("rigid component placements", () => {
     expect(planes.transforms.get("sketch:solid")).toBe(plane);
   });
 
-  it("round trips schema 16 placements and rejects imported placements outside schema bounds", () => {
+  it("round trips current placements, migrates legacy placements and rejects imported poses outside bounds", () => {
     const document = createEmptyDocument("Placement schema"), placed = withComponentPlacement(document, document.rootComponentId, pose);
     const serialized = serializeProject(placed), imported = importProjectText(serialized);
-    expect(imported.schemaVersion).toBe(16);
+    expect(imported.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
     expect(imported.components[document.rootComponentId].placement).toEqual(pose);
     expect(validateDocument(placed)).toEqual([]);
     const malformed: CadDocument = { ...placed, components: { ...placed.components, [placed.rootComponentId]: { ...placed.components[placed.rootComponentId], placement: { translation: [1e9, 0, 0], rotation: [0, 0, 0] } } } };
     expect(validateDocument(malformed).some(issue => issue.message.includes("Component placement"))).toBe(true);
     expect(() => importProjectText(JSON.stringify(malformed))).toThrow(/Component placement/);
     const legacy = importProjectText(JSON.stringify({ ...document, schemaVersion: 15 }));
-    expect(legacy.schemaVersion).toBe(16);
+    expect(legacy.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
     expect(legacy.components[document.rootComponentId].placement).toBeUndefined();
   });
 });

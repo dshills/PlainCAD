@@ -9,8 +9,12 @@ Cancel leaves the project unchanged.
 
 The destination plane must be parallel to the source cap. Origin, offset and
 supported face planes are accepted when their resolved normals are parallel.
-Projection follows source dimensions and resolves world orientation into the
-sketch's local coordinates; a linked sketch is persisted in schema 15. Loading
+New links follow source dimensions and component placement. Source cap coordinates
+are transformed into placed world space, projected along the destination normal,
+and resolved into the destination sketch's authored local coordinates. Downstream
+features stay in those local coordinates, then receive their component placement.
+Analytic circles retain their radius; arcs retain their sweep and reverse winding
+when the two placed plane normals oppose. Schema 17 records `coordinateSpace: "world"`. Loading
 older projects migrates without inventing links.
 
 Only full native-validated surviving caps of earlier distance extrusions that
@@ -73,7 +77,40 @@ invalidates the preview. A source edit after Apply updates the link at rebuild;
 save/open preserves its stable member identities. Display limits retain the named
 chooser and native Preview/Apply validation.
 
-Source-view outlines use the current posed world coordinates. A new projection
-between components with different placements is refused: align their placements
-first. Existing links follow authored design geometry, while component placement
-positions the finished parts. Moving a component does not deform its sketches.
+Source-view outlines use the current posed world coordinates. Different component
+positions and in-plane rotations are accepted whenever the **placed** source cap
+and destination plane are parallel. Different authored origin planes can also
+project when their component rotations make the placed planes parallel. Separated
+parallel planes project orthogonally; distance along the normal does not alter the
+outline. Oblique planes fail explicitly: circles are never approximated as ellipses
+or polyline outlines.
+
+Moving the source updates the destination-local outline at rebuild. Moving the
+destination changes its local outline to retain the source's projected world
+position; the destination feature still starts on its own placed sketch plane and extrudes
+along that plane's normal. Moving both components by the same rigid placement preserves their
+relative authored outline. A downstream cut or join can change volume when its
+linked outline moves relative to its target. Move previews validate the complete
+native candidate and retain body identities/solid counts; independent solids must
+retain exact volume. Incompatible motion invalidates the linked sketch and its
+consumers and prevents Apply/export, with source-linked repair diagnostics. Undo
+restores the last valid pose; reselect a compatible cap, repair the sketch plane,
+or remove the link rather than guessing geometry.
+
+Older schema 15/16 links remain **Legacy design links** and keep their original
+authored-coordinate associations, even when components move. Migration does not
+convert them. Reselect preserves their coordinate mode and generated IDs. To adopt
+placed behavior, remove the legacy link, project a new boundary, and explicitly
+repair downstream profile references. Break link retains the currently solved
+local outline as ordinary editable geometry. The linked-boundary UI labels the
+association mode. During legacy repair, the source view still displays the actual
+placed native part; compatibility and the linked sketch preview follow authored
+design coordinates, as the task explicitly labels.
+
+`placedSketchProjection.test.ts` covers XY/XZ/YZ circles/arcs, opposite normals,
+world-parallel different authored planes, schema migration, source/target motion,
+coordinate limits and exact cache signatures. `e2e/placed-projection.spec.ts` adds
+native solids/volume/orientation, motion, Undo/Redo, save/open, parameter changes,
+STL, stale preview rejection and oblique-motion recovery. The production schema
+17 fixture verifies the same native association under built-app security headers.
+Execution results are recorded in [the validation log](VALIDATION_LOG.md).

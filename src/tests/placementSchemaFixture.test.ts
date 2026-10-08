@@ -1,3 +1,4 @@
+import { CURRENT_SCHEMA_VERSION } from "../cad/document/schema";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { importProjectText } from "../persistence/importProject";
@@ -5,10 +6,11 @@ import { serializeProject } from "../persistence/exportProject";
 import { validateDocument } from "../cad/document/validate";
 import { rebuildDocument } from "../cad/features/rebuildGraph";
 
-describe("schema 16 real placement fixture", () => {
+describe("schema 16 placement fixture migration", () => {
   it("round trips independent posed component identities and drives changed positioned bounds", () => {
     const text = readFileSync("src/persistence/fixtures/schema-v16.pcaddoc", "utf8"), document = importProjectText(text);
-    expect(document.schemaVersion).toBe(16);
+    expect(JSON.parse(text).schemaVersion).toBe(16);
+    expect(document.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
     expect(validateDocument(document)).toEqual([]);
     expect(document.features.map(feature => feature.id)).toEqual(["first-solid", "second-solid"]);
     expect(document.components["first-component"].placement).toEqual({ translation: [30, -7, 4], rotation: [0, 0, Math.PI / 2] });

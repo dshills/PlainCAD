@@ -3,7 +3,7 @@ import type { RebuildResult } from "../cad/worker/workerProtocol";
 import { resolveDocumentPlanes, transformPoint, type Point3 } from "../cad/sketch/planes";
 import { evaluateExpressionRef } from "../cad/parameters/expressionEvaluator";
 import { extrusionSweep } from "../cad/features/extrusionSweep";
-import { componentPlacementsEqual, placePlane } from "../cad/document/componentPlacement";
+import { placePlane } from "../cad/document/componentPlacement";
 import { featureComponentId, sketchComponentId } from "../cad/document/components";
 import type { SketchProjectionChoice } from "../ui/commands/sketchProjectionCommand";
 
@@ -13,17 +13,22 @@ export interface ProjectionBoundaryTarget extends SketchProjectionChoice {
 }
 /** Sampled lines are display/pick affordances only. Native complete-cap proof
  * and the projection planner remain authoritative for geometry and Apply. */
-export function projectionBoundaryTargets(document: CadDocument, sketchId: string, proof: RebuildResult, choices: readonly SketchProjectionChoice[]): ProjectionBoundaryTarget[] {
+export function projectionBoundaryTargets(document: CadDocument, sketchId: string, proof: RebuildResult, choices: readonly SketchProjectionChoice[], replaceProjectionId?: string): ProjectionBoundaryTarget[] {
   if (!proof.success || proof.documentId !== document.id) return [];
+  const previous = document.sketches[sketchId]?.projections?.find((link) => link.id === replaceProjectionId);
+  if (replaceProjectionId && !previous) return choices.map(choice => ({ ...choice, curves: [], disabledReason: "Projection link was lost. Reopen repair for a current linked boundary." }));
   const parameters = proof.parameterValues ?? {};
   const planes = resolveDocumentPlanes(document, parameters, new Map(Object.entries(proof.solvedSketches ?? {})), true);
-  const destination = planes.transforms.get(sketchId);
+  const world = !previous || previous.coordinateSpace === "world";
+  const authoredDestination = planes.transforms.get(sketchId);
+  const destination = authoredDestination && (world ? placePlane(authoredDestination, document.components[sketchComponentId(document, sketchId)]?.placement) : authoredDestination);
   const compatibility = new Map(choices.map((choice) => {
     const feature = document.features.find((item) => item.id === choice.featureId);
     if (feature?.type !== "extrude") return [choice.id, "Choose a supported distance extrusion."] as const;
-    if (!componentPlacementsEqual(document, featureComponentId(document, feature), sketchComponentId(document, sketchId))) return [choice.id, "Components have different placements; align them before projecting. Placement positions completed parts; existing links follow design geometry."] as const;
+    if (featureComponentId(document, feature) !== sketchComponentId(document, feature.sketchId)) return [choice.id, "Source feature and sketch must belong to the same component. Repair source ownership."] as const;
     if (!destination) return [choice.id, planes.errors.get(sketchId) ?? "Destination sketch plane is unavailable. Repair its plane."] as const;
-    const normal = planes.transforms.get(feature.sketchId)?.normal;
+    const authoredSource = planes.transforms.get(feature.sketchId);
+    const normal = authoredSource && (world ? placePlane(authoredSource, document.components[featureComponentId(document, feature)]?.placement) : authoredSource).normal;
     if (!normal) return [choice.id, "Source sketch plane is unavailable. Repair its source."] as const;
     const alignment = normal.x * destination.normal.x + normal.y * destination.normal.y + normal.z * destination.normal.z;
     return [choice.id, Math.abs(Math.abs(alignment) - 1) > 1e-7 ? "Project edges currently requires parallel planes. Choose a parallel origin, offset or cap plane." : undefined] as const;
@@ -40,6 +45,8 @@ export function projectionBoundaryTargets(document: CadDocument, sketchId: strin
     const source = proof.solvedSketches?.[feature.sketchId];
     const profile = proof.profiles?.[feature.sketchId]?.find((item) => item.id === feature.profileId || item.alternateIds?.includes(feature.profileId));
     const designSourcePlane = planes.transforms.get(feature.sketchId);
+    // The overlay identifies the actual native source body in the world-space
+    // source view, even when a legacy repair follows authored design coordinates.
     const sourcePlane = proof.sketchPlanes?.[feature.sketchId] ?? (designSourcePlane && placePlane(designSourcePlane, document.components[featureComponentId(document, feature)]?.placement));
     if (!source || source.errors.length || !profile || !sourcePlane) return { ...target, disabledReason: "Source sketch geometry or plane is unavailable. Repair its source." };
     const distance = evaluateExpressionRef(feature.termination?.type === "distance" ? (feature.termination.distance ?? feature.distance) : feature.distance, { parameters });

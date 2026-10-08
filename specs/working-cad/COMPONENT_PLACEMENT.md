@@ -15,18 +15,23 @@ Position is bounded to ±100,000,000 mm; each rotation is bounded to ±360 degre
 
 Mouse movement displays a temporary rigid transformation of already validated
 native meshes. Native validation starts after the drag ends, and an isolated
-worker validates the whole candidate project. Body identities, exact volumes,
-solid counts, and BRep validity must remain unchanged. **Apply component placement**
+worker validates the whole candidate project. Body identities,
+solid counts, and BRep validity remain invariant. Independent solids retain exact
+volume. Bodies downstream of placed cross-component projection links may change
+volume when the linked outline moves relative to a boolean target; their complete
+native candidate must still validate. **Apply component placement**
 requires the exact current successful native preview and saves one Undo step.
 Escape during a drag, pointer cancellation, or window blur restores the captured
 pose. **Cancel placement** closes the task without changing the project.
 
 Placement belongs to the component in the project file. It does not rewrite
-sketch coordinates, dimensions, feature parameters, or existing linked projection
-associations. Parameter edits rebuild the authored shape, then position the
+independent sketch coordinates, dimensions or feature parameters. New schema 17
+world projection links regenerate their destination-local coordinates from relative
+component placement; legacy design links preserve their existing associations. Parameter edits rebuild the authored shape, then position the
 finished bodies. Measurements, view picking, save/open, and STL use placed world
-coordinates. New projections across components with different placements are
-refused; align their placements first. Placement provides independent positioning;
+coordinates. New projections accept different placements when their placed planes remain
+parallel; oblique motion diagnoses and prevents Apply rather than guessing an
+approximate projected curve. See [linked projection](SKETCH_PROJECTION.md). Placement provides independent positioning;
 it does not provide assembly joints, motion constraints, or linked external files.
 
 `e2e/component-placement.spec.ts` covers native bounds and volume, mouse drag and

@@ -112,6 +112,7 @@ export function validateDocument(document: CadDocument, mode: "modeling" | "stor
         for (const projection of sketch.projections) {
           if (!projection || typeof projection.id !== "string" || !projection.id || typeof projection.sourceFeatureId !== "string" || !projection.sourceFeatureId ||
             !["startCapPerimeter", "endCapPerimeter"].includes(projection.role) || typeof projection.construction !== "boolean" ||
+            (projection.coordinateSpace !== undefined && projection.coordinateSpace !== "world") ||
             !Array.isArray(projection.members) || !projection.members.length || projection.members.length > 256) {
             issues.push({ source: "sketch", sourceId: sketch.id, message: "Malformed sketch projection." });
             continue;

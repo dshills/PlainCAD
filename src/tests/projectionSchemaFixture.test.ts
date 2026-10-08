@@ -29,3 +29,22 @@ describe("schema 15 linked cover fixture", () => {
     expect(Object.keys(projected.entities)).toEqual(Object.keys(document.sketches["cover-section"].entities));
   });
 });
+
+describe("schema 17 placed projection fixture", () => {
+  it("round trips schema 17 differently placed world links with local coordinates and analytic profile identity", () => {
+  const text = readFileSync("src/persistence/fixtures/schema-v17.pcaddoc", "utf8"), document = importProjectText(text);
+  expect(JSON.parse(text).schemaVersion).toBe(17); expect(document.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+  expect(validateDocument(document)).toEqual([]); expect(serializeProject(importProjectText(serializeProject(document)))).toBe(serializeProject(document));
+  expect(document.sketches["cover-section"].projections![0].coordinateSpace).toBe("world");
+  const values = evaluateParameters(document.parameters).values, source = solveSketch(document.sketches["source-section"], values);
+  const sketch = materializeSketchProjections(document, document.sketches["cover-section"], new Map([[source.id, source]]), new Map([[source.id, detectProfiles(source)]]), values);
+  const solved = solveSketch(sketch, values), points = Object.values(solved.points);
+  // Persisted copies deliberately remain stale: links, solved sources and poses
+  // must regenerate them rather than trusting saved point values.
+  expect(document.sketches["cover-section"].entities["cover-p0"]).toMatchObject({ type: "point", x: { expression: "0mm" } });
+  expect(solved.points["cover-p0"]).toMatchObject({ x: 45, y: 13 });
+  expect(solved.errors).toEqual([]); expect(detectProfiles(solved).profiles[0].alternateIds).toContain("cover-section:profile:rectangle");
+  expect(Math.min(...points.map(p => p.x))).toBeCloseTo(25, 8); expect(Math.max(...points.map(p => p.x))).toBeCloseTo(45, 8);
+  expect(Math.min(...points.map(p => p.y))).toBeCloseTo(13, 8); expect(Math.max(...points.map(p => p.y))).toBeCloseTo(43, 8);
+});
+});

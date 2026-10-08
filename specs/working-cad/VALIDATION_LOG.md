@@ -188,3 +188,13 @@ The isolated checkout passed `npm run check:item`: type checks, all 1224 unit/co
 Alignment produces static rigid placements using supported native points, straight edges and planar face roles. Face alignment preserves tangential translation, and has no collision avoidance, mate or joint. Lists remain available when display marker budgets or overlap prevent a pointer choice.
 
 Cadence: 2 completed items since the last successful full checkpoint; the full gate is due after 3 more requested changes (the fourth item in this implementation batch).
+
+### Item 3: associative projection between placed components (2026-10-08)
+
+Prism reviewed the isolated implementation with Anthropic `claude-sonnet-5-5`: initial `d036c0d30ff912d695a9e2b9094b0517`, complete final `e89af189148ce6b5d76e4ce09c92eabe`, and follow-ups `cb440e01ad08b5cf8d93cc8400b43786`, `50e62bda62d0670b627656a1f232db60` and `f0b9e8a602572793413de25c12d39990`. Actionable repair guards, finite native tolerances and unit-normal checks were fixed. Final reviews have no high/medium findings; the final runtime follow-up has no findings. Low production-fixture label/regex notes are controlled constants.
+
+The exact isolated runtime passed `npm run check:item`: type checks, 1239 unit/component tests, build/bundle budget (largest 489.83 kB), 5 development and 14 production native smoke cases. All 5 focused development cases passed (33s), proving differently placed XY/XZ/YZ analytical boundaries, opposite-normal arc winding, source/target movement, one Undo/Redo, durable parameters and save/open, STL orientation, actual stale results and failed oblique/no-op-cut placement. All 3 focused production schema cases passed (12.1s), covering new schema 17 world links and preserved schema 16/15 projects. Initial production body-label and reopened-result synchronization expectations were corrected before the final pass; runtime sources stayed unchanged. The final 61 focused unit tests and type check passed.
+
+New links retain analytical world-coordinate associations across parallel placed planes. Legacy links keep authored-coordinate semantics. Traced world-link consumer bodies may change volume during placement; independent source bodies must retain native validity, solid count and volume. Oblique, missing or unsupported references fail explicitly.
+
+Cadence: 3 completed items since the last successful full checkpoint; the full gate is due after 2 more requested changes.

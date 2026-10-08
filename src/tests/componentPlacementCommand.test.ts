@@ -1,4 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createSketchOnPlane } from "../cad/sketch/SketchModel";
+import { upsertSketch, upsertFeature, createExtrudeFeature } from "../cad/document/CadDocument";
+import { planSketchProjection } from "../cad/sketch/sketchProjection";
+import { detectProfiles } from "../cad/sketch/profileDetection";
+import { solveSketch } from "../cad/sketch/SketchSolver";
 import { createBoxTemplate } from "../templates/templates";
 import { rebuildDocument } from "../cad/features/rebuildGraph";
 import type { CadDocument, ComponentPlacement } from "../cad/document/schema";
@@ -41,6 +46,38 @@ describe("native component placement workflow", () => {
     preview.mockResolvedValueOnce(rebuildDocument(frame.document));
     await expect(previewComponentPlacement(frame, placement, new AbortController().signal)).rejects.toThrow("native solid");
     expect(useCadStore.getState().history.past).toHaveLength(0);
+  });
+  it("permits valid changed world-link consumer volumes while keeping independent bodies and solid counts invariant", async () => {
+    const initial = setup(), target = { ...createSketchOnPlane("Dependent cover", "XY"), componentId: "cover" };
+    let document = upsertSketch({ ...initial.document, components: { ...initial.document.components, cover: { id: "cover", name: "Cover" } } }, target);
+    const source = document.features[0], proof = { ...initial.frame.result, availableEdges: [{ featureId: source.id, bodyId: `body:${source.id}`, role: "endCapPerimeter" as const }] };
+    const plan = planSketchProjection(document, target.id, source.id, "endCapPerimeter", false, proof);
+    const profile = detectProfiles(solveSketch(plan.document.sketches[target.id], proof.parameterValues!)).profiles[0];
+    const feature = createExtrudeFeature({ name: "Consumer", sketchId: target.id, profileId: profile.id, operation: "newBody", direction: "positive", distance: { expression: "2mm", unit: "mm" } });
+    document = upsertFeature(plan.document, feature);
+    // Controlled command boundary mock: actual linked native solids are proved by browser acceptance.
+    const sourceMesh = proof.meshes[0], consumerMesh = { ...sourceMesh, id: "consumer-mesh", bodyId: `body:${feature.id}`, geometryAssertions: { ...sourceMesh.geometryAssertions!, volume: 1000 } };
+    const before = { ...proof, meshes: [sourceMesh, consumerMesh] };
+    useCadStore.setState({ history: { past: [], present: document, future: [] }, rebuild: { status: "succeeded", kernelReady: true, result: before } });
+    cancelComponentPlacement(); beginComponentPlacement(); const frame = useComponentPlacement.getState().frame!;
+    const changed = { ...before, meshes: [sourceMesh, { ...consumerMesh, geometryAssertions: { ...consumerMesh.geometryAssertions, volume: 800 } }] };
+    preview.mockResolvedValueOnce(changed);
+    const allowed = await previewComponentPlacement(frame, placement, new AbortController().signal);
+    expect(allowed.result.meshes[1].geometryAssertions!.volume).toBe(800);
+    // Infinity reaches the placement-specific finite check; nonpositive/NaN
+    // values are rejected by the shared native-solid proof before that check.
+    for (const [volume, message] of [[Infinity, "independent solid volume"], [NaN, "native solid"], [0, "native solid"], [-1, "native solid"]] as const) {
+      preview.mockResolvedValueOnce({ ...changed, meshes: [sourceMesh, { ...changed.meshes[1], geometryAssertions: { ...changed.meshes[1].geometryAssertions!, volume } }] });
+      await expect(previewComponentPlacement(frame, placement, new AbortController().signal)).rejects.toThrow(message);
+    }
+    preview.mockResolvedValueOnce({ ...changed, meshes: [{ ...sourceMesh, geometryAssertions: { ...sourceMesh.geometryAssertions!, volume: 23000 } }, changed.meshes[1]] });
+    await expect(previewComponentPlacement(frame, placement, new AbortController().signal)).rejects.toThrow("independent solid volume");
+    preview.mockResolvedValueOnce({ ...changed, meshes: [sourceMesh, { ...changed.meshes[1], geometryAssertions: { ...changed.meshes[1].geometryAssertions!, solidCount: 2 } }] });
+    await expect(previewComponentPlacement(frame, placement, new AbortController().signal)).rejects.toThrow("solid count");
+    const legacy = { ...document, sketches: { ...document.sketches, [target.id]: { ...document.sketches[target.id], projections: [{ ...plan.projection, coordinateSpace: undefined }] } } };
+    useCadStore.setState({ history: { past: [], present: legacy, future: [] } }); cancelComponentPlacement(); beginComponentPlacement();
+    preview.mockResolvedValueOnce(changed);
+    await expect(previewComponentPlacement(useComponentPlacement.getState().frame!, placement, new AbortController().signal)).rejects.toThrow("Placement changed body identity, solid count or an independent solid volume. Review native diagnostics before applying.");
   });
   it("rejects delayed results after document/session/active-component changes", async () => {
     const { document, frame } = setup();

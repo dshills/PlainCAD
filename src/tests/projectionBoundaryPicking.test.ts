@@ -58,7 +58,21 @@ describe("native authored cap pick targets", () => {
     expect(points.some((point) => Math.abs(point.x - 40) < 1e-8 && Math.abs(point.z - 50) < 1e-8)).toBe(true);
     const different = { ...document, components: { ...document.components, destination: { id: "destination", name: "Destination" } }, sketches: { ...document.sketches, [f.target.id]: { ...f.target, componentId: "destination" } } };
     const incompatible = projectionBoundaryTargets(different, f.target.id, proof, f.choices);
-    expect(incompatible.every((target) => target.curves.length && target.disabledReason?.includes("different placements"))).toBe(true);
+    expect(incompatible.every((target) => target.curves.length && target.disabledReason?.includes("parallel planes"))).toBe(true);
+  });
+  it("checks placed world normals for new links and preserves legacy design-mode repair compatibility", () => {
+    const f = fixture(), sourcePose = { translation: [10, 20, 30] as [number, number, number], rotation: [Math.PI / 2, 0, 0] as [number, number, number] };
+    const document = { ...f.document, components: { ...f.document.components, [f.document.rootComponentId]: { ...f.document.components[f.document.rootComponentId], placement: sourcePose }, destination: { id: "destination", name: "Destination" } }, sketches: { ...f.document.sketches, [f.target.id]: { ...f.target, componentId: "destination" } } };
+    const incompatible = projectionBoundaryTargets(document, f.target.id, f.proof, f.choices);
+    expect(incompatible).toHaveLength(2); expect(incompatible.every(target => target.disabledReason?.includes("parallel planes"))).toBe(true);
+    const worldParallel = { ...document, sketches: { ...document.sketches, [f.target.id]: { ...document.sketches[f.target.id], plane: { type: "origin" as const, plane: "XZ" as const } } } };
+    const worldTargets = projectionBoundaryTargets(worldParallel, f.target.id, f.proof, f.choices);
+    expect(worldTargets).toHaveLength(2); expect(worldTargets.every(target => !target.disabledReason)).toBe(true);
+    const legacy = { ...document, sketches: { ...document.sketches, [f.target.id]: { ...document.sketches[f.target.id], projections: [{ id: "legacy", sourceFeatureId: f.feature.id, role: "endCapPerimeter" as const, construction: false, members: [] }] } } };
+    const legacyTargets = projectionBoundaryTargets(legacy, f.target.id, f.proof, f.choices, "legacy");
+    expect(legacyTargets).toHaveLength(2); expect(legacyTargets.every(target => !target.disabledReason)).toBe(true);
+    const missing = projectionBoundaryTargets(legacy, f.target.id, f.proof, f.choices, "removed");
+    expect(missing).toHaveLength(2); expect(missing.every(target => !target.curves.length && target.disabledReason?.includes("link was lost"))).toBe(true);
   });
   it("reserves display capacity for compatible sources before incompatible diagnostic outlines", () => {
     const f = fixture("XY", "positive", true);

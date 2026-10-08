@@ -1,4 +1,4 @@
-export const CURRENT_SCHEMA_VERSION = 16;
+export const CURRENT_SCHEMA_VERSION = 17;
 
 export type UnitSystem = "metric" | "imperial";
 
@@ -99,6 +99,8 @@ export interface Sketch {
 }
 
 export interface SketchProjection {
+  /** Schema 17 links follow placed geometry; absence preserves legacy design associations. */
+  coordinateSpace?: "world";
   id: string;
   sourceFeatureId: string;
   role: "startCapPerimeter" | "endCapPerimeter";
