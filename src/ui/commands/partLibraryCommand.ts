@@ -7,7 +7,11 @@ import type { RebuildResult } from "../../cad/worker/workerProtocol";
 import { previewModeling } from "../../cad/worker/extrudePreviewClient";
 import { appendProject } from "../../persistence/appendProject";
 import { importProjectText } from "../../persistence/projectCodec";
-import { clearLibraryParts, createLibraryEntry, decodeLibraryEntry, deleteDamagedLibraryPart, deleteLibraryPart, listLibrarySnapshot, partLibraryName, saveLibraryPart } from "../../persistence/partLibrary";
+import { clearLibraryParts, createLibraryEntry, decodeLibraryEntry, deleteDamagedLibraryPart, deleteLibraryPart, importLibraryCopies, listLibrarySnapshot, partLibraryName, readLibraryBackup, saveLibraryPart } from "../../persistence/partLibrary";
+import { exportLibraryPackText, importLibraryPackFile } from "../../persistence/libraryPackFile";
+import { LIBRARY_PACK_EXTENSION, LIBRARY_PACK_MIME_TYPE } from "../../persistence/partLibraryPack";
+import { downloadArrayBuffer, PROJECT_FILE_EXTENSION, PROJECT_FILE_MIME_TYPE } from "../../persistence/exportProject";
+import { safeFilename } from "../../persistence/filenames";
 import { libraryThumbnail } from "../../persistence/partLibraryThumbnail";
 import { usePartLibrary, type PartLibraryFrame } from "./partLibraryState";
 import { interactionDraftBusy } from "./interactionDraftState";
@@ -65,9 +69,68 @@ export function cancelPartLibrary() {
   storageController?.abort(); storageController = undefined;
   usePartLibrary.setState({ frame: undefined });
 }
+export function downloadSavedLibraryPart(id: string) {
+  const frame = usePartLibrary.getState().frame, entry = frame?.entries.find(item => item.id === id);
+  if (!frame || !entry || frame.busy || frame.placement || frame.transfer || !libraryFrameCurrent(frame)) return;
+  try {
+    const valid = decodeLibraryEntry(entry);
+    downloadArrayBuffer(new TextEncoder().encode(valid.text).buffer, safeFilename(valid.name, PROJECT_FILE_EXTENSION), PROJECT_FILE_MIME_TYPE);
+    usePartLibrary.setState({ frame: { ...frame, notice: `Downloaded editable project for ${valid.name}. The open project is unchanged.`, error: undefined } });
+  } catch (error) { showError(frame, error); }
+}
+export async function downloadLibraryBackup() {
+  const current = usePartLibrary.getState().frame;
+  if (!current || current.busy || current.placement || current.transfer || !libraryFrameCurrent(current)) return;
+  const frame = { ...current, busy: true, error: undefined, notice: undefined };
+  usePartLibrary.setState({ frame });
+  const operation = storageOperation(frame);
+  try {
+    const entries = await readLibraryBackup(operation.signal);
+    const text = await exportLibraryPackText(entries, operation.signal);
+    if (usePartLibrary.getState().frame !== frame) return;
+    if (operation.signal.aborted || !libraryFrameCurrent(frame)) throw new Error("Project changed while preparing the backup. Reopen the library and retry.");
+    downloadArrayBuffer(new TextEncoder().encode(text).buffer, "PlainCAD-parts" + LIBRARY_PACK_EXTENSION, LIBRARY_PACK_MIME_TYPE);
+    usePartLibrary.setState({ frame: { ...frame, busy: false, notice: `Downloaded a complete backup of ${entries.length} saved parts. Store it outside this browser.` } });
+  } catch (error) { showError(frame, error); } finally { operation.finish(); }
+}
+export async function beginLibraryPackImport(file: File) {
+  const current = usePartLibrary.getState().frame;
+  if (!current || current.busy || current.placement || current.transfer || current.damaged.length || current.limited || !libraryFrameCurrent(current)) return;
+  const frame = { ...current, busy: true, error: undefined, notice: undefined, transfer: { filename: file.name.slice(0, 200) } };
+  usePartLibrary.setState({ frame });
+  const operation = storageOperation(frame);
+  try {
+    const entries = await importLibraryPackFile(file, operation.signal);
+    if (usePartLibrary.getState().frame !== frame) return;
+    if (!libraryFrameCurrent(frame) || operation.signal.aborted) throw new Error("Project changed during library pack validation. Cancel and reopen the library.");
+    usePartLibrary.setState({ frame: { ...frame, busy: false, transfer: { ...frame.transfer, entries } } });
+  } catch (error) { showError(frame, error); } finally { operation.finish(); }
+}
+export function cancelLibraryPackImport() {
+  const frame = usePartLibrary.getState().frame;
+  if (!frame?.transfer) return;
+  // Do not claim cancellation while the atomic transaction may be completing.
+  // Validation and the uncommitted preview remain cancellable.
+  if (frame.busy && frame.transfer.entries) return;
+  storageController?.abort(); storageController = undefined;
+  usePartLibrary.setState({ frame: { ...frame, busy: false, transfer: undefined, error: undefined, notice: "Cancelled library pack import. Saved copies and the open project are unchanged." } });
+}
+export async function applyLibraryPackImport() {
+  const current = usePartLibrary.getState().frame;
+  if (!current?.transfer?.entries?.length || current.busy || current.error || !libraryFrameCurrent(current)) return;
+  const pending = current.transfer.entries;
+  const frame = { ...current, busy: true, error: undefined, notice: undefined };
+  usePartLibrary.setState({ frame });
+  const operation = storageOperation(frame);
+  try {
+    const entries = await importLibraryCopies(pending, operation.signal);
+    if (usePartLibrary.getState().frame !== frame) return;
+    usePartLibrary.setState({ frame: { ...frame, entries, transfer: undefined, busy: false, notice: `Imported ${pending.length} independent saved copies. Existing names may repeat; no saved copy was overwritten. The open project is unchanged.` } });
+  } catch (error) { showError(frame, error); } finally { operation.finish(); }
+}
 export async function saveActiveLibraryPart(name: string) {
   const current = usePartLibrary.getState().frame;
-  if (!current || current.busy || current.placement) return;
+  if (!current || current.busy || current.placement || current.transfer) return;
   const frame = { ...current, busy: true, error: undefined, notice: undefined };
   usePartLibrary.setState({ frame });
   const operation = storageOperation(frame);
@@ -86,7 +149,7 @@ export async function saveActiveLibraryPart(name: string) {
 }
 export async function renameSavedLibraryPart(id: string, name: string) {
   const current = usePartLibrary.getState().frame, entry = current?.entries.find(item => item.id === id);
-  if (!current || !entry || current.busy || current.placement || !libraryFrameCurrent(current)) return;
+  if (!current || !entry || current.busy || current.placement || current.transfer || !libraryFrameCurrent(current)) return;
   const frame = { ...current, busy: true, error: undefined, notice: undefined };
   usePartLibrary.setState({ frame });
   const operation = storageOperation(frame);
@@ -98,7 +161,7 @@ export async function renameSavedLibraryPart(id: string, name: string) {
 }
 export async function recoverLibraryPart(key?: string | number) {
   const current = usePartLibrary.getState().frame;
-  if (!current || current.busy || current.placement || !libraryFrameCurrent(current) || !current.damaged.some(entry => entry.key === key)) return;
+  if (!current || current.busy || current.placement || current.transfer || !libraryFrameCurrent(current) || !current.damaged.some(entry => entry.key === key)) return;
   const frame = { ...current, busy: true, error: undefined, notice: undefined };
   usePartLibrary.setState({ frame });
   const operation = storageOperation(frame);
@@ -113,7 +176,7 @@ export async function recoverLibraryPart(key?: string | number) {
 }
 export async function resetDamagedLibrary() {
   const current = usePartLibrary.getState().frame;
-  if (!current || current.busy || current.placement || !libraryFrameCurrent(current) || (!current.damaged.length && !current.limited)) return;
+  if (!current || current.busy || current.placement || current.transfer || !libraryFrameCurrent(current) || (!current.damaged.length && !current.limited)) return;
   const frame = { ...current, busy: true, error: undefined, notice: undefined };
   usePartLibrary.setState({ frame });
   const operation = storageOperation(frame);
@@ -124,7 +187,7 @@ export async function resetDamagedLibrary() {
 }
 export async function removeSavedLibraryPart(id: string) {
   const current = usePartLibrary.getState().frame;
-  if (!current || !current.entries.some(item => item.id === id) || current.busy || current.placement || !libraryFrameCurrent(current)) return;
+  if (!current || !current.entries.some(item => item.id === id) || current.busy || current.placement || current.transfer || !libraryFrameCurrent(current)) return;
   const frame = { ...current, busy: true, error: undefined, notice: undefined };
   usePartLibrary.setState({ frame });
   const operation = storageOperation(frame);
@@ -141,7 +204,7 @@ export function assertLibraryPlacementResult(result: RebuildResult, frame: PartL
 }
 export async function beginLibraryPlacement(id: string, origin: Point3 = { x: 0, y: 0, z: 0 }) {
   const current = usePartLibrary.getState().frame;
-  if (!current || current.busy || current.placement || !libraryFrameCurrent(current)) return;
+  if (!current || current.busy || current.placement || current.transfer || !libraryFrameCurrent(current)) return;
   const rawEntry = current.entries.find(item => item.id === id);
   if (!rawEntry) return;
   let frame = current;

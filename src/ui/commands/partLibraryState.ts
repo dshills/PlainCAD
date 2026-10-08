@@ -22,6 +22,7 @@ export interface PartLibraryFrame {
   error?: string;
   notice?: string;
   placement?: LibraryPlacement;
+  transfer?: { filename: string; entries?: PartLibraryEntry[] };
 }
 /** Runtime ownership: saved entries contain only portable CAD and a bounded thumbnail. */
 export const usePartLibrary = create<{ frame?: PartLibraryFrame }>(() => ({}));

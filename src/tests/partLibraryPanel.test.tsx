@@ -6,6 +6,7 @@ import { useInspectionState } from "../state/inspectionState";
 import { useTargetScopeCapture } from "../ui/commands/targetScopeCaptureCommand";
 import { useFileJobs } from "../persistence/fileJobs";
 import * as repository from "../persistence/partLibrary";
+import * as packFiles from "../persistence/libraryPackFile";
 import { PartLibraryPanel } from "../ui/panels/PartLibraryPanel";
 import { beginPartLibrary, cancelPartLibrary, PART_LIBRARY_DRAG_TYPE, usePartLibrary } from "../ui/commands/partLibraryCommand";
 const png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9WlWv4sAAAAASUVORK5CYII=";
@@ -92,5 +93,28 @@ it("offers explicit damaged-copy recovery and requires confirmation before reset
   expect(resetButton).toBeEnabled(); fireEvent.click(resetButton);
   await waitFor(() => expect(reset).toHaveBeenCalledWith(expect.any(AbortSignal)));
   await waitFor(() => expect(screen.queryByRole("region", { name: "Recover local part library" })).toBeNull());
+  expect(useCadStore.getState().history.present).toBe(before);
+});
+
+it("offers portable backups and a cancellable import preview with explicit duplicate handling", async () => {
+  const snapshot = await repository.listLibrarySnapshot();
+  vi.spyOn(packFiles, "importLibraryPackFile").mockResolvedValue(snapshot.entries);
+  const importing = vi.spyOn(repository, "importLibraryCopies").mockResolvedValue([...snapshot.entries, { ...snapshot.entries[0], id: "newImported" }]);
+  await act(() => beginPartLibrary()); render(<PartLibraryPanel/>);
+  const before = useCadStore.getState().history.present;
+  expect(screen.getByRole("button", { name: "Download library backup" })).toBeEnabled();
+  expect(screen.getByRole("button", { name: "Download project for Saved block" })).toBeEnabled();
+  const file = new File(["{}"], "backup.pcadlib");
+  fireEvent.change(screen.getByLabelText("Import library pack"), { target: { files: [file] } });
+  await waitFor(() => expect(screen.getByRole("button", { name: "Apply library pack import" })).toBeEnabled());
+  expect(screen.getByRole("dialog", { name: "Import library pack" })).toHaveTextContent(/matching names can appear more than once/i);
+  expect(importing).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: "Cancel library pack import" }));
+  expect(screen.queryByRole("dialog")).toBeNull();
+  fireEvent.change(screen.getByLabelText("Import library pack"), { target: { files: [file] } });
+  await waitFor(() => expect(screen.getByRole("button", { name: "Apply library pack import" })).toBeEnabled());
+  fireEvent.click(screen.getByRole("button", { name: "Apply library pack import" }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  expect(screen.getAllByRole("button", { name: "Download project for Saved block" })).toHaveLength(2);
   expect(useCadStore.getState().history.present).toBe(before);
 });

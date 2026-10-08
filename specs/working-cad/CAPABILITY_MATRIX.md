@@ -2,6 +2,7 @@
 
 ## Component reuse and interoperability
 
+- **Portable part library:** Back up the complete local library as a bounded .pcadlib pack, preview/import it as independent saved copies, or download one editable .pcaddoc. Imports validate every entry and commit atomically; failures/cancellation preserve existing copies and the open project. See [library transfer](PART_LIBRARY.md).
 - **Placed-component projections:** New schema-17 links project retained native cap boundaries in world coordinates into parallel placed sketch planes. Source/target movement updates linked geometry; legacy links preserve their authored-coordinate behavior. Oblique, lost or unsupported references diagnose and block Apply. See [projection scope](SKETCH_PROJECTION.md).
 - **Component alignment:** Move component can match native endpoints, straight-edge midpoints/directions, or supported planar face planes with signed clearance. Preview/Apply saves a static rigid pose in one Undo step; curved/general boolean topology, collision avoidance and assembly joints remain unavailable. See [alignment scope](COMPONENT_ALIGNMENT.md).
 

@@ -190,3 +190,32 @@ export function deleteDamagedLibraryPart(key: string | number, signal?: AbortSig
 export function clearLibraryParts(signal?: AbortSignal): Promise<void> {
   return transaction("readwrite", (store, done) => { const request = store.clear(); request.onsuccess = () => done(undefined); }, signal);
 }
+/** Add independent copies in one transaction; a quota/validation/cancellation
+ * failure aborts every addition, without overwriting another tab's saved parts. */
+export async function importLibraryCopies(input: PartLibraryEntry[], signal?: AbortSignal): Promise<PartLibraryEntry[]> {
+  if (signal?.aborted) throw new Error("Local part operation was cancelled.");
+  if (input.length > PART_LIBRARY_LIMITS.entries) throw new Error("Library pack contains more than 50 parts.");
+  const source = input.map(entry => decodeLibraryEntry(entry));
+  assertLibraryBudget(source);
+  if (new Set(source.map(entry => entry.id)).size !== source.length) throw new Error("Library pack contains duplicate part identities.");
+  return transaction("readwrite", (store, done, fail) => readEntries(store, ({ entries }) => {
+    try {
+      const importedAt = Date.now();
+      const copies = source.map((entry, index) => ({ ...entry, id: createId("library"), savedAt: importedAt - index }));
+      if (new Set([...entries, ...copies].map(entry => entry.id)).size !== entries.length + copies.length) throw new Error("Saved part identity collided. Retry importing the pack.");
+      assertLibraryBudget([...entries, ...copies]);
+      for (const entry of copies) store.add(entry);
+      done([...entries, ...copies].sort((a, b) => b.savedAt - a.savedAt || a.id.localeCompare(b.id)));
+    } catch (error) { fail(error); }
+  }, fail), signal);
+}
+/** Strict complete export refuses damaged/partial snapshots rather than silently
+ * downloading an incomplete backup. */
+export function readLibraryBackup(signal?: AbortSignal): Promise<PartLibraryEntry[]> {
+  return transaction("readonly", (store, done, fail) => readEntries(store, ({ entries, damaged, limited }) => {
+    // readEntries already fails in strict mode; retain an explicit complete
+    // snapshot guard here if its recovery policy changes later.
+    if (damaged.length || limited) { fail(new Error("Repair damaged or partially loaded copies before downloading a complete library backup.")); return; }
+    done(entries.sort((a, b) => b.savedAt - a.savedAt || a.id.localeCompare(b.id)));
+  }, fail), signal);
+}

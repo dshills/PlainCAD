@@ -25,3 +25,17 @@
 .part-library-card[draggable="true"] { cursor: grab; }
 .part-library-card img { float: left; margin: 0 8px 8px 0; border-radius: 4px; }
 .part-library-card > button:first-of-type { clear: both; display: block; }
+.part-library-transfer {
+  padding: 20px;
+  width: min(500px, calc(100vw - 40px));
+  max-height: 80vh;
+  overflow: auto;
+  background: var(--panel, #f7f9f8);
+  color: var(--text, #203833);
+  border: 1px solid var(--border, #9aaba5);
+  border-radius: var(--radius-panel, 8px);
+}
+.part-library-transfer ul { max-height: 25vh; overflow: auto; }
+.part-library-transfer p { line-height: 1.5; }
+.part-library-transfer button { margin: 4px 8px 4px 0; }
+.part-library-transfer-actions { display: grid; gap: 4px; }

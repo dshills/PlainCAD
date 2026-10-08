@@ -23,11 +23,16 @@ const DANGEROUS_KEYS = new Set([
 ]);
 
 export function parseProjectJson(text: string): unknown {
+  return parseBoundedJson(text, PROJECT_IMPORT_LIMITS.maxBytes, "Project file");
+}
+
+/** Shared untrusted JSON boundary; callers retain their own final shape/count validation. */
+export function parseBoundedJson(text: string, maxBytes: number, label: string): unknown {
   if (
-    text.length > PROJECT_IMPORT_LIMITS.maxBytes ||
-    new TextEncoder().encode(text).byteLength > PROJECT_IMPORT_LIMITS.maxBytes
+    text.length > maxBytes ||
+    (text.length * 3 > maxBytes && new TextEncoder().encode(text).byteLength > maxBytes)
   ) {
-    throw new Error("Project file is too large.");
+    throw new Error(`${label} is too large.`);
   }
   // Bound nesting before JSON.parse's recursive reviver can exhaust the call stack.
   let depth = 0,
@@ -41,22 +46,22 @@ export function parseProjectJson(text: string): unknown {
     } else if (character === '"') quoted = true;
     else if (character === "{" || character === "[") {
       if (++depth > PROJECT_IMPORT_LIMITS.maxDepth)
-        throw new Error("Project file is nested too deeply.");
+        throw new Error(`${label} is nested too deeply.`);
     } else if (character === "}" || character === "]") depth--;
   }
   try {
     return JSON.parse(text, (key, value) => {
       if (DANGEROUS_KEYS.has(key))
-        throw new Error(`Project file contains unsafe key ${key}.`);
+        throw new Error(`${label} contains unsafe key ${key}.`);
       return value;
     });
   } catch (error) {
     if (
       error instanceof Error &&
-      error.message.startsWith("Project file contains unsafe key")
+      error.message.startsWith(`${label} contains unsafe key`)
     )
       throw error;
-    throw new Error("Project file is not valid JSON.");
+    throw new Error(`${label} is not valid JSON.`);
   }
 }
 

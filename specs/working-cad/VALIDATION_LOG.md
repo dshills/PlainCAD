@@ -198,3 +198,13 @@ The exact isolated runtime passed `npm run check:item`: type checks, 1239 unit/c
 New links retain analytical world-coordinate associations across parallel placed planes. Legacy links keep authored-coordinate semantics. Traced world-link consumer bodies may change volume during placement; independent source bodies must retain native validity, solid count and volume. Oblique, missing or unsupported references fail explicitly.
 
 Cadence: 3 completed items since the last successful full checkpoint; the full gate is due after 2 more requested changes.
+
+### Item 4: portable editable part-library backups (2026-10-08)
+
+Prism Anthropic `claude-sonnet-5-5` reviewed the complete transfer change: `9de280cb7a2bcf213348e206e570ca34`, `2d50fc33d09f9919bbd30383f5964c1b`, `99895858eee34bbc3e60b20a85439cab` and final `e07bef64ff0a26f412eaee13a4b99768`. Worker ordering, cancellation and dismissal guards were strengthened. Atomic transaction-abort regressions prove rollback rather than partial writes. The final review has no findings.
+
+The frozen independent checkout passed `npm run check:item`: type checks, all 1253 unit/component tests, build/bundle budget (largest 495.48 kB), 5 development and 14 production native smoke cases. Its temporary harness used ports 5292/5293; source/server files and all 14 owned files were compared byte-for-byte against the sequential commit checkout. All 5 additional library/transfer browser cases passed (22.5s), verifying native editable downloads, portable backup/import, independent copies, reload, original library operations and invalid-input safety. The 43 focused unit tests passed, including bounded envelope validation, quota failures and actual canceled-transaction rollback.
+
+Complete `.pcadlib` backups validate every stored entry before download; imports preview and atomically add fresh independent entries. Individual downloads remain editable `.pcaddoc` projects. Corrupt or overfilled libraries cannot silently produce partial backups. Transfer payloads preserve existing project safety checks and resource limits.
+
+Cadence: 4 completed items since the successful full checkpoint. The next requested item requires the full release gate before its commit.

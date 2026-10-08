@@ -1,0 +1,93 @@
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { createBoxTemplate } from "../templates/templates";
+import { useCadStore } from "../state/useCadStore";
+import { useInspectionState } from "../state/inspectionState";
+import { useTargetScopeCapture } from "../ui/commands/targetScopeCaptureCommand";
+import { useFileJobs } from "../persistence/fileJobs";
+import * as repository from "../persistence/partLibrary";
+import * as files from "../persistence/libraryPackFile";
+import * as downloads from "../persistence/exportProject";
+import { decodeLibraryPack, serializeLibraryPack } from "../persistence/partLibraryPack";
+import { applyLibraryPackImport, beginLibraryPackImport, beginPartLibrary, cancelLibraryPackImport, cancelPartLibrary, downloadLibraryBackup, downloadSavedLibraryPart, usePartLibrary } from "../ui/commands/partLibraryCommand";
+const png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9WlWv4sAAAAASUVORK5CYII=";
+let entry: repository.PartLibraryEntry;
+const file = new File(["{}"], "parts.pcadlib");
+beforeEach(() => {
+  cancelPartLibrary(); useInspectionState.setState({ picking: false }); useTargetScopeCapture.setState({ busy: false }); useFileJobs.getState().cancel();
+  const source = createBoxTemplate(); useCadStore.getState().setDocument(source);
+  entry = repository.createLibraryEntry(source, source.rootComponentId, "Transfer block", png);
+  vi.spyOn(repository, "listLibrarySnapshot").mockResolvedValue({ entries: [entry], damaged: [], limited: false });
+  vi.spyOn(repository, "readLibraryBackup").mockResolvedValue([entry]);
+  vi.spyOn(repository, "importLibraryCopies").mockResolvedValue([entry, { ...entry, id: "newCopy" }]);
+  vi.spyOn(files, "importLibraryPackFile").mockResolvedValue([entry]);
+  vi.spyOn(files, "exportLibraryPackText").mockImplementation(async entries => serializeLibraryPack(entries));
+  vi.spyOn(downloads, "downloadArrayBuffer").mockImplementation(() => undefined);
+});
+afterEach(() => { cancelPartLibrary(); vi.restoreAllMocks(); useCadStore.setState(useCadStore.getInitialState(), true); });
+it("downloads a complete authoritative backup and individual portable project without altering history", async () => {
+  await beginPartLibrary(); const document = useCadStore.getState().history.present;
+  downloadSavedLibraryPart(entry.id);
+  expect(downloads.downloadArrayBuffer).toHaveBeenCalledWith(expect.objectContaining({ byteLength: expect.any(Number) }), "Transfer_block.pcaddoc", "application/vnd.plaincad.project+json");
+  expect(new TextDecoder().decode(vi.mocked(downloads.downloadArrayBuffer).mock.calls[0][0])).toBe(entry.text);
+  await downloadLibraryBackup();
+  expect(repository.readLibraryBackup).toHaveBeenCalledWith(expect.any(AbortSignal));
+  const backup = vi.mocked(downloads.downloadArrayBuffer).mock.calls[1];
+  expect(backup[1]).toBe("PlainCAD-parts.pcadlib"); expect(decodeLibraryPack(new TextDecoder().decode(backup[0]))).toEqual([entry]);
+  expect(useCadStore.getState().history.present).toBe(document); expect(useCadStore.getState().history.past).toHaveLength(0);
+});
+it("previews, cancels, then atomically applies copies without replacing the open document", async () => {
+  await beginPartLibrary(); const document = useCadStore.getState().history.present;
+  await beginLibraryPackImport(file);
+  expect(usePartLibrary.getState().frame?.transfer?.entries).toEqual([entry]); expect(repository.importLibraryCopies).not.toHaveBeenCalled();
+  cancelLibraryPackImport(); expect(usePartLibrary.getState().frame?.transfer).toBeUndefined(); expect(usePartLibrary.getState().frame?.entries).toEqual([entry]);
+  await beginLibraryPackImport(file); await applyLibraryPackImport();
+  expect(repository.importLibraryCopies).toHaveBeenCalledWith([entry], expect.any(AbortSignal));
+  expect(usePartLibrary.getState().frame?.entries).toHaveLength(2); expect(usePartLibrary.getState().frame?.transfer).toBeUndefined();
+  expect(useCadStore.getState().history.present).toBe(document); expect(useCadStore.getState().history.past).toHaveLength(0);
+});
+it("shows parse/quota failures, keeps saved entries and permits cancellation", async () => {
+  await beginPartLibrary(); vi.mocked(files.importLibraryPackFile).mockRejectedValueOnce(new Error("Library pack contains unsafe key __proto__."));
+  await beginLibraryPackImport(file); expect(usePartLibrary.getState().frame?.error).toMatch(/unsafe key/);
+  await applyLibraryPackImport(); expect(repository.importLibraryCopies).not.toHaveBeenCalled();
+  cancelLibraryPackImport(); await beginLibraryPackImport(file);
+  vi.mocked(repository.importLibraryCopies).mockRejectedValue(new Error("Browser storage is full."));
+  await applyLibraryPackImport(); expect(usePartLibrary.getState().frame?.error).toMatch(/storage is full/); expect(usePartLibrary.getState().frame?.entries).toEqual([entry]);
+  cancelLibraryPackImport(); expect(usePartLibrary.getState().frame?.busy).toBe(false);
+});
+it("discards late file validation after cancellation and aborts when project identity changes", async () => {
+  let resolve!: (value: repository.PartLibraryEntry[]) => void;
+  let signal: AbortSignal | undefined;
+  vi.mocked(files.importLibraryPackFile).mockImplementation((_file, receivedSignal) => { signal = receivedSignal; return new Promise(done => { resolve = done; }); });
+  await beginPartLibrary(); const pending = beginLibraryPackImport(file);
+  await vi.waitFor(() => expect(files.importLibraryPackFile).toHaveBeenCalledTimes(1));
+  cancelLibraryPackImport(); resolve([entry]); await pending;
+  expect(usePartLibrary.getState().frame?.transfer).toBeUndefined(); expect(usePartLibrary.getState().frame?.entries).toEqual([entry]);
+  const next = beginLibraryPackImport(file);
+  await vi.waitFor(() => expect(files.importLibraryPackFile).toHaveBeenCalledTimes(2));
+  useCadStore.getState().updateDocument(document => ({ ...document, name: "Changed" }));
+  expect(signal?.aborted).toBe(true); resolve([entry]); await next;
+  expect(usePartLibrary.getState().frame?.error).toMatch(/Project changed/); await applyLibraryPackImport(); expect(repository.importLibraryCopies).not.toHaveBeenCalled();
+});
+it("refuses partial/damaged backups and exports nothing after cancellation or project change", async () => {
+  await beginPartLibrary(); vi.mocked(repository.readLibraryBackup).mockRejectedValueOnce(new Error("The library contains a damaged saved copy."));
+  await downloadLibraryBackup(); expect(usePartLibrary.getState().frame?.error).toMatch(/damaged saved copy/); expect(downloads.downloadArrayBuffer).not.toHaveBeenCalled();
+  let resolve!: (value: repository.PartLibraryEntry[]) => void;
+  vi.mocked(repository.readLibraryBackup).mockImplementation(() => new Promise(done => { resolve = done; }));
+  const pending = downloadLibraryBackup(); cancelPartLibrary(); resolve([entry]); await pending;
+  expect(downloads.downloadArrayBuffer).not.toHaveBeenCalled();
+});
+
+it("keeps atomic Apply busy until it settles instead of claiming a cancellation during commit", async () => {
+  let resolve!: (value: repository.PartLibraryEntry[]) => void;
+  vi.mocked(repository.importLibraryCopies).mockImplementation(() => new Promise(done => { resolve = done; }));
+  await beginPartLibrary(); await beginLibraryPackImport(file);
+  const pending = applyLibraryPackImport();
+  await vi.waitFor(() => expect(repository.importLibraryCopies).toHaveBeenCalled());
+  cancelLibraryPackImport();
+  expect(usePartLibrary.getState().frame?.busy).toBe(true);
+  expect(usePartLibrary.getState().frame?.transfer?.entries).toEqual([entry]);
+  resolve([entry, { ...entry, id: "committedCopy" }]); await pending;
+  expect(usePartLibrary.getState().frame?.busy).toBe(false);
+  expect(usePartLibrary.getState().frame?.entries).toHaveLength(2);
+  expect(usePartLibrary.getState().frame?.notice).toMatch(/Imported 1 independent/);
+});
