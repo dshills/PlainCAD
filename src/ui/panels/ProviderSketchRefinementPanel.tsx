@@ -1,3 +1,4 @@
+import { aiHistoryIntent, handleAiHistoryPrompt } from "../commands/aiHistoryPrompt";
 import { canReviewAiSketchCanvasPreview, clearAiSketchCanvasPreview, publishAiSketchCanvasPreview, useAiSketchCanvasPreview } from "../commands/aiSketchCanvasPreview";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchAiProviders } from "../../ai/client";
@@ -108,6 +109,13 @@ export function ProviderSketchRefinementPanel({ onCancelReady }: { onCancelReady
     }
   }, [document, session, component, active, selection, fileBusy, sharedFrame]);
   const generate = async () => {
+    if (busy || fileBusy) return;
+    if (aiHistoryIntent(prompt)) {
+      cancel(); setError("");
+      const outcome = handleAiHistoryPrompt(prompt);
+      setStatus(outcome?.message ?? "AI history is unavailable.");
+      return;
+    }
     if (busy || fileBusy || !kernelReady || !consent || !consentFrame.current || !currentSketchRefinementFrame(consentFrame.current) || !configuration?.available || !prompt.trim() || !context.value || requestReview.error) return;
     cancel(); setError(""); setAnswer(undefined);
     const abort = new AbortController(); controller.current = abort;
@@ -191,7 +199,7 @@ export function ProviderSketchRefinementPanel({ onCancelReady }: { onCancelReady
       <label>Provider sketch request<textarea ref={promptInput} value={prompt} rows={3} maxLength={AI_LIMITS.promptCharacters} placeholder="Make these two selected lines perpendicular"
         onChange={(event) => { cancel("Request changed. Generate a fresh preview before Apply."); setError(""); setPrompt(event.target.value); }}
         onKeyDown={(event) => { if ((event.ctrlKey || event.metaKey) && event.key === "Enter") { event.preventDefault(); void generate(); } }} /></label>
-      <button type="button" disabled={busy || fileBusy || !kernelReady || !consent || !configuration?.available || !context.value || Boolean(requestReview.error) || !prompt.trim()} onClick={() => void generate()}>Generate AI sketch preview</button>
+      <button type="button" disabled={busy || fileBusy || !prompt.trim() || (!aiHistoryIntent(prompt) && (fileBusy || !kernelReady || !consent || !configuration?.available || !context.value || Boolean(requestReview.error)))} onClick={() => void generate()}>Generate AI sketch preview</button>
       <button type="button" onClick={() => { cancel(); setError(""); promptInput.current?.focus(); }}>Cancel AI sketch refinement</button>
       <button type="button" onClick={reset}>Start new sketch conversation</button>
       {preview ? <button type="button" disabled={busy || canvasProposal?.frame !== preview.frame || !canReviewAiSketchCanvasPreview(preview.frame, preview.solved) || sharedFrame !== preview.frame} onClick={() => {

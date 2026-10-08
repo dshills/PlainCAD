@@ -45,6 +45,12 @@ vi.mock("../cad/worker/extrudePreviewClient", () => ({
 vi.mock("../viewer/ExtrudePreview", () => ({
   ExtrudePreview: () => <div>Preview display</div>,
 }));
+// Controlled accepted source; native geometry is verified by the browser suites.
+function acceptSource() {
+  const state = useCadStore.getState();
+  useCadStore.setState({ rebuild: { status: "succeeded", kernelReady: true,
+    result: { documentId: state.history.present.id, success: true, meshes: [], bodies: [], errors: [], warnings: [], durationMs: 0 } } });
+}
 beforeEach(() => {
   useOperationDrop.setState({ frame: undefined });
   useExtrudeDraft.setState({ draft: undefined });
@@ -52,9 +58,7 @@ beforeEach(() => {
   useGeometryHighlight.setState({ highlight: undefined });
   useCadStore.setState(useCadStore.getInitialState(), true);
   useCadStore.getState().setDocument(createEmptyDocument());
-  useCadStore.setState({
-    rebuild: { ...useCadStore.getState().rebuild, kernelReady: true },
-  });
+  acceptSource();
   useAiDrawer.setState({ open: true });
   mocks.providers.mockResolvedValue(
     ["anthropic", "openai", "google"].map((id) => ({
@@ -210,6 +214,7 @@ function selectedPlate() {
     id: feature.id,
     documentId: staged.document.id,
   });
+  acceptSource();
   return { staged, feature };
 }
 it("scope buttons clarify an existing-part request before any provider call", async () => {
@@ -280,6 +285,7 @@ it("asks for a dimension when thickness is locked and previews only the user's c
       [thickness.name]: { ...thickness, locked: true },
     },
   }));
+  acceptSource();
   const width = Object.values(staged.document.parameters).find((p) =>
     p.name.endsWith("_width"),
   )!;
@@ -446,6 +452,7 @@ it("keeps bounded dimension choice and an actionable message when related-geomet
       [thickness.name]: { ...thickness, locked: true },
     },
   }));
+  acceptSource();
   const trace = vi
     .spyOn(clarificationTargets, "aiClarificationTargets")
     .mockImplementation(() => {
@@ -560,4 +567,19 @@ it("clears read-only AI hints and disables generation throughout an operation pi
   expect(useCadStore.getState().history).toBe(state.history);
   expect(mocks.request).not.toHaveBeenCalled();
   expect(mocks.preview).not.toHaveBeenCalled();
+});
+
+it("waits for the current accepted source before generating a new native proposal", async () => {
+  render(<AiDrawer />);
+  fireEvent.change(screen.getByLabelText("What would you like to make?"), { target: { value: "Make a plate" } });
+  await waitFor(() => expect(screen.getByRole("button", { name: "Generate preview" })).toBeEnabled());
+  act(() => useCadStore.setState({ rebuild: { ...useCadStore.getState().rebuild, status: "queued" } }));
+  const generate = screen.getByRole("button", { name: "Generate preview" });
+  expect(generate).toBeDisabled();
+  expect(screen.getByLabelText("AI source readiness")).toHaveTextContent("Waiting for the current native rebuild");
+  fireEvent.keyDown(screen.getByLabelText("What would you like to make?"), { key: "Enter", ctrlKey: true });
+  expect(mocks.request).not.toHaveBeenCalled();
+  act(() => useCadStore.setState({ rebuild: { ...useCadStore.getState().rebuild, status: "succeeded" } }));
+  expect(generate).toBeEnabled();
+  expect(screen.queryByLabelText("AI source readiness")).toBeNull();
 });

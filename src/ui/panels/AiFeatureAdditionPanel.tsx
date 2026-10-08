@@ -1,3 +1,4 @@
+import { aiHistoryIntent, handleAiHistoryPrompt } from "../commands/aiHistoryPrompt";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fetchAiProviders } from "../../ai/client";
 import { prepareAiFeatureAddRequest, requestAiFeatureAddProposal } from "../../ai/featureAddAiClient";
@@ -73,6 +74,13 @@ export function AiFeatureAdditionPanel({ active = true, targetFaceId }: { active
     }
   }, [cadDocument, session, component, rebuild, selection, shared, fileBusy, enablement.editProject, viewerSession, hiddenBodies, hiddenComponents]);
   const generate = async () => {
+    if (!active || busy || fileBusy) return;
+    if (aiHistoryIntent(prompt)) {
+      cancel(); setError("");
+      const outcome = handleAiHistoryPrompt(prompt);
+      setStatus(outcome?.message ?? "AI history is unavailable.");
+      return;
+    }
     const frame = consentFrame.current;
     if (!active || busy || fileBusy || !consent || !frame || !currentAiFeatureAddition(frame) || !configuration?.available || !context.value || !budget.value || budget.error) return;
     cancel(); setError(""); setAnswer(undefined);
@@ -121,7 +129,7 @@ export function AiFeatureAdditionPanel({ active = true, targetFaceId }: { active
       }} />Allow sending the selected face's local bounds, body/edge IDs, project parameter names and expressions, and recent conversation to the selected AI provider</label>
       <details><summary>Review feature data sent to the provider</summary><p>No project file, full geometry, meshes or credentials. Maximum request: 32 KB.</p>{budget.value || context.value ? <pre aria-label="Bounded feature context" style={{ maxHeight: "220px", overflow: "auto", whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{JSON.stringify(budget.value ?? context.value, null, 2)}</pre> : null}</details>
       <label>Feature request<textarea ref={input} rows={3} value={prompt} maxLength={AI_LIMITS.promptCharacters} placeholder="Add four 3 mm mounting holes at local coordinates…" onChange={(event) => { cancel("Request changed. Generate a fresh preview."); setPrompt(event.target.value); setError(""); }} onKeyDown={(event) => { if ((event.ctrlKey || event.metaKey) && event.key === "Enter") { event.preventDefault(); void generate(); } }} /></label>
-      <button type="button" disabled={busy || !consent || !configuration?.available || !budget.value || Boolean(budget.error) || fileBusy} onClick={() => void generate()}>Generate AI feature preview</button>
+      <button type="button" disabled={busy || fileBusy || !prompt.trim() || (!aiHistoryIntent(prompt) && (!consent || !configuration?.available || !budget.value || Boolean(budget.error)))} onClick={() => void generate()}>Generate AI feature preview</button>
       <button type="button" onClick={() => { cancel(); setError(""); input.current?.focus(); }}>Cancel AI feature proposal</button>
       <button type="button" onClick={reset}>Start new feature conversation</button>
       {preview ? <button type="button" disabled={busy || canvasPreview !== preview.canvasPreview || !currentAiCanvasPreview(useCadStore.getState()) || !currentAiFeatureAddition(preview.frame) || shared !== preview.frame} onClick={() => {

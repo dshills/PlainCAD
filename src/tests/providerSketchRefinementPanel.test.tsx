@@ -77,6 +77,19 @@ it("keeps local refinement default, and requires explicit provider context conse
   act(() => useCadStore.getState().undo());
   expect(useCadStore.getState().history.present).toBe(original);
 });
+
+it("handles local history intent before provider consent without changing an active sketch", async () => {
+  mocks.providers.mockResolvedValue([]);
+  render(<ProviderSketchRefinementPanel />);
+  const before = useCadStore.getState().history;
+  fireEvent.change(screen.getByLabelText("Provider sketch request"), { target: { value: "undo that" } });
+  expect(screen.getByRole("button", { name: "Generate AI sketch preview" })).toBeEnabled();
+  fireEvent.click(screen.getByRole("button", { name: "Generate AI sketch preview" }));
+  await waitFor(() => expect(screen.getByLabelText("Provider sketch refinement status")).toHaveTextContent("The latest AI change cannot be"));
+  expect(mocks.request).not.toHaveBeenCalled();
+  expect(mocks.preview).not.toHaveBeenCalled();
+  expect(useCadStore.getState().history).toBe(before);
+});
 it("shows clarification without Apply or worker calls, and carries bounded complete follow-up turns", async () => {
   mocks.request.mockResolvedValueOnce({ proposal: { summary: "Which width do you want?", warnings: [], actions: [] } }).mockResolvedValueOnce({ proposal: resize });
   render(<ProviderSketchRefinementPanel />); await allow();

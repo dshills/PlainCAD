@@ -18,6 +18,7 @@ import { documentAtFeature } from "../../cad/document/featureStage";
 import { previewModeling } from "../../cad/worker/extrudePreviewClient";
 import { assertNativeExtrudePreview, useExtrudeDraft } from "./extrudeCommand";
 import { assertNativeHolePreview, useHoleDraft } from "./holeCommand";
+import { recordAiHistoryChange } from "./aiHistoryState";
 export type AiStaged = ReturnType<typeof buildAiPlan> & {
   changes?: Array<{ name: string; before: string; after: string }>;
   editedFeature?: AiEditableFeature;
@@ -160,6 +161,7 @@ export function applyAiPlan(
     throw new Error(
       useCadStore.getState().fileError || "AI component could not be applied.",
     );
+  recordAiHistoryChange(frame.document, frame.session, staged.editedFeature ? "Edit feature" : staged.changes?.length ? "Edit component parameters" : "Create component");
   state.activateComponent(staged.componentId);
   const featureId = staged.featureIds.at(-1);
   if (featureId)

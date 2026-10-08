@@ -1,3 +1,5 @@
+import { aiHistoryIntent, handleAiHistoryPrompt } from "../commands/aiHistoryPrompt";
+import { AiCanvasHistoryControls } from "./AiCanvasHistoryControls";
 import { useSolidDimensionEdit } from "../commands/solidDimensionCommand";
 import { SketchRefinementPanel } from "./SketchRefinementPanel";
 import { useHoleDraft } from "../commands/holeCommand";
@@ -84,6 +86,7 @@ export function AiDrawer({ embedded = false }: { embedded?: boolean }) {
   const featureActive = Boolean(open && !canvas && (mode === "features" || (mode === "auto" && target.kind === "face")));
   useEffect(() => { if (!open) clearAiFacePicking(); }, [open]);
   return <div className="ai-mode-shell">
+    {open ? <AiCanvasHistoryControls /> : null}
     {open && !canvas ? <div role="group" aria-label="AI modeling mode" className="ai-actions" title="Descriptions and conversations are kept when switching modes. Pending previews are canceled.">
       <button type="button" aria-pressed={!featureActive} onClick={() => setMode("ordinary")}>Describe or edit a part</button>
       <button type="button" aria-pressed={featureActive} onClick={() => setMode("features")}>Add features to this part</button>
@@ -419,21 +422,15 @@ function StandardAiDrawer({ embedded = false, active = true, target, followVersi
       cancel("The native canvas preview closed. Generate a fresh preview before Apply.");
   }, [proposal, canvasPreview, cancel]);
   const current = proposal && currentAiFrame(proposal.frame) && canvasPreview === proposal.canvasPreview && Boolean(currentAiCanvasPreview(useCadStore.getState()));
-  const canGenerate =
-    !busy &&
-    !fileBusy &&
-    !canvasActive &&
-    !operationActive &&
-    kernelReady &&
-    Boolean(prompt.trim()) &&
-    prompt.length <= AI_LIMITS.promptCharacters &&
-    (Boolean(intent.localPlan || intent.clarification) ||
-      (/^[A-Za-z0-9._-]{1,100}$/.test(model) &&
-        !configError &&
-        !conversation.error &&
-        providers.some((p) => p.id === provider && p.available))) &&
-    !editing.error &&
-    (task === "create" || Boolean(editing.context?.parameters.length));
+  const nativeSourceReady = rebuildStatus === "succeeded" && rebuildResult?.success && rebuildResult.documentId === document.id;
+  const canGenerate = !busy && !fileBusy && Boolean(prompt.trim()) &&
+    (Boolean(aiHistoryIntent(prompt)) || (
+      nativeSourceReady && !canvasActive && !operationActive && kernelReady &&
+      prompt.length <= AI_LIMITS.promptCharacters &&
+      (Boolean(intent.localPlan || intent.clarification) ||
+        (/^[A-Za-z0-9._-]{1,100}$/.test(model) && !configError && !conversation.error &&
+          providers.some((p) => p.id === provider && p.available))) &&
+      !editing.error && (task === "create" || Boolean(editing.context?.parameters.length))));
   useEffect(() => {
     if (!open) {
       if (controller.current || frame.current)
@@ -528,6 +525,12 @@ function StandardAiDrawer({ embedded = false, active = true, target, followVersi
   };
   const generate = async () => {
     if (!canGenerate) return;
+    if (aiHistoryIntent(prompt)) {
+      cancel(); setError("");
+      const outcome = handleAiHistoryPrompt(prompt);
+      setStatus(outcome?.message ?? "AI history is unavailable.");
+      return;
+    }
     if (task === "feature" && !selectedFeatureId) {
       setError("Select a feature before generating dimension edits.");
       return;
@@ -834,6 +837,9 @@ function StandardAiDrawer({ embedded = false, active = true, target, followVersi
           }}
         >
           <div className="ai-composer">
+            {!nativeSourceReady && !aiHistoryIntent(prompt) ? <p className="muted" aria-label="AI source readiness">
+              {rebuildStatus === "failed" ? "Repair the current model’s diagnostics before generating a native AI preview." : "Waiting for the current native rebuild before generating a preview."}
+            </p> : null}
               {embedded ? <div className="ai-actions" aria-label="AI selected target">
                 <span>Target: <strong>{automatic ? target.label : task === "create" ? "New part" : task === "feature" ? editing.context?.feature?.name ?? "Selected feature" : document.components[componentId]?.name}</strong>{automatic ? " · follows selection" : " · explicit scope"}</span>
                 <button type="button" disabled={busy || !commandEnablement.measurementPicking} onClick={() => void runCommand("ai.pickFace")}>Choose face on model</button>

@@ -1,3 +1,4 @@
+import { aiHistoryIntent, handleAiHistoryPrompt } from "../commands/aiHistoryPrompt";
 import { canReviewAiSketchCanvasPreview, clearAiSketchCanvasPreview, publishAiSketchCanvasPreview, useAiSketchCanvasPreview } from "../commands/aiSketchCanvasPreview";
 import { ProviderSketchRefinementPanel } from "./ProviderSketchRefinementPanel";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -39,6 +40,13 @@ export function SketchRefinementPanel() {
   }, [document, session, component, busyFile, active, selection]);
   useEffect(() => () => { controller.current?.abort(); controller.current = undefined; if (request.current) clearAiSketchCanvasPreview(request.current); request.current = undefined; useSketchRefinement.setState({ frame: undefined }); }, []);
   const preview = async () => {
+    if (busy || busyFile) return;
+    if (aiHistoryIntent(prompt)) {
+      cancel(); setError("");
+      const outcome = handleAiHistoryPrompt(prompt);
+      setStatus(outcome?.message ?? "AI history is unavailable.");
+      return;
+    }
     if (busy || !kernelReady || busyFile || !prompt.trim()) return;
     cancel(); setError("");
     let abort: AbortController | undefined;
@@ -100,7 +108,7 @@ export function SketchRefinementPanel() {
         onKeyDown={(event) => { if ((event.ctrlKey || event.metaKey) && event.key === "Enter") { event.preventDefault(); void preview(); } }} /></label>
       <p>Select one rectangle’s edges if there are multiple regions. For horizontal/vertical relations, select only the lines to change.</p>
       <p>Existing parameter bindings are preserved. Unsupported or conflicting requests produce a diagnostic; no provider request is sent.</p>
-      <button type="button" disabled={busy || busyFile || !kernelReady || !prompt.trim()} onClick={() => void preview()}>Preview sketch refinement</button>
+      <button type="button" disabled={busy || busyFile || !prompt.trim() || (!aiHistoryIntent(prompt) && (busyFile || !kernelReady))} onClick={() => void preview()}>Preview sketch refinement</button>
       <button type="button" onClick={() => { cancel(); setError(""); }}>Cancel refinement</button>
       <button type="button" disabled={!proposal || busy || canvasProposal?.frame !== proposal.frame || !canReviewAiSketchCanvasPreview(proposal.frame, proposal.solved)} onClick={() => {
         if (!proposal) return;

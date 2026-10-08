@@ -339,6 +339,8 @@ The canvas assistant follows one selected part, supported feature, sketch, or pl
 
 AI part proposals appear as real native geometry in the existing 3D viewport. **Before model** and **After model** keep the same camera; new and changed bodies are highlighted. Sketch proposals appear in cyan directly over the drawing canvas with their own Before/After controls. Cancel restores the accepted model. Proposal geometry is temporary; exports and model picking require Apply or Cancel first. See [canvas proposal behavior](specs/working-cad/AI_CANVAS_PREVIEW.md).
 
+Each successful AI Apply creates one ordinary project history step. Canvas controls offer project Undo/Redo and a guarded latest-AI action. Exact requests such as **undo that** and **redo that** run locally without provider calls or new sharing consent. An intervening manual edit blocks the guarded AI action and explains how to use project history; opening another project clears AI action provenance.
+
 Existing-part feature additions preserve existing IDs, parameters, and features.
 Each proposed operation and the complete project must pass private native checks
 before **Apply AI feature plan** creates one Undo edit. Mode changes preserve

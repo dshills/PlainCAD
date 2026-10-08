@@ -93,6 +93,7 @@ import { moveTimelineItem, planTimelineMove } from "../../cad/document/timelineE
 import { beginHoleCreation, beginHoleEditing, editableHole, holeCreationContext, useHoleDraft } from "./holeCommand";
 import { prepareProjectDrop, replaceWithDroppedProject, saveAndReplaceDroppedProject } from "./projectDropCommand";
 import { focusRepairIssue, addRepairClosingEdge, type RepairContext } from "./repairCommand";
+import { canUndoAiChange, canRedoAiChange, type AiHistoryTransaction } from "./aiHistoryState";
 import { beginAiFacePicking, clearAiFacePicking } from "../../state/aiFacePicking";
 import { currentAiCanvasPreview, clearAiCanvasPreview } from "../../state/aiCanvasPreview";
 
@@ -110,6 +111,7 @@ async function exportCurrentPng(scope: "project" | "body" | "sketch") {
 }
 
 export interface CommandContext {
+  aiHistory?: AiHistoryTransaction;
   canvasTarget?: CanvasActionTarget;
   linkedSketchTarget?: LinkedSketchContext;
   dimension?: SolidDimension;
@@ -170,6 +172,8 @@ export interface CommandEnablement {
   finishSketch: boolean;
   undo: boolean;
   redo: boolean;
+  undoAiChange: boolean;
+  redoAiChange: boolean;
   saveOrExport: boolean;
   exportStl: boolean;
   exportStep: boolean;
@@ -250,6 +254,8 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
     restoreNamedView: Boolean(state.history.present.viewState?.namedViews?.length),
     undo: !transientPickerActive && state.history.past.length > 0,
     redo: !transientPickerActive && state.history.future.length > 0,
+    undoAiChange: !transientPickerActive && !guidedHoleStartBlocked && !scopeCaptureBusy && canUndoAiChange(state),
+    redoAiChange: !transientPickerActive && !guidedHoleStartBlocked && !scopeCaptureBusy && canRedoAiChange(state),
     exportStl: !aiPreviewActive && canExportStl(state) && !state.fileBusy && !operationBusy && !refinementBusy,
     exportStep: !aiPreviewActive && canOpenStepExport(state) && !operationBusy && !refinementBusy,
     exportSelectedBody: !aiPreviewActive && canExportStl(state) && !state.fileBusy && !operationBusy && !refinementBusy && Boolean(selectedExportBody(state)),
@@ -572,6 +578,26 @@ export const commands: CadCommand[] = [
     label: "Undo",
     enablementKey: "undo",
     run: () => { clearAiCanvasPreview(); useCadStore.getState().undo(); },
+  },
+  {
+    id: "ai.undoChange",
+    label: "Undo latest AI change",
+    description: "Undo the last applied AI proposal only while it is the latest project action.",
+    enablementKey: "undoAiChange",
+    run: (context) => {
+      const state = useCadStore.getState();
+      if (canUndoAiChange(state, context.aiHistory)) { clearAiCanvasPreview(); state.undo(); }
+    },
+  },
+  {
+    id: "ai.redoChange",
+    label: "Redo latest AI change",
+    description: "Redo the AI proposal only while it is the next project redo action.",
+    enablementKey: "redoAiChange",
+    run: (context) => {
+      const state = useCadStore.getState();
+      if (canRedoAiChange(state, context.aiHistory)) { clearAiCanvasPreview(); state.redo(); }
+    },
   },
   {
     id: "history.redo",

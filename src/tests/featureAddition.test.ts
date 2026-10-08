@@ -16,6 +16,14 @@ import { buildAiFeatureAddition, validateAiFeatureAddProposal, validateAiFeature
 import { prepareAiFeatureAddRequest } from "../ai/featureAddAiClient";
 import { serializeProject } from "../persistence/exportProject";
 import { parseProjectJson } from "../persistence/importSafety";
+import { useAiHistory, canUndoAiChange } from "../ui/commands/aiHistoryState";
+import { handleAiHistoryPrompt } from "../ui/commands/aiHistoryPrompt";
+import { applyAiPlan } from "../ui/commands/aiCommand";
+import { buildAiPlan } from "../ai/buildPlan";
+import { buildAiParameterEdit } from "../ai/editPlan";
+import { buildAiFeatureEdit } from "../ai/featureEditPlan";
+import { documentAtFeature } from "../cad/document/featureStage";
+import { aiPlatePlan } from "./fixtures/aiPlan";
 
 vi.mock("opencascade.js/dist/opencascade.wasm.js", async () => {
   const { readFileSync } = await import("node:fs"), { createRequire } = await import("node:module");
@@ -25,7 +33,7 @@ vi.mock("opencascade.js/dist/opencascade.wasm.js", async () => {
 });
 vi.setConfig({ testTimeout: 30000, hookTimeout: 60000 });
 beforeAll(async () => OpenCascadeKernel.initialize());
-beforeEach(() => { useCadStore.setState(useCadStore.getInitialState(), true); useViewerState.setState({ session: -1, hiddenBodyIds: [], hiddenComponentIds: [], hiddenSketchIds: [] }); cancelAiFeatureAddition(); });
+beforeEach(() => { useCadStore.setState(useCadStore.getInitialState(), true); useViewerState.setState({ session: -1, hiddenBodyIds: [], hiddenComponentIds: [], hiddenSketchIds: [] }); cancelAiFeatureAddition(); useAiHistory.setState({ transaction: undefined }); });
 function fixture(opening = false) {
   const base = createXySketch("Plate outline"), sketch = addCanvasGeometry(base, solveSketch(base, {}), "rectangle", [{ x: 0, y: 0 }, { x: 40, y: 30 }]).sketch;
   const authored = opening ? addCanvasGeometry(sketch, solveSketch(sketch, {}), "circle", [{ x: 20, y: 15 }, { x: 22, y: 15 }]).sketch : sketch;
@@ -45,6 +53,84 @@ const proposal = { summary: "Four holes and a pocket", warnings: [], actions: [
   { kind: "holes", centers: [{ x: "5mm", y: "5mm" }, { x: "35mm", y: "5mm" }, { x: "5mm", y: "25mm" }, { x: "35mm", y: "25mm" }], diameter: "holeSize", depth: "throughAll" },
   { kind: "pocket", profile: { type: "rectangle", x: "15mm", y: "10mm", width: "10mm", height: "10mm" }, depth: "2mm" },
 ] };
+it("creates a native multi-operation AI component in one undo step and restores exact geometry on redo", () => {
+  useCadStore.getState().setDocument(createEmptyDocument());
+  const state = useCadStore.getState(), base = state.history.present;
+  const plan = buildAiPlan(base, aiPlatePlan), result = rebuildDocument(plan.document);
+  const expected = 60 * 40 * 5 - Math.PI * 2 ** 2 * 5;
+  expect(result.meshes[0].geometryAssertions!.volume).toBeCloseTo(expected, 5);
+  applyAiPlan({ document: base, session: state.documentSession, componentId: state.activeComponentId }, plan, result);
+  expect(useCadStore.getState().history.past).toEqual([base]);
+  expect(useCadStore.getState().history.present.features).toHaveLength(2);
+  expect(handleAiHistoryPrompt("undo that")).toMatchObject({ changed: true });
+  expect(rebuildDocument(useCadStore.getState().history.present).meshes).toHaveLength(0);
+  expect(handleAiHistoryPrompt("redo that")).toMatchObject({ changed: true });
+  const restored = rebuildDocument(useCadStore.getState().history.present);
+  expect(restored.meshes[0].geometryAssertions).toMatchObject({ valid: true, solidCount: 1 });
+  expect(restored.meshes[0].geometryAssertions!.volume).toBeCloseTo(expected, 5);
+});
+it("applies a native two-dimension component edit as one correctly named history action", () => {
+  const original = buildAiPlan(createEmptyDocument(), aiPlatePlan);
+  useCadStore.getState().setDocument(original.document);
+  useCadStore.getState().activateComponent(original.componentId);
+  const state = useCadStore.getState(), base = state.history.present;
+  const edited = buildAiParameterEdit(base, original.componentId, {
+    name: "Larger plate", summary: "Increase width and thickness", warnings: [], steps: [],
+    parameters: [{ name: "ai_1_width", value: 72, unit: "mm" }, { name: "ai_1_thickness", value: 6, unit: "mm" }],
+  });
+  applyAiPlan({ document: base, componentId: original.componentId, session: state.documentSession }, edited, rebuildDocument(edited.document));
+  expect(useCadStore.getState().history.past).toEqual([base]);
+  expect(useAiHistory.getState().transaction?.label).toBe("Edit component parameters");
+  const volume = () => rebuildDocument(useCadStore.getState().history.present).meshes[0].geometryAssertions!.volume;
+  expect(volume()).toBeCloseTo((72 * 40 - Math.PI * 2 ** 2) * 6, 5);
+  expect(handleAiHistoryPrompt("undo that")).toMatchObject({ changed: true });
+  expect(volume()).toBeCloseTo((60 * 40 - Math.PI * 2 ** 2) * 5, 5);
+  expect(handleAiHistoryPrompt("redo that")).toMatchObject({ changed: true });
+  expect(volume()).toBeCloseTo((72 * 40 - Math.PI * 2 ** 2) * 6, 5);
+});
+it("restores native downstream cuts through one selected-feature history edit", () => {
+  const original = buildAiPlan(createEmptyDocument(), aiPlatePlan), feature = original.document.features[0];
+  useCadStore.getState().setDocument(original.document);
+  useCadStore.getState().activateComponent(original.componentId);
+  useCadStore.getState().select({ kind: "feature", id: feature.id, documentId: original.document.id });
+  const state = useCadStore.getState(), base = state.history.present;
+  const edited = buildAiFeatureEdit(base, original.componentId, feature.id, {
+    name: "Thicker extrusion", summary: "Change extrusion distance", warnings: [], steps: [],
+    parameters: [{ name: "distance", value: 8, unit: "mm" }],
+  });
+  applyAiPlan({ document: base, componentId: original.componentId, session: state.documentSession, featureId: feature.id }, edited,
+    rebuildDocument(edited.document), rebuildDocument(documentAtFeature(edited.document, feature.id, true)));
+  expect(useCadStore.getState().history.past).toEqual([base]);
+  expect(useAiHistory.getState().transaction?.label).toBe("Edit feature");
+  const volume = () => rebuildDocument(useCadStore.getState().history.present).meshes[0].geometryAssertions!.volume;
+  expect(volume()).toBeCloseTo((60 * 40 - Math.PI * 2 ** 2) * 8, 5);
+  expect(handleAiHistoryPrompt("undo that")).toMatchObject({ changed: true });
+  expect(volume()).toBeCloseTo((60 * 40 - Math.PI * 2 ** 2) * 5, 5);
+  expect(handleAiHistoryPrompt("redo that")).toMatchObject({ changed: true });
+  expect(volume()).toBeCloseTo((60 * 40 - Math.PI * 2 ** 2) * 8, 5);
+});
+it("applies several native additions as one reversible AI transaction and protects subsequent manual changes", async () => {
+  const { document, result, frame, context } = fixture();
+  const plan = buildAiFeatureAddition(document, document.rootComponentId, frame.choice, result, context, proposal);
+  useAiFeatureAddition.setState({ frame });
+  const worker = vi.spyOn(previewClient, "previewModeling").mockImplementation(async (doc) => rebuildDocument(doc));
+  try {
+    const proof = await previewAiFeatureAddition(frame, plan, new AbortController().signal);
+    applyAiFeatureAddition(frame, plan, proof.result);
+    expect(useCadStore.getState().history.past).toEqual([document]);
+    expect(useAiHistory.getState().transaction?.label).toBe("Add features");
+    expect(handleAiHistoryPrompt("undo that")).toMatchObject({ changed: true });
+    expect(rebuildDocument(useCadStore.getState().history.present).meshes[0].geometryAssertions!.volume).toBeCloseTo(12000, 5);
+    expect(handleAiHistoryPrompt("redo that")).toMatchObject({ changed: true });
+    const expected = 12000 - 4 * Math.PI * 1.5 ** 2 * 10 - 200;
+    expect(rebuildDocument(useCadStore.getState().history.present).meshes[0].geometryAssertions!.volume).toBeCloseTo(expected, 5);
+    useCadStore.getState().updateDocument((doc) => ({ ...doc, name: "Manual rename" }));
+    const manuallyEdited = useCadStore.getState().history.present;
+    expect(canUndoAiChange(useCadStore.getState())).toBe(false);
+    expect(handleAiHistoryPrompt("undo that")).toMatchObject({ changed: false });
+    expect(useCadStore.getState().history.present).toBe(manuallyEdited);
+  } finally { worker.mockRestore(); }
+});
 it("shares bounded evaluated context and preserves bindings through native multi-feature additions and parameter edits", () => {
   const { document, result, frame, context } = fixture();
   expect(context.parameters[0].value).toBe(3);

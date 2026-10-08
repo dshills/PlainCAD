@@ -13,6 +13,7 @@ import { useExtrudeDraft } from "./extrudeCommand";
 import { useHoleDraft } from "./holeCommand";
 import { useFileJobs } from "../../persistence/fileJobs";
 import { useProjectWorkflow } from "./projectWorkflowCommand";
+import { recordAiHistoryChange } from "./aiHistoryState";
 
 export interface SketchRefinementFrame {
   document: CadDocument;
@@ -81,6 +82,7 @@ export function applySketchRefinement(frame: SketchRefinementFrame, plan: Sketch
   const state = useCadStore.getState();
   state.updateDocument((document) => document === frame.document ? plan.document : document);
   if (useCadStore.getState().history.present === frame.document) throw new Error("Refinement could not be saved. Review project diagnostics.");
+  recordAiHistoryChange(frame.document, frame.session, "Refine sketch");
   validatedPreviews.delete(result);
   useSketchCanvas.setState({ selection: undefined });
   useSketchRefinement.setState({ frame: undefined });

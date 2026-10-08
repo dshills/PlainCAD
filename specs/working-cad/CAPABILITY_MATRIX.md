@@ -751,6 +751,8 @@ Apply/Cancel. Native solid proposals use the existing viewport/camera and full-p
 Node gateway in Vite development/preview; browser/project data never contain keys.
 Static deployment reports a missing AI service without changing ordinary CAD.
 
+Each successful AI Apply creates one ordinary project history step. Canvas controls offer project Undo/Redo and a guarded latest-AI action. Exact requests such as **undo that** and **redo that** run locally without provider calls or new sharing consent. An intervening manual edit blocks the guarded AI action and explains how to use project history; opening another project clears AI action provenance.
+
 AI recipes support rectangle/circle/polygon/line-arc wire and flat compound profiles, plus point
 sketches for native Hole patterns (up to 64 centers), signed origin offsets,
 distance/through-all/positive-to-face extrudes, recipe-owned unmodified cap/straight-side

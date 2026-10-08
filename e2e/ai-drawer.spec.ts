@@ -69,6 +69,9 @@ async function setup(page: Page) {
   await expect(drawer.getByLabel("AI model", { exact: true })).toHaveValue(
     "test-anthropic",
   );
+  // These recipe acceptance cases explicitly create new parts; selection-following
+  // and post-Apply editing are exercised in their dedicated native suites.
+  await drawer.getByRole("combobox", { name: "AI scope", exact: true }).selectOption("create");
   return drawer;
 }
 test("AI cap/straight-side sketches and to-face extrusion produce native geometry, follow upstream edits, and repair lost planes explicitly", async ({

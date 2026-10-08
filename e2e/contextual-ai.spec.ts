@@ -95,6 +95,9 @@ test("contextual scope, exact local feature sizing, native preview, stale select
     .getByRole("button", { name: "Open AI assistant", exact: true })
     .click();
   const drawer = page.getByRole("region", { name: "AI modeling assistant" });
+  // Explicit creation scope should ask for an edit scope. Automatic selected-feature
+  // targeting is exercised separately by the selection acceptance suite.
+  await drawer.getByRole("combobox", { name: "AI scope", exact: true }).selectOption("create");
   await drawer
     .getByLabel("What would you like to make?")
     .fill("Make this thicker to 8 mm");

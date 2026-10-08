@@ -9,10 +9,10 @@ missing or the count cannot be determined, establish a baseline with the full ga
 ## Last successful full gate
 
 - Date: 2026-10-08.
-- Change: inviting visual workbench through purposeful motion: project gallery, Saturn instrument styling, native build stories and edit confirmation, including the preceding export hub item (commit `c25a8f1`).
-- Result: type checks, 1343 unit/component tests, build/bundle budget (largest 498.48 kB), all 288 development native browser cases and all 38 production cases passed.
-- Completed items since that full gate: **1**.
-- Next full gate: after **4** more completed items.
+- Change: guarded AI canvas undo/redo, including the preceding canvas assistant, selection targeting and native proposal items.
+- Result: type checks, 1411 unit/component tests, build/bundle budget (largest 460.61 kB), all 301 development native browser cases and all 40 production cases passed.
+- Completed items since that full gate: **0**.
+- Next full gate: after **5** more completed items.
 
 ## Completed batch
 
@@ -639,3 +639,33 @@ collision was corrected with separate trace directories before successful reruns
 
 Cadence: 4 completed items since the successful full checkpoint. The next requested
 change requires the full release gate before commit.
+
+## AI canvas item 4 — guarded undo and redo (2026-10-08)
+
+Each AI Apply is one normal project-history transaction. Canvas controls expose
+ordinary project Undo/Redo and guarded latest-AI Undo/Redo; local “undo that” and
+“redo that” use the same command availability without a provider request. Exact
+session/document/history adjacency prevents undoing intervening manual changes.
+Project replacement clears runtime provenance. Keyboard requests respect busy and
+file-operation guards, including active sketches. Generation waits for a settled
+current accepted rebuild and explains pending/failed source readiness.
+
+Prism Anthropic `claude-sonnet-5-5` reviewed the final 26-file integration
+(`674c37dc2ea861829a19b22602612cfd`), complete coverage: no high findings, one medium
+and five low notes assessed against source and native tests. The medium suggestion
+to remove source readiness conflicts with the reproduced new-project accepted-result
+race and the main-canvas proposal contract. Busy keyboard handling and misleading
+sketch feedback were corrected; store reset, active-sketch setup and fresh command
+availability claims were checked. No unresolved actionable findings remain.
+
+`npm run release:check` passed: type checks, 1411 unit/component tests, production
+build and bundle budget (largest 460.61 kB), all 301 development browser cases
+(33.1 minutes) and all 40 production cases (3.4 minutes). This satisfies the
+per-item reduced gate and resets the five-item cadence. Focused native history,
+sketch-history, 13 AI regression cases and contextual-target regression also passed.
+Earlier incomplete runs exposed a genuine unsettled-source race and legacy tests
+assuming creation after automatic feature targeting; both were corrected before
+the successful full run. Controlled provider responses test modeling behavior;
+Prism uses the requested live Anthropic model.
+
+Cadence: **0** completed items since this successful full checkpoint.

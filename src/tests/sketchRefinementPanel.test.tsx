@@ -84,6 +84,16 @@ it("disables Apply when the main canvas has disposed its proposal", async () => 
   expect(useCadStore.getState().history.past).toHaveLength(0);
 });
 
+it("recognizes redo locally while preserving an active drawing and avoiding geometry requests", () => {
+  render(<SketchRefinementPanel />);
+  const before = useCadStore.getState().history;
+  fireEvent.change(screen.getByLabelText("Sketch refinement request"), { target: { value: "redo that" } });
+  fireEvent.click(screen.getByRole("button", { name: "Preview sketch refinement" }));
+  expect(screen.getByLabelText("Sketch refinement status")).toHaveTextContent("The latest AI change cannot be");
+  expect(mocks.preview).not.toHaveBeenCalled();
+  expect(useCadStore.getState().history).toBe(before);
+});
+
 afterEach(() => vi.restoreAllMocks());
 it("ignores an empty keyboard submission and clears a timed-out request even if its worker resolves late", async () => {
   let resolve: ((result: RebuildResult) => void) | undefined;

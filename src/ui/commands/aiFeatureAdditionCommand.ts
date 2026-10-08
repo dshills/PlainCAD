@@ -16,6 +16,7 @@ import { useModelingDraft, assertNativeModelingPreview, assertNativeSolidPreview
 import { useFileJobs } from "../../persistence/fileJobs";
 import { useProjectWorkflow } from "./projectWorkflowCommand";
 import { useAiFeatureAddition } from "./aiFeatureAdditionState";
+import { recordAiHistoryChange } from "./aiHistoryState";
 export { useAiFeatureAddition } from "./aiFeatureAdditionState";
 export type AiFeatureAdditionPlan = ReturnType<typeof buildAiFeatureAddition>;
 export interface AiFeatureAdditionFrame {
@@ -73,6 +74,7 @@ export function applyAiFeatureAddition(frame: AiFeatureAdditionFrame, plan: AiFe
   try {
     useCadStore.getState().updateDocument((document) => document === frame.document ? plan.document : document);
     if (useCadStore.getState().history.present === frame.document) throw new Error("Feature plan could not be applied. Review project diagnostics.");
+    recordAiHistoryChange(frame.document, frame.session, "Add features");
   } finally { proofs.delete(result); cancelAiFeatureAddition(); }
 }
 export function cancelAiFeatureAddition() { useAiFeatureAddition.setState({ frame: undefined }); }

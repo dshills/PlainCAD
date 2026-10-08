@@ -32,3 +32,5 @@
   .ai-canvas-assistant.expanded { max-height: 60%; }
 }
 @media (forced-colors: active) { .ai-canvas-assistant { box-shadow: none; border-color: CanvasText; } }
+
+.ai-canvas-history { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 12px; }
