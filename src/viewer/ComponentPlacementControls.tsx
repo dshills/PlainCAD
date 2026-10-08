@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import type { ComponentPlacement } from "../cad/document/schema";
 import type { RenderMesh } from "../cad/kernel/KernelAdapter";
+import type { ComponentAlignmentTarget } from "../cad/inspection/componentAlignment";
 import { fitCameraBounds } from "./cameraFit";
 import { changedPlacementField, componentPlacementMatrix, placementAxis, placementDragAngle, placementDragDistance, placementRotationRing, wrappedRotationDelta, type PlacementAxis, type PlacementMode, type PlacementRing } from "./componentPlacementHandles";
 import { useThemeState } from "../state/useThemeState";
@@ -10,22 +11,26 @@ import { viewerThemeColors } from "../ui/themes/themes";
 import "./ComponentPlacementControls.css";
 interface Runtime { group: THREE.Group; camera: THREE.PerspectiveCamera; controls: OrbitControls; render: () => void; fit: () => void }
 interface Handle { axis: PlacementAxis; mode: PlacementMode; x: number; y: number; path: string; unavailable: boolean }
+interface AlignmentMarker { id: string; label: string; x: number; y: number }
+const NO_ALIGNMENT_TARGETS: ComponentAlignmentTarget[] = [];
 interface Gesture { pointerId: number; axis: PlacementAxis; mode: PlacementMode; original: ComponentPlacement; viewport: DOMRect; camera: THREE.Camera; start: number; last: number; rotation: number; ring: PlacementRing; onChange: (value: ComponentPlacement) => void; onDragging: (value: boolean) => void }
 function clear(group: THREE.Group) { group.traverse((object) => { if (object instanceof THREE.Mesh) { object.geometry.dispose(); (Array.isArray(object.material) ? object.material : [object.material]).forEach((material) => material.dispose()); } }); group.clear(); }
 /** Transient display transform during gestures; Apply still requires native proof. */
-export function ComponentPlacementControls({ meshes, meshPlacement, placement, bodyIds, disabled, onChange, onDragging }: {
+export function ComponentPlacementControls({ meshes, meshPlacement, placement, bodyIds, disabled, onChange, onDragging, alignmentTargets = NO_ALIGNMENT_TARGETS, alignmentPicking, onAlignmentPick }: {
   meshes: RenderMesh[]; meshPlacement: ComponentPlacement; placement: ComponentPlacement; bodyIds: string[]; disabled: boolean;
   onChange: (placement: ComponentPlacement) => void; onDragging: (dragging: boolean) => void;
+  alignmentTargets?: ComponentAlignmentTarget[]; alignmentPicking?: "source" | "target"; onAlignmentPick?: (id: string) => void;
 }) {
   const host = useRef<HTMLDivElement>(null), runtime = useRef<Runtime>(undefined), gesture = useRef<Gesture>(undefined), fittedMeshes = useRef<RenderMesh[] | undefined>(undefined);
   const [handles, setHandles] = useState<Handle[]>([]), [error, setError] = useState("");
+  const [alignmentMarkers, setAlignmentMarkers] = useState<AlignmentMarker[]>([]);
   const theme = useThemeState((state) => state.theme);
   const radius = useMemo(() => {
     const selected = meshes.filter((mesh) => bodyIds.includes(mesh.bodyId));
     return Math.max(1, ...selected.flatMap((mesh) => mesh.bounds.max.map((value, axis) => Math.abs(value - mesh.bounds.min[axis]) * 0.35)));
   }, [meshes, bodyIds]);
-  const propsRef = useRef({ placement, meshPlacement, bodyIds, radius });
-  useLayoutEffect(() => { propsRef.current = { placement, meshPlacement, bodyIds, radius }; }, [placement, meshPlacement, bodyIds, radius]);
+  const propsRef = useRef({ placement, meshPlacement, bodyIds, radius, alignmentTargets });
+  useLayoutEffect(() => { propsRef.current = { placement, meshPlacement, bodyIds, radius, alignmentTargets }; }, [placement, meshPlacement, bodyIds, radius, alignmentTargets]);
   const stop = (cancel: boolean) => {
     const active = gesture.current;
     if (!active) return;
@@ -51,6 +56,8 @@ export function ComponentPlacementControls({ meshes, meshPlacement, placement, b
       const width = element.clientWidth, height = element.clientHeight, rect = element.getBoundingClientRect(), props = propsRef.current;
       const project = (point: THREE.Vector3) => { const p = point.project(camera); return { x: (p.x + 1) * width / 2, y: (1 - p.y) * height / 2, z: p.z }; };
       const origin = new THREE.Vector3(...props.placement.translation), start = project(origin.clone());
+      const markers = props.alignmentTargets.flatMap(target => { const point = target.displayPoint ?? (target.kind === "face" ? undefined : target.point); if (!point) return []; const p = project(new THREE.Vector3(point.x, point.y, point.z)); return p.z >= -1 && p.z <= 1 && p.x >= 12 && p.y >= 12 && p.x <= width - 12 && p.y <= height - 12 ? [{ id: target.id, label: target.label, x: p.x, y: p.y }] : []; });
+      setAlignmentMarkers(previous => previous.length === markers.length && previous.every((marker, i) => marker.id === markers[i].id && marker.x === markers[i].x && marker.y === markers[i].y && marker.label === markers[i].label) ? previous : markers);
       const next: Handle[] = [];
       for (const axis of [0, 1, 2] as const) for (const mode of ["translation", "rotation"] as const) {
         const ring = placementRotationRing(props.placement, axis);
@@ -97,13 +104,14 @@ export function ComponentPlacementControls({ meshes, meshPlacement, placement, b
     state.group.children.forEach((object) => { object.matrix.copy(object.userData.selected ? delta : new THREE.Matrix4()); object.matrixWorldNeedsUpdate = true; });
     if (fittedMeshes.current !== meshes && !gesture.current) { fittedMeshes.current = meshes; state.fit(); }
     else state.render();
-  }, [placement, meshPlacement, radius, theme, meshes, bodyIds]);
+  }, [placement, meshPlacement, radius, theme, meshes, bodyIds, alignmentTargets]);
   useEffect(() => { if (disabled) stop(true); }, [disabled]);
+  useEffect(() => { if (alignmentPicking) stop(true); }, [alignmentPicking]);
   return <div className="component-placement-view">
     <div className="component-placement-frame">
       <div ref={host} className="component-placement-canvas" role="img" aria-label="Component placement geometry preview" />
       <svg aria-hidden="true" className="component-placement-overlay">{handles.map((handle) => <path key={`${handle.mode}:${handle.axis}`} d={handle.path} fill="none" stroke={["#ff8f8f", "#8ce1ae", "#8cbeff"][handle.axis]} strokeWidth={handle.mode === "translation" ? 3 : 1.5} opacity={handle.unavailable ? 0.35 : 0.85} />)}</svg>
-      {handles.map((handle) => <button key={`${handle.mode}:${handle.axis}`} type="button" className="component-placement-handle" aria-label={`${handle.mode === "translation" ? "Move" : "Rotate"} component ${["X", "Y", "Z"][handle.axis]}`} disabled={disabled || (!gesture.current && handle.unavailable)} title={handle.unavailable ? "Orbit the preview to see this axis before dragging, or use the numeric fields." : "Drag this handle. Arrow keys adjust 1 mm or 1 degree (Shift: 10). Escape restores the drag."} style={{ left: handle.x, top: handle.y, borderColor: ["#ff8f8f", "#8ce1ae", "#8cbeff"][handle.axis] }}
+      {alignmentPicking ? alignmentMarkers.map(marker => <button key={marker.id} type="button" className="component-alignment-marker" disabled={disabled} aria-label={`Pick ${alignmentPicking}: ${marker.label}`} title={marker.label} style={{ left: marker.x, top: marker.y }} onClick={() => onAlignmentPick?.(marker.id)}>+</button>) : handles.map((handle) => <button key={`${handle.mode}:${handle.axis}`} type="button" className="component-placement-handle" aria-label={`${handle.mode === "translation" ? "Move" : "Rotate"} component ${["X", "Y", "Z"][handle.axis]}`} disabled={disabled || (!gesture.current && handle.unavailable)} title={handle.unavailable ? "Orbit the preview to see this axis before dragging, or use the numeric fields." : "Drag this handle. Arrow keys adjust 1 mm or 1 degree (Shift: 10). Escape restores the drag."} style={{ left: handle.x, top: handle.y, borderColor: ["#ff8f8f", "#8ce1ae", "#8cbeff"][handle.axis] }}
         onPointerDown={(event) => {
           const state = runtime.current; if (disabled || gesture.current || !state || !host.current || event.button !== 0) return;
           const viewport = host.current.getBoundingClientRect(), camera = state.camera.clone(); camera.updateMatrixWorld();

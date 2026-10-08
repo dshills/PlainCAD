@@ -1,5 +1,10 @@
 # Working CAD Capability Matrix
 
+## Component reuse and interoperability
+
+- **Component alignment:** Move component can match native endpoints, straight-edge midpoints/directions, or supported planar face planes with signed clearance. Preview/Apply saves a static rigid pose in one Undo step; curved/general boolean topology, collision avoidance and assembly joints remain unavailable. See [alignment scope](COMPONENT_ALIGNMENT.md).
+
+
 ## Docked Workbench workflow improvements
 
 - Native cap-edge eligibility uses bounded, handle-free exact-input proof reuse.

@@ -7,6 +7,9 @@ import { useCadStore } from "../state/useCadStore";
 import { beginComponentPlacement, cancelComponentPlacement, useComponentPlacement } from "../ui/commands/componentPlacementCommand";
 import { previewModeling } from "../cad/worker/extrudePreviewClient";
 import { ComponentPlacementPanel } from "../ui/panels/ComponentPlacementPanel";
+import { appendProject } from "../persistence/appendProject";
+import { withComponentPlacement } from "../cad/document/componentPlacement";
+import { componentAlignmentTargets } from "../cad/inspection/componentAlignment";
 vi.mock("../cad/worker/extrudePreviewClient", () => ({ previewModeling: vi.fn() }));
 vi.mock("../viewer/ComponentPlacementControls", () => ({ ComponentPlacementControls: ({ onChange, onDragging }: { onChange: (placement: ComponentPlacement) => void; onDragging: (value: boolean) => void }) => <div><button onClick={() => { onDragging(true); onChange({ translation: [15, 0, 0], rotation: [0, 0, 0] }); }}>Begin move gesture</button><button onClick={() => onDragging(false)}>Finish move gesture</button></div> }));
 const worker = vi.mocked(previewModeling);
@@ -14,8 +17,10 @@ function native(document: CadDocument) {
   const result = rebuildDocument(document);
   return { ...result, meshes: result.meshes.map((mesh) => ({ ...mesh, geometrySource: "opencascade" as const, geometryAssertions: { valid: true as const, volume: 24000, surfaceArea: 10000, solidCount: 1 } })) };
 }
-function setup() {
-  const document = createBoxTemplate(), result = native(document);
+function setup(two = false) {
+  let document = createBoxTemplate();
+  if (two) { const appended = appendProject(document, createBoxTemplate()); document = withComponentPlacement(appended.document, appended.componentIds[0], { translation: [0, 0, 60], rotation: [0, 0, 0] }); }
+  const result = native(document);
   useCadStore.setState({ history: { past: [], present: document, future: [] }, documentSession: 51, activeComponentId: document.rootComponentId, fileBusy: false, rebuild: { status: "succeeded", kernelReady: true, result }, selection: { selectedIds: [] } });
   worker.mockImplementation(async (document) => native(document)); beginComponentPlacement(); render(<ComponentPlacementPanel />); return document;
 }
@@ -50,4 +55,29 @@ it("closes on document currency changes and ignores a late worker result", async
   expect(screen.queryByRole("dialog", { name: "Move or rotate component" })).toBeNull(); expect(useComponentPlacement.getState().frame).toBeUndefined();
   await act(async () => { deliver(native(document)); await Promise.resolve(); });
   expect(useCadStore.getState().history.present).toBe(document); expect(useCadStore.getState().history.past).toHaveLength(0);
+});
+it("requires explicit alignment before Apply and saves one native-validated rigid pose", async () => {
+  const document = setup(true), targets = componentAlignmentTargets(document, useCadStore.getState().rebuild.result!);
+  const source = targets.find(target => target.componentId === document.rootComponentId && target.id.endsWith(":endCap"))!;
+  const target = targets.find(target => target.componentId !== document.rootComponentId && target.id.endsWith(":startCap"))!;
+  field("50"); await flush(); expect(screen.getByRole("button", { name: "Apply component placement" })).toBeEnabled();
+  fireEvent.change(screen.getByRole("combobox", { name: "Source geometry" }), { target: { value: source.id } });
+  fireEvent.change(screen.getByRole("combobox", { name: "Target geometry" }), { target: { value: target.id } });
+  expect(screen.getByRole("button", { name: "Apply component placement" })).toBeDisabled();
+  fireEvent.click(screen.getByRole("button", { name: "Align selected geometry" })); await flush();
+  expect(screen.getByLabelText("Position X (mm)")).toHaveValue("50"); expect(screen.getByLabelText("Position Z (mm)")).toHaveValue("40");
+  expect(screen.getByRole("button", { name: "Apply component placement" })).toBeEnabled(); expect(useCadStore.getState().history.present).toBe(document);
+  fireEvent.click(screen.getByRole("checkbox", { name: "Oppose face normals" }));
+  expect(screen.getByRole("button", { name: "Align selected geometry" })).toBeEnabled(); expect(screen.getByRole("button", { name: "Apply component placement" })).toBeDisabled();
+  fireEvent.click(screen.getByRole("button", { name: "Align selected geometry" })); await flush();
+  fireEvent.click(screen.getByRole("button", { name: "Apply component placement" })); expect(useCadStore.getState().history.past).toEqual([document]);
+  expect(useCadStore.getState().history.present.components[document.rootComponentId].placement).toEqual({ translation: [50, 0, 80], rotation: [Math.PI, 0, Math.PI] });
+  const other = Object.keys(document.components).find(id => id !== document.rootComponentId)!;
+  expect(useCadStore.getState().history.present.components[other]).toEqual(document.components[other]);
+});
+it("invalid clearance cannot reuse an old placement proof and Cancel writes no history", async () => {
+  const document = setup(true); field("50"); await flush();
+  const input = screen.getByLabelText("Face clearance (mm)"); fireEvent.change(input, { target: { value: "NaN" } }); fireEvent.blur(input);
+  expect(screen.getByRole("alert")).toHaveTextContent("finite face clearance"); expect(screen.getByRole("button", { name: "Apply component placement" })).toBeDisabled();
+  fireEvent.click(screen.getByRole("button", { name: "Cancel placement" })); expect(useCadStore.getState().history.present).toBe(document); expect(useCadStore.getState().history.past).toHaveLength(0);
 });

@@ -176,3 +176,15 @@ All 3 focused native library cases passed on port 5281, and the final owned-canv
 The library is local to this browser and stores bounded independent copies. Saved parts must be self-contained; unsupported external dependencies produce a diagnostic. Drop positions use the owned canvas and XY world plane; Move component provides further placement. No assembly joints or external live links are introduced.
 
 Cadence: 1 completed item since the successful full checkpoint above. The next full gate is due after 4 more requested changes.
+
+## Current batch: alignment, portability and interchange
+
+### Item 2: snap and align native component geometry (2026-10-08)
+
+Prism Anthropic `claude-sonnet-5-5` reviewed the complete isolated alignment change: initial `9d5d0861733a6255cf2d270287474ec5`, final `0965639bf9907005bdf44bd5b7cb8b8e`, and final test/documentation delta `9dc53640ab79df1516c424d90222eb9d`. Actionable degenerate-normal handling, bounded complete face-marker scans, gesture cancellation and pending-alignment status were fixed. Final reviews have no high/medium findings. Low marker notes are documented: display centroids may lie between coplanar regions, while exact plane roles govern placement. The final unit assertion intentionally checks the deterministic canonical, snapped Euler pose in its fixed opposite-normal fixture; independent math tests compare transformed directions at gimbal poses.
+
+The isolated checkout passed `npm run check:item`: type checks, all 1224 unit/component tests, build/bundle budget (largest 489.68 kB), 5 development and 14 production native smoke tests. All 3 additional native alignment/placement cases passed on the final runtime, proving actual face-marker pointer choice, signed clearance, straight-edge rotation, endpoint cancellation, preserved native BRep volume/solid count, one Undo, save/open, parameter edits and placed positive STL. The final stronger saved-pose assertion and documentation received focused unit/type checks and the delta review; runtime sources stayed unchanged. Initial browser failures exposed overlapping face markers and disabling a dirty clearance field, both fixed before final validation.
+
+Alignment produces static rigid placements using supported native points, straight edges and planar face roles. Face alignment preserves tangential translation, and has no collision avoidance, mate or joint. Lists remain available when display marker budgets or overlap prevent a pointer choice.
+
+Cadence: 2 completed items since the last successful full checkpoint; the full gate is due after 3 more requested changes (the fourth item in this implementation batch).
