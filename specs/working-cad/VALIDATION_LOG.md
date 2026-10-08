@@ -363,3 +363,41 @@ downstream repair. Lost/unsupported references diagnose rather than guessing.
 
 Cadence: 0 completed items since this successful full checkpoint. The next full
 gate is due after 5 more requested changes.
+
+### Item 5: unified Save/export goals (2026-10-08)
+
+Prism Anthropic `claude-sonnet-5-5` reviewed the complete eight-file implementation
+`98c0f16357ac0512de5534ff4bb366c6`, final selection-guard delta
+`ca0e9534db4df05e314ab01ef1b7f2a0` and documentation
+`6fefec76871e50e5850fb54d9c3eb1a9`. All actionable findings were addressed:
+observable mock assertions, readiness subscriptions, semantic selection currency,
+clear busy/handoff labels, accessible values and readable native test steps.
+Final delta and documentation reviews have zero findings.
+
+The fully integrated frozen checkout passed `npm run check:item`: type checks,
+all 1315 unit/component tests across 164 files, build/bundle budget (largest
+496.16 kB), 5 development native smoke cases and 14 production CSP/modeling smoke
+cases. All 39 focused hub/PNG tests passed, including deferred-encoding stale
+selection and same-part reselection. Three focused native hub/PNG/ORBIT workflows
+passed, and a final integrated hub case passed again after the other usability
+changes. The built hub's dedicated STEP/PNG CSP case passed on the final integrated
+build, with native STEP reimport volume/solid-count/world-bounds proof and real
+PNG pixels.
+
+Source/runtime hashes matched the root workspace. The reviewed STEP fixture's
+final no-op action was copied after the successful reduced gate; all 5 focused
+STEP tests and lint then passed. No runtime/build changes followed the gate.
+The successful item-4 full checkpoint is commit `47df069` above.
+
+Save or export presents editable project, printing STL, other-CAD STEP, PNG image
+and complete local-library backup goals. STEP and library open their existing
+selection/validation controls; opening options never claims a download. A saved
+selected sketch opens its drawing for its existing PNG action. Active drawing
+retains that workspace's PNG control and must finish/cancel before opening the
+hub. Handoffs capture current document/session/result/selection, close the modal
+before shared commands run, and reject stale contexts. Part PNG repeats semantic
+selection checks after encoding. Editable project history stays in .pcaddoc; STEP
+does not introduce editable import or assembly joints.
+
+Cadence: 1 completed item since the successful full checkpoint above. The next
+full gate is due after 4 more requested changes.

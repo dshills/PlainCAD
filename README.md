@@ -370,7 +370,15 @@ Download project files regularly: termination can lose edits before a completed
 storage transaction. Current schema is 17, with checked-in schema 1–17 regression
 fixtures and migrations.
 
-**File → Save or export…** separates editable projects from printable STL. STL
+**File → Save or export…** brings editable projects, printing STL, other-CAD
+STEP, PNG images and local library backup together. Each goal explains its scope
+and opens the existing validated workflow. A selected saved sketch opens its
+drawing, where Download sketch PNG captures its annotations; opening the drawing
+does not itself download a file. Library backup opens the saved local parts and
+its complete backup action. Finish/cancel active drawing before opening the hub.
+See [export hub scope](specs/working-cad/EXPORT_HUB.md).
+
+STL
 requires a successful current rebuild with exportable geometry. Select bodies
 explicitly; visibility does not silently change the export scope. Multi-body
 export defaults to separate STL files in a ZIP. One STL with separate shells and

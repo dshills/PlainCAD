@@ -65,6 +65,40 @@ describe("PNG downloads", () => {
     if (change !== "cancel") expect(useCadStore.getState().fileError).toMatch(/changed during PNG export/);
     expect(useFileJobs.getState().busy).toBe(false);
   });
+  it.each(["encoding", "bytes"])("rejects a changed part selection while awaiting %s and permits an explicit retry", async (boundary) => {
+    const document = fixture(), result = useCadStore.getState().rebuild.result;
+    let finishImage!: (image: Blob) => void;
+    let finishBytes!: (value: ArrayBuffer) => void;
+    unregister = registerPngCapture("viewer", () => boundary === "encoding"
+      ? new Promise(resolve => { finishImage = resolve; })
+      : Promise.resolve({ arrayBuffer: () => new Promise<ArrayBuffer>(resolve => { finishBytes = resolve; }) } as Blob));
+    const job = exportPng("body");
+    await vi.waitFor(() => expect(boundary === "bytes" ? finishBytes : finishImage).toBeTypeOf("function"));
+    useCadStore.setState({ selection: { selectedIds: [] } });
+    if (boundary === "encoding") finishImage(blob()); else finishBytes(bytes);
+    await job;
+    expect(downloadArrayBuffer).not.toHaveBeenCalled();
+    expect(useCadStore.getState().fileError).toMatch(/Part selection changed during PNG export/);
+    expect(useCadStore.getState().history.present).toBe(document);
+    expect(useCadStore.getState().rebuild.result).toBe(result);
+    expect(useFileJobs.getState().busy).toBe(false);
+    unregister?.(); unregister = registerPngCapture("viewer", async () => blob());
+    useCadStore.setState({ selection: { selectedIds: [{ kind: "body", id: "box", documentId: document.id }] } });
+    await exportPng("body");
+    expect(downloadArrayBuffer).toHaveBeenCalledExactlyOnceWith(bytes, "Box_part.png", "image/png");
+    expect(useCadStore.getState().fileError).toBeUndefined();
+  });
+  it("retains the same part scope when its selection object is recreated during encoding", async () => {
+    const document = fixture();
+    let finish!: (image: Blob) => void;
+    unregister = registerPngCapture("viewer", () => new Promise(resolve => { finish = resolve; }));
+    const job = exportPng("body");
+    await vi.waitFor(() => expect(finish).toBeTypeOf("function"));
+    useCadStore.setState({ selection: { selectedIds: [{ kind: "body", id: "box", documentId: document.id }] } });
+    finish(blob()); await job;
+    expect(downloadArrayBuffer).toHaveBeenCalledExactlyOnceWith(bytes, "Box_part.png", "image/png");
+    expect(useCadStore.getState().fileError).toBeUndefined();
+  });
   it("reports capture/encoding errors and releases file-job ownership", async () => {
     fixture();
     unregister = registerPngCapture("viewer", async () => { throw new Error("PNG encoding failed"); });

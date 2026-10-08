@@ -21,6 +21,15 @@ Move component guides two picks: source, then destination. Destination, Gap and 
 
 Linked curves have dashed styling and badges. Source provenance, Show/Edit source, Repair link and Make independent explain where geometry comes from. Showing a source preserves the destination component/sketch; opening its drawing protects unfinished mouse input. See [linked sketch controls](LINKED_SKETCH_USABILITY.md).
 
+## Unified file-output entry
+
+Save or export offers editable project, printing STL, other-CAD STEP, project/part
+PNG and complete local-library backup goals. Selected sketches open their drawing
+for its existing PNG action. STEP/library handoffs retain their selection and
+validation controls and do not claim a download on opening. Handoffs reject stale
+project/selection/native results; part PNG also checks selection after encoding.
+See [export hub scope](EXPORT_HUB.md).
+
 ## Component reuse and interoperability
 
 - **Portable part library:** Back up the complete local library as a bounded .pcadlib pack, preview/import it as independent saved copies, or download one editable .pcaddoc. Imports validate every entry and commit atomically; failures/cancellation preserve existing copies and the open project. See [library transfer](PART_LIBRARY.md).

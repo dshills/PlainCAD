@@ -1,5 +1,6 @@
 import { ModalDialog } from "../ModalDialog";
 import { useEffect, useState } from "react";
+import { useShallow } from "zustand/react/shallow";
 import {
   useFileJobs,
   runFabrication,
@@ -17,6 +18,7 @@ import {
 import { bodyDisplayNames } from "../../cad/document/bodyDisplayNames";
 import { exportDiagnostic } from "../../fabrication/exportDiagnostic";
 import type { StlMode } from "../../fabrication/exportPlan";
+import { captureExportHub, exportHubAvailability, exportHubCurrent, handoffExportHub, type ExportHubGoal, type ExportHubImageScope } from "../commands/exportHubCommand";
 import "./FabricationPanel.css";
 
 export function FabricationPanel() {
@@ -69,12 +71,16 @@ function ExportDialog({
     result = useCadStore((state) => state.rebuild.result),
     available = useCadStore((state) => canExportStl(state)),
     selection = useCadStore((state) => state.selection.selectedIds[0]),
+    cadFileBusy = useCadStore((state) => state.fileBusy),
     fileError = useCadStore((state) => state.fileError);
-  const [goal, setGoal] = useState<"project" | "stl">(task ? "project" : "stl"),
+  const [goal, setGoal] = useState<ExportHubGoal>(task ? "project" : "stl"),
     [mode, setMode] = useState<StlMode>("separate"),
     [full, setFull] = useState(true),
     [advanced, setAdvanced] = useState(!task),
     [saving, setSaving] = useState(false);
+  const [hubSnapshot] = useState(captureExportHub), [imageScope, setImageScope] = useState<ExportHubImageScope>("project");
+  const hubAvailability = useCadStore(useShallow(exportHubAvailability));
+  const hubCurrent = useCadStore(state => exportHubCurrent(hubSnapshot, state));
   const sameProject = jobs.exportSession === session,
     changed = Boolean(task && !guidedExportCurrent(task)),
     bodies = sameProject ? (result?.bodies ?? []) : [],
@@ -95,7 +101,7 @@ function ExportDialog({
       (sum, mesh) => sum + mesh.indices.length / 3,
       0,
     ),
-    busy = jobs.busy || saving,
+    busy = jobs.busy || saving || cadFileBusy,
     diagnostic = fileError
       ? exportDiagnostic(fileError, cadDocument, result)
       : undefined,
@@ -112,7 +118,7 @@ function ExportDialog({
     jobs.cancel();
     useFileJobs.setState({ exportOpen: false });
   };
-  const chooseGoal = (next: "project" | "stl") => {
+  const chooseGoal = (next: ExportHubGoal) => {
     clearPrepared();
     useCadStore.getState().setFileError(undefined);
     setGoal(next);
@@ -182,6 +188,11 @@ function ExportDialog({
               Export for printing (.stl)
               <small>A mesh for slicers and fabrication tools.</small>
             </label>
+            {task ? <>
+              <label><input type="radio" name="file-goal" value="step" checked={goal === "step"} onChange={() => chooseGoal("step")} /> Other CAD (.step)<small>Precise solids for other CAD applications.</small></label>
+              <label><input type="radio" name="file-goal" value="image" checked={goal === "image"} onChange={() => chooseGoal("image")} /> Image (.png)<small>Share the project view, a selected part, or a sketch drawing.</small></label>
+              <label><input type="radio" name="file-goal" value="library" checked={goal === "library"} onChange={() => chooseGoal("library")} /> Library backup (.pcadlib)<small>Keep all saved library parts outside this browser.</small></label>
+            </> : null}
           </div>
         </fieldset>
         {!sameProject ? (
@@ -213,6 +224,27 @@ function ExportDialog({
               </div>
             ) : null}
           </>
+        ) : goal === "step" || goal === "image" || goal === "library" ? (
+          <div className="export-hub-summary" role="group" aria-label="Output readiness">
+            {!hubCurrent && !cadFileBusy ? <p role="alert">Model or selection changed. Reopen Save or export to continue with the current scope.</p> : null}
+            {goal === "step" ? <>
+              <p>Export precise solids in millimeters at their project positions. STEP keeps separate solids; it does not keep PlainCAD’s editable feature history.</p>
+              <p>{bodies.length} parts available. The next screen lets you choose parts, validate a native export and download it.</p>
+              {!hubAvailability.step ? <p role="status">Other CAD export needs current, valid OpenCascade solids and browser worker support. Rebuild or repair the model first.</p> : <p role="status">Ready to choose parts for STEP.</p>}
+            </> : goal === "library" ? <>
+              <p>Back up the complete local part library, including editable sketches and features, as one .pcadlib file. This includes saved library copies rather than the current project alone.</p>
+              <p>Review saved parts in the library, then choose Download library backup. Invalid or incomplete storage stops backup with a diagnostic.</p>
+              {!hubAvailability.library ? <p role="status">Library backup needs browser database storage. Use a browser with IndexedDB available.</p> : <p role="status">Ready to review the library backup.</p>}
+            </> : <>
+              <label>Image content<select aria-label="Image content" value={imageScope} disabled={busy} onChange={event => setImageScope(event.target.value as ExportHubImageScope)}>
+                <option value="project">Project view</option><option value="body">Selected part</option><option value="sketch">Selected sketch drawing</option>
+              </select></label>
+              {imageScope === "project" ? <><p>Download the current 3D camera view, visible parts and section view. Selection and sketch editing overlays are omitted.</p><p role="status">{hubAvailability.projectImage ? "Ready to capture the project view." : "Rebuild the current model successfully before downloading its image."}</p></>
+                : imageScope === "body" ? <><p>Download a fitted image of {hubAvailability.bodyId ? names[hubAvailability.bodyId] ?? "the selected part" : "one selected part"}, without other parts.</p><p role="status">{hubAvailability.bodyImage ? "Ready to capture the selected part." : "Select a rebuilt part in the project browser or viewer, then reopen Save or export."}</p></>
+                : <><p>{hubAvailability.sketchId ? `Open ${hubAvailability.sketchName} as a drawing, then choose Download sketch PNG to capture its visible dimensions and constraints.` : "Select a sketch in the project browser, then reopen Save or export."}</p><p role="status">Opening the drawing does not download an image. Finish or cancel any drawing gesture before exporting its PNG.</p></>}
+            </>}
+            {fileError ? <p role="alert">{fileError}</p> : null}
+          </div>
         ) : (
           <>
             <p>
@@ -418,6 +450,10 @@ function ExportDialog({
             onClick={() => void saveProject()}
           >
             Save editable project
+          </button>
+        ) : goal === "step" || goal === "image" || goal === "library" ? (
+          <button type="button" disabled={busy || !sameProject || changed || !hubCurrent || (goal === "step" ? !hubAvailability.step : goal === "library" ? !hubAvailability.library : imageScope === "project" ? !hubAvailability.projectImage : imageScope === "body" ? !hubAvailability.bodyImage : !hubAvailability.sketchId)} onClick={() => void handoffExportHub(hubSnapshot, goal, imageScope)}>
+            {goal === "step" ? "Choose parts for STEP" : goal === "library" ? "Review library backup" : imageScope === "sketch" ? "Open sketch image" : "Download PNG"}
           </button>
         ) : jobs.prepared ? (
           <button

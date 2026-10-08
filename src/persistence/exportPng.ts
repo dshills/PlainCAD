@@ -37,6 +37,9 @@ export async function exportPng(scope: PngScope) {
     const current = useCadStore.getState();
     if (current.history.present !== document || current.documentSession !== session || (scope !== "sketch" && (current.rebuild.result !== result || current.rebuild.status !== "succeeded")))
       throw new Error("Project changed during PNG export. Export the current view again.");
+    const currentSelection = current.selection.selectedIds[0];
+    if (scope === "body" && (currentSelection?.kind !== "body" || currentSelection.id !== bodyId || currentSelection.documentId !== document.id))
+      throw new Error("Part selection changed during PNG export. Export the currently selected part again.");
     const name = sketch?.name ?? (bodyId ? bodyDisplayNames(document, result?.bodies ?? [])[bodyId] ?? "Part" : document.name);
     downloadArrayBuffer(bytes, safeFilename(name, ".png"), "image/png");
   } catch (error) {
