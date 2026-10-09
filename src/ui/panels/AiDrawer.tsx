@@ -1,3 +1,5 @@
+import { lazy, Suspense } from "react";
+import { CommandAgentBoundary } from "./CommandAgentBoundary";
 import { resolveAiFollowUp, type FailedAiRequest } from "../../ai/followUp";
 import { aiHistoryIntent, handleAiHistoryPrompt } from "../commands/aiHistoryPrompt";
 import { AiCanvasHistoryControls } from "./AiCanvasHistoryControls";
@@ -64,6 +66,8 @@ import { useCommandEnablement } from "../commands/useCommandEnablement";
 import { hiddenViewerBodies, useViewerState } from "../../state/viewerState";
 import { useShallow } from "zustand/react/shallow";
 
+const CommandAgentPanel = lazy(() => import("./CommandAgentPanel").then(module => ({ default: module.CommandAgentPanel })));
+
 interface CanvasAiDraftFrame extends AiDraftFrame { beforeResult?: RebuildResult }
 interface Proposal {
   frame: CanvasAiDraftFrame;
@@ -77,7 +81,8 @@ interface Proposal {
 type Message = AiMessage & { summary?: string; display?: string };
 export function AiDrawer({ embedded = false }: { embedded?: boolean }) {
   const open = useAiDrawer((state) => state.open), canvas = useSketchCanvas((state) => state.active);
-  const [mode, setMode] = useState<"auto" | "ordinary" | "features">(embedded ? "auto" : "ordinary");
+  const [mode, setMode] = useState<"auto" | "ordinary" | "features" | "commands">(embedded ? "auto" : "ordinary");
+  const [commandVisited, setCommandVisited] = useState(false);
   const [followVersion, setFollowVersion] = useState(0);
   const state = useCadStore(useShallow(state => ({ history: state.history, activeComponentId: state.activeComponentId, selection: state.selection, rebuild: state.rebuild, fileBusy: state.fileBusy, documentSession: state.documentSession })));
   const visibility = useViewerState(useShallow(state => [state.session, state.hiddenBodyIds, state.hiddenComponentIds]));
@@ -85,20 +90,23 @@ export function AiDrawer({ embedded = false }: { embedded?: boolean }) {
     state.rebuild.status === "succeeded" ? state.rebuild.result : undefined, facePocketFaces(),
     hiddenViewerBodies(state.history.present, state.rebuild.result?.meshes.map(mesh => mesh.bodyId) ?? [], state.documentSession, useViewerState.getState())),
     [state.history.present, state.activeComponentId, state.selection, state.rebuild, state.fileBusy, state.documentSession, visibility]);
+  const commandActive = Boolean(open && !canvas && mode === "commands");
   const featureActive = Boolean(open && !canvas && (mode === "features" || (mode === "auto" && target.kind === "face")));
   useEffect(() => { if (!open) clearAiFacePicking(); }, [open]);
   return <div className="ai-mode-shell">
     {open ? <AiCanvasHistoryControls /> : null}
     {open && !canvas ? <div role="group" aria-label="AI modeling mode" className="ai-actions" title="Descriptions and conversations are kept when switching modes. Pending previews are canceled.">
-      <button type="button" aria-pressed={!featureActive} onClick={() => setMode("ordinary")}>Describe or edit a part</button>
+      <button type="button" aria-pressed={!featureActive && !commandActive} onClick={() => setMode("ordinary")}>Describe or edit a part</button>
       <button type="button" aria-pressed={featureActive} onClick={() => setMode("features")}>Add features to this part</button>
+      <button type="button" aria-pressed={commandActive} onClick={() => { setCommandVisited(true); setMode("commands"); }}>Command agent</button>
       {embedded ? <button type="button" onClick={() => { setMode("auto"); setFollowVersion(value => value + 1); }}>Follow current selection</button> : null}
     </div> : null}
     <section hidden={!featureActive} className="ai-drawer open" aria-label="AI modeling assistant">
       {!embedded ? <button type="button" onClick={() => void runCommand("ai.toggle")}>Close AI drawer</button> : null}
       <AiFeatureAdditionPanel active={featureActive} targetFaceId={mode === "auto" ? target.faceId : undefined} />
     </section>
-    <div hidden={featureActive} className="ai-mode-pane"><StandardAiDrawer embedded={embedded} active={!featureActive} target={target} followVersion={followVersion} /></div>
+    {commandVisited ? <section hidden={!commandActive} className="ai-drawer open" aria-label="AI command planning"><CommandAgentBoundary><Suspense fallback={<p role="status">Loading command agent…</p>}><CommandAgentPanel active={commandActive} /></Suspense></CommandAgentBoundary></section> : null}
+    <div hidden={featureActive || commandActive} className="ai-mode-pane"><StandardAiDrawer embedded={embedded} active={!featureActive && !commandActive} target={target} followVersion={followVersion} /></div>
   </div>;
 }
 function StandardAiDrawer({ embedded = false, active = true, target, followVersion }: { embedded?: boolean; active?: boolean; target: SelectionAiTarget; followVersion: number }) {

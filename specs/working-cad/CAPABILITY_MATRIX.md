@@ -28,6 +28,17 @@ Undo restores the accepted source. Document/session/selection/component/rebuild
 changes invalidate the proof. Empty and sketch-only candidates remain supported.
 See [plan bounds](../../docs/COMMAND_PLANS.md).
 
+## Built-in command agent
+
+Anthropic/OpenAI/Google can inspect a consented bounded project snapshot and return
+clarification or up to 12 schema-validated semantic CAD commands. Proposals use the
+shared transactional main-viewport preview; either Apply control records guarded
+AI Undo/Redo provenance. Credentials remain in the local gateway. Conversation
+context clears on project/target changes even while unshared or hidden. Complete
+project context is capped at 20 kB and is rejected, rather than silently truncated,
+when oversized. This mode accepts CAD intent only; exports and general automation
+remain explicit shared commands. See [command agent scope](../../docs/COMMAND_AGENT.md).
+
 ## Canvas action workflow
 
 - Contextual native-part controls share command guards with the rest of the UI.

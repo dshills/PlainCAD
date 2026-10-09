@@ -1,0 +1,6 @@
+.command-agent-panel { display: grid; gap: 12px; min-width: 0; }
+.command-agent-panel label { display: grid; gap: 6px; }
+.command-agent-panel textarea { min-height: 88px; resize: vertical; width: 100%; }
+.command-agent-panel pre { overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 180px; }
+.command-agent-panel h3 { font-size: 1rem; margin: 0 0 6px; }
+.command-agent-panel p { margin: 0; }

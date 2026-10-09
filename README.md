@@ -352,6 +352,7 @@ any proposal; clarifications and failed previews do not edit the document.
 
 | Mode/scope | What it can do |
 | --- | --- |
+| Command agent | Inspect the shared project snapshot, ask clarifying questions, and propose up to twelve typed semantic CAD edits for a native main-canvas preview and one-step Apply/Undo. Full context is limited to 20 kB; broader tools remain available through the shared command interface. |
 | New part | Create an editable component from bounded parametric recipes, including supported analytic profiles, openings, extrudes, revolves, holes, and cap treatments. |
 | This part | Change eligible independent length/angle parameters used exclusively by the active component. Shared, locked, derived, and unused values are excluded. |
 | Selected feature | Change supported Hole dimensions, distance Extrude thickness, or Revolve angle while preserving the feature's other settings. Changed fields explicitly replace their old binding. |
@@ -380,6 +381,14 @@ before **Apply AI feature plan** creates one Undo edit. Mode changes preserve
 descriptions/conversations, cancel pending previews, and reset feature-addition
 sharing consent. New-part generation and feature-field edits retain their own
 bounded scope and invalidation rules.
+
+Choose **Command agent** in the AI dock for registry-based creation and editing.
+It sends editable project JSON only after explicit consent. Proposals are checked
+against the command catalog and proved locally by OpenCascade. Review them in the
+main viewport, then Apply once or Cancel. Both the AI dock and task-dock Apply
+record guarded AI Undo/Redo provenance. Conversations stay with their project and
+target, including when sharing is unchecked or the mode is hidden. See
+[built-in command planning](docs/COMMAND_AGENT.md) for limits and sharing details.
 
 ### Configure providers
 

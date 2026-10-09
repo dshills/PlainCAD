@@ -6,6 +6,7 @@ import type { JsonValue } from "../commands/registry";
 export interface CommandPlanFrame {
   id: string;
   label: string;
+  owner?: "ai";
   source: CadDocument;
   session: number;
   componentId: string;

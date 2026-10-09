@@ -11,8 +11,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Date: 2026-10-09.
 - Change: shared command registry for UI, browser automation and CLI, including all preceding feature work.
 - Result: type checks, 1565 unit/component tests in 199 files, build/bundle budget (52 bundles, largest 474.54 kB), all 320 development native browser cases and all 48 production cases passed.
-- Completed items since that full gate: **2**.
-- Next full gate: after **3** more completed items.
+- Completed items since that full gate: **3**.
+- Next full gate: after **2** more completed items.
 
 ## Completed batch
 
@@ -1146,3 +1146,35 @@ Classifying the pure project codec with CAD leaves resolves the concurrent AI
 context circular chunk warning. No circular chunk warnings remain; the existing
 linkedSketch static/dynamic import advisory remains. Cadence: **2**; full gate
 is due after three more completed items.
+
+## Command automation item 3: built-in AI command agent
+
+The existing AI dock now includes Command agent for Anthropic, OpenAI and Google.
+Explicit consent covers bounded editable-project context and conversation; stale
+responses or project changes cannot apply old plans. Trusted server command schemas
+restrict proposals to twelve semantic CAD steps. Local native preview precedes
+Apply, including main task-panel Apply, and records guarded AI Undo/Redo provenance.
+
+Prism Anthropic `claude-sonnet-5-5` reviewed provider/client/panel integration and
+follow-up patches (704f7b1237846c6f841821234af42fdf,
+531f2c5b8dfd0ef5f4c82d2c54b874a5, d610cc91f75e5c9be4014d6edcc84d1b).
+Fixed endpoint routing, stale conversation ownership, Escape handling and incomplete
+snapshots. Root integration review 5f6f18f8384a44357078326812858fa0 found one low
+observer-failure note; added a visible normal-Undo diagnostic and regression.
+Follow-up 551df8539e4849b520b33f2a231edd6a assumed missing owner typing and warned
+about mutable runtime frames. `owner` is explicitly typed, assigned only after
+ready proof, and consumed by the synchronous Apply observer; it is never durable
+document data or an owner-based UI selector. Error reporting clearly states the
+change succeeded. No actionable functional findings remain. Native test/helper
+reviews c388adff547bf728a9432ba594cbe19c,
+0c23a8dd5cb3a91be8c78ff1bc4bd172, e6e9911f9e9462edb30c25e8707045f9 passed.
+
+Final reduced gate: lint, 1630 tests in 209 files, production build/budget
+(54 bundles, largest 488.15 kB), 5 development native smoke tests and 14 production
+smoke tests passed. An initial run overlapped new macro-test edits; the frozen
+checkout rerun passed completely. Focused provenance/plan tests passed 24 tests.
+Additional AI acceptance passed in development and production: clarification,
+consent, native main-panel Apply, exact volume and guarded AI Undo/Redo. Provider
+transports are covered with mocks. Optional fixture-only live provider calls await
+explicit data-sharing approval after automatic review rejected the outbound test.
+Cadence: **3**; full gate due after two more items.

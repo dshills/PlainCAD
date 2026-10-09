@@ -19,6 +19,7 @@ let guard: () => boolean = () => false;
 let applying = false;
 let failureSource: CadDocument | undefined;
 let acceptedSteps: CadCommandCall[] = [];
+let acceptedObserver: ((frame: CommandPlanFrame) => void) | undefined;
 
 function inputPlan(value: unknown): CommandPlanInput {
   const serialized = JSON.stringify(value);
@@ -157,6 +158,13 @@ export async function previewCommandPlan(value: CommandPlanInput) {
     throw new Error(message);
   } finally { clearTimeout(timeout); if (controller === abort) controller = undefined; }
 }
+/** Local AI ownership is runtime provenance, not an agent-supplied geometry proof. */
+export function markAiCommandPlan(planId: string) {
+  const { frame, status } = useCommandPlan.getState();
+  if (!frame || frame.id !== planId || status !== "ready" || !frameCurrent(frame) ||
+    currentAiCanvasPreview(useCadStore.getState())?.planId !== planId) throw new Error("The AI plan became stale before ownership could be recorded.");
+  frame.owner = "ai";
+}
 export function applyCommandPlan(planId: string) {
   const { frame, status } = useCommandPlan.getState();
   if (!frame || frame.id !== planId || status !== "ready" || !frame.document || !frame.result || !frameCurrent(frame) || !guard() ||
@@ -173,12 +181,14 @@ export function applyCommandPlan(planId: string) {
     const state = useCadStore.getState();
     if (state.fileError || state.history.present === frame.source) throw new Error(state.fileError ?? "Command plan was not committed.");
     cancelCommandPlan();
+    try { acceptedObserver?.(frame); }
+    catch { useCadStore.getState().setFileError("AI Undo provenance could not be recorded. The change was applied; use normal Undo."); }
     steps.forEach((step, index) => reportAppliedCommand({ ...step, target: "domain", session: frame.session }, frame.results[index]));
     return { planId, applied: true, steps: frame.steps, documentId: state.history.present.id };
   } finally { applying = false; }
 }
-export function registerCommandPlanCommands(canPreview: () => boolean) {
-  guard = canPreview;
+export function registerCommandPlanCommands(canPreview: () => boolean, onApplied?: (frame: CommandPlanFrame) => void) {
+  guard = canPreview; acceptedObserver = onApplied;
   const bind = (id: string, label: string, input: JsonValue, invoke: (value: unknown) => unknown, available = () => undefined as string | undefined) =>
     bindCommand({ id, label, kind: "domain", input }, { id: "domain", label: () => label, available, invoke: args => invoke(args[0]) });
   const disposers = [
@@ -197,7 +207,7 @@ export function registerCommandPlanCommands(canPreview: () => boolean) {
     bind("plan.cancel", "Cancel the current command plan", { type: "object", additionalProperties: false }, value => { objectArguments(value, []); cancelCommandPlan(); }),
     bind("plan.status", "Inspect the current command plan", { type: "object", additionalProperties: false }, value => { objectArguments(value, []); const state = useCommandPlan.getState(); return state.frame ? planSummary(state.frame) : { status: state.status, error: state.error ?? null }; }),
   ];
-  return () => { cancelCommandPlan(); disposers.forEach(dispose => dispose()); guard = () => false; };
+  return () => { cancelCommandPlan(); disposers.forEach(dispose => dispose()); guard = () => false; acceptedObserver = undefined; };
 }
 useCadStore.subscribe(() => {
   const frame = useCommandPlan.getState().frame;

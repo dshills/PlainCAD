@@ -33,6 +33,15 @@ beforeEach(() => {
 });
 afterEach(() => { dispose(); clearAiCanvasPreview(); useCadStore.setState(useCadStore.getInitialState(), true); });
 describe("transactional command plans", () => {
+  it("preserves the applied change and explains how to undo if provenance reporting fails", async () => {
+    dispose();
+    dispose = registerCommandPlanCommands(() => true, () => { throw new Error("Observer unavailable"); });
+    const preview = await previewCommandPlan({ steps });
+    expect(applyCommandPlan(preview.planId)).toMatchObject({ applied: true });
+    expect(useCadStore.getState().history.past).toHaveLength(1);
+    expect(useCadStore.getState().history.present.features).toHaveLength(1);
+    expect(useCadStore.getState().fileError).toContain("use normal Undo");
+  });
   it("resolves only backward own-property JSON result references", () => {
     const results = [{ id: "sketch", pointIds: ["point0"] }];
     expect(resolvePlanReferences({ sketchId: { $result: { step: 0, path: ["id"] } }, center: [{ $result: { step: 0, path: ["pointIds", 0] } }] }, results)).toEqual({ sketchId: "sketch", center: ["point0"] });

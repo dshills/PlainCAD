@@ -104,7 +104,7 @@ import { moveTimelineItem, planTimelineMove } from "../../cad/document/timelineE
 import { beginHoleCreation, beginHoleEditing, editableHole, holeCreationContext, useHoleDraft } from "./holeCommand";
 import { prepareProjectDrop, replaceWithDroppedProject, saveAndReplaceDroppedProject } from "./projectDropCommand";
 import { focusRepairIssue, addRepairClosingEdge, type RepairContext } from "./repairCommand";
-import { canUndoAiChange, canRedoAiChange, type AiHistoryTransaction } from "./aiHistoryState";
+import { recordAiHistoryChange, canUndoAiChange, canRedoAiChange, type AiHistoryTransaction } from "./aiHistoryState";
 import { beginAiFacePicking, clearAiFacePicking } from "../../state/aiFacePicking";
 import { currentAiCanvasPreview, clearAiCanvasPreview } from "../../state/aiCanvasPreview";
 
@@ -849,6 +849,8 @@ registerCommandPlanCommands(() => {
     !useSketchCanvas.getState().active && !useGuidedHole.getState().draft &&
     !useExtrudeDraft.getState().draft && !useHoleDraft.getState().draft &&
     !useModelingDraft.getState().draft && !useProjectWorkflow.getState().active && !operationDraftBusy();
+}, frame => {
+  if (frame.owner === "ai") recordAiHistoryChange(frame.source, frame.session, frame.label);
 });
 function parameterCommandsEditable() {
   const state = useCadStore.getState();

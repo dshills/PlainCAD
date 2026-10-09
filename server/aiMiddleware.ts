@@ -1,3 +1,4 @@
+import { generateCommandAgentProposal, validateCommandAgentRequest, type CommandAgentRequest } from "./commandAgentProvider";
 import { generateAiSketchProposal, validateSketchAiRequest, type SketchAiRequest } from "./sketchAiProvider";
 import { generateAiFeatureAddProposal, validateFeatureAddAiRequest, type FeatureAddAiRequest } from "./featureAddAiProvider";
 import type { IncomingMessage, ServerResponse } from "node:http";
@@ -54,7 +55,7 @@ function send(response: ServerResponse, status: number, value: unknown) {
   });
   response.end(JSON.stringify(value));
 }
-async function readRequest(request: IncomingMessage, route: "part" | "sketch" | "features"): Promise<{ kind: "sketch"; request: SketchAiRequest } | { kind: "part"; request: AiRequest } | { kind: "features"; request: FeatureAddAiRequest }> {
+async function readRequest(request: IncomingMessage, route: "part" | "sketch" | "features" | "commands"): Promise<{ kind: "commands"; request: CommandAgentRequest } | { kind: "sketch"; request: SketchAiRequest } | { kind: "part"; request: AiRequest } | { kind: "features"; request: FeatureAddAiRequest }> {
   if (
     request.headers["content-type"]?.split(";")[0].trim().toLowerCase() !==
     "application/json"
@@ -73,6 +74,7 @@ async function readRequest(request: IncomingMessage, route: "part" | "sketch" | 
     chunks.push(buffer);
   }
   const value = parseProjectJson(Buffer.concat(chunks).toString("utf8"));
+  if (route === "commands") return { kind: "commands", request: validateCommandAgentRequest(value) };
   if (route === "features") return { kind: "features", request: validateFeatureAddAiRequest(value) };
   return route === "sketch"
     ? { kind: "sketch", request: validateSketchAiRequest(value) }
@@ -91,7 +93,7 @@ export function createAiMiddleware(
     next: () => void,
   ) => {
     const path = request.url?.split("?")[0];
-    if (path !== "/api/ai/status" && path !== "/api/ai/generate" && path !== "/api/ai/sketch" && path !== "/api/ai/features") {
+    if (path !== "/api/ai/status" && path !== "/api/ai/generate" && path !== "/api/ai/sketch" && path !== "/api/ai/features" && path !== "/api/ai/commands") {
       next();
       return;
     }
@@ -106,7 +108,7 @@ export function createAiMiddleware(
       send(response, 200, { providers: publicProviderStatus(env) });
       return;
     }
-    if (!["/api/ai/generate", "/api/ai/sketch", "/api/ai/features"].includes(path ?? "") || request.method !== "POST") {
+    if (!["/api/ai/generate", "/api/ai/sketch", "/api/ai/features", "/api/ai/commands"].includes(path ?? "") || request.method !== "POST") {
       send(response, 405, { error: "Unsupported AI request method." });
       return;
     }
@@ -131,7 +133,7 @@ export function createAiMiddleware(
     void (async () => {
       let parsed;
       try {
-        parsed = await readRequest(request, path === "/api/ai/sketch" ? "sketch" : path === "/api/ai/features" ? "features" : "part");
+        parsed = await readRequest(request, path === "/api/ai/sketch" ? "sketch" : path === "/api/ai/features" ? "features" : path === "/api/ai/commands" ? "commands" : "part");
       } catch (error) {
         // Do not drain an unbounded rejected body. Flush the diagnostic before
         // closing its socket, including wrong-content-type and malformed requests.
@@ -145,6 +147,11 @@ export function createAiMiddleware(
       }
       if (controller.signal.aborted) return;
       try {
+        if (parsed.kind === "commands") {
+          const proposal = await generateCommandAgentProposal(parsed.request, env, controller.signal, fetcher);
+          if (!controller.signal.aborted) send(response, 200, { proposal });
+          return;
+        }
         if (parsed.kind === "features") {
           const proposal = await generateAiFeatureAddProposal(parsed.request, env, controller.signal, fetcher);
           if (!controller.signal.aborted) send(response, 200, { proposal });
