@@ -1,0 +1,3 @@
+.live-session-panel { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; min-width: 0; padding: 16px; color: var(--text); border-top: 1px solid var(--border); }
+.live-session-panel h3, .live-session-panel p { margin: 0; }
+.live-session-panel button { max-width: 100%; }

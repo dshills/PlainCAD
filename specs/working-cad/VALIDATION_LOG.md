@@ -9,10 +9,10 @@ missing or the count cannot be determined, establish a baseline with the full ga
 ## Last successful full gate
 
 - Date: 2026-10-09.
-- Change: shared command registry for UI, browser automation and CLI, including all preceding feature work.
-- Result: type checks, 1565 unit/component tests in 199 files, build/bundle budget (52 bundles, largest 474.54 kB), all 320 development native browser cases and all 48 production cases passed.
-- Completed items since that full gate: **4**.
-- Next full gate: after **1** more completed item.
+- Change: five-item command automation batch: typed semantic CAD commands, transactional native plans, built-in command agent, recorded workflows and live access to the open project; includes the authored-parameter diagnostic fix.
+- Result: type checks, 1646 unit/component tests in 211 files, build/bundle budget (58 bundles, largest 498.24 kB), all 328 development browser cases and all 55 production cases passed.
+- Completed items since that full gate: **0**.
+- Next full gate: after **5** more completed items.
 
 ## Completed batch
 
@@ -1240,3 +1240,45 @@ gates. The final frozen-checkout `npm run release:check` passed: 1646 tests in
 55 production browser cases. The full gate also satisfies the reduced gate.
 This is an item-1 fixup, not an additional completed requested item. Item 5 and
 the new full-gate baseline are recorded with its separate feature commit.
+
+## Command automation item 5: live access to the open project
+
+The retained Automation dock offers explicit trusted-click connection and capability
+copying. `npm run cad:live` sends bounded JSON registry requests to the existing
+browser tab, sharing its actual project, selection, native worker and Undo history.
+The optional loopback-only Vite development/preview relay keeps separate browser
+and agent capabilities in memory, bounds messages/readers/queues/deadlines, rejects
+cross-site traffic and checks explicit project sessions. Disconnect/expiry revoke
+capabilities and queued work. Already delivered commands can finish; receipts forbid
+automatic retries. Late replies cannot update a replacement connection. Static
+hosting, arbitrary JavaScript/filesystem access, HTTP mouse gestures and an MCP
+server are outside this transport's supported scope.
+
+Prism Anthropic `claude-sonnet-5-5` reviewed implementation and integration.
+Initial/final relay review 157c69c4273a1471fbc77553fdb0f40f and
+199d0885208458fddb03834ee555d8f1 prompted bounded-reader, expiry, keepalive and CLI
+fixes. Native helper/wrapper reviews ecb99ed020f344a94eff0ac086705d40,
+cd627ac650cc6f8f6b9ec37e24aafb8a and 2ebe66d9ad94a6e8654a4015813536c1 found no
+issues. Browser deadline reviews 0a0bce4c27face0280fd9db297368f52 and
+0db9b8e4de68859c4853c4208f5e8308 found no issues. Root integration review
+2d707b0502c68d2445e3a7881bb4cbcd found stale copied feedback after disconnect;
+fixed it, guarded delayed clipboard completion and added accessible failure alerts
+with regressions. Final d6cf77c10d3b7c0761d24e69ebd16c89 has no high/medium
+findings. Its low effect-timing note does not expose a capability: the client clears
+the connection ID immediately and callbacks/buttons check the current connection.
+No actionable findings remain.
+
+Focused client/middleware/panel checks passed 17 tests. Focused development and
+production acceptance each passed: trusted connection, actual CLI snapshot and
+parameter edit, exact native volume/orientation, shared Undo, stale same-ID project
+replacement and revoked capability rejection. The complete frozen-checkout
+`npm run release:check` passed lint, all 1646 tests in 211 files, build/budget
+(58 bundles, largest 498.24 kB), 328 development cases in 36.4 minutes and 55
+production cases in 4.1 minutes. This full gate satisfies the per-item reduced
+gate and establishes the baseline above. Optional live cloud-provider calls for
+item 3 remain unperformed pending explicit fixture-sharing approval; provider
+transports are covered with mocks and native browser geometry is real.
+
+No circular or large-bundle warnings remain. Vite's existing linkedSketch
+static/dynamic import advisory remains; it does not fail the budget. Cadence:
+**0** completed items since this successful full gate; next full gate after five.

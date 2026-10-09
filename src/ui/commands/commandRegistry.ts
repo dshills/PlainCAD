@@ -1,6 +1,7 @@
 import { beginCoach, canCoach } from "./manufacturingCoachCommand";
 import { bindCommand, executeCommand, invokeCommand, isRegisteredCommandAvailable, subscribeCommandExecutions, type JsonValue } from "../../commands/registry";
 import { registerMacroCommands } from "../../commands/macroStore";
+import { registerLiveSessionCommands } from "../../commands/liveSession";
 import { CAD_COMMANDS } from "../../commands/cadCommands";
 import { useWorkbenchState } from "../../state/useWorkbenchState";
 import { registerCommandPlanCommands } from "../../commands/commandPlans";
@@ -876,6 +877,7 @@ registerMacroCommands({
     return response.value;
   },
 });
+registerLiveSessionCommands();
 bindCommand({ id: "automation.open", label: "Open automation tools", kind: "domain", input: { type: "object", additionalProperties: false, properties: {} } }, {
   id: "domain", label: () => "Open automation tools", available: () => undefined,
   invoke: args => { objectArguments(args[0] ?? {}, []); useWorkbenchState.getState().showBottom("automation"); },

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "cad": "node scripts/plaincad-cli.mjs",
+    "cad:live": "node scripts/plaincad-live.mjs",
     "dev": "vite",
     "build": "tsc -b && vite build && node scripts/check-bundle-size.mjs",
     "test": "vitest run",

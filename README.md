@@ -9,6 +9,13 @@ workflows. Make inputs adjustable, save locally or download JSON, then replay
 through a native preview and accept the workflow as one Undo step. Camera moves
 and interface clicks are excluded. See [workflow recording and limits](docs/MACROS.md).
 
+Automation also offers **Connect live agent**: opt in to let an external agent
+inspect and edit the project already open in your browser through the same registry,
+selection, native modeling and Undo. Copy its temporary capability privately into
+`PLAINCAD_LIVE_TOKEN`, then use `npm run cad:live` with JSON requests. This loopback
+relay requires the local development/preview server. Disconnect revokes access;
+static hosting does not include the relay. See [live connection setup](docs/LIVE_SESSION.md).
+
 Browser-first, local-first parametric CAD for mechanical parts. Draw sketches,
 create native solids, edit dimensions, and save an editable project or export STL.
 Optional AI assistance supports Anthropic, OpenAI, and Google.
@@ -337,7 +344,10 @@ agents. Discover argument schemas through `commands.list`: create/place componen
 create/draw/dimension sketches, edit parameters, extrude/revolve, make scoped holes,
 and add native fillets/chamfers. Generated UI interaction commands still cover
 advanced tools whose semantic adapters are not yet available. No runtime geometry
-proofs or arbitrary document patches are accepted as command arguments. See
+proofs or arbitrary document patches are accepted as command arguments. Parameter
+updates retain invalid authored expressions with source-linked diagnostics so they
+can be repaired; current measurements and export require a successful rebuild.
+Native command plans reject invalid candidates before Apply. See
 [stable command catalog](docs/STABLE_COMMANDS.md).
 
 ### Preview a command plan

@@ -15,7 +15,10 @@ component creation/placement, origin/offset sketches, mouse drawing, constructio
 driving dimensions, deletion, extrude/revolve, scoped holes, and native edge
 fillet/chamfer. UI drawing and parameter edits call these same semantic handlers.
 Native rebuild diagnostics remain authoritative; a synchronous document edit is
-not a geometry-success receipt. Advanced face/to-face, pattern and assembly tools
+not a geometry-success receipt. Parameter updates preserve invalid authored text
+and return source-linked diagnostics; measurements and export require a successful
+current rebuild. Native plan previews reject these invalid candidates before Apply.
+Advanced face/to-face, pattern and assembly tools
 retain the discoverable UI adapters. See [catalog and limits](../../docs/STABLE_COMMANDS.md).
 
 ## Transactional command plans
@@ -49,6 +52,18 @@ the canonical native command-plan preview and one Apply/Undo transaction. Projec
 replacement immediately discards active recording and unsaved drafts; saved
 workflows remain separate from CAD files. Limits: 100 steps, 32 variables, 30 saved
 workflows and 256 KiB of library JSON. See [workflow scope](../../docs/MACROS.md).
+
+## External agents in the open project
+
+Explicit **Connect live agent** in the Automation dock enables a loopback-only
+JSON relay and `npm run cad:live` CLI to the existing browser tab. The agent uses
+its actual selection, document, native worker and shared Undo. Separate in-memory
+browser/agent capabilities, bounded readers/queues/messages, explicit session
+checks and disconnect/expiry reject old requests. Delivered commands may finish
+after a disconnect or timeout; receipts forbid automatic retries. Static hosting,
+arbitrary JavaScript/filesystem access and Chromium mouse gestures are unavailable
+through this HTTP-only transport. This is a JSON command connection, not an MCP
+server. See [transport scope](../../docs/LIVE_SESSION.md).
 
 ## Canvas action workflow
 

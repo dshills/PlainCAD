@@ -6,6 +6,7 @@ import {
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 import { aiPlugin } from "./server/aiMiddleware";
+import { liveSessionPlugin } from "./server/liveSessionMiddleware";
 import { commandInstrumentation } from "./scripts/command-instrumentation";
 
 export default defineConfig({
@@ -13,6 +14,7 @@ export default defineConfig({
     commandInstrumentation(),
     react(),
     aiPlugin(),
+    liveSessionPlugin(),
     {
       name: "plaincad-deployment-headers",
       configurePreviewServer(server) {
@@ -56,6 +58,7 @@ export default defineConfig({
           if (/\/src\/commands\/(registry|protocol|CommandHost|interactionEvents|inputDriver|nativeEvents|artifacts)\.tsx?$/.test(path)) return "command-runtime";
           if (/\/src\/commands\/(cadCommands|cadCommandOperations|commandSchemas)\.ts$/.test(path)) return "cad-command-model";
           if (path.endsWith("/src/commands/macros.ts")) return "macro-model";
+          if (path.endsWith("/src/commands/liveSession.ts")) return "live-command-runtime";
           if (path.includes("/src/state/") || path.includes("/src/ui/themes/")) return "application-state";
           if (path.includes("/src/ai/") || path.includes("/src/templates/")) return "cad-recipes";
           // These persistence helpers are dependencies of CAD/worker modules.
