@@ -1,5 +1,8 @@
 import { beginCoach, canCoach } from "./manufacturingCoachCommand";
 import { bindCommand, invokeCommand, isRegisteredCommandAvailable, type JsonValue } from "../../commands/registry";
+import { registerCommandPlanCommands } from "../../commands/commandPlans";
+import { useCommandPlan } from "../../state/commandPlanState";
+import { useAiFacePicking } from "../../state/aiFacePicking";
 import { registerCadCommands } from "../../commands/registerCadCommands";
 import { registerApplicationCommands } from "../../commands/applicationCommands";
 import { objectArguments, stringArgument } from "../../commands/protocol";
@@ -834,6 +837,18 @@ for (const command of commands) bindCommand({ id: command.id, label: command.lab
     checkOutcome();
     return result;
   },
+});
+registerCommandPlanCommands(() => {
+  const state = useCadStore.getState();
+  const preview = currentAiCanvasPreview(state);
+  return !state.fileBusy && (state.rebuild.status === "succeeded" ||
+    (state.rebuild.status === "idle" && !state.history.present.features.length)) &&
+    (!preview || (preview.planId !== undefined && preview.planId === useCommandPlan.getState().frame?.id)) &&
+    !useAiFacePicking.getState().frame && !interactionDraftBusy("commandPlan") &&
+    !useTargetScopeCapture.getState().busy && !useFileJobs.getState().exportOpen &&
+    !useSketchCanvas.getState().active && !useGuidedHole.getState().draft &&
+    !useExtrudeDraft.getState().draft && !useHoleDraft.getState().draft &&
+    !useModelingDraft.getState().draft && !useProjectWorkflow.getState().active && !operationDraftBusy();
 });
 function parameterCommandsEditable() {
   const state = useCadStore.getState();

@@ -335,6 +335,15 @@ advanced tools whose semantic adapters are not yet available. No runtime geometr
 proofs or arbitrary document patches are accepted as command arguments. See
 [stable command catalog](docs/STABLE_COMMANDS.md).
 
+### Preview a command plan
+
+Scripts can submit a bounded sequence of semantic edits to `plan.preview`. The
+native candidate appears in the main viewport with Before/After controls. Apply
+commits all edits as one Undo step; Cancel, stale context and failed modeling keep
+the accepted project unchanged. Runtime geometry proofs remain private. See
+[transactional command plans](docs/COMMAND_PLANS.md) for aliases, result references
+and resource limits.
+
 ## AI Assistance
 
 AI is optional; ordinary drawing, modeling, and file commands work without a

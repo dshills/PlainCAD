@@ -18,6 +18,16 @@ Native rebuild diagnostics remain authoritative; a synchronous document edit is
 not a geometry-success receipt. Advanced face/to-face, pattern and assembly tools
 retain the discoverable UI adapters. See [catalog and limits](../../docs/STABLE_COMMANDS.md).
 
+## Transactional command plans
+
+`plan.preview/apply/cancel/status` stages bounded semantic edits on a private
+native worker and compares the candidate in the existing viewport. Every edit
+while modeled features exist requires native validity/solid-count/volume proof;
+a later deletion cannot hide an earlier failed operation. Apply commits once;
+Undo restores the accepted source. Document/session/selection/component/rebuild
+changes invalidate the proof. Empty and sketch-only candidates remain supported.
+See [plan bounds](../../docs/COMMAND_PLANS.md).
+
 ## Canvas action workflow
 
 - Contextual native-part controls share command guards with the rest of the UI.

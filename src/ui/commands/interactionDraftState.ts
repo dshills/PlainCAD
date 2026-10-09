@@ -5,6 +5,7 @@ import { useFittedPart } from "./fittedPartState";
 import { useComponentPlacement } from "./componentPlacementState";
 import { usePartLibrary } from "./partLibraryState";
 import { useStepExport } from "./stepExportState";
+import { useCommandPlan } from "../../state/commandPlanState";
 import { create } from "zustand";
 import { useInspectionState } from "../../state/inspectionState";
 import { useSketchProjection } from "./sketchProjectionState";
@@ -29,10 +30,11 @@ export const useSketchTrimExtend = create<{ frame?: SketchTrimExtendFrame; mode:
 export const useFacePocket = create<{ frame?: FacePocketFrame }>(() => ({}));
 export const useFeaturePattern = create<{ frame?: FeaturePatternFrame }>(() => ({}));
 
-export type InteractionDraftOwner = "inspection" | "drawing" | "family" | "coach" | "fit" | "solidDimension" | "sketchRefinement" | "constraint" | "trimExtend" | "facePocket" | "replication" | "featureAddition" | "offset" | "reusablePart" | "pattern" | "projection" | "partLibrary" | "componentPlacement" | "stepExport";
+export type InteractionDraftOwner = "commandPlan" | "inspection" | "drawing" | "family" | "coach" | "fit" | "solidDimension" | "sketchRefinement" | "constraint" | "trimExtend" | "facePocket" | "replication" | "featureAddition" | "offset" | "reusablePart" | "pattern" | "projection" | "partLibrary" | "componentPlacement" | "stepExport";
 /** Each draft can inspect competing owners without counting its own frame. */
 export function interactionDraftBusy(owner?: InteractionDraftOwner) {
   return Boolean(
+    (owner !== "commandPlan" && useCommandPlan.getState().frame) ||
     (owner !== "drawing" && useShopDrawing.getState().frame) ||
     (owner !== "family" && useProductFamily.getState().frame) ||
     (owner !== "coach" && useManufacturingCoach.getState().frame) ||

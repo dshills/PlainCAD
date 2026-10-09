@@ -1,3 +1,5 @@
+import { useCommandPlan } from "../../state/commandPlanState";
+import { CommandPlanPanel } from "../panels/CommandPlanPanel";
 import { useShallow } from "zustand/react/shallow";
 import { WorkbenchDetailsDock } from "./WorkbenchDetailsDock";
 import { RetainedPanel } from "./RetainedPanel";
@@ -81,6 +83,7 @@ export function WorkspacePanels() {
   );
 }
 function LegacyWorkspacePanels() {
+  const plan = useCommandPlan(state => state.status !== "idle");
   const { layout, pins } = useWorkspaceState(
     useShallow(({ layout, pins }) => ({ layout, pins })),
   );
@@ -126,9 +129,10 @@ function LegacyWorkspacePanels() {
     <aside
       className="right-panel"
       aria-label="Workspace details"
-      hidden={!visible}
+      hidden={!visible && !plan}
     >
-      {layout === "focused" && (
+      {plan ? <CommandPlanPanel /> : null}
+      {layout === "focused" && !plan && (
         <div className="workspace-panel-header">
           <strong>Details</strong>
           <button
@@ -148,9 +152,9 @@ function LegacyWorkspacePanels() {
         <div
           key={panel.id}
           hidden={
-            layout !== "full" &&
+            plan || (layout !== "full" &&
             current !== panel.id &&
-            !pins.includes(panel.id)
+            !pins.includes(panel.id))
           }
         >
           <PinPanel panel={panel.id} label={panel.label} />

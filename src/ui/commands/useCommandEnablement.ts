@@ -1,3 +1,4 @@
+import { useCommandPlan } from "../../state/commandPlanState";
 import { useManufacturingCoach } from "./manufacturingCoachState";
 import { useProductFamily } from "./productFamilyState";
 import { useShopDrawing } from "./shopDrawingState";
@@ -37,6 +38,7 @@ import { useAiFacePicking } from "../../state/aiFacePicking";
 import { useAiDrawer } from "./aiCommand";
 
 export function useCommandEnablement() {
+  useCommandPlan(state => state.frame);
   useAiHistory(state => state.transaction);
   useAiCanvasPreview(state => state.preview);
   useAiDrawer(state => state.open);

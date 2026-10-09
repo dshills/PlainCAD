@@ -1,3 +1,6 @@
+import { useCommandPlan } from "../../state/commandPlanState";
+import { CommandPlanPanel } from "../panels/CommandPlanPanel";
+import { executeCommand } from "../../commands/registry";
 import { useShallow } from "zustand/react/shallow";
 import { useWorkbenchState } from "../../state/useWorkbenchState";
 import { useWorkspaceState } from "../../state/useWorkspaceState";
@@ -19,6 +22,7 @@ import { useCompactWorkbench } from "./useCompactWorkbench";
 
 export function WorkbenchDetailsDock() {
   const compact = useCompactWorkbench();
+  const plan = useCommandPlan(state => state.status !== "idle");
   const dock = useWorkbenchState(
     useShallow((state) => ({
       rightOpen: state.rightOpen,
@@ -39,10 +43,10 @@ export function WorkbenchDetailsDock() {
       id="workbench-details"
       className={`workbench-dock workbench-right ${dock.mobileDock === "right" ? "mobile-current" : ""}`}
       aria-label="Workspace details"
-      hidden={sketching || (compact ? dock.mobileDock !== "right" : !dock.rightOpen)}
+      hidden={!plan && (sketching || (compact ? dock.mobileDock !== "right" : !dock.rightOpen))}
     >
       <div className="dock-header">
-        <div role="group" aria-label="Task dock tabs">
+        <div role="group" aria-label="Task dock tabs" hidden={plan}>
           <button
             type="button"
             aria-pressed={!properties}
@@ -61,8 +65,9 @@ export function WorkbenchDetailsDock() {
         <button
           type="button"
           className="dock-close"
-          aria-label="Close Details"
+          aria-label={plan ? "Close command plan" : "Close Details"}
           onClick={() => {
+            if (plan) { void executeCommand({ command: "plan.cancel", session: useCadStore.getState().documentSession, arguments: {} }); return; }
             if (compact) useWorkbenchState.setState({ mobileDock: "none" });
             else dock.configure({ rightOpen: false });
             window.document.getElementById("workspace-details-toggle")?.focus();
@@ -72,10 +77,11 @@ export function WorkbenchDetailsDock() {
         </button>
       </div>
       <div className="dock-body">
-        <div hidden={properties}>
+        {plan ? <CommandPlanPanel /> : null}
+        <div hidden={plan || properties}>
           <TaskGuide />
         </div>
-        <div hidden={!properties}>
+        <div hidden={plan || !properties}>
           <label className="dock-tool-select">
             Show
             <select

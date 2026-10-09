@@ -6,6 +6,8 @@ import { useCadStore, type CadStore } from "./useCadStore";
 /** A native proposal is temporary view data, never document or undo history. */
 export interface AiCanvasPreview {
   document: CadDocument;
+  candidate?: CadDocument;
+  planId?: string;
   session: number;
   componentId?: string;
   selection?: readonly SelectionRef[];
@@ -58,3 +60,15 @@ useCadStore.subscribe((state) => {
   const preview = useAiCanvasPreview.getState().preview;
   if (preview && !currentAiCanvasPreview(state, preview)) clearAiCanvasPreview(preview);
 });
+
+/** Private native proof from the plan worker; never callable with agent-supplied meshes. */
+export function publishCommandCanvasPreview(input: AiCanvasPreview): boolean {
+  if (!input.planId || !input.candidate || input.result.documentId !== input.candidate.id ||
+    !input.result.success || input.result.errors.length || input.result.meshes.some(mesh =>
+      mesh.geometrySource !== "opencascade" || mesh.geometryAssertions?.valid !== true ||
+      !Number.isInteger(mesh.geometryAssertions.solidCount) || mesh.geometryAssertions.solidCount < 1 ||
+      !Number.isFinite(mesh.geometryAssertions.volume) || mesh.geometryAssertions.volume <= 0)) return false;
+  if (!currentAiCanvasPreview(useCadStore.getState(), input)) return false;
+  useAiCanvasPreview.setState({ preview: input, mode: "after" });
+  return true;
+}

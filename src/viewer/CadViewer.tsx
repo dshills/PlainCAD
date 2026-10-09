@@ -286,7 +286,8 @@ export function CadViewer() {
     const operationPicking = installOperationDropPicking(scene, renderer.domElement, camera, () => clippingRef.current, invalidate);
     const fit = () => {
       keepFitted = true;
-      fitMeshes(camera, controls, meshesRef.current);
+      const preview = currentAiCanvasPreview(useCadStore.getState());
+      fitMeshes(camera, controls, preview && useAiCanvasPreview.getState().mode === "after" ? preview.result.meshes : meshesRef.current);
       invalidate();
     };
     runtimeRef.current = { background, grid, camera, controls, applyPose, modelGroup, modelMeshes, refreshQuality, invalidate, fit, sketchGroup, measurementGroup, operationPicking, sketchResources: createSketchOverlayResources() };
@@ -621,17 +622,15 @@ export function CadViewer() {
     if (runtime)
       updateSketchOverlay(
         runtime.sketchGroup,
-        document,
+        aiPreviewMode === "after" && aiPreview?.candidate && !aiPreview.result.meshes.length ? aiPreview.candidate : document,
         runtime.sketchResources,
         hiddenComponents,
         hiddenSketches,
-        rebuild.status === "succeeded" &&
-          rebuild.result?.documentId === document.id
-          ? rebuild.result
-          : undefined,
+        aiPreviewMode === "after" && aiPreview?.candidate && !aiPreview.result.meshes.length ? aiPreview.result :
+          rebuild.status === "succeeded" && rebuild.result?.documentId === document.id ? rebuild.result : undefined,
       );
     if (runtime) { applyClipping(runtime.sketchGroup, clippingRef.current); runtime.invalidate(); }
-  }, [document, rebuild, view.hiddenComponentIds, view.hiddenSketchIds, view.session, session]);
+  }, [document, rebuild, aiPreview, aiPreviewMode, view.hiddenComponentIds, view.hiddenSketchIds, view.session, session]);
 
   useEffect(() => {
     meshesRef.current = meshes.filter((mesh) => !hidden.includes(mesh.bodyId));
@@ -725,7 +724,7 @@ export function CadViewer() {
     const hit = ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 0, 1), 0), new THREE.Vector3());
     if (!hit) { useCadStore.getState().setFileError("This view cannot place a part on the XY ground plane. Use an angled or top view, or Insert at origin."); return; }
     void beginLibraryPlacement(id, { x: hit.x, y: hit.y, z: hit.z });
-  }}>{presentationMode === "model" && (!aiPreview || aiPreviewMode === "before") ? <ModelMeasurementReadout project={dimensionProjector.current} subscribeFrames={subscribeFrames.current} /> : null}{presentationMode === "model" && (!aiPreview || aiPreviewMode === "before") && !inspection.picking ? <SolidDimensionOverlay dimensions={dimensions} project={dimensionProjector.current} subscribeFrames={subscribeFrames.current} /> : null}<ViewerToolbar hasGeometry={meshes.some((mesh) => !hidden.includes(mesh.bodyId))} /></div>;
+  }}>{presentationMode === "model" && (!aiPreview || aiPreviewMode === "before") ? <ModelMeasurementReadout project={dimensionProjector.current} subscribeFrames={subscribeFrames.current} /> : null}{presentationMode === "model" && (!aiPreview || aiPreviewMode === "before") && !inspection.picking ? <SolidDimensionOverlay dimensions={dimensions} project={dimensionProjector.current} subscribeFrames={subscribeFrames.current} /> : null}<ViewerToolbar hasGeometry={(aiPreviewMode === "after" && currentAiCanvasPreview(useCadStore.getState(), aiPreview) ? aiPreview!.result.meshes : meshes).some((mesh) => !hidden.includes(mesh.bodyId))} /></div>;
 }
 
 function applyClipping(group: THREE.Group, plane: THREE.Plane | undefined) {

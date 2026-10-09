@@ -58,7 +58,7 @@ export default defineConfig({
           if (path.includes("/src/state/") || path.includes("/src/ui/themes/")) return "application-state";
           if (path.includes("/src/ai/") || path.includes("/src/templates/")) return "cad-recipes";
           // These persistence helpers are dependencies of CAD/worker modules.
-          if (path.includes("/src/cad/") || /\/src\/persistence\/(importSafety|backgroundJob)\.ts$/.test(path)) return "cad";
+          if (path.includes("/src/cad/") || /\/src\/persistence\/(importSafety|backgroundJob|projectCodec)\.ts$/.test(path)) return "cad";
         },
       },
     },

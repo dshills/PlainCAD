@@ -45,7 +45,8 @@ export function renderAiProposal(runtime: { aiProposal?: AiProposalMeshes; aiOve
   proposal.group.visible = mode === "after";
   runtime.modelGroup.visible = mode === "before";
   const saved = runtime.aiOverlayVisibility;
-  runtime.sketchGroup.visible = mode === "before" && (saved.mode === presentation ? saved.sketch : presentation === "model");
+  runtime.sketchGroup.visible = (mode === "after" && Boolean(preview.candidate && !preview.result.meshes.length)) ||
+    (mode === "before" && (saved.mode === presentation ? saved.sketch : presentation === "model"));
   runtime.measurementGroup.visible = mode === "before" && (saved.mode === presentation ? saved.measurement : presentation === "model");
   runtime.invalidate();
 }

@@ -11,8 +11,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Date: 2026-10-09.
 - Change: shared command registry for UI, browser automation and CLI, including all preceding feature work.
 - Result: type checks, 1565 unit/component tests in 199 files, build/bundle budget (52 bundles, largest 474.54 kB), all 320 development native browser cases and all 48 production cases passed.
-- Completed items since that full gate: **1**.
-- Next full gate: after **4** more completed items.
+- Completed items since that full gate: **2**.
+- Next full gate: after **3** more completed items.
 
 ## Completed batch
 
@@ -1109,3 +1109,40 @@ The existing linkedSketch static/dynamic import advisory remains.
 
 Cadence: **1** completed item since the last full gate; the full gate is due on
 the fifth item in this batch.
+
+## 2026-10-09 — Item 2: transactional command plans
+
+Bounded semantic plans create private native candidates, compare Before/After in
+the existing viewport and commit once through document history. Alias/backward
+result references resolve as JSON. Each edit while active modeling features exist
+requires native validity/solid-count/volume proof; later deletion cannot hide
+failed modeling. Cancel/failure preserve accepted geometry. Source/session,
+selection, component and accepted-rebuild changes invalidate the proof. Sketch-
+only/empty candidates and fitting proposed geometry are supported. Apply/cancel
+share registry guards, and accepted semantic steps can be recorded.
+
+Prism Anthropic claude-sonnet-5-5 review
+c79d351c1229ff6a8f18894b4cdec49d covered all 18 original files. Fixed its
+foreign-preview ownership, stale acceptance coverage, availability and dock
+retention findings; added action error/busy guards and preserved existing detail
+drafts. Fix review 16fb84b707d17d123c1d69664568dc0c covered 10 files; its only
+medium finding assumes a missing useCadStore import, which already exists at
+WorkbenchDetailsDock line 8 and passes TypeScript/native checks. The earlier
+test-only Prism e674e3a4bfdb2de4379bb0606cfe4aed timing concern was fixed with an
+explicit worker-start wait. No actionable findings remain.
+
+The final reduced gate passed: lint, 1626 unit/component tests in 209 files, build
+and bundle budget (54 bundles, largest 487.73 kB), 5 development native smoke
+cases and 14 production/CSP cases. Focused plan/retention units passed 19 tests.
+Additional native acceptance covers non-template offset profiles, scoped cuts,
+exact volume/orientation, main-canvas Fit, private staging, Apply/one Undo,
+cancellation and stale sessions in development and production. The development
+case forces a same-ID external project replacement while a real outstanding
+native proof exists, without cancelling first; it verifies automatic invalidation,
+rejected old Apply and unchanged accepted volume. This uses a controlled Vite
+module test hook, not a production agent bypass.
+
+Classifying the pure project codec with CAD leaves resolves the concurrent AI
+context circular chunk warning. No circular chunk warnings remain; the existing
+linkedSketch static/dynamic import advisory remains. Cadence: **2**; full gate
+is due after three more completed items.
