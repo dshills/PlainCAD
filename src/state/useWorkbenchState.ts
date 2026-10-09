@@ -3,7 +3,7 @@ import { compactSnapshot } from "./workbenchViewport";
 
 export const WORKBENCH_STORAGE_KEY = "plaincad.workbench.v1";
 export type WorkbenchLeftTab = "project" | "parameters";
-export type WorkbenchBottomTab = "history" | "ai" | "issues";
+export type WorkbenchBottomTab = "history" | "ai" | "issues" | "automation";
 export interface WorkbenchPreferences {
   leftOpen: boolean;
   rightOpen: boolean;

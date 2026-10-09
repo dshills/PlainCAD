@@ -11,8 +11,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Date: 2026-10-09.
 - Change: shared command registry for UI, browser automation and CLI, including all preceding feature work.
 - Result: type checks, 1565 unit/component tests in 199 files, build/bundle budget (52 bundles, largest 474.54 kB), all 320 development native browser cases and all 48 production cases passed.
-- Completed items since that full gate: **3**.
-- Next full gate: after **2** more completed items.
+- Completed items since that full gate: **4**.
+- Next full gate: after **1** more completed item.
 
 ## Completed batch
 
@@ -1178,3 +1178,38 @@ consent, native main-panel Apply, exact volume and guarded AI Undo/Redo. Provide
 transports are covered with mocks. Optional fixture-only live provider calls await
 explicit data-sharing approval after automatic review rejected the outbound test.
 Cadence: **3**; full gate due after two more items.
+
+## Command automation item 4: recorded modeling workflows
+
+Added the retained Automation bottom dock and shared `macro.*` recording, local
+naming/library, adjustable primitive inputs, bounded versioned JSON import/export
+and canonical native plan replay. Recording excludes navigation and camera moves.
+Only declared CAD references are automatically rebound; authored names/expressions
+remain intact. Project replacement immediately discards recording/unsaved drafts.
+
+Prism Anthropic `claude-sonnet-5-5` reviewed the implementation and integration:
+f3a01c0d44b5c538e64c3b0436287921, 18c20161ee64d9f5283768dde868ccca,
+319ae80d21363a47e67e8c0b20b54a23, 40ef338d5e04e8f74862a072fc6412a5,
+0189b76721c3f15ab3f2cd89359ac2a7 and 40dbc7897caa8d05e5d353c3c702a506.
+Fixed overwrite/substitution validation, independent preview guards, immediate
+session invalidation, shared UI availability and accidental literal rewriting.
+Follow-up c8dac3a73d66ea4bc0398a45fec36f88 warns that imported explicit string
+result references can derive names or expressions; this is intentional. The plan
+engine resolves them, strictly checks actual schemas/expressions and validates
+native geometry before Apply. There is no validation bypass. Dock-test review
+4ee5eaabdd60ca8d610e91647ca3a84f low asynchronous concerns do not apply to its
+synchronous close/focus and actual hidden attributes; cleanup is failure safe.
+Documentation review 95d0690a238d972bf52c0d1f8e79c7f3 prompted current-session/ID
+clarification and consistent examples; the complete macro example passes the real
+validator. Test review 246e243ba1ba4b1f2fc7a5827345b589 covers the helper and both
+wrappers; its medium assumes a 30-second timeout, while both configs specify 90.
+No actionable findings remain.
+
+Final reduced gate passed: lint, 1633 tests in 209 files, build/budget
+(56 bundles, largest 497.84 kB), 5 development native smoke cases and 14 production
+smoke cases. Focused macro/panel tests passed 15 tests and dock tests passed 9.
+Additional native development and production cases validate recording, typed
+12mm replay, exact BRep volume/orientation and one-step Undo back to 8mm.
+Initial acceptance failures were exact-label selectors containing option text;
+accessible combobox selectors fixed the tests without changing runtime behavior.
+Cadence: **4**; next item requires the full release gate before commit.

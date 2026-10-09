@@ -15,6 +15,7 @@ import {
 import { RetainedPanel } from "./RetainedPanel";
 import { DockResize } from "./DockResize";
 import { AiDockContent } from "./AiDockContent";
+import { AutomationDockContent } from "./AutomationDockContent";
 import { actionableIssueCount } from "./diagnosticPresentation";
 export function WorkbenchBottomDock({
   context,
@@ -64,17 +65,17 @@ export function WorkbenchBottomDock({
       useWorkbenchState.setState({ bottomOpen: false });
   }, [aiOpen, dock.bottomTab, dock.bottomOpen, closeAi]);
   const tab = dock.bottomTab;
-  const open = dock.bottomOpen && (tab === "ai" ? aiOpen : enabled);
+  const open = dock.bottomOpen && (tab === "ai" ? aiOpen : tab === "automation" || enabled);
   const aiVisible = open && aiOpen && tab === "ai";
   const close = () => {
     if (tab === "ai") void closeAi();
     else useWorkbenchState.setState({ bottomOpen: false });
-    window.document.getElementById(tab === "ai" ? "workbench-ai-toggle" : tab === "issues" ? "workbench-issues-toggle" : "workspace-history-toggle")?.focus();
+    window.document.getElementById(tab === "ai" ? "workbench-ai-toggle" : tab === "automation" ? "workbench-automation-toggle" : tab === "issues" ? "workbench-issues-toggle" : "workspace-history-toggle")?.focus();
   };
   return (
     <section
       className={`workbench-bottom${open ? " expanded" : ""}`}
-      aria-label={enabled ? "History, AI and issues" : "AI dock"}
+      aria-label={enabled ? "History, AI, automation and issues" : "AI and automation dock"}
     >
       <div
         className="dock-header bottom-tabs"
@@ -122,6 +123,12 @@ export function WorkbenchBottomDock({
           <WarningCircleIcon size={18} aria-hidden={true} />
           Issues{issues ? ` (${issues})` : ""}
         </button> : null}
+        <button type="button" id="workbench-automation-toggle"
+          aria-expanded={open && tab === "automation"} aria-pressed={open && tab === "automation"}
+          aria-controls="workbench-automation"
+          onClick={() => { if (open && tab === "automation") close(); else void runCommand("automation.open"); }}>
+          Automation
+        </button>
         <span className="bottom-hint">
           {open ? "" : "Local project · changes stay on this device"}
         </span>
@@ -162,6 +169,10 @@ export function WorkbenchBottomDock({
         }
       }}>
         <RetainedPanel visible={aiVisible}><AiDockContent visible={aiVisible} /></RetainedPanel>
+      </div>
+      <div hidden={!open || tab !== "automation"} id="workbench-automation" className="bottom-dock-body"
+        onKeyDown={event => { if (event.key === "Escape" && !event.nativeEvent.isComposing && !event.defaultPrevented && !window.document.querySelector("dialog[open]")) { event.preventDefault(); event.stopPropagation(); close(); } }}>
+        <RetainedPanel visible={open && tab === "automation"}><AutomationDockContent /></RetainedPanel>
       </div>
       {open ? <DockResize dock="bottom" /> : null}
     </section>

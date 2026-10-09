@@ -39,6 +39,17 @@ project context is capped at 20 kB and is rejected, rather than silently truncat
 when oversized. This mode accepts CAD intent only; exports and general automation
 remain explicit shared commands. See [command agent scope](../../docs/COMMAND_AGENT.md).
 
+## Recorded modeling workflows
+
+The Automation dock and `macro.*` commands record successful semantic CAD edits,
+save named local workflows, expose typed adjustable inputs and import/export
+bounded versioned JSON. Created object references are rebound to earlier replay
+results. Existing IDs remain project specific unless made adjustable. Replay uses
+the canonical native command-plan preview and one Apply/Undo transaction. Project
+replacement immediately discards active recording and unsaved drafts; saved
+workflows remain separate from CAD files. Limits: 100 steps, 32 variables, 30 saved
+workflows and 256 KiB of library JSON. See [workflow scope](../../docs/MACROS.md).
+
 ## Canvas action workflow
 
 - Contextual native-part controls share command guards with the rest of the UI.

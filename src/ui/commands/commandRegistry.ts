@@ -1,5 +1,8 @@
 import { beginCoach, canCoach } from "./manufacturingCoachCommand";
-import { bindCommand, invokeCommand, isRegisteredCommandAvailable, type JsonValue } from "../../commands/registry";
+import { bindCommand, executeCommand, invokeCommand, isRegisteredCommandAvailable, subscribeCommandExecutions, type JsonValue } from "../../commands/registry";
+import { registerMacroCommands } from "../../commands/macroStore";
+import { CAD_COMMANDS } from "../../commands/cadCommands";
+import { useWorkbenchState } from "../../state/useWorkbenchState";
 import { registerCommandPlanCommands } from "../../commands/commandPlans";
 import { useCommandPlan } from "../../state/commandPlanState";
 import { useAiFacePicking } from "../../state/aiFacePicking";
@@ -859,6 +862,24 @@ function parameterCommandsEditable() {
 }
 registerCadCommands(id => id === "cad.parameter.update" ? parameterCommandsEditable() :
   selectCommandEnablement(useCadStore.getState()).editProject);
+registerMacroCommands({
+  canRecord: () => selectCommandEnablement(useCadStore.getState()).editProject,
+  canPreview: () => isRegisteredCommandAvailable("plan.preview", "domain"),
+  currentSession: () => useCadStore.getState().documentSession,
+  commands: () => CAD_COMMANDS.map(command => command.id),
+  subscribeExecutions: subscribeCommandExecutions,
+  subscribeSession: listener => useCadStore.subscribe(listener),
+  previewPlan: async input => {
+    const response = await executeCommand({ command: "plan.preview", arguments: input as unknown as JsonValue,
+      session: useCadStore.getState().documentSession });
+    if (!response.ok) throw new Error(response.error.message);
+    return response.value;
+  },
+});
+bindCommand({ id: "automation.open", label: "Open automation tools", kind: "domain", input: { type: "object", additionalProperties: false, properties: {} } }, {
+  id: "domain", label: () => "Open automation tools", available: () => undefined,
+  invoke: args => { objectArguments(args[0] ?? {}, []); useWorkbenchState.getState().showBottom("automation"); },
+});
 registerApplicationCommands(
   () => selectCommandEnablement(useCadStore.getState()).editProject,
   () => {

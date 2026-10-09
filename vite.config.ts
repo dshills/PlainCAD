@@ -55,6 +55,7 @@ export default defineConfig({
           // stores and file actions and must stay with the application entry.
           if (/\/src\/commands\/(registry|protocol|CommandHost|interactionEvents|inputDriver|nativeEvents|artifacts)\.tsx?$/.test(path)) return "command-runtime";
           if (/\/src\/commands\/(cadCommands|cadCommandOperations|commandSchemas)\.ts$/.test(path)) return "cad-command-model";
+          if (path.endsWith("/src/commands/macros.ts")) return "macro-model";
           if (path.includes("/src/state/") || path.includes("/src/ui/themes/")) return "application-state";
           if (path.includes("/src/ai/") || path.includes("/src/templates/")) return "cad-recipes";
           // These persistence helpers are dependencies of CAD/worker modules.

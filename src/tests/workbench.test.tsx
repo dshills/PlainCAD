@@ -24,6 +24,7 @@ import {
 } from "../state/useWorkbenchState";
 import { useAiDrawer } from "../ui/commands/aiCommand";
 import { useSketchCanvas } from "../ui/commands/sketchCanvasCommand";
+import { useMacroStore } from "../commands/macroStore";
 vi.mock("../viewer/CadViewer", () => ({
   CadViewer: () => <div data-testid="cad-viewer" />,
 }));
@@ -63,6 +64,7 @@ beforeEach(async () => {
 });
 afterEach(() => {
   cleanup();
+  useMacroStore.setState({ draft: undefined });
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
   if (originalStorage)
@@ -208,4 +210,26 @@ it("keeps auto panel reset transient and reports both sync/async command failure
       screen.getByText(/Command failed:/).closest("[role=alert]"),
     ).toHaveTextContent("Command failed: Save project. Download failed"),
   );
+});
+
+it("retains workflow input drafts across automation dock collapse and restores toggle focus", async () => {
+  render(<App />);
+  const before = useCadStore.getState().history;
+  act(() => useMacroStore.setState({ draft: { version: 1, id: "dock-draft", name: "Draft workflow", variables: [], steps: [{ command: "cad.parameter.add", arguments: { name: "width", expression: "20mm" } }] } }));
+  const toggle = screen.getByRole("button", { name: "Automation" });
+  fireEvent.click(toggle);
+  await screen.findByRole("heading", { name: "Modeling workflows" });
+  const panel = screen.getByRole("region", { name: "Modeling workflows" });
+  const name = screen.getByLabelText("Workflow name");
+  fireEvent.change(name, { target: { value: "Uncommitted workflow name" } });
+  expect(panel).toBeVisible();
+  fireEvent.keyDown(panel, { key: "Escape" });
+  expect(panel).not.toBeVisible();
+  expect(toggle).toHaveFocus();
+  fireEvent.click(toggle);
+  expect(screen.getByRole("region", { name: "Modeling workflows" })).toBe(panel);
+  expect(panel).toBeVisible();
+  expect(screen.getByLabelText("Workflow name")).toBe(name);
+  expect(name).toHaveValue("Uncommitted workflow name");
+  expect(useCadStore.getState().history).toBe(before);
 });

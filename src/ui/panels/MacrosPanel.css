@@ -1,0 +1,8 @@
+.macros-panel { display: flex; flex-direction: column; gap: 12px; min-width: 0; padding: 16px; color: var(--text); }
+.macros-panel h2, .macros-panel h3, .macros-panel p { margin: 0; }
+.macros-panel header, .macros-draft, .macros-run, .macros-panel details { display: flex; flex-direction: column; gap: 10px; }
+.macros-panel label { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.macros-panel input, .macros-panel select { max-width: 100%; min-width: 0; }
+.macros-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.macros-panel summary { cursor: pointer; margin-bottom: 10px; }
+.macros-panel .macros-note { opacity: .75; font-size: .85rem; }
