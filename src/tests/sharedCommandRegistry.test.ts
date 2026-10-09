@@ -21,7 +21,7 @@ describe("shared command transport", () => {
     expect(await executeCommand({ command: "test.parity", session: 7, arguments: { amount: 8 } })).toEqual({ ok: true, command: "test.parity", value: { value: { amount: 8 } } });
     expect(handler.mock.calls.map(call => call[0])).toEqual([[{ amount: 8 }], [{ amount: 8 }]]);
   });
-  it("reports accepted edits with isolated JSON results and preserves unavailable-result evidence", async () => {
+  it("isolates observer results and distinguishes executed-but-unserializable actions from failed invocations", async () => {
     configureCommandRuntime(() => 7);
     const observed: unknown[] = [];
     const first = subscribeCommandExecutions(event => { event.result = "changed"; throw new Error("Observer failed"); });
@@ -31,8 +31,9 @@ describe("shared command transport", () => {
       invokeCommand("test.recorded", "domain", [{}]);
       expect(observed).toEqual([{ id: "created" }]);
       const circular: Record<string, unknown> = {}; circular.self = circular;
-      bind("test.resultUnavailable", "domain", vi.fn(() => circular));
-      expect(await executeCommand({ command: "test.resultUnavailable", session: 7 })).toMatchObject({ error: { code: "result_unavailable" } });
+      const handler = bind("test.resultUnavailable", "domain", vi.fn(() => circular));
+      expect(await executeCommand({ command: "test.resultUnavailable", session: 7 })).toMatchObject({ error: { code: "result_unavailable", message: expect.stringContaining("Command executed") } });
+      expect(handler).toHaveBeenCalledTimes(1);
       expect(observed).toEqual([{ id: "created" }, null]);
       bind("test.failedRecording", "domain", vi.fn(() => { throw new Error("Rejected edit"); }));
       expect(await executeCommand({ command: "test.failedRecording", session: 7 })).toMatchObject({ error: { code: "command_failed" } });
@@ -95,14 +96,5 @@ describe("shared command transport", () => {
       removeCommandListener(window, "keydown", handler, null);
       node.remove();
     }
-  });
-  it("distinguishes an executed action with an unserializable result from invocation failure", async () => {
-    const result: {
-      self?: object;
-    } = {};
-    result.self = result;
-    const handler = bind("test.executed", "domain", vi.fn(() => result));
-    expect(await executeCommand({ command: "test.executed", session: 0 })).toMatchObject({ error: { code: "result_unavailable", message: expect.stringContaining("Command executed") } });
-    expect(handler).toHaveBeenCalledTimes(1);
   });
 });

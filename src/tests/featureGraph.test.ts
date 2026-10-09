@@ -605,19 +605,6 @@ describe("feature graph rebuild", () => {
     expect(deleteFeature(document, feature.id).features).toHaveLength(0);
   });
 
-  it("creates extrude features with timeline metadata", () => {
-    const feature = createExtrudeFeature({
-      name: "Manual Extrude",
-      sketchId: "sketch_1",
-      profileId: "sketch_1:profile:rectangle",
-      operation: "newBody",
-      distance: { expression: "10mm", unit: "mm" },
-      direction: "positive",
-    });
-    expect(feature.type).toBe("extrude");
-    expect(feature.createdAt).toBeTruthy();
-  });
-
   it.each([
     {
       label: "unknown boolean intent",

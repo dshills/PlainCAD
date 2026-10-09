@@ -16,14 +16,26 @@ describe("sketch helpers and profile detection", () => {
 
   it("detects rectangle with circular holes", () => {
     let sketch = addCenterRectangle(createXySketch(), "plate_width", "plate_height");
-    sketch = addCircleAt(sketch, "0mm", "0mm", "hole_diameter / 2");
+    for (const [x, y] of [
+      ["-hole_offset_x", "-hole_offset_y"],
+      ["hole_offset_x", "-hole_offset_y"],
+      ["hole_offset_x", "hole_offset_y"],
+      ["-hole_offset_x", "hole_offset_y"],
+    ] as const) {
+      sketch = addCircleAt(sketch, x, y, "hole_diameter / 2");
+    }
     const solved = solveSketch(sketch, {
       plate_width: normalizeQuantity(80, "mm"),
       plate_height: normalizeQuantity(50, "mm"),
-      hole_diameter: normalizeQuantity(4, "mm"),
+      hole_diameter: normalizeQuantity(5, "mm"),
+      hole_offset_x: normalizeQuantity(30, "mm"),
+      hole_offset_y: normalizeQuantity(18, "mm"),
     });
     const profiles = detectProfiles(solved);
-    expect(profiles.profiles[0].innerLoops).toHaveLength(1);
+    expect(solved.errors).toEqual([]);
+    expect(profiles.errors).toEqual([]);
+    expect(profiles.profiles).toHaveLength(1);
+    expect(profiles.profiles[0].innerLoops).toHaveLength(4);
   });
 
   it("detects a standalone circle profile", () => {

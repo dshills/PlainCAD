@@ -83,13 +83,6 @@ describe("rebuild, persistence, and export", () => {
     expect(analysis.errors).toContain("Missing or invalid mounting plate parameter hole_offset_x.");
   });
 
-  it("round trips project JSON", () => {
-    const document = createMountingPlateTemplate();
-    const imported = importProjectText(serializeProject(document));
-    expect(imported.name).toBe(document.name);
-    expect(rebuildDocument(imported).success).toBe(true);
-  });
-
   it("serializes projects deterministically with stable object key ordering", () => {
     const document = createMountingPlateTemplate();
     const reversed = {
@@ -102,14 +95,22 @@ describe("rebuild, persistence, and export", () => {
     expect(projectFilename({ ...document, name: "Mounting Plate: Rev A" })).toBe("Mounting_Plate_Rev_A.pcaddoc");
   });
 
-  it("saves and loads projects through the repository helpers", () => {
+  it("saves and loads editable projects through the repository helpers", () => {
     const document = createMountingPlateTemplate();
     const saved = saveProject(document);
 
     expect(saved.filename).toBe("Mounting_Plate.pcaddoc");
     expect(saved.text).toBe(serializeProject(document));
     expect(new TextDecoder().decode(saved.bytes)).toBe(saved.text);
-    expect(loadProject(saved.text).id).toBe(document.id);
+    const loaded = loadProject(saved.text);
+    expect(loaded).toMatchObject({ id: document.id, name: document.name });
+    expect(rebuildDocument(loaded).success).toBe(true);
+
+    const edited = upsertParameter(loaded, { ...loaded.parameters.plate_height, expression: "70mm" });
+    const rebuilt = rebuildDocument(edited);
+    expect(rebuilt.success).toBe(true);
+    expect(rebuilt.meshes.length).toBeGreaterThan(0);
+    expect(rebuilt.meshes[0].bounds.max[1] - rebuilt.meshes[0].bounds.min[1]).toBeCloseTo(70, 5);
   });
 
   it("rejects invalid project JSON with user-facing errors", () => {

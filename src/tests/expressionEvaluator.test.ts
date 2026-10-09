@@ -48,6 +48,21 @@ describe("expression evaluator", () => {
   });
 
   it("orders dependencies and detects cycles", () => {
+    const chain = evaluateParameters(Object.fromEntries(
+      Array.from({ length: 40 }, (_, index) => {
+        const name = `p${index}`;
+        return [name, {
+          id: name,
+          name,
+          expression: index === 0 ? "1mm" : `p${index - 1} + 1mm`,
+          value: 0,
+          unit: "mm",
+        }];
+      }).reverse(),
+    ));
+    expect(chain.errors).toEqual([]);
+    expect(chain.parameters.p39.value).toBe(40);
+
     const ok = evaluateParameters({
       a: { id: "a", name: "a", expression: "b + 1mm", value: 0, unit: "mm" },
       b: { id: "b", name: "b", expression: "9mm", value: 0, unit: "mm" },

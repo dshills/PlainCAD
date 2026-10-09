@@ -11,8 +11,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Date: 2026-10-09.
 - Change: five-item command automation batch: typed semantic CAD commands, transactional native plans, built-in command agent, recorded workflows and live access to the open project; includes the authored-parameter diagnostic fix.
 - Result: type checks, 1646 unit/component tests in 211 files, build/bundle budget (58 bundles, largest 498.24 kB), all 328 development browser cases and all 55 production cases passed.
-- Completed items since that full gate: **0**.
-- Next full gate: after **5** more completed items.
+- Completed items since that full gate: **1**.
+- Next full gate: after **4** more completed items.
 
 ## Completed batch
 
@@ -1282,3 +1282,51 @@ transports are covered with mocks and native browser geometry is real.
 No circular or large-bundle warnings remain. Vite's existing linkedSketch
 static/dynamic import advisory remains; it does not fail the budget. Cadence:
 **0** completed items since this successful full gate; next full gate after five.
+
+
+## Test-suite audit: redundant and ineffective cases
+
+Audited the inventory and assertion structure of all 386 test/support files:
+211 unit/component test files, development and production browser suites,
+cross-browser checks and optional live-provider acceptance. Investigated duplicate
+bodies, weak assertions, helper-only wrappers and overlapping workflow cases
+against their implementations and stronger neighboring tests. Negative assertions,
+old-schema fixtures, fallback/native separation, and development/production/CSP
+checks cover distinct regressions and remain intact. No browser cases were removed.
+
+Removed five standalone cases, consolidating useful assertions across six unit-test files:
+
+| Removed case | Coverage retained |
+| --- | --- |
+| Release performance metrics with optional strict budgets | The case neither enforced budgets nor emitted metrics; real native benchmark/resource tests remain in development and production browser suites. The 40-parameter chain now runs in the dependency-order evaluator test, and the circular-hole profile test verifies four parameter-driven inner loops. Rebuild correctness retains dedicated geometry checks. |
+| Extrude factory timeline metadata | It asserted only a literal type and a truthy timestamp. `timelineOrdering.test.ts` verifies actual monotonic timeline steps; feature rebuild tests verify geometry. |
+| Project JSON round trip | Name preservation and successful imported rebuild now run in the repository save/load test alongside filename, byte and ID checks. |
+| Imported mounting-plate edit/rebuild | The repository test now edits the loaded plate height to 70mm and checks actual rebuilt bounds. |
+| Executed action with an unserializable result | The existing observer/result-unavailable case now checks explicit executed-action messaging and exactly one handler invocation as well as observer isolation and failure distinction. |
+
+Five fewer cases do not materially reduce the native browser suite duration.
+They remove misleading or repeated checks while preserving their useful assertions.
+Prism Anthropic `claude-sonnet-5-5` reviewed the changes in
+6c8ac187632d4f1ff52b7a0a55be79e7, f0977c93073fc477ff36e5d5b8a866b3 and
+1a4ac800902b97f2183ec42acdd39a23. The initial missing-import concerns were
+checked against existing imports and passing type/focused checks. Retained the
+40-parameter and four-hole assertions in their dedicated suites and clarified the
+consolidated command test name. Final review has no high/medium findings. Its one
+low note requests restoration of the literal-type/truthy-timestamp factory smoke;
+that removal is intentional: it does not verify timeline behavior. Actual timeline
+ordering and native feature dispatch remain covered, and document insertion
+supplies missing creation timestamps. No actionable findings remain. Final
+audit/validation documentation review 1aa21b974adeb159599864d2f46d795d has no
+findings.
+
+Focused checks passed all 78 cases in the six changed test files. The final
+frozen-code `npm run check:item` passed type checking, all **1641** unit/component
+tests in **211** files, build/bundle budget (**58** bundles; largest **498.24 kB**),
+**5** development native modeling/stale-result and **14** production smoke cases.
+The production cases include modeling, AI transport and CSP enforcement. Existing
+Vite linked-sketch static/dynamic import and test-environment canvas/localStorage
+advisories remain; no large-bundle warnings or budget failures occurred.
+
+The full release, cross-browser and optional live-provider suites were audited but
+not rerun for this test-only cleanup. The full gate is not due: cadence **1**;
+four more completed items remain before the next full gate.
