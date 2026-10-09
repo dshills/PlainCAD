@@ -170,4 +170,36 @@ describe("stable semantic CAD commands", () => {
     expect(profile.bounds.maxX - profile.bounds.minX).toBeCloseTo(30, 5);
     expect(profile.bounds.maxY - profile.bounds.minY).toBeCloseTo(10, 5);
   });
+  it("preserves invalid authored parameter updates with diagnostics and supports repair", () => {
+    const part = fixture();
+    const parameter = part.execute("cad.parameter.add", { name: "width", expression: "6mm" });
+    const before = part.document();
+    const invalid = part.execute("cad.parameter.update", { parameterId: parameter.id!, expression: "missing_length" });
+    expect(before.parameters.width.expression).toBe("6mm");
+    expect(part.document().parameters.width.expression).toBe("missing_length");
+    expect(invalid.diagnostics).toEqual([{ source: "parameter", sourceId: parameter.id, parameterName: "width", expression: "missing_length", severity: "error", message: expect.stringContaining("missing_length") }]);
+    expect(JSON.parse(JSON.stringify(invalid))).toEqual(invalid);
+    expect(() => part.execute("cad.component.create", { name: "Blocked modeling" })).toThrow("missing_length");
+    expect(() => part.execute("cad.parameter.add", { name: "other", expression: "1mm" })).toThrow("missing_length");
+    const invalidDocument = part.document();
+    const repaired = part.execute("cad.parameter.update", { parameterId: parameter.id!, expression: "8mm" });
+    expect(repaired.diagnostics).toBeUndefined();
+    expect(evaluateParameters(part.document().parameters).values.width.value).toBe(8);
+    expect(invalidDocument.parameters.width.expression).toBe("missing_length");
+  });
+  it("links missing-name depth diagnostics to the edited parameter without crashing", () => {
+    const document = {
+      ...createEmptyDocument("Deep parameter references"),
+      parameters: Object.fromEntries(Array.from({ length: 65 }, (_, index) => {
+        const name = `p${index}`;
+        return [name, { id: `parameter-${index}`, name, expression: index === 64 ? "missing_tail" : `p${index + 1}`, authoredUnit: "mm", unit: "mm", value: 0 }];
+      })),
+    };
+    const applied = applyCadCommand(document, { command: "cad.parameter.update", arguments: { parameterId: "parameter-0", expression: "p1" } });
+    const missing = applied.result.diagnostics?.find(error => error.parameterName === "missing_tail");
+    expect(missing).toEqual({ source: "parameter", sourceId: "parameter-0", parameterName: "missing_tail", expression: "", severity: "error", message: "Parameter dependency depth limit exceeded." });
+    expect(document.parameters.p0.expression).toBe("p1");
+    expect(applied.document).not.toBe(document);
+    expect(JSON.parse(JSON.stringify(applied.result))).toEqual(applied.result);
+  });
 });

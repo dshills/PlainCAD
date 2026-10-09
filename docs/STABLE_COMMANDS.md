@@ -15,7 +15,7 @@ before accepting edits.
 | Command | Required arguments and supported behavior |
 | --- | --- |
 | `cad.parameter.add` | `name`, `expression`; optional `authoredUnit`, `group` |
-| `cad.parameter.update` | `parameterId`; optional name/expression/unit/group; renames preserve expression references |
+| `cad.parameter.update` | `parameterId`; optional name/expression/unit/group; renames preserve expression references; invalid authored expressions return parameter diagnostics |
 | `cad.component.create` | `name` |
 | `cad.component.rename` | `componentId`, `name` |
 | `cad.component.place` | `componentId`, three-number `translation` in mm and `rotation` in radians; X then Y then Z |
@@ -41,7 +41,14 @@ Geometry expressions are strings, including numbers (`"20"`) or explicit units
 (`"20mm"`). Bare scalar lengths use the project's authored length unit; explicit
 lengths retain their unit. Dimensionless ratios involving dimensional inputs do
 not silently become lengths. Missing IDs, unknown fields, duplicate references,
-invalid parameters, failed sketch solving, and ambiguous profiles fail explicitly.
+invalid parameters during creation/modeling, failed sketch solving, and ambiguous
+profiles fail explicitly. Parameter updates preserve structurally valid authored
+expressions even when evaluation fails, so users can see and repair their input.
+Their results include serializable, source-linked `diagnostics`; the rebuild fails
+and current geometry/measurements become unavailable until repair. An accepted
+parameter edit does not establish modeling success. Previewed plans still require
+a successful native rebuild before Apply, and every other semantic modeling
+command requires valid parameters.
 
 Rectangle/circle/line/arc/point creation accepts `construction: true`. Driving
 dimensions support length, radius, diameter, horizontalDistance, verticalDistance,

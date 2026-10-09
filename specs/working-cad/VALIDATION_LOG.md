@@ -1213,3 +1213,30 @@ Additional native development and production cases validate recording, typed
 Initial acceptance failures were exact-label selectors containing option text;
 accessible combobox selectors fixed the tests without changing runtime behavior.
 Cadence: **4**; next item requires the full release gate before commit.
+
+## Command automation item 1 fixup: authored parameter diagnostics
+
+The first item-5 full gate found a real regression in world measurements: semantic
+parameter updates rejected invalid expressions before storing them, leaving the
+previous valid model and measurements current. Updates now preserve structurally
+valid authored text and return serializable, source-linked diagnostics. Rebuilds
+fail until repair; history and Undo preserve both invalid and repaired edits.
+Creation and other modeling commands remain strict. Native plans still reject
+invalid candidates before Apply. Dependency-depth errors naming a missing symbol
+link to the edited parameter while retaining the missing name and error message.
+
+Prism Anthropic `claude-sonnet-5-5` reviewed the fix and regressions:
+1ed710758f3d8e6aa689983cdb906010 identified the rare missing-name lookup; it was
+fixed with a 65-link regression. Final be9200cbfd7026faa743eb3ea8d45490 has no
+high/medium findings; its low attribution note describes the documented fallback
+to the edited stable ID, which the regression verifies. Plan/documentation review
+4f639ca9d82e99578ec40d2db1c0db59 has no findings. No actionable findings remain.
+
+Focused checks passed: 53 semantic/UI parameter tests, 19 command-plan tests,
+lint, and the native measurement case. The original failed full run and a
+subsequent run stopped during units for the lookup fix do not count as successful
+gates. The final frozen-checkout `npm run release:check` passed: 1646 tests in
+211 files, build/budget (58 bundles, largest 498.24 kB), all 328 development and
+55 production browser cases. The full gate also satisfies the reduced gate.
+This is an item-1 fixup, not an additional completed requested item. Item 5 and
+the new full-gate baseline are recorded with its separate feature commit.

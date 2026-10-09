@@ -33,6 +33,19 @@ beforeEach(() => {
 });
 afterEach(() => { dispose(); clearAiCanvasPreview(); useCadStore.setState(useCadStore.getInitialState(), true); });
 describe("transactional command plans", () => {
+  it("rejects native parameter diagnostics without committing an invalid authored AI edit", async () => {
+    const initial = useCadStore.getState().history.present;
+    const added = applyCadCommand(initial, { command: "cad.parameter.add", arguments: { name: "width", expression: "20mm" } });
+    useCadStore.setState({ history: { past: [], present: added.document, future: [] } });
+    native.preview.mockImplementation(async (document: CadDocument) => ({ ...result(document), success: false,
+      errors: [{ id: "invalid-parameter", source: "parameter", sourceId: added.result.id, message: "Unknown parameter missing_length." }] }));
+    await expect(previewCommandPlan({ steps: [{ command: "cad.parameter.update", arguments: { parameterId: added.result.id!, expression: "missing_length" } }] })).rejects.toThrow("Unknown parameter missing_length");
+    expect(native.preview).toHaveBeenCalled();
+    expect(useCadStore.getState().history.present).toBe(added.document);
+    expect(useCadStore.getState().history.past).toHaveLength(0);
+    expect(useCommandPlan.getState().status).toBe("failed");
+    expect(() => applyCommandPlan(useCommandPlan.getState().frame?.id ?? "failed")).toThrow("stale");
+  });
   it("preserves the applied change and explains how to undo if provenance reporting fails", async () => {
     dispose();
     dispose = registerCommandPlanCommands(() => true, () => { throw new Error("Observer unavailable"); });

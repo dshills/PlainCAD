@@ -30,6 +30,14 @@ export interface CadCommandResult {
   profileIds?: string[];
   bodyId?: string;
   endpoint?: CanvasPoint;
+  diagnostics?: Array<{
+    source: "parameter";
+    sourceId: string;
+    parameterName: string;
+    expression: string;
+    message: string;
+    severity: "error";
+  }>;
 }
 export interface AppliedCadCommand { document: CadDocument; result: CadCommandResult; aliases: Record<string, string> }
 
@@ -293,7 +301,17 @@ export function applyCadCommand(document: CadDocument, call: CadCommandCall | Ty
   const dependency = timelineDependencyErrors(next)[0];
   if (issues.length || dependency) throw new Error(issues[0]?.message ?? dependency);
   const parameters = evaluateParameters(next.parameters);
-  if (parameters.errors.length) throw new Error(parameters.errors[0].message);
+  if (parameters.errors.length) {
+    // Parameter editing preserves authored invalid input so the existing rebuild
+    // and diagnostics can explain it. Plans still require native proof before
+    // Apply; creation and other modeling operations require valid parameters.
+    if (call.command !== "cad.parameter.update") throw new Error(parameters.errors[0].message);
+    result.diagnostics = parameters.errors.map(error => ({
+      source: "parameter", sourceId: next.parameters[error.parameterName]?.id ?? reference(args.parameterId, "parameterId"),
+      parameterName: error.parameterName, expression: error.expression,
+      message: error.message, severity: "error",
+    }));
+  }
   if (changedSketch) {
     const solved = solveSketch(next.sketches[changedSketch.id], parameters.values);
     const error = solved.errors.find(item => item.severity === "error");

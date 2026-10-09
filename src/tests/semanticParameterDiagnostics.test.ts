@@ -1,0 +1,43 @@
+import { afterEach, expect, it } from "vitest";
+import { createEmptyDocument } from "../cad/document/CadDocument";
+import { useCadStore } from "../state/useCadStore";
+import { executeCommand } from "../commands/registry";
+import "../ui/commands/commandRegistry";
+
+const initial = useCadStore.getState();
+afterEach(() => useCadStore.setState(initial, true));
+
+it("commits invalid parameter text through the registry, reports failed geometry, repairs and undoes", async () => {
+  useCadStore.getState().setDocument(createEmptyDocument("Parameter diagnostics"));
+  const session = useCadStore.getState().documentSession;
+  const created = await executeCommand({ command: "cad.parameter.add", session, arguments: { name: "width", expression: "6mm" } });
+  expect(created.ok).toBe(true);
+  if (!created.ok) throw new Error(created.error.message);
+  const parameterId = (created.value as { id: string }).id;
+  const before = useCadStore.getState().history.present;
+  const undoCount = useCadStore.getState().history.past.length;
+  const invalid = await executeCommand({ command: "cad.parameter.update", session, arguments: { parameterId, expression: "missing_length" } });
+  expect(invalid).toMatchObject({ ok: true, value: { id: parameterId, diagnostics: [{ source: "parameter", sourceId: parameterId, parameterName: "width", expression: "missing_length", severity: "error" }] } });
+  expect(before.parameters.width.expression).toBe("6mm");
+  expect(useCadStore.getState().history.present.parameters.width.expression).toBe("missing_length");
+  expect(useCadStore.getState().history.past).toHaveLength(undoCount + 1);
+  await expect.poll(() => useCadStore.getState().rebuild.status).toBe("failed");
+  expect(useCadStore.getState().rebuild.result).toMatchObject({ success: false, errors: expect.arrayContaining([expect.objectContaining({ source: "parameter", sourceId: "width", message: expect.stringContaining("missing_length") })]) });
+  const invalidDocument = useCadStore.getState().history.present;
+  const geometry = await executeCommand({ command: "runtime.awaitNative", session, arguments: { timeoutMs: 10 } });
+  expect(geometry).toMatchObject({ ok: false, error: { message: expect.stringContaining("missing_length") } });
+  const repaired = await executeCommand({ command: "cad.parameter.update", session, arguments: { parameterId, expression: "8mm" } });
+  expect(repaired).toMatchObject({ ok: true, value: { id: parameterId } });
+  if (repaired.ok) expect((repaired.value as { diagnostics?: unknown }).diagnostics).toBeUndefined();
+  expect(invalidDocument.parameters.width.expression).toBe("missing_length");
+  expect(useCadStore.getState().history.present.parameters.width.expression).toBe("8mm");
+  await expect.poll(() => useCadStore.getState().rebuild.status).toBe("succeeded");
+  expect(useCadStore.getState().rebuild.result?.errors).toEqual([]);
+  expect(await executeCommand({ command: "history.undo", session, arguments: {} })).toMatchObject({ ok: true });
+  expect(useCadStore.getState().history.present.parameters.width.expression).toBe("missing_length");
+  await expect.poll(() => useCadStore.getState().rebuild.status).toBe("failed");
+  expect(await executeCommand({ command: "history.undo", session, arguments: {} })).toMatchObject({ ok: true });
+  expect(useCadStore.getState().history.present.parameters.width.expression).toBe("6mm");
+  await expect.poll(() => useCadStore.getState().rebuild.status).toBe("succeeded");
+  expect(useCadStore.getState().rebuild.result?.errors).toEqual([]);
+});
