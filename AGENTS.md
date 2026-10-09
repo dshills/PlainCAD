@@ -67,7 +67,10 @@ configuration files. Keep `package-lock.json` consistent with dependency changes
 - `src/cad/worker/`: geometry worker, request/response protocol, and lifecycle rules.
 - `src/state/`: Zustand document history, selection, rebuild state, and selectors.
 - `src/persistence/`: import safety, project load/save, and deterministic exports.
-- `src/ui/commands/`: command execution and shared enablement; `src/ui/panels/`:
+- `src/commands/`: canonical runtime registry, JSON protocol, UI/native adapters
+  and browser API; `scripts/plaincad-cli.mjs`: Chromium CLI using that same API.
+  `scripts/command-instrumentation.ts`: Vite source coverage and source-map adapter.
+- `src/ui/commands/`: CAD command metadata and shared enablement; `src/ui/panels/`:
   parameter, sketch, feature, inspector, and diagnostic controls.
 - `src/viewer/CadViewer.tsx`: Three.js rendering and viewer resource lifecycle.
 - `src/ai/`: bounded AI recipes, validation, and immutable CAD generation;
@@ -101,7 +104,13 @@ configuration files. Keep `package-lock.json` consistent with dependency changes
 7. Dispose OpenCascade objects and Three.js resources at their ownership boundary,
    including failure paths. Do not serialize runtime handles or retain them in
    caches after their owning shapes have been disposed.
-8. Route shared actions and enablement through `commandRegistry.ts`. Keep ribbon,
+8. Route every UI, script and agent action through `src/commands/registry.ts`.
+   Prefer explicit domain bindings for reusable business actions. JSX controls
+   and native input listeners use the build-time command adapters; preserve their
+   coverage tests and registration/unmount lifecycle. Never accept runtime proof
+   objects or callbacks as JSON command arguments. Generated UI IDs are discovered
+   from current bindings; durable project IDs remain separate. See `docs/COMMANDS.md`.
+   Keep CAD enablement in `ui/commands/commandRegistry.ts`. Keep ribbon,
    palette, and timeline availability consistent. Export must use a successful
    rebuild matching the current document and containing exportable meshes.
 9. Return actionable, source-linked diagnostics for invalid parameters, sketches,

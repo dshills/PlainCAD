@@ -8,8 +8,10 @@ import "./styles.css";
 import "./ui/design-system/workbench.css";
 import { applyTheme } from "./ui/themes/themes";
 import { useThemeState } from "./state/useThemeState";
+import { installCommandApi } from "./commands/applicationCommands";
 
 applyTheme(useThemeState.getState().theme);
+installCommandApi();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

@@ -9,6 +9,8 @@ import {
 
 export const PROJECT_FILE_EXTENSION = ".pcaddoc";
 export const PROJECT_FILE_MIME_TYPE = "application/vnd.plaincad.project+json";
+let downloadObserver: ((request: { filename: string; type: string; bytes: number }) => void) | undefined;
+export function setDownloadObserver(observer: typeof downloadObserver) { downloadObserver = observer; }
 
 export function serializeProject(document: CadDocument, pretty = true): string {
   assertProjectJsonShape(document);
@@ -42,8 +44,11 @@ export function downloadArrayBuffer(
   const anchor = globalThis.document.createElement("a");
   anchor.href = url;
   anchor.download = filename;
-  anchor.click();
-  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  try {
+    anchor.click();
+    try { downloadObserver?.({ filename, type, bytes: bytes.byteLength }); }
+    catch { /* Optional observation must never fail an initiated download. */ }
+  } finally { window.setTimeout(() => URL.revokeObjectURL(url), 1000); }
 }
 
 export function downloadProject(document: CadDocument) {

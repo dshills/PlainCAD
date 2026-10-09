@@ -1,5 +1,13 @@
 # Working CAD Capability Matrix
 
+UI interactions and CAD actions share a discoverable runtime registry and JSON
+browser/CLI transport. Mounted controls preserve disabled/modal/preview guards;
+scripts can edit parameters, use tools/dialogs, undo, save/open and export through
+the same actions. Native pointer gestures use the CLI's Chromium input driver.
+Generated interaction IDs require rediscovery across source edits/remounts; custom
+component callbacks and runtime proof frames are not JSON inputs. See
+[command architecture and transport limits](../../docs/COMMANDS.md).
+
 ## Canvas action workflow
 
 - Contextual native-part controls share command guards with the rest of the UI.

@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { runCommand } from "../commands/commandRegistry";
+import { isRegisteredCommandAvailable } from "../../commands/registry";
 import { useCadStore } from "../../state/useCadStore";
 import { orderedParameters } from "../../state/selectors";
 import {
@@ -18,7 +19,18 @@ export function ParameterPanel() {
   const session = useCadStore((state) => state.documentSession);
   const [renaming, setRenaming] = useState<string>();
   const previousValues = useRef<{ session: number; documentId: string; values: Map<string, Quantity> }>({ session, documentId: document.id, values: new Map() });
-  const updateParameter = useCadStore((state) => state.updateParameter);
+  const updateParameter = useCallback((parameterId: string, patch: { name?: string; expression?: string }) => {
+    const state = useCadStore.getState();
+    if (state.documentSession !== session) return;
+    if (!isRegisteredCommandAvailable("parameter.update", "domain")) { state.setFileError("Finish the current task before editing parameters."); return; }
+    const report = (error: unknown) => state.setFileError(error instanceof Error ? error.message : "Parameter could not be updated.");
+    try {
+      const result = runCommand("parameter.update", { parameterId, patch });
+      if (result) void result.catch(report);
+    } catch (error) {
+      report(error);
+    }
+  }, [session]);
   const select = useCadStore((state) => state.select);
   const errors = useCadStore(
     (state) => state.rebuild.result?.errors ?? EMPTY_ERRORS,

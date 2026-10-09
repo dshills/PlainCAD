@@ -8,11 +8,11 @@ missing or the count cannot be determined, establish a baseline with the full ga
 
 ## Last successful full gate
 
-- Date: 2026-10-08.
-- Change: guarded AI canvas undo/redo, including the preceding canvas assistant, selection targeting and native proposal items.
-- Result: type checks, 1411 unit/component tests, build/bundle budget (largest 460.61 kB), all 301 development native browser cases and all 40 production cases passed.
-- Completed items since that full gate: **2**.
-- Next full gate: after **3** more completed items.
+- Date: 2026-10-09.
+- Change: shared command registry for UI, browser automation and CLI, including all preceding feature work.
+- Result: type checks, 1565 unit/component tests in 199 files, build/bundle budget (52 bundles, largest 474.54 kB), all 320 development native browser cases and all 48 production cases passed.
+- Completed items since that full gate: **0**.
+- Next full gate: after **5** more completed items.
 
 ## Completed batch
 
@@ -1017,3 +1017,57 @@ CSV volume assertions use the documented three-decimal output precision.
 Existing linkedSketchCommand import advisory remains; no bundle-budget failures.
 
 Cadence: **2** completed items since the feature-3 full checkpoint.
+
+## Shared command registry — 2026-10-09
+
+One requested item: menus, tools, dialogs, mounted input handlers and native
+project input listeners enter `src/commands/registry.ts`. Stable CAD actions,
+the JSON browser API and the isolated Chromium CLI use that same executor.
+Vite source instrumentation preserves React keys/refs and native event paths;
+coverage tests inspect every current source interaction. Commands retain document
+history, input validation, live availability, modal/preview guards and project
+session checks. Download receipts distinguish initiation from actual CLI saves.
+
+Prism reviews used Anthropic `claude-sonnet-5-5` throughout. Initial review
+`3b6cb7db03f7fe8766a2b50e1c766419` covered all 23 initial files. Subsequent
+reviews fixed nested/spread/optional-listener rewriting, source maps, listener
+lifecycle, field event delivery, import outcomes, error propagation and native
+availability. Review `a719c4b195cc8ff58184af98a9e102a1` covered the final
+runtime/guard changes; its absent-custom-callback finding was fixed and tested.
+Final review `9074e361f2a2bbb999bbc19e2cb9875f` covered six final files,
+with 0 high, 2 medium and 1 low findings. Its medium hypotheses were checked:
+`elementState` explicitly excludes password/file values, no provider-key input
+exists, and credentials remain in the server environment; `file.openProject.run`
+is declared async and its returned promise is awaited before checking replacement.
+The public production browser API is intentional and its trusted-session boundary
+is documented. The low duplicated-validation note does not change behavior: the
+outer check validates before mutation and the inner check uses those same args.
+No actionable review findings remain. Earlier circular-chunk concerns were fixed
+by keeping app registration with the entry and separating leaf runtime/state,
+recipes and icon modules; the build has no circular chunk warnings and production
+startup/native flows pass under CSP.
+
+Focused validation passed: type checking, 19 command unit/component tests in four
+files, and 5 native command/measurement browser tests. An early full attempt found
+parameter edits were blocked during read-only measurement picking; the guard was
+fixed to preserve that workflow while rejecting competing drafts. The complete
+release gate then passed on frozen runtime sources: types, all 1565 tests in 199
+files, the production build and 500 kB budget, all 320 development cases (35.1m),
+and all 48 production cases (3.6m). This full gate also satisfies the reduced gate.
+The existing linkedSketchCommand static/dynamic import advisory remains; there
+are no bundle-budget failures.
+
+Three new acceptance cases run in both development and production: UI/JSON edits
+share history and exact native volume; CLI parameter edits, undo, project save/open,
+STL and drawing SVG/CSV downloads use real files; native pointer commands cancel
+a drag, draw a non-template rectangle and apply a valid positive-Z extrusion with
+volume matching its actual bounds. Existing release workflows verify every major
+UI family, stale worker results, persistence, analytic geometry and fabrication.
+
+Limits: generated interaction IDs/targets require live discovery; custom callback
+proofs are local and agents use mounted DOM controls; native gestures require a
+browser input driver; the CLI runs an isolated browser; built-in AI recipes remain
+bounded while external agents can use the shared command interface. Execute
+automation interactions sequentially and wait explicitly for native results or
+downloads. A full gate was run early because this item changes UI routing across
+the application. Cadence resets to **0** completed items since this checkpoint.

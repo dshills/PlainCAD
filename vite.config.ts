@@ -6,9 +6,11 @@ import {
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 import { aiPlugin } from "./server/aiMiddleware";
+import { commandInstrumentation } from "./scripts/command-instrumentation";
 
 export default defineConfig({
   plugins: [
+    commandInstrumentation(),
     react(),
     aiPlugin(),
     {
@@ -48,6 +50,12 @@ export default defineConfig({
           if (path.includes("/node_modules/three/")) return "three-renderer";
           if (/\/node_modules\/(react|react-dom|scheduler|zustand|use-sync-external-store)\//.test(path)) return "react-runtime";
           if (path.includes("/node_modules/opencascade.js/")) return "opencascade-loader";
+          if (path.includes("/node_modules/@phosphor-icons/react/")) return "icons";
+          // The core adapters are leaves; app command registration depends on
+          // stores and file actions and must stay with the application entry.
+          if (path.includes("/src/commands/") && !path.endsWith("/applicationCommands.ts")) return "command-runtime";
+          if (path.includes("/src/state/") || path.includes("/src/ui/themes/")) return "application-state";
+          if (path.includes("/src/ai/") || path.includes("/src/templates/")) return "cad-recipes";
           // These persistence helpers are dependencies of CAD/worker modules.
           if (path.includes("/src/cad/") || /\/src\/persistence\/(importSafety|backgroundJob)\.ts$/.test(path)) return "cad";
         },

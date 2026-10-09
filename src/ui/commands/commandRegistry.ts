@@ -1,4 +1,7 @@
 import { beginCoach, canCoach } from "./manufacturingCoachCommand";
+import { bindCommand, invokeCommand, isRegisteredCommandAvailable, type JsonValue } from "../../commands/registry";
+import { registerApplicationCommands } from "../../commands/applicationCommands";
+import { objectArguments, stringArgument } from "../../commands/protocol";
 import { beginFamily, canOpenFamily } from "./productFamilyCommand";
 import { beginDrawing, canOpenDrawing } from "./shopDrawingCommand";
 import { beginFit, canBuildFit } from "./fittedPartCommand";
@@ -133,6 +136,8 @@ export interface CommandContext {
   studio?: import("./studioCommand").StudioCommandContext;
   fileInputRef?: RefObject<HTMLInputElement | null>;
   file?: File;
+  parameterId?: string;
+  patch?: { name?: string; expression?: string; group?: string };
 }
 
 export interface CadCommand {
@@ -797,19 +802,61 @@ export const commands: CadCommand[] = [
   },
 ];
 
-export const commandById = new Map(
-  commands.map((command) => [command.id, command]),
+/** Compatibility metadata lookup; the runtime executor lives in commands/registry. */
+export const commandById = new Map(commands.map(command => [command.id, command]));
+
+const contextFields = ["sketchId", "componentId", "componentName", "projectName", "viewName", "viewId", "documentSession", "operationTargetId", "operation", "file"];
+for (const command of commands) bindCommand({ id: command.id, label: command.label, description: command.description, kind: "domain", input: { type: "object", additionalProperties: false, properties: Object.fromEntries(contextFields.map((field): [string, JsonValue] => [field, field === "documentSession" ? { type: "integer" } : field === "file" ? { type: "object", properties: { name: { type: "string" }, text: { type: "string" }, type: { type: "string" } } } : { type: "string" }])) } }, {
+  id: "domain", label: () => command.label,
+  available: () => command.internal ? "Use this tool's mounted interaction commands; runtime preview frames cannot be supplied as JSON." : isCommandEnabledForSnapshot(command.id, selectCommandEnablement(useCadStore.getState())) ? undefined : "Select the required geometry, finish the current task, or wait for a current rebuild.",
+  invoke: (args, remote) => {
+    if (!remote) return command.run(args[0] as CommandContext ?? {});
+    const input = objectArguments(args[0], contextFields), context: CommandContext = {};
+    for (const [field, value] of Object.entries(input)) {
+      if (field === "file") {
+        const file = objectArguments(value, ["name", "text", "type"]);
+        context.file = new File([stringArgument(file.text, "file text", 5 * 1024 * 1024)], stringArgument(file.name, "file name", 160), { type: file.type === undefined ? "application/json" : stringArgument(file.type, "file type", 100) });
+      } else if (field === "documentSession") {
+        if (!Number.isSafeInteger(value) || (value as number) < 0) throw new Error("Invalid documentSession.");
+        context.documentSession = value as number;
+      } else Object.assign(context, { [field]: stringArgument(value, field, 5000) });
+    }
+    if (context.operation !== undefined && !["extrude", "fillet", "chamfer"].includes(context.operation)) throw new Error("Operation must be extrude, fillet or chamfer.");
+    if (context.documentSession !== undefined && context.documentSession !== useCadStore.getState().documentSession) throw new Error("Project replaced. Refresh discovery.");
+    if (["file.openProject", "file.dropProject"].includes(command.id) && !context.file) throw new Error("Supply file {name,text,type} to open a project from a script.");
+    const sourceSession = useCadStore.getState().documentSession;
+    // Legacy UI actions confirm dispatch. Opening a supplied file additionally
+    // promises replacement; verify that outcome without consuming global alerts.
+    const checkOutcome = () => { const state = useCadStore.getState(); if (command.id === "file.openProject" && state.documentSession === sourceSession) throw new Error(state.fileError ?? "Project import did not complete. Inspect current diagnostics."); };
+    const result = command.run(context);
+    if (result && typeof (result as Promise<unknown>).then === "function") return Promise.resolve(result).then(checkOutcome);
+    checkOutcome();
+    return result;
+  },
+});
+registerApplicationCommands(
+  () => selectCommandEnablement(useCadStore.getState()).editProject,
+  () => {
+    const state = useCadStore.getState();
+    // Measurement picks are read-only and are invalidated by parameter edits.
+    // Preserve that existing UI workflow while blocking competing edit drafts.
+    return !state.fileBusy && (selectCommandEnablement(state).editProject ||
+      (useInspectionState.getState().picking && !interactionDraftBusy("inspection")));
+  },
 );
 
-export function runCommand(id: string, context: CommandContext = {}) {
+export function runCommand(id: string, context: CommandContext = {}): void | Promise<void> {
   const command = commandById.get(id);
   const state = useCadStore.getState();
   if (
-    !command ||
+    (!command && !isRegisteredCommandAvailable(id, "domain")) ||
+    (command &&
     !isCommandEnabledForSnapshot(id, selectCommandEnablement(state))
+    )
   )
     return;
-  return command.run(context);
+  const result = invokeCommand(id, "domain", [context]);
+  return result instanceof Promise ? result.then(() => undefined) : undefined;
 }
 
 function updateSelectedSketch(

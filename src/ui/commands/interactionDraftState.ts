@@ -29,7 +29,7 @@ export const useSketchTrimExtend = create<{ frame?: SketchTrimExtendFrame; mode:
 export const useFacePocket = create<{ frame?: FacePocketFrame }>(() => ({}));
 export const useFeaturePattern = create<{ frame?: FeaturePatternFrame }>(() => ({}));
 
-export type InteractionDraftOwner = "drawing" | "family" | "coach" | "fit" | "solidDimension" | "sketchRefinement" | "constraint" | "trimExtend" | "facePocket" | "replication" | "featureAddition" | "offset" | "reusablePart" | "pattern" | "projection" | "partLibrary" | "componentPlacement" | "stepExport";
+export type InteractionDraftOwner = "inspection" | "drawing" | "family" | "coach" | "fit" | "solidDimension" | "sketchRefinement" | "constraint" | "trimExtend" | "facePocket" | "replication" | "featureAddition" | "offset" | "reusablePart" | "pattern" | "projection" | "partLibrary" | "componentPlacement" | "stepExport";
 /** Each draft can inspect competing owners without counting its own frame. */
 export function interactionDraftBusy(owner?: InteractionDraftOwner) {
   return Boolean(
@@ -42,7 +42,7 @@ export function interactionDraftBusy(owner?: InteractionDraftOwner) {
     (owner !== "partLibrary" && usePartLibrary.getState().frame) ||
     (owner !== "projection" && useSketchProjection.getState().frame) ||
     (owner !== "pattern" && useFeaturePattern.getState().frame) ||
-    useInspectionState.getState().picking ||
+    (owner !== "inspection" && useInspectionState.getState().picking) ||
     (owner !== "reusablePart" && useReusablePart.getState().frame) ||
     (owner !== "solidDimension" && useSolidDimensionEdit.getState().frame) ||
     (owner !== "sketchRefinement" && useSketchRefinement.getState().frame) ||

@@ -1,5 +1,9 @@
 # PlainCAD
 
+Menus, tools and dialogs route through one discoverable command registry. Use
+`window.plaincadCommands` or `npm run cad` to drive the same guarded actions from
+scripts and agents. See [shared commands and CLI examples](docs/COMMANDS.md).
+
 Browser-first, local-first parametric CAD for mechanical parts. Draw sketches,
 create native solids, edit dimensions, and save an editable project or export STL.
 Optional AI assistance supports Anthropic, OpenAI, and Google.
