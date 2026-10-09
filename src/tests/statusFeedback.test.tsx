@@ -82,8 +82,8 @@ describe("parameter presentation", () => {
   it("shows full names and requires an explicit rename action", () => {
     const name = "mounting_plate_outer_hole_spacing";
     fixture(upsertParameter(createEmptyDocument(), { id: "long-name", name, expression: "42mm", unit: "mm", value: 42 }));
-    const update = vi.fn();
-    useCadStore.setState({ updateParameter: update });
+    useCadStore.setState({ rebuildNow: vi.fn() });
+    const before = useCadStore.getState().history.present;
     render(<ParameterPanel />);
     expect(screen.getByText(name)).toHaveClass("parameter-name");
     expect(screen.queryByLabelText(`Parameter ${name} name`)).not.toBeInTheDocument();
@@ -93,7 +93,10 @@ describe("parameter presentation", () => {
     expect(input).toHaveFocus();
     fireEvent.change(input, { target: { value: "hole_spacing" } });
     fireEvent.blur(input);
-    expect(update).toHaveBeenCalledWith("long-name", { name: "hole_spacing" });
+    const history = useCadStore.getState().history;
+    expect(history.present.parameters.hole_spacing).toMatchObject({ id: "long-name", name: "hole_spacing", expression: "42mm" });
+    expect(history.present.parameters[name]).toBeUndefined();
+    expect(history.past.at(-1)).toBe(before);
   });
   it("retains a clearly stale last value while pending and replaces it when current", () => {
     const document = fixture();
@@ -133,8 +136,7 @@ describe("parameter presentation", () => {
   });
   it("resets a focused expression draft on same-ID project replacement", () => {
     const document = fixture();
-    const update = vi.fn();
-    useCadStore.setState({ updateParameter: update });
+    useCadStore.setState({ rebuildNow: vi.fn() });
     render(<ParameterPanel />);
     const input = screen.getByLabelText("Parameter width expression");
     fireEvent.focus(input);
@@ -144,6 +146,7 @@ describe("parameter presentation", () => {
       fixture(upsertParameter(document, { ...document.parameters.width, expression: "70mm" }));
     });
     expect(screen.getByLabelText("Parameter width expression")).toHaveValue("70mm");
-    expect(update).not.toHaveBeenCalled();
+    expect(useCadStore.getState().history.present.parameters.width.expression).toBe("70mm");
+    expect(useCadStore.getState().history.past).toHaveLength(0);
   });
 });

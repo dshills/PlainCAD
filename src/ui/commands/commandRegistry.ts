@@ -1,5 +1,6 @@
 import { beginCoach, canCoach } from "./manufacturingCoachCommand";
 import { bindCommand, invokeCommand, isRegisteredCommandAvailable, type JsonValue } from "../../commands/registry";
+import { registerCadCommands } from "../../commands/registerCadCommands";
 import { registerApplicationCommands } from "../../commands/applicationCommands";
 import { objectArguments, stringArgument } from "../../commands/protocol";
 import { beginFamily, canOpenFamily } from "./productFamilyCommand";
@@ -834,6 +835,13 @@ for (const command of commands) bindCommand({ id: command.id, label: command.lab
     return result;
   },
 });
+function parameterCommandsEditable() {
+  const state = useCadStore.getState();
+  return !state.fileBusy && (selectCommandEnablement(state).editProject ||
+    (useInspectionState.getState().picking && !interactionDraftBusy("inspection")));
+}
+registerCadCommands(id => id === "cad.parameter.update" ? parameterCommandsEditable() :
+  selectCommandEnablement(useCadStore.getState()).editProject);
 registerApplicationCommands(
   () => selectCommandEnablement(useCadStore.getState()).editProject,
   () => {

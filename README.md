@@ -325,6 +325,16 @@ Use source-linked Issues and the Inspector to repair references. Timeline moves
 preserve IDs and reject dependency violations. Failed operations retain upstream
 previews while blocking dependent modeling and STL until repaired or suppressed.
 
+### Stable modeling commands
+
+UI drawing and parameter edits share typed `cad.*` commands with scripts and
+agents. Discover argument schemas through `commands.list`: create/place components,
+create/draw/dimension sketches, edit parameters, extrude/revolve, make scoped holes,
+and add native fillets/chamfers. Generated UI interaction commands still cover
+advanced tools whose semantic adapters are not yet available. No runtime geometry
+proofs or arbitrary document patches are accepted as command arguments. See
+[stable command catalog](docs/STABLE_COMMANDS.md).
+
 ## AI Assistance
 
 AI is optional; ordinary drawing, modeling, and file commands work without a

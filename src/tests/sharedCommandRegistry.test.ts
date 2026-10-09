@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { bindCommand, configureCommandRuntime, describeCommands, executeCommand, invokeCommand, dispatchCommandInteraction } from "../commands/registry";
+import { bindCommand, subscribeCommandExecutions, configureCommandRuntime, describeCommands, executeCommand, invokeCommand, dispatchCommandInteraction } from "../commands/registry";
 import { commandRequest } from "../commands/protocol";
 import { addCommandListener, removeCommandListener } from "../commands/nativeEvents";
 const releases: (() => void)[] = [];
@@ -20,6 +20,24 @@ describe("shared command transport", () => {
     invokeCommand("test.parity", "domain", [{ amount: 8 }]);
     expect(await executeCommand({ command: "test.parity", session: 7, arguments: { amount: 8 } })).toEqual({ ok: true, command: "test.parity", value: { value: { amount: 8 } } });
     expect(handler.mock.calls.map(call => call[0])).toEqual([[{ amount: 8 }], [{ amount: 8 }]]);
+  });
+  it("reports accepted edits with isolated JSON results and preserves unavailable-result evidence", async () => {
+    configureCommandRuntime(() => 7);
+    const observed: unknown[] = [];
+    const first = subscribeCommandExecutions(event => { event.result = "changed"; throw new Error("Observer failed"); });
+    const second = subscribeCommandExecutions(event => observed.push(event.result));
+    try {
+      bind("test.recorded", "domain", vi.fn(() => ({ id: "created" })));
+      invokeCommand("test.recorded", "domain", [{}]);
+      expect(observed).toEqual([{ id: "created" }]);
+      const circular: Record<string, unknown> = {}; circular.self = circular;
+      bind("test.resultUnavailable", "domain", vi.fn(() => circular));
+      expect(await executeCommand({ command: "test.resultUnavailable", session: 7 })).toMatchObject({ error: { code: "result_unavailable" } });
+      expect(observed).toEqual([{ id: "created" }, null]);
+      bind("test.failedRecording", "domain", vi.fn(() => { throw new Error("Rejected edit"); }));
+      expect(await executeCommand({ command: "test.failedRecording", session: 7 })).toMatchObject({ error: { code: "command_failed" } });
+      expect(observed).toHaveLength(2);
+    } finally { first(); second(); }
   });
   it("rejects stale projects, ambiguous/unmounted targets and unavailable actions before invoking", async () => {
     configureCommandRuntime(() => 3);

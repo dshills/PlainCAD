@@ -8,6 +8,16 @@ Generated interaction IDs require rediscovery across source edits/remounts; cust
 component callbacks and runtime proof frames are not JSON inputs. See
 [command architecture and transport limits](../../docs/COMMANDS.md).
 
+## Stable semantic command catalog
+
+Typed `cad.*` commands and strict discovered argument schemas support parameters,
+component creation/placement, origin/offset sketches, mouse drawing, construction,
+driving dimensions, deletion, extrude/revolve, scoped holes, and native edge
+fillet/chamfer. UI drawing and parameter edits call these same semantic handlers.
+Native rebuild diagnostics remain authoritative; a synchronous document edit is
+not a geometry-success receipt. Advanced face/to-face, pattern and assembly tools
+retain the discoverable UI adapters. See [catalog and limits](../../docs/STABLE_COMMANDS.md).
+
 ## Canvas action workflow
 
 - Contextual native-part controls share command guards with the rest of the UI.

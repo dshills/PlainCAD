@@ -40,6 +40,26 @@ export type CommandResponse = {
   };
 };
 const registry = new Map<string, RegisteredCommand>();
+export interface CommandExecution { request: CommandRequest; result: JsonValue }
+const executionObservers = new Set<(execution: CommandExecution) => void>();
+export function subscribeCommandExecutions(observer: (execution: CommandExecution) => void) {
+  executionObservers.add(observer);
+  return () => { executionObservers.delete(observer); };
+}
+export function reportAppliedCommand(request: CommandRequest, result: unknown) {
+  if (!executionObservers.size || registry.get(request.command)?.kind !== "domain") return;
+  try {
+    let serialized: string;
+    try { serialized = JSON.stringify({ request, result: result ?? null }); }
+    catch { serialized = JSON.stringify({ request, result: null }); }
+    if (new TextEncoder().encode(serialized).byteLength > 16 * 1024 * 1024)
+      serialized = JSON.stringify({ request, result: null });
+    if (new TextEncoder().encode(serialized).byteLength > 16 * 1024 * 1024) return;
+    for (const observer of executionObservers) {
+      try { observer(JSON.parse(serialized) as CommandExecution); } catch { /* Observers cannot undo an accepted command. */ }
+    }
+  } catch { /* Runtime handles and non-JSON local arguments are not recorded. */ }
+}
 interface Delivery { command: string; target: string; invoked: boolean; error?: unknown; pending: Promise<unknown>[] }
 const deliveries = new Set<Delivery>();
 let session = () => 0;
@@ -64,11 +84,18 @@ export function invokeCommand(command: string, target: string, args: unknown[] =
   const binding = registry.get(command)?.bindings.get(target);
   if (!binding)
     throw new Error(`Command target is no longer mounted: ${command}. Refresh command discovery.`);
-  if (!deliveries.size) return binding.invoke(args, false);
+  const request: CommandRequest = { command, target, arguments: args[0] as JsonValue, session: session() };
+  const invoke = () => {
+    const result = binding.invoke(args, false);
+    if (result instanceof Promise) return result.then(value => { reportAppliedCommand(request, value); return value; });
+    reportAppliedCommand(request, result);
+    return result;
+  };
+  if (!deliveries.size) return invoke();
   const observers = [...deliveries].filter(delivery => delivery.command === command && delivery.target === target);
   observers.forEach(delivery => { delivery.invoked = true; });
   try {
-    const result = binding.invoke(args, false);
+    const result = invoke();
     if (result instanceof Promise) observers.forEach(delivery => delivery.pending.push(result));
     return result;
   } catch (error) { observers.forEach(delivery => { delivery.error = error; }); throw error; }
@@ -146,9 +173,12 @@ export async function executeCommand(value: unknown): Promise<CommandResponse> {
       const json = JSON.stringify(result === undefined ? null : result);
       if (new TextEncoder().encode(json ?? "null").byteLength > 16 * 1024 * 1024)
         throw new Error("Result exceeds 16 MiB.");
-      return { ok: true, command: request.command, value: JSON.parse(json ?? "null") as JsonValue };
+      const value = JSON.parse(json ?? "null") as JsonValue;
+      reportAppliedCommand(request, value);
+      return { ok: true, command: request.command, value };
     }
     catch {
+      reportAppliedCommand(request, null);
       return fail("result_unavailable", "Command executed but its result could not be returned as bounded JSON. Inspect runtime.snapshot; do not retry the mutation.");
     }
   }

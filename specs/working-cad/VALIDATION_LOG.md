@@ -11,8 +11,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Date: 2026-10-09.
 - Change: shared command registry for UI, browser automation and CLI, including all preceding feature work.
 - Result: type checks, 1565 unit/component tests in 199 files, build/bundle budget (52 bundles, largest 474.54 kB), all 320 development native browser cases and all 48 production cases passed.
-- Completed items since that full gate: **0**.
-- Next full gate: after **5** more completed items.
+- Completed items since that full gate: **1**.
+- Next full gate: after **4** more completed items.
 
 ## Completed batch
 
@@ -1071,3 +1071,41 @@ bounded while external agents can use the shared command interface. Execute
 automation interactions sequentially and wait explicitly for native results or
 downloads. A full gate was run early because this item changes UI routing across
 the application. Cadence resets to **0** completed items since this checkpoint.
+
+## 2026-10-09 — Item 1: stable semantic CAD commands
+
+Added strict typed cad.* handlers for parameters, components/placements, sketch
+creation/drawing/construction/driving dimensions/deletion, extrude/revolve, scoped
+holes, and supported native fillet/chamfer references. Mouse drawing and legacy
+parameter edits invoke the same handlers. Successful semantic command execution
+is observable for recording; observer failures are isolated and unavailable JSON
+results retain accepted-edit evidence. Native rebuild remains authoritative.
+
+Prism Anthropic claude-sonnet-5-5 reviewed all 17 original changed files in
+8687a269aaf123f446379bbc4e26a16d; scoped final semantic review
+df64c0bf4a1db2ceb6da2d3bb4408766 had no high/medium findings. Integration/fix
+reviews 84cfc6d79b4b00984ce7f6e77693758b and
+6db76f127fe78db0874b4c2476a1c959 covered recording and existing tests. Fixed
+accepted-result evidence, obsolete implementation-spy tests, rectangle constraints,
+canvas DTO validation and meaningful curved-geometry bounds. The delegated CAD
+binding is synchronous and throws validation/store failures; hypothetical async
+handler concerns do not apply. Macro recording filters the semantic catalog, so
+the enclosing legacy wrapper is not recorded twice. Chunk leaf ownership is
+intentional; production startup and native geometry are exercised.
+
+The reduced gate passed: lint, 1618 unit/component tests in 208 files, build and
+500 kB budget (54 bundles, largest 478.73 kB), 5 development native smoke cases and
+14 production/CSP cases. The updated stale-expression state assertions also
+passed all 9 status-feedback tests. Additional semantic acceptance in development
+and production verifies exact OpenCascade volume/solid count, scoped holes, XZ
+revolve orientation, real volume-changing edge treatments, placements, parameter
+edits, save/open and Undo. Displayed radial mesh bounds use 0.03 mm tolerance;
+BRep volume and planar coordinates retain tight numeric assertions.
+
+An integrated-build circular-chunk warning comes from the concurrently developed
+command-agent context importing the entry-owned project codec; it belongs to an
+uncommitted later feature and will be removed before that feature's gate/commit.
+The existing linkedSketch static/dynamic import advisory remains.
+
+Cadence: **1** completed item since the last full gate; the full gate is due on
+the fifth item in this batch.

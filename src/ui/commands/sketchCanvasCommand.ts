@@ -1,7 +1,6 @@
-import {
-  addSizedCanvasGeometry,
-  type CanvasSizeInput,
-} from "../../cad/sketch/sizedCanvasGeometry";
+import { type CanvasSizeInput } from "../../cad/sketch/sizedCanvasGeometry";
+import { invokeCommand, type JsonValue } from "../../commands/registry";
+import type { CadCommandResult } from "../../commands/cadCommandOperations";
 import {
   deformedCanvasSketch,
   validateCanvasDeformation,
@@ -322,27 +321,16 @@ export function commitCanvasGeometry(
   const state = useCadStore.getState();
   if (state.history.present !== expected)
     throw new Error("Project changed during drawing. Cancel and draw again.");
-  const context = canvasContext(active, state),
-    result = addSizedCanvasGeometry(
-      context.sketch,
-      context.solved,
-      tool,
-      points,
-      construction,
-      clockwise,
-      sizes,
-      evaluateParameters(context.document.parameters).values,
-      context.document.unitSettings.length,
-    );
-  if (result.sketch === context.sketch) return result;
-  const next = upsertSketch(context.document, result.sketch);
-  assertProjectJsonShape(next);
-  state.updateDocument((d) => (d === expected ? next : d));
-  if (useCadStore.getState().history.present === expected)
-    throw new Error(
-      useCadStore.getState().fileError ?? "Sketch edit could not be saved.",
-    );
-  return result;
+  const context = canvasContext(active, state);
+  const drawingSizes = Object.fromEntries(Object.entries(sizes).filter(([, value]) => value !== undefined && (typeof value !== "string" || value.trim() !== "")));
+  if (points.some(point => !Number.isFinite(point.x) || !Number.isFinite(point.y))) throw new Error("Canvas coordinates must be finite and within 100,000,000 mm.");
+  const input: JsonValue = { sketchId: context.sketch.id, tool, points: points.map(point => ({ x: point.x, y: point.y, ...(point.pointId === undefined ? {} : { pointId: point.pointId }) })), construction, clockwise, sizes: drawingSizes };
+  const response = invokeCommand("cad.sketch.draw", "domain", [input]);
+  if (!response || typeof response !== "object" || response instanceof Promise) throw new Error("The drawing command must finish synchronously before continuing the gesture.");
+  const result = response as CadCommandResult;
+  const sketch = useCadStore.getState().history.present.sketches[context.sketch.id];
+  if (!sketch) throw new Error("Sketch was removed during drawing. Reopen the current sketch.");
+  return { sketch, endpoint: result.endpoint };
 }
 
 export function commitCanvasDimension(

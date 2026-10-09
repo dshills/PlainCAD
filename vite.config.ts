@@ -53,7 +53,8 @@ export default defineConfig({
           if (path.includes("/node_modules/@phosphor-icons/react/")) return "icons";
           // The core adapters are leaves; app command registration depends on
           // stores and file actions and must stay with the application entry.
-          if (path.includes("/src/commands/") && !path.endsWith("/applicationCommands.ts")) return "command-runtime";
+          if (/\/src\/commands\/(registry|protocol|CommandHost|interactionEvents|inputDriver|nativeEvents|artifacts)\.tsx?$/.test(path)) return "command-runtime";
+          if (/\/src\/commands\/(cadCommands|cadCommandOperations|commandSchemas)\.ts$/.test(path)) return "cad-command-model";
           if (path.includes("/src/state/") || path.includes("/src/ui/themes/")) return "application-state";
           if (path.includes("/src/ai/") || path.includes("/src/templates/")) return "cad-recipes";
           // These persistence helpers are dependencies of CAD/worker modules.

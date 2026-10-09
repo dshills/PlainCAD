@@ -1,4 +1,4 @@
-import { bindCommand, configureCommandRuntime, describeCommands, executeCommand, type CommandDescriptor, type JsonValue } from "./registry";
+import { bindCommand, invokeCommand, configureCommandRuntime, describeCommands, executeCommand, type CommandDescriptor, type JsonValue } from "./registry";
 import { objectArguments, stringArgument } from "./protocol";
 import { flushSync } from "react-dom";
 import { useCadStore } from "../state/useCadStore";
@@ -66,10 +66,7 @@ export function registerApplicationCommands(editable: () => boolean, parameterEd
       fields[field] = stringArgument(fieldValue, field, field === "expression" ? 5000 : 120);
     if (!Object.keys(fields).length)
       throw new Error("Parameter patch is empty.");
-    state.setFileError(undefined);
-    state.updateParameter(id, fields);
-    if (useCadStore.getState().fileError)
-      throw new Error(useCadStore.getState().fileError);
+    invokeCommand("cad.parameter.update", "domain", [{ parameterId: id, ...fields }]);
   }, true, parameterEditable);
   register("selection.set", "Select a project item", schema({ kind: { enum: ["parameter", "sketch", "sketchEntity", "feature", "body"] }, id: { type: "string" } }, ["kind", "id"]), value => {
     const args = objectArguments(value, ["kind", "id"]), kind = stringArgument(args.kind, "Selection kind", 30), id = stringArgument(args.id, "Selection ID", 160), state = useCadStore.getState(), document = state.history.present;
