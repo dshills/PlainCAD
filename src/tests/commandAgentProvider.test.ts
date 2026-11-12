@@ -2,6 +2,8 @@
 import { bindCommand, type JsonValue } from "../commands/registry";
 import { AI_LIMITS } from "../ai/plan";
 import { expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
+import { importProjectText } from "../persistence/projectCodec";
 import { createEmptyDocument } from "../cad/document/CadDocument";
 import { generateCommandAgentProposal, validateCommandAgentRequest } from "../../server/commandAgentProvider";
 import { validateCommandAgentContext, validateCommandAgentProposal } from "../ai/commandAgentPlan";
@@ -56,6 +58,12 @@ it("bounds conversation payloads without truncating a current project or half a 
   expect(request.history.length).toBeLessThan(messages.length);
   expect(request.history.length % 2).toBe(0); expect(new TextEncoder().encode(JSON.stringify(request)).byteLength).toBeLessThanOrEqual(AI_LIMITS.requestBytes);
   expect(request.commandContext.document).toEqual(document);
+});
+it("keeps embedded STEP sources out of client and gateway provider context", () => {
+  const imported = importProjectText(readFileSync("src/persistence/fixtures/schema-v21.pcaddoc", "utf8"));
+  const commandContext = { ...context, document: imported, activeComponentId: imported.rootComponentId };
+  expect(() => prepareCommandAgentRequest("anthropic", "test", "Create", [], commandContext)).toThrow(/cannot share projects with embedded STEP/);
+  expect(() => validateCommandAgentRequest({ provider: "anthropic", model: "test", prompt: "Create", history: [], commandContext })).toThrow(/cannot share projects with embedded STEP/);
 });
 it("does not forward provider error bodies or accept malformed returned commands", async () => {
   const input = validateCommandAgentRequest({ provider: "anthropic", model: "test", prompt: "Create a part", history: [], commandContext: context });

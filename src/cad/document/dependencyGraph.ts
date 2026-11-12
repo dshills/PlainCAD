@@ -115,7 +115,7 @@ export function buildDependencyGraph(document: CadDocument): DependencyGraph {
     document.features
       .filter(
         (f) =>
-          (f.type === "extrude" || f.type === "revolve" || f.type === "fit") &&
+          (f.type === "extrude" || f.type === "revolve" || f.type === "fit" || f.type === "stepImport") &&
           f.operation === "newBody",
       )
       .map((f) => [stableBodyIdForFeature(f.id), f]),
@@ -184,7 +184,7 @@ export function buildDependencyGraph(document: CadDocument): DependencyGraph {
     // Suppressed operations retain authored edges but never become an active writer.
     if (!f.suppressed) {
       if (
-        (f.type === "extrude" || f.type === "revolve" || f.type === "fit") &&
+        (f.type === "extrude" || f.type === "revolve" || f.type === "fit" || f.type === "stepImport") &&
         f.operation === "newBody"
       )
         bodyWriters.set(stableBodyIdForFeature(f.id), f.id);

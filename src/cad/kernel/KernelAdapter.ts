@@ -45,7 +45,8 @@ export interface RenderMesh {
     | "fuse"
     | "fillet"
     | "chamfer"
-    | "toFace";
+    | "toFace"
+    | "stepImport";
   geometryAssertions?: GeometryAssertions;
   bounds: BoundingBox;
 }
@@ -117,6 +118,7 @@ export interface KernelAdapter {
   disposeShape?(shape: KernelShape): void;
   /** Allocated WASM memory capacity, not live allocations or process memory. */
   getWasmHeapCapacityBytes?(): number | undefined;
+  importStep?(source: string): KernelShape;
   exportStep?(shapes: readonly KernelShape[]): NativeStepExport;
 }
 

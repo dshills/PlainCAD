@@ -1,6 +1,11 @@
+import { readFileSync } from "node:fs";
+import { createEmptyDocument } from "../cad/document/CadDocument";
+import { applyCadCommand } from "../commands/cadCommandOperations";
+import { importProjectText } from "../persistence/projectCodec";
+import { serializeProject } from "../persistence/exportProject";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { OpenCascadeKernel } from "../cad/kernel/OpenCascadeKernel";
-import { exportNativeStep, STEP_EXPORT_MAX_BYTES, stepBindingDiagnostic } from "../cad/kernel/nativeStep";
+import { exportNativeStep, importNativeStep, STEP_EXPORT_MAX_BYTES, stepBindingDiagnostic, stepImportBindingDiagnostic } from "../cad/kernel/nativeStep";
 import { getDisposableScopeMetrics } from "../cad/kernel/disposableScope";
 import { createBoxTemplate } from "../templates/templates";
 import { clearNativeFeatureCache, rebuildDocument } from "../cad/features/rebuildGraph";
@@ -54,6 +59,63 @@ describe("installed native STEP writer/reader geometry and ownership", () => {
       expect(new TextDecoder().decode(output.bytes)).toMatch(/ISO-10303-21;[\s\S]*END-ISO-10303-21;/);
       expect(fs.open).toBe(open); expect(fs.write).toBe(write); expect(fs.readdir("/")).toEqual(files);
     } finally { [distinct, distinctBox, overlap, posed, cut, tool, box].forEach(shape => kernel.disposeShape(shape)); }
+  });
+  it("imports one placed native STEP solid and converts model units to millimetres", () => {
+    vi.stubGlobal("document", undefined);
+    const box = kernel.createBox(20, 10, 4);
+    const posed = kernel.placeShape(box, { translation: [31, -7, 9], rotation: [0, 0, Math.PI / 2] });
+    const oc = runtime.oc!, open = oc.FS.open, files = oc.FS.readdir("/");
+    try {
+      const text = new TextDecoder().decode(kernel.exportStep([posed]).bytes);
+      const source = text.replace(/SI_UNIT\s*\(\s*\.MILLI\.\s*,\s*\.METRE\.\s*\)/g, "SI_UNIT($,.METRE.)");
+      const restored = importNativeStep(oc, source);
+      try {
+        expect(restored.proof.solidCount).toBe(1);
+        expect(restored.proof.volume).toBeCloseTo(800 * 1000 ** 3, 1);
+        expect(restored.proof.bounds.min).toEqual([26000, -17000, 9000]);
+        expect(restored.proof.bounds.max).toEqual([36000, 3000, 13000]);
+      } finally { restored.shape.delete(); }
+      expect(() => importNativeStep(oc, new TextDecoder().decode(kernel.exportStep([box, posed]).bytes))).toThrow(/one STEP root/);
+      expect(oc.FS.open).toBe(open);
+      expect(oc.FS.readdir("/")).toEqual(files);
+    } finally { kernel.disposeShape(posed); kernel.disposeShape(box); }
+  });
+  it("reports installed STEP reader support for an empty native rebuild and diagnoses missing file bindings", () => {
+    const oc = runtime.oc!;
+    expect(rebuildDocument(createEmptyDocument())).toMatchObject({ success: true, meshes: [], stepImportAvailable: true });
+    const unavailable = stepImportBindingDiagnostic({ ...oc, FS: { ...oc.FS, writeFile: undefined } });
+    expect(unavailable).toMatch(/reader and filesystem bindings/);
+  });
+  it("rebuilds a saved STEP source and cuts the same native body without inventing feature history", () => {
+    vi.stubGlobal("document", undefined);
+    const source = importProjectText(readFileSync("src/persistence/fixtures/schema-v21.pcaddoc", "utf8"));
+    expect(source.sketches).toEqual({});
+    const imported = rebuildDocument(source);
+    expect(imported.errors).toEqual([]);
+    expect(imported.meshes[0]).toMatchObject({ bodyId: "body:imported-bore", kernelOperation: "stepImport", geometryAssertions: { valid: true, solidCount: 1 } });
+    expect(imported.meshes[0].geometryAssertions!.volume).toBeCloseTo(2000 - 40 * Math.PI, 6);
+    const outline = applyCadCommand(source, { command: "cad.sketch.create", arguments: { name: "New pocket", plane: "XY", offset: "19mm", componentId: "placed-part" } });
+    const sketchId = outline.result.id!;
+    const profile = applyCadCommand(outline.document, { command: "cad.sketch.rectangle", arguments: { sketchId, width: "2mm", height: "2mm", origin: { x: "27mm", y: "-15mm" } } });
+    const cut = applyCadCommand(profile.document, { command: "cad.feature.extrude", arguments: { sketchId, operation: "cut", distance: "4mm", direction: "negative", targetBodyIds: ["body:imported-bore"] } });
+    const reopened = importProjectText(serializeProject(cut.document));
+    const result = rebuildDocument(reopened, { exportStepBodyIds: ["body:imported-bore"] });
+    expect(result.errors).toEqual([]);
+    expect(result.meshes[0]).toMatchObject({ bodyId: "body:imported-bore", kernelOperation: "cut" });
+    expect(result.nativeStepExport!.after[0].volume).toBeCloseTo(2000 - 40 * Math.PI - 16, 6);
+    expect(result.metrics!.shapeDisposalFailures).toBe(0);
+  });
+  it("rejects native STEP parse/transfer failure with source-linked diagnostics and releases filesystem resources", () => {
+    vi.stubGlobal("document", undefined);
+    const source = importProjectText(readFileSync("src/persistence/fixtures/schema-v21.pcaddoc", "utf8"));
+    const invalid = { ...source, features: source.features.map(feature => ({ ...feature, stepSource: "ISO-10303-21;\nHEADER;\nENDSEC;\nDATA;\n#1=FOO();\nENDSEC;\nEND-ISO-10303-21;" })) };
+    const oc = runtime.oc!, open = oc.FS.open, files = oc.FS.readdir("/");
+    const result = rebuildDocument(invalid);
+    expect(result.success).toBe(false);
+    expect(result.meshes).toEqual([]);
+    expect(result.errors).toMatchObject([{ source: "feature", sourceId: "imported-bore", message: expect.stringMatching(/STEP/) }]);
+    expect(oc.FS.open).toBe(open);
+    expect(oc.FS.readdir("/")).toEqual(files);
   });
   it("keeps STEP bytes out of ordinary rebuilds and exports only explicitly selected current bodies before disposal", () => {
     vi.stubGlobal("document", undefined);

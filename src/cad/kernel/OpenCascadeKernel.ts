@@ -1,6 +1,6 @@
 import { assertMeshBudget } from "../resourceLimits";
 import { measureNativeBores } from "./nativeDrawing";
-import { exportNativeStep, stepBindingDiagnostic } from "./nativeStep";
+import { exportNativeStep, importNativeStep, stepBindingDiagnostic, stepImportBindingDiagnostic } from "./nativeStep";
 import initOpenCascadeModule from "opencascade.js/dist/opencascade.wasm.js";
 import openCascadeWasmUrl from "opencascade.js/dist/opencascade.wasm.wasm?url";
 import { createId } from "../document/ids";
@@ -64,6 +64,7 @@ const MAX_EDGE_PROOF_SIGNATURE_CHARS = 262144;
 class EdgeProofSignatureUnavailable extends Error {}
 
 type KernelHandle =
+  | { kind: "stepImport"; occtShape?: unknown }
   | {
       kind: "box";
       width: number;
@@ -278,6 +279,18 @@ export class OpenCascadeKernel implements KernelAdapter {
   }
   static stepExportDiagnostic(): string | undefined {
     return stepBindingDiagnostic(OpenCascadeKernel.openCascade);
+  }
+  static stepImportDiagnostic(): string | undefined {
+    return stepImportBindingDiagnostic(OpenCascadeKernel.openCascade);
+  }
+  importStep(source: string): KernelShape {
+    const oc = OpenCascadeKernel.openCascade;
+    if (!oc || typeof globalThis.document !== "undefined") throw new Error("STEP import requires an isolated native worker.");
+    const id = createId("shape");
+    const imported = importNativeStep(oc, source);
+    const { bounds: _bounds, ...assertions } = imported.proof;
+    this.assertions.set(imported.shape, assertions);
+    return { id, kernelHandle: { kind: "stepImport", occtShape: imported.shape } };
   }
   exportStep(shapes: readonly KernelShape[]) {
     const oc = OpenCascadeKernel.openCascade;

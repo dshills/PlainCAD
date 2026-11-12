@@ -58,6 +58,8 @@ import {
 import { saveRecovery } from "../../persistence/autosave";
 import { RefObject } from "react";
 import { CadStore, useCadStore } from "../../state/useCadStore";
+import { useStepImport } from "./stepImportState";
+import { canApplyStepImport, canOpenStepImport } from "./stepImportAvailability";
 import { canOpenStepExport, openStepExport } from "./stepExportCommand";
 import {
   createBoxTemplate,
@@ -178,6 +180,9 @@ export interface CommandEnablement {
   partLibrary: boolean;
   projectSketchEdges: boolean;
   insertProject: boolean;
+  importStep: boolean;
+  applyStepImport: boolean;
+  cancelStepImport: boolean;
   measurementPicking: boolean;
   createFacePocket: boolean;
   removeSketchMaterial: boolean;
@@ -237,6 +242,7 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
   const canvasBodyActions = Boolean(canvasTarget && !targetPickerActive && !canvasActive && !guidedHoleStartBlocked && !scopeCaptureBusy && !useInspectionState.getState().picking);
   const base = state.history.present.features.find(feature => feature.id === canvasTarget?.featureId);
   const links = state.history.present.sketches[useSketchCanvas.getState().active?.sketchId ?? ""]?.projections ?? [];
+  const stepImportFrame = useStepImport.getState().frame;
   return {
     aiAssistant: useAiDrawer.getState().open || (!transientPickerActive && !guidedHoleStartBlocked && !scopeCaptureBusy && !state.fileBusy),
     linkedSketchShowSource: !targetPickerActive && !guidedHoleStartBlocked && !state.fileBusy && links.some(link => canNavigateLinkedSketchSource(link.id)),
@@ -246,6 +252,9 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
     canvasDeleteBase: canvasBodyActions && Boolean(base),
     projectSketchEdges: !targetPickerActive && !guidedHoleStartBlocked && !state.fileBusy && canOpenSketchProjection(state),
     insertProject: !aiPreviewActive && canInsertProject(state),
+    importStep: !targetPickerActive && !guidedHoleStartBlocked && !canvasActive && !scopeCaptureBusy && canOpenStepImport(state),
+    applyStepImport: canApplyStepImport(state),
+    cancelStepImport: Boolean(stepImportFrame),
     partLibrary: !aiPreviewActive && canOpenPartLibrary(state),
     removeJoint: !state.fileBusy && !targetPickerActive && !guidedHoleStartBlocked && !canvasActive && !scopeCaptureBusy && Boolean(state.history.present.assemblyJoints?.some(joint => joint.childComponentId === state.activeComponentId)),
     manufacturingCoach: !scopeCaptureBusy && !targetPickerActive && Boolean(canCoach(state)),
@@ -493,6 +502,9 @@ export const commands: CadCommand[] = [
   { id: "inspect.pickModel", label: "Measure in Model", description: "Click supported authored points, edges, faces and bodies to inspect their geometry.", enablementKey: "measurementPicking", run: () => { const state = useCadStore.getState(); useInspectionState.getState().setPicking(state.documentSession, true); useViewerState.getState().setPresentationMode(state.documentSession, "model"); useWorkspaceState.getState().setPanel("measure"); } },
   { id: "sketch.projectEdges", label: "Project Edges into Sketch", description: "Link a surviving complete authored cap boundary into a parallel sketch.", enablementKey: "projectSketchEdges", run: () => openSketchProjection() },
   { id: "partLibrary", label: "Local part library", description: "Save editable components locally and insert independent copies by dragging or at the origin.", enablementKey: "partLibrary", run: beginPartLibrary },
+  { id: "file.importStep", label: "Import STEP solid", description: "Preview one native STEP solid and add it to the current project.", enablementKey: "importStep", run: context => { const state = useCadStore.getState(); return import("./stepImportCommand").then(module => module.beginStepImport(context.file, state)); } },
+  { id: "file.applyStepImport", label: "Add STEP solid", description: "Accept the current native STEP preview as one Undo step.", enablementKey: "applyStepImport", run: () => { const frame = useStepImport.getState().frame; return import("./stepImportCommand").then(module => module.applyStepImport(frame)); } },
+  { id: "file.cancelStepImport", label: "Cancel STEP import", enablementKey: "cancelStepImport", run: () => import("./stepImportCommand").then(module => module.cancelStepImport()) },
   { id: "file.insertProject", label: "Insert Reusable Part", description: "Copy editable components from a local project at the shared origin without replacing the open project.", enablementKey: "insertProject", run: beginInsertProject },
   {
     id: "file.openProject",
@@ -816,7 +828,13 @@ export const commandById = new Map(commands.map(command => [command.id, command]
 const contextFields = ["sketchId", "componentId", "componentName", "projectName", "viewName", "viewId", "documentSession", "operationTargetId", "operation", "file"];
 for (const command of commands) bindCommand({ id: command.id, label: command.label, description: command.description, kind: "domain", input: { type: "object", additionalProperties: false, properties: Object.fromEntries(contextFields.map((field): [string, JsonValue] => [field, field === "documentSession" ? { type: "integer" } : field === "file" ? { type: "object", properties: { name: { type: "string" }, text: { type: "string" }, type: { type: "string" } } } : { type: "string" }])) } }, {
   id: "domain", label: () => command.label,
-  available: () => command.internal ? "Use this tool's mounted interaction commands; runtime preview frames cannot be supplied as JSON." : isCommandEnabledForSnapshot(command.id, selectCommandEnablement(useCadStore.getState())) ? undefined : "Select the required geometry, finish the current task, or wait for a current rebuild.",
+  available: () => {
+    if (command.internal) return "Use this tool's mounted interaction commands; runtime preview frames cannot be supplied as JSON.";
+    const state = useCadStore.getState();
+    if (isCommandEnabledForSnapshot(command.id, selectCommandEnablement(state))) return undefined;
+    return (command.id === "file.importStep" && state.rebuild.status === "succeeded" && state.rebuild.result?.stepImportDiagnostic) ||
+      "Select the required geometry, finish the current task, or wait for a current rebuild.";
+  },
   invoke: (args, remote) => {
     if (!remote) return command.run(args[0] as CommandContext ?? {});
     const input = objectArguments(args[0], contextFields), context: CommandContext = {};

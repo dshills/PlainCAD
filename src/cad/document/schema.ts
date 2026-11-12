@@ -1,4 +1,4 @@
-export const CURRENT_SCHEMA_VERSION = 20;
+export const CURRENT_SCHEMA_VERSION = 21;
 
 export type UnitSystem = "metric" | "imperial";
 
@@ -274,7 +274,15 @@ export type Feature =
   | FilletFeature
   | ChamferFeature
   | FeaturePatternFeature
-  | FittedPartFeature;
+  | FittedPartFeature
+  | StepImportFeature;
+
+/** Original bounded exchange source, rebuilt into a native solid on demand. */
+export interface StepImportFeature extends FeatureBase {
+  type: "stepImport";
+  operation: "newBody";
+  stepSource: string;
+}
 
 export interface TopologyRef {
   featureId: string;

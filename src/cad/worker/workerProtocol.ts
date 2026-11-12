@@ -45,6 +45,9 @@ export interface RebuildResult {
   /** Actual loaded native STEP bindings; not inferred from optional adapter types. */
   stepExportAvailable?: boolean;
   stepExportDiagnostic?: string;
+  /** Actual loaded reader, native bounds and filesystem support, even in an empty project. */
+  stepImportAvailable?: boolean;
+  stepImportDiagnostic?: string;
   /** Explicit STEP export rebuilds only; native handles never cross the worker. */
   nativeStepExport?: NativeStepExport;
   /** Explicit disposable drawing rebuild only; native handles never cross workers. */

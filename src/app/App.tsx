@@ -40,9 +40,11 @@ import { FeatureTimeline } from "../ui/panels/FeatureTimeline";
 import { SketchPanel } from "../ui/panels/SketchPanel";
 import { useCadStore } from "../state/useCadStore";
 import { usePartLibrary } from "../ui/commands/partLibraryState";
+import { useStepImport } from "../ui/commands/stepImportState";
 import { useStepExport } from "../ui/commands/stepExportState";
 import { useProjectGallery } from "../ui/workspace/projectGalleryState";
 
+const StepImportPanel = lazy(() => import("../ui/panels/StepImportPanel").then(module => ({ default: module.StepImportPanel })));
 const FabricationPanel = lazy(() => import("../ui/panels/FabricationPanel").then(module => ({ default: module.FabricationPanel })));
 const ProjectGalleryPanel = lazy(() => import("../ui/workspace/ProjectGalleryPanel").then(module => ({ default: module.ProjectGalleryPanel })));
 const ModelUpdateFeedback = lazy(() => import("../ui/workspace/ModelUpdateFeedback").then(module => ({ default: module.ModelUpdateFeedback })));
@@ -326,6 +328,7 @@ const FOCUSED_WHEN_ENABLED = new Set([
 
 export function App() {
   const partLibraryOpen = usePartLibrary(state => Boolean(state.frame));
+  const stepImportOpen = useStepImport(state => Boolean(state.frame));
   const stepExportOpen = useStepExport(state => Boolean(state.frame));
   const galleryOpen = useProjectGallery(state => state.open);
   const workspace = useWorkspaceState(
@@ -610,6 +613,7 @@ export function App() {
             {galleryOpen ? <Suspense fallback={<p role="status">Loading project gallery…</p>}><ProjectGalleryPanel /></Suspense> : null}
             {(hasCanvasSelection || hasSketchSelection) && <Suspense fallback={null}><CanvasSelectionActions /></Suspense>}
             {partLibraryOpen ? <Suspense fallback={<p role="status">Loading local parts…</p>}><PartLibraryPanel /></Suspense> : null}
+            {stepImportOpen ? <Suspense fallback={<p role="status">Loading STEP import…</p>}><StepImportPanel /></Suspense> : null}
             {stepExportOpen ? <Suspense fallback={<p role="status">Loading STEP export…</p>}><StepExportPanel /></Suspense> : null}
             {!sketchActive ? <><SketchSolidHandoffPanel /><OperationDropPanel /></> : null}
             <Suspense fallback={null}><ModelUpdateFeedback /></Suspense>

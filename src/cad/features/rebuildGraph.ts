@@ -263,7 +263,7 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
       if (feature.suppressed) continue;
       // Supported edge roles belong to a new-body extrusion, so this is the
       // same stable target ID used by rebuildEdgeTreatmentFeature below.
-      const affectedIds = (feature.type === "extrude" || feature.type === "revolve" || feature.type === "fit") && feature.operation === "newBody"
+      const affectedIds = (feature.type === "extrude" || feature.type === "revolve" || feature.type === "fit" || feature.type === "stepImport") && feature.operation === "newBody"
         ? [stableBodyIdForFeature(feature.id)] : targetBodyIds(feature);
       const capture = options.captureTargetScopeFeatureId === feature.id ? captureTargets : undefined;
       const errorsBefore: number = errors.length;
@@ -354,6 +354,20 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
           beforeBodies = new Map(runtimeBodies);
         }
         operationCount += 1;
+        if (feature.type === "stepImport") {
+          try {
+            if (!kernel.importStep) throw new Error("STEP import requires the native OpenCascade reader.");
+            const shape = kernel.importStep(feature.stepSource);
+            shapesToDispose.add(shape);
+            const bodyId = stableBodyIdForFeature(feature.id);
+            const mesh = withStableBodyId(kernel.tessellate(shape, TESSELLATION_LOD.default), bodyId);
+            setRuntimeBody(runtimeBodies, bodyId, { shape, mesh, featureId: feature.id, name: feature.name, planeKey: "" });
+          } catch (error) {
+            errors.push({ id: `feature:${feature.id}:step-import`, source: "feature", sourceId: feature.id,
+              message: error instanceof Error ? error.message : "OpenCascade rejected the STEP geometry. Re-export the source solid." });
+          }
+          continue;
+        }
         if (feature.type === "fit") {
           try {
             const source = runtimeBodies.get(feature.sourceBodyId);
@@ -693,6 +707,7 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
   nativeFeatureCache.finish(errors.length === 0);
   const disposableMetricsFinished = getDisposableScopeMetrics();
   const stepDiagnostic = OpenCascadeKernel.stepExportDiagnostic();
+  const stepImportDiagnostic = OpenCascadeKernel.stepImportDiagnostic();
 
   return {
     documentId: document.id,
@@ -715,6 +730,8 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
     parameterValues: evaluated.values,
     stepExportAvailable: nativeReferences && !stepDiagnostic,
     ...(stepDiagnostic ? { stepExportDiagnostic: stepDiagnostic } : {}),
+    stepImportAvailable: nativeReferences && !stepImportDiagnostic,
+    ...(stepImportDiagnostic ? { stepImportDiagnostic } : {}),
     ...(nativeStepExport ? { nativeStepExport } : {}),
     ...(nativeDrawingGeometry ? { nativeDrawingGeometry } : {}),
     ...(capturedTargetBodyIds !== undefined ? { capturedTargetBodyIds } : {}),

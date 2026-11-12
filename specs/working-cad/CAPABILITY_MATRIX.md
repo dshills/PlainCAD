@@ -1299,6 +1299,13 @@ The local part library saves one self-contained editable component with a bounde
 
 Native STEP export uses a disposable OpenCascade worker to rebuild selected bodies at saved world poses, write real STEP solids and reimport the actual file. Download requires current matching native BRep validity, solid/root counts, exact volumes, bounds and millimetre units. Separate bodies remain separate; editable history, labels and assembly structure are retained in project files. Cancellation, changed documents, missing bindings and native failures produce diagnostics without authorizing stale downloads. See [STEP export](STEP_EXPORT.md).
 
+Native STEP import previews a bounded local exchange file containing one root
+and one closed solid. Apply adds an independent component with stable body
+identity and exact native geometry; Cancel and Undo leave the accepted project
+unchanged or restore it. Schema 21 stores the original STEP source, never runtime
+proofs or meshes. Source dimensions and placement survive save/open; imported
+faces do not acquire authored topology references. See [STEP import](STEP_IMPORT.md).
+
 ## Assembly joints (schema 18)
 
 Working: face-picked rigid, hinge and slider joints; native posed BReps with unchanged exact volumes/solid counts; parent pose propagation; current supported mating-plane resolution; bounded numeric/range motion preview, cancel, one-step Apply/Undo, detach preserving pose, save/open and positioned STL/STEP. At most 32 joints, one incoming joint per component, acyclic graph. Native common-volume collision checks reject broad-phase false positives, highlight colliders orange and report body IDs. At most 256 overlapping pair probes.

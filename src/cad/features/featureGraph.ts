@@ -139,7 +139,7 @@ export function planFeatureGraph(document: CadDocument): FeatureGraphPlan {
       );
     featureDepths.set(feature.id, depth);
     if (
-      (feature.type === "extrude" || feature.type === "revolve" || feature.type === "fit") &&
+      (feature.type === "extrude" || feature.type === "revolve" || feature.type === "fit" || feature.type === "stepImport") &&
       feature.operation === "newBody"
     )
       bodyDepths.set(stableBodyIdForFeature(feature.id), depth);

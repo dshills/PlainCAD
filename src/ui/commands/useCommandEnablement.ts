@@ -6,6 +6,8 @@ import { useFittedPart } from "./fittedPartState";
 import { useViewerState } from "../../state/viewerState";
 import { useComponentPlacement } from "./componentPlacementState";
 import { usePartLibrary } from "./partLibraryState";
+import { useProjectDrop } from "./projectDropCommand";
+import { useStepImport } from "./stepImportState";
 import { useStepExport } from "./stepExportState";
 import { useInspectionState } from "../../state/inspectionState";
 import { useSketchProjection } from "./sketchProjectionState";
@@ -53,6 +55,8 @@ export function useCommandEnablement() {
   useComponentPlacement(state => state.frame);
   usePartLibrary(state => state.frame);
   useStepExport(state => state.frame);
+  useStepImport(state => state.frame);
+  useProjectDrop(state => state.pending);
   useFeaturePattern((state) => state.frame);
   useInspectionState((state) => state.picking);
   useSketchProjection((state) => state.frame);

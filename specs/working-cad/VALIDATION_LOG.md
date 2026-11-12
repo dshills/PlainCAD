@@ -11,8 +11,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Date: 2026-10-09.
 - Change: five-item command automation batch: typed semantic CAD commands, transactional native plans, built-in command agent, recorded workflows and live access to the open project; includes the authored-parameter diagnostic fix.
 - Result: type checks, 1646 unit/component tests in 211 files, build/bundle budget (58 bundles, largest 498.24 kB), all 328 development browser cases and all 55 production cases passed.
-- Completed items since that full gate: **2**.
-- Next full gate: after **3** more completed items.
+- Completed items since that full gate: **3**.
+- Next full gate: after **2** more completed items.
 
 ## Completed batch
 
@@ -1355,3 +1355,26 @@ real CLI and mocked-provider AI workflows reach 11700 mm³, with exact native
 bounds, successful Undo, and STL/save-open evidence. The existing linked-sketch
 static/dynamic import advisory remains; no circular or large-bundle warnings.
 Full suite not due. Cadence: **2** completed items since the last full gate.
+
+
+## Native modeling item 2: portable STEP solid import
+
+File → Import STEP solid previews one bounded closed native solid, retains its
+world pose and physical size, and adds it as one Undo step. Schema 21 saves the
+validated ASCII source, not mesh or kernel data. Native rebuilds reread the
+source and support explicit boolean targets and export. Assemblies and sheets
+are diagnosed. Embedded source is excluded from the provider command agent by
+client/server validation; the local registry accepts bounded file text.
+
+Independent internal review caught missing AI face-picker exclusion and reader
+capability checks. Shared start/Apply availability now checks both and rejects
+replaced sessions and results. Final integrated guard review found no blocker.
+Native tests verify metre-to-millimetre conversion, exact volume and placement,
+malformed-source cleanup, a downstream cut, and STEP re-export.
+
+`npm run check:item` passed type checks, 1651 unit/component tests, 61 bundles
+(largest 494.18 kB), 5 development smoke cases and 14 production smoke cases.
+Both focused development cases and the built CSP case passed, including
+UI/registry import, Undo/Redo, save/open, STL, and in-flight same-ID replacement.
+Existing linked-sketch import advisory only; no large-bundle warnings. Cadence:
+**3** completed items since the last full gate.

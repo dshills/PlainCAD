@@ -38,6 +38,8 @@ export function validateCommandAgentContext(value: unknown): CommandAgentContext
   if (!Number.isSafeInteger(source.session) || Number(source.session) < 0 || typeof source.native !== "boolean") throw new Error("Invalid project session or native status.");
   if (!source.document || typeof source.document !== "object") throw new Error("Current project context is missing.");
   const document = importProjectText(JSON.stringify(source.document));
+  if (document.features.some(feature => feature.type === "stepImport"))
+    throw new Error("The provider command agent cannot share projects with embedded STEP sources. Use local commands for this project.");
   const activeComponentId = stringArgument(source.activeComponentId, "Active component", 160);
   if (!document.components[activeComponentId]) throw new Error("The active component is absent from this project.");
   if (!Array.isArray(source.selection) || source.selection.length > 32 || !Array.isArray(source.diagnostics) || source.diagnostics.length > 32) throw new Error("Project context exceeds the supported selection or diagnostic limit.");

@@ -31,6 +31,7 @@ const migrations = new Map<number, Migration>([
   [17, document => { const { assemblyJoints: _joints, ...legacy } = document; return { ...legacy, schemaVersion: 18 }; }],
   [18, document => ({ ...document, schemaVersion: 19 })],
   [19, document => { const { configurations: _configurations, ...legacy } = document; return { ...legacy, schemaVersion: 20 }; }],
+  [20, document => ({ ...document, schemaVersion: 21 })],
 ]);
 
 function migrateV16ToV17(document: CadDocument): CadDocument {
@@ -404,6 +405,7 @@ function sanitizeFeature(feature: Feature): Feature | undefined {
     timelineStep: feature.timelineStep,
     createdAt: feature.createdAt,
   };
+  if (feature.type === "stepImport") return { ...base, type: "stepImport", operation: feature.operation, stepSource: feature.stepSource };
   if (feature.type === "fit") return { ...base, type: "fit", operation: feature.operation, sourceBodyId: feature.sourceBodyId, style: feature.style, clearance: sanitizeExpressionRef(feature.clearance), wallThickness: sanitizeExpressionRef(feature.wallThickness), followSourcePlacement: feature.followSourcePlacement };
   if (feature.type === "extrude") {
     return {

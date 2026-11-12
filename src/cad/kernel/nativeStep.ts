@@ -1,3 +1,4 @@
+import { stepSourceDiagnostic } from "../document/stepImportSource";
 import { MODEL_RESOURCE_LIMITS } from "../resourceLimits";
 import type { BoundingBox, GeometryAssertions } from "./KernelAdapter";
 import { withDisposableScope } from "./disposableScope";
@@ -17,6 +18,16 @@ export function stepBindingDiagnostic(oc: Record<string, any> | undefined): stri
       !oc.STEPControl_StepModelType?.STEPControl_AsIs || !oc.IFSelect_ReturnStatus?.IFSelect_RetDone || typeof oc.Bnd_Box_1 !== "function" || typeof oc.BRepBndLib?.AddOptimal !== "function" ||
       !["open", "write", "readFile", "stat", "mkdir", "unlink", "rmdir"].every(method => typeof oc.FS?.[method] === "function"))
     return "STEP export requires native OpenCascade STEP writer, reader and filesystem bindings. They are unavailable in this kernel.";
+  return undefined;
+}
+export function stepImportBindingDiagnostic(oc: Record<string, any> | undefined): string | undefined {
+  if (!oc || typeof oc.STEPControl_Reader_1 !== "function" ||
+      !["ReadFile", "NbRootsForTransfer", "TransferRoots", "NbShapes", "Shape"]
+        .every(method => typeof oc.STEPControl_Reader?.prototype?.[method] === "function") ||
+      !oc.IFSelect_ReturnStatus?.IFSelect_RetDone || !oc.TopAbs_ShapeEnum?.TopAbs_SOLID ||
+      typeof oc.Bnd_Box_1 !== "function" || typeof oc.BRepBndLib?.AddOptimal !== "function" ||
+      !["open", "writeFile", "mkdir", "unlink", "rmdir"].every(method => typeof oc.FS?.[method] === "function"))
+    return "STEP import requires native OpenCascade STEP reader and filesystem bindings. They are unavailable in this kernel.";
   return undefined;
 }
 function geometryProof(oc: Record<string, any>, shape: any): StepGeometryProof {
@@ -56,7 +67,7 @@ function routedNativeFileCall<T>(oc: Record<string, any>, path: string, mode: "r
     fs.open = function (name: unknown, flags: unknown, ...args: unknown[]) {
       if (typeof name !== "string" || name.length > 1024 || typeof flags !== "number" || !Number.isInteger(flags) || ++opened !== 1 ||
           (mode === "read" ? (flags & OPEN_ACCESS_MASK) !== 0 || Boolean(flags & (OPEN_CREATE | OPEN_TRUNCATE)) : (flags & OPEN_ACCESS_MASK) !== OPEN_WRITE_ONLY || !(flags & OPEN_CREATE) || !(flags & OPEN_TRUNCATE)))
-        throw new Error("STEP native file access was unexpected. This kernel cannot safely export STEP.");
+        throw new Error("STEP native file access was unexpected. This kernel cannot safely access this STEP file.");
       return previousOpen.call(this, path, flags, ...args);
     };
     if (mode === "write") fs.write = function (stream: StepFileStream, buffer: unknown, offset: number, length: number, position?: number, ...args: unknown[]) {
@@ -105,5 +116,39 @@ export function exportNativeStep(oc: Record<string, any>, shapes: readonly any[]
   } finally {
     try { oc.FS.unlink(path); } catch { /* A failed writer may not have created a file. */ }
     try { oc.FS.rmdir(directory); } catch { /* Preserve primary errors; the disposable worker releases its filesystem. */ }
+  }
+}
+
+/** Import a single closed solid. Callers receive ownership of the detached shape. */
+export function importNativeStep(oc: Record<string, any>, source: string): { shape: any; proof: StepGeometryProof } {
+  const sourceError = stepSourceDiagnostic(source);
+  if (sourceError) throw new Error(sourceError);
+  const unavailable = stepImportBindingDiagnostic(oc);
+  if (unavailable) throw new Error(unavailable);
+  const directory = `/plaincad-step-${++taskCounter}`, path = `${directory}/source.step`;
+  oc.FS.mkdir(directory);
+  try {
+    oc.FS.writeFile(path, source);
+    return withDisposableScope(scope => {
+      const reader = scope.use(new oc.STEPControl_Reader_1());
+      const done = oc.IFSelect_ReturnStatus.IFSelect_RetDone.value;
+      routedNativeFileCall(oc, path, "read", () => {
+        if (reader.ReadFile("source.step").value !== done)
+          throw new Error("OpenCascade could not read the STEP file. Re-export the source solid.");
+        if (reader.NbRootsForTransfer() !== 1 || reader.TransferRoots() !== 1 || reader.NbShapes() !== 1)
+          throw new Error("Import needs one STEP root containing one solid. Export assembly parts individually.");
+      });
+      const shape = scope.use(reader.Shape(1));
+      if (!shape || shape.IsNull() || shape.ShapeType().value !== oc.TopAbs_ShapeEnum.TopAbs_SOLID.value)
+        throw new Error("Import needs a closed STEP solid. Assemblies, compounds and open surfaces are unsupported.");
+      const proof = geometryProof(oc, shape);
+      if (proof.solidCount !== 1 || !Number.isFinite(proof.surfaceArea) || proof.surfaceArea <= 0 ||
+          [...proof.bounds.min, ...proof.bounds.max].some(value => Math.abs(value) > 1e8))
+        throw new Error("STEP solid has invalid or out-of-range geometry.");
+      return { shape: scope.release(shape), proof };
+    });
+  } finally {
+    try { oc.FS.unlink(path); } catch { /* A failed file write may not create a file. */ }
+    try { oc.FS.rmdir(directory); } catch { /* Preserve the import diagnostic. */ }
   }
 }

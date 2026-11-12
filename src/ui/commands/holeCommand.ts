@@ -133,7 +133,7 @@ export function holeCreationContext(state: CadStore, sketchId?: string) {
         featureComponentId(document, f) ===
           sketchComponentId(document, sketch.id) &&
         !f.suppressed &&
-        (f.type === "extrude" || f.type === "revolve") &&
+        (f.type === "extrude" || f.type === "revolve" || f.type === "stepImport") &&
         f.operation === "newBody",
     )
     .flatMap((f) => {

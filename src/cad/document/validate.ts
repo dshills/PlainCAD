@@ -1,3 +1,4 @@
+import { STEP_IMPORT_PROJECT_MAX_BYTES, stepSourceDiagnostic } from "./stepImportSource";
 import { assemblyJointIssues } from "./assemblyJoints";
 import { configurationIssues } from "./configurationValidation";
 import { componentScopeIssues, featureComponentId, sketchComponentId } from "./components";
@@ -436,7 +437,7 @@ export function validateDocument(document: CadDocument, mode: "modeling" | "stor
       }));
       if (feature.followSourcePlacement && placedProjection) issues.push({ source: "feature", sourceId: feature.id, message: "Turn off Follow source position before projecting to or from this fitted component in world coordinates." });
       const owner = document.features.find(item => `body:${item.id}` === feature.sourceBodyId);
-      if (!owner || owner.suppressed || !((owner.type === "extrude" || owner.type === "revolve" || owner.type === "fit") && owner.operation === "newBody")) issues.push({ source: "feature", sourceId: feature.id, message: "Fitted reference body was lost, suppressed or changed. Select a surviving source body." });
+      if (!owner || owner.suppressed || !((owner.type === "extrude" || owner.type === "revolve" || owner.type === "fit" || owner.type === "stepImport") && owner.operation === "newBody")) issues.push({ source: "feature", sourceId: feature.id, message: "Fitted reference body was lost, suppressed or changed. Select a surviving source body." });
     }
     if (feature.type === "pattern") {
       const source = document.features.find(item => item.id === feature.sourceFeatureId);
@@ -689,6 +690,7 @@ function validatePersistedFields(document: CadDocument): ValidationIssue[] {
       item.id,
     );
   }
+  let stepSourceBytes = 0;
   for (const feature of document.features) {
     const checkFeature = (valid: boolean, message: string) =>
       check(valid, "feature", message, feature.id);
@@ -702,6 +704,14 @@ function validatePersistedFields(document: CadDocument): ValidationIssue[] {
         typeof feature.sketchId === "string",
         "Sketch reference must be an ID.",
       );
+    if (feature.type === "stepImport") {
+      const sourceError = stepSourceDiagnostic(feature.stepSource);
+      if (sourceError) checkFeature(false, sourceError);
+      else stepSourceBytes += feature.stepSource.length;
+      checkFeature(stepSourceBytes <= STEP_IMPORT_PROJECT_MAX_BYTES, "Project exceeds the 2 MiB total embedded STEP source limit.");
+      checkFeature(feature.operation === "newBody", "A STEP import must create a new body.");
+      checkFeature(typeof feature.componentId === "string" && feature.componentId !== document.rootComponentId, "A STEP import needs its own component.");
+    }
     if (feature.type === "fit") {
       checkFeature(typeof feature.componentId === "string" && feature.componentId !== document.rootComponentId, "A fitted part requires its own explicit non-root component.");
       checkFeature(typeof feature.sourceBodyId === "string" && feature.sourceBodyId.startsWith("body:") && feature.sourceBodyId.length <= 320 && ["enclosure", "bracket", "adapter"].includes(feature.style) && feature.operation === "newBody" && expression(feature.clearance) && expression(feature.wallThickness) && typeof feature.followSourcePlacement === "boolean", "Malformed fitted part. Choose a source body, supported style, clearance and wall expressions.");

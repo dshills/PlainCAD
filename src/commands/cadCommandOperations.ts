@@ -100,7 +100,7 @@ export function applyCadCommand(document: CadDocument, call: CadCommandCall | Ty
     const ids = references(args.targetBodyIds, "targetBodyIds");
     for (const id of ids) {
       const feature = document.features.find(item => stableBodyIdForFeature(item.id) === id);
-      if (!feature || feature.suppressed || !((feature.type === "extrude" || feature.type === "revolve") && feature.operation === "newBody") || featureComponentId(document, feature) !== owner)
+      if (!feature || feature.suppressed || !((feature.type === "extrude" || feature.type === "revolve" || feature.type === "stepImport") && feature.operation === "newBody") || featureComponentId(document, feature) !== owner)
         throw new Error(`Target body ${id} must be an active new-body owner in this component. Native rebuild verifies that it remains available.`);
     }
     return ids;

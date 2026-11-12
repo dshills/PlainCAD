@@ -80,7 +80,7 @@ their existing constraints; free Corner rectangles retain their positional freed
 - Docked Workbench, Minimal and Full layouts, and Light, Dark, and Saturn Command themes.
 - Body visibility, named camera views, section previews, sketch measurements, and linked diagnostics.
 - Click-to-measure supported model edges, endpoints and planar faces, with analytic values.
-- Editable `.pcaddoc`/JSON files, autosave/recovery, validated STL, and native STEP export.
+- Editable `.pcaddoc`/JSON files, autosave/recovery, validated STL, and native STEP import/export.
 - Reusable-part insertion with independent parameters and safe reference remapping.
 - PNG downloads of the current 3D view, an isolated selected body, or a sketch with its visible dimensions.
 - AI part creation, bounded existing-part edits/additions, and conversational sketch refinement.
@@ -485,6 +485,12 @@ available. Cancellation or a changed model invalidates prepared output. STEP
 contains geometric solids; editable history and component hierarchy stay in the
 project file. Exports are limited to 64 bodies, 32 MiB and 60 seconds. See
 [STEP export](specs/working-cad/STEP_EXPORT.md) for binding and geometry limits.
+
+Use **File → Import STEP solid** (or the command palette) to preview a local
+`.step`/`.stp` file and add its single closed solid as a separate component.
+The native solid keeps its original dimensions and position. Save the editable
+project to reopen it without the original file. Imported geometry has no source
+sketch or feature history. See [STEP import limits](specs/working-cad/STEP_IMPORT.md).
 
 The viewport and native previews expose **Fit model** / **Fit preview** at compact
 widths. Fitted views keep the complete model visible when docks or the canvas

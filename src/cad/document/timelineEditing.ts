@@ -123,7 +123,7 @@ export function timelineDependencyErrors(document: CadDocument): string[] {
     document.features
       .filter(
         (f) =>
-          (f.type === "extrude" || f.type === "revolve") &&
+          (f.type === "extrude" || f.type === "revolve" || f.type === "stepImport") &&
           f.operation === "newBody",
       )
       .map((f) => [stableBodyIdForFeature(f.id), f]),
@@ -245,7 +245,7 @@ export function upstreamBodyOwners(
     featureComponentId(document, item.feature) === consumerComponent &&
     !absorbed.has(stableBodyIdForFeature(item.feature.id)) &&
     (includeSuppressed || !item.feature.suppressed) &&
-    (item.feature.type === "extrude" || item.feature.type === "revolve") &&
+    (item.feature.type === "extrude" || item.feature.type === "revolve" || item.feature.type === "stepImport") &&
     item.feature.operation === "newBody"
       ? [item.feature]
       : [],

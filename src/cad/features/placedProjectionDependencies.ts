@@ -34,7 +34,7 @@ export function placedProjectionConsumerBodies(document: CadDocument, movedCompo
       (feature.type === "extrude" && feature.termination?.type === "toFace" && features.has(feature.termination.faceRef.featureId));
     if (!affected) continue;
     features.add(feature.id);
-    if ((feature.type === "extrude" || feature.type === "revolve" || feature.type === "fit") && feature.operation === "newBody") bodies.add(stableBodyIdForFeature(feature.id));
+    if ((feature.type === "extrude" || feature.type === "revolve" || feature.type === "fit" || feature.type === "stepImport") && feature.operation === "newBody") bodies.add(stableBodyIdForFeature(feature.id));
     for (const id of targets) bodies.add(id);
   }
   return bodies;
