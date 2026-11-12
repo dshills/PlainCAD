@@ -1,3 +1,4 @@
+import { holePresetDiameter, type HolePreset } from "../../cad/hardware/fastenerCatalog";
 import { create } from "zustand";
 import { interactionDraftBusy } from "./interactionDraftState";
 import { useCadStore, type CadStore } from "../../state/useCadStore";
@@ -58,6 +59,7 @@ export interface GuidedHoleCenter {
 export interface GuidedHoleInput {
   centers: GuidedHoleCenter[];
   diameter: string;
+  preset?: HolePreset;
   depth: string;
   throughAll: boolean;
 }
@@ -257,6 +259,8 @@ export function stageGuidedHole(
       );
     return value.quantity.value;
   };
+  if (input.preset && input.diameter !== holePresetDiameter(input.preset))
+    throw new Error("Select a preset or enter a custom diameter.");
   const diameter = evaluateSize("diameter", input.diameter);
   if (!input.throughAll) evaluateSize("depth", input.depth);
   const reference = choice.reference;
@@ -322,6 +326,7 @@ export function stageGuidedHole(
   const feature: HoleFeature = {
     id: draft.featureId,
     name: "Face holes",
+    ...(input.preset ? { preset: input.preset } : {}),
     type: "hole",
     componentId: draft.componentId,
     sketchId: sketch.id,

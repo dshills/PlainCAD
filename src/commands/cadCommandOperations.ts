@@ -1,5 +1,7 @@
 import type { CadDocument, ExpressionRef, ExtrudeTermination, FacePlaneReference, Feature, OriginPlane, Sketch, SketchDimension } from "../cad/document/schema";
 import { isShellSource, requireShellOpening } from "../cad/features/shellFeature";
+import { holePresetDiameter, isHolePreset } from "../cad/hardware/fastenerCatalog";
+import { addFastenerBlank } from "../cad/hardware/fastenerBlank";
 import { deleteFeature, nowIso, touchDocument, upsertFeature, upsertParameter, upsertSketch } from "../cad/document/CadDocument";
 import { addComponent, featureComponentId, renameComponent } from "../cad/document/components";
 import { withComponentPlacement } from "../cad/document/componentPlacement";
@@ -35,6 +37,7 @@ export interface CadCommandContext {
 }
 export interface CadCommandResult {
   id?: string;
+  featureId?: string;
   entityIds?: string[];
   pointIds?: string[];
   profileIds?: string[];
@@ -318,7 +321,15 @@ export function applyCadCommand(document: CadDocument, call: CadCommandCall | Ty
     const centerPointIds = references(args.centerPointIds, "centerPointIds");
     if (centerPointIds.some(id => sketch.entities[id]?.type !== "point")) throw new Error("Hole centers must be current points in its source sketch.");
     if ((args.depth === undefined) === (args.throughAll !== true)) throw new Error("Provide depth or throughAll: true, exclusively.");
-    putFeature({ id: createId("feature"), type: "hole", createdAt: nowIso(), name: string("name", "Hole")!, componentId, sketchId: sketch.id, centerPointIds, targetBodyIds: targets(componentId), diameter: positive(string("diameter")!, "Diameter"), depth: args.throughAll === true ? "throughAll" : positive(string("depth")!, "Depth"), direction: string("direction", "positive") as "positive" | "negative" });
+    const preset = isHolePreset(args.preset) ? args.preset : undefined;
+    if (Boolean(preset) === (args.diameter !== undefined)) throw new Error("Choose one hole preset or provide a custom diameter.");
+    putFeature({ id: createId("feature"), type: "hole", createdAt: nowIso(), name: string("name", "Hole")!, componentId, sketchId: sketch.id, centerPointIds, targetBodyIds: targets(componentId),
+      ...(preset ? { preset } : {}), diameter: positive(preset ? holePresetDiameter(preset) : string("diameter")!, "Diameter"),
+      depth: args.throughAll === true ? "throughAll" : positive(string("depth")!, "Depth"), direction: string("direction", "positive") as "positive" | "negative" });
+  } else if (call.command === "cad.hardware.fastener") {
+    const created = addFastenerBlank(document, string("size")!, positive(string("length")!, "Fastener length"), string("name"));
+    next = created.document;
+    result = { id: created.id, featureId: created.featureId, bodyId: created.bodyId };
   } else if (call.command === "cad.feature.fillet" || call.command === "cad.feature.chamfer") {
     const edges = (args.edges as Array<{ featureId: string; role: SupportedEdgeRole; sourceEntityId?: string }>).map(edge => createExtrudeEdgeRef(reference(edge.featureId, "edge.featureId"), edge.role, edge.sourceEntityId === undefined ? undefined : reference(edge.sourceEntityId, "edge.sourceEntityId")));
     const resolved = resolveSupportedEdgeRefs(document, edges);
@@ -340,7 +351,7 @@ export function applyCadCommand(document: CadDocument, call: CadCommandCall | Ty
     const id = reference(args.featureId, "featureId");
     const feature = document.features.find(item => item.id === id);
     if (!feature) throw new Error("Feature reference was lost.");
-    const allowed = new Set(["featureId", "name", "suppressed", ...(feature.type === "extrude" ? ["distance", "direction", "operation", "targetBodyIds"] : feature.type === "revolve" ? ["angle", "axis", "operation", "targetBodyIds"] : feature.type === "hole" ? ["diameter", "depth", "throughAll", "direction", "targetBodyIds"] : feature.type === "fillet" ? ["radius"] : feature.type === "chamfer" ? ["distance"] : feature.type === "shell" ? ["opening", "wallThickness"] : [])]);
+    const allowed = new Set(["featureId", "name", "suppressed", ...(feature.type === "extrude" ? ["distance", "direction", "operation", "targetBodyIds"] : feature.type === "revolve" ? ["angle", "axis", "operation", "targetBodyIds"] : feature.type === "hole" ? ["diameter", "preset", "depth", "throughAll", "direction", "targetBodyIds"] : feature.type === "fillet" ? ["radius"] : feature.type === "chamfer" ? ["distance"] : feature.type === "shell" ? ["opening", "wallThickness"] : [])]);
     for (const key of Object.keys(args)) if (!allowed.has(key)) throw new Error(`${key} is not a setting for ${feature.type}.`);
     let updated: Feature = { ...feature, ...(args.name === undefined ? {} : { name: string("name")! }), ...(args.suppressed === undefined ? {} : { suppressed: args.suppressed as boolean }) };
     if (updated.type === "extrude") {
@@ -359,7 +370,12 @@ export function applyCadCommand(document: CadDocument, call: CadCommandCall | Ty
     } else if (updated.type === "hole") {
       if (args.direction === "symmetric") throw new Error("Holes support positive or negative drilling directions.");
       if (args.direction !== undefined) updated = { ...updated, direction: string("direction") as "positive" | "negative" };
-      if (args.diameter !== undefined) updated = { ...updated, diameter: positive(string("diameter")!, "Diameter") };
+      if (args.diameter !== undefined && args.preset !== undefined) throw new Error("Choose a hole preset or a custom diameter.");
+      if (isHolePreset(args.preset)) updated = { ...updated, preset: args.preset, diameter: positive(holePresetDiameter(args.preset), "Diameter") };
+      if (args.diameter !== undefined) {
+        const { preset: _preset, ...custom } = updated;
+        updated = { ...custom, diameter: positive(string("diameter")!, "Diameter") };
+      }
       if (args.depth !== undefined && args.throughAll === true) throw new Error("Provide depth or throughAll: true, exclusively.");
       if (args.throughAll === false && args.depth === undefined && updated.depth === "throughAll") throw new Error("A finite hole requires depth.");
       if (args.depth !== undefined) updated = { ...updated, depth: positive(string("depth")!, "Depth") };

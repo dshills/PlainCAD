@@ -4,6 +4,7 @@ import { useCadStore } from "../../state/useCadStore";
 import { CommitInput } from "./CommitInput";
 import { MODEL_RESOURCE_LIMITS } from "../../cad/resourceLimits";
 import { DEFAULT_HOLE_DEPTH } from "../commands/holeCommand";
+import { HolePresetControls } from "./HolePresetControls";
 
 export function HoleFeatureControls({ feature }: { feature: HoleFeature }) {
   const document = useCadStore((s) => s.history.present);
@@ -31,12 +32,16 @@ export function HoleFeatureControls({ feature }: { feature: HoleFeature }) {
           onCommit={(name) => update({ name })}
         />
       </label>
+      <HolePresetControls preset={feature.preset} onChange={(preset, expression) => update({
+        preset,
+        ...(expression ? { diameter: { expression, unit: "mm" } } : {}),
+      })} />
       <label>
         Hole diameter
         <CommitInput
           value={feature.diameter.expression}
           onCommit={(expression) =>
-            update({ diameter: { ...feature.diameter, expression } })
+            update({ preset: undefined, diameter: { ...feature.diameter, expression } })
           }
         />
       </label>

@@ -3,6 +3,11 @@ import type { RebuildResult } from "../worker/workerProtocol";
 import type { NativeBore } from "../kernel/nativeDrawing";
 import type { BoundingBox } from "../kernel/KernelAdapter";
 import { bodyDisplayNames } from "../document/bodyDisplayNames";
+import { targetBodyIds } from "../document/bodyScopes";
+import { documentTimeline } from "../document/timelineOrdering";
+import { holePresetLabel } from "../hardware/fastenerCatalog";
+import { transformPoint } from "../sketch/planes";
+import { evaluateExpressionRef } from "../parameters/expressionEvaluator";
 import { assertDrawingMesh, DRAWING_VIEWS, drawingSection, orthographicSvg, projectDrawingPoint, type DrawingRect } from "./drawingGeometry";
 export const DRAWING_MAX_BYTES = 8 * 1024 * 1024;
 export interface DrawingBomRow { number: number; bodyId: string; name: string; quantity: 1; volumeMm3: number; solids: number }
@@ -13,6 +18,36 @@ function csv(value: string) { const protectedValue = /^[\s]*[=+\-@]/.test(value)
 const text = (x: number, y: number, value: string, size = 13) => `<text x="${x}" y="${y}" font-size="${size}">${escapeDrawingText(value)}</text>`;
 const truncate = (value: string, length: number) => value.length > length ? `${value.slice(0, length - 1)}…` : value;
 function validBounds(bounds: BoundingBox) { return bounds && Array.isArray(bounds.min) && Array.isArray(bounds.max) && bounds.min.length === 3 && bounds.max.length === 3 && [...bounds.min, ...bounds.max].every(Number.isFinite) && bounds.min.every((value, axis) => value < bounds.max[axis]); }
+
+function currentBorePresets(document: CadDocument, result: RebuildResult, bodyId: string, bores: NativeBore[]) {
+  // Restrict attribution to the final modifying operation. A later fill and
+  // redrill could otherwise make an unrelated bore match the same dimensions.
+  const feature = documentTimeline(document).filter(entry => entry.kind === "feature")
+    .map(entry => entry.feature).reverse().find(item => !item.suppressed && targetBodyIds(item).includes(bodyId));
+  const matches = new Map<number, string>();
+  if (feature?.type !== "hole" || !feature.preset || targetBodyIds(feature).length !== 1) return matches;
+  const prior = result.nativeDrawingGeometry?.beforePresetHole;
+  if (prior?.featureId !== feature.id) return matches;
+  const plane = result.sketchPlanes?.[feature.sketchId], solved = result.solvedSketches?.[feature.sketchId];
+  if (!plane || !solved) return matches;
+  const diameter = evaluateExpressionRef(feature.diameter, { parameters: result.parameterValues ?? {} }).quantity;
+  if (diameter?.dimension !== "length") return matches;
+  const direction = feature.direction === "negative" ? -1 : 1;
+  for (const id of feature.centerPointIds) {
+    const point = solved.points[id];
+    if (!point) continue;
+    const center = transformPoint(plane, point.x, point.y);
+    const matchesEntrance = (bore: NativeBore) => {
+      const alignment = bore.direction[0] * plane.normal.x + bore.direction[1] * plane.normal.y + bore.direction[2] * plane.normal.z;
+      if (Math.abs(bore.diameter - diameter.value) > 1e-7 || Math.abs(Math.abs(alignment) - 1) > 1e-8) return false;
+      const start = bore.start.map((value, axis) => value + (alignment * direction < 0 ? bore.length * bore.direction[axis] : 0));
+      return Math.hypot(start[0] - center.x, start[1] - center.y, start[2] - center.z) <= 1e-6;
+    };
+    const candidates = bores.flatMap((bore, index) => matchesEntrance(bore) ? [index] : []);
+    if (candidates.length === 1 && !prior.bores.some(matchesEntrance)) matches.set(candidates[0], holePresetLabel(feature.preset));
+  }
+  return matches;
+}
 export function buildShopDrawing(document: CadDocument, result: RebuildResult, bodyId: string, sectionHeight?: number): ShopDrawing {
   const mesh = result.meshes.find(mesh => mesh.bodyId === bodyId), geometry = result.nativeDrawingGeometry;
   if (!result.success || result.documentId !== document.id || !mesh || !geometry || !validBounds(geometry.bounds) || !result.meshes.length || result.meshes.some(mesh => mesh.geometrySource !== "opencascade" || !mesh.geometryAssertions?.valid || !Number.isFinite(mesh.geometryAssertions.volume) || !(mesh.geometryAssertions.volume > 0) || !Number.isSafeInteger(mesh.geometryAssertions.solidCount) || mesh.geometryAssertions.solidCount < 1)) throw new Error("Shop drawings require successful current native geometry and exact measurements. Repair or reselect the source part.");
@@ -22,6 +57,7 @@ export function buildShopDrawing(document: CadDocument, result: RebuildResult, b
   const height = sectionHeight ?? (bounds.min[2] + bounds.max[2]) / 2, section = drawingSection(mesh, bounds, height);
   const bom: DrawingBomRow[] = result.meshes.map((mesh, index) => ({ number: index + 1, bodyId: mesh.bodyId, name: labels[mesh.bodyId] ?? mesh.bodyId, quantity: 1, volumeMm3: mesh.geometryAssertions!.volume, solids: mesh.geometryAssertions!.solidCount }));
   const warnings = [...geometry.warnings];
+  const presets = currentBorePresets(document, result, bodyId, geometry.bores);
   const bodyRowsHeight = bom.length * 34, boreRowsHeight = geometry.bores.length * 48, sheetHeight = Math.max(840, 210 + bodyRowsHeight + boreRowsHeight + warnings.length * 45);
   const top: DrawingRect = { x: 30, y: 80, width: 470, height: 285 }, front: DrawingRect = { x: 30, y: 390, width: 470, height: 265 }, right: DrawingRect = { x: 525, y: 80, width: 315, height: 285 }, cut: DrawingRect = { x: 525, y: 390, width: 315, height: 265 };
   const panel = (label: string, rect: DrawingRect, content: string) => `<g aria-label="${escapeDrawingText(label)}"><rect x="${rect.x}" y="${rect.y}" width="${rect.width}" height="${rect.height}" fill="none" stroke="#b8c6cb"/>${text(rect.x + 12, rect.y + 20, label)}${content}</g>`;
@@ -36,7 +72,7 @@ export function buildShopDrawing(document: CadDocument, result: RebuildResult, b
   for (const row of bom) { side += text(865, cursor, `${row.number}. ${truncate(row.name, 31)}`) + text(865, cursor + 15, `Qty 1 · ${number(row.volumeMm3)} mm³ · ${row.solids} solid(s)`, 11); cursor += 34; }
   side += text(865, cursor + 18, "VERIFIED INTERNAL BORES", 15); cursor += 42;
   if (!geometry.bores.length) { side += text(865, cursor, "No complete internal cylinders found", 11); cursor += 20; }
-  for (const [index, bore] of geometry.bores.entries()) { side += text(865, cursor, `B${index + 1} · Ø${number(bore.diameter)} mm`) + text(865, cursor + 15, `Cylindrical wall length ${number(bore.length)} mm`, 11) + text(865, cursor + 29, `Axis ${bore.direction.map(number).join(", ")}`, 10); cursor += 48; }
+  for (const [index, bore] of geometry.bores.entries()) { side += text(865, cursor, `B${index + 1} · Ø${number(bore.diameter)} mm`) + text(865, cursor + 15, `Cylindrical wall length ${number(bore.length)} mm`, 11) + text(865, cursor + 29, presets.get(index) ?? `Axis ${bore.direction.map(number).join(", ")}`, 10); cursor += 48; }
   const sectionLineY = projectDrawingPoint([bounds.min[0], bounds.min[1], height], bounds, DRAWING_VIEWS.front, front)[1];
   const sectionLine = `<path d="M${front.x + 35},${sectionLineY}h${front.width - 70}" stroke="#487b8b" stroke-dasharray="8 4"/>` + text(front.x + 40, sectionLineY - 5, `A–A at Z ${number(height)} mm`, 11);
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1188" height="${sheetHeight}" viewBox="0 0 1188 ${sheetHeight}" role="img" aria-label="${escapeDrawingText(`Shop drawing: ${name}`)}" data-body-id="${escapeDrawingText(bodyId)}"><title>${escapeDrawingText(`${document.name} — ${name}`)}</title><desc>Associative world-coordinate views. Dimensions use native bounds; outlines and section are tessellated. All dimensions are millimeters. Views fit independently.</desc><defs><pattern id="section-hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="7" height="7" fill="#f5f8f7"/><path d="M0,0V7" stroke="#80979c" stroke-width="1"/></pattern></defs><rect width="1188" height="${sheetHeight}" fill="white"/><g fill="#172f39" font-family="Arial, sans-serif">${text(30, 35, truncate(document.name, 68), 23)}${text(30, 59, `${truncate(name, 65)} · dimensions in mm · each view fitted independently`, 13)}${panel("TOP · XY · from +Z", top, orthographicSvg(mesh, bounds, DRAWING_VIEWS.top, top) + viewDimensions(top, DRAWING_VIEWS.top))}${panel("FRONT · XZ · from −Y", front, orthographicSvg(mesh, bounds, DRAWING_VIEWS.front, front) + sectionLine + viewDimensions(front, DRAWING_VIEWS.front))}${panel("RIGHT · YZ · from +X", right, orthographicSvg(mesh, bounds, DRAWING_VIEWS.right, right) + viewDimensions(right, DRAWING_VIEWS.right))}${panel(`SECTION A–A · Z ${number(height)} mm`, cut, `<path d="${sectionPath}" fill="url(#section-hatch)" fill-rule="evenodd" stroke="#172f39" stroke-width="1.1"/>` + text(cut.x + 12, cut.y + cut.height - 14, `Mesh section area ${number(section.area)} mm²`, 11))}${side}${text(30, 697, "Native bounds dimensions; complete inward cylinders only. Bore lengths are wall lengths, not drilling depths.", 12)}${text(30, 718, "Outlines/hidden-edge visibility and sections are tessellated illustrations. No tolerance, GD&T or machining certification.", 12)}${text(30, 739, "Section A–A is a horizontal XY slice at the stated world Z; the cutting height is shown in the Front view.", 12)}${warnings.map((warning, index) => text(30, 770 + index * 20, truncate(warning, 150), 11)).join("")}${text(30, sheetHeight - 20, "PlainCAD · regenerated from the current project · complete body identities and names are in the CSV parts list", 11)}</g></svg>`;

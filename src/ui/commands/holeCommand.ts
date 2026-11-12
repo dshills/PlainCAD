@@ -1,3 +1,4 @@
+import { holePresetDiameter, type HolePreset } from "../../cad/hardware/fastenerCatalog";
 import type {
   CadDocument,
   HoleFeature,
@@ -178,6 +179,7 @@ export interface HoleInput {
   targetBodyIds?: string[];
   centerPointIds: string[];
   diameter: string;
+  preset?: HolePreset;
   depth: string;
   throughAll: boolean;
 }
@@ -266,6 +268,8 @@ export function stageHole(
       "Center references were lost or repeated. Reselect unique sketch points.",
     );
   const parameters = evaluateParameters(context.document.parameters).values;
+  if (input.preset && input.diameter !== holePresetDiameter(input.preset))
+    return fail("Select a preset or enter a custom diameter.");
   const authoredUnit = context.document.unitSettings.length;
   // Preserve unchanged expression units and bindings after default-unit changes.
   const diameter =
@@ -301,6 +305,7 @@ export function stageHole(
     targetBodyIds: [...targets],
     centerPointIds: input.centerPointIds,
     diameter,
+    preset: input.preset,
     depth: input.throughAll ? ("throughAll" as const) : depth,
   };
   return {

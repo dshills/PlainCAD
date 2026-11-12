@@ -20,6 +20,8 @@ import { sketchComponentId } from "../../cad/document/components";
 import { targetBodyIds } from "../../cad/document/bodyScopes";
 import { assertNativeSolidPreview } from "../commands/modelingDraftCommand";
 import { useFeatureDraftContext } from "./useFeatureDraftContext";
+import { HolePresetControls } from "./HolePresetControls";
+import type { HolePreset } from "../../cad/hardware/fastenerCatalog";
 
 import { useWorkspaceState } from "../../state/useWorkspaceState";
 import { ModelingAdvancedOptions, ModelingTaskActions, ModelingTaskGuide, ModelingTaskStep } from "./ModelingTask";
@@ -70,6 +72,7 @@ function HoleDialog({ draft }: { draft: HoleDraft }) {
     ),
     [centers, setCenters] = useState(draft.centerPointIds),
     [diameter, setDiameter] = useState(original?.diameter.expression ?? "3mm"),
+    [preset, setPreset] = useState<HolePreset | undefined>(original?.preset),
     [depth, setDepth] = useState(
       original && original.depth !== "throughAll"
         ? original.depth.expression
@@ -87,10 +90,11 @@ function HoleDialog({ draft }: { draft: HoleDraft }) {
       targetBodyIds: targets,
       centerPointIds: centers,
       diameter,
+      preset,
       depth,
       throughAll,
     }),
-    [name, sketchId, targets, centers, diameter, depth, throughAll],
+    [name, sketchId, targets, centers, diameter, depth, throughAll, preset],
   );
   const staged = useMemo(
     () =>
@@ -300,12 +304,16 @@ function HoleDialog({ draft }: { draft: HoleDraft }) {
               {centers.length} {centers.length === 1 ? "center" : "centers"} selected · {targets.length} {targets.length === 1 ? "body" : "bodies"} selected
             </p>
             <ModelingTaskStep number={2}>Settings</ModelingTaskStep>
+            <HolePresetControls preset={preset} onChange={(next, size) => {
+              setPreset(next);
+              if (size) setDiameter(size);
+            }} />
             <label>
               Diameter
               <input
                 aria-label="Hole diameter"
                 value={diameter}
-                onChange={(e) => setDiameter(e.target.value)}
+                onChange={(e) => { setPreset(undefined); setDiameter(e.target.value); }}
               />
             </label>
             <label>

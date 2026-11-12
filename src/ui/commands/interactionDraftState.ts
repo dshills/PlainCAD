@@ -3,6 +3,7 @@ import { useProductFamily } from "./productFamilyState";
 import { useShopDrawing } from "./shopDrawingState";
 import { useFittedPart } from "./fittedPartState";
 import { useShell } from "../../state/shellDraftState";
+import { useHardwarePreset } from "../../state/hardwarePresetState";
 import { useComponentPlacement } from "./componentPlacementState";
 import { usePartLibrary } from "./partLibraryState";
 import { useStepImport } from "./stepImportState";
@@ -43,6 +44,7 @@ export function interactionDraftBusy(owner?: InteractionDraftOwner) {
     (owner !== "fit" && useFittedPart.getState().frame) ||
     (owner !== "stepImport" && useStepImport.getState().frame) ||
     (owner !== "shell" && useShell.getState().frame) ||
+    useHardwarePreset.getState().frame ||
     (owner !== "stepExport" && useStepExport.getState().frame) ||
     (owner !== "componentPlacement" && useComponentPlacement.getState().frame) ||
     (owner !== "partLibrary" && usePartLibrary.getState().frame) ||

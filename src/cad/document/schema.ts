@@ -1,4 +1,6 @@
-export const CURRENT_SCHEMA_VERSION = 22;
+import type { HolePreset } from "../hardware/fastenerCatalog";
+
+export const CURRENT_SCHEMA_VERSION = 23;
 
 export type UnitSystem = "metric" | "imperial";
 
@@ -230,6 +232,7 @@ export interface RevolveFeature extends FeatureBase {
 }
 
 export interface HoleFeature extends FeatureBase {
+  preset?: HolePreset;
   type: "hole";
   /** Absence preserves legacy drilling along the positive sketch normal. */
   direction?: "positive" | "negative";

@@ -2,6 +2,7 @@ import { featureComponentId } from "./components";
 import { targetBodyIds } from "./bodyScopes";
 import { CURRENT_SCHEMA_VERSION, CadDocument, Feature, Sketch } from "./schema";
 import { stableBodyIdForFeature } from "../features/featureGraph";
+import { isHolePreset } from "../hardware/fastenerCatalog";
 
 type Migration = (input: CadDocument) => CadDocument;
 
@@ -33,6 +34,11 @@ const migrations = new Map<number, Migration>([
   [19, document => { const { configurations: _configurations, ...legacy } = document; return { ...legacy, schemaVersion: 20 }; }],
   [20, document => ({ ...document, schemaVersion: 21 })],
   [21, document => ({ ...document, schemaVersion: 22 })],
+  [22, document => ({ ...document, schemaVersion: 23, features: document.features.map(feature => {
+    if (feature.type !== "hole") return feature;
+    const { preset: _preset, ...legacy } = feature;
+    return legacy;
+  }) })],
 ]);
 
 function migrateV16ToV17(document: CadDocument): CadDocument {
@@ -438,9 +444,12 @@ function sanitizeFeature(feature: Feature): Feature | undefined {
   }
   if (feature.type === "hole") {
     assertHoleTargetScope(feature);
+    const preset = feature.preset;
+    if (preset !== undefined && !isHolePreset(preset)) throw new Error("Unsupported fastener hole preset.");
     return {
       ...base,
       type: "hole",
+      ...(preset ? { preset: { size: preset.size, kind: preset.kind } } : {}),
       ...(feature.direction !== undefined ? { direction: feature.direction } : {}),
       ...(feature.targetFeatureId !== undefined ? { targetFeatureId: feature.targetFeatureId } : {}),
       ...(feature.targetBodyId !== undefined ? { targetBodyId: feature.targetBodyId } : {}),

@@ -25,7 +25,7 @@ import { RetainedPanel } from "../ui/workspace/RetainedPanel";
 import { ThemeSelector } from "../ui/themes/ThemeSelector";
 import { useCommandEnablement } from "../ui/commands/useCommandEnablement";
 import { RecoveryPanel } from "../ui/panels/RecoveryPanel";
-import { HoleCreationPanel } from "../ui/panels/HoleCreationPanel";
+import { useHoleDraft } from "../ui/commands/holeCommand";
 import { FeaturePatternPanel } from "../ui/panels/FeaturePatternPanel";
 import { lazy, Suspense, useEffect, useMemo, useRef } from "react";
 import { LazyPanelBoundary } from "../ui/design-system/LazyPanelBoundary";
@@ -54,6 +54,8 @@ const ProductFamilyPanel = lazy(() => import("../ui/panels/ProductFamilyPanel").
 const ShopDrawingPanel = lazy(() => import("../ui/panels/ShopDrawingPanel").then(module => ({ default: module.ShopDrawingPanel })));
 const FittedPartPanel = lazy(() => import("../ui/panels/FittedPartPanel").then(module => ({ default: module.FittedPartPanel })));
 const ShellPanel = lazy(() => import("../ui/panels/ShellPanel").then(module => ({ default: module.ShellPanel })));
+const HoleCreationPanel = lazy(() => import("../ui/panels/HoleCreationPanel").then(module => ({ default: module.HoleCreationPanel })));
+const HardwarePresetPanel = lazy(() => import("../ui/panels/HardwarePresetPanel").then(module => ({ default: module.HardwarePresetPanel })));
 const ComponentPlacementPanel = lazy(() => import("../ui/panels/ComponentPlacementPanel").then(module => ({ default: module.ComponentPlacementPanel })));
 const PartLibraryPanel = lazy(() => import("../ui/panels/PartLibraryPanel").then(module => ({ default: module.PartLibraryPanel })));
 const StepExportPanel = lazy(() => import("../ui/panels/StepExportPanel").then(module => ({ default: module.StepExportPanel })));
@@ -337,6 +339,7 @@ const FOCUSED_WHEN_ENABLED = new Set([
 export function App() {
   const partLibraryOpen = usePartLibrary(state => Boolean(state.frame));
   const stepImportOpen = useStepImport(state => Boolean(state.frame));
+  const holeCreationOpen = useHoleDraft(state => Boolean(state.draft));
   const stepExportOpen = useStepExport(state => Boolean(state.frame));
   const galleryOpen = useProjectGallery(state => state.open);
   const workspace = useWorkspaceState(
@@ -569,9 +572,9 @@ export function App() {
       ) : null}
       <RecoveryPanel />
       <Suspense fallback={null}><FabricationPanel /></Suspense>
-      <HoleCreationPanel />
+      {holeCreationOpen ? <Suspense fallback={<p role="status">Loading Hole…</p>}><HoleCreationPanel /></Suspense> : null}
       <Suspense fallback={<p role="status">Loading component controls…</p>}><ComponentPlacementPanel /></Suspense>
-      <Suspense fallback={null}><ShopDrawingPanel /><ProductFamilyPanel /><ManufacturingCoachPanel /><FittedPartPanel /><ShellPanel /></Suspense>
+      <Suspense fallback={null}><ShopDrawingPanel /><ProductFamilyPanel /><ManufacturingCoachPanel /><FittedPartPanel /><ShellPanel /><HardwarePresetPanel /></Suspense>
       <FeaturePatternPanel />
       <SolidDimensionEditor />
       <ExtrudeCreationPanel />

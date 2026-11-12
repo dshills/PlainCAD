@@ -14,6 +14,7 @@ import { beginFamily, canOpenFamily } from "./productFamilyCommand";
 import { beginDrawing, canOpenDrawing } from "./shopDrawingCommand";
 import { beginFit, canBuildFit } from "./fittedPartCommand";
 import { shellTarget } from "../../state/shellDraftState";
+import { useHardwarePreset } from "../../state/hardwarePresetState";
 import { openShell, shellTaskBusy } from "./shellAvailability";
 import { canNavigateLinkedSketchSource, type LinkedSketchContext } from "./linkedSketchCommand";
 import { beginProjectGallery } from "../workspace/projectGalleryState";
@@ -199,6 +200,7 @@ export interface CommandEnablement {
   repairModel: boolean;
   document: boolean;
   editProject: boolean;
+  insertFastener: boolean;
   newComponent: boolean;
   createSketch: boolean;
   finishSketch: boolean;
@@ -287,6 +289,8 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
     // Preserve the shared legacy command key while blocking all transient target tasks.
     outsideGuidedHole: !targetPickerActive,
     editProject: !state.fileBusy && !targetPickerActive,
+    insertFastener: state.rebuild.kernelReady && Object.keys(state.history.present.components).length < MODEL_RESOURCE_LIMITS.maxComponents &&
+      isRegisteredCommandAvailable("plan.preview", "domain"),
     newComponent: !targetPickerActive && !guidedHoleStartBlocked && !state.fileBusy && !canvasActive && Object.keys(state.history.present.components).length < MODEL_RESOURCE_LIMITS.maxComponents,
     createSketch: !targetPickerActive && !state.fileBusy && !canvasActive,
     finishSketch: !targetPickerActive && canvasActive,
@@ -377,6 +381,10 @@ export const commands: CadCommand[] = [
   { id: "ai.toggle", label: "Toggle AI assistant", description: "Open the bottom AI dock to describe changes and review geometry in the main viewport.", enablementKey: "aiAssistant", run: toggleAiDrawer },
   { id: "feature.edit", label: "Edit Selected Feature", description: "Preview changes to the selected Extrude, Revolve, Fillet, Chamfer, Hole, Pattern or Shell and its downstream geometry.", enablementKey: "editFeature", run: () => { if (shellTarget(useCadStore.getState(), true)) return openShell(true); if (selectedPattern(useCadStore.getState())) beginFeaturePatternEditing(); else if (editableExtrude(useCadStore.getState())) beginExtrudeEditing(); else if (editableHole(useCadStore.getState())) beginHoleEditing(); else beginModelingEditing(); } },
   { id: "feature.shell", label: "Shell", description: "Hollow an unmodified rectangular extrusion from its start or end cap.", enablementKey: "createShell", run: () => openShell() },
+  { id: "hardware.fastener", label: "Insert fastener", description: "Preview a metric or Unified inch socket-head fastener blank as a separate component.", enablementKey: "insertFastener", run: () => {
+    const state = useCadStore.getState();
+    useHardwarePreset.setState({ frame: { document: state.history.present, session: state.documentSession, componentId: state.activeComponentId } });
+  } },
   { id: "feature.pattern", label: "Repeat Hole or Pocket", description: "Select a single-center Hole or distance Cut Extrude, then create a linked linear or circular native feature pattern.", enablementKey: "createFeaturePattern", run: beginFeaturePattern },
   {
     id: "file.renameProject", internal: true, label: "Rename Project", enablementKey: "editProject",

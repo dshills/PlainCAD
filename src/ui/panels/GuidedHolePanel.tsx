@@ -26,6 +26,8 @@ import { useSketchPlanePicker } from "../commands/sketchPlanePicker";
 import { runCommand } from "../commands/commandRegistry";
 import { ModalDialog } from "../ModalDialog";
 import { ExtrudePreview } from "../../viewer/ExtrudePreview";
+import { HolePresetControls } from "./HolePresetControls";
+import type { HolePreset } from "../../cad/hardware/fastenerCatalog";
 import "./GuidedHolePanel.css";
 
 const EMPTY_MESHES: RebuildResult["meshes"] = [];
@@ -165,12 +167,13 @@ function GuidedHoleCenters({
     [x, setX] = useState("0mm"),
     [y, setY] = useState("0mm"),
     [diameter, setDiameter] = useState("3mm"),
+    [preset, setPreset] = useState<HolePreset>(),
     [depth, setDepth] = useState("5mm"),
     [throughAll, setThroughAll] = useState(true),
     [error, setError] = useState("");
   const input = useMemo(
-    () => ({ centers, diameter, depth, throughAll }),
-    [centers, diameter, depth, throughAll],
+    () => ({ centers, diameter, depth, throughAll, preset }),
+    [centers, diameter, depth, throughAll, preset],
   );
   const staged = useMemo(() => {
     if (!current)
@@ -370,12 +373,17 @@ function GuidedHoleCenters({
           </li>
         ))}
       </ul>
+      <HolePresetControls preset={preset} disabled={!current} onChange={(next, size) => {
+        setPreset(next);
+        if (size) setDiameter(size);
+      }} />
       <label>
         Guided hole diameter
         <input
           value={diameter}
           disabled={!current}
           onChange={(event) => {
+            setPreset(undefined);
             setDiameter(event.target.value);
             setError("");
           }}

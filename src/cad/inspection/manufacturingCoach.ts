@@ -95,7 +95,7 @@ export function correctManufacturingFinding(document: CadDocument, correction: C
   let updated: Feature;
   if (feature.type === "fit" && (correction.field === "clearance" || correction.field === "wallThickness")) updated = { ...feature, [correction.field]: ref };
   else if (feature.type === "extrude" && correction.field === "distance" && (!feature.termination || feature.termination.type === "distance")) updated = { ...feature, distance: ref, ...(feature.termination?.type === "distance" ? { termination: { type: "distance", distance: ref } } : {}) };
-  else if (feature.type === "hole" && correction.field === "diameter") updated = { ...feature, diameter: ref };
+  else if (feature.type === "hole" && correction.field === "diameter") updated = { ...feature, preset: undefined, diameter: ref };
   else throw new Error("This finding requires manual repair.");
   return bindDocumentExpressions(upsertFeature(document, updated), document);
 }

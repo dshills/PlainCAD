@@ -1,5 +1,6 @@
 import type { CommandDescriptor } from "./registry";
 import type { CadCommandArguments } from "./cadCommandTypes";
+import { FASTENER_SIZES } from "../cad/hardware/fastenerCatalog";
 import { aliasSchema, arraySchema, commandSchemaJson, enumSchema, expressionSchema, nameSchema, objectSchema, pointSchema, referenceSchema, type CommandSchema } from "./commandSchemas";
 
 const bool: CommandSchema = { type: "boolean" };
@@ -8,6 +9,8 @@ const unit = enumSchema(["", "mm", "cm", "m", "in", "ft", "deg", "rad"]);
 const operation = enumSchema(["newBody", "join", "cut"]);
 const direction = enumSchema(["positive", "negative", "symmetric"]);
 const shellOpening = enumSchema(["startCap", "endCap"]);
+const fastenerSize = enumSchema(FASTENER_SIZES.map(size => size.id));
+const holePreset = objectSchema({ size: fastenerSize, kind: enumSchema(["clearance", "tapDrill"]) }, ["size", "kind"]);
 const vector = arraySchema({ type: "number", minimum: -1e8, maximum: 1e8 }, 3, 3);
 const rotation = arraySchema({ type: "number", minimum: -2 * Math.PI, maximum: 2 * Math.PI }, 3, 3);
 const refs = arraySchema(referenceSchema);
@@ -24,6 +27,8 @@ const extrusionFields = { ...featureProperties, direction };
 const pocketFields = { name: nameSchema, sketchId: referenceSchema, profileId: referenceSchema, targetBodyId: referenceSchema, as: aliasSchema };
 const throughAll: CommandSchema = { type: "boolean", enum: [true], description: "Use true instead of distance to cut through the explicit body." };
 const pocketRequired = ["sketchId", "targetBodyId"];
+const holeFields = { name: nameSchema, sketchId: referenceSchema, centerPointIds: refs, targetBodyIds: refs, depth: expressionSchema, throughAll: bool, direction: enumSchema(["positive", "negative"]), as: aliasSchema };
+const holeRequired = ["sketchId", "centerPointIds", "targetBodyIds"];
 const canvasPoint = objectSchema({ x: { type: "number", minimum: -1e8, maximum: 1e8 }, y: { type: "number", minimum: -1e8, maximum: 1e8 }, pointId: referenceSchema }, ["x", "y"]);
 export const CAD_COMMAND_SCHEMAS = {
   "cad.parameter.add": objectSchema({ name: nameSchema, expression: expressionSchema, authoredUnit: unit, group: nameSchema, as: aliasSchema }, ["name", "expression"]),
@@ -55,11 +60,18 @@ export const CAD_COMMAND_SCHEMAS = {
       objectSchema({ ...pocketFields, throughAll }, [...pocketRequired, "throughAll"])],
   },
   "cad.feature.revolve": objectSchema({ ...featureProperties, angle: expressionSchema, axis: enumSchema(["X", "Y", "Z"]), axisLineId: referenceSchema }, ["sketchId", "angle"]),
-  "cad.feature.hole": objectSchema({ name: nameSchema, sketchId: referenceSchema, centerPointIds: refs, targetBodyIds: refs, diameter: expressionSchema, depth: expressionSchema, throughAll: bool, direction: enumSchema(["positive", "negative"]), as: aliasSchema }, ["sketchId", "centerPointIds", "targetBodyIds", "diameter"]),
+  "cad.feature.hole": {
+    ...objectSchema({ ...holeFields, diameter: expressionSchema, preset: holePreset }, holeRequired),
+    oneOf: [
+      objectSchema({ ...holeFields, diameter: expressionSchema }, [...holeRequired, "diameter"]),
+      objectSchema({ ...holeFields, preset: holePreset }, [...holeRequired, "preset"]),
+    ],
+  },
+  "cad.hardware.fastener": objectSchema({ size: fastenerSize, length: expressionSchema, name: nameSchema, as: aliasSchema }, ["size", "length"]),
   "cad.feature.fillet": objectSchema({ name: nameSchema, edges, radius: expressionSchema, as: aliasSchema }, ["edges", "radius"]),
   "cad.feature.chamfer": objectSchema({ name: nameSchema, edges, distance: expressionSchema, as: aliasSchema }, ["edges", "distance"]),
   "cad.feature.shell": objectSchema({ name: nameSchema, sourceFeatureId: referenceSchema, opening: shellOpening, wallThickness: expressionSchema, as: aliasSchema }, ["sourceFeatureId", "opening", "wallThickness"]),
-  "cad.feature.update": objectSchema({ featureId: referenceSchema, name: nameSchema, suppressed: bool, distance: expressionSchema, angle: expressionSchema, diameter: expressionSchema, radius: expressionSchema, depth: expressionSchema, throughAll: bool, direction, operation, targetBodyIds: refs, axis: enumSchema(["X", "Y", "Z"]), opening: shellOpening, wallThickness: expressionSchema }, ["featureId"]),
+  "cad.feature.update": objectSchema({ featureId: referenceSchema, name: nameSchema, suppressed: bool, distance: expressionSchema, angle: expressionSchema, diameter: expressionSchema, preset: holePreset, radius: expressionSchema, depth: expressionSchema, throughAll: bool, direction, operation, targetBodyIds: refs, axis: enumSchema(["X", "Y", "Z"]), opening: shellOpening, wallThickness: expressionSchema }, ["featureId"]),
   "cad.feature.delete": objectSchema({ featureId: referenceSchema }, ["featureId"]),
 } as const satisfies Record<keyof CadCommandArguments, CommandSchema>;
 export type CadCommandId = keyof typeof CAD_COMMAND_SCHEMAS;
@@ -67,6 +79,7 @@ export type { CadCommandArguments, TypedCadCommandCall } from "./cadCommandTypes
 export const CAD_COMMANDS: CommandDescriptor[] = (Object.keys(CAD_COMMAND_SCHEMAS) as CadCommandId[]).map(id => ({
   id, label: id.replace("cad.", "").replaceAll(".", " "), kind: "domain", source: "src/commands/cadCommandOperations.ts",
   description: id === "cad.feature.pocket" ? "Plan-only inward cut from a supported face sketch into its explicit body. Provide distance or throughAll: true. Native preview must reduce volume and leave one solid." :
+    id === "cad.hardware.fastener" ? "Plan-only socket-head fastener blank with a smooth shaft, named size and length below the head." :
     id === "cad.feature.shell" ? "Plan-only native Shell. Choose one supported rectangular extrusion cap and inward wall thickness; Apply requires a valid cavity proof." :
     "Immutable semantic CAD edit. Geometry requires a successful current native rebuild; use command plans for preview and one-step Undo.",
   input: commandSchemaJson(CAD_COMMAND_SCHEMAS[id]),

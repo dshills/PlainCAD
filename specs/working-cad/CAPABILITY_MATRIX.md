@@ -1437,3 +1437,19 @@ machining details, tolerances and GD&T separately. PDF/DXF export is not include
 Limits are 20,000 triangles per selected part, 4,096 inspected native faces,
 64 bore callouts, an 8 MiB SVG and a 128 KiB CSV. Ambiguous/coplanar sections and
 resource limits produce diagnostics rather than an incomplete downloadable sheet.
+
+### Fastener and hole presets
+
+**Insert fastener** previews an editable socket-head blank as a new component.
+Select metric coarse M2 through M10 or a listed Unified UNC/UNF inch size and
+enter the length below the head. The native solid has a nominal smooth shaft,
+head and hex recess. It is useful as a fit envelope and does not model thread
+flanks, head fillets or manufacturing tolerances. Metric and inch sizes are
+separate choices and use explicit units regardless of project defaults.
+
+Guided and sketch-based Hole share general-clearance and tap-drill presets.
+Preset intent is saved with the Hole. Typing a custom diameter clears it.
+Shop drawing callouts add the preset name only for a matching native bore
+made by the last operation on that body. A tap drill is a smooth pilot bore.
+The same presets are available to CLI and AI through `cad.feature.hole`,
+and blank insertion uses `cad.hardware.fastener` through a native plan.

@@ -7,6 +7,7 @@ import { bindCommand, type JsonValue } from "./registry";
 function nativePlanReason(id: string) {
   if (id === "cad.feature.pocket") return "Use plan.preview to validate an inward pocket before applying it.";
   if (id === "cad.feature.shell") return "Use plan.preview to validate Shell before applying it.";
+  if (id === "cad.hardware.fastener") return "Use plan.preview to validate a fastener before inserting it.";
 }
 
 /** Register once alongside existing business command enablement. */

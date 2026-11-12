@@ -1,7 +1,12 @@
 import type { BoundingBox } from "./KernelAdapter";
 import { withDisposableScope } from "./disposableScope";
 export interface NativeBore { diameter: number; length: number; start: [number, number, number]; direction: [number, number, number] }
-export interface NativeDrawingGeometry { bounds: BoundingBox; bores: NativeBore[]; warnings: string[] }
+export interface NativeDrawingGeometry {
+  bounds: BoundingBox;
+  bores: NativeBore[];
+  warnings: string[];
+  beforePresetHole?: { featureId: string; bores: NativeBore[] };
+}
 /** Current BRep faces only: authored Hole metadata is insufficient after later booleans. */
 export function measureNativeBores(oc: Record<string, any>, shape: any, observeCompleteBore?: (bore: NativeBore, face: any) => void): Pick<NativeDrawingGeometry, "bores" | "warnings"> {
   return withDisposableScope(scope => {

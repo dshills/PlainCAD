@@ -11,6 +11,7 @@ import { validateParameterBindings } from "../parameters/expressionBindings";
 import { MODEL_RESOURCE_LIMITS } from "../resourceLimits";
 import { validAuthoredUnit, validUnitSettings } from "../parameters/parameterUnits";
 import { isShellSource } from "../features/shellFeature";
+import { holePresetDiameter, isHolePreset } from "../hardware/fastenerCatalog";
 
 const PARAMETER_NAME_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
 const REQUIRED_DOCUMENT_OBJECTS = ["parameters", "sketches", "components"] as const;
@@ -769,6 +770,9 @@ function validatePersistedFields(document: CadDocument): ValidationIssue[] {
     }
     if (feature.type === "hole") {
       checkFeature(feature.direction === undefined || feature.direction === "positive" || feature.direction === "negative", "Hole direction must be positive or negative.");
+      checkFeature(feature.preset === undefined ||
+        (isHolePreset(feature.preset) && feature.diameter?.expression === holePresetDiameter(feature.preset)),
+        "Hole preset and diameter must agree. Choose a supported preset or a custom diameter.");
       checkFeature(Array.isArray(feature.centerPointIds) && feature.centerPointIds.length <= MODEL_RESOURCE_LIMITS.maxHoleCenters, `Hole exceeds the ${MODEL_RESOURCE_LIMITS.maxHoleCenters}-center resource limit.`);
       checkFeature(
         strings(feature.centerPointIds) &&

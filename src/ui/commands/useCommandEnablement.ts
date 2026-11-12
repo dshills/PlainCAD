@@ -4,6 +4,7 @@ import { useProductFamily } from "./productFamilyState";
 import { useShopDrawing } from "./shopDrawingState";
 import { useFittedPart } from "./fittedPartState";
 import { useShell } from "../../state/shellDraftState";
+import { useHardwarePreset } from "../../state/hardwarePresetState";
 import { useViewerState } from "../../state/viewerState";
 import { useComponentPlacement } from "./componentPlacementState";
 import { usePartLibrary } from "./partLibraryState";
@@ -54,6 +55,7 @@ export function useCommandEnablement() {
   useShopDrawing(state => state.frame);
   useFittedPart(state => state.frame);
   useShell(state => state.frame);
+  useHardwarePreset(state => state.frame);
   useComponentPlacement(state => state.frame);
   usePartLibrary(state => state.frame);
   useStepExport(state => state.frame);

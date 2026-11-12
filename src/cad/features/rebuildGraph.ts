@@ -4,6 +4,8 @@ import { assemblyCollisions } from "./assemblyCollisions";
 import { NativeFeatureCache } from "./nativeFeatureCache";
 import type { NativeStepExport } from "../kernel/nativeStep";
 import { applyComponentPlacements } from "./componentPlacement";
+import { placedPoint, placedVector, placementTransform } from "../document/componentPlacement";
+import { bodyComponentId } from "../document/components";
 import { nativeFeatureSignature } from "./nativeFeatureSignature";
 import { currentNativeEdges } from "./nativeEdgeTargets";
 import { NativeEdgeProofCache } from "./nativeEdgeProofCache";
@@ -244,6 +246,7 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
   const runtimeBodies = new Map<string, RuntimeBody>();
   const bodyVersions = new Map<string, number>();
   const canReuseNative = nativeReferences && typeof kernel.cloneShape === "function" && options.reuseNativeFeatures !== false && !options.captureTargetScopeFeatureId;
+  let beforePresetHole: NonNullable<RebuildResult["nativeDrawingGeometry"]>["beforePresetHole"];
   let capturedTargetBodyIds: string[] | undefined;
   const captureTargets: ScopeCapture = (tools, targets) => {
     const hasCommon = kernel.hasCommonVolume?.bind(kernel);
@@ -276,6 +279,20 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
       let reused = false;
       let beforeBodies: Map<string, RuntimeBody> | undefined;
       try {
+        if (options.captureDrawingBodyId && affectedIds.includes(options.captureDrawingBodyId)) {
+          beforePresetHole = undefined;
+          if (feature.type === "hole" && feature.preset && affectedIds.length === 1) {
+            const target = runtimeBodies.get(options.captureDrawingBodyId);
+            if (target && kernel.nativeDrawingGeometry) {
+              try {
+                const prior = kernel.nativeDrawingGeometry(target.shape);
+                if (!prior.warnings.length) beforePresetHole = { featureId: feature.id, bores: prior.bores };
+              } catch {
+                // The drawing still works without an optional preset callout.
+              }
+            }
+          }
+        }
         if (affectedIds.some((id) => id && failedBodies.has(id))) {
           errors.push({
             id: `feature:${feature.id}:upstream`,
@@ -712,6 +729,17 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
       const body = runtimeBodies.get(options.captureDrawingBodyId);
       if (!body || !kernel.nativeDrawingGeometry) throw new Error("Drawing source is lost or the kernel cannot supply native drawing measurements. Reselect a current part.");
       nativeDrawingGeometry = kernel.nativeDrawingGeometry(body.shape);
+      if (beforePresetHole) {
+        const placement = placementTransform(document.components[bodyComponentId(document, options.captureDrawingBodyId) ?? ""]?.placement);
+        nativeDrawingGeometry.beforePresetHole = {
+          featureId: beforePresetHole.featureId,
+          bores: beforePresetHole.bores.map(bore => {
+            const start = placedPoint(placement, { x: bore.start[0], y: bore.start[1], z: bore.start[2] });
+            const axis = placedVector(placement, { x: bore.direction[0], y: bore.direction[1], z: bore.direction[2] });
+            return { ...bore, start: [start.x, start.y, start.z], direction: [axis.x, axis.y, axis.z] };
+          }),
+        };
+      }
     } catch (error) { errors.push({ id: "export:drawing", source: "export", message: error instanceof Error ? error.message : "Native drawing inspection failed." }); }
   }
   if (options.exportStepBodyIds && !errors.length) {

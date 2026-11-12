@@ -132,6 +132,7 @@ export function buildAiFeatureEdit(
     feature.type === "hole"
       ? {
           ...feature,
+          ...(refs.diameter !== feature.diameter ? { preset: undefined } : {}),
           diameter: refs.diameter,
           depth: feature.depth === "throughAll" ? "throughAll" : refs.depth,
         }

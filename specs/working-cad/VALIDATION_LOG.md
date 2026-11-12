@@ -11,8 +11,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Date: 2026-11-12.
 - Change: shared face-to-pocket, STEP import, Shell, and native machined references; includes the feature palette search repair.
 - Result: type checks, 1663 unit/component tests in 214 files, build/bundle budget (63 bundles, largest 496.93 kB), 335 development browser cases (38.6m), and 61 production browser cases (4.7m) passed.
-- Completed items since that full gate: **1**.
-- Next full gate: after four more completed items.
+- Completed items since that full gate: **2**.
+- Next full gate: after the current hardware batch, per user request.
 
 ## Completed batch
 
@@ -1449,3 +1449,24 @@ The final integrated build with the palette search repair passed (**68** bundles
 largest **497.07 kB**); the focused built CSP case passed again. The existing
 linked-sketch import advisory remains. Cadence **1**; the full gate is due after
 four more completed items.
+
+
+## Hardware item 1: metric and Unified inch presets
+
+Insert fastener creates a native socket-head blank as one editable component
+with a smooth shaft and hex recess. Guided and sketch-based Hole share clearance
+and tap-drill presets with explicit units and durable schema 23 intent. Drawing
+callouts require a newly matching native bore on the final modifying Hole.
+Custom diameter edits clear the preset.
+
+Independent internal review verified the corrected dimensions and fit tables,
+input retry and command availability, diameter edit paths, migration and
+prior-bore evidence in world coordinates. The reduced gate passed type checks,
+1668 unit/component tests, the bundle budget (70 bundles, largest 492.57 kB),
+five development smoke cases and fourteen production smoke cases. Both focused
+browser cases passed, covering native metric and inch blanks, Undo, the guided
+tap drill and SVG callout. Seven focused unit cases include preset save/reopen,
+tamper rejection and custom editing. The prior build exceeded the entry bundle
+budget. Lazy loading the Hole creation task restored the budget. The existing
+linked-sketch import advisory remains. The full gate is deferred until the
+hardware batch is complete.

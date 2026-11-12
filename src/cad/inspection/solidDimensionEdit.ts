@@ -54,7 +54,7 @@ export function buildSolidDimensionEdit(document: CadDocument, featureId: string
     else if (feature.type === "revolve") updated = { ...feature, angle: ref };
     else if (feature.type === "fillet") updated = { ...feature, radius: ref };
     else if (feature.type === "chamfer") updated = { ...feature, distance: ref };
-    else if (feature.type === "hole") updated = field === "diameter" ? { ...feature, diameter: ref } : { ...feature, depth: ref };
+    else if (feature.type === "hole") updated = field === "diameter" ? { ...feature, preset: undefined, diameter: ref } : { ...feature, depth: ref };
     else throw new Error("Use Edit Feature to change this pattern’s settings.");
     staged = upsertFeature(document, updated);
   }

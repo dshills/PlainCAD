@@ -740,6 +740,19 @@ convert solids to sheet parts. Assembly interference uses native solid common
 volume. Resource/collision limits explicitly mark analysis incomplete.
 
 
+### Fasteners and hole presets
+
+Open **Insert fastener** from the command palette to preview a metric or Unified
+inch socket-head blank as an editable component. Choose its size and length
+below the head, then apply the native preview. The blank includes a smooth
+shaft and hex socket. In **Hole**, choose a screw size and either **General
+clearance** or **Tap drill**. Editing the diameter switches to a custom hole.
+Tap-drill geometry is a smooth bore, with preset callouts on verified shop
+drawings. Sizes and nominal head dimensions follow selected entries from the
+[ISO metric series](https://www.iso.org/standard/4165.html),
+[Unified inch series](https://www.asme.org/codes-standards/find-codes-standards/b1-1-unified-inch-screw-threads-unr-thread-form)
+and [Unbrako engineering guide](https://unbrako.com/docs/engguide.pdf).
+
 ### Product configurations
 
 Open **Product configurations** from the command palette or active component
