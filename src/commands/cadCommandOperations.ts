@@ -1,7 +1,8 @@
-import type { CadDocument, ExpressionRef, ExtrudeTermination, FacePlaneReference, Feature, OriginPlane, Sketch, SketchDimension } from "../cad/document/schema";
+import type { CadDocument, ExpressionRef, ExtrudeTermination, FacePlaneReference, Feature, OriginPlane, Sketch, SketchDimension, ThreadFeature } from "../cad/document/schema";
 import { isShellSource, requireShellOpening } from "../cad/features/shellFeature";
 import { holePresetDiameter, isHolePreset } from "../cad/hardware/fastenerCatalog";
 import { addFastenerBlank } from "../cad/hardware/fastenerBlank";
+import { resolveThreadDimensions } from "../cad/hardware/threadSettings";
 import { deleteFeature, nowIso, touchDocument, upsertFeature, upsertParameter, upsertSketch } from "../cad/document/CadDocument";
 import { addComponent, featureComponentId, renameComponent } from "../cad/document/components";
 import { withComponentPlacement } from "../cad/document/componentPlacement";
@@ -336,6 +337,18 @@ export function applyCadCommand(document: CadDocument, call: CadCommandCall | Ty
     if ("error" in resolved) throw new Error(resolved.error);
     const base = { id: createId("feature"), createdAt: nowIso(), name: string("name", call.command.endsWith("fillet") ? "Fillet" : "Chamfer")!, componentId: featureComponentId(document, resolved[0].feature), targetEdgeRefs: edges };
     putFeature(call.command.endsWith("fillet") ? { ...base, type: "fillet", radius: positive(string("radius")!, "Radius") } : { ...base, type: "chamfer", distance: positive(string("distance")!, "Distance") });
+  } else if (call.command === "cad.feature.thread") {
+    const targetBodyId = reference(args.targetBodyId, "targetBodyId");
+    const owner = document.features.find(feature => stableBodyIdForFeature(feature.id) === targetBodyId);
+    if (!owner || owner.suppressed || !("operation" in owner) || owner.operation !== "newBody")
+      throw new Error("Choose a surviving upstream body for the thread.");
+    const feature: ThreadFeature = { id: createId("feature"), type: "thread", createdAt: nowIso(), name: string("name", "Thread")!,
+      componentId: featureComponentId(document, owner), targetBodyId, size: string("size")!,
+      side: args.side as ThreadFeature["side"], hand: args.hand as ThreadFeature["hand"],
+      threadLength: positive(string("threadLength")!, "Thread length"), threadOffset: expression(string("threadOffset", "0mm")!) };
+    resolveThreadDimensions(feature, evaluateParameters(document.parameters).values);
+    putFeature(feature);
+    result.bodyId = targetBodyId;
   } else if (call.command === "cad.feature.shell") {
     const sourceFeatureId = reference(args.sourceFeatureId, "sourceFeatureId");
     const source = document.features.find(item => item.id === sourceFeatureId);
@@ -351,7 +364,7 @@ export function applyCadCommand(document: CadDocument, call: CadCommandCall | Ty
     const id = reference(args.featureId, "featureId");
     const feature = document.features.find(item => item.id === id);
     if (!feature) throw new Error("Feature reference was lost.");
-    const allowed = new Set(["featureId", "name", "suppressed", ...(feature.type === "extrude" ? ["distance", "direction", "operation", "targetBodyIds"] : feature.type === "revolve" ? ["angle", "axis", "operation", "targetBodyIds"] : feature.type === "hole" ? ["diameter", "preset", "depth", "throughAll", "direction", "targetBodyIds"] : feature.type === "fillet" ? ["radius"] : feature.type === "chamfer" ? ["distance"] : feature.type === "shell" ? ["opening", "wallThickness"] : [])]);
+    const allowed = new Set(["featureId", "name", "suppressed", ...(feature.type === "extrude" ? ["distance", "direction", "operation", "targetBodyIds"] : feature.type === "revolve" ? ["angle", "axis", "operation", "targetBodyIds"] : feature.type === "hole" ? ["diameter", "preset", "depth", "throughAll", "direction", "targetBodyIds"] : feature.type === "fillet" ? ["radius"] : feature.type === "chamfer" ? ["distance"] : feature.type === "shell" ? ["opening", "wallThickness"] : feature.type === "thread" ? ["size", "side", "hand", "threadLength", "threadOffset"] : [])]);
     for (const key of Object.keys(args)) if (!allowed.has(key)) throw new Error(`${key} is not a setting for ${feature.type}.`);
     let updated: Feature = { ...feature, ...(args.name === undefined ? {} : { name: string("name")! }), ...(args.suppressed === undefined ? {} : { suppressed: args.suppressed as boolean }) };
     if (updated.type === "extrude") {
@@ -386,6 +399,15 @@ export function applyCadCommand(document: CadDocument, call: CadCommandCall | Ty
       if (args.opening !== undefined) updated = { ...updated, opening: requireShellOpening(args.opening) };
       if (args.wallThickness !== undefined && string("wallThickness") !== updated.wallThickness.expression)
         updated = { ...updated, wallThickness: positive(string("wallThickness")!, "Wall thickness") };
+    }
+    else if (updated.type === "thread") {
+      if (args.size !== undefined) updated.size = string("size")!;
+      if (args.side !== undefined) updated.side = args.side as ThreadFeature["side"];
+      if (args.hand !== undefined) updated.hand = args.hand as ThreadFeature["hand"];
+      if (args.threadLength !== undefined && args.threadLength !== updated.threadLength.expression) updated.threadLength = positive(string("threadLength")!, "Thread length");
+      if (args.threadOffset !== undefined && args.threadOffset !== updated.threadOffset.expression) updated.threadOffset = expression(string("threadOffset")!);
+      if (!updated.suppressed && Object.keys(args).some(key => !["featureId", "name"].includes(key)))
+        resolveThreadDimensions(updated, evaluateParameters(document.parameters).values);
     }
     if ((updated.type === "extrude" || updated.type === "revolve") && args.operation !== undefined) updated = { ...updated, operation: string("operation") as "newBody" | "join" | "cut" };
     if ((updated.type === "extrude" || updated.type === "revolve") && updated.operation === "newBody") {

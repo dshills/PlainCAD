@@ -11,7 +11,7 @@ import { validateParameterBindings } from "../parameters/expressionBindings";
 import { MODEL_RESOURCE_LIMITS } from "../resourceLimits";
 import { validAuthoredUnit, validUnitSettings } from "../parameters/parameterUnits";
 import { isShellSource } from "../features/shellFeature";
-import { holePresetDiameter, isHolePreset } from "../hardware/fastenerCatalog";
+import { fastenerSize, holePresetDiameter, isHolePreset } from "../hardware/fastenerCatalog";
 
 const PARAMETER_NAME_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
 const REQUIRED_DOCUMENT_OBJECTS = ["parameters", "sketches", "components"] as const;
@@ -433,6 +433,10 @@ export function validateDocument(document: CadDocument, mode: "modeling" | "stor
         !isShellSource(document.features.find(item => item.id === feature.sourceFeatureId))) {
       issues.push({ source: "feature", sourceId: feature.id, message: "Shell opening owner was lost, suppressed or changed. Restore its positive distance extrusion or suppress the Shell feature." });
     }
+    if (feature.type === "thread" && !feature.suppressed &&
+        !document.features.some(item => !item.suppressed && "operation" in item && item.operation === "newBody" && `body:${item.id}` === feature.targetBodyId)) {
+      issues.push({ source: "feature", sourceId: feature.id, message: "Thread target was lost or suppressed. Restore the source body or suppress Thread." });
+    }
     if (feature.type === "fit" && !feature.suppressed) {
       const component = featureComponentId(document, feature);
       const sourceFeatures = feature.followSourcePlacement ? new Map(document.features.map(item => [item.id, item])) : undefined;
@@ -802,6 +806,13 @@ function validatePersistedFields(document: CadDocument): ValidationIssue[] {
           (feature.opening === "startCap" || feature.opening === "endCap") && expression(feature.wallThickness),
         "Malformed Shell feature. Specify a source extrusion, start/end cap and wall thickness expression.",
       );
+    }
+    if (feature.type === "thread") {
+      checkFeature(typeof feature.targetBodyId === "string" && feature.targetBodyId.startsWith("body:") &&
+        feature.targetBodyId.length <= 320 && Boolean(fastenerSize(feature.size)) &&
+        (feature.side === "internal" || feature.side === "external") && (feature.hand === "right" || feature.hand === "left") &&
+        expression(feature.threadLength) && expression(feature.threadOffset),
+        "Malformed Thread. Choose a target body, size, side, handedness, length and offset.");
     }
     if (feature.type === "fillet" || feature.type === "chamfer") {
       checkFeature(

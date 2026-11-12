@@ -61,6 +61,7 @@ export interface RebuildResult {
   stepImportDiagnostic?: string;
   /** Actual loaded native thick-solid bindings. */
   shellAvailable?: boolean;
+  threadsAvailable?: boolean;
   /** Explicit STEP export rebuilds only; native handles never cross the worker. */
   nativeStepExport?: NativeStepExport;
   /** Explicit disposable drawing rebuild only; native handles never cross workers. */

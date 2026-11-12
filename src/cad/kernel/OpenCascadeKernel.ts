@@ -2,11 +2,13 @@ import { assertMeshBudget } from "../resourceLimits";
 import { measureNativeBores } from "./nativeDrawing";
 import { exportNativeStep, importNativeStep, stepBindingDiagnostic, stepImportBindingDiagnostic } from "./nativeStep";
 import { createNativeShell, nativeShellAvailable } from "./nativeShell";
+import { cutNativeThread, nativeThreadsAvailable } from "./nativeThreads";
+import type { ThreadDimensions } from "../hardware/threadSettings";
 import { matchNativeHoleRim, measureNativeBoreRims, validateNativePocketFloor, type NativeHoleRimEvidence } from "./occtMachinedReferences";
 import initOpenCascadeModule from "opencascade.js/dist/opencascade.wasm.js";
 import openCascadeWasmUrl from "opencascade.js/dist/opencascade.wasm.wasm?url";
 import { createId } from "../document/ids";
-import { ComponentPlacement, RevolveAxisReference, ShellFeature, TopologyRef } from "../document/schema";
+import { ComponentPlacement, RevolveAxisReference, ShellFeature, ThreadFeature, TopologyRef } from "../document/schema";
 import { placePlane, placementTransform } from "../document/componentPlacement";
 import {
   HoleScopeError,
@@ -68,6 +70,7 @@ class EdgeProofSignatureUnavailable extends Error {}
 type KernelHandle =
   | { kind: "stepImport"; occtShape?: unknown }
   | { kind: "shell"; occtShape?: unknown }
+  | { kind: "thread"; occtShape: unknown; pitch: number }
   | {
       kind: "box";
       width: number;
@@ -298,6 +301,16 @@ export class OpenCascadeKernel implements KernelAdapter {
   }
   static shellAvailable(): boolean {
     return nativeShellAvailable(OpenCascadeKernel.openCascade);
+  }
+  static threadsAvailable(): boolean {
+    return nativeThreadsAvailable(OpenCascadeKernel.openCascade);
+  }
+  thread(shape: KernelShape, settings: Pick<ThreadFeature, "side" | "hand">, dimensions: ThreadDimensions): KernelShape {
+    const oc = OpenCascadeKernel.openCascade, handle = shape.kernelHandle as KernelHandle;
+    if (!oc || !handle.occtShape) throw new Error("Modeled threads require a current native solid.");
+    const { native, proof } = cutNativeThread(oc, handle.occtShape, settings, dimensions, this.measureNative(handle.occtShape));
+    this.assertions.set(native, proof);
+    return { id: createId("shape"), kernelHandle: { kind: "thread", occtShape: native, pitch: dimensions.pitch } satisfies KernelHandle };
   }
   shell(shape: KernelShape, opening: ShellFeature["opening"], wall: number): KernelShape {
     const oc = OpenCascadeKernel.openCascade, base = shape.kernelHandle as KernelHandle | undefined;
@@ -1028,7 +1041,7 @@ export class OpenCascadeKernel implements KernelAdapter {
     const occtMesh = this.tessellateOcctShape(
       shape.id,
       handle.occtShape,
-      options,
+      handle.kind === "thread" ? { ...options, linearDeflection: Math.min(options.linearDeflection, handle.pitch / 40) } : options,
     );
     if (!occtMesh && handle.occtShape)
       throw new Error(

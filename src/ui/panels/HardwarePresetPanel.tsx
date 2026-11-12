@@ -1,17 +1,19 @@
 import { useState } from "react";
 import { executeCommand } from "../../commands/registry";
-import { useHardwarePreset } from "../../state/hardwarePresetState";
+import { useHardwarePreset, type HardwareFrame } from "../../state/hardwarePresetState";
 import { useCadStore } from "../../state/useCadStore";
 import { ModalDialog } from "../ModalDialog";
 import { validateFastenerLength } from "../../cad/hardware/fastenerBlank";
 import { FastenerSizeOptions } from "./HolePresetControls";
+import { ThreadDialog } from "./ThreadDialog";
 
 export function HardwarePresetPanel() {
   const frame = useHardwarePreset(state => state.frame);
-  return frame ? <FastenerDialog key={frame.session} frame={frame} /> : null;
+  if (!frame) return null;
+  return frame.thread ? <ThreadDialog key={frame.session} frame={frame} thread={frame.thread} /> : <FastenerDialog key={frame.session} frame={frame} />;
 }
 
-function FastenerDialog({ frame }: { frame: NonNullable<ReturnType<typeof useHardwarePreset.getState>["frame"]> }) {
+function FastenerDialog({ frame }: { frame: HardwareFrame }) {
   const current = useCadStore(state => state.history.present === frame.document &&
     state.documentSession === frame.session && state.activeComponentId === frame.componentId && !state.fileBusy);
   const [size, setSize] = useState("m3");

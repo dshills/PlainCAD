@@ -71,6 +71,7 @@ export function mapDocumentExpressions(
     if (f.type === "stepImport") return f;
     if (f.type === "fit") return { ...f, clearance: read(f.clearance, "clearance"), wallThickness: read(f.wallThickness, "wallThickness") };
     if (f.type === "shell") return { ...f, wallThickness: read(f.wallThickness, "wallThickness") };
+    if (f.type === "thread") return { ...f, threadLength: read(f.threadLength, "threadLength"), threadOffset: read(f.threadOffset, "threadOffset") };
     if (f.type === "extrude")
       return {
         ...f,

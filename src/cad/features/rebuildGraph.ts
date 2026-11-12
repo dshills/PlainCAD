@@ -14,6 +14,7 @@ import { documentTimeline } from "../document/timelineOrdering";
 import { nativeProjectionValidator } from "./nativeProjectionValidator";
 import { currentNativeFaces, nativeSketchPlaneValidator } from "./nativeSketchPlanes";
 import { currentNativeHoleRims } from "./nativeHoleRims";
+import { resolveThreadDimensions } from "../hardware/threadSettings";
 import { faceReferenceBodyId } from "../document/faceReferences";
 import { absorbedBodyIds, targetBodyIds } from "../document/bodyScopes";
 import { extrusionSweep, throughAllDistance } from "./extrusionSweep";
@@ -67,6 +68,8 @@ const sketchSeeds = new Map<
 >();
 
 interface RebuildOptions {
+  /** Worker heartbeat between bounded synchronous modeling operations. */
+  onNativeProgress?: (stage: string) => void;
     /** Export current world-positioned native solids before their ownership ends. */
     exportStepBodyIds?: readonly string[];
     captureDrawingBodyId?: string;
@@ -339,6 +342,7 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
           feature.type !== "fillet" &&
           feature.type !== "chamfer" &&
           feature.type !== "shell" &&
+          feature.type !== "thread" &&
           feature.type !== "pattern" &&
           feature.operation === "newBody" &&
           runtimeBodies.size >= MODEL_RESOURCE_LIMITS.maxBodies
@@ -418,6 +422,21 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
             setRuntimeBody(runtimeBodies, id, { ...target, shape, mesh });
           } catch (error) {
             errors.push({ id: `feature:${feature.id}:shell`, source: "feature", sourceId: feature.id, message: kernelErrorMessage("Shell", error) });
+          }
+          continue;
+        }
+        if (feature.type === "thread") {
+          const target = runtimeBodies.get(feature.targetBodyId);
+          try {
+            options.onNativeProgress?.("thread");
+            if (!target || !kernel.thread) throw new Error("Select a surviving upstream body and wait for the native thread kernel.");
+            const dimensions = resolveThreadDimensions(feature, evaluated.values);
+            const shape = kernel.thread(target.shape, feature, dimensions);
+            shapesToDispose.add(shape);
+            const mesh = withStableBodyId(kernel.tessellate(shape, TESSELLATION_LOD.default), feature.targetBodyId);
+            setRuntimeBody(runtimeBodies, feature.targetBodyId, { ...target, shape, mesh });
+          } catch (error) {
+            errors.push({ id: `feature:${feature.id}:thread`, source: "feature", sourceId: feature.id, message: kernelErrorMessage("Thread", error) });
           }
           continue;
         }
@@ -788,6 +807,7 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
     parameterValues: evaluated.values,
     stepExportAvailable: nativeReferences && !stepDiagnostic,
     shellAvailable,
+    threadsAvailable: nativeReferences && OpenCascadeKernel.threadsAvailable(),
     ...(stepDiagnostic ? { stepExportDiagnostic: stepDiagnostic } : {}),
     stepImportAvailable: nativeReferences && !stepImportDiagnostic,
     ...(stepImportDiagnostic ? { stepImportDiagnostic } : {}),

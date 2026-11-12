@@ -39,6 +39,7 @@ const migrations = new Map<number, Migration>([
     const { preset: _preset, ...legacy } = feature;
     return legacy;
   }) })],
+  [23, document => ({ ...document, schemaVersion: 24 })],
 ]);
 
 function migrateV16ToV17(document: CadDocument): CadDocument {
@@ -415,6 +416,9 @@ function sanitizeFeature(feature: Feature): Feature | undefined {
   if (feature.type === "stepImport") return { ...base, type: "stepImport", operation: feature.operation, stepSource: feature.stepSource };
   if (feature.type === "fit") return { ...base, type: "fit", operation: feature.operation, sourceBodyId: feature.sourceBodyId, style: feature.style, clearance: sanitizeExpressionRef(feature.clearance), wallThickness: sanitizeExpressionRef(feature.wallThickness), followSourcePlacement: feature.followSourcePlacement };
   if (feature.type === "shell") return { ...base, type: "shell", sourceFeatureId: feature.sourceFeatureId, opening: feature.opening, wallThickness: sanitizeExpressionRef(feature.wallThickness) };
+  if (feature.type === "thread") return { ...base, type: "thread", targetBodyId: feature.targetBodyId,
+    size: feature.size, side: feature.side, hand: feature.hand,
+    threadLength: sanitizeExpressionRef(feature.threadLength), threadOffset: sanitizeExpressionRef(feature.threadOffset) };
   if (feature.type === "extrude") {
     return {
       ...base,

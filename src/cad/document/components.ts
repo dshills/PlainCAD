@@ -23,7 +23,8 @@ export function featureComponentId(
   if (feature.type === "fit" || feature.type === "stepImport") return document.rootComponentId;
   if ("sketchId" in feature)
     return sketchComponentId(document, feature.sketchId);
-  const ownerId = feature.type === "pattern" || feature.type === "shell" ? feature.sourceFeatureId : feature.targetEdgeRefs[0]?.featureId;
+  const ownerId = feature.type === "pattern" || feature.type === "shell" ? feature.sourceFeatureId :
+    feature.type === "thread" ? feature.targetBodyId.slice(5) : feature.targetEdgeRefs[0]?.featureId;
   const owner = document.features.find((item) => item.id === ownerId);
   // Edges and shells use extrusion owners. Read their or a pattern source's
   // component directly rather than following a potentially recursive reference.

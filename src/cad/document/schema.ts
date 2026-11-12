@@ -1,6 +1,6 @@
 import type { HolePreset } from "../hardware/fastenerCatalog";
 
-export const CURRENT_SCHEMA_VERSION = 23;
+export const CURRENT_SCHEMA_VERSION = 24;
 
 export type UnitSystem = "metric" | "imperial";
 
@@ -265,6 +265,16 @@ export interface ShellFeature extends FeatureBase {
   wallThickness: ExpressionRef;
 }
 
+export interface ThreadFeature extends FeatureBase {
+  type: "thread";
+  targetBodyId: string;
+  size: string;
+  side: "internal" | "external";
+  hand: "right" | "left";
+  threadLength: ExpressionRef;
+  threadOffset: ExpressionRef;
+}
+
 /** Count includes the source. Coordinates and axes belong to the source sketch plane. */
 export type FeaturePatternSettings =
   | { type: "linear"; count: ExpressionRef; spacing: ExpressionRef; direction: "X" | "Y" }
@@ -284,6 +294,7 @@ export type Feature =
   | FilletFeature
   | ChamferFeature
   | ShellFeature
+  | ThreadFeature
   | FeaturePatternFeature
   | FittedPartFeature
   | StepImportFeature;

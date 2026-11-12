@@ -968,3 +968,64 @@ describe("native modeling geometry", () => {
   });
 
 });
+
+describe("native modeled thread", () => {
+  it("builds a maximum-length Unified inch thread in a cold rebuild and rejects an oversize request", () => {
+    const sketch = addCircleAt(createXySketch("Inch shaft"), "0mm", "0mm", "0.056in");
+    const stock = createExtrudeFeature({ name: "Inch shaft", sketchId: sketch.id,
+      profileId: detectProfiles(solveSketch(sketch, {})).profiles[0].id, direction: "positive",
+      operation: "newBody", distance: { expression: "0.4in", unit: "mm" } });
+    const document = upsertFeature(upsertSketch(createEmptyDocument(), sketch), stock);
+    const args = { targetBodyId: stableBodyIdForFeature(stock.id), size: "4-40", side: "external", hand: "right" } as const;
+    expect(() => applyCadCommand(document, { command: "cad.feature.thread", arguments: { ...args, threadLength: "0.325in" } })).toThrow(/1–12 pitches/);
+    const { document: threaded } = applyCadCommand(document, { command: "cad.feature.thread", arguments: { ...args, threadLength: "0.3in" } });
+    const result = rebuildDocument(importProjectText(serializeProject(threaded)), { reuseNativeFeatures: false });
+    expect(result.errors).toEqual([]);
+    expect(result.meshes[0]).toMatchObject({ bodyId: args.targetBodyId, kernelOperation: "thread", geometryAssertions: { valid: true, solidCount: 1 } });
+    expect(result.meshes[0].geometryAssertions!.volume).toBeLessThan(58);
+    expect(() => validateMesh(result.meshes[0])).not.toThrow();
+  });
+
+  it("rejects a lead-in that would remove the full end of a thin bore", () => {
+    let sketch = addCircleAt(createXySketch("Thin sleeve"), "0mm", "0mm", "1.505mm");
+    sketch = addCircleAt(sketch, "0mm", "0mm", "1.25mm");
+    const stock = createExtrudeFeature({ name: "Thin sleeve", sketchId: sketch.id,
+      profileId: detectProfiles(solveSketch(sketch, {})).profiles.find(profile => profile.holes.length === 1)!.id,
+      direction: "positive", operation: "newBody", distance: { expression: "4mm", unit: "mm" } });
+    const { document, result } = applyCadCommand(upsertFeature(upsertSketch(createEmptyDocument(), sketch), stock), {
+      command: "cad.feature.thread", arguments: { targetBodyId: stableBodyIdForFeature(stock.id),
+        size: "m3", side: "internal", hand: "right", threadLength: "3mm" },
+    });
+    const rebuild = rebuildDocument(document, { reuseNativeFeatures: false });
+    expect(rebuild.success).toBe(false);
+    expect(rebuild.errors).toContainEqual(expect.objectContaining({ sourceId: result.id, message: expect.stringMatching(/retained material|surrounding wall/) }));
+    expect(rebuild.meshes.every(mesh => mesh.kernelOperation !== "thread")).toBe(true);
+  });
+
+  it.each([["external", "right"], ["external", "left"], ["internal", "right"], ["internal", "left"]] as const)(
+    "cuts a valid %s %s-hand thread and retains its body ID",
+    (side, hand) => {
+      const before = createEmptyDocument();
+      const shaft = addCircleAt(createXySketch("Thread stock"), "0mm", "0mm", side === "internal" ? "3mm" : "1.5mm");
+      const sketch = side === "internal" ? addCircleAt(shaft, "0mm", "0mm", "1.25mm") : shaft;
+      const profile = detectProfiles(solveSketch(sketch, {})).profiles.find(item => item.holes.length === (side === "internal" ? 1 : 0))!;
+      const stock = createExtrudeFeature({ name: "Thread stock", sketchId: sketch.id, profileId: profile.id,
+        direction: "positive", operation: "newBody", distance: { expression: "4mm", unit: "mm" } });
+      const targetBodyId = stableBodyIdForFeature(stock.id);
+      const base = upsertFeature(upsertSketch(before, sketch), stock);
+      const { document } = applyCadCommand(base, { command: "cad.feature.thread",
+        arguments: { side, hand, targetBodyId, size: "m3", threadLength: "3mm", threadOffset: "0.1mm" } });
+      try {
+        const rebuilt = rebuildDocument(document, { reuseNativeFeatures: false });
+        expect(rebuilt.errors).toEqual([]);
+        expect(rebuilt.meshes).toHaveLength(1);
+        const [mesh] = rebuilt.meshes;
+        expect(mesh).toMatchObject({ bodyId: targetBodyId, geometrySource: "opencascade", kernelOperation: "thread", geometryAssertions: { valid: true, solidCount: 1 } });
+        const baseVolume = 4 * Math.PI * (side === "internal" ? 9 - 1.25 ** 2 : 1.5 ** 2);
+        const removed = baseVolume - mesh.geometryAssertions!.volume;
+        expect(removed).toBeCloseTo(side === "internal" ? 3.598 : 5.273, 2);
+        expect(() => validateMesh(mesh)).not.toThrow();
+      } finally { clearNativeFeatureCache(); }
+    },
+  );
+});

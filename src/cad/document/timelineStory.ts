@@ -26,6 +26,7 @@ export function timelineFeatureIntent(feature: Feature): string {
   if (feature.type === "fillet") return "Round selected edges";
   if (feature.type === "chamfer") return "Bevel selected edges";
   if (feature.type === "shell") return "Hollow the solid through a cap";
+  if (feature.type === "thread") return "Cut a modeled helical thread";
   if (feature.type === "pattern") return "Repeat geometry in a pattern";
   return "Inspect this modeling operation";
 }

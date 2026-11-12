@@ -8,6 +8,7 @@ function nativePlanReason(id: string) {
   if (id === "cad.feature.pocket") return "Use plan.preview to validate an inward pocket before applying it.";
   if (id === "cad.feature.shell") return "Use plan.preview to validate Shell before applying it.";
   if (id === "cad.hardware.fastener") return "Use plan.preview to validate a fastener before inserting it.";
+  if (id === "cad.feature.thread") return "Use plan.preview to validate native thread geometry before applying it.";
 }
 
 /** Register once alongside existing business command enablement. */
@@ -28,6 +29,10 @@ export function registerCadCommands(canEdit: (id: string) => boolean): () => voi
           before.features.some(feature => feature.type === "shell" && feature.id === input.featureId) &&
           (Object.hasOwn(input, "wallThickness") || Object.hasOwn(input, "opening") || input.suppressed === false))
         throw new Error("Use plan.preview to validate changes to Shell geometry before applying them.");
+      if (descriptor.id === "cad.feature.update" && input && typeof input === "object" && !Array.isArray(input) &&
+          before.features.some(feature => feature.type === "thread" && feature.id === input.featureId) &&
+          Object.keys(input).some(key => !["featureId", "name"].includes(key) && !(key === "suppressed" && input.suppressed === true)))
+        throw new Error("Use plan.preview to validate changes to Thread before applying them.");
       const result = state.rebuild.result;
       const native = state.rebuild.status === "succeeded" && state.rebuild.kernelReady && result?.success && result.documentId === before.id ? result : undefined;
       const applied = applyCadCommand(before, { command: descriptor.id, arguments: input }, { native });

@@ -2,6 +2,7 @@ import type { Feature } from "./schema";
 import { stableBodyIdForFeature } from "./ids";
 
 export function targetBodyIds(feature: Feature): string[] {
+  if (feature.type === "thread") return [feature.targetBodyId];
   if (feature.type === "shell") return [stableBodyIdForFeature(feature.sourceFeatureId)];
   if (feature.type === "pattern") return feature.targetBodyIds;
   if (feature.type === "hole")

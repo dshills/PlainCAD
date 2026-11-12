@@ -1,4 +1,5 @@
-import { ComponentPlacement, RevolveAxisReference, ShellFeature, TopologyRef } from "../document/schema";
+import { ComponentPlacement, RevolveAxisReference, ShellFeature, ThreadFeature, TopologyRef } from "../document/schema";
+import type { ThreadDimensions } from "../hardware/threadSettings";
 import { Point3, SketchPlaneTransform } from "../sketch/planes";
 import { SketchProfile } from "../sketch/profileDetection";
 import type { NativeStepExport } from "./nativeStep";
@@ -46,6 +47,7 @@ export interface RenderMesh {
     | "fillet"
     | "chamfer"
     | "shell"
+    | "thread"
     | "toFace"
     | "stepImport";
   geometryAssertions?: GeometryAssertions;
@@ -117,6 +119,7 @@ export interface KernelAdapter {
     distance: number,
   ): KernelShape;
   shell?(shape: KernelShape, opening: ShellFeature["opening"], wall: number): KernelShape;
+  thread?(shape: KernelShape, settings: Pick<ThreadFeature, "side" | "hand">, dimensions: ThreadDimensions): KernelShape;
   tessellate(shape: KernelShape, options: TessellationOptions): RenderMesh;
   exportStl(shape: KernelShape): ArrayBuffer;
   disposeShape?(shape: KernelShape): void;

@@ -1,6 +1,6 @@
 import type { CanvasPoint, CanvasTool } from "../cad/sketch/canvasGeometry";
 import type { CanvasSizeInput } from "../cad/sketch/sizedCanvasGeometry";
-import type { OriginPlane, ShellFeature, SketchDimension, UnitSettings } from "../cad/document/schema";
+import type { OriginPlane, ShellFeature, SketchDimension, ThreadFeature, UnitSettings } from "../cad/document/schema";
 import type { SupportedEdgeRole } from "../cad/features/topologyRefs";
 import type { HolePreset } from "../cad/hardware/fastenerCatalog";
 
@@ -15,6 +15,7 @@ type Edge = { featureId: string; role: SupportedEdgeRole; sourceEntityId?: strin
 type Face = { featureId: string; stableFaceId: string };
 type ExtrudeEnd = { distance: string; termination?: never } | { termination: { type: "throughAll" } | ({ type: "toFace" } & Face); distance?: never };
 type AuthoredUnit = "" | UnitSettings["length"] | UnitSettings["angle"];
+type ThreadInput = { size: string; side: ThreadFeature["side"]; hand: ThreadFeature["hand"]; threadLength: string; threadOffset?: string };
 /** Compile-time counterparts of the strict catalog schemas. JSON callers are
  * still validated at runtime; IDs and $aliases share the string representation. */
 export type CadCommandArguments = {
@@ -39,10 +40,11 @@ export type CadCommandArguments = {
   "cad.feature.revolve": FeatureInput & { angle: string; axis?: "X" | "Y" | "Z"; axisLineId?: string };
   "cad.feature.hole": Named & { sketchId: string; centerPointIds: string[]; targetBodyIds: string[]; direction?: "positive" | "negative" } & ({ diameter: string; preset?: never } | { preset: HolePreset; diameter?: never }) & ({ depth: string; throughAll?: false } | { throughAll: true });
   "cad.hardware.fastener": Named & { size: string; length: string };
+  "cad.feature.thread": Named & ThreadInput & { targetBodyId: string };
   "cad.feature.fillet": Named & { edges: Edge[]; radius: string };
   "cad.feature.chamfer": Named & { edges: Edge[]; distance: string };
   "cad.feature.shell": Named & { sourceFeatureId: string; opening: ShellFeature["opening"]; wallThickness: string };
-  "cad.feature.update": { featureId: string; name?: string; suppressed?: boolean; distance?: string; angle?: string; diameter?: string; preset?: HolePreset; radius?: string; depth?: string; throughAll?: boolean; direction?: Direction; operation?: Operation; targetBodyIds?: string[]; axis?: "X" | "Y" | "Z"; opening?: ShellFeature["opening"]; wallThickness?: string };
+  "cad.feature.update": Partial<ThreadInput> & { featureId: string; name?: string; suppressed?: boolean; distance?: string; angle?: string; diameter?: string; preset?: HolePreset; radius?: string; depth?: string; throughAll?: boolean; direction?: Direction; operation?: Operation; targetBodyIds?: string[]; axis?: "X" | "Y" | "Z"; opening?: ShellFeature["opening"]; wallThickness?: string };
   "cad.feature.delete": { featureId: string };
 };
 export type TypedCadCommandCall = { [Id in keyof CadCommandArguments]: { command: Id; arguments: CadCommandArguments[Id] } }[keyof CadCommandArguments];

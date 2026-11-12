@@ -11,7 +11,7 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Date: 2026-11-12.
 - Change: shared face-to-pocket, STEP import, Shell, and native machined references; includes the feature palette search repair.
 - Result: type checks, 1663 unit/component tests in 214 files, build/bundle budget (63 bundles, largest 496.93 kB), 335 development browser cases (38.6m), and 61 production browser cases (4.7m) passed.
-- Completed items since that full gate: **2**.
+- Completed items since that full gate: **4**.
 - Next full gate: after the current hardware batch, per user request.
 
 ## Completed batch
@@ -1470,3 +1470,25 @@ tamper rejection and custom editing. The prior build exceeded the entry bundle
 budget. Lazy loading the Hole creation task restored the budget. The existing
 linked-sketch import advisory remains. The full gate is deferred until the
 hardware batch is complete.
+
+
+## Hardware item 2: native modeled threads
+
+Thread cuts an editable nominal metric or Unified inch profile into a matching
+shaft or tap-drill bore, with a native lead-in, right/left hand and 1–12 pitches.
+The modifier keeps the target body ID. A current native plan gates creation,
+edits and reactivation. Schema 24 preserves the expression fields and targets.
+
+Internal review verified free-end selection, To Face modifier handling, measured
+cut volume and phase, and exact retained material around the lead-in. A thin
+bore that would lose its entry wall fails. The cold 12-turn Unified inch test
+and both hands of M3 internal/external geometry passed. Worker heartbeats between
+thread features retain the existing per-operation and total timeout.
+
+The reduced gate passed 1674 unit/component tests, the build budget, five
+development and fourteen production smoke tests. The final lead-in proof passed
+six focused native cases and the final build (70 bundles, largest 494.33 kB).
+Three final browser cases passed, including editing, save/open and STL for the
+external thread and a native internal thread on an independently authored bore.
+The existing linked-sketch import advisory remains. The full gate remains
+deferred until the lead screw and nut item is complete.

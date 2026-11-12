@@ -688,7 +688,7 @@ validation, and commit workflow.
 
 ## Limits and Troubleshooting
 
-Dynamic simulation, CAM, sheet metal, loft/sweep/shell/thread modeling,
+Dynamic simulation, CAM, sheet metal, general loft and sweep modeling,
 general surface modeling, and arbitrary topological naming remain unavailable. Existing constraints, face/edge references, and AI recipes have the
 supported scopes documented in the capability matrix. Native failures report
 the source and preserve upstream previews for repair.
@@ -784,6 +784,22 @@ drawings. Sizes and nominal head dimensions follow selected entries from the
 [ISO metric series](https://www.iso.org/standard/4165.html),
 [Unified inch series](https://www.asme.org/codes-standards/find-codes-standards/b1-1-unified-inch-screw-threads-unr-thread-form)
 and [Unbrako engineering guide](https://unbrako.com/docs/engguide.pdf).
+
+### Modeled threads
+
+Select a body and choose **Modeled Thread**. External threads cut a complete
+nominal-diameter shaft and turn down its free tip for entry. Internal threads
+cut a complete matching tap-drill bore and open an entry relief at its mouth.
+When both ends are open, the lower end along the cylinder axis is used. Choose the
+metric or inch size, handedness, length, and optional start offset. The native
+preview verifies the helical cut before Apply. Select Thread in History and
+choose **Edit Selected Feature** to change its settings. If a source edit
+breaks the thread, suppress Thread, repair the stock, then preview reactivation.
+
+The first implementation models nominal 60° profiles for 1–12 pitches,
+reserves runout at both ends, and requires one unambiguous complete cylinder.
+These profiles do not assign an ISO/Unified tolerance class or guarantee a
+specific assembled fit.
 
 ### Product configurations
 

@@ -123,7 +123,7 @@ export function timelineDependencyErrors(document: CadDocument): string[] {
     document.features
       .filter(
         (f) =>
-          (f.type === "extrude" || f.type === "revolve" || f.type === "stepImport") &&
+          (f.type === "extrude" || f.type === "revolve" || f.type === "fit" || f.type === "stepImport") &&
           f.operation === "newBody",
       )
       .map((f) => [stableBodyIdForFeature(f.id), f]),

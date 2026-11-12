@@ -1453,3 +1453,16 @@ Shop drawing callouts add the preset name only for a matching native bore
 made by the last operation on that body. A tap drill is a smooth pilot bore.
 The same presets are available to CLI and AI through `cad.feature.hole`,
 and blank insertion uses `cad.hardware.fastener` through a native plan.
+
+
+### Modeled Thread
+
+Native internal and external helical cuts on one matching complete cylinder.
+Thread keeps the upstream body ID and persists the size, side, handedness,
+length and start offset in schema 24. Thread length is 1–12 pitches. The tool
+reserves axial room at both ends and cuts a lead-in at the free shaft tip or
+bore mouth. When both ends are open, the lower axial end is used. The preview verifies one solid, helical material loss
+and the requested pitch and hand. Coincident, interrupted, ambiguous or
+undersized cylinders fail with a feature diagnostic. Nominal 60-degree
+geometry has no assigned fit class. Arbitrary helix sweeps and end treatments
+remain outside this command.

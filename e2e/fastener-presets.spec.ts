@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import type { CadDocument } from "../src/cad/document/schema";
 import type { CommandRequest, CommandResponse } from "../src/commands/registry";
+import { stlSignedVolume } from "./aiAcceptanceHelpers";
 import { openNewPartMenu } from "./newPartWorkflow";
 
 type Snapshot = {
@@ -93,4 +94,73 @@ test("guided holes save preset intent and place a verified tap-drill callout on 
   const svg = await readFile(path!, "utf8");
   expect(svg).toContain("#4-40 UNC tap drill");
   expect(svg).toContain("Ø2.261 mm");
+});
+
+test("modeled Thread previews and persists native external and internal grooves", async ({ page }) => {
+  await page.goto("/");
+  await palette(page, "Insert fastener");
+  await page.getByRole("button", { name: "Preview fastener" }).click();
+  await page.getByRole("button", { name: "Apply command plan" }).click();
+  await expect.poll(async () => (await snapshot(page)).rebuild.native).toBe(true);
+  const blank = await snapshot(page), shaft = blank.rebuild.bodies[0];
+  await command(page, { command: "selection.set", arguments: { kind: "body", id: `body:${blank.document.features[0].id}` } });
+  await palette(page, "Modeled Thread");
+  let dialog = page.getByRole("dialog", { name: "Modeled Thread" });
+  await dialog.getByLabel("Handedness").selectOption("left");
+  await dialog.getByRole("button", { name: "Preview thread" }).click();
+  await page.getByRole("button", { name: "Apply command plan" }).click();
+  await expect(async () => {
+    const state = await snapshot(page);
+    expect(state.document.features.at(-1)).toMatchObject({ type: "thread", hand: "left", side: "external", size: "m3" });
+    expect(state.rebuild.bodies[0].assertions.volume).toBeCloseTo(shaft.assertions.volume - 5.002, 2);
+  }).toPass();
+
+  const threaded = await snapshot(page), thread = threaded.document.features.at(-1)!;
+  await command(page, { command: "selection.set", arguments: { kind: "feature", id: thread.id } });
+  await palette(page, "Edit Selected Feature");
+  dialog = page.getByRole("dialog", { name: "Edit Thread" });
+  await dialog.getByLabel("Thread length").fill("2mm");
+  await dialog.getByRole("button", { name: "Preview thread" }).click();
+  await page.getByRole("button", { name: "Apply command plan" }).click();
+  await expect(async () => {
+    const state = await snapshot(page);
+    expect(state.document.features.at(-1)).toMatchObject({ id: thread.id, threadLength: { expression: "2mm" } });
+    expect(state.rebuild.bodies[0].assertions.volume).toBeCloseTo(shaft.assertions.volume - (5.002 - 4.160 / 3), 2);
+  }).toPass();
+
+  const [saved] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("button", { name: "Save project", exact: true }).click(),
+  ]);
+  await page.locator('input[type="file"]').first().setInputFiles((await saved.path())!);
+  await expect(async () => {
+    const state = await snapshot(page);
+    expect(state.history.undo).toBe(0);
+    expect(state.document.features.at(-1)).toMatchObject({ id: thread.id, type: "thread" });
+    expect(state.rebuild.bodies[0].assertions.volume).toBeCloseTo(shaft.assertions.volume - (5.002 - 4.160 / 3), 2);
+  }).toPass();
+
+  const [stl] = await Promise.all([
+    page.waitForEvent("download", { timeout: 15000 }),
+    command(page, { command: "file.exportStl", arguments: {} }),
+  ]);
+  const bytes = await readFile((await stl.path())!);
+  expect(bytes.readUInt32LE(80)).toBeGreaterThan(100);
+  expect(Math.abs(stlSignedVolume(bytes) - (await snapshot(page)).rebuild.bodies[0].assertions.volume)).toBeLessThan(2);
+
+  const nut = await command(page, { command: "plan.preview", arguments: { label: "Test nut blank and thread", steps: [
+    { command: "cad.component.create", arguments: { name: "Nut blank", as: "nut" } },
+    { command: "cad.component.place", arguments: { componentId: "$nut", translation: [10, 0, 0], rotation: [0, 0, 0] } },
+    { command: "cad.sketch.create", arguments: { name: "Nut bore", componentId: "$nut", plane: "XY", as: "section" } },
+    { command: "cad.sketch.circle", arguments: { sketchId: "$section", center: { x: "0mm", y: "0mm" }, radius: "3mm" } },
+    { command: "cad.sketch.circle", arguments: { sketchId: "$section", center: { x: "0mm", y: "0mm" }, radius: "1.25mm" } },
+    { command: "cad.feature.extrude", arguments: { sketchId: "$section", distance: "4mm", as: "stock" } },
+    { command: "cad.feature.thread", arguments: { targetBodyId: "$stock.body", size: "m3", side: "internal", hand: "right", threadLength: "3mm" } },
+  ] } }) as { planId: string };
+  await command(page, { command: "plan.apply", arguments: { planId: nut.planId } });
+  await expect(async () => {
+    const state = await snapshot(page);
+    expect(state.rebuild.bodies).toHaveLength(2);
+    expect(state.rebuild.bodies[1].assertions.volume).toBeCloseTo(Math.PI * (9 - 1.25 ** 2) * 4 - 3.372, 2);
+  }).toPass();
 });

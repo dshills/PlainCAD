@@ -201,6 +201,8 @@ export interface CommandEnablement {
   document: boolean;
   editProject: boolean;
   insertFastener: boolean;
+  createThread: boolean;
+  suppressFeature: boolean;
   newComponent: boolean;
   createSketch: boolean;
   finishSketch: boolean;
@@ -249,6 +251,8 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
   const base = state.history.present.features.find(feature => feature.id === canvasTarget?.featureId);
   const links = state.history.present.sketches[useSketchCanvas.getState().active?.sketchId ?? ""]?.projections ?? [];
   const stepImportFrame = useStepImport.getState().frame;
+  const selectedFeature = getSelectedFeature(state);
+  const threadReady = Boolean(state.rebuild.result?.threadsAvailable && isRegisteredCommandAvailable("plan.preview", "domain"));
   return {
     aiAssistant: useAiDrawer.getState().open || (!transientPickerActive && !guidedHoleStartBlocked && !scopeCaptureBusy && !state.fileBusy),
     linkedSketchShowSource: !targetPickerActive && !guidedHoleStartBlocked && !state.fileBusy && links.some(link => canNavigateLinkedSketchSource(link.id)),
@@ -291,6 +295,9 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
     editProject: !state.fileBusy && !targetPickerActive,
     insertFastener: state.rebuild.kernelReady && Object.keys(state.history.present.components).length < MODEL_RESOURCE_LIMITS.maxComponents &&
       isRegisteredCommandAvailable("plan.preview", "domain"),
+    createThread: !targetPickerActive && threadReady && Boolean(selectedThreadTarget(state)),
+    suppressFeature: !targetPickerActive && !canvasActive && Boolean(selectedFeature) &&
+      (selectedFeature?.type !== "thread" || !selectedFeature.suppressed || threadReady),
     newComponent: !targetPickerActive && !guidedHoleStartBlocked && !state.fileBusy && !canvasActive && Object.keys(state.history.present.components).length < MODEL_RESOURCE_LIMITS.maxComponents,
     createSketch: !targetPickerActive && !state.fileBusy && !canvasActive,
     finishSketch: !targetPickerActive && canvasActive,
@@ -314,6 +321,7 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
     createExtrude: !canvasActive && ((!targetPickerActive && canCreateExtrude(state)) || handoffReady),
     createRevolve: !targetPickerActive && !canvasActive && Boolean(defaultRevolveAxis(state)),
     editFeature: !targetPickerActive && !canvasActive && Boolean(editableExtrude(state) || editableModelingFeature(state) || editableHole(state) || selectedPattern(state) ||
+      (threadReady && selectedFeature?.type === "thread") ||
       (!shellBlocked && shellTarget(state, true))),
     selectedFeature: !targetPickerActive && !canvasActive && Boolean(getSelectedFeature(state)),
     createEdgeTreatment: !targetPickerActive && !canvasActive && Boolean(edgeTreatmentOwner(state)),
@@ -379,7 +387,8 @@ export const commands: CadCommand[] = [
   { id: "ai.cancelFacePick", label: "Cancel AI face selection", internal: true, alwaysEnabled: true, run: clearAiFacePicking },
   { id: "ai.close", label: "Close AI assistant", internal: true, alwaysEnabled: true, run: closeAiDrawer },
   { id: "ai.toggle", label: "Toggle AI assistant", description: "Open the bottom AI dock to describe changes and review geometry in the main viewport.", enablementKey: "aiAssistant", run: toggleAiDrawer },
-  { id: "feature.edit", label: "Edit Selected Feature", description: "Preview changes to the selected Extrude, Revolve, Fillet, Chamfer, Hole, Pattern or Shell and its downstream geometry.", enablementKey: "editFeature", run: () => { if (shellTarget(useCadStore.getState(), true)) return openShell(true); if (selectedPattern(useCadStore.getState())) beginFeaturePatternEditing(); else if (editableExtrude(useCadStore.getState())) beginExtrudeEditing(); else if (editableHole(useCadStore.getState())) beginHoleEditing(); else beginModelingEditing(); } },
+  { id: "feature.edit", label: "Edit Selected Feature", description: "Preview changes to the selected Extrude, Revolve, Fillet, Chamfer, Hole, Pattern, Shell or Thread and its downstream geometry.", enablementKey: "editFeature", run: () => { const feature = getSelectedFeature(); if (feature?.type === "thread") return openThread(feature.targetBodyId, feature.id); if (shellTarget(useCadStore.getState(), true)) return openShell(true); if (selectedPattern(useCadStore.getState())) beginFeaturePatternEditing(); else if (editableExtrude(useCadStore.getState())) beginExtrudeEditing(); else if (editableHole(useCadStore.getState())) beginHoleEditing(); else beginModelingEditing(); } },
+  { id: "feature.thread", label: "Modeled Thread", description: "Cut a native internal or external thread on a selected shaft or tap-drill bore.", enablementKey: "createThread", run: () => openThread(selectedThreadTarget(useCadStore.getState())) },
   { id: "feature.shell", label: "Shell", description: "Hollow an unmodified rectangular extrusion from its start or end cap.", enablementKey: "createShell", run: () => openShell() },
   { id: "hardware.fastener", label: "Insert fastener", description: "Preview a metric or Unified inch socket-head fastener blank as a separate component.", enablementKey: "insertFastener", run: () => {
     const state = useCadStore.getState();
@@ -784,11 +793,12 @@ export const commands: CadCommand[] = [
   {
     id: "feature.suppress",
     label: "Suppress/Unsuppress Feature",
-    enablementKey: "selectedFeature",
+    enablementKey: "suppressFeature",
     run: () => {
       const state = useCadStore.getState();
       const feature = getSelectedFeature();
       if (!feature) return;
+      if (feature.type === "thread" && feature.suppressed) return openThread(feature.targetBodyId, feature.id, true);
       state.updateDocument((document) =>
         suppressFeature(document, feature.id, !feature.suppressed),
       );
@@ -1005,6 +1015,20 @@ export function canExportStl(state: CadStore) {
 function selectedExportBody(state: CadStore): string | undefined {
   const selected = state.selection.selectedIds[0];
   return selected?.kind === "body" && selected.documentId === state.history.present.id && state.rebuild.result?.meshes.some((mesh) => mesh.bodyId === selected.id) ? selected.id : undefined;
+}
+
+function selectedThreadTarget(state: CadStore): string | undefined {
+  const feature = getSelectedFeature(state);
+  const bodyId = selectedExportBody(state) ?? (feature && "operation" in feature && feature.operation === "newBody" ? `body:${feature.id}` : undefined);
+  return state.rebuild.result?.meshes.some(mesh => mesh.bodyId === bodyId && mesh.geometrySource === "opencascade" &&
+    mesh.geometryAssertions?.solidCount === 1) ? bodyId : undefined;
+}
+
+function openThread(targetBodyId: string | undefined, editId?: string, reactivate?: boolean) {
+  if (!targetBodyId) return;
+  const state = useCadStore.getState();
+  useHardwarePreset.setState({ frame: { document: state.history.present, session: state.documentSession, componentId: state.activeComponentId,
+    thread: { targetBodyId, editId, reactivate } } });
 }
 
 interface ActiveProfile {

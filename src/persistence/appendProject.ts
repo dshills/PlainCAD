@@ -152,6 +152,7 @@ export function appendProject(target: CadDocument, source: CadDocument, options:
       case "stepImport": return { ...f, id: base.id, componentId: base.componentId };
       case "fit": return { ...f, id: base.id, componentId: base.componentId, sourceBodyId: body(f.sourceBodyId) };
       case "shell": return { ...f, id: base.id, componentId: base.componentId, sourceFeatureId: remap(f.sourceFeatureId) };
+      case "thread": return { ...f, id: base.id, componentId: base.componentId, targetBodyId: body(f.targetBodyId) };
       case "extrude": return { ...base, ...f, id: base.id, componentId: base.componentId, sketchId: remap(f.sketchId), profileId: profile(f.sketchId, f.profileId), ...(f.targetBodyIds ? { targetBodyIds: f.targetBodyIds.map(body) } : {}), ...(f.termination?.type === "toFace" ? { termination: { ...f.termination, faceRef: topology(f.termination.faceRef) } } : {}) };
       case "revolve": return { ...f, id: base.id, componentId: base.componentId, sketchId: remap(f.sketchId), profileId: profile(f.sketchId, f.profileId), axis: f.axis.type === "sketchLine" ? { ...f.axis, sketchId: remap(f.axis.sketchId), lineId: remap(f.axis.lineId) } : f.axis, ...(f.targetBodyIds ? { targetBodyIds: f.targetBodyIds.map(body) } : {}) };
       case "hole": return { ...f, id: base.id, componentId: base.componentId, sketchId: remap(f.sketchId), centerPointIds: f.centerPointIds.map(remap), ...(f.targetFeatureId ? { targetFeatureId: remap(f.targetFeatureId) } : {}), ...(f.targetBodyId ? { targetBodyId: body(f.targetBodyId) } : {}), ...(f.targetBodyIds ? { targetBodyIds: f.targetBodyIds.map(body) } : {}) };
@@ -257,6 +258,7 @@ function occupiedDocumentIds(document: CadDocument): Set<string> {
       case "stepImport": break;
       case "fit": addBody(feature.sourceBodyId); break;
       case "shell": ids.add(feature.sourceFeatureId); break;
+      case "thread": addBody(feature.targetBodyId); break;
       case "pattern": ids.add(feature.sourceFeatureId); break;
       default: { const exhaustive: never = feature; return exhaustive; }
     }

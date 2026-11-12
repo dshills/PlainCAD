@@ -271,6 +271,13 @@ const toolbarGroups: ToolbarGroup[] = [
         ariaLabel: "Hollow a rectangular extrusion",
       },
       {
+        command: "feature.thread",
+        label: "Thread",
+        icon: "Th",
+        title: "Cut a modeled thread",
+        ariaLabel: "Modeled Thread",
+      },
+      {
         command: "feature.suppress",
         label: "Suppress",
         icon: "Sup",

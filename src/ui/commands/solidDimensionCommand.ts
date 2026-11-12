@@ -61,6 +61,7 @@ export async function previewSolidDimensionEdit(frame: SolidDimensionEditFrame, 
   if (feature.type === "stepImport") throw new Error("Imported STEP bodies do not have authored dimensions.");
   if (feature.type === "fit") throw new Error("Use Edit fitted part to change fitted part settings.");
   if (feature.type === "shell") throw new Error("Use Edit Feature to change Shell settings.");
+  if (feature.type === "thread") throw new Error("Use Edit Feature to change Thread settings.");
   const operation = await previewModeling(documentAtFeature(document, feature.id, true), signal);
   if (feature.type === "extrude") assertNativeExtrudePreview(operation, document.id, feature);
   else if (feature.type === "hole") assertNativeHolePreview(operation, document.id, feature);
