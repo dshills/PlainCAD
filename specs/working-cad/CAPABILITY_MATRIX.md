@@ -1466,3 +1466,20 @@ and the requested pitch and hand. Coincident, interrupted, ambiguous or
 undersized cylinders fail with a feature diagnostic. Nominal 60-degree
 geometry has no assigned fit class. Arbitrary helix sweeps and end treatments
 remain outside this command.
+
+### Lead screw and matching nut
+
+Separate editable native screw and nut solids from 30-degree trapezoidal or
+29-degree Acme nominal profiles. Choose 1–4 starts, either hand, a 0.5–6 mm
+pitch, and a diameter of at least three pitches and at most 50 mm. Screw
+length is 5–14 pitches with one or two starts, or 5–10 pitches with three
+or four starts. Nut length is 4.75–8 pitches with one or two starts, or
+4.75–6 with three or four starts. The screw must be at least one pitch
+longer than the nut, with nut radial clearance of 2.5–10% of pitch.
+The circular nut has opposed entry reliefs. Lead equals pitch times starts.
+
+The nut links to its screw feature in schema 25 and inherits its profile,
+pitch, hand, diameter and starts. Native validation checks each cut, every
+start's phase and native occupancy across both flanks against the nominal
+coaxial clearance envelope. Parts initially appear side by side. The
+profiles use explicit radial clearance, with no assigned tolerance class.

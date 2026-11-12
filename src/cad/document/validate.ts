@@ -12,6 +12,7 @@ import { MODEL_RESOURCE_LIMITS } from "../resourceLimits";
 import { validAuthoredUnit, validUnitSettings } from "../parameters/parameterUnits";
 import { isShellSource } from "../features/shellFeature";
 import { fastenerSize, holePresetDiameter, isHolePreset } from "../hardware/fastenerCatalog";
+import { LEAD_SCREW_STYLES, LEAD_STARTS } from "../hardware/leadScrewSettings";
 
 const PARAMETER_NAME_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
 const REQUIRED_DOCUMENT_OBJECTS = ["parameters", "sketches", "components"] as const;
@@ -437,6 +438,11 @@ export function validateDocument(document: CadDocument, mode: "modeling" | "stor
         !document.features.some(item => !item.suppressed && "operation" in item && item.operation === "newBody" && `body:${item.id}` === feature.targetBodyId)) {
       issues.push({ source: "feature", sourceId: feature.id, message: "Thread target was lost or suppressed. Restore the source body or suppress Thread." });
     }
+    if (feature.type === "leadNut" && !feature.suppressed) {
+      const screw = document.features.find(item => item.id === feature.screwFeatureId);
+      if (screw?.type !== "leadScrew" || screw.suppressed || featureComponentId(document, screw) === featureComponentId(document, feature))
+        issues.push({ source: "feature", sourceId: feature.id, message: "Matching nut requires its own component and an active upstream lead screw." });
+    }
     if (feature.type === "fit" && !feature.suppressed) {
       const component = featureComponentId(document, feature);
       const sourceFeatures = feature.followSourcePlacement ? new Map(document.features.map(item => [item.id, item])) : undefined;
@@ -447,7 +453,7 @@ export function validateDocument(document: CadDocument, mode: "modeling" | "stor
       }));
       if (feature.followSourcePlacement && placedProjection) issues.push({ source: "feature", sourceId: feature.id, message: "Turn off Follow source position before projecting to or from this fitted component in world coordinates." });
       const owner = document.features.find(item => `body:${item.id}` === feature.sourceBodyId);
-      if (!owner || owner.suppressed || !((owner.type === "extrude" || owner.type === "revolve" || owner.type === "fit" || owner.type === "stepImport") && owner.operation === "newBody")) issues.push({ source: "feature", sourceId: feature.id, message: "Fitted reference body was lost, suppressed or changed. Select a surviving source body." });
+      if (!owner || owner.suppressed || !("operation" in owner && owner.operation === "newBody")) issues.push({ source: "feature", sourceId: feature.id, message: "Fitted reference body was lost, suppressed or changed. Select a surviving source body." });
     }
     if (feature.type === "pattern") {
       const source = document.features.find(item => item.id === feature.sourceFeatureId);
@@ -813,6 +819,18 @@ function validatePersistedFields(document: CadDocument): ValidationIssue[] {
         (feature.side === "internal" || feature.side === "external") && (feature.hand === "right" || feature.hand === "left") &&
         expression(feature.threadLength) && expression(feature.threadOffset),
         "Malformed Thread. Choose a target body, size, side, handedness, length and offset.");
+    }
+    if (feature.type === "leadScrew" || feature.type === "leadNut") {
+      checkFeature(feature.operation === "newBody" && typeof feature.componentId === "string" && feature.componentId !== document.rootComponentId,
+        "Lead screw and nut require their own components and create new bodies.");
+      if (feature.type === "leadScrew") {
+        checkFeature(LEAD_SCREW_STYLES.includes(feature.form) && LEAD_STARTS.includes(feature.starts) &&
+          (feature.hand === "right" || feature.hand === "left") && expression(feature.diameter) && expression(feature.pitch) && expression(feature.screwLength),
+          "Malformed lead screw profile, starts, hand or dimensions.");
+      } else {
+        checkFeature(typeof feature.screwFeatureId === "string" && feature.screwFeatureId.length > 0 && feature.screwFeatureId.length <= 320 &&
+          expression(feature.nutLength) && expression(feature.clearance), "Malformed matching nut reference or dimensions.");
+      }
     }
     if (feature.type === "fillet" || feature.type === "chamfer") {
       checkFeature(

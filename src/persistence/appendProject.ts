@@ -67,7 +67,7 @@ export function appendProject(target: CadDocument, source: CadDocument, options:
     return newId(prefix, id);
   };
   const body = (id: string) => {
-    const owner = features.find((f) => stableBodyIdForFeature(f.id) === id && (f.type === "extrude" || f.type === "revolve" || f.type === "fit" || f.type === "stepImport") && f.operation === "newBody");
+    const owner = features.find((f) => stableBodyIdForFeature(f.id) === id && "operation" in f && f.operation === "newBody");
     if (!owner)
       throw new Error(`Source body ${id} is missing or outside the selected component. Choose all components or repair the source project.`);
     return stableBodyIdForFeature(remap(owner.id));
@@ -150,6 +150,8 @@ export function appendProject(target: CadDocument, source: CadDocument, options:
     const base = { ...f, id: remap(f.id), componentId: remap(featureComponentId(bound, f)) };
     switch (f.type) {
       case "stepImport": return { ...f, id: base.id, componentId: base.componentId };
+      case "leadScrew": return { ...f, id: base.id, componentId: base.componentId };
+      case "leadNut": return { ...f, id: base.id, componentId: base.componentId, screwFeatureId: remap(f.screwFeatureId) };
       case "fit": return { ...f, id: base.id, componentId: base.componentId, sourceBodyId: body(f.sourceBodyId) };
       case "shell": return { ...f, id: base.id, componentId: base.componentId, sourceFeatureId: remap(f.sourceFeatureId) };
       case "thread": return { ...f, id: base.id, componentId: base.componentId, targetBodyId: body(f.targetBodyId) };
@@ -256,6 +258,8 @@ function occupiedDocumentIds(document: CadDocument): Set<string> {
       case "hole": feature.centerPointIds.forEach((id) => ids.add(id)); if (feature.targetFeatureId) ids.add(feature.targetFeatureId); if (feature.targetBodyId) addBody(feature.targetBodyId); break;
       case "fillet": case "chamfer": feature.targetEdgeRefs.forEach(addTopology); break;
       case "stepImport": break;
+      case "leadScrew": break;
+      case "leadNut": ids.add(feature.screwFeatureId); break;
       case "fit": addBody(feature.sourceBodyId); break;
       case "shell": ids.add(feature.sourceFeatureId); break;
       case "thread": addBody(feature.targetBodyId); break;

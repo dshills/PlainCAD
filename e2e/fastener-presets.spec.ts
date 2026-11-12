@@ -8,7 +8,7 @@ import { openNewPartMenu } from "./newPartWorkflow";
 type Snapshot = {
   document: CadDocument;
   history: { undo: number };
-  rebuild: { status: string; native: boolean; bodies: Array<{ assertions: { volume: number; solidCount: number }; bounds: { min: number[]; max: number[] } }> };
+  rebuild: { status: string; native: boolean; bodies: Array<{ id: string; assertions: { volume: number; solidCount: number }; bounds: { min: number[]; max: number[] } }> };
 };
 
 async function command(page: Page, request: Omit<CommandRequest, "session">) {
@@ -163,4 +163,67 @@ test("modeled Thread previews and persists native external and internal grooves"
     expect(state.rebuild.bodies).toHaveLength(2);
     expect(state.rebuild.bodies[1].assertions.volume).toBeCloseTo(Math.PI * (9 - 1.25 ** 2) * 4 - 3.372, 2);
   }).toPass();
+});
+
+
+test("lead screw and matching nut are linked, editable and survive a cold open", async ({ page }) => {
+  test.setTimeout(180000);
+  await page.goto("/");
+  await palette(page, "Lead screw and nut");
+  const task = page.getByRole("dialog", { name: "Lead screw and nut" });
+  await task.getByLabel("Thread starts").selectOption("4");
+  await task.getByRole("button", { name: "Preview hardware" }).click();
+  await page.getByRole("button", { name: "Apply command plan" }).click({ timeout: 50000 });
+  let screwId: string, nutId: string;
+  const provePair = async (hand: "right" | "left") => {
+    await expect(async () => {
+      const state = await snapshot(page);
+      expect(state.rebuild.status).toBe("succeeded");
+      expect(state.rebuild.native).toBe(true);
+      const [screw, nut] = state.document.features;
+      expect(screw).toMatchObject({ type: "leadScrew", hand, starts: 4 });
+      expect(nut).toMatchObject({ type: "leadNut", screwFeatureId: screw.id });
+      expect(screw.componentId).not.toBe(nut.componentId);
+      expect(state.rebuild.bodies).toHaveLength(2);
+      const [shaft, collar] = state.rebuild.bodies;
+      expect(shaft.assertions).toMatchObject({ solidCount: 1 });
+      expect(collar.assertions).toMatchObject({ solidCount: 1 });
+      expect(shaft.assertions.volume).toBeGreaterThan(680);
+      expect(shaft.assertions.volume).toBeLessThan(780);
+      expect(collar.assertions.volume).toBeGreaterThan(580);
+      expect(collar.assertions.volume).toBeLessThan(720);
+      expect(shaft.bounds.max[2]).toBeCloseTo(18, 3);
+      expect(collar.bounds.max[2]).toBeCloseTo(10, 3);
+      expect(collar.bounds.min[0]).toBeGreaterThan(shaft.bounds.max[0]);
+      if (screwId) expect([screw.id, nut.id]).toEqual([screwId, nutId]);
+      screwId = screw.id;
+      nutId = nut.id;
+    }).toPass({ timeout: 40000 });
+  };
+  await provePair("right");
+  await command(page, { command: "selection.set", arguments: { kind: "feature", id: screwId! } });
+  await command(page, { command: "feature.edit" });
+  const edit = page.getByRole("dialog", { name: "Edit lead screw" });
+  await edit.getByLabel("Handedness").selectOption("left");
+  await edit.getByRole("button", { name: "Preview hardware" }).click();
+  await page.getByRole("button", { name: "Apply command plan" }).click({ timeout: 50000 });
+  await provePair("left");
+  const [file] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("button", { name: "Save project", exact: true }).click(),
+  ]);
+  await page.reload();
+  await page.locator('input[type="file"]').first().setInputFiles((await file.path())!);
+  await provePair("left");
+  const reopened = await snapshot(page);
+  expect(reopened.history.undo).toBe(0);
+  for (const body of reopened.rebuild.bodies) {
+    await command(page, { command: "selection.set", arguments: { kind: "body", id: body.id } });
+    const [stl] = await Promise.all([
+      page.waitForEvent("download"),
+      command(page, { command: "file.exportSelectedBody" }),
+    ]);
+    const bytes = await readFile((await stl.path())!);
+    expect(Math.abs(stlSignedVolume(bytes) - body.assertions.volume)).toBeLessThan(10);
+  }
 });

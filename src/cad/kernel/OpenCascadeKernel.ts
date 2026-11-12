@@ -4,6 +4,8 @@ import { exportNativeStep, importNativeStep, stepBindingDiagnostic, stepImportBi
 import { createNativeShell, nativeShellAvailable } from "./nativeShell";
 import { cutNativeThread, nativeThreadsAvailable } from "./nativeThreads";
 import type { ThreadDimensions } from "../hardware/threadSettings";
+import type { LeadScrewDimensions } from "../hardware/leadScrewSettings";
+import { createNativeLeadPart, assertNativeLeadPair } from "./nativeLeadScrew";
 import { matchNativeHoleRim, measureNativeBoreRims, validateNativePocketFloor, type NativeHoleRimEvidence } from "./occtMachinedReferences";
 import initOpenCascadeModule from "opencascade.js/dist/opencascade.wasm.js";
 import openCascadeWasmUrl from "opencascade.js/dist/opencascade.wasm.wasm?url";
@@ -71,6 +73,7 @@ type KernelHandle =
   | { kind: "stepImport"; occtShape?: unknown }
   | { kind: "shell"; occtShape?: unknown }
   | { kind: "thread"; occtShape: unknown; pitch: number }
+  | { kind: "leadScrew" | "leadNut"; occtShape: unknown; pitch: number }
   | {
       kind: "box";
       width: number;
@@ -311,6 +314,18 @@ export class OpenCascadeKernel implements KernelAdapter {
     const { native, proof } = cutNativeThread(oc, handle.occtShape, settings, dimensions, this.measureNative(handle.occtShape));
     this.assertions.set(native, proof);
     return { id: createId("shape"), kernelHandle: { kind: "thread", occtShape: native, pitch: dimensions.pitch } satisfies KernelHandle };
+  }
+  leadPart(dimensions: LeadScrewDimensions, nut: boolean, progress?: (stage: string) => void): KernelShape {
+    const oc = OpenCascadeKernel.openCascade;
+    if (!oc || !nativeThreadsAvailable(oc)) throw new Error("Lead screw and nut require native helical modeling.");
+    const { native, proof } = createNativeLeadPart(oc, dimensions, nut, progress);
+    this.assertions.set(native, proof);
+    return { id: createId("shape"), kernelHandle: { kind: nut ? "leadNut" : "leadScrew", occtShape: native, pitch: dimensions.pitch } satisfies KernelHandle };
+  }
+  assertLeadPair(screw: KernelShape, nut: KernelShape, dimensions: LeadScrewDimensions, progress?: (stage: string) => void) {
+    const oc = OpenCascadeKernel.openCascade, a = screw.kernelHandle as KernelHandle, b = nut.kernelHandle as KernelHandle;
+    if (!oc || a.kind !== "leadScrew" || b.kind !== "leadNut") throw new Error("Matching nut requires the original native lead screw geometry.");
+    assertNativeLeadPair(oc, a.occtShape, b.occtShape, dimensions, progress);
   }
   shell(shape: KernelShape, opening: ShellFeature["opening"], wall: number): KernelShape {
     const oc = OpenCascadeKernel.openCascade, base = shape.kernelHandle as KernelHandle | undefined;
@@ -1041,7 +1056,7 @@ export class OpenCascadeKernel implements KernelAdapter {
     const occtMesh = this.tessellateOcctShape(
       shape.id,
       handle.occtShape,
-      handle.kind === "thread" ? { ...options, linearDeflection: Math.min(options.linearDeflection, handle.pitch / 40) } : options,
+      "pitch" in handle ? { ...options, linearDeflection: Math.min(options.linearDeflection, handle.pitch / 40) } : options,
     );
     if (!occtMesh && handle.occtShape)
       throw new Error(

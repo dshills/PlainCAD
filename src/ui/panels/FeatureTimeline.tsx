@@ -111,6 +111,8 @@ function featureGlyph(feature: Feature): string {
   if (feature.type === "chamfer") return "C";
   if (feature.type === "shell") return "S";
   if (feature.type === "thread") return "T";
+  if (feature.type === "leadScrew") return "LS";
+  if (feature.type === "leadNut") return "N";
   return "F";
 }
 

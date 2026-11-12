@@ -1,5 +1,6 @@
 import { ComponentPlacement, RevolveAxisReference, ShellFeature, ThreadFeature, TopologyRef } from "../document/schema";
 import type { ThreadDimensions } from "../hardware/threadSettings";
+import type { LeadScrewDimensions } from "../hardware/leadScrewSettings";
 import { Point3, SketchPlaneTransform } from "../sketch/planes";
 import { SketchProfile } from "../sketch/profileDetection";
 import type { NativeStepExport } from "./nativeStep";
@@ -48,6 +49,8 @@ export interface RenderMesh {
     | "chamfer"
     | "shell"
     | "thread"
+    | "leadScrew"
+    | "leadNut"
     | "toFace"
     | "stepImport";
   geometryAssertions?: GeometryAssertions;
@@ -120,6 +123,8 @@ export interface KernelAdapter {
   ): KernelShape;
   shell?(shape: KernelShape, opening: ShellFeature["opening"], wall: number): KernelShape;
   thread?(shape: KernelShape, settings: Pick<ThreadFeature, "side" | "hand">, dimensions: ThreadDimensions): KernelShape;
+  leadPart?(dimensions: LeadScrewDimensions, nut: boolean, progress?: (stage: string) => void): KernelShape;
+  assertLeadPair?(screw: KernelShape, nut: KernelShape, dimensions: LeadScrewDimensions, progress?: (stage: string) => void): void;
   tessellate(shape: KernelShape, options: TessellationOptions): RenderMesh;
   exportStl(shape: KernelShape): ArrayBuffer;
   disposeShape?(shape: KernelShape): void;

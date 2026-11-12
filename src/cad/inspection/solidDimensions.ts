@@ -23,7 +23,7 @@ export interface SolidDimension {
 }
 
 function fields(feature: Feature): Array<{ field: SolidDimensionField; label: string; fieldLabel: string; ref: ExpressionRef }> {
-  if (feature.type === "pattern" || feature.type === "fit" || feature.type === "stepImport" || feature.type === "shell" || feature.type === "thread") return [];
+  if (feature.type === "pattern" || feature.type === "fit" || feature.type === "stepImport" || feature.type === "shell" || feature.type === "thread" || feature.type === "leadScrew" || feature.type === "leadNut") return [];
   if (feature.type === "extrude")
     return !feature.termination || feature.termination.type === "distance"
       ? [{ field: "distance", label: "Thickness", fieldLabel: "Extrude distance", ref: feature.termination?.distance ?? feature.distance }]

@@ -15,6 +15,7 @@ import { nativeProjectionValidator } from "./nativeProjectionValidator";
 import { currentNativeFaces, nativeSketchPlaneValidator } from "./nativeSketchPlanes";
 import { currentNativeHoleRims } from "./nativeHoleRims";
 import { resolveThreadDimensions } from "../hardware/threadSettings";
+import { leadScrewDimensions } from "../hardware/leadScrewSettings";
 import { faceReferenceBodyId } from "../document/faceReferences";
 import { absorbedBodyIds, targetBodyIds } from "../document/bodyScopes";
 import { extrusionSweep, throughAllDistance } from "./extrusionSweep";
@@ -274,7 +275,7 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
       if (feature.suppressed) continue;
       // Supported edge roles belong to a new-body extrusion, so this is the
       // same stable target ID used by rebuildEdgeTreatmentFeature below.
-      const affectedIds = (feature.type === "extrude" || feature.type === "revolve" || feature.type === "fit" || feature.type === "stepImport") && feature.operation === "newBody"
+      const affectedIds = "operation" in feature && feature.operation === "newBody"
         ? [stableBodyIdForFeature(feature.id)] : targetBodyIds(feature);
       const capture = options.captureTargetScopeFeatureId === feature.id ? captureTargets : undefined;
       const errorsBefore: number = errors.length;
@@ -437,6 +438,28 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
             setRuntimeBody(runtimeBodies, feature.targetBodyId, { ...target, shape, mesh });
           } catch (error) {
             errors.push({ id: `feature:${feature.id}:thread`, source: "feature", sourceId: feature.id, message: kernelErrorMessage("Thread", error) });
+          }
+          continue;
+        }
+        if (feature.type === "leadScrew" || feature.type === "leadNut") {
+          try {
+            const nut = feature.type === "leadNut" ? feature : undefined;
+            const screw = feature.type === "leadScrew" ? feature : document.features.find(item => item.id === feature.screwFeatureId);
+            if (screw?.type !== "leadScrew" || screw.suppressed || !kernel.leadPart || !kernel.assertLeadPair)
+              throw new Error("Restore the upstream lead screw and wait for the native helical kernel.");
+            const source = nut ? runtimeBodies.get(stableBodyIdForFeature(screw.id)) : undefined;
+            if (nut && (!source || failedBodies.has(stableBodyIdForFeature(screw.id))))
+              throw new Error("Matching nut requires a successful upstream lead screw.");
+            const dimensions = leadScrewDimensions(screw, nut, evaluated.values);
+            const shape = kernel.leadPart(dimensions, Boolean(nut), options.onNativeProgress);
+            shapesToDispose.add(shape);
+            if (nut && source) kernel.assertLeadPair(source.shape, shape, dimensions, options.onNativeProgress);
+            const bodyId = stableBodyIdForFeature(feature.id);
+            options.onNativeProgress?.("lead_tessellation");
+            const mesh = withStableBodyId(kernel.tessellate(shape, TESSELLATION_LOD.default), bodyId);
+            setRuntimeBody(runtimeBodies, bodyId, { shape, mesh, featureId: feature.id, name: feature.name, planeKey: "" });
+          } catch (error) {
+            errors.push({ id: `feature:${feature.id}:lead`, source: "feature", sourceId: feature.id, message: kernelErrorMessage(feature.name, error) });
           }
           continue;
         }

@@ -20,7 +20,7 @@ export function featureComponentId(
   feature: Feature,
 ): string {
   if (feature.componentId) return feature.componentId;
-  if (feature.type === "fit" || feature.type === "stepImport") return document.rootComponentId;
+  if (feature.type === "fit" || feature.type === "stepImport" || feature.type === "leadScrew" || feature.type === "leadNut") return document.rootComponentId;
   if ("sketchId" in feature)
     return sketchComponentId(document, feature.sketchId);
   const ownerId = feature.type === "pattern" || feature.type === "shell" ? feature.sourceFeatureId :

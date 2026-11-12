@@ -72,6 +72,8 @@ export function mapDocumentExpressions(
     if (f.type === "fit") return { ...f, clearance: read(f.clearance, "clearance"), wallThickness: read(f.wallThickness, "wallThickness") };
     if (f.type === "shell") return { ...f, wallThickness: read(f.wallThickness, "wallThickness") };
     if (f.type === "thread") return { ...f, threadLength: read(f.threadLength, "threadLength"), threadOffset: read(f.threadOffset, "threadOffset") };
+    if (f.type === "leadScrew") return { ...f, diameter: read(f.diameter, "diameter"), pitch: read(f.pitch, "pitch"), screwLength: read(f.screwLength, "screwLength") };
+    if (f.type === "leadNut") return { ...f, nutLength: read(f.nutLength, "nutLength"), clearance: read(f.clearance, "clearance") };
     if (f.type === "extrude")
       return {
         ...f,

@@ -1029,3 +1029,29 @@ describe("native modeled thread", () => {
     },
   );
 });
+
+describe("native lead screw and nut", () => {
+  it.each([[1, "right", "trapezoidal"], [2, "left", "acme"], [4, "right", "trapezoidal"]] as const)(
+    "cuts %i start(s), %s-hand %s threads and verifies coaxial fit",
+    (starts, hand, form) => {
+      const d = { major: 4, minor: 3, bore: 3.1, nutOuter: 6, pitch: 2, lead: 2 * starts, screwLength: 18,
+        nutLength: 10, clearance: .1, slope: Math.tan((form === "acme" ? 14.5 : 15) * Math.PI / 180), starts, hand: hand === "right" ? 1 as const : -1 as const };
+      const screw = kernel.leadPart(d, false);
+      try {
+        const nut = kernel.leadPart(d, true);
+        try {
+          const shaft = kernel.tessellate(screw, options), sleeve = kernel.tessellate(nut, options);
+          expect(shaft.geometryAssertions).toMatchObject({ solidCount: 1, valid: true });
+          expect(sleeve.geometryAssertions).toMatchObject({ solidCount: 1, valid: true });
+          expect(shaft.geometryAssertions!.volume).toBeLessThan(800);
+          expect(sleeve.geometryAssertions!.volume).toBeLessThan(690);
+          expect(shaft.bounds.max[2]).toBeCloseTo(18, 4);
+          expect(sleeve.bounds.max[2]).toBeCloseTo(10, 4);
+          expect(() => validateMesh(shaft)).not.toThrow();
+          expect(() => validateMesh(sleeve)).not.toThrow();
+          kernel.assertLeadPair(screw, nut, d);
+        } finally { kernel.disposeShape(nut); }
+      } finally { kernel.disposeShape(screw); }
+    }, 45000,
+  );
+});

@@ -1,11 +1,12 @@
-import type { CadDocument, ExpressionRef, ExtrudeTermination, FacePlaneReference, Feature, OriginPlane, Sketch, SketchDimension, ThreadFeature } from "../cad/document/schema";
+import type { CadDocument, ExpressionRef, ExtrudeTermination, FacePlaneReference, Feature, LeadNutFeature, LeadScrewFeature, OriginPlane, Sketch, SketchDimension, ThreadFeature } from "../cad/document/schema";
 import { isShellSource, requireShellOpening } from "../cad/features/shellFeature";
 import { holePresetDiameter, isHolePreset } from "../cad/hardware/fastenerCatalog";
 import { addFastenerBlank } from "../cad/hardware/fastenerBlank";
 import { resolveThreadDimensions } from "../cad/hardware/threadSettings";
+import { leadScrewDimensions, validateLeadScrewEdit } from "../cad/hardware/leadScrewSettings";
 import { deleteFeature, nowIso, touchDocument, upsertFeature, upsertParameter, upsertSketch } from "../cad/document/CadDocument";
 import { addComponent, featureComponentId, renameComponent } from "../cad/document/components";
-import { withComponentPlacement } from "../cad/document/componentPlacement";
+import { IDENTITY_PLACEMENT, placedPoint, placementTransform, withComponentPlacement } from "../cad/document/componentPlacement";
 import { createId } from "../cad/document/ids";
 import { validateDocument } from "../cad/document/validate";
 import { timelineDependencyErrors } from "../cad/document/timelineEditing";
@@ -34,7 +35,7 @@ export interface CadCommandContext {
   /** Local interactive draft identity, never read from JSON arguments. */
   draftPocketId?: string;
   /** Local analysis from the exact immutable document being edited. */
-  native?: Pick<RebuildResult, "profiles" | "availableFaces">;
+  native?: Pick<RebuildResult, "profiles" | "availableFaces"> & Partial<Pick<RebuildResult, "componentPlacements">>;
 }
 export interface CadCommandResult {
   id?: string;
@@ -105,7 +106,7 @@ export function applyCadCommand(document: CadDocument, call: CadCommandCall | Ty
     const ids = references(args.targetBodyIds, "targetBodyIds");
     for (const id of ids) {
       const feature = document.features.find(item => stableBodyIdForFeature(item.id) === id);
-      if (!feature || feature.suppressed || !((feature.type === "extrude" || feature.type === "revolve" || feature.type === "stepImport") && feature.operation === "newBody") || featureComponentId(document, feature) !== owner)
+      if (!feature || feature.suppressed || !("operation" in feature && feature.operation === "newBody") || featureComponentId(document, feature) !== owner)
         throw new Error(`Target body ${id} must be an active new-body owner in this component. Native rebuild verifies that it remains available.`);
     }
     return ids;
@@ -331,6 +332,36 @@ export function applyCadCommand(document: CadDocument, call: CadCommandCall | Ty
     const created = addFastenerBlank(document, string("size")!, positive(string("length")!, "Fastener length"), string("name"));
     next = created.document;
     result = { id: created.id, featureId: created.featureId, bodyId: created.bodyId };
+  } else if (call.command === "cad.hardware.leadScrew" || call.command === "cad.hardware.leadNut") {
+    const isScrew = call.command === "cad.hardware.leadScrew";
+    const name = string("name", isScrew ? "Lead screw" : "Matching nut")!;
+    const added = addComponent(document, name);
+    const base = { id: createId("feature"), componentId: added.component.id, name, operation: "newBody" as const, createdAt: nowIso() };
+    const parameters = evaluateParameters(document.parameters).values;
+    let feature: LeadScrewFeature | LeadNutFeature;
+    let componentDocument = added.document;
+    if (isScrew) {
+      feature = { ...base, type: "leadScrew", form: args.form as LeadScrewFeature["form"], hand: args.hand as LeadScrewFeature["hand"],
+        starts: args.starts as LeadScrewFeature["starts"], diameter: positive(string("diameter")!, "Major diameter"),
+        pitch: positive(string("pitch")!, "Pitch"), screwLength: positive(string("screwLength")!, "Screw length") };
+      leadScrewDimensions(feature, undefined, parameters);
+    } else {
+      const screwFeatureId = reference(args.screwFeatureId, "screwFeatureId");
+      const screw = document.features.find(item => item.id === screwFeatureId);
+      if (screw?.type !== "leadScrew" || screw.suppressed) throw new Error("Select a current upstream lead screw.");
+      feature = { ...base, type: "leadNut", screwFeatureId, nutLength: positive(string("nutLength")!, "Nut length"),
+        clearance: positive(string("clearance")!, "Radial clearance") };
+      const dimensions = leadScrewDimensions(screw, feature, parameters);
+      // Start beside the screw for inspection and separate fabrication export.
+      const sourceId = featureComponentId(document, screw);
+      const placement = context.native?.componentPlacements?.[sourceId] ?? document.components[sourceId].placement ?? IDENTITY_PLACEMENT;
+      const point = placedPoint(placementTransform(placement), { x: dimensions.major + dimensions.nutOuter + 2 * dimensions.pitch, y: 0, z: 0 });
+      componentDocument = withComponentPlacement(componentDocument, added.component.id, {
+        translation: [point.x, point.y, point.z], rotation: placement.rotation,
+      });
+    }
+    next = upsertFeature(componentDocument, feature);
+    result = { id: feature.id, bodyId: stableBodyIdForFeature(feature.id) };
   } else if (call.command === "cad.feature.fillet" || call.command === "cad.feature.chamfer") {
     const edges = (args.edges as Array<{ featureId: string; role: SupportedEdgeRole; sourceEntityId?: string }>).map(edge => createExtrudeEdgeRef(reference(edge.featureId, "edge.featureId"), edge.role, edge.sourceEntityId === undefined ? undefined : reference(edge.sourceEntityId, "edge.sourceEntityId")));
     const resolved = resolveSupportedEdgeRefs(document, edges);
@@ -364,7 +395,8 @@ export function applyCadCommand(document: CadDocument, call: CadCommandCall | Ty
     const id = reference(args.featureId, "featureId");
     const feature = document.features.find(item => item.id === id);
     if (!feature) throw new Error("Feature reference was lost.");
-    const allowed = new Set(["featureId", "name", "suppressed", ...(feature.type === "extrude" ? ["distance", "direction", "operation", "targetBodyIds"] : feature.type === "revolve" ? ["angle", "axis", "operation", "targetBodyIds"] : feature.type === "hole" ? ["diameter", "preset", "depth", "throughAll", "direction", "targetBodyIds"] : feature.type === "fillet" ? ["radius"] : feature.type === "chamfer" ? ["distance"] : feature.type === "shell" ? ["opening", "wallThickness"] : feature.type === "thread" ? ["size", "side", "hand", "threadLength", "threadOffset"] : [])]);
+    const allowed = new Set(["featureId", "name", "suppressed", ...(feature.type === "extrude" ? ["distance", "direction", "operation", "targetBodyIds"] : feature.type === "revolve" ? ["angle", "axis", "operation", "targetBodyIds"] : feature.type === "hole" ? ["diameter", "preset", "depth", "throughAll", "direction", "targetBodyIds"] : feature.type === "fillet" ? ["radius"] : feature.type === "chamfer" ? ["distance"] : feature.type === "shell" ? ["opening", "wallThickness"] : feature.type === "thread" ? ["size", "side", "hand", "threadLength", "threadOffset"] :
+      feature.type === "leadScrew" ? ["form", "hand", "starts", "diameter", "pitch", "screwLength"] : feature.type === "leadNut" ? ["nutLength", "clearance"] : [])]);
     for (const key of Object.keys(args)) if (!allowed.has(key)) throw new Error(`${key} is not a setting for ${feature.type}.`);
     let updated: Feature = { ...feature, ...(args.name === undefined ? {} : { name: string("name")! }), ...(args.suppressed === undefined ? {} : { suppressed: args.suppressed as boolean }) };
     if (updated.type === "extrude") {
@@ -408,6 +440,25 @@ export function applyCadCommand(document: CadDocument, call: CadCommandCall | Ty
       if (args.threadOffset !== undefined && args.threadOffset !== updated.threadOffset.expression) updated.threadOffset = expression(string("threadOffset")!);
       if (!updated.suppressed && Object.keys(args).some(key => !["featureId", "name"].includes(key)))
         resolveThreadDimensions(updated, evaluateParameters(document.parameters).values);
+    }
+    else if (updated.type === "leadScrew") {
+      if (args.form !== undefined) updated.form = args.form as LeadScrewFeature["form"];
+      if (args.hand !== undefined) updated.hand = args.hand as LeadScrewFeature["hand"];
+      if (args.starts !== undefined) updated.starts = args.starts as LeadScrewFeature["starts"];
+      for (const key of ["diameter", "pitch", "screwLength"] as const)
+        if (args[key] !== undefined && args[key] !== updated[key].expression) updated[key] = positive(string(key)!, key);
+      if (Object.keys(args).some(key => !["featureId", "name"].includes(key)))
+        validateLeadScrewEdit(document, updated, evaluateParameters(document.parameters).values);
+    }
+    else if (updated.type === "leadNut") {
+      for (const key of ["nutLength", "clearance"] as const)
+        if (args[key] !== undefined && args[key] !== updated[key].expression) updated[key] = positive(string(key)!, key);
+      if (!updated.suppressed) {
+        const screwId = updated.screwFeatureId;
+        const screw = document.features.find(item => item.id === screwId);
+        if (screw?.type !== "leadScrew" || screw.suppressed) throw new Error("Restore the matching lead screw first.");
+        leadScrewDimensions(screw, updated, evaluateParameters(document.parameters).values);
+      }
     }
     if ((updated.type === "extrude" || updated.type === "revolve") && args.operation !== undefined) updated = { ...updated, operation: string("operation") as "newBody" | "join" | "cut" };
     if ((updated.type === "extrude" || updated.type === "revolve") && updated.operation === "newBody") {

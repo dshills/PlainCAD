@@ -801,6 +801,26 @@ reserves runout at both ends, and requires one unambiguous complete cylinder.
 These profiles do not assign an ISO/Unified tolerance class or guarantee a
 specific assembled fit.
 
+### Lead screws and matching nuts
+
+Use **Lead screw and nut** in the command palette to build one or both native
+solids. Choose a 30° trapezoidal or 29° Acme profile, one to four starts, right-
+or left-hand rotation, diameter, pitch and length. **Add matching nut** also
+works from a selected lead screw. Each nut is a separate component linked to
+its screw's profile, pitch, hand and starts. Edit either in History. Choose the
+nut length and radial clearance to control engagement. If a pitch edit
+exceeds those dimensions, suppress the nut, edit the screw, then use
+**Suppress/Unsuppress Feature** on the nut to update its dimensions.
+
+The native preview verifies both solids and checks flank occupancy against
+the nominal coaxial clearance. The parts appear side by side for inspection and separate
+fabrication export. The nominal profiles are based on the
+[ISO trapezoidal](https://www.iso.org/standard/68337.html) and
+[Acme](https://www.asme.org/codes-standards/find-codes-standards/b1-5-acme-screw-threads)
+forms. This first implementation has a bounded threaded length, cylindrical
+nut stock and entry reliefs. It does not assign manufacturing tolerance
+classes or simulate motion.
+
 ### Product configurations
 
 Open **Product configurations** from the command palette or active component

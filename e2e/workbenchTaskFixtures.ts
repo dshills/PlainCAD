@@ -13,8 +13,10 @@ export function workbenchTaskFixture(operation: WorkbenchOperation) {
   let document = createEmptyDocument(`Workbench ${operation}`);
   const sketch = addCornerRectangle(createXySketch("Section"), operation === "Revolve" ? "5mm" : "24mm", operation === "Revolve" ? "10mm" : "16mm");
   document = upsertSketch(document, sketch);
-  const profile = detectProfiles(solveSketch(sketch, {})).profiles[0];
-  if (!profile) throw new Error(`Workbench ${operation} fixture did not produce a closed rectangle profile.`);
+  // The authored rectangle has no constraints. Resolve its profile from the
+  // exact coordinates without the interactive solver's wall-clock budget.
+  const { profiles: [profile], errors } = detectProfiles(solveSketch({ ...sketch, solveMode: "validate" }, {}));
+  if (!profile) throw new Error(`Workbench ${operation} fixture did not produce a closed rectangle profile. ${errors.join(" ")}`);
   const profileId = profile.id;
   if (operation === "Revolve") {
     return upsertFeature(document, { id: "qa_revolve", name: "Sweep", type: "revolve", sketchId: sketch.id,

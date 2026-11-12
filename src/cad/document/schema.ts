@@ -1,6 +1,6 @@
 import type { HolePreset } from "../hardware/fastenerCatalog";
 
-export const CURRENT_SCHEMA_VERSION = 24;
+export const CURRENT_SCHEMA_VERSION = 25;
 
 export type UnitSystem = "metric" | "imperial";
 
@@ -275,6 +275,25 @@ export interface ThreadFeature extends FeatureBase {
   threadOffset: ExpressionRef;
 }
 
+export interface LeadScrewFeature extends FeatureBase {
+  type: "leadScrew";
+  operation: "newBody";
+  form: "trapezoidal" | "acme";
+  hand: "right" | "left";
+  starts: 1 | 2 | 3 | 4;
+  diameter: ExpressionRef;
+  pitch: ExpressionRef;
+  screwLength: ExpressionRef;
+}
+
+export interface LeadNutFeature extends FeatureBase {
+  type: "leadNut";
+  operation: "newBody";
+  screwFeatureId: string;
+  nutLength: ExpressionRef;
+  clearance: ExpressionRef;
+}
+
 /** Count includes the source. Coordinates and axes belong to the source sketch plane. */
 export type FeaturePatternSettings =
   | { type: "linear"; count: ExpressionRef; spacing: ExpressionRef; direction: "X" | "Y" }
@@ -295,6 +314,8 @@ export type Feature =
   | ChamferFeature
   | ShellFeature
   | ThreadFeature
+  | LeadScrewFeature
+  | LeadNutFeature
   | FeaturePatternFeature
   | FittedPartFeature
   | StepImportFeature;

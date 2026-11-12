@@ -18,12 +18,14 @@ export function nativeFeatureSignature(
   parameters: Record<string, Quantity>,
   bodyVersions: Map<string, number>,
 ): string | undefined {
-  const source = feature.type === "pattern" ? document.features.find(item => item.id === feature.sourceFeatureId) : feature;
+  const source = feature.type === "pattern" ? document.features.find(item => item.id === feature.sourceFeatureId) :
+    feature.type === "leadNut" ? document.features.find(item => item.id === feature.screwFeatureId) : feature;
   const sketchId = source && "sketchId" in source ? source.sketchId : undefined;
   const solved = sketchId ? sketches.get(sketchId) : undefined;
   if (sketchId && (!solved || solved.errors.length || !planes.has(sketchId))) return undefined;
   const dependencies = new Set(targetBodyIds(feature));
   if (feature.type === "fit") dependencies.add(feature.sourceBodyId);
+  if (feature.type === "leadNut") dependencies.add(stableBodyIdForFeature(feature.screwFeatureId));
   if (feature.type === "extrude" && feature.termination?.type === "toFace") dependencies.add(stableBodyIdForFeature(feature.termination.faceRef.featureId));
   for (const id of dependencies) if (!bodyVersions.has(id)) return undefined;
   try {

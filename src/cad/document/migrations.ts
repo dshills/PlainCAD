@@ -40,6 +40,7 @@ const migrations = new Map<number, Migration>([
     return legacy;
   }) })],
   [23, document => ({ ...document, schemaVersion: 24 })],
+  [24, document => ({ ...document, schemaVersion: 25 })],
 ]);
 
 function migrateV16ToV17(document: CadDocument): CadDocument {
@@ -419,6 +420,11 @@ function sanitizeFeature(feature: Feature): Feature | undefined {
   if (feature.type === "thread") return { ...base, type: "thread", targetBodyId: feature.targetBodyId,
     size: feature.size, side: feature.side, hand: feature.hand,
     threadLength: sanitizeExpressionRef(feature.threadLength), threadOffset: sanitizeExpressionRef(feature.threadOffset) };
+  if (feature.type === "leadScrew") return { ...base, type: "leadScrew", operation: feature.operation, form: feature.form,
+    hand: feature.hand, starts: feature.starts, diameter: sanitizeExpressionRef(feature.diameter),
+    pitch: sanitizeExpressionRef(feature.pitch), screwLength: sanitizeExpressionRef(feature.screwLength) };
+  if (feature.type === "leadNut") return { ...base, type: "leadNut", operation: feature.operation, screwFeatureId: feature.screwFeatureId,
+    nutLength: sanitizeExpressionRef(feature.nutLength), clearance: sanitizeExpressionRef(feature.clearance) };
   if (feature.type === "extrude") {
     return {
       ...base,

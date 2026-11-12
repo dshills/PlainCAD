@@ -54,6 +54,12 @@ export function planFeatureGraph(document: CadDocument): FeatureGraphPlan {
       if (sourceIndex === undefined || sourceIndex >= featureRanks.get(feature.id)!)
         errors.push({ id: `feature:${feature.id}:pattern-source`, source: "feature", sourceId: feature.id, message: "Pattern must appear after its source feature in the timeline. Restore the source or move the pattern after it." });
     }
+    if (feature.type === "leadNut" && !feature.suppressed) {
+      const rank = featureRanks.get(feature.screwFeatureId);
+      if (rank === undefined || rank >= featureRanks.get(feature.id)! || orderedFeatures[rank].type !== "leadScrew" || orderedFeatures[rank].suppressed)
+        errors.push({ id: `feature:${feature.id}:lead-screw`, source: "feature", featureId: feature.id, sourceId: feature.id,
+          message: "Matching nut must follow its active lead screw in the timeline." });
+    }
     if (feature.timelineStep !== undefined) {
       const owner = stepOwner.get(feature.timelineStep);
       if (owner) {
@@ -117,6 +123,7 @@ export function planFeatureGraph(document: CadDocument): FeatureGraphPlan {
     let depth = 1;
     if (feature.type === "fit") depth = Math.max(depth, 1 + (bodyDepths.get(feature.sourceBodyId) ?? 0));
     if (feature.type === "pattern") depth = Math.max(depth, 1 + (featureDepths.get(feature.sourceFeatureId) ?? 0));
+    if (feature.type === "leadNut") depth = Math.max(depth, 1 + (featureDepths.get(feature.screwFeatureId) ?? 0));
     for (const id of targets)
       depth = Math.max(depth, 1 + (bodyDepths.get(id) ?? 0));
     if ("sketchId" in feature) {
@@ -139,7 +146,7 @@ export function planFeatureGraph(document: CadDocument): FeatureGraphPlan {
       );
     featureDepths.set(feature.id, depth);
     if (
-      (feature.type === "extrude" || feature.type === "revolve" || feature.type === "fit" || feature.type === "stepImport") &&
+      "operation" in feature &&
       feature.operation === "newBody"
     )
       bodyDepths.set(stableBodyIdForFeature(feature.id), depth);

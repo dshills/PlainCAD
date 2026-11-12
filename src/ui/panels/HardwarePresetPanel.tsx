@@ -6,10 +6,12 @@ import { ModalDialog } from "../ModalDialog";
 import { validateFastenerLength } from "../../cad/hardware/fastenerBlank";
 import { FastenerSizeOptions } from "./HolePresetControls";
 import { ThreadDialog } from "./ThreadDialog";
+import { LeadScrewDialog } from "./LeadScrewDialog";
 
 export function HardwarePresetPanel() {
   const frame = useHardwarePreset(state => state.frame);
   if (!frame) return null;
+  if (frame.lead) return <LeadScrewDialog key={frame.session} frame={frame} lead={frame.lead} />;
   return frame.thread ? <ThreadDialog key={frame.session} frame={frame} thread={frame.thread} /> : <FastenerDialog key={frame.session} frame={frame} />;
 }
 

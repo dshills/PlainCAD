@@ -16,13 +16,14 @@ export function CommandPalette({ context }: { context: CommandContext }) {
   const filterRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
   const filtered = useMemo(() => {
-    const normalizedQuery = query.toLowerCase();
+    const normalizedQuery = query.trim().toLowerCase();
+    const exact = (command: (typeof commands)[number]) => command.label.toLowerCase() === normalizedQuery || command.id.toLowerCase() === normalizedQuery;
     return commands.filter(command => !command.internal).filter(
       (command) =>
         command.label.toLowerCase().includes(normalizedQuery) ||
         command.id.toLowerCase().includes(normalizedQuery) ||
         (command.description?.toLowerCase().includes(normalizedQuery) ?? false),
-    );
+    ).sort((a, b) => Number(exact(b)) - Number(exact(a)));
   }, [query]);
 
   useEffect(() => {

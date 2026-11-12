@@ -1,3 +1,4 @@
+import { activeMatchingNuts } from "../../cad/hardware/leadScrewSettings";
 import { beginCoach, canCoach } from "./manufacturingCoachCommand";
 import { bindCommand, executeCommand, invokeCommand, isRegisteredCommandAvailable, subscribeCommandExecutions, type JsonValue } from "../../commands/registry";
 import { registerMacroCommands } from "../../commands/macroStore";
@@ -202,6 +203,8 @@ export interface CommandEnablement {
   editProject: boolean;
   insertFastener: boolean;
   createThread: boolean;
+  createLeadScrew: boolean;
+  createLeadNut: boolean;
   suppressFeature: boolean;
   newComponent: boolean;
   createSketch: boolean;
@@ -253,6 +256,8 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
   const stepImportFrame = useStepImport.getState().frame;
   const selectedFeature = getSelectedFeature(state);
   const threadReady = Boolean(state.rebuild.result?.threadsAvailable && isRegisteredCommandAvailable("plan.preview", "domain"));
+  const helicalSelected = selectedFeature?.type === "thread" || selectedFeature?.type === "leadScrew" || selectedFeature?.type === "leadNut";
+  const spaceForHardware = Object.keys(state.history.present.components).length < MODEL_RESOURCE_LIMITS.maxComponents;
   return {
     aiAssistant: useAiDrawer.getState().open || (!transientPickerActive && !guidedHoleStartBlocked && !scopeCaptureBusy && !state.fileBusy),
     linkedSketchShowSource: !targetPickerActive && !guidedHoleStartBlocked && !state.fileBusy && links.some(link => canNavigateLinkedSketchSource(link.id)),
@@ -293,11 +298,13 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
     // Preserve the shared legacy command key while blocking all transient target tasks.
     outsideGuidedHole: !targetPickerActive,
     editProject: !state.fileBusy && !targetPickerActive,
-    insertFastener: state.rebuild.kernelReady && Object.keys(state.history.present.components).length < MODEL_RESOURCE_LIMITS.maxComponents &&
+    insertFastener: state.rebuild.kernelReady && spaceForHardware &&
       isRegisteredCommandAvailable("plan.preview", "domain"),
     createThread: !targetPickerActive && threadReady && Boolean(selectedThreadTarget(state)),
+    createLeadScrew: !targetPickerActive && threadReady && spaceForHardware,
+    createLeadNut: !targetPickerActive && threadReady && spaceForHardware && Boolean(selectedLeadScrew(state)),
     suppressFeature: !targetPickerActive && !canvasActive && Boolean(selectedFeature) &&
-      (selectedFeature?.type !== "thread" || !selectedFeature.suppressed || threadReady),
+      (!helicalSelected || !selectedFeature?.suppressed || threadReady),
     newComponent: !targetPickerActive && !guidedHoleStartBlocked && !state.fileBusy && !canvasActive && Object.keys(state.history.present.components).length < MODEL_RESOURCE_LIMITS.maxComponents,
     createSketch: !targetPickerActive && !state.fileBusy && !canvasActive,
     finishSketch: !targetPickerActive && canvasActive,
@@ -321,7 +328,7 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
     createExtrude: !canvasActive && ((!targetPickerActive && canCreateExtrude(state)) || handoffReady),
     createRevolve: !targetPickerActive && !canvasActive && Boolean(defaultRevolveAxis(state)),
     editFeature: !targetPickerActive && !canvasActive && Boolean(editableExtrude(state) || editableModelingFeature(state) || editableHole(state) || selectedPattern(state) ||
-      (threadReady && selectedFeature?.type === "thread") ||
+      (threadReady && helicalSelected) ||
       (!shellBlocked && shellTarget(state, true))),
     selectedFeature: !targetPickerActive && !canvasActive && Boolean(getSelectedFeature(state)),
     createEdgeTreatment: !targetPickerActive && !canvasActive && Boolean(edgeTreatmentOwner(state)),
@@ -387,8 +394,13 @@ export const commands: CadCommand[] = [
   { id: "ai.cancelFacePick", label: "Cancel AI face selection", internal: true, alwaysEnabled: true, run: clearAiFacePicking },
   { id: "ai.close", label: "Close AI assistant", internal: true, alwaysEnabled: true, run: closeAiDrawer },
   { id: "ai.toggle", label: "Toggle AI assistant", description: "Open the bottom AI dock to describe changes and review geometry in the main viewport.", enablementKey: "aiAssistant", run: toggleAiDrawer },
-  { id: "feature.edit", label: "Edit Selected Feature", description: "Preview changes to the selected Extrude, Revolve, Fillet, Chamfer, Hole, Pattern, Shell or Thread and its downstream geometry.", enablementKey: "editFeature", run: () => { const feature = getSelectedFeature(); if (feature?.type === "thread") return openThread(feature.targetBodyId, feature.id); if (shellTarget(useCadStore.getState(), true)) return openShell(true); if (selectedPattern(useCadStore.getState())) beginFeaturePatternEditing(); else if (editableExtrude(useCadStore.getState())) beginExtrudeEditing(); else if (editableHole(useCadStore.getState())) beginHoleEditing(); else beginModelingEditing(); } },
+  { id: "feature.edit", label: "Edit Selected Feature", description: "Preview changes to the selected Extrude, Revolve, Fillet, Chamfer, Hole, Pattern, Shell, Thread, lead screw or nut and its downstream geometry.", enablementKey: "editFeature", run: () => { const feature = getSelectedFeature(); if (feature?.type === "thread") return openThread(feature.targetBodyId, feature.id); if (feature?.type === "leadScrew" || feature?.type === "leadNut") return openLead({ editId: feature.id }); if (shellTarget(useCadStore.getState(), true)) return openShell(true); if (selectedPattern(useCadStore.getState())) beginFeaturePatternEditing(); else if (editableExtrude(useCadStore.getState())) beginExtrudeEditing(); else if (editableHole(useCadStore.getState())) beginHoleEditing(); else beginModelingEditing(); } },
   { id: "feature.thread", label: "Modeled Thread", description: "Cut a native internal or external thread on a selected shaft or tap-drill bore.", enablementKey: "createThread", run: () => openThread(selectedThreadTarget(useCadStore.getState())) },
+  { id: "hardware.leadScrew", label: "Lead screw and nut", description: "Model an editable trapezoidal or Acme lead screw and optionally add a matching nut.", enablementKey: "createLeadScrew", run: () => openLead({}) },
+  { id: "hardware.leadNut", label: "Add matching nut", description: "Select a lead screw and model its matching nut as a new component.", enablementKey: "createLeadNut", run: () => {
+    const screw = selectedLeadScrew(useCadStore.getState());
+    if (screw) openLead({ screwId: screw.id });
+  } },
   { id: "feature.shell", label: "Shell", description: "Hollow an unmodified rectangular extrusion from its start or end cap.", enablementKey: "createShell", run: () => openShell() },
   { id: "hardware.fastener", label: "Insert fastener", description: "Preview a metric or Unified inch socket-head fastener blank as a separate component.", enablementKey: "insertFastener", run: () => {
     const state = useCadStore.getState();
@@ -799,6 +811,11 @@ export const commands: CadCommand[] = [
       const feature = getSelectedFeature();
       if (!feature) return;
       if (feature.type === "thread" && feature.suppressed) return openThread(feature.targetBodyId, feature.id, true);
+      if ((feature.type === "leadScrew" || feature.type === "leadNut") && feature.suppressed) return openLead({ editId: feature.id, reactivate: true });
+      if (feature.type === "leadScrew" && activeMatchingNuts(state.history.present, feature.id).length) {
+        state.setFileError("Suppress the matching nuts before suppressing their lead screw.");
+        return;
+      }
       state.updateDocument((document) =>
         suppressFeature(document, feature.id, !feature.suppressed),
       );
@@ -1029,6 +1046,18 @@ function openThread(targetBodyId: string | undefined, editId?: string, reactivat
   const state = useCadStore.getState();
   useHardwarePreset.setState({ frame: { document: state.history.present, session: state.documentSession, componentId: state.activeComponentId,
     thread: { targetBodyId, editId, reactivate } } });
+}
+
+function selectedLeadScrew(state: CadStore) {
+  const bodyId = selectedExportBody(state), feature = getSelectedFeature(state) ??
+    state.history.present.features.find(item => `body:${item.id}` === bodyId);
+  return feature?.type === "leadScrew" && !feature.suppressed && state.rebuild.result?.meshes.some(mesh =>
+    mesh.bodyId === `body:${feature.id}` && mesh.kernelOperation === "leadScrew") ? feature : undefined;
+}
+
+function openLead(lead: NonNullable<NonNullable<ReturnType<typeof useHardwarePreset.getState>["frame"]>["lead"]>) {
+  const state = useCadStore.getState();
+  useHardwarePreset.setState({ frame: { document: state.history.present, session: state.documentSession, componentId: state.activeComponentId, lead } });
 }
 
 interface ActiveProfile {

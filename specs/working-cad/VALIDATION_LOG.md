@@ -9,10 +9,10 @@ missing or the count cannot be determined, establish a baseline with the full ga
 ## Last successful full gate
 
 - Date: 2026-11-12.
-- Change: shared face-to-pocket, STEP import, Shell, and native machined references; includes the feature palette search repair.
-- Result: type checks, 1663 unit/component tests in 214 files, build/bundle budget (63 bundles, largest 496.93 kB), 335 development browser cases (38.6m), and 61 production browser cases (4.7m) passed.
-- Completed items since that full gate: **4**.
-- Next full gate: after the current hardware batch, per user request.
+- Change: metric and Unified inch fastener and hole presets, native threads, and native lead screw/nut pairs.
+- Result: type checks, 1680 unit/component tests in 216 files, build/bundle budget (70 bundles, largest 496.21 kB), 337 development browser cases plus three corrected cases rerun, and 62 production browser cases passed.
+- Completed items since that full gate: **0**.
+- Next full gate: after five more completed items.
 
 ## Completed batch
 
@@ -1492,3 +1492,29 @@ Three final browser cases passed, including editing, save/open and STL for the
 external thread and a native internal thread on an independently authored bore.
 The existing linked-sketch import advisory remains. The full gate remains
 deferred until the lead screw and nut item is complete.
+
+## Hardware item 3: lead screws and matching nuts
+
+Added native Acme and trapezoidal lead screws and linked nuts in schema 25.
+The nut inherits profile, pitch, hand and starts. It is placed beside its
+source, including when the source has a resolved component pose. Native
+verification checks solid count, cut volume, the phase of each start, and
+sampled flank occupancy against the nominal coaxial clearance envelope.
+Three- and four-start parts have shorter length limits to stay within the
+interactive rebuild budget.
+
+Independent internal review verified geometry and scoped resource limits,
+mixed-unit defaults, component placement, linked edit recovery and the
+release follow-up patches. Native probes passed for one, two and four starts,
+including a cold maximum-length four-start case and rigid placement of both
+solids. Chromium verified editing handedness, cold save/open, and separate
+STL exports with volumes matching native results.
+
+Full validation began after all three hardware items were implemented. Type
+checks, 1680 unit/component tests, and the bundle budget passed. The initial
+development run passed 337 of 340 cases. Fixed the static setup of an AI test
+fixture, ranked exact command palette matches first, and used registered Edit
+and Export commands after a lead screw test timed out on a redundant palette
+click. All three cases passed on rerun. The App component suite was rerun
+after the palette fix. The final build passed with 70 bundles, largest
+496.21 kB. All 62 production browser tests passed (4.7 minutes). The existing linked-sketch import advisory remains.
