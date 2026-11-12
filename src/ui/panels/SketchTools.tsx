@@ -180,8 +180,9 @@ export function SketchTools({
   const currentReference = sketch.plane.type === "face" ? sketch.plane : sketch.plane.type === "offset" && typeof sketch.plane.base !== "string" ? sketch.plane.base : undefined;
   const availableFaces = planes.faces.filter((f) => {
     const feature = document.features.find((item) => item.id === f.featureId);
+    const currentProved = nativeFaces.has(f.id) || (currentReference?.stableFaceId === f.id && Boolean(currentResult?.sketchPlanes?.[sketch.id]));
     return (
-      (!faceOwnerModifiedBefore(document, f.featureId, sketch) || nativeFaces.has(f.id) || (currentReference?.stableFaceId === f.id && Boolean(currentResult?.sketchPlanes?.[sketch.id]))) &&
+      (f.role === "pocketFloor" ? currentProved : !faceOwnerModifiedBefore(document, f.featureId, sketch) || currentProved) &&
       feature?.timelineStep !== undefined &&
       sketch.timelineStep !== undefined &&
       feature.timelineStep < sketch.timelineStep

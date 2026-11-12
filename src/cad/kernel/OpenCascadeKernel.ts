@@ -2,6 +2,7 @@ import { assertMeshBudget } from "../resourceLimits";
 import { measureNativeBores } from "./nativeDrawing";
 import { exportNativeStep, importNativeStep, stepBindingDiagnostic, stepImportBindingDiagnostic } from "./nativeStep";
 import { createNativeShell, nativeShellAvailable } from "./nativeShell";
+import { matchNativeHoleRim, measureNativeBoreRims, validateNativePocketFloor, type NativeHoleRimEvidence } from "./occtMachinedReferences";
 import initOpenCascadeModule from "opencascade.js/dist/opencascade.wasm.js";
 import openCascadeWasmUrl from "opencascade.js/dist/opencascade.wasm.wasm?url";
 import { createId } from "../document/ids";
@@ -218,6 +219,7 @@ export class OpenCascadeKernel implements KernelAdapter {
   }
 
   private readonly planarReferenceCache = new WeakMap<KernelShape, NativePlanarFaceMeasurement[]>();
+  private readonly boreReferenceCache = new WeakMap<KernelShape, NativeHoleRimEvidence[]>();
 
   private static openCascade: Record<string, any> | undefined;
   private static initPromise: Promise<Record<string, any>> | undefined;
@@ -330,6 +332,20 @@ export class OpenCascadeKernel implements KernelAdapter {
     const matches = measurements.filter(face => Math.abs(Math.abs(dot(face.normal, plane.normal)) - 1) <= 1e-9 && Math.abs(dot(subtract(face.origin, plane.origin), face.normal)) <= KERNEL_LINEAR_TOLERANCE);
     if (matches.length !== 1 || !Number.isFinite(matches[0].area) || matches[0].area <= KERNEL_LINEAR_TOLERANCE ** 2)
       throw new Error("Sketch plane reference was lost or split into ambiguous faces. Reselect a retained planar face or an origin plane.");
+  }
+
+  validatePocketFloor(shape: KernelShape, plane: SketchPlaneTransform, profile: SketchProfile): void {
+    const oc = OpenCascadeKernel.openCascade, handle = shape.kernelHandle as KernelHandle;
+    if (!oc || !handle.occtShape) throw new Error("Pocket floor validation requires current native geometry.");
+    validateNativePocketFloor(oc, handle.occtShape, plane, scope => this.createOcctFace(profile, plane, scope));
+  }
+
+  measureHoleRim(shape: KernelShape, center: import("../sketch/planes").Point3, outward: import("../sketch/planes").Point3, radius: number) {
+    const oc = OpenCascadeKernel.openCascade, handle = shape.kernelHandle as KernelHandle;
+    if (!oc || !handle.occtShape) return;
+    let rims = this.boreReferenceCache.get(shape);
+    if (!rims) { rims = measureNativeBoreRims(oc, handle.occtShape); this.boreReferenceCache.set(shape, rims); }
+    return matchNativeHoleRim(rims, center, outward, radius);
   }
 
   static async initialize(): Promise<void> {
@@ -1144,6 +1160,7 @@ export class OpenCascadeKernel implements KernelAdapter {
 
   disposeShape(shape: KernelShape): void {
     this.planarReferenceCache.delete(shape);
+    this.boreReferenceCache.delete(shape);
     const handle = shape.kernelHandle as KernelHandle;
     if (handle.occtShape) this.assertions.delete(handle.occtShape);
     deleteOcct(handle.occtShape);

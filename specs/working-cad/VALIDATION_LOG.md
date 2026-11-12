@@ -8,11 +8,11 @@ missing or the count cannot be determined, establish a baseline with the full ga
 
 ## Last successful full gate
 
-- Date: 2026-10-09.
-- Change: five-item command automation batch: typed semantic CAD commands, transactional native plans, built-in command agent, recorded workflows and live access to the open project; includes the authored-parameter diagnostic fix.
-- Result: type checks, 1646 unit/component tests in 211 files, build/bundle budget (58 bundles, largest 498.24 kB), all 328 development browser cases and all 55 production cases passed.
-- Completed items since that full gate: **4**.
-- Next full gate: on the next completed item.
+- Date: 2026-11-12.
+- Change: shared face-to-pocket, STEP import, Shell, and native machined references; includes the feature palette search repair.
+- Result: type checks, 1663 unit/component tests in 214 files, build/bundle budget (63 bundles, largest 496.93 kB), 335 development browser cases (38.6m), and 61 production browser cases (4.7m) passed.
+- Completed items since that full gate: **0**.
+- Next full gate: after five more completed items.
 
 ## Completed batch
 
@@ -1401,3 +1401,28 @@ passed and the largest of 63 bundles was 496.29 kB. Moving the lazy loader to
 the command module eliminated the intermediate circular chunk warning. The
 existing linked-sketch import advisory remains. Cadence **4**; the next item
 requires the full gate.
+
+
+## Native modeling item 3: machined references
+
+Draw on face, reference repair, and planar measurement can use a supported blind
+pocket floor proven by the native kernel. The cut owns the reference; the floor
+belongs to the original target body. An unchanged preexisting floor cannot be
+claimed by a new cut, and a later cut cannot revive a floor lost during a rebuild.
+Supported inward holes report radius and diameter from a complete native entrance
+rim. Ambiguous rims are omitted. These roles do not extend To Face, assembly
+mating, or edge treatments.
+
+Independent internal review verified owner-stage proof, reusable project insertion,
+duplicate-rim exclusion, lost-floor continuity, and refusal to relabel a floor when
+opening its roof. The reviewer also verified restoration of Fillet and Chamfer
+search terms for the feature edit command after the Shell integration. The two
+focused keyboard cases passed; the search fix is part of this checkpoint.
+
+The final `npm run release:check` passed type checks, **1663** unit/component tests,
+the bundle budget (**63** bundles, largest **496.93 kB**), **335** development and
+**61** production browser cases. The native reference cases verify floor picking,
+measurement, nested pockets on the original body, stale-reference rejection,
+repair, and save/reopen. The existing linked-sketch import advisory remains.
+Preliminary runs do not count toward the gate. This successful run resets cadence
+to **0**.

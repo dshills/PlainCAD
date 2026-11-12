@@ -53,7 +53,7 @@ export function componentAlignmentTargets(document: CadDocument, result: Rebuild
     if (!componentId || !document.components[componentId]) return [];
     const base = { id: target.id, label: `${document.components[componentId]?.name ?? "Part"} · ${target.label}`, bodyId: target.bodyId, componentId };
     if (target.point && finite(target.point)) return [{ ...base, kind: "point", point: target.point }];
-    if (target.plane && finite(target.plane.origin) && finite(target.plane.normal)) {
+    if (target.plane && target.plane.role !== "pocketFloor" && finite(target.plane.origin) && finite(target.plane.normal)) {
       if (Math.hypot(target.plane.normal.x, target.plane.normal.y, target.plane.normal.z) < 1e-12) return [];
       const direction = unit(target.plane.normal);
       return [{ ...base, kind: "face", point: target.plane.origin, direction, displayPoint: faceMarker(target.bodyId, target.plane.origin, direction) }];

@@ -4,10 +4,11 @@ import { KERNEL_LINEAR_TOLERANCE } from "./tolerances";
 import { evaluateExpressionRef } from "../parameters/expressionEvaluator";
 import { Quantity } from "../parameters/units";
 import { solveSketch } from "./SketchSolver";
-import { detectProfiles } from "./profileDetection";
+import { detectProfiles, type SketchProfile } from "./profileDetection";
 import { orientedSegments } from "../kernel/profileMesh";
-import { featureComponentId, sketchComponentId } from "../document/components";
+import { bodyComponentId, featureComponentId, sketchComponentId } from "../document/components";
 import { placePlane } from "../document/componentPlacement";
+import { faceReferenceBodyId, MAX_MACHINED_REFERENCES, pocketFloorId, pocketFloorTarget } from "../document/faceReferences";
 import {
   CadDocument,
   FacePlaneReference,
@@ -91,6 +92,9 @@ export interface AvailableFace {
   featureId: string;
   label: string;
   transform: SketchPlaneTransform;
+  /** A machined floor belongs to its cut feature but lives on the cut target body. */
+  bodyId?: string;
+  role?: "pocketFloor";
 }
 export function faceOwnerModifiedBefore(
   document: CadDocument,
@@ -124,6 +128,7 @@ export function resolveDocumentPlanes(
   transforms: Map<string, SketchPlaneTransform>;
   errors: Map<string, string>;
   faces: AvailableFace[];
+  pocketFloorProfiles?: Map<string, SketchProfile>;
 } {
   const transforms = new Map<string, SketchPlaneTransform>(),
     errors = new Map<string, string>();
@@ -132,6 +137,7 @@ export function resolveDocumentPlanes(
   const profileCache = new Map<string, ReturnType<typeof detectProfiles>>();
   const faces: AvailableFace[] = [],
     faceMap = new Map<string, SketchPlaneTransform>(),
+    pocketFloorProfiles = new Map<string, SketchProfile>(),
     visiting = new Set<string>();
   const resolve = (sketchId: string): SketchPlaneTransform => {
     const cached = transforms.get(sketchId);
@@ -161,11 +167,16 @@ export function resolveDocumentPlanes(
   };
   const publishOwner = (ref: FacePlaneReference, consumerId?: string) => {
     const owner = document.features.find((f) => f.id === ref.featureId);
+    const floorId = pocketFloorId(ref.featureId);
+    const floorTarget = owner && ref.stableFaceId === floorId ? pocketFloorTarget(owner) : undefined;
+    if (ref.stableFaceId === floorId && (!floorTarget || !allowModifiedFaces)) throw new Error(
+      "Pocket floor reference requires an active, supported inward distance cut and native geometry. Reselect a supported upstream face.",
+    );
     if (
       !owner ||
       owner.type !== "extrude" ||
       owner.suppressed ||
-      owner.operation !== "newBody" ||
+      (owner.operation !== "newBody" && !floorTarget) ||
       (owner.termination && owner.termination.type !== "distance")
     )
       throw new Error(
@@ -229,6 +240,22 @@ export function resolveDocumentPlanes(
       throw new Error(
         "Sketch plane reference lost: the owner extrusion distance is invalid.",
       );
+    if (floorTarget) {
+      const source = ownerSketch.plane;
+      if (source.type !== "face" || faceReferenceBodyId(document, source) !== floorTarget ||
+          bodyComponentId(document, floorTarget) !== sketchComponentId(document, ownerSketch.id) ||
+          featureComponentId(document, owner) !== sketchComponentId(document, ownerSketch.id) ||
+          profile.innerLoops.length || (profile.outerLoop.type === "polygon" && (profile.outerLoop.segments?.length ?? 0) > 32)) {
+        throw new Error("Pocket floor requires a same-body face sketch with one complete profile boundary. Reselect a supported face.");
+      }
+      if (pocketFloorProfiles.size >= MAX_MACHINED_REFERENCES) throw new Error("Pocket floor reference limit reached. Simplify the project or reselect a supported face.");
+      const transform = extrusionSweep(authoredBase, size.quantity.value, "negative");
+      faces.push({ id: floorId, featureId: owner.id, bodyId: floorTarget, role: "pocketFloor", label: `${owner.name} — pocket floor`, transform });
+      faceMap.set(floorId, transform);
+      pocketFloorProfiles.set(floorId, profile);
+      published.add(owner.id);
+      return;
+    }
     const base = extrusionSweep(
       authoredBase,
       size.quantity.value,
@@ -301,13 +328,13 @@ export function resolveDocumentPlanes(
         publishOwner({
           type: "face",
           featureId: feature.id,
-          stableFaceId: stableFaceId(feature.id, "endCap"),
+          stableFaceId: pocketFloorTarget(feature) ? pocketFloorId(feature.id) : stableFaceId(feature.id, "endCap"),
         });
       } catch {
         /* Unsupported or failed owners are not selectable. */
       }
     }
-  return { transforms, errors, faces };
+  return { transforms, errors, faces, pocketFloorProfiles };
 }
 
 /** Viewer/inspection coordinates; feature evaluation retains authored design coordinates. */

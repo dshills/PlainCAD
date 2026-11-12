@@ -79,7 +79,7 @@ export function installMeasurementPicking(canvas: HTMLCanvasElement, camera: THR
       const choice = hit && normal ? faceChoiceAt(sketchPlaneChoices(state.history.present, state.rebuild.result), hit.object.userData.bodyId, hit.point, normal) : undefined;
       target = choice ? targets.find((item) => item.id === `face:${choice.id}`) : undefined;
     }
-    if (!target) { inspection.setError(state.documentSession, "Click a solved sketch point or curve, a highlighted original native cap edge, or a supported planar face. Curved, split and new boolean topology are unavailable."); return; }
+    if (!target) { inspection.setError(state.documentSession, "Click a solved sketch point or curve, a highlighted native cap edge or complete hole entrance rim, or a supported planar face. Other curved, split and ambiguous topology is unavailable."); return; }
     inspection.pick(state.documentSession, state.history.present, state.rebuild.result!, target.id);
   };
   const key = (event: KeyboardEvent) => {

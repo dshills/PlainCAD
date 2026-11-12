@@ -11,6 +11,8 @@ import { materializeSketchProjections } from "../sketch/sketchProjection";
 import { documentTimeline } from "../document/timelineOrdering";
 import { nativeProjectionValidator } from "./nativeProjectionValidator";
 import { currentNativeFaces, nativeSketchPlaneValidator } from "./nativeSketchPlanes";
+import { currentNativeHoleRims } from "./nativeHoleRims";
+import { faceReferenceBodyId } from "../document/faceReferences";
 import { absorbedBodyIds, targetBodyIds } from "../document/bodyScopes";
 import { extrusionSweep, throughAllDistance } from "./extrusionSweep";
 import { MODEL_RESOURCE_LIMITS } from "../resourceLimits";
@@ -300,10 +302,10 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
               : plane?.type === "offset" && typeof plane.base !== "string"
                 ? plane.base
                 : undefined;
+          const ownerBodyId = owner && faceReferenceBodyId(document, owner);
           if (
             owner &&
-            (!runtimeBodies.has(stableBodyIdForFeature(owner.featureId)) ||
-              failedBodies.has(stableBodyIdForFeature(owner.featureId)))
+            (!ownerBodyId || !runtimeBodies.has(ownerBodyId) || failedBodies.has(ownerBodyId))
           ) {
             errors.push({
               id: `feature:${feature.id}:plane-owner`,
@@ -526,6 +528,7 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
               ref.kind !== "face" ||
               ref.repairRequired ||
               !face ||
+              face.role === "pocketFloor" ||
               !owner ||
               failedBodies.has(stableBodyIdForFeature(ref.featureId))
             )
@@ -586,8 +589,9 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
           }
         }
         // Also runs for every continue above, including invalid face planes.
-        if (errors.length > errorsBefore)
+        if (errors.length > errorsBefore) {
           for (const id of affectedIds) if (id) failedBodies.add(id);
+        } else if (!capture) nativePlanes?.afterFeature(feature.id, affectedIds);
       }
     }
     nativePlanes?.finish();
@@ -598,7 +602,7 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
   if (!errors.length && document.assemblyJoints?.length) {
     try {
       if (!nativeReferences) throw new Error("Assembly joints require native OpenCascade geometry.");
-      document = resolveAssemblyPlacements(document, currentNativeFaces(planes.faces, kernel, runtimeBodies, failedBodies));
+      document = resolveAssemblyPlacements(document, currentNativeFaces(planes.faces.filter(face => face.role !== "pocketFloor"), kernel, runtimeBodies, failedBodies));
     } catch (error) { errors.push({ id: "assembly:joints", source: "kernel", message: error instanceof Error ? error.message : String(error) }); }
   }
   if (!errors.length) {
@@ -696,7 +700,8 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
       message:
         "Model exceeds the total triangle resource limit. Simplify or suppress bodies.",
     });
-  const availableFaces = nativeReferences ? currentNativeFaces(placedPlanes.faces, kernel, runtimeBodies, failedBodies) : undefined;
+  const availableFaces = nativeReferences ? currentNativeFaces(placedPlanes.faces, kernel, runtimeBodies, failedBodies, placedPlanes.pocketFloorProfiles, nativePlanes?.retainedFloors) : undefined;
+  const availableHoleRims = nativeReferences && !errors.length ? currentNativeHoleRims(document, kernel, runtimeBodies, failedBodies, solvedSketches, placedPlanes.transforms, evaluated.values) : undefined;
   const edgeProofStarted = performance.now();
   const availableEdges = nativeReferences ? currentNativeEdges(document, kernel, runtimeBodies, failedBodies, warnings, edgeProofCache) : undefined;
   const nativeEdgeProofMs = performance.now() - edgeProofStarted;
@@ -751,6 +756,7 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
     sketchPlanes: Object.fromEntries(placedPlanes.transforms),
     ...(availableFaces !== undefined ? { availableFaces } : {}),
     ...(availableEdges !== undefined ? { availableEdges } : {}),
+    ...(availableHoleRims?.length ? { availableHoleRims } : {}),
     parameterValues: evaluated.values,
     stepExportAvailable: nativeReferences && !stepDiagnostic,
     shellAvailable,

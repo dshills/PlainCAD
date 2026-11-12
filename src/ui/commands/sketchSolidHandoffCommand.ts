@@ -1,4 +1,4 @@
-import { stableBodyIdForFeature } from "../../cad/features/featureGraph";
+import { faceReferenceBodyId } from "../../cad/document/faceReferences";
 import { useFacePocketIntent } from "./facePocketIntentState";
 import { beginExtrudeCreation, useExtrudeDraft } from "./extrudeCommand";
 import { create } from "zustand";
@@ -136,11 +136,12 @@ export function sketchPocketTarget(state: CadStore = useCadStore.getState()) {
   if (plane?.type !== "face" || plane.lost) return;
   const result = state.rebuild.result;
   if (state.rebuild.status !== "succeeded" || !result?.success || result.documentId !== source.document.id) return;
-  const bodyId = stableBodyIdForFeature(plane.featureId);
+  const bodyId = faceReferenceBodyId(source.document, plane);
+  if (!bodyId) return;
   const face = result?.availableFaces?.find((item) => item.id === plane.stableFaceId && item.featureId === plane.featureId);
   const body = result?.bodies.find((item) => item.id === bodyId);
   const mesh = result?.meshes.find((item) => item.bodyId === bodyId);
-  if (bodyComponentId(source.document, bodyId) !== source.componentId || !face || !body || mesh?.geometrySource !== "opencascade" || !mesh.geometryAssertions?.valid ||
+  if (bodyComponentId(source.document, bodyId) !== source.componentId || !face || (face.bodyId && face.bodyId !== bodyId) || !body || mesh?.geometrySource !== "opencascade" || !mesh.geometryAssertions?.valid ||
       mesh.geometryAssertions.solidCount !== 1 || !(mesh.geometryAssertions.volume > 0)) return;
   return { bodyId, name: body.name, faceId: face.id, baseVolume: mesh.geometryAssertions.volume };
 }

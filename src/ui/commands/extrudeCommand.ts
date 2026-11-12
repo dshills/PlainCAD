@@ -78,7 +78,7 @@ export function extrudeContext(state: CadStore, sketchId: string) {
   // list also excludes failed/absorbed bodies and lost or ambiguous planes.
   const faces = current
     ? (state.rebuild.result?.availableFaces ?? []).filter(
-        (face) => !faceOwnerModifiedBefore(document, face.featureId, {}),
+        (face) => face.role !== "pocketFloor" && !faceOwnerModifiedBefore(document, face.featureId, {}),
       )
     : [];
   return { sketch, profiles, bodies, faces };

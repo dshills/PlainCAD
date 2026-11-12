@@ -3,7 +3,7 @@ import { withDisposableScope } from "./disposableScope";
 export interface NativeBore { diameter: number; length: number; start: [number, number, number]; direction: [number, number, number] }
 export interface NativeDrawingGeometry { bounds: BoundingBox; bores: NativeBore[]; warnings: string[] }
 /** Current BRep faces only: authored Hole metadata is insufficient after later booleans. */
-export function measureNativeBores(oc: Record<string, any>, shape: any): Pick<NativeDrawingGeometry, "bores" | "warnings"> {
+export function measureNativeBores(oc: Record<string, any>, shape: any, observeCompleteBore?: (bore: NativeBore, face: any) => void): Pick<NativeDrawingGeometry, "bores" | "warnings"> {
   return withDisposableScope(scope => {
     const bores: NativeBore[] = [], warnings = new Set<string>();
     const explorer = scope.use(new oc.TopExp_Explorer_2(shape, oc.TopAbs_ShapeEnum.TopAbs_FACE, oc.TopAbs_ShapeEnum.TopAbs_SHAPE));
@@ -31,7 +31,9 @@ export function measureNativeBores(oc: Record<string, any>, shape: any): Pick<Na
         const props = faceScope.use(new oc.GProp_GProps_1()); oc.BRepGProp.SurfaceProperties_1(face, props, false, false);
         const expectedArea = 2 * Math.PI * radius * length;
         if (Math.abs(lastU - firstU - 2 * Math.PI) > 1e-7 || Math.abs(props.Mass() - expectedArea) > Math.max(1e-6, expectedArea * 1e-7)) { warnings.add("Trimmed internal cylindrical faces need manual dimensions; incomplete bore callouts are omitted."); return; }
-        return { diameter: radius * 2, length, direction: vector, start: [origin.X() + vector[0] * firstV, origin.Y() + vector[1] * firstV, origin.Z() + vector[2] * firstV] as [number, number, number] };
+        const complete: NativeBore = { diameter: radius * 2, length, direction: vector, start: [origin.X() + vector[0] * firstV, origin.Y() + vector[1] * firstV, origin.Z() + vector[2] * firstV] };
+        observeCompleteBore?.(complete, face);
+        return complete;
       });
       if (bore) { if (bores.length >= 64) throw new Error("Drawing exceeds the 64-bore callout limit. Select a simpler part."); bores.push(bore); }
     }

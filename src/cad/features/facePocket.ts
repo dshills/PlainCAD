@@ -1,14 +1,13 @@
 import { featureComponentId, sketchComponentId } from "../document/components";
 import type { CadDocument, ExtrudeFeature } from "../document/schema";
 import type { RebuildResult } from "../worker/workerProtocol";
-import { stableBodyIdForFeature } from "./featureGraph";
+import { faceReferenceBodyId } from "../document/faceReferences";
 
 /** Shared authored intent. Neither a caller-provided face frame nor a mesh is durable. */
 export function facePocketFeature(document: CadDocument, feature: ExtrudeFeature, bodyId: string): ExtrudeFeature {
   const plane = document.sketches[feature.sketchId]?.plane;
   const owner = plane?.type === "face" && !plane.lost && document.features.find(item => item.id === plane.featureId);
-  if (!owner || owner.suppressed || owner.type !== "extrude" || owner.operation !== "newBody" ||
-      (owner.termination && owner.termination.type !== "distance") || stableBodyIdForFeature(owner.id) !== bodyId ||
+  if (plane?.type !== "face" || !owner || faceReferenceBodyId(document, plane) !== bodyId ||
       featureComponentId(document, owner) !== sketchComponentId(document, feature.sketchId))
     throw new Error("Pocket requires a current face sketch and its explicit native body in the same component.");
   if (feature.termination?.type === "toFace") throw new Error("An inward pocket supports Distance or Through All termination.");

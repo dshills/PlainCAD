@@ -2,7 +2,6 @@ import { evaluateParameters } from "../cad/parameters/expressionEvaluator";
 import { planSketchProjection } from "../cad/sketch/sketchProjection";
 import { applyCadCommand, type CadCommandCall } from "../commands/cadCommandOperations";
 import { placePlane } from "../cad/document/componentPlacement";
-import { createEmptyDocument, createExtrudeFeature, upsertFeature, upsertSketch } from "../cad/document/CadDocument";
 import type { ComponentPlacement } from "../cad/document/schema";
 import { validateMesh } from "../fabrication/meshValidation";
 import { beforeAll, describe, expect, it, vi } from "vitest";
@@ -17,6 +16,7 @@ import {
   createSketchOnPlane,
 } from "../cad/sketch/SketchModel";
 import { solveSketch } from "../cad/sketch/SketchSolver";
+import { addCanvasGeometry } from "../cad/sketch/canvasGeometry";
 import { detectProfiles } from "../cad/sketch/profileDetection";
 import { faceOwnerModifiedBefore, resolveDocumentPlanes, sketchPlaneTransform, stableFaceId } from "../cad/sketch/planes";
 import { clearNativeFeatureCache, rebuildDocument } from "../cad/features/rebuildGraph";
@@ -24,6 +24,13 @@ import { createExtrudeEdgeRef } from "../cad/features/topologyRefs";
 import { TESSELLATION_LOD } from "../cad/kernel/tessellationCache";
 import { getDisposableScopeMetrics } from "../cad/kernel/disposableScope";
 import { resolveRevolveAxis } from "../cad/features/revolveAxis";
+import { createEmptyDocument, createExtrudeFeature, upsertFeature, upsertParameter, upsertSketch } from "../cad/document/CadDocument";
+import { faceReferenceBodyId, pocketFloorId } from "../cad/document/faceReferences";
+import { stableBodyIdForFeature } from "../cad/document/ids";
+import { serializeProject } from "../persistence/exportProject";
+import { importProjectText } from "../persistence/projectCodec";
+import { appendProject } from "../persistence/appendProject";
+import { expectedVolume, machinedReferenceFixture, pocketFloorRef, rimId, stockBodyId, trimPocketFloor } from "./fixtures/machinedReferences";
 
 // Exercise the exact installed WASM bindings, with no geometry mocks.
 vi.mock("opencascade.js/dist/opencascade.wasm.js", async () => {
@@ -203,6 +210,213 @@ describe("native modeling geometry", () => {
         expect(result.sketchPlanes?.[later.id]).toBeDefined();
       }
       expect(cached.metrics!.nativeFeatureCacheHits).toBeGreaterThan(0);
+    } finally { clearNativeFeatureCache(); }
+  });
+
+  it("proves placed pocket floors and complete native hole entrance rims through parameter edits and save/open", () => {
+    const { document } = machinedReferenceFixture();
+    const sketch = createSketchOnPlane("On the floor", pocketFloorRef);
+    const initial = upsertSketch(document, sketch);
+    expect(faceReferenceBodyId(initial, pocketFloorRef)).toBe(stockBodyId);
+    try {
+      const check = (source: typeof document, depth: number, diameter: number) => {
+        const result = rebuildDocument(source);
+        expect(result.errors).toEqual([]);
+        expect(result.meshes).toHaveLength(1);
+        expect(result.meshes[0]).toMatchObject({ bodyId: stockBodyId, geometrySource: "opencascade", geometryAssertions: { valid: true, solidCount: 1 } });
+        expect(result.meshes[0].geometryAssertions!.volume).toBeCloseTo(expectedVolume(depth, diameter), 5);
+        const floor = result.availableFaces!.find(face => face.id === pocketFloorRef.stableFaceId);
+        expect(floor).toMatchObject({ role: "pocketFloor", bodyId: stockBodyId, featureId: pocketFloorRef.featureId });
+        expect(floor!.transform.origin.z).toBeCloseTo(25 - depth, 7);
+        expect(result.sketchPlanes?.[sketch.id]?.origin.z).toBeCloseTo(25 - depth, 7);
+        const rim = result.availableHoleRims?.find(item => item.id === rimId);
+        expect(rim).toMatchObject({ bodyId: stockBodyId, featureId: "machined-hole" });
+        expect(rim!.radius).toBeCloseTo(diameter / 2, 7);
+        expect(rim!.plane.origin.x).toBeCloseTo(-18, 7);
+        expect(rim!.plane.origin.y).toBeCloseTo(42, 7);
+        expect(rim!.plane.origin.z).toBeCloseTo(25, 7);
+      };
+      check(initial, 6, 4);
+      const edited = upsertParameter(upsertParameter(initial, { ...initial.parameters.pocketDepth, expression: "8mm" }), { ...initial.parameters.boreSize, expression: "6mm" });
+      const restored = importProjectText(serializeProject(edited));
+      expect(restored.sketches[sketch.id].plane).toEqual(pocketFloorRef);
+      check(restored, 8, 6);
+      const childSketch = addCircleAt(restored.sketches[sketch.id], "18mm", "16mm", "1mm");
+      const child = createExtrudeFeature({ name: "Second pocket", sketchId: childSketch.id,
+        profileId: detectProfiles(solveSketch(childSketch, {})).profiles[0].id, direction: "negative", operation: "cut",
+        distance: { expression: "1mm", unit: "mm" }, targetBodyIds: [stockBodyId] });
+      const cut = rebuildDocument(upsertFeature(upsertSketch(restored, childSketch), child));
+      expect(cut.errors).toEqual([]);
+      expect(cut.meshes[0].bodyId).toBe(stockBodyId);
+      expect(cut.meshes[0].geometryAssertions!.volume).toBeCloseTo(expectedVolume(8, 6) - Math.PI, 5);
+      expect(cut.sketchPlanes?.[sketch.id]?.origin.z).toBeCloseTo(17, 7);
+      expect(cut.availableFaces?.some(face => face.id === pocketFloorRef.stableFaceId)).toBe(false);
+    } finally { clearNativeFeatureCache(); }
+  });
+
+  it("retains an earlier floor sketch but rejects a trimmed floor and a replaced entrance rim at later stages", () => {
+    const { document, holeSketch, holePointId } = machinedReferenceFixture(false);
+    const early = createSketchOnPlane("Before trimming", pocketFloorRef);
+    const late = createSketchOnPlane("After trimming", pocketFloorRef);
+    const trimmed = trimPocketFloor(upsertSketch(document, early));
+    try {
+      const result = rebuildDocument(trimmed);
+      expect(result.errors).toEqual([]);
+      expect(result.sketchPlanes?.[early.id]?.origin.z).toBeCloseTo(14, 7);
+      expect(result.availableFaces?.some(face => face.id === pocketFloorRef.stableFaceId)).toBe(false);
+      expect(result.meshes[0].geometryAssertions!.volume).toBeCloseTo(expectedVolume() - Math.PI * 1.5 ** 2 * 14, 5);
+      const lost = rebuildDocument(upsertSketch(trimmed, late));
+      expect(lost.errors).toContainEqual(expect.objectContaining({ source: "sketch", sourceId: late.id, message: expect.stringMatching(/Pocket floor is missing, trimmed, split or ambiguous/) }));
+      expect(lost.sketchPlanes?.[late.id]).toBeUndefined();
+      expect(lost.sketchPlanes?.[early.id]?.origin.z).toBeCloseTo(14, 7);
+
+      const counterbored = upsertFeature(document, { id: "counterbore", name: "Counterbore", type: "hole", sketchId: holeSketch.id,
+        direction: "negative", centerPointIds: [holePointId], diameter: { expression: "6mm", unit: "mm" },
+        depth: { expression: "1mm", unit: "mm" }, targetBodyIds: [stockBodyId] });
+      const widened = rebuildDocument(counterbored);
+      expect(widened.errors).toEqual([]);
+      expect(widened.meshes[0].geometryAssertions!.volume).toBeCloseTo(expectedVolume() - Math.PI * 5, 5);
+      expect(widened.availableHoleRims?.some(rim => rim.id === rimId)).toBe(false);
+      expect(widened.availableHoleRims?.find(rim => rim.id === "hole:counterbore:entrance")?.radius).toBeCloseTo(3, 7);
+    } finally { clearNativeFeatureCache(); }
+  });
+
+  it("does not attribute a later joined plate to an earlier through-depth cut, even with native reuse", () => {
+    const { document } = machinedReferenceFixture(false);
+    // Leave one opening so the joined plate really does create a unique, full
+    // face at the predicted plane; checking only final geometry would accept it.
+    const pocketOnly = { ...document, features: document.features.filter(item => item.id !== "machined-hole") };
+    const deep = upsertParameter(pocketOnly, { ...document.parameters.pocketDepth, expression: "20mm" });
+    const plate = addCornerRectangle(createSketchOnPlane("Added lower plate", { type: "offset", base: "XY", offset: { expression: "-2mm", unit: "mm" } }), "60mm", "40mm");
+    const join = createExtrudeFeature({ name: "Join lower plate", sketchId: plate.id,
+      profileId: detectProfiles(solveSketch(plate, {})).profiles[0].id, direction: "positive", operation: "join",
+      distance: { expression: "2mm", unit: "mm" }, targetBodyIds: [stockBodyId] });
+    const joined = upsertFeature(upsertSketch(deep, plate), join);
+    try {
+      const check = (result: ReturnType<typeof rebuildDocument>) => {
+        expect(result.errors).toEqual([]);
+        expect(result.meshes[0]).toMatchObject({ bodyId: stockBodyId, geometryAssertions: { valid: true, solidCount: 1 } });
+        expect(result.meshes[0].geometryAssertions!.volume).toBeCloseTo(expectedVolume(20, 0) + 4800, 5);
+        expect(result.meshes[0].bounds.min[2]).toBeCloseTo(-2, 7);
+        expect(result.availableFaces?.some(face => face.id === pocketFloorRef.stableFaceId)).toBe(false);
+      };
+      check(rebuildDocument(joined));
+      const warm = rebuildDocument(joined);
+      check(warm);
+      expect(warm.metrics?.nativeFeatureCacheHits).toBeGreaterThan(0);
+      const late = createSketchOnPlane("Claim the later floor", pocketFloorRef);
+      const lost = rebuildDocument(upsertSketch(joined, late));
+      expect(lost.errors).toContainEqual(expect.objectContaining({ source: "sketch", sourceId: late.id, message: expect.stringMatching(/not created by its owner cut/) }));
+      expect(lost.sketchPlanes?.[late.id]).toBeUndefined();
+    } finally { clearNativeFeatureCache(); }
+  });
+
+  it("does not revive a destroyed pocket floor when an identical floor is later recut", () => {
+    const { document } = machinedReferenceFixture(false);
+    const early = createSketchOnPlane("Original floor consumer", pocketFloorRef);
+    const blank = createSketchOnPlane("Pocket filler", { type: "offset", base: "XY", offset: { expression: "13mm", unit: "mm" } });
+    const fill = addCanvasGeometry(blank, solveSketch(blank, {}), "rectangle", [{ x: 11, y: 11 }, { x: 25, y: 21 }]).sketch;
+    const join = createExtrudeFeature({ name: "Fill the original pocket", sketchId: fill.id,
+      profileId: detectProfiles(solveSketch(fill, {})).profiles[0].id, direction: "positive", operation: "join",
+      distance: { expression: "7mm", unit: "mm" }, targetBodyIds: [stockBodyId] });
+    const filled = upsertFeature(upsertSketch(upsertSketch(document, early), fill), join);
+    const original = document.features.find(item => item.id === pocketFloorRef.featureId)!;
+    const { timelineStep: _previousStep, ...settings } = original;
+    const recut = upsertFeature(filled, { ...settings, id: "recut-pocket", name: "Recut the pocket" });
+    const replacement = { ...pocketFloorRef, featureId: "recut-pocket", stableFaceId: pocketFloorId("recut-pocket") };
+    const repaired = createSketchOnPlane("Replacement floor consumer", replacement);
+    const candidate = upsertSketch(recut, repaired);
+    try {
+      const check = (result: ReturnType<typeof rebuildDocument>) => {
+        expect(result.errors).toEqual([]);
+        expect(result.meshes[0].geometryAssertions).toMatchObject({ valid: true, solidCount: 1 });
+        expect(result.meshes[0].geometryAssertions!.volume).toBeCloseTo(expectedVolume(), 5);
+        expect(result.sketchPlanes?.[early.id]?.origin.z).toBeCloseTo(14, 7);
+        expect(result.sketchPlanes?.[repaired.id]?.origin.z).toBeCloseTo(14, 7);
+        expect(result.availableFaces?.some(face => face.id === pocketFloorRef.stableFaceId)).toBe(false);
+        expect(result.availableFaces).toContainEqual(expect.objectContaining({ id: replacement.stableFaceId, bodyId: stockBodyId }));
+      };
+      check(rebuildDocument(candidate));
+      const warm = rebuildDocument(candidate);
+      check(warm);
+      expect(warm.metrics?.nativeFeatureCacheHits).toBeGreaterThan(0);
+      const late = createSketchOnPlane("Stale floor consumer", pocketFloorRef);
+      const lost = rebuildDocument(upsertSketch(candidate, late));
+      expect(lost.errors).toContainEqual(expect.objectContaining({ source: "sketch", sourceId: late.id, message: expect.stringMatching(/Pocket floor is missing, trimmed, split or ambiguous/) }));
+      expect(lost.sketchPlanes?.[late.id]).toBeUndefined();
+      expect(lost.sketchPlanes?.[early.id]?.origin.z).toBeCloseTo(14, 7);
+    } finally { clearNativeFeatureCache(); }
+  });
+
+  it("keeps the original floor identity when reopening a roof over an existing cavity", () => {
+    const { document } = machinedReferenceFixture(false);
+    const blank = createSketchOnPlane("Pocket roof", { type: "offset", base: "XY", offset: { expression: "18mm", unit: "mm" } });
+    const roof = addCanvasGeometry(blank, solveSketch(blank, {}), "rectangle", [{ x: 11, y: 11 }, { x: 25, y: 21 }]).sketch;
+    const join = createExtrudeFeature({ name: "Cover the pocket", sketchId: roof.id,
+      profileId: detectProfiles(solveSketch(roof, {})).profiles[0].id, direction: "positive", operation: "join",
+      distance: { expression: "2mm", unit: "mm" }, targetBodyIds: [stockBodyId] });
+    const covered = upsertFeature(upsertSketch(document, roof), join);
+    const original = document.features.find(item => item.id === pocketFloorRef.featureId)!;
+    const { timelineStep: _previousStep, ...settings } = original;
+    const reopened = upsertFeature(covered, { ...settings, id: "roof-recut", name: "Cut the pocket roof" });
+    const existing = createSketchOnPlane("Use the original floor", pocketFloorRef);
+    const candidate = upsertSketch(reopened, existing);
+    try {
+      const check = (result: ReturnType<typeof rebuildDocument>, volume: number) => {
+        expect(result.errors).toEqual([]);
+        expect(result.meshes[0]).toMatchObject({ geometrySource: "opencascade", geometryAssertions: { valid: true, solidCount: 1 } });
+        expect(result.meshes[0].geometryAssertions!.volume).toBeCloseTo(volume, 5);
+        expect(result.availableFaces?.filter(face => face.role === "pocketFloor").map(face => face.id)).toEqual([pocketFloorRef.stableFaceId]);
+      };
+      check(rebuildDocument(covered), expectedVolume() + 192);
+      check(rebuildDocument(candidate), expectedVolume());
+      const warm = rebuildDocument(candidate);
+      check(warm, expectedVolume());
+      expect(warm.metrics?.nativeFeatureCacheHits).toBeGreaterThan(0);
+      expect(warm.sketchPlanes?.[existing.id]?.origin.z).toBeCloseTo(14, 7);
+      const duplicate = createSketchOnPlane("Claim the roof cut floor", { type: "face", featureId: "roof-recut", stableFaceId: pocketFloorId("roof-recut") });
+      const lost = rebuildDocument(upsertSketch(candidate, duplicate));
+      expect(lost.errors).toContainEqual(expect.objectContaining({ source: "sketch", sourceId: duplicate.id, message: expect.stringMatching(/already existed before its cut/) }));
+      expect(lost.sketchPlanes?.[duplicate.id]).toBeUndefined();
+    } finally { clearNativeFeatureCache(); }
+  });
+
+  it("copies a selected component's floor owner and target independently and rebuilds the remapped sketch", () => {
+    const { document } = machinedReferenceFixture();
+    const source = upsertSketch(document, createSketchOnPlane("Copied floor sketch", pocketFloorRef));
+    const copied = appendProject(createEmptyDocument(), source, { componentId: source.rootComponentId }).document;
+    const sketch = Object.values(copied.sketches).find(item => item.name === "Copied floor sketch")!;
+    const cut = copied.features.find(item => item.name === "Blind pocket")!;
+    const stock = copied.features.find(item => item.name === "Stock")!;
+    const copiedBody = stableBodyIdForFeature(stock.id);
+    expect(copiedBody).not.toBe(stockBodyId);
+    expect(sketch.plane).toEqual({ type: "face", featureId: cut.id, stableFaceId: pocketFloorId(cut.id) });
+    expect(cut).toMatchObject({ operation: "cut", targetBodyIds: [copiedBody] });
+    try {
+      const result = rebuildDocument(copied);
+      expect(result.errors).toEqual([]);
+      expect(result.availableFaces).toContainEqual(expect.objectContaining({ id: pocketFloorId(cut.id), featureId: cut.id, bodyId: copiedBody }));
+      expect(result.sketchPlanes?.[sketch.id]?.origin.z).toBeCloseTo(19, 7);
+      expect(result.meshes[0].geometryAssertions!.volume).toBeCloseTo(expectedVolume(), 5);
+    } finally { clearNativeFeatureCache(); }
+  });
+
+  it("does not offer an entrance rim when two authored holes claim an identically redrilled native circle", () => {
+    const { document } = machinedReferenceFixture(false);
+    const plug = addCircleAt(createXySketch("Bore plug"), "45mm", "25mm", "3mm");
+    const join = createExtrudeFeature({ name: "Fill the bore", sketchId: plug.id,
+      profileId: detectProfiles(solveSketch(plug, {})).profiles[0].id, direction: "positive", operation: "join",
+      distance: { expression: "20mm", unit: "mm" }, targetBodyIds: [stockBodyId] });
+    const plugged = upsertFeature(upsertSketch(document, plug), join);
+    const original = document.features.find(item => item.id === "machined-hole")!;
+    const { timelineStep: _previousStep, ...settings } = original;
+    const redrilled = upsertFeature(plugged, { ...settings, id: "redrill", name: "Redrill the bore" });
+    try {
+      const result = rebuildDocument(redrilled);
+      expect(result.errors).toEqual([]);
+      expect(result.meshes[0].geometryAssertions).toMatchObject({ valid: true, solidCount: 1 });
+      expect(result.meshes[0].geometryAssertions!.volume).toBeCloseTo(expectedVolume(), 5);
+      expect(result.availableHoleRims ?? []).toEqual([]);
     } finally { clearNativeFeatureCache(); }
   });
   it("cuts and joins real solids and rejects disjoint, contained, and empty results", () => {

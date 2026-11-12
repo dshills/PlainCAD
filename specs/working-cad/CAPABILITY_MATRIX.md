@@ -504,7 +504,23 @@ original edge; arbitrary transient BRep edge picks are unavailable.
   native-validated positive/negative/symmetric distance new-body role, including
   unique retained cap/straight-side planes after booleans;
   cap and straight-side planes follow shifted sweep origins and outward normals.
-  curved side faces, hole/revolve faces, and ambiguous rebinding are unsupported.
+  A blind negative distance Cut on an explicit face of its single target can
+  also own a pocket floor. The feature-owned floor lives on the original target
+  body, follows the cut depth, and requires a full finite native boundary matching
+  the authored single-loop profile both immediately after its cut and when used.
+  A cut cannot claim an identical face already present in its target. Draw
+  on face, face-plane repair, and planar measurement use current proof; saved
+  sketches validate at their own timeline position. Each modifier must retain
+  the floor; a later cut cannot revive a destroyed floor identity. Losing a
+  current floor pick does not invalidate an earlier sketch. Removed, trimmed,
+  split and ambiguous floors require explicit repair. One-target, one-center
+  inward face-based Holes expose diameter/radius only when the current inward
+  cylinder retains one complete circular entrance edge. Coincident old/new rim
+  claims are omitted rather than assigning one the identity. New machined roles do
+  not authorize To Face, assembly mating or edge treatments. Curved side faces,
+  other hole/revolve faces, and arbitrary post-boolean rebinding are unsupported.
+  The current proof scope is bounded to 64 floor and 64 hole candidates, at most
+  32 segments in a hole-free pocket boundary and bounded native face/edge scans.
 - Canvas constraint markers cover all 11 supported types and identify current
   satisfied/redundant/conflicting/pending/lost/unavailable states. Leaders locate
   referenced geometry rather than tangency contacts. Marker/list selection supports

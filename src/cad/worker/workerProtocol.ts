@@ -20,6 +20,16 @@ export interface AvailableEdge extends AvailableCapEdge {
   bodyId: string;
 }
 
+/** Current complete native circle, valid for measurement only. */
+export interface AvailableHoleRim {
+  id: string;
+  featureId: string;
+  bodyId: string;
+  label: string;
+  plane: SketchPlaneTransform;
+  radius: number;
+}
+
 export interface RebuildResult {
   documentId: string;
   success: boolean;
@@ -42,6 +52,7 @@ export interface RebuildResult {
   availableFaces?: AvailableFace[];
   /** Native-validated current sharp authored edges, never persisted. */
   availableEdges?: AvailableEdge[];
+  availableHoleRims?: AvailableHoleRim[];
   /** Actual loaded native STEP bindings; not inferred from optional adapter types. */
   stepExportAvailable?: boolean;
   stepExportDiagnostic?: string;

@@ -136,7 +136,7 @@ function MeasurementSession({ session }: { session: number }) {
     <section className="panel" aria-label="Measurements">
       <h2>Measure</h2>
       <p className="muted">
-        Click a point, curve, original native cap edge, or supported planar face.
+        Click a point, curve, native cap edge, complete hole entrance rim, or supported planar face.
         Pick two points for distance, two straight edges for their smaller angle,
         or two faces for plane angle/separation. Values use analytic geometry.
       </p>
@@ -162,7 +162,7 @@ function MeasurementSession({ session }: { session: number }) {
         <div><dt>Selected geometry</dt><dd>{modelMeasurement.label}</dd></div>
         {modelMeasurement.length !== undefined ? <div><dt>{modelMeasurement.label}</dt><dd aria-label="Model measured distance">{formatMeasuredLength(modelMeasurement.length, unit)}</dd></div> : null}
         {modelMeasurement.angle !== undefined ? <div><dt>Smaller angle</dt><dd aria-label="Model measured angle">{modelMeasurement.angle.toFixed(4)} deg</dd></div> : null}
-        {modelMeasurement.curve ? <><div><dt>Analytic curve length</dt><dd aria-label="Model measured length">{formatMeasuredLength(modelMeasurement.curve.length, unit)}</dd></div>{modelMeasurement.curve.diameter !== undefined ? <div><dt>Diameter</dt><dd aria-label="Model measured diameter">{formatMeasuredLength(modelMeasurement.curve.diameter, unit)}</dd></div> : null}</> : null}
+        {modelMeasurement.curve ? <><div><dt>Analytic curve length</dt><dd aria-label="Model measured length">{formatMeasuredLength(modelMeasurement.curve.length, unit)}</dd></div>{modelMeasurement.curve.diameter !== undefined ? <div><dt>Diameter</dt><dd aria-label="Model measured diameter">{formatMeasuredLength(modelMeasurement.curve.diameter, unit)}</dd></div> : null}{modelMeasurement.curve.radius !== undefined ? <div><dt>Radius</dt><dd aria-label="Model measured radius">{formatMeasuredLength(modelMeasurement.curve.radius, unit)}</dd></div> : null}</> : null}
         {modelMeasurement.point ? <div><dt>World X / Y / Z</dt><dd>{[modelMeasurement.point.x, modelMeasurement.point.y, modelMeasurement.point.z].map((value) => formatMeasuredLength(value, unit)).join(" / ")}</dd></div> : null}
       </dl> : null}
       <label>

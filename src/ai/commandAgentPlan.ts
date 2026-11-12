@@ -4,7 +4,7 @@ import { CAD_COMMAND_SCHEMAS, isCadCommandId, type CadCommandId } from "../comma
 import { validateCommandArguments } from "../commands/commandSchemas";
 import { objectArguments, stringArgument } from "../commands/protocol";
 import { featureComponentId } from "../cad/document/components";
-import { stableBodyIdForFeature } from "../cad/features/featureGraph";
+import { faceReferenceBodyId } from "../cad/document/faceReferences";
 import type { CadDocument } from "../cad/document/schema";
 import type { JsonValue } from "../commands/registry";
 
@@ -67,7 +67,7 @@ export function validateCommandAgentContext(value: unknown): CommandAgentContext
       const bodyId = stringArgument(face.bodyId, "Face body", 160);
       const owner = owners.get(featureId);
       if (ids.has(id) || !owner || featureComponentId(document, owner) !== activeComponentId ||
-          stableBodyIdForFeature(featureId) !== bodyId || !bodyIds.has(bodyId) || face.componentId !== activeComponentId)
+          faceReferenceBodyId(document, { featureId, stableFaceId: id }) !== bodyId || !bodyIds.has(bodyId) || face.componentId !== activeComponentId)
         throw new Error("Native face context contains a duplicate or unknown owner outside the active component.");
       ids.add(id);
       return { id, featureId, bodyId, componentId: activeComponentId, label: stringArgument(face.label, "Face label", 300) };

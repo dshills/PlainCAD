@@ -177,6 +177,11 @@ distance, straight-edge angles and planar-face angle/separation. A keyboard targ
 list and advanced sketch selectors remain available. Pending edits invalidate
 old picks. See [measurement limits](specs/working-cad/CLICK_MEASURE.md).
 
+**Draw on face** and sketch-plane repair can also use a proved floor of a blind,
+single-body inward pocket. The sketch follows the cut depth and keeps its link
+when reopened. In **Measure**, a complete native hole entrance rim reports
+diameter and radius. Trimmed or ambiguous references are not offered.
+
 ### Make your first part
 
 1. Open **New part** above the canvas, enter **Part name**, and choose **Draw a shape**.

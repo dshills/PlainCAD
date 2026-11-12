@@ -18,7 +18,7 @@ export interface ModelMeasurementTarget {
   point?: Point3;
   direction?: Point3;
   curve?: EntityMeasurement;
-  plane?: { origin: Point3; normal: Point3 };
+  plane?: { origin: Point3; normal: Point3; role?: "pocketFloor" };
 }
 export const MEASUREMENT_TARGET_LIMIT = 1024;
 export const MEASUREMENT_VERTEX_LIMIT = 65536;
@@ -48,6 +48,15 @@ export function modelMeasurementTargets(document: CadDocument, result: RebuildRe
     }
   };
   const native = new Set(result.meshes.filter((mesh) => mesh.geometrySource === "opencascade" && mesh.geometryAssertions?.valid).map((mesh) => mesh.bodyId));
+  for (const rim of result.availableHoleRims ?? []) {
+    if (!native.has(rim.bodyId) || !Number.isFinite(rim.radius) || rim.radius <= 0) continue;
+    const path = Array.from({ length: CIRCLE_PATH_POINTS }, (_, index) => {
+      const angle = index * 2 * Math.PI / CIRCLE_PATH_POINTS;
+      return transformPoint(rim.plane, rim.radius * Math.cos(angle), rim.radius * Math.sin(angle));
+    });
+    add({ id: `edge:${rim.id}`, label: rim.label, kind: "curve", bodyId: rim.bodyId, paths: [path], closed: true,
+      curve: { radius: rim.radius, diameter: 2 * rim.radius, length: 2 * Math.PI * rim.radius } });
+  }
   for (const edge of result.availableEdges ?? []) {
     if (!edge.sourceEntityId || !native.has(edge.bodyId) || (edge.role !== "startCapPerimeter" && edge.role !== "endCapPerimeter")) continue;
     const feature = document.features.find((item) => item.id === edge.featureId);
@@ -70,7 +79,7 @@ export function modelMeasurementTargets(document: CadDocument, result: RebuildRe
     }
   }
   for (const face of sketchPlaneChoices(document, result)) if (face.bodyId && native.has(face.bodyId))
-    add({ id: `face:${face.id}`, label: face.label, kind: "face", bodyId: face.bodyId, paths: [], plane: { origin: face.transform.origin, normal: face.transform.normal }, direction: face.transform.normal });
+    add({ id: `face:${face.id}`, label: face.label, kind: "face", bodyId: face.bodyId, paths: [], plane: { origin: face.transform.origin, normal: face.transform.normal, ...(face.role ? { role: face.role } : {}) }, direction: face.transform.normal });
   for (const sketch of Object.values(document.sketches)) {
     const solved = result.solvedSketches?.[sketch.id], plane = result.sketchPlanes?.[sketch.id];
     if (!solved || !plane || solved.errors.some((error) => error.severity === "error")) continue;

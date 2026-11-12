@@ -287,7 +287,7 @@ export function applyCadCommand(document: CadDocument, call: CadCommandCall | Ty
         const owner = document.features.find(item => item.id === face.featureId);
         const faces = context.native?.availableFaces ?? resolveDocumentPlanes(document, evaluateParameters(document.parameters).values, undefined, true).faces;
         if (direction !== "positive" || !owner || featureComponentId(document, owner) !== componentId || faceOwnerModifiedBefore(document, owner.id, {}) ||
-            !faces.some(item => item.featureId === face.featureId && item.id === face.stableFaceId))
+            !faces.some(item => item.role !== "pocketFloor" && item.featureId === face.featureId && item.id === face.stableFaceId))
           throw new Error("To Face requires a positive direction and an unmodified supported planar face in this component.");
         termination = { type: "toFace", faceRef: { kind: "face", role: "planarFace", featureId: face.featureId, transientId: face.stableFaceId, stableHint: face.stableFaceId } };
       }

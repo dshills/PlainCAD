@@ -92,6 +92,8 @@ export interface KernelAdapter {
   ): KernelShape;
   /** Require one finite native planar face matching an authored plane role. */
   validatePlanarFace?(shape: KernelShape, plane: SketchPlaneTransform): void;
+  validatePocketFloor?(shape: KernelShape, plane: SketchPlaneTransform, profile: SketchProfile): void;
+  measureHoleRim?(shape: KernelShape, center: Point3, outward: Point3, radius: number): { center: Point3; radius: number } | undefined;
   /** Only complete, unique, sharp original cap edges are returned. */
   availableExtrudeCapEdges?(shape: KernelShape): AvailableCapEdge[];
   /** Exact construction inputs for reusable proofs; absent for unsupported histories. No native handles. */
@@ -123,6 +125,9 @@ export interface KernelAdapter {
   importStep?(source: string): KernelShape;
   exportStep?(shapes: readonly KernelShape[]): NativeStepExport;
 }
+
+/** A completed native probe definitively found no exact matching floor. */
+export class PocketFloorMismatchError extends Error {}
 
 export class HoleScopeError extends Error {
   constructor(

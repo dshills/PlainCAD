@@ -1,5 +1,5 @@
 import { featureComponentId } from "../cad/document/components";
-import { stableBodyIdForFeature } from "../cad/features/featureGraph";
+import { faceReferenceBodyId } from "../cad/document/faceReferences";
 import type { CadStore } from "../state/useCadStore";
 
 /** Only worker-published faces on current native single-solid bodies are offered. */
@@ -12,8 +12,8 @@ export function nativeCommandFaces(state: CadStore) {
     mesh.geometryAssertions?.valid && mesh.geometryAssertions.solidCount === 1 && mesh.geometryAssertions.volume > 0).map(mesh => mesh.bodyId));
   return (result.availableFaces ?? []).flatMap(face => {
     const owner = owners.get(face.featureId);
-    const bodyId = stableBodyIdForFeature(face.featureId);
-    return owner && nativeBodies.has(bodyId) ? [{ id: face.id, featureId: face.featureId, bodyId,
+    const bodyId = faceReferenceBodyId(present, { featureId: face.featureId, stableFaceId: face.id });
+    return owner && bodyId && (!face.bodyId || face.bodyId === bodyId) && nativeBodies.has(bodyId) ? [{ id: face.id, featureId: face.featureId, bodyId,
       componentId: featureComponentId(present, owner), label: face.label }] : [];
   });
 }

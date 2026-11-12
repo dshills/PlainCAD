@@ -57,6 +57,7 @@ export function planarFaces(
   shape: any,
   plane: SketchPlaneTransform,
   scope: DisposableScope,
+  limit = Infinity,
 ): any[] {
   const explorer = scope.use(
     new oc.TopExp_Explorer_2(
@@ -66,7 +67,9 @@ export function planarFaces(
     ),
   );
   const faces = [];
+  let count = 0;
   for (; explorer.More(); explorer.Next()) {
+    if (++count > limit) throw new Error("Native face inspection exceeds its resource limit. Select a simpler body.");
     const current = scope.use(explorer.Current());
     const face = scope.use(oc.TopoDS.Face_1(current));
     const surface = scope.use(new oc.BRepAdaptor_Surface_2(face, true));

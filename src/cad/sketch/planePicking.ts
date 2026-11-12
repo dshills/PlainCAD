@@ -19,6 +19,7 @@ export interface SketchPlaneChoice {
   reference: OriginPlane | FacePlaneReference;
   transform: SketchPlaneTransform;
   bodyId?: string;
+  role?: "pocketFloor";
 }
 const origins: SketchPlaneChoice[] = (["XY", "XZ", "YZ"] as const).map(
   (plane) => ({
@@ -62,9 +63,10 @@ export function sketchPlaneChoices(
     );
   const choices = [
     ...origins,
-    ...faces
-      .filter((face) => native.has(stableBodyIdForFeature(face.featureId)))
-      .map((face) => ({
+    ...faces.flatMap((face) => {
+      const bodyId = face.bodyId ?? stableBodyIdForFeature(face.featureId);
+      if (!native.has(bodyId)) return [];
+      return [{
         id: face.id,
         label: face.label,
         reference: {
@@ -73,8 +75,10 @@ export function sketchPlaneChoices(
           stableFaceId: face.id,
         },
         transform: face.transform,
-        bodyId: stableBodyIdForFeature(face.featureId),
-      })),
+        bodyId,
+        ...(face.role ? { role: face.role } : {}),
+      }];
+    }),
   ];
   cache.set(document, { result, choices });
   return choices;

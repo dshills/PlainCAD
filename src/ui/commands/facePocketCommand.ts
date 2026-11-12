@@ -55,7 +55,7 @@ export function canBeginFacePocket(state: CadStore = useCadStore.getState()) {
 }
 export function beginFacePocket() {
   const state = useCadStore.getState();
-  if (!canBeginFacePocket(state)) throw new Error("Choose an active component with a visible native distance-extrusion planar face. Curved, split, lost and ambiguous faces are unsupported.");
+  if (!canBeginFacePocket(state)) throw new Error("Choose an active component with a visible supported native planar face. Curved, split, lost and ambiguous faces are unsupported.");
   useSketchPlanePicker.setState({ hover: undefined, error: undefined, offset: undefined });
   useFacePocket.setState({ frame: { kind: "facePocket", document: state.history.present,
     result: state.rebuild.result!, session: state.documentSession, componentId: state.activeComponentId } });

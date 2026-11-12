@@ -1,5 +1,6 @@
 import type { CadDocument, FacePlaneReference, Feature, Sketch, SketchEntity, SketchPlaneReference, TopologyRef } from "../cad/document/schema";
 import { stableFaceId } from "../cad/sketch/planes";
+import { faceReferenceBodyId, pocketFloorId } from "../cad/document/faceReferences";
 import { createId, stableBodyIdForFeature } from "../cad/document/ids";
 import { documentTimeline, timelineItemId } from "../cad/document/timelineOrdering";
 import { featureComponentId, sketchComponentId } from "../cad/document/components";
@@ -86,7 +87,16 @@ export function appendProject(target: CadDocument, source: CadDocument, options:
     const mappedSuffix = entityId !== undefined ? `:${remap(entityId)}` : groupSuffix || !suffix ? suffix : `:${remap(suffix.slice(1))}`;
     return `extrude:${remap(featureId)}:${role}${mappedSuffix}`;
   };
-  const face = (ref: FacePlaneReference): FacePlaneReference => ({ ...ref, featureId: remap(ref.featureId), stableFaceId: stable(ref.stableFaceId, ref.featureId) });
+  const face = (ref: FacePlaneReference): FacePlaneReference => {
+    const featureId = remap(ref.featureId);
+    if (ref.stableFaceId === pocketFloorId(ref.featureId)) {
+      const targetBodyId = faceReferenceBodyId(bound, { featureId: ref.featureId, stableFaceId: ref.stableFaceId });
+      if (!targetBodyId) throw new Error("Source pocket floor has no supported cut target. Repair it before insertion.");
+      body(targetBodyId); // Prove the cut's original target belongs to the same copied scope.
+      return { ...ref, featureId, stableFaceId: pocketFloorId(featureId) };
+    }
+    return { ...ref, featureId, stableFaceId: stable(ref.stableFaceId, ref.featureId) };
+  };
   const plane = (ref: SketchPlaneReference): SketchPlaneReference => ref.type === "face" ? face(ref) : ref.type === "offset" && typeof ref.base !== "string" ? { ...ref, base: face(ref.base) } : ref;
   const topology = (ref: TopologyRef): TopologyRef => ({ ...ref, featureId: remap(ref.featureId), transientId: stable(ref.transientId, ref.featureId, ref.sourceEntityId), ...(ref.stableHint ? { stableHint: stable(ref.stableHint, ref.featureId, ref.sourceEntityId) } : {}), ...(ref.sourceEntityId ? { sourceEntityId: remap(ref.sourceEntityId) } : {}) });
   const entity = (e: SketchEntity): SketchEntity => {

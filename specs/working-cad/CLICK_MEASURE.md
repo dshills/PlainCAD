@@ -1,7 +1,7 @@
 # Click measurements
 
 Open **Measure**, choose **Pick in model**, and click the highlighted geometry.
-A single curve shows its analytic length and, for a circle or arc, diameter.
+A single curve shows its analytic length and, for a circle or arc, diameter and radius.
 A point shows its world coordinates. Pick a second point for straight-line world
 distance, a second straight edge for the smaller undirected angle, or a second
 supported planar face for the smaller plane angle. Parallel faces report
@@ -15,10 +15,13 @@ provides an accessible exact choice for overlapping targets. Existing cross-sket
 point and curve controls remain under **Choose sketch geometry by name**.
 
 Supported model targets are complete native-validated authored extrusion cap
-edges, their true endpoints, and currently supported retained planar faces.
+edges, their true endpoints, currently supported retained planar faces, and proved
+blind pocket floors. An inward single-center Hole authored on a face of its sole
+target offers a rim only when its complete native cylinder still has one matching
+circular edge at the entrance. This rim is a measurement target only.
 Solved sketch points, lines, circles, and arcs are also available when the sketch
 is visible. Render view, hidden geometry, rebuilding/failed models, trimmed or
-split edges, new boolean topology, arbitrary BRep vertices and curved faces are
+split edges, other boolean topology, arbitrary BRep vertices and curved faces are
 unavailable. Mixed pairs and distances involving curved edges produce an explicit
 diagnostic rather than an approximation.
 
@@ -35,4 +38,4 @@ or undo history, and PNG export removes measurement overlays.
 
 Validation: analytic and coordinate unit tests in `modelMeasurements.test.ts`,
 existing `measurements.test.ts`, and real-kernel mouse acceptance in
-`e2e/click-measure.spec.ts`.
+`e2e/click-measure.spec.ts` and `e2e/machined-references.spec.ts`.
