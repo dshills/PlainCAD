@@ -1,3 +1,8 @@
+import { createEmptyDocument } from "../cad/document/CadDocument";
+import { rebuildDocument } from "../cad/features/rebuildGraph";
+import { evaluateParameters } from "../cad/parameters/expressionEvaluator";
+import { planSketchProjection } from "../cad/sketch/sketchProjection";
+import { applyCadCommand, type CadCommandCall } from "../commands/cadCommandOperations";
 import { placePlane } from "../cad/document/componentPlacement";
 import type { ComponentPlacement } from "../cad/document/schema";
 import { validateMesh } from "../fabrication/meshValidation";
@@ -79,6 +84,53 @@ function volume(shape: ReturnType<typeof kernel.createBox>, solidCount = 1) {
 vi.setConfig({ testTimeout: 30000, hookTimeout: 60000 });
 beforeAll(async () => OpenCascadeKernel.initialize());
 describe("native modeling geometry", () => {
+  it("cuts a linked face region using its rebuilt profile and the current authored depth unit", () => {
+    let document = createEmptyDocument("Linked face pocket");
+    const execute = (call: CadCommandCall) => {
+      const result = applyCadCommand(document, call);
+      document = result.document;
+      return result.result;
+    };
+    const stockSketch = execute({ command: "cad.sketch.create", arguments: { name: "Stock", plane: "XY" } }).id!;
+    execute({ command: "cad.sketch.rectangle", arguments: { sketchId: stockSketch, width: "40mm", height: "30mm" } });
+    const stock = execute({ command: "cad.feature.extrude", arguments: { sketchId: stockSketch, distance: "10mm" } });
+    const center = execute({ command: "cad.parameter.add", arguments: { name: "center_x", expression: "30mm" } });
+    const source = execute({ command: "cad.sketch.create", arguments: { name: "Projection source", plane: "XY", offset: "12mm" } }).id!;
+    execute({ command: "cad.sketch.circle", arguments: { sketchId: source, center: { x: "center_x", y: "15mm" }, radius: "2mm" } });
+    const cylinder = execute({ command: "cad.feature.extrude", arguments: { sketchId: source, distance: "2mm" } });
+    const pocket = execute({ command: "cad.sketch.createOnFace", arguments: {
+      name: "Pocket outline", featureId: stock.id!, stableFaceId: `extrude:${stock.id}:endCap`,
+    } }).id!;
+    execute({ command: "cad.sketch.rectangle", arguments: { sketchId: pocket, origin: { x: "10mm", y: "10mm" }, width: "10mm", height: "10mm" } });
+    const rebuild = () => rebuildDocument(document, { reuseNativeFeatures: false });
+    document = planSketchProjection(document, pocket, cylinder.id!, "endCapPerimeter", false, rebuild()).document;
+    execute({ command: "cad.parameter.update", arguments: { parameterId: center.id!, expression: "15mm" } });
+    const current = rebuild();
+    expect(current.success, JSON.stringify(current.errors)).toBe(true);
+    const region = current.profiles?.[pocket].find(profile => profile.innerLoops.length === 1);
+    expect(region).toBeDefined();
+    const raw = detectProfiles(solveSketch(document.sketches[pocket], evaluateParameters(document.parameters).values));
+    expect(raw.profiles.some(profile => profile.id === region!.id)).toBe(false);
+    const command = { command: "cad.feature.pocket", arguments: { sketchId: pocket, profileId: region!.id, targetBodyId: stock.bodyId!, distance: "2mm" } };
+    expect(() => applyCadCommand(document, command)).toThrow(/current native rebuild/);
+    const cut = applyCadCommand(document, command, { native: current });
+    document = cut.document;
+    const stockProof = () => {
+      const result = rebuild();
+      expect(result.success, JSON.stringify(result.errors)).toBe(true);
+      const mesh = result.meshes.find(mesh => mesh.bodyId === stock.bodyId);
+      expect(mesh).toMatchObject({ geometrySource: "opencascade", kernelOperation: "cut", geometryAssertions: { valid: true, solidCount: 1 } });
+      return mesh!.geometryAssertions!.volume;
+    };
+    expect(stockProof()).toBeCloseTo(12000 - 2 * (100 - 4 * Math.PI), 6);
+    document = { ...document, unitSettings: { ...document.unitSettings, length: "in" } };
+    execute({ command: "cad.feature.update", arguments: { featureId: cut.result.id!, distance: "0.1" } });
+    expect(stockProof()).toBeCloseTo(12000 - 2.54 * (100 - 4 * Math.PI), 6);
+    document = { ...document, unitSettings: { ...document.unitSettings, length: "mm" } };
+    execute({ command: "cad.feature.update", arguments: { featureId: cut.result.id!, distance: "0.1" } });
+    expect(stockProof()).toBeCloseTo(12000 - 2.54 * (100 - 4 * Math.PI), 6);
+  });
+
   it("cuts and joins real solids and rejects disjoint, contained, and empty results", () => {
     const shapes = [kernel.createBox(20, 10, 10), kernel.createBox(10, 10, 5)];
     try {

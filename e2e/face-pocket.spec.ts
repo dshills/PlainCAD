@@ -82,9 +82,9 @@ for (const role of ["endCap", "side"] as const) test(`${role} Draw here → mous
   await dialog.getByLabel("Extrude distance", { exact: true }).fill("2mm");
   await expect(dialog.getByRole("status")).toContainText("Native preview ready");
   await dialog.getByRole("button", { name: "Apply pocket", exact: true }).click();
-  const volume = role === "endCap" ? 11800 : 11920;
+  let volume = role === "endCap" ? 11800 : 11920;
   await ready(page, volume);
-  const accepted = await aiSnapshot(page);
+  let accepted = await aiSnapshot(page);
   expect(accepted.past).toBe(beforeApply.past + 1);
   expect(accepted.document.features.at(-1)).toMatchObject({ operation: "cut", direction: "negative", sketchId: faceSketch, targetBodyIds: [`body:${ids.ownerId}`] });
   expect(accepted.result!.meshes[0].kernelOperation).toBe("cut");
@@ -93,6 +93,25 @@ for (const role of ["endCap", "side"] as const) test(`${role} Draw here → mous
   await ready(page, 12000);
   await page.evaluate(async () => { const path = "/src/state/useCadStore.ts"; (await import(path)).useCadStore.getState().redo(); });
   await ready(page, volume);
+  if (role === "endCap") {
+    const feature = accepted.document.features.at(-1)!;
+    const edit = await page.evaluate(async ({ id, session }) => {
+      const select = await window.plaincadCommands.execute({ command: "selection.set", session, arguments: { id, kind: "feature" } });
+      if (!select.ok) return select;
+      return window.plaincadCommands.execute({ command: "feature.edit", session });
+    }, { id: feature.id, session: accepted.session });
+    expect(edit.ok).toBe(true);
+    const editing = page.getByRole("dialog", { name: "Edit Extrude", exact: true });
+    await editing.getByLabel("Extrude distance", { exact: true }).fill("3mm");
+    await expect(editing.getByRole("status")).toContainText("11700.000 mm³");
+    const undoCount = (await aiSnapshot(page)).past;
+    await editing.getByRole("button", { name: "Apply extrusion", exact: true }).click();
+    volume = 11700;
+    await ready(page, volume);
+    accepted = await aiSnapshot(page);
+    expect(accepted.past).toBe(undoCount + 1);
+    expect(accepted.document.features.at(-1)).toMatchObject({ id: feature.id, distance: { expression: "3mm" } });
+  }
   const saving = page.waitForEvent("download"); await page.getByRole("button", { name: "Save project", exact: true }).click();
   const projectPath = info.outputPath(`${role}-pocket.pcaddoc`); await (await saving).saveAs(projectPath);
   await page.locator('input[type="file"]').setInputFiles(projectPath);

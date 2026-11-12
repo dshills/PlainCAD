@@ -1,6 +1,6 @@
 # Validation cadence
 
-Run Prism with Anthropic `claude-sonnet-5-5` and `npm run check:item` for every
+Run an internal agent review and `npm run check:item` for every
 completed requested change. Run `npm run release:check` on the fifth item, before
 its handoff or commit. Fixup commits belong to the same item. Record results here
 with each item; reset the count only after the full gate succeeds. If this log is
@@ -11,8 +11,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Date: 2026-10-09.
 - Change: five-item command automation batch: typed semantic CAD commands, transactional native plans, built-in command agent, recorded workflows and live access to the open project; includes the authored-parameter diagnostic fix.
 - Result: type checks, 1646 unit/component tests in 211 files, build/bundle budget (58 bundles, largest 498.24 kB), all 328 development browser cases and all 55 production cases passed.
-- Completed items since that full gate: **1**.
-- Next full gate: after **4** more completed items.
+- Completed items since that full gate: **2**.
+- Next full gate: after **3** more completed items.
 
 ## Completed batch
 
@@ -1330,3 +1330,28 @@ advisories remain; no large-bundle warnings or budget failures occurred.
 The full release, cross-browser and optional live-provider suites were audited but
 not rerun for this test-only cleanup. The full gate is not due: cadence **1**;
 four more completed items remain before the next full gate.
+
+
+## Native modeling item 1: shared face-to-pocket workflow
+
+Draw on face, scoped inward pocket creation, and depth edits share semantic
+CAD intent with CLI and AI plans. Current worker faces and materialized profiles
+remain private analysis; JSON carries only stable references. Inward preview
+proves one retained native solid and measurable volume reduction. Scoped Through
+All and supported positive To Face are available in the semantic Extrude command.
+Face references in recordings are scoped to existing project owners.
+
+The user switched to independent internal agent review. The reviewer caught
+unit conversion on depth edits and a stale linked-profile lookup, verified the
+fixes, and signed off without remaining actionable findings. The mixed-unit
+native regression checks a moved projected ring, a newly authored inch depth,
+and untouched depth after changing the project default back to millimetres.
+AGENTS, the active validation instructions, and README record the new policy.
+
+`npm run check:item` passed type checks, 1643 unit/component tests, the build
+(59 bundles; largest 491.22 kB), 5 development smoke cases and 14 production
+smoke cases. Five focused development and three production cases passed. Mouse,
+real CLI and mocked-provider AI workflows reach 11700 mm³, with exact native
+bounds, successful Undo, and STL/save-open evidence. The existing linked-sketch
+static/dynamic import advisory remains; no circular or large-bundle warnings.
+Full suite not due. Cadence: **2** completed items since the last full gate.

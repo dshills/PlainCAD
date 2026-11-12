@@ -42,6 +42,18 @@ project context is capped at 20 kB and is rejected, rather than silently truncat
 when oversized. This mode accepts CAD intent only; exports and general automation
 remain explicit shared commands. See [command agent scope](../../docs/COMMAND_AGENT.md).
 
+## Shared face-to-pocket workflow
+
+`runtime.snapshot.rebuild.faces` lists stable, currently native-proved planar
+faces and their body/component IDs. Draw on face and `cad.sketch.createOnFace`
+share authored face selection. The GUI, CLI and command agent can create an
+inward pocket with explicit region, target and depth; native proof requires one
+remaining solid and a measurable volume reduction. A previewed command plan
+can create the sketch and cut, or edit its depth, as one Undo. The interactive
+workflow retains separate Undo steps for sketch drawing and feature Apply.
+The semantic Extrude command also exposes the existing scoped Through All and
+positive, covering To Face limits. See [stable commands](../../docs/STABLE_COMMANDS.md).
+
 ## Recorded modeling workflows
 
 The Automation dock and `macro.*` commands record successful semantic CAD edits,

@@ -1,5 +1,8 @@
 import { useFacePocketIntent } from "./facePocketIntentState";
 import { interactionDraftBusy } from "./interactionDraftState";
+import { assertPocketCut } from "../../cad/features/facePocket";
+import type { TypedCadCommandCall } from "../../commands/cadCommandTypes";
+import { reportAppliedCommand, type JsonValue } from "../../commands/registry";
 import { createId } from "../../cad/document/ids";
 import { featureComponentId } from "../../cad/document/components";
 import { stableBodyIdForFeature } from "../../cad/features/featureGraph";
@@ -232,6 +235,7 @@ export function commitExtrude(
   staged: CadDocument,
   result: RebuildResult,
   operationResult?: RebuildResult,
+  command?: TypedCadCommandCall,
 ) {
   const state = useCadStore.getState();
   if (
@@ -261,6 +265,10 @@ export function commitExtrude(
     throw new Error(
       useCadStore.getState().fileError ?? "Extrusion could not be saved.",
     );
+  // As with plan.apply, record the semantic step only after its private native preview is committed.
+  if (command) reportAppliedCommand({ command: command.command, target: "domain", session: draft.session,
+    arguments: command.arguments as JsonValue,
+  }, { id: feature.id, ...(draft.pocket ? { bodyId: draft.pocket.bodyId } : {}) });
   state.select({ kind: "feature", id: feature.id, documentId: staged.id });
   useExtrudeDraft.setState({ draft: undefined });
   if (useFacePocketIntent.getState().source?.sketchId === draft.sketchId)
@@ -274,10 +282,5 @@ export function assertNativePocketPreview(draft: ExtrudeDraft, result: RebuildRe
       feature.sketchId !== draft.sketchId || feature.profileId !== draft.feature.profileId ||
       feature.targetBodyIds?.length !== 1 || feature.targetBodyIds[0] !== pocket.bodyId)
     throw new Error("Remove material must keep the chosen region, face body and inward direction. Cancel to start another operation.");
-  const mesh = result.meshes.find((item) => item.bodyId === pocket.bodyId);
-  const proof = mesh?.geometryAssertions;
-  if (mesh?.geometrySource !== "opencascade" || mesh.kernelOperation !== "cut" || !proof?.valid ||
-      proof.solidCount !== 1 || !(proof.volume > 0) ||
-      !(proof.volume < pocket.baseVolume - Math.max(1e-7, pocket.baseVolume * 1e-9)))
-    throw new Error("The pocket must remove measurable material and leave one valid native solid. Move the region onto the face or reduce the depth.");
+  assertPocketCut(result, pocket.bodyId, pocket.baseVolume);
 }

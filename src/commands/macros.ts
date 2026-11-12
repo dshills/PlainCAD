@@ -1,7 +1,7 @@
 import { parseBoundedJson } from "../persistence/importSafety";
 import type { CommandRequest, JsonValue } from "./registry";
 import { CAD_COMMAND_SCHEMAS, isCadCommandId } from "./cadCommands";
-import { referenceSchema, validateCommandArguments, type CommandSchema } from "./commandSchemas";
+import { referenceSchema, validateCommandAlternatives, validateCommandArguments, type CommandSchema } from "./commandSchemas";
 
 export const MACRO_LIMITS = { bytes: 256 * 1024, steps: 100, variables: 32, saved: 30 } as const;
 export interface MacroVariable {
@@ -67,6 +67,7 @@ function validateArgumentTemplate(schema: CommandSchema, value: JsonValue, varia
       validateArgumentTemplate(schema.properties![key], child, variables, `${path}.${key}`);
     }
     for (const key of schema.required ?? []) if (!Object.hasOwn(value, key)) throw new Error(`${path}.${key} is required.`);
+    validateCommandAlternatives(schema, variant => validateArgumentTemplate(variant, value, variables, path), path);
     return;
   }
   if (schema.type === "array" && Array.isArray(value)) {

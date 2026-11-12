@@ -1,7 +1,10 @@
+import { registerCadCommands } from "../commands/registerCadCommands";
 import { beforeEach, expect, it, vi } from "vitest";
 import { createEmptyDocument, upsertSketch } from "../cad/document/CadDocument";
 import { addLine, addPoint, createXySketch } from "../cad/sketch/SketchModel";
 import { createBoxTemplate } from "../templates/templates";
+import { resolveDocumentPlanes } from "../cad/sketch/planes";
+import { evaluateParameters } from "../cad/parameters/expressionEvaluator";
 import { rebuildDocument } from "../cad/features/rebuildGraph";
 import { buildSketchTrimExtend } from "../cad/sketch/trimExtend";
 import { buildContextualConstraint } from "../cad/sketch/contextualConstraints";
@@ -32,6 +35,7 @@ function resetDrafts() {
   useSolidDimensionEdit.setState({ frame: undefined });
 }
 beforeEach(() => {
+  const releaseCommands = registerCadCommands(() => true);
   resetDrafts(); useCadStore.setState(useCadStore.getInitialState(), true);
   useSketchCanvas.setState({ active: undefined, selection: undefined });
   useExtrudeDraft.setState({ draft: undefined }); useModelingDraft.setState({ draft: undefined });
@@ -39,6 +43,7 @@ beforeEach(() => {
   useFacePocketIntent.setState({ source: undefined });
   useFileJobs.setState({ exportOpen: false }); useProjectWorkflow.setState({ active: undefined });
   mocks.preview.mockReset(); mocks.preview.mockImplementation(rebuildDocument);
+  return releaseCommands;
 });
 function canvasFixture() {
   let sketch = createXySketch(); let lineId = "";
@@ -57,6 +62,7 @@ function canvasFixture() {
 function nativeFixture() {
   const document = createBoxTemplate(), result = rebuildDocument(document);
   // Simulated responses prove transaction guards; browser tests prove native BRep.
+  result.availableFaces = resolveDocumentPlanes(document, evaluateParameters(document.parameters).values).faces;
   for (const mesh of result.meshes) { mesh.geometrySource = "opencascade"; mesh.geometryAssertions = { valid: true, solidCount: 1, volume: 1000, surfaceArea: 600 }; }
   useCadStore.setState({ ...useCadStore.getInitialState(), history: { past: [], present: document, future: [] }, activeComponentId: document.rootComponentId, rebuild: { status: "succeeded", kernelReady: true, result }, rebuildNow: vi.fn() }, true);
   useSketchCanvas.setState({ active: undefined, selection: undefined });

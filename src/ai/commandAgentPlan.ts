@@ -3,9 +3,18 @@ import { parseBoundedJson } from "../persistence/importSafety";
 import { CAD_COMMAND_SCHEMAS, isCadCommandId, type CadCommandId } from "../commands/cadCommands";
 import { validateCommandArguments } from "../commands/commandSchemas";
 import { objectArguments, stringArgument } from "../commands/protocol";
+import { featureComponentId } from "../cad/document/components";
+import { stableBodyIdForFeature } from "../cad/features/featureGraph";
 import type { CadDocument } from "../cad/document/schema";
 import type { JsonValue } from "../commands/registry";
 
+interface CommandAgentFace {
+  id: string;
+  featureId: string;
+  bodyId: string;
+  componentId: string;
+  label: string;
+}
 export interface CommandAgentContext {
   session: number;
   document: CadDocument;
@@ -14,6 +23,7 @@ export interface CommandAgentContext {
   native: boolean;
   bodies: Array<{ id: string; volume: number; solidCount: number; valid: boolean }>;
   diagnostics: string[];
+  faces?: CommandAgentFace[];
 }
 export interface CommandAgentProposal {
   kind: "clarification" | "plan";
@@ -24,7 +34,7 @@ export interface CommandAgentProposal {
 }
 export const COMMAND_AGENT_LIMITS = { contextBytes: 20000, steps: 12, proposalBytes: 48000 } as const;
 export function validateCommandAgentContext(value: unknown): CommandAgentContext {
-  const source = objectArguments(value, ["session", "document", "activeComponentId", "selection", "native", "bodies", "diagnostics"]);
+  const source = objectArguments(value, ["session", "document", "activeComponentId", "selection", "native", "bodies", "diagnostics", "faces"]);
   if (!Number.isSafeInteger(source.session) || Number(source.session) < 0 || typeof source.native !== "boolean") throw new Error("Invalid project session or native status.");
   if (!source.document || typeof source.document !== "object") throw new Error("Current project context is missing.");
   const document = importProjectText(JSON.stringify(source.document));
@@ -42,7 +52,26 @@ export function validateCommandAgentContext(value: unknown): CommandAgentContext
     if (typeof body.volume !== "number" || !Number.isFinite(body.volume) || body.volume < 0 || !Number.isSafeInteger(body.solidCount) || Number(body.solidCount) < 1 || typeof body.valid !== "boolean") throw new Error("Invalid body context.");
     return { id: stringArgument(body.id, "Body ID", 160), volume: body.volume, solidCount: Number(body.solidCount), valid: body.valid };
   });
-  const context = { bodies, session: Number(source.session), document, activeComponentId, selection, native: source.native, diagnostics: source.diagnostics.map(value => stringArgument(value, "Diagnostic", 500)) };
+  let faces: CommandAgentFace[] | undefined;
+  if (source.faces !== undefined) {
+    if (!Array.isArray(source.faces) || source.faces.length > 32 || (!source.native && source.faces.length))
+      throw new Error("Native face context exceeds its supported limit or belongs to an unavailable rebuild.");
+    const owners = new Map(document.features.map(feature => [feature.id, feature]));
+    const bodyIds = new Set(bodies.map(body => body.id));
+    const ids = new Set<string>();
+    faces = source.faces.map(value => {
+      const face = objectArguments(value, ["id", "featureId", "bodyId", "componentId", "label"]);
+      const id = stringArgument(face.id, "Face ID", 300), featureId = stringArgument(face.featureId, "Face feature", 160);
+      const bodyId = stringArgument(face.bodyId, "Face body", 160);
+      const owner = owners.get(featureId);
+      if (ids.has(id) || !owner || featureComponentId(document, owner) !== activeComponentId ||
+          stableBodyIdForFeature(featureId) !== bodyId || !bodyIds.has(bodyId) || face.componentId !== activeComponentId)
+        throw new Error("Native face context contains a duplicate or unknown owner outside the active component.");
+      ids.add(id);
+      return { id, featureId, bodyId, componentId: activeComponentId, label: stringArgument(face.label, "Face label", 300) };
+    });
+  }
+  const context = { bodies, ...(faces ? { faces } : {}), session: Number(source.session), document, activeComponentId, selection, native: source.native, diagnostics: source.diagnostics.map(value => stringArgument(value, "Diagnostic", 500)) };
   if (new TextEncoder().encode(JSON.stringify(context)).byteLength > COMMAND_AGENT_LIMITS.contextBytes) throw new Error("This project exceeds the command agent's 20 kB context budget. Use stable commands or an external live agent for this project.");
   return context;
 }

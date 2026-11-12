@@ -3,6 +3,8 @@
 Menus, tools and dialogs route through one discoverable command registry. Use
 `window.plaincadCommands` or `npm run cad` to drive the same guarded actions from
 scripts and agents. See [shared commands and CLI examples](docs/COMMANDS.md).
+Current native faces can drive a shared [face sketch and pocket workflow](docs/STABLE_COMMANDS.md#modeling-limits),
+including depth edits and atomic CLI/AI preview and Undo.
 
 The bottom **Automation** dock records semantic modeling commands as named
 workflows. Make inputs adjustable, save locally or download JSON, then replay
@@ -572,8 +574,7 @@ remain runtime data.
 | `npm run test:ai:browser` | Controlled AI corpus and Focused workflows on all three engines, development server on strict port 5281. |
 | `npm run test:ai:live` | Opt-in live provider checks, strict port 5291. |
 
-Every completed item requires Prism review with Anthropic `claude-sonnet-5-5`
-and `npm run check:item`, plus focused tests for affected behavior outside the
+Every completed item requires an internal agent review and `npm run check:item`, plus focused tests for affected behavior outside the
 smoke set. After every **five completed items**, run `npm run release:check`
 before committing or handing off the fifth item. Count requested changes rather
 than fixup commits, and record the count and check results in
@@ -581,7 +582,7 @@ than fixup commits, and record the count and check results in
 after a successful full gate. A missing or uncertain count requires a full gate
 to establish a baseline; failed checks must be fixed before moving on. The full
 gate already includes the reduced checks, so item five needs one full run and
-Prism review rather than two test runs.
+an internal agent review rather than two test runs.
 
 Install Chromium before the per-item gate:
 

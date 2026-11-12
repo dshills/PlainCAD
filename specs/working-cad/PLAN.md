@@ -33,7 +33,7 @@ Each phase should include:
 - unit tests for model logic,
 - integration tests for user-visible workflows,
 - browser smoke coverage when UI behavior changes,
-- Prism review before commit.
+- Independent internal agent review before commit.
 
 ## 3. Phase 0 - Baseline Hardening and Planning Alignment
 
@@ -816,7 +816,7 @@ Prepare the working CAD system for sustained use and future feature expansion.
 - Prefer source-linked diagnostics over generic failure messages.
 - Use stable IDs for durable references.
 - Treat imported files as untrusted input.
-- Run Prism review before committing each phase.
+- Run an independent internal agent review before committing each phase.
 
 ## 20. Suggested Commit Boundaries
 

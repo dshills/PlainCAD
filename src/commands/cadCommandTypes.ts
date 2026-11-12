@@ -11,6 +11,8 @@ type Operation = "newBody" | "join" | "cut";
 type Direction = "positive" | "negative" | "symmetric";
 type FeatureInput = Named & { sketchId: string; profileId?: string; operation?: Operation; targetBodyIds?: string[] };
 type Edge = { featureId: string; role: SupportedEdgeRole; sourceEntityId?: string };
+type Face = { featureId: string; stableFaceId: string };
+type ExtrudeEnd = { distance: string; termination?: never } | { termination: { type: "throughAll" } | ({ type: "toFace" } & Face); distance?: never };
 type AuthoredUnit = "" | UnitSettings["length"] | UnitSettings["angle"];
 /** Compile-time counterparts of the strict catalog schemas. JSON callers are
  * still validated at runtime; IDs and $aliases share the string representation. */
@@ -21,6 +23,7 @@ export type CadCommandArguments = {
   "cad.component.rename": { componentId: string; name: string };
   "cad.component.place": { componentId: string; translation: [number, number, number]; rotation: [number, number, number] };
   "cad.sketch.create": { name: string; plane: OriginPlane; componentId?: string; offset?: string; as?: string };
+  "cad.sketch.createOnFace": Face & { name: string; componentId?: string; as?: string };
   "cad.sketch.draw": SketchGeometry & { tool: CanvasTool; points: CanvasPoint[]; clockwise?: boolean; sizes?: CanvasSizeInput };
   "cad.sketch.point": SketchGeometry & { point: Point };
   "cad.sketch.rectangle": SketchGeometry & { width: string; height: string; origin?: Point };
@@ -30,7 +33,8 @@ export type CadCommandArguments = {
   "cad.sketch.construction": { sketchId: string; entityIds: string[]; construction: boolean };
   "cad.sketch.dimension": { sketchId: string; type: SketchDimension["type"]; refs: string[]; expression: string; authoredUnit?: AuthoredUnit; dimensionId?: string; as?: string };
   "cad.sketch.deleteEntities": { sketchId: string; entityIds: string[] };
-  "cad.feature.extrude": FeatureInput & { distance: string; direction?: Direction };
+  "cad.feature.extrude": FeatureInput & ExtrudeEnd & { direction?: Direction };
+  "cad.feature.pocket": Named & { sketchId: string; profileId?: string; targetBodyId: string } & ({ distance: string; throughAll?: never } | { throughAll: true; distance?: never });
   "cad.feature.revolve": FeatureInput & { angle: string; axis?: "X" | "Y" | "Z"; axisLineId?: string };
   "cad.feature.hole": Named & { sketchId: string; centerPointIds: string[]; targetBodyIds: string[]; diameter: string; direction?: "positive" | "negative" } & ({ depth: string; throughAll?: false } | { throughAll: true });
   "cad.feature.fillet": Named & { edges: Edge[]; radius: string };

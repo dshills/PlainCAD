@@ -1,4 +1,4 @@
-import type { CadDocument, ExpressionRef, Feature, OriginPlane, Sketch, SketchDimension } from "../cad/document/schema";
+import type { CadDocument, ExpressionRef, ExtrudeTermination, FacePlaneReference, Feature, OriginPlane, Sketch, SketchDimension } from "../cad/document/schema";
 import { deleteFeature, nowIso, touchDocument, upsertFeature, upsertParameter, upsertSketch } from "../cad/document/CadDocument";
 import { addComponent, featureComponentId, renameComponent } from "../cad/document/components";
 import { withComponentPlacement } from "../cad/document/componentPlacement";
@@ -11,6 +11,8 @@ import { addArc, addCircle, addConstraint, addLine, addPoint, createSketchOnPlan
 import { withCanvasDimension } from "../cad/sketch/canvasDimensions";
 import { deleteSketchEntities } from "../cad/sketch/entityDeletion";
 import { solveSketch } from "../cad/sketch/SketchSolver";
+import { faceOwnerModifiedBefore, resolveDocumentPlanes } from "../cad/sketch/planes";
+import { facePocketFeature } from "../cad/features/facePocket";
 import { detectProfiles } from "../cad/sketch/profileDetection";
 import { createExtrudeEdgeRef, resolveSupportedEdgeRefs, type SupportedEdgeRole } from "../cad/features/topologyRefs";
 import { stableBodyIdForFeature } from "../cad/features/featureGraph";
@@ -19,10 +21,17 @@ import type { CanvasPoint, CanvasTool } from "../cad/sketch/canvasGeometry";
 import { CAD_COMMAND_SCHEMAS, isCadCommandId } from "./cadCommands";
 import { validateCommandArguments } from "./commandSchemas";
 import type { JsonValue } from "./registry";
+import type { RebuildResult } from "../cad/worker/workerProtocol";
 import type { TypedCadCommandCall } from "./cadCommandTypes";
 
 export interface CadCommandCall { command: string; arguments?: JsonValue }
-export interface CadCommandContext { aliases?: Record<string, string> }
+export interface CadCommandContext {
+  aliases?: Record<string, string>;
+  /** Local interactive draft identity, never read from JSON arguments. */
+  draftPocketId?: string;
+  /** Local analysis from the exact immutable document being edited. */
+  native?: Pick<RebuildResult, "profiles" | "availableFaces">;
+}
 export interface CadCommandResult {
   id?: string;
   entityIds?: string[];
@@ -41,7 +50,7 @@ export interface CadCommandResult {
 }
 export interface AppliedCadCommand { document: CadDocument; result: CadCommandResult; aliases: Record<string, string> }
 
-/** Pure immutable intent execution. No store, renderer, worker or runtime proof is accepted. */
+/** Pure immutable intent execution. No store, renderer, worker or caller-provided JSON proof. */
 export function applyCadCommand(document: CadDocument, call: CadCommandCall | TypedCadCommandCall, context: CadCommandContext = {}): AppliedCadCommand {
   if (!isCadCommandId(call.command)) throw new Error(`Unsupported semantic CAD command: ${call.command}.`);
   validateCommandArguments(CAD_COMMAND_SCHEMAS[call.command], call.arguments);
@@ -68,10 +77,11 @@ export function applyCadCommand(document: CadDocument, call: CadCommandCall | Ty
     return evaluated.quantity?.dimension === "scalar" && authored.quantity?.dimension === "length" ? `((${value}) * 1${document.unitSettings.length})` : `(${value})`;
   };
   const positive = (value: string, label: string, angle = false) => {
-    const evaluated = evaluateExpressionRef(expression(value, angle), { parameters: evaluateParameters(document.parameters).values });
+    const ref = expression(value, angle);
+    const evaluated = evaluateExpressionRef(ref, { parameters: evaluateParameters(document.parameters).values });
     if (evaluated.error || !evaluated.quantity || evaluated.quantity.dimension !== (angle ? "angle" : "length") || evaluated.quantity.value <= 1e-7 || Math.abs(evaluated.quantity.value) > (angle ? Math.PI * 2 + 1e-8 : 1e8))
       throw new Error(`${label} requires a positive ${angle ? "angle of at most one turn" : "length within modeling limits"}. ${evaluated.error ?? ""}`);
-    return expression(value, angle);
+    return ref;
   };
   let next = document;
   let result: CadCommandResult = {};
@@ -96,12 +106,17 @@ export function applyCadCommand(document: CadDocument, call: CadCommandCall | Ty
     return ids;
   };
   const profile = (sketch: Sketch) => {
-    const detection = detectProfiles(solveSketch(sketch, evaluateParameters(document.parameters).values));
+    const current = context.native?.profiles?.[sketch.id];
+    if (sketch.projections?.length && !current) throw new Error("Wait for a current native rebuild of the linked sketch before choosing its profile.");
+    const detection = current ? { profiles: current, errors: [] } : detectProfiles(solveSketch(sketch, evaluateParameters(document.parameters).values));
     const requested = args.profileId === undefined ? undefined : reference(args.profileId, "profileId");
     const selected = requested ? detection.profiles.find(item => item.id === requested || item.alternateIds?.includes(requested)) : detection.profiles.length === 1 ? detection.profiles[0] : undefined;
     if (!selected) throw new Error(`Select one current closed profile. ${detection.errors[0] ?? (detection.profiles.length > 1 ? "Multiple profiles require an explicit profileId." : "Sketch has no usable closed profile.")}`);
     return selected.id;
   };
+  const faceReference = (input: { featureId?: JsonValue; stableFaceId?: JsonValue }): FacePlaneReference => ({
+    type: "face", featureId: reference(input.featureId, "featureId"), stableFaceId: reference(input.stableFaceId, "stableFaceId"),
+  });
   const putFeature = (feature: Feature) => {
     next = upsertFeature(document, feature);
     result = { id: feature.id, ...((feature.type === "extrude" || feature.type === "revolve") && feature.operation === "newBody" ? { bodyId: stableBodyIdForFeature(feature.id) } : {}) };
@@ -144,6 +159,22 @@ export function applyCadCommand(document: CadDocument, call: CadCommandCall | Ty
     }
     const sketch = { ...createSketchOnPlane(string("name")!, args.offset === undefined ? plane : { type: "offset" as const, base: plane, offset: expression(string("offset")!) }), componentId: getComponent() };
     next = upsertSketch(document, sketch);
+    result = { id: sketch.id };
+  } else if (call.command === "cad.sketch.createOnFace") {
+    const plane = faceReference(args);
+    const owner = document.features.find(item => item.id === plane.featureId);
+    if (!owner) throw new Error("Face owner was lost. Select a current supported planar face.");
+    const componentId = featureComponentId(document, owner);
+    if (args.componentId !== undefined && getComponent() !== componentId) throw new Error("A face sketch must belong to its face owner's component.");
+    const sketch = { ...createSketchOnPlane(string("name")!, plane), componentId };
+    next = upsertSketch(document, sketch);
+    if (context.native?.availableFaces) {
+      if (!context.native.availableFaces.some(face => face.featureId === plane.featureId && face.id === plane.stableFaceId))
+        throw new Error("The native face reference was lost. Reselect a supported planar face.");
+    } else {
+      const resolution = resolveDocumentPlanes(next, evaluateParameters(next.parameters).values, undefined, true);
+      if (!resolution.transforms.has(sketch.id)) throw new Error(resolution.errors.get(sketch.id) ?? "The supported face reference was lost.");
+    }
     result = { id: sketch.id };
   } else if (call.command.startsWith("cad.sketch.")) {
     let sketch = getSketch();
@@ -241,13 +272,46 @@ export function applyCadCommand(document: CadDocument, call: CadCommandCall | Ty
     const operation = (string("operation", "newBody")) as "newBody" | "join" | "cut";
     if (operation === "newBody" && args.targetBodyIds !== undefined) throw new Error("New-body features cannot specify boolean targets.");
     const base = { id: createId("feature"), createdAt: nowIso(), name: string("name", call.command.endsWith("extrude") ? "Extrude" : "Revolve")!, componentId, sketchId: sketch.id, profileId: profile(sketch), operation, ...(operation !== "newBody" ? { targetBodyIds: targets(componentId) } : {}) };
-    if (call.command === "cad.feature.extrude") putFeature({ ...base, type: "extrude", direction: string("direction", "positive") as "positive" | "negative" | "symmetric", distance: positive(string("distance")!, "Distance") });
+    if (call.command === "cad.feature.extrude") {
+      if ((args.distance === undefined) === (args.termination === undefined)) throw new Error("Provide distance or termination, exclusively.");
+      const direction = string("direction", "positive") as "positive" | "negative" | "symmetric";
+      const ending = args.termination as { type: "throughAll" | "toFace"; featureId?: JsonValue; stableFaceId?: JsonValue } | undefined;
+      let termination: ExtrudeTermination | undefined;
+      if (ending?.type === "throughAll") {
+        if (operation === "newBody" || ending.featureId !== undefined || ending.stableFaceId !== undefined)
+          throw new Error("Through All requires Cut or Join with explicit target bodies and no terminating face.");
+        termination = { type: "throughAll" };
+      } else if (ending?.type === "toFace") {
+        const face = faceReference(ending);
+        const owner = document.features.find(item => item.id === face.featureId);
+        const faces = context.native?.availableFaces ?? resolveDocumentPlanes(document, evaluateParameters(document.parameters).values, undefined, true).faces;
+        if (direction !== "positive" || !owner || featureComponentId(document, owner) !== componentId || faceOwnerModifiedBefore(document, owner.id, {}) ||
+            !faces.some(item => item.featureId === face.featureId && item.id === face.stableFaceId))
+          throw new Error("To Face requires a positive direction and an unmodified supported planar face in this component.");
+        termination = { type: "toFace", faceRef: { kind: "face", role: "planarFace", featureId: face.featureId, transientId: face.stableFaceId, stableHint: face.stableFaceId } };
+      }
+      putFeature({ ...base, type: "extrude", direction, distance: termination ? expression("10mm") : positive(string("distance")!, "Distance"), ...(termination ? { termination } : {}) });
+    }
     else {
       if (args.axis !== undefined && args.axisLineId !== undefined) throw new Error("Choose an origin axis or sketch line, not both.");
       const lineId = args.axisLineId === undefined ? undefined : reference(args.axisLineId, "axisLineId");
       if (lineId && sketch.entities[lineId]?.type !== "line") throw new Error("Revolve axis must be a current sketch line.");
       putFeature({ ...base, type: "revolve", angle: positive(string("angle")!, "Angle", true), axis: lineId ? { type: "sketchLine", sketchId: sketch.id, lineId } : { type: "origin", axis: string("axis", "Y") as "X" | "Y" | "Z" } });
     }
+  } else if (call.command === "cad.feature.pocket") {
+    const sketch = getSketch();
+    const targetBodyId = reference(args.targetBodyId, "targetBodyId");
+    const throughAll = args.throughAll === true;
+    if (throughAll === (args.distance !== undefined)) throw new Error("Provide pocket distance or throughAll: true, exclusively.");
+    const distance = throughAll ? expression("2mm") : positive(string("distance")!, "Pocket depth");
+    const id = context.draftPocketId ?? createId("feature");
+    if (document.features.some(feature => feature.id === id)) throw new Error("Pocket draft identity is already in use.");
+    putFeature(facePocketFeature(document, { id, type: "extrude", createdAt: nowIso(),
+      name: string("name", "Pocket")!, componentId: sketch.componentId ?? document.rootComponentId, sketchId: sketch.id,
+      profileId: profile(sketch), operation: "cut", direction: "negative", distance,
+      termination: throughAll ? { type: "throughAll" } : { type: "distance", distance },
+    }, targetBodyId));
+    result.bodyId = targetBodyId;
   } else if (call.command === "cad.feature.hole") {
     const sketch = getSketch(), componentId = sketch.componentId ?? document.rootComponentId;
     const centerPointIds = references(args.centerPointIds, "centerPointIds");
@@ -268,7 +332,14 @@ export function applyCadCommand(document: CadDocument, call: CadCommandCall | Ty
     for (const key of Object.keys(args)) if (!allowed.has(key)) throw new Error(`${key} is not a setting for ${feature.type}.`);
     let updated: Feature = { ...feature, ...(args.name === undefined ? {} : { name: string("name")! }), ...(args.suppressed === undefined ? {} : { suppressed: args.suppressed as boolean }) };
     if (updated.type === "extrude") {
-      if (args.distance !== undefined) { const distance = positive(string("distance")!, "Distance"); updated = { ...updated, distance, ...(updated.termination ? { termination: { type: "distance", distance } } : {}) }; }
+      if (args.distance !== undefined) {
+        const previous = updated.termination?.type === "distance" ? (updated.termination.distance ?? updated.distance) : updated.distance;
+        const text = string("distance")!;
+        // An untouched finite depth is not a new unit-bearing expression.
+        const unchanged = (!updated.termination || updated.termination.type === "distance") && previous.expression === text;
+        const distance = unchanged ? previous : positive(text, "Distance");
+        updated = { ...updated, distance, ...(updated.termination ? { termination: { type: "distance", distance } } : {}) };
+      }
       if (args.direction !== undefined) updated = { ...updated, direction: string("direction") as "positive" | "negative" | "symmetric" };
     } else if (updated.type === "revolve") {
       if (args.angle !== undefined) updated = { ...updated, angle: positive(string("angle")!, "Angle", true) };

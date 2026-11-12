@@ -13,8 +13,14 @@ export async function captureCommandAgentContext() {
       !Array.isArray(value.rebuild.errors) || value.rebuild.errors.some(error => !record(error) || typeof error.message !== "string") ||
       !Array.isArray(value.rebuild.bodies) || (value.rebuild.native && value.rebuild.bodies.some(body => !record(body) || typeof body.id !== "string" || !record(body.assertions) || typeof body.assertions.volume !== "number" || typeof body.assertions.solidCount !== "number" || typeof body.assertions.valid !== "boolean")))
     throw new Error("The command registry returned an incomplete project snapshot. Refresh the project before asking the agent.");
+  const faceRecords = value.rebuild.faces;
+  const faces = value.rebuild.native && Array.isArray(faceRecords) ? faceRecords.flatMap(face => {
+    if (!record(face) || face.componentId !== value.activeComponentId) return [];
+    const { id, featureId, bodyId, componentId, label } = face;
+    return [{ id, featureId, bodyId, componentId, label: typeof label === "string" ? label.slice(0, 300) : label }];
+  }).slice(0, 32) : undefined;
   const snapshot = value as unknown as { session: number; document: unknown; activeComponentId: string; selection: { selectedIds: unknown[] }; rebuild: { native: boolean; errors: { message: string }[]; bodies: { id: string; assertions: { volume: number; solidCount: number; valid: boolean } }[] } };
-  return validateCommandAgentContext({ session: snapshot.session, document: snapshot.document, activeComponentId: snapshot.activeComponentId, selection: snapshot.selection.selectedIds, native: snapshot.rebuild.native, bodies: (snapshot.rebuild.native ? snapshot.rebuild.bodies : []).map(body => ({ id: body.id, volume: body.assertions.volume, solidCount: body.assertions.solidCount, valid: body.assertions.valid })), diagnostics: snapshot.rebuild.errors.map(error => error.message.slice(0, 500)).slice(0, 32) });
+  return validateCommandAgentContext({ ...(faces ? { faces } : {}), session: snapshot.session, document: snapshot.document, activeComponentId: snapshot.activeComponentId, selection: snapshot.selection.selectedIds, native: snapshot.rebuild.native, bodies: (snapshot.rebuild.native ? snapshot.rebuild.bodies : []).map(body => ({ id: body.id, volume: body.assertions.volume, solidCount: body.assertions.solidCount, valid: body.assertions.valid })), diagnostics: snapshot.rebuild.errors.map(error => error.message.slice(0, 500)).slice(0, 32) });
 }
 export function prepareCommandAgentRequest(provider: AiProvider, model: string, prompt: string, messages: AiMessage[], commandContext: CommandAgentContext) {
   if (!prompt.trim() || prompt.length > AI_LIMITS.promptCharacters) throw new Error(`Describe the requested edits in 1–${AI_LIMITS.promptCharacters} characters.`);

@@ -1,4 +1,5 @@
 import { bindCommand, invokeCommand, configureCommandRuntime, describeCommands, executeCommand, type CommandDescriptor, type JsonValue } from "./registry";
+import { nativeCommandFaces } from "./nativeCommandFaces";
 import { objectArguments, stringArgument } from "./protocol";
 import { flushSync } from "react-dom";
 import { useCadStore } from "../state/useCadStore";
@@ -15,7 +16,7 @@ let canEdit: () => boolean;
 function snapshot() {
   const state = useCadStore.getState(), current = state.rebuild.status === "succeeded" && state.rebuild.result?.success && state.rebuild.result.documentId === state.history.present.id;
   return { session: state.documentSession, document: JSON.parse(serializeProject(state.history.present)), activeComponentId: state.activeComponentId, selection: state.selection,
-    rebuild: { status: state.rebuild.status, native: Boolean(current && state.rebuild.result?.meshes.length && state.rebuild.result.meshes.every(mesh => mesh.geometrySource === "opencascade" && mesh.geometryAssertions?.valid)), errors: state.rebuild.result?.errors ?? [], bodies: current ? state.rebuild.result!.meshes.map(mesh => ({ id: mesh.bodyId, bounds: mesh.bounds, assertions: mesh.geometryAssertions })) : [] },
+    rebuild: { status: state.rebuild.status, native: Boolean(current && state.rebuild.result?.meshes.length && state.rebuild.result.meshes.every(mesh => mesh.geometrySource === "opencascade" && mesh.geometryAssertions?.valid)), errors: state.rebuild.result?.errors ?? [], faces: nativeCommandFaces(state), bodies: current ? state.rebuild.result!.meshes.map(mesh => ({ id: mesh.bodyId, bounds: mesh.bounds, assertions: mesh.geometryAssertions })) : [] },
     history: { undo: state.history.past.length, redo: state.history.future.length }, fileError: state.fileError ?? null,
     alerts: typeof document === "undefined" ? [] : [...document.querySelectorAll('[role="alert"]')].filter(element => !element.closest("[hidden], [inert], [aria-hidden='true']")).map(element => element.textContent?.trim()).filter(Boolean) } as unknown as JsonValue;
 }

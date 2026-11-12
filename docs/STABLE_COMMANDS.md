@@ -20,6 +20,7 @@ before accepting edits.
 | `cad.component.rename` | `componentId`, `name` |
 | `cad.component.place` | `componentId`, three-number `translation` in mm and `rotation` in radians; X then Y then Z |
 | `cad.sketch.create` | `name`, `plane`: XY/XZ/YZ; optional `componentId`, signed `offset` expression; defaults to root component |
+| `cad.sketch.createOnFace` | `name`, `featureId`, `stableFaceId`; optional matching `componentId`. Pick a current native face from `runtime.snapshot.rebuild.faces`. |
 | `cad.sketch.draw` | `sketchId`, `tool`, numeric-mm `points` with optional existing `pointId`; optional `sizes`, `construction`, `clockwise`; the same sized drawing helper used by mouse gestures |
 | `cad.sketch.point` | `sketchId`, `point`: `{x,y}` expressions |
 | `cad.sketch.rectangle` | `sketchId`, `width`, `height`; optional corner `origin`: `{x,y}`; positive sizes |
@@ -29,7 +30,8 @@ before accepting edits.
 | `cad.sketch.construction` | `sketchId`, `entityIds`, `construction` boolean |
 | `cad.sketch.dimension` | `sketchId`, `type`, `refs`, `expression`; optional `authoredUnit`, `dimensionId` for editing existing dimensions without changing their type/references |
 | `cad.sketch.deleteEntities` | `sketchId`, `entityIds`; removes dependent dimensions and orphan points using the same deletion planner as the UI |
-| `cad.feature.extrude` | `sketchId`, `distance`; optional `profileId`, `direction`, `operation`, `targetBodyIds`, `name` |
+| `cad.feature.extrude` | `sketchId`, either `distance` or `termination`; optional `profileId`, `direction`, `operation`, `targetBodyIds`, `name` |
+| `cad.feature.pocket` | Plan only: `sketchId`, `targetBodyId`, either `distance` or `throughAll: true`; optional `profileId`, `name`. Cuts inward from a supported face sketch. |
 | `cad.feature.revolve` | `sketchId`, `angle` up to one turn; optional `profileId`, origin `axis`: X/Y/Z or `axisLineId`, `operation`, `targetBodyIds`, `name` |
 | `cad.feature.hole` | `sketchId`, `centerPointIds`, `targetBodyIds`, `diameter`, and either `depth` or `throughAll: true`; positive/negative `direction` |
 | `cad.feature.fillet` | supported `edges`, `radius`; optional `name` |
@@ -77,12 +79,32 @@ after topology-changing edits instead of assuming old IDs still match.
 
 ## Modeling limits
 
-The stable sketch-plane command supports origin planes and origin-plane offsets.
-Face-plane repair and arbitrary topology selection continue through their existing
-UI commands. Extrusion creation uses distance termination; existing advanced UI
-commands expose through-all/to-face tools. Boolean features require explicit,
-nonempty target body IDs in the same component. Native rebuild verifies final
-body availability and scope.
+`cad.sketch.create` supports origin planes and origin-plane offsets.
+`cad.sketch.createOnFace` uses a stable feature-owned planar reference on an
+existing native body. IDs are published only for a current successful rebuild.
+Direct execution checks that native face before creating the sketch; plans
+validate the candidate sketch at its timeline position in the worker. Repair
+and arbitrary topology picking remain separate UI tasks.
+
+`cad.feature.extrude` accepts `{ "type": "throughAll" }` for scoped Cut or Join,
+or `{ "type": "toFace", "featureId": "…", "stableFaceId": "…" }` for positive
+extrusions to a covering, unmodified supported planar face in the same component.
+Use `plan.preview` for native coverage and target checks before Apply.
+Boolean features require explicit, nonempty targets in the same component.
+
+For a face pocket, put `cad.sketch.createOnFace`, a closed region such as
+`cad.sketch.rectangle`, and `cad.feature.pocket` into one `plan.preview`.
+Use the listed face's `bodyId` as `targetBodyId`, and the sketch's local
+coordinates for the region. The pocket selects inward direction automatically,
+reduces the target's exact volume, and leaves one valid native solid. Apply the
+plan once, or Cancel with no change. Later, preview `cad.feature.update` with the
+pocket feature ID and a new `distance`; it retains body and feature identity.
+Changed bare depths use the current project length unit; untouched expressions
+keep their authored units. Use explicit units to lock size. Interactive Draw on face, Remove material and
+straightforward depth edits use the same authored commands with native previews.
+Recorded face references target existing project faces. A recording does not
+rebind a composite `stableFaceId` to a newly replayed owner; select an existing
+face or supply its current ID when replaying such a workflow.
 
 Edge specifications are `{featureId, role, sourceEntityId?}`. Roles are
 `startCapPerimeter`, `endCapPerimeter`, or `profileEdge` (requires a source line).

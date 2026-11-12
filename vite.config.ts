@@ -57,6 +57,7 @@ export default defineConfig({
           // stores and file actions and must stay with the application entry.
           if (/\/src\/commands\/(registry|protocol|CommandHost|interactionEvents|inputDriver|nativeEvents|artifacts)\.tsx?$/.test(path)) return "command-runtime";
           if (/\/src\/commands\/(cadCommands|cadCommandOperations|commandSchemas)\.ts$/.test(path)) return "cad-command-model";
+          if (/\/src\/commands\/(commandPlans|nativeCommandFaces)\.ts$/.test(path)) return "command-plan-runtime";
           if (path.endsWith("/src/commands/macros.ts")) return "macro-model";
           if (path.endsWith("/src/commands/liveSession.ts")) return "live-command-runtime";
           if (path.includes("/src/state/") || path.includes("/src/ui/themes/")) return "application-state";

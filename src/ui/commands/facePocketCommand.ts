@@ -4,8 +4,8 @@ export { useFacePocket } from "./interactionDraftState";
 import type { CadDocument } from "../../cad/document/schema";
 import type { RebuildResult } from "../../cad/worker/workerProtocol";
 import { featureComponentId } from "../../cad/document/components";
-import { upsertSketch } from "../../cad/document/CadDocument";
-import { createSketchOnPlane } from "../../cad/sketch/SketchModel";
+import { invokeCommand } from "../../commands/registry";
+import type { CadCommandResult } from "../../commands/cadCommandOperations";
 import { sketchPlaneChoices, type SketchPlaneChoice } from "../../cad/sketch/planePicking";
 import { guidedFaceTriangles } from "../../cad/sketch/guidedHoleGeometry";
 import { hiddenViewerBodies, useViewerState } from "../../state/viewerState";
@@ -79,13 +79,17 @@ export function drawOnPocketFace() {
   if (!frame || !facePocketCurrent(frame)) throw new Error("The project, component or geometry changed. Cancel and choose the face again.");
   const choice: SketchPlaneChoice | undefined = facePocketFaces().find((item) => item.id === frame.choiceId);
   if (!choice || typeof choice.reference === "string") throw new Error("Select a supported planar face before choosing Draw here.");
-  const sketch = { ...createSketchOnPlane(`Pocket sketch ${Object.keys(frame.document.sketches).length + 1}`, choice.reference), componentId: frame.componentId };
   // Camera setup is view-only. Validate it before publishing the authored sketch,
   // so a renderer/controller error leaves the picker available for retry.
   alignToSketchPlane(choice);
   const state = useCadStore.getState();
-  state.updateDocument((document) => document === frame.document ? upsertSketch(document, sketch) : document);
-  if (!useCadStore.getState().history.present.sketches[sketch.id]) throw new Error("The face sketch could not be created. Check Issues and choose the face again.");
+  if (!facePocketCurrent(frame, state)) throw new Error("The project changed before drawing could start. Choose the face again.");
+  const { id } = invokeCommand("cad.sketch.createOnFace", "domain", [{
+    name: `Pocket sketch ${Object.keys(frame.document.sketches).length + 1}`, componentId: frame.componentId,
+    featureId: choice.reference.featureId, stableFaceId: choice.reference.stableFaceId,
+  }]) as CadCommandResult;
+  const sketch = id && useCadStore.getState().history.present.sketches[id];
+  if (!sketch) throw new Error("The face sketch could not be created. Check Issues and choose the face again.");
   try {
     state.select({ kind: "sketch", id: sketch.id, documentId: frame.document.id });
     const active = beginSketchCanvas(sketch.id);

@@ -1,3 +1,4 @@
+import { registerCadCommands } from "../commands/registerCadCommands";
 import { registerCameraController } from "../viewer/cameraController";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it } from "vitest";
@@ -35,6 +36,7 @@ function fixture() {
   return { document, result, feature };
 }
 beforeEach(() => {
+  const releaseCommands = registerCadCommands(() => true);
   useCadStore.setState(useCadStore.getInitialState(), true);
   useViewerState.setState({ session: -1, hiddenBodyIds: [], hiddenSketchIds: [], hiddenComponentIds: [] });
   cancelFacePocket();
@@ -43,6 +45,7 @@ beforeEach(() => {
   useExtrudeDraft.setState({ draft: undefined });
   useOperationDrop.setState({ frame: undefined });
   useSketchSolidHandoff.setState({ source: undefined });
+  return releaseCommands;
 });
 afterEach(() => { cleanup(); cancelFacePocket(); useSketchCanvas.setState({ active: undefined }); useExtrudeDraft.setState({ draft: undefined }); useOperationDrop.setState({ frame: undefined }); useSketchSolidHandoff.setState({ source: undefined }); });
 it("selects an explicit supported face without editing history and creates one editable face sketch on Draw here", () => {

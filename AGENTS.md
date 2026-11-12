@@ -25,7 +25,7 @@ that a capability works end to end.
 - Run focused tests with `npm test -- src/tests/document.test.ts` (substitute
   the relevant file).
 - `npm run build` checks TypeScript and creates `dist/`.
-- Run `npm run check:item` and Prism for every completed item before handoff or
+- Run `npm run check:item` and an internal agent review for every completed item before handoff or
   commit. The reduced gate runs type checking, all unit/component tests, the
   production build and bundle-size budget, development native modeling/stale-result
   smoke tests, and focused built-app modeling/AI/CSP browser tests. Add focused
@@ -34,7 +34,7 @@ that a capability works end to end.
   or committing that fifth item. It runs the complete development and production
   browser suites as well as type checking, unit/component tests, and build.
   The full gate includes the reduced checks, so it satisfies both test gates for
-  that item; Prism review is still required.
+  that item; internal agent review is still required.
   Track completed items and the last successful full gate in
   `specs/working-cad/VALIDATION_LOG.md`; an item is a completed requested change,
   not each fixup commit. Update the log with each item; reset the count only after a
@@ -125,11 +125,10 @@ configuration files. Keep `package-lock.json` consistent with dependency changes
 
 ## Implementation and validation
 
-Always use Prism with the Anthropic `claude-sonnet-5-5` model for code reviews. Run that
-review before handing off code changes or committing them, address actionable
-findings, and report the review result. Do not substitute another provider or
-model without the user's authorization. If Prism or the requested model is
-unavailable, report the limitation explicitly; do not claim that review passed.
+Use an independent internal agent for code reviews until the user changes this
+policy. Review the final diff before handing off or committing code, address
+and re-review actionable findings, and record the result. Do not invoke Prism
+unless the user explicitly restores it.
 
 Follow the surrounding TypeScript/React style: strict types, ES modules, named
 helpers, double-quoted strings, and semicolons. Keep CAD calculations in the CAD

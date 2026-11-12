@@ -38,6 +38,16 @@ it("preserves explicit clarification and rejects unsafe, oversized or executable
   expect(() => validateCommandAgentProposal(undefined)).toThrow(/no command proposal/);
   expect(() => validateCommandAgentRequest({ provider: "anthropic", model: "test", prompt: "Create", history: [], commandContext: context, credentials: "forbidden" })).toThrow(/unsupported/);
 });
+it("rejects ambiguous termination forms before a provider proposal can reach modeling", () => {
+  const extrude = (args: Record<string, unknown>) => ({ command: "cad.feature.extrude", arguments: { sketchId: "outline", ...args } });
+  const pocket = (args: Record<string, unknown>) => ({ command: "cad.feature.pocket", arguments: { sketchId: "outline", targetBodyId: "body:plate", ...args } });
+  for (const step of [extrude({}), extrude({ distance: "2mm", termination: { type: "throughAll" } }),
+    extrude({ termination: { type: "toFace", featureId: "plate" } }), extrude({ termination: { type: "throughAll", featureId: "plate" } }),
+    pocket({}), pocket({ distance: "2mm", throughAll: true })])
+    expect(() => validateCommandAgentProposal({ ...proposal, steps: [step] })).toThrow(/exclusively|To Face/);
+  const steps = [extrude({ termination: { type: "toFace", featureId: "plate", stableFaceId: "extrude:plate:endCap" } }), pocket({ throughAll: true })];
+  expect(validateCommandAgentProposal({ ...proposal, steps }).steps).toEqual(steps);
+});
 it("bounds conversation payloads without truncating a current project or half a turn", () => {
   const messages = Array.from({ length: 6 }, (_, index) => ({ role: (index % 2 ? "assistant" : "user") as "assistant" | "user", content: `Turn ${index} ` + "x".repeat(8000) }));
   const request = prepareCommandAgentRequest("openai", "test", "Create a part", messages, context);

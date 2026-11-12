@@ -1,5 +1,6 @@
 import type { CadDocument } from "../cad/document/schema";
 import type { RebuildResult } from "../cad/worker/workerProtocol";
+import { assertPocketCut } from "../cad/features/facePocket";
 import { createId } from "../cad/document/ids";
 import { previewModeling } from "../cad/worker/extrudePreviewClient";
 import { parseBoundedJson } from "../persistence/importSafety";
@@ -109,14 +110,17 @@ export async function previewCommandPlan(value: CommandPlanInput) {
   try {
     let document = frame.source;
     let aliases: Record<string, string> = {};
-    let result: RebuildResult | undefined;
+    let result = frame.beforeResult;
+    let provedDocument: CadDocument | undefined = result ? frame.source : undefined;
     let nativeChecks = 0;
     const calls: CadCommandCall[] = [];
     for (const [index, step] of input.steps.entries()) {
       ensureCurrent();
       useCommandPlan.setState({ progress: `Step ${index + 1}/${input.steps.length}: ${step.command}` });
       const call = { command: step.command, arguments: resolvePlanReferences(step.arguments ?? {}, frame.results) };
-      const applied = applyCadCommand(document, call, { aliases });
+      const beforeStep = document;
+      const prior = provedDocument === beforeStep ? result : undefined;
+      const applied = applyCadCommand(document, call, { aliases, native: prior });
       const changed = applied.document !== document;
       document = applied.document; aliases = applied.aliases;
       frame.results.push(JSON.parse(JSON.stringify({ ...applied.result, aliases })) as JsonValue);
@@ -125,7 +129,17 @@ export async function previewCommandPlan(value: CommandPlanInput) {
       if (changed && document.features.some(feature => !feature.suppressed)) {
         if (++nativeChecks > PLAN_LIMITS.nativeChecks) throw new Error("Split this plan into at most 16 edits to modeled geometry per preview.");
         result = await previewModeling(document, abort.signal); ensureCurrent(); nativeProof(result, document);
-      } else if (changed) result = undefined;
+        provedDocument = document;
+        if (call.command === "cad.feature.pocket") {
+          const bodyId = applied.result.bodyId;
+          if (!bodyId) throw new Error("Pocket did not identify its native target body.");
+          const mesh = prior?.meshes.find(item => item.bodyId === bodyId);
+          const proof = mesh?.geometryAssertions;
+          if (mesh?.geometrySource !== "opencascade" || !proof?.valid || proof.solidCount !== 1 || !(proof.volume > 0))
+            throw new Error("Pocket requires a single current native target body before the cut.");
+          assertPocketCut(result, bodyId, proof.volume);
+        }
+      } else if (changed) { result = undefined; provedDocument = undefined; }
     }
     if (document === frame.source) throw new Error("The command plan makes no changes.");
     assertProjectJsonShape(document);

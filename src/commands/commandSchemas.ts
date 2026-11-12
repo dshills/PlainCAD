@@ -7,7 +7,7 @@ export interface CommandSchema {
   required?: string[];
   additionalProperties?: false;
   items?: CommandSchema;
-  enum?: (string | number)[];
+  enum?: (string | number | boolean)[];
   minLength?: number;
   maxLength?: number;
   minItems?: number;
@@ -15,6 +15,7 @@ export interface CommandSchema {
   minimum?: number;
   maximum?: number;
   description?: string;
+  oneOf?: CommandSchema[];
 }
 export const expressionSchema: CommandSchema = { type: "string", minLength: 1, maxLength: 5000, description: "A unit-aware CAD expression; bare lengths use project authored units." };
 export const referenceSchema: CommandSchema = { type: "string", minLength: 1, maxLength: 300, description: "An existing stable ID or a $alias from this plan." };
@@ -26,6 +27,14 @@ export function arraySchema(items: CommandSchema, maximum = 64, minimum = 1): Co
 export function objectSchema(properties: Record<string, CommandSchema>, required: string[] = []): CommandSchema {
   return { type: "object", properties, required, additionalProperties: false };
 }
+export function validateCommandAlternatives(schema: CommandSchema, check: (variant: CommandSchema) => void, path: string) {
+  if (!schema.oneOf) return;
+  let matches = 0;
+  for (const variant of schema.oneOf) {
+    try { check(variant); matches++; } catch { /* Try the other declared form. */ }
+  }
+  if (matches !== 1) throw new Error(`${path}: ${schema.description ?? "Choose exactly one supported argument form."}`);
+}
 export function commandSchemaJson(schema: CommandSchema): JsonValue { return JSON.parse(JSON.stringify(schema)) as JsonValue; }
 export function validateCommandArguments(schema: CommandSchema, value: unknown, path = "arguments"): asserts value is Record<string, JsonValue> {
   if (schema.type === "object") {
@@ -36,6 +45,7 @@ export function validateCommandArguments(schema: CommandSchema, value: unknown, 
       validateCommandArguments(schema.properties![key], input[key], `${path}.${key}`);
     }
     for (const key of schema.required ?? []) if (!Object.hasOwn(input, key)) throw new Error(`${path}.${key} is required.`);
+    validateCommandAlternatives(schema, variant => validateCommandArguments(variant, input, path), path);
   } else if (schema.type === "array") {
     if (!Array.isArray(value) || value.length < (schema.minItems ?? 0) || value.length > (schema.maxItems ?? 64)) throw new Error(`${path} has an invalid array length.`);
     value.forEach((item, index) => validateCommandArguments(schema.items!, item, `${path}[${index}]`));
@@ -43,6 +53,6 @@ export function validateCommandArguments(schema: CommandSchema, value: unknown, 
     if (typeof value !== schema.type) throw new Error(`${path} must be ${schema.type}.`);
     if (typeof value === "string" && (value.trim().length < (schema.minLength ?? 0) || value.length > (schema.maxLength ?? 5000))) throw new Error(`${path} has an invalid string length.`);
     if (typeof value === "number" && (!Number.isFinite(value) || value < (schema.minimum ?? -Infinity) || value > (schema.maximum ?? Infinity))) throw new Error(`${path} must be a finite number within its bounds.`);
-    if (schema.enum && !schema.enum.includes(value as string | number)) throw new Error(`${path} must be one of ${schema.enum.join(", ")}.`);
+    if (schema.enum && !schema.enum.includes(value as string | number | boolean)) throw new Error(`${path} must be one of ${schema.enum.join(", ")}.`);
   }
 }

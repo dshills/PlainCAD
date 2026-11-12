@@ -4,6 +4,8 @@ import {
 } from "../../cad/parameters/expressionEvaluator";
 import { transformPoint } from "../../cad/sketch/planes";
 import { literalExtrusionDistance } from "../../viewer/extrudeDistanceHandle";
+import { applyCadCommand } from "../../commands/cadCommandOperations";
+import type { TypedCadCommandCall } from "../../commands/cadCommandTypes";
 import { bindDocumentExpressions } from "../../cad/parameters/expressionBindings";
 import { useFeatureDraftContext } from "./useFeatureDraftContext";
 import { documentAtFeature } from "../../cad/document/featureStage";
@@ -86,40 +88,57 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
     if (!workbench || termination !== "distance") setAdvancedOpen(true);
   }, [workbench, termination]);
   const targetFace = context?.faces.find((face) => face.id === faceId);
-  const staged = useMemo(
-    () =>
-      bindDocumentExpressions(
-        upsertFeature(draft.document, {
-          ...draft.feature,
-          profileId,
-          distance: { ...draft.feature.distance, expression: distance },
-          direction,
-          operation,
-          termination:
-            termination === "throughAll"
-              ? { type: "throughAll" }
-              : termination === "toFace" && targetFace
-                ? {
-                    type: "toFace",
-                    faceRef: {
-                      kind: "face",
-                      featureId: targetFace.featureId,
-                      role: "planarFace",
-                      transientId: targetFace.id,
-                      stableHint: targetFace.id,
-                    },
-                  }
-                : {
-                    type: "distance",
-                    distance: {
-                      ...draft.feature.distance,
-                      expression: distance,
-                    },
+  const { staged, command, stageError } = useMemo(
+    () => {
+      const depthOnly = draft.editing && draft.feature.operation === "cut" && draft.feature.direction === "negative" &&
+        draft.document.sketches[draft.sketchId]?.plane.type === "face" && termination === "distance" &&
+        profileId === draft.feature.profileId && direction === draft.feature.direction && operation === draft.feature.operation &&
+        targets.length === draft.feature.targetBodyIds?.length && targets.every((id, index) => id === draft.feature.targetBodyIds?.[index]);
+      const command: TypedCadCommandCall | undefined = draft.pocket ? { command: "cad.feature.pocket", arguments: {
+        name: draft.feature.name, sketchId: draft.sketchId, profileId, targetBodyId: draft.pocket.bodyId,
+        ...(termination === "throughAll" ? { throughAll: true } : { distance }),
+      } } : depthOnly ? { command: "cad.feature.update", arguments: { featureId: draft.feature.id, distance } } : undefined;
+      if (command) {
+        try {
+          return { staged: applyCadCommand(draft.document, command, {
+            draftPocketId: draft.pocket ? draft.feature.id : undefined,
+            native: draft.targetSnapshot,
+          }).document, command };
+        } catch (error) {
+          return { staged: draft.document, stageError: error instanceof Error ? error.message : String(error) };
+        }
+      }
+      const feature: ExtrudeFeature = {
+        ...draft.feature,
+        profileId,
+        distance: { ...draft.feature.distance, expression: distance },
+        direction,
+        operation,
+        termination:
+          termination === "throughAll"
+            ? { type: "throughAll" }
+            : termination === "toFace" && targetFace
+              ? {
+                  type: "toFace",
+                  faceRef: {
+                    kind: "face",
+                    featureId: targetFace.featureId,
+                    role: "planarFace",
+                    transientId: targetFace.id,
+                    stableHint: targetFace.id,
                   },
-          targetBodyIds: operation === "newBody" ? undefined : targets,
-        }),
-        draft.document,
-      ),
+                }
+              : {
+                  type: "distance",
+                  distance: {
+                    ...draft.feature.distance,
+                    expression: distance,
+                  },
+                },
+        targetBodyIds: operation === "newBody" ? undefined : targets,
+      };
+      return { staged: bindDocumentExpressions(upsertFeature(draft.document, feature), draft.document) };
+    },
     [
       draft,
       profileId,
@@ -151,6 +170,7 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
       !current ||
       !base.ready ||
       base.error ||
+      stageError ||
       !hasTargets ||
       !validProfile ||
       !hasFace
@@ -207,11 +227,12 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
     current,
     base.ready,
     base.error,
+    stageError,
     hasTargets,
     validProfile,
     hasFace,
   ]);
-  const shown = current && preview?.staged === staged ? preview : undefined;
+  const shown = current && !stageError && preview?.staged === staged ? preview : undefined;
   const handle = useMemo(() => {
     const profile = selectedProfile,
       plane = base.result?.sketchPlanes?.[draft.sketchId],
@@ -275,7 +296,7 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
           event.preventDefault();
           if (!shown?.result || dragging) return;
           try {
-            commitExtrude(draft, staged, shown.result, shown.operationResult);
+            commitExtrude(draft, staged, shown.result, shown.operationResult, command);
           } catch (error) {
             setCommitError(
               error instanceof Error ? error.message : String(error),
@@ -501,14 +522,14 @@ function ExtrudeDialog({ draft }: { draft: ExtrudeDraft }) {
                         ? "Choose at least one target body."
                         : !hasFace
                           ? "Choose a covering planar target face."
-                          : shown?.error
+                          : stageError || shown?.error
                             ? "Preview failed"
                             : shown?.result
                               ? `Native preview ready · ${shown.result.meshes.length} bodies · ${shown.result.meshes.reduce((sum, mesh) => sum + mesh.geometryAssertions!.volume, 0).toFixed(3)} mm³`
                               : "Building native preview…"}
             </p>
-            {base.error || shown?.error || commitError ? (
-              <p role="alert">{base.error || shown?.error || commitError}</p>
+            {base.error || stageError || shown?.error || commitError ? (
+              <p role="alert">{base.error || stageError || shown?.error || commitError}</p>
             ) : null}
           </div>
         </div>
