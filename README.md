@@ -72,6 +72,7 @@ their existing constraints; free Corner rectangles retain their positional freed
 - Points, lines, circles, arcs, construction geometry, supported constraints, and driving dimensions.
 - XY/XZ/YZ, offset, and supported feature-owned face sketch planes.
 - Native Extrude, Revolve, Cut/Join, Hole, Fillet, and Chamfer with preview, Apply, and Cancel.
+- [Native Shell](specs/working-cad/SHELL.md) opens one cap of a rectangular extrusion and keeps the original body and outside size.
 - Sketch Trim/Extend, Mirror, linear patterns, and bounded outline Offset.
 - Linked projection of complete supported cap boundaries into parallel sketches.
 - Associative linear/circular patterns of single-center Holes and distance Cut Extrudes.

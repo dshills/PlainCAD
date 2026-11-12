@@ -43,7 +43,7 @@ export function FeatureTimeline({ commandContext = emptyCommandContext }: Featur
         <label className="timeline-filter"><input type="checkbox" aria-label="Timeline: active component only" checked={filtered} onChange={() => void runCommand("timeline.toggleComponentFilter")} /> Active component only</label>
         <div className="timeline-actions" aria-label="Timeline commands">
           <button onClick={() => runCommand("feature.extrude", commandContext)} disabled={!isCommandEnabledForSnapshot("feature.extrude", commandEnablement)}>Extrude</button>
-          {["revolve", "hole", "fillet", "chamfer", "pattern"].map((type) => <button key={type} onClick={() => runCommand(`feature.${type}`, commandContext)} disabled={!isCommandEnabledForSnapshot(`feature.${type}`, commandEnablement)}>{type[0].toUpperCase() + type.slice(1)}</button>)}
+          {["revolve", "hole", "fillet", "chamfer", "shell", "pattern"].map((type) => <button key={type} onClick={() => runCommand(`feature.${type}`, commandContext)} disabled={!isCommandEnabledForSnapshot(`feature.${type}`, commandEnablement)}>{type[0].toUpperCase() + type.slice(1)}</button>)}
           <button onClick={() => runCommand("feature.edit", commandContext)} disabled={!isCommandEnabledForSnapshot("feature.edit", commandEnablement)}>Edit Feature</button>
           <button onClick={() => runCommand("feature.suppress", commandContext)} disabled={!isCommandEnabledForSnapshot("feature.suppress", commandEnablement)}>Suppress</button>
           <button onClick={() => runCommand("feature.delete", commandContext)} disabled={!isCommandEnabledForSnapshot("feature.delete", commandEnablement)}>Delete</button>
@@ -109,6 +109,7 @@ function featureGlyph(feature: Feature): string {
   if (feature.type === "pattern") return "P";
   if (feature.type === "fillet") return "F";
   if (feature.type === "chamfer") return "C";
+  if (feature.type === "shell") return "S";
   return "F";
 }
 

@@ -36,6 +36,7 @@ before accepting edits.
 | `cad.feature.hole` | `sketchId`, `centerPointIds`, `targetBodyIds`, `diameter`, and either `depth` or `throughAll: true`; positive/negative `direction` |
 | `cad.feature.fillet` | supported `edges`, `radius`; optional `name` |
 | `cad.feature.chamfer` | supported `edges`, `distance`; optional `name` |
+| `cad.feature.shell` | Plan only: `sourceFeatureId`, `opening`: startCap/endCap, `wallThickness`; optional `name`; keeps the source body ID |
 | `cad.feature.update` | `featureId`; only settings compatible with that feature are accepted; changing extrusion distance selects distance termination |
 | `cad.feature.delete` | `featureId`; rejects deletion that leaves authored dependencies broken |
 
@@ -112,3 +113,8 @@ They target one active distance new-body extrusion and use existing supported
 feature-owned topology references. They do not accept arbitrary edge indices or
 runtime proof objects. Native geometry must establish that the selected original
 edges remain available and that the treatment actually changes the solid.
+
+Shell accepts one cap of an active, unmodified positive-distance rectangular
+extrusion without holes. Use `cad.feature.update` with `opening` or
+`wallThickness` to edit it. Use a native plan to preview and verify the cavity
+before committing. See [Shell limits](../specs/working-cad/SHELL.md).

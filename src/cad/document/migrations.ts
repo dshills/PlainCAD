@@ -32,6 +32,7 @@ const migrations = new Map<number, Migration>([
   [18, document => ({ ...document, schemaVersion: 19 })],
   [19, document => { const { configurations: _configurations, ...legacy } = document; return { ...legacy, schemaVersion: 20 }; }],
   [20, document => ({ ...document, schemaVersion: 21 })],
+  [21, document => ({ ...document, schemaVersion: 22 })],
 ]);
 
 function migrateV16ToV17(document: CadDocument): CadDocument {
@@ -407,6 +408,7 @@ function sanitizeFeature(feature: Feature): Feature | undefined {
   };
   if (feature.type === "stepImport") return { ...base, type: "stepImport", operation: feature.operation, stepSource: feature.stepSource };
   if (feature.type === "fit") return { ...base, type: "fit", operation: feature.operation, sourceBodyId: feature.sourceBodyId, style: feature.style, clearance: sanitizeExpressionRef(feature.clearance), wallThickness: sanitizeExpressionRef(feature.wallThickness), followSourcePlacement: feature.followSourcePlacement };
+  if (feature.type === "shell") return { ...base, type: "shell", sourceFeatureId: feature.sourceFeatureId, opening: feature.opening, wallThickness: sanitizeExpressionRef(feature.wallThickness) };
   if (feature.type === "extrude") {
     return {
       ...base,

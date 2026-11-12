@@ -1324,6 +1324,17 @@ Build a fitted part / Edit fitted part generate a native open enclosure, L brack
 
 The rectangular local envelope is not a contoured offset surface. No fastener inference or cylindrical adapter support. Enclosures open at local +Z; bracket backs are local −Y; sleeves are open at both Z ends. Lost, suppressed, absorbed or downstream sources diagnose. New source modifications must precede the fit in the explicit timeline; an out-of-order fit fails rather than keeping stale geometry. Preview currency and worker-issued proof gate one-step Apply and cancellation.
 
+### Native Shell
+
+Shell removes one selected start/end cap of an unmodified positive-distance
+rectangular extrusion, preserving the outside dimensions and stable body ID.
+The inward wall thickness accepts length expressions and stable parameter
+bindings. Apply requires a current native preview; the kernel verifies one
+valid solid and the exact remaining material volume. Collapsed cavities,
+unsupported profiles and lost or modified opening owners fail explicitly.
+Cancel and Edit Feature use the normal history workflow. Stable command plans
+can create or edit the same feature. See [Shell limits](SHELL.md).
+
 ### Manufacturing coach
 
 Use **Manufacturing coach** in the command palette or active component settings.

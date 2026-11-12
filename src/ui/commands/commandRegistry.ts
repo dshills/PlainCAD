@@ -13,6 +13,8 @@ import { objectArguments, stringArgument } from "../../commands/protocol";
 import { beginFamily, canOpenFamily } from "./productFamilyCommand";
 import { beginDrawing, canOpenDrawing } from "./shopDrawingCommand";
 import { beginFit, canBuildFit } from "./fittedPartCommand";
+import { shellTarget } from "../../state/shellDraftState";
+import { openShell, shellTaskBusy } from "./shellAvailability";
 import { canNavigateLinkedSketchSource, type LinkedSketchContext } from "./linkedSketchCommand";
 import { beginProjectGallery } from "../workspace/projectGalleryState";
 import { unplacePlane, positionedDocument, withComponentPlacement } from "../../cad/document/componentPlacement";
@@ -168,6 +170,7 @@ export interface CommandEnablement {
   manufacturingCoach: boolean;
   createFit: boolean;
   editFit: boolean;
+  createShell: boolean;
   aiAssistant: boolean;
   linkedSketchShowSource: boolean;
   linkedSketchEditSource: boolean;
@@ -238,6 +241,7 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
   const handoffReady = !aiPreviewActive && !facePickerActive && !refinementBusy && !guidedHoleActive && !exportDialogOpen && !guidedHoleStartBlocked && !state.fileBusy && canMakeSketchSolid(state);
   const transientPickerActive = facePickerActive || guidedHoleActive || operationBusy || exportDialogOpen || refinementBusy;
   const targetPickerActive = transientPickerActive || aiPreviewActive;
+  const shellBlocked = scopeCaptureBusy || targetPickerActive || canvasActive || guidedHoleStartBlocked || shellTaskBusy(state);
   const canvasTarget = selectedCanvasActionTarget(state);
   const canvasBodyActions = Boolean(canvasTarget && !targetPickerActive && !canvasActive && !guidedHoleStartBlocked && !scopeCaptureBusy && !useInspectionState.getState().picking);
   const base = state.history.present.features.find(feature => feature.id === canvasTarget?.featureId);
@@ -262,6 +266,7 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
     shopDrawing: !scopeCaptureBusy && !targetPickerActive && canOpenDrawing(state),
     createFit: !scopeCaptureBusy && !targetPickerActive && Boolean(canBuildFit(state)),
     editFit: !scopeCaptureBusy && !targetPickerActive && Boolean(canBuildFit(state, true)),
+    createShell: !shellBlocked && Boolean(shellTarget(state, false)),
     assemblyMotion: !aiPreviewActive && canBeginAssemblyMotion(state),
     moveComponent: !aiPreviewActive && canBeginComponentPlacement(state),
     measurementPicking: state.rebuild.status === "succeeded" && Boolean(state.rebuild.result?.success && state.rebuild.result.documentId === state.history.present.id) && !state.fileBusy && !canvasActive && !guidedHoleStartBlocked && !targetPickerActive && !scopeCaptureBusy,
@@ -304,7 +309,8 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
     exportSketchPng: canvasActive && !state.fileBusy && !targetPickerActive && !guidedHoleStartBlocked && !scopeCaptureBusy,
     createExtrude: !canvasActive && ((!targetPickerActive && canCreateExtrude(state)) || handoffReady),
     createRevolve: !targetPickerActive && !canvasActive && Boolean(defaultRevolveAxis(state)),
-    editFeature: !targetPickerActive && !canvasActive && Boolean(editableExtrude(state) || editableModelingFeature(state) || editableHole(state) || selectedPattern(state)),
+    editFeature: !targetPickerActive && !canvasActive && Boolean(editableExtrude(state) || editableModelingFeature(state) || editableHole(state) || selectedPattern(state) ||
+      (!shellBlocked && shellTarget(state, true))),
     selectedFeature: !targetPickerActive && !canvasActive && Boolean(getSelectedFeature(state)),
     createEdgeTreatment: !targetPickerActive && !canvasActive && Boolean(edgeTreatmentOwner(state)),
     moveEarlier: !targetPickerActive && !canvasActive && !planTimelineMove(state.history.present, state.selection.selectedIds[0], "earlier").reason,
@@ -369,7 +375,8 @@ export const commands: CadCommand[] = [
   { id: "ai.cancelFacePick", label: "Cancel AI face selection", internal: true, alwaysEnabled: true, run: clearAiFacePicking },
   { id: "ai.close", label: "Close AI assistant", internal: true, alwaysEnabled: true, run: closeAiDrawer },
   { id: "ai.toggle", label: "Toggle AI assistant", description: "Open the bottom AI dock to describe changes and review geometry in the main viewport.", enablementKey: "aiAssistant", run: toggleAiDrawer },
-  { id: "feature.edit", label: "Edit Selected Feature", description: "Preview changes to the selected Extrude, Revolve, Fillet, Chamfer, Hole or Pattern and its downstream geometry.", enablementKey: "editFeature", run: () => { if (selectedPattern(useCadStore.getState())) beginFeaturePatternEditing(); else if (editableExtrude(useCadStore.getState())) beginExtrudeEditing(); else if (editableHole(useCadStore.getState())) beginHoleEditing(); else beginModelingEditing(); } },
+  { id: "feature.edit", label: "Edit Selected Feature", description: "Preview changes to the selected feature and its downstream geometry.", enablementKey: "editFeature", run: () => { if (shellTarget(useCadStore.getState(), true)) return openShell(true); if (selectedPattern(useCadStore.getState())) beginFeaturePatternEditing(); else if (editableExtrude(useCadStore.getState())) beginExtrudeEditing(); else if (editableHole(useCadStore.getState())) beginHoleEditing(); else beginModelingEditing(); } },
+  { id: "feature.shell", label: "Shell", description: "Hollow an unmodified rectangular extrusion from its start or end cap.", enablementKey: "createShell", run: () => openShell() },
   { id: "feature.pattern", label: "Repeat Hole or Pocket", description: "Select a single-center Hole or distance Cut Extrude, then create a linked linear or circular native feature pattern.", enablementKey: "createFeaturePattern", run: beginFeaturePattern },
   {
     id: "file.renameProject", internal: true, label: "Rename Project", enablementKey: "editProject",

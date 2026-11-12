@@ -1,9 +1,8 @@
-import { createEmptyDocument } from "../cad/document/CadDocument";
-import { rebuildDocument } from "../cad/features/rebuildGraph";
 import { evaluateParameters } from "../cad/parameters/expressionEvaluator";
 import { planSketchProjection } from "../cad/sketch/sketchProjection";
 import { applyCadCommand, type CadCommandCall } from "../commands/cadCommandOperations";
 import { placePlane } from "../cad/document/componentPlacement";
+import { createEmptyDocument, createExtrudeFeature, upsertFeature, upsertSketch } from "../cad/document/CadDocument";
 import type { ComponentPlacement } from "../cad/document/schema";
 import { validateMesh } from "../fabrication/meshValidation";
 import { beforeAll, describe, expect, it, vi } from "vitest";
@@ -15,10 +14,12 @@ import {
   addPoint,
   addCornerRectangle,
   createXySketch,
+  createSketchOnPlane,
 } from "../cad/sketch/SketchModel";
 import { solveSketch } from "../cad/sketch/SketchSolver";
 import { detectProfiles } from "../cad/sketch/profileDetection";
-import { sketchPlaneTransform } from "../cad/sketch/planes";
+import { faceOwnerModifiedBefore, resolveDocumentPlanes, sketchPlaneTransform, stableFaceId } from "../cad/sketch/planes";
+import { clearNativeFeatureCache, rebuildDocument } from "../cad/features/rebuildGraph";
 import { createExtrudeEdgeRef } from "../cad/features/topologyRefs";
 import { TESSELLATION_LOD } from "../cad/kernel/tessellationCache";
 import { getDisposableScopeMetrics } from "../cad/kernel/disposableScope";
@@ -131,6 +132,79 @@ describe("native modeling geometry", () => {
     expect(stockProof()).toBeCloseTo(12000 - 2.54 * (100 - 4 * Math.PI), 6);
   });
 
+  it("hollows either authored rectangular cap with a valid solid and exact remaining wall volume", () => {
+    const base = kernel.extrudeProfile(rectangle().profile, 8);
+    const shapes = [base];
+    const own = (shape: typeof base) => { shapes.push(shape); return shape; };
+    try {
+      const triangleAreaAt = (shape: typeof base, z: number) => {
+        const mesh = kernel.tessellate(shape, options);
+        let area = 0;
+        for (let i = 0; i < mesh.indices.length; i += 3) {
+          const [a, b, c] = mesh.indices.slice(i, i + 3).map(index => index * 3);
+          const p = mesh.positions;
+          if ([a, b, c].every(offset => Math.abs(p[offset + 2] - z) < 1e-7))
+            area += Math.abs((p[b] - p[a]) * (p[c + 1] - p[a + 1]) - (p[b + 1] - p[a + 1]) * (p[c] - p[a])) / 2;
+        }
+        return area;
+      };
+      const startShell = own(kernel.shell(base, "startCap", 1));
+      const endShell = own(kernel.shell(base, "endCap", 1));
+      for (const [opening, shell] of [["startCap", startShell], ["endCap", endShell]] as const) {
+        expect(volume(shell)).toBeCloseTo(1600 - 18 * 8 * 7, 6);
+        const native = kernel.tessellate(shell, options);
+        expect(native.kernelOperation).toBe("shell");
+        expect(native.bounds).toEqual(kernel.tessellate(base, options).bounds);
+        // The opened cap retains only its rim, with a complete floor one mm
+        // inside the opposite cap. The removed cap must not be silently swapped.
+        expect(triangleAreaAt(shell, opening === "startCap" ? 0 : 8)).toBeCloseTo(56, 6);
+        expect(triangleAreaAt(shell, opening === "startCap" ? 7 : 1)).toBeCloseTo(144, 6);
+      }
+      expect(() => own(kernel.shell(base, "endCap", 5))).toThrow(/collapses the cavity/);
+      expect(() => own(kernel.shell(base, "endCap", -1))).toThrow(/wall thickness/i);
+      expect(() => own(kernel.shell(base, "side" as never, 1))).toThrow(/start or end cap/);
+      expect(() => own(kernel.shell(startShell, "endCap", 1))).toThrow(/unmodified native/);
+      const cloned = own(kernel.cloneShape(endShell));
+      const placed = own(kernel.placeShape(cloned, { translation: [10, -5, 2], rotation: [0, 0, 0] }));
+      expect(volume(placed)).toBeCloseTo(592, 6);
+      expect(kernel.nativeBounds(placed)).toEqual({ min: [10, -5, 2], max: [30, 5, 10] });
+      const cutter = own(kernel.extrudeProfile(rectangle(2, 2).profile, 2, {
+        ...sketchPlaneTransform("XY"), origin: { x: 9, y: 4, z: 0 },
+      }));
+      expect(volume(own(kernel.cut(endShell, cutter)))).toBeCloseTo(588, 6);
+      expect(volume(base)).toBeCloseTo(1600, 6);
+    } finally {
+      shapes.forEach(shape => kernel.disposeShape(shape));
+    }
+  });
+  it("keeps Shell's source body ownership on cold and cached rebuilds and validates surviving native faces", () => {
+    const { sketch, profile } = rectangle();
+    let document = upsertSketch(createEmptyDocument("Shelled source"), sketch);
+    const source = createExtrudeFeature({ name: "Original extrusion", sketchId: sketch.id, profileId: profile.id,
+      operation: "newBody", distance: { expression: "8mm", unit: "mm" }, direction: "positive" });
+    document = upsertFeature(document, source);
+    const faceRef = { type: "face" as const, featureId: source.id, stableFaceId: stableFaceId(source.id, "startCap") };
+    const earlier = createSketchOnPlane("Earlier face sketch", faceRef);
+    document = upsertSketch(document, earlier);
+    document = upsertFeature(document, { type: "shell", id: "box-shell", name: "Later Shell", sourceFeatureId: source.id,
+      opening: "endCap", wallThickness: { expression: "1mm", unit: "mm" } });
+    const later = createSketchOnPlane("Retained face sketch", faceRef);
+    document = upsertSketch(document, later);
+    expect(faceOwnerModifiedBefore(document, source.id, document.sketches[earlier.id])).toBe(false);
+    expect(faceOwnerModifiedBefore(document, source.id, document.sketches[later.id])).toBe(true);
+    expect(resolveDocumentPlanes(document, {}).errors.get(later.id)).toContain("owner body was modified");
+    try {
+      const first = rebuildDocument(document);
+      const cached = rebuildDocument(document);
+      for (const result of [first, cached]) {
+        expect(result.errors).toEqual([]);
+        expect(result.bodies).toMatchObject([{ id: `body:${source.id}`, name: source.name, featureId: source.id }]);
+        expect(result.meshes[0].geometryAssertions?.volume).toBeCloseTo(592, 6);
+        expect(result.sketchPlanes?.[later.id]).toBeDefined();
+      }
+      expect(cached.metrics!.nativeFeatureCacheHits).toBeGreaterThan(0);
+    } finally { clearNativeFeatureCache(); }
+  });
   it("cuts and joins real solids and rejects disjoint, contained, and empty results", () => {
     const shapes = [kernel.createBox(20, 10, 10), kernel.createBox(10, 10, 5)];
     try {

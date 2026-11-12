@@ -53,6 +53,7 @@ const ManufacturingCoachPanel = lazy(() => import("../ui/panels/ManufacturingCoa
 const ProductFamilyPanel = lazy(() => import("../ui/panels/ProductFamilyPanel").then(module => ({ default: module.ProductFamilyPanel })));
 const ShopDrawingPanel = lazy(() => import("../ui/panels/ShopDrawingPanel").then(module => ({ default: module.ShopDrawingPanel })));
 const FittedPartPanel = lazy(() => import("../ui/panels/FittedPartPanel").then(module => ({ default: module.FittedPartPanel })));
+const ShellPanel = lazy(() => import("../ui/panels/ShellPanel").then(module => ({ default: module.ShellPanel })));
 const ComponentPlacementPanel = lazy(() => import("../ui/panels/ComponentPlacementPanel").then(module => ({ default: module.ComponentPlacementPanel })));
 const PartLibraryPanel = lazy(() => import("../ui/panels/PartLibraryPanel").then(module => ({ default: module.PartLibraryPanel })));
 const StepExportPanel = lazy(() => import("../ui/panels/StepExportPanel").then(module => ({ default: module.StepExportPanel })));
@@ -259,6 +260,13 @@ const toolbarGroups: ToolbarGroup[] = [
         icon: "Cha",
         title: "Bevel feature-owned extrusion edges",
         ariaLabel: "Chamfer extrusion edges",
+      },
+      {
+        command: "feature.shell",
+        label: "Shell",
+        icon: "Sh",
+        title: "Hollow an unmodified rectangular extrusion",
+        ariaLabel: "Hollow a rectangular extrusion",
       },
       {
         command: "feature.suppress",
@@ -563,7 +571,7 @@ export function App() {
       <Suspense fallback={null}><FabricationPanel /></Suspense>
       <HoleCreationPanel />
       <Suspense fallback={<p role="status">Loading component controls…</p>}><ComponentPlacementPanel /></Suspense>
-      <Suspense fallback={null}><ShopDrawingPanel /><ProductFamilyPanel /><ManufacturingCoachPanel /><FittedPartPanel /></Suspense>
+      <Suspense fallback={null}><ShopDrawingPanel /><ProductFamilyPanel /><ManufacturingCoachPanel /><FittedPartPanel /><ShellPanel /></Suspense>
       <FeaturePatternPanel />
       <SolidDimensionEditor />
       <ExtrudeCreationPanel />

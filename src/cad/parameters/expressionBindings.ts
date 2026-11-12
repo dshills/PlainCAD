@@ -70,6 +70,7 @@ export function mapDocumentExpressions(
       visit(v, "feature", f.id, field) as ExpressionRef;
     if (f.type === "stepImport") return f;
     if (f.type === "fit") return { ...f, clearance: read(f.clearance, "clearance"), wallThickness: read(f.wallThickness, "wallThickness") };
+    if (f.type === "shell") return { ...f, wallThickness: read(f.wallThickness, "wallThickness") };
     if (f.type === "extrude")
       return {
         ...f,

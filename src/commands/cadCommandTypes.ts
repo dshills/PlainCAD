@@ -1,6 +1,6 @@
 import type { CanvasPoint, CanvasTool } from "../cad/sketch/canvasGeometry";
 import type { CanvasSizeInput } from "../cad/sketch/sizedCanvasGeometry";
-import type { OriginPlane, SketchDimension, UnitSettings } from "../cad/document/schema";
+import type { OriginPlane, ShellFeature, SketchDimension, UnitSettings } from "../cad/document/schema";
 import type { SupportedEdgeRole } from "../cad/features/topologyRefs";
 
 type Named = { name?: string; as?: string };
@@ -39,7 +39,8 @@ export type CadCommandArguments = {
   "cad.feature.hole": Named & { sketchId: string; centerPointIds: string[]; targetBodyIds: string[]; diameter: string; direction?: "positive" | "negative" } & ({ depth: string; throughAll?: false } | { throughAll: true });
   "cad.feature.fillet": Named & { edges: Edge[]; radius: string };
   "cad.feature.chamfer": Named & { edges: Edge[]; distance: string };
-  "cad.feature.update": { featureId: string; name?: string; suppressed?: boolean; distance?: string; angle?: string; diameter?: string; radius?: string; depth?: string; throughAll?: boolean; direction?: Direction; operation?: Operation; targetBodyIds?: string[]; axis?: "X" | "Y" | "Z" };
+  "cad.feature.shell": Named & { sourceFeatureId: string; opening: ShellFeature["opening"]; wallThickness: string };
+  "cad.feature.update": { featureId: string; name?: string; suppressed?: boolean; distance?: string; angle?: string; diameter?: string; radius?: string; depth?: string; throughAll?: boolean; direction?: Direction; operation?: Operation; targetBodyIds?: string[]; axis?: "X" | "Y" | "Z"; opening?: ShellFeature["opening"]; wallThickness?: string };
   "cad.feature.delete": { featureId: string };
 };
 export type TypedCadCommandCall = { [Id in keyof CadCommandArguments]: { command: Id; arguments: CadCommandArguments[Id] } }[keyof CadCommandArguments];

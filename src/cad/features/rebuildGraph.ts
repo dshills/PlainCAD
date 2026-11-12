@@ -80,6 +80,7 @@ export function rebuildDocument(document: CadDocument, options: RebuildOptions =
 }
 function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions): RebuildResult {
   const started = performance.now();
+  const shellAvailable = OpenCascadeKernel.shellAvailable();
   const disposableMetricsStarted = getDisposableScopeMetrics();
   nativeFeatureCache.begin(document.id, kernel, options.epoch);
   const errors: RebuildError[] = [];
@@ -90,6 +91,7 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
   } catch (error) {
     return {
       documentId: document.id,
+      shellAvailable,
       success: false,
       bodies: [],
       meshes: [],
@@ -117,6 +119,7 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
   if (validation.length)
     return {
       documentId: document.id,
+      shellAvailable,
       success: false,
       bodies: [],
       meshes: [],
@@ -316,6 +319,7 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
           feature.type !== "hole" &&
           feature.type !== "fillet" &&
           feature.type !== "chamfer" &&
+          feature.type !== "shell" &&
           feature.type !== "pattern" &&
           feature.operation === "newBody" &&
           runtimeBodies.size >= MODEL_RESOURCE_LIMITS.maxBodies
@@ -376,6 +380,26 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
             const shape = fitted.shape, bodyId = stableBodyIdForFeature(feature.id), mesh = withStableBodyId(fitted.mesh, bodyId);
             setRuntimeBody(runtimeBodies, bodyId, { shape, mesh, featureId: feature.id, name: feature.name, planeKey: "" });
           } catch (error) { errors.push({ id: `feature:${feature.id}:fit`, source: "feature", sourceId: feature.id, message: error instanceof Error ? error.message : String(error) }); }
+          continue;
+        }
+        if (feature.type === "shell") {
+          const id = stableBodyIdForFeature(feature.sourceFeatureId), target = runtimeBodies.get(id);
+          try {
+            if (!target)
+              throw new Error("Shell source was not found upstream. Place Shell after its source extrusion and before any join that absorbs it.");
+            if (target.featureId !== feature.sourceFeatureId || target.mesh?.kernelOperation !== "extrusion")
+              throw new Error("Shell opening requires its unmodified upstream extrusion. Move intervening edits after Shell or suppress them.");
+            const wall = evaluateExpressionRef(feature.wallThickness, { parameters: evaluated.values });
+            if (wall.error || wall.quantity?.dimension !== "length" ||
+                !Number.isFinite(wall.quantity.value) || wall.quantity.value <= 0)
+              throw new Error(wall.error ?? "Shell wall thickness requires a positive length.");
+            const shape = kernel.shell(target.shape, feature.opening, wall.quantity.value);
+            shapesToDispose.add(shape);
+            const mesh = withStableBodyId(kernel.tessellate(shape, TESSELLATION_LOD.default), id);
+            setRuntimeBody(runtimeBodies, id, { ...target, shape, mesh });
+          } catch (error) {
+            errors.push({ id: `feature:${feature.id}:shell`, source: "feature", sourceId: feature.id, message: kernelErrorMessage("Shell", error) });
+          }
           continue;
         }
         if (feature.type === "pattern") {
@@ -729,6 +753,7 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
     ...(availableEdges !== undefined ? { availableEdges } : {}),
     parameterValues: evaluated.values,
     stepExportAvailable: nativeReferences && !stepDiagnostic,
+    shellAvailable,
     ...(stepDiagnostic ? { stepExportDiagnostic: stepDiagnostic } : {}),
     stepImportAvailable: nativeReferences && !stepImportDiagnostic,
     ...(stepImportDiagnostic ? { stepImportDiagnostic } : {}),

@@ -1,4 +1,4 @@
-export const CURRENT_SCHEMA_VERSION = 21;
+export const CURRENT_SCHEMA_VERSION = 22;
 
 export type UnitSystem = "metric" | "imperial";
 
@@ -255,6 +255,13 @@ export interface ChamferFeature extends FeatureBase {
   distance: ExpressionRef;
 }
 
+export interface ShellFeature extends FeatureBase {
+  type: "shell";
+  sourceFeatureId: string;
+  opening: "startCap" | "endCap";
+  wallThickness: ExpressionRef;
+}
+
 /** Count includes the source. Coordinates and axes belong to the source sketch plane. */
 export type FeaturePatternSettings =
   | { type: "linear"; count: ExpressionRef; spacing: ExpressionRef; direction: "X" | "Y" }
@@ -273,6 +280,7 @@ export type Feature =
   | HoleFeature
   | FilletFeature
   | ChamferFeature
+  | ShellFeature
   | FeaturePatternFeature
   | FittedPartFeature
   | StepImportFeature;

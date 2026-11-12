@@ -10,6 +10,7 @@ import { CadDocument, Sketch, ValidationIssue } from "./schema";
 import { validateParameterBindings } from "../parameters/expressionBindings";
 import { MODEL_RESOURCE_LIMITS } from "../resourceLimits";
 import { validAuthoredUnit, validUnitSettings } from "../parameters/parameterUnits";
+import { isShellSource } from "../features/shellFeature";
 
 const PARAMETER_NAME_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
 const REQUIRED_DOCUMENT_OBJECTS = ["parameters", "sketches", "components"] as const;
@@ -427,6 +428,10 @@ export function validateDocument(document: CadDocument, mode: "modeling" | "stor
     // Well-typed broken references must survive open/recovery so the inspector can repair them.
     // Modeling still rejects them below; malformed fields and duplicate IDs always fail.
     if (mode === "storage") continue;
+    if (feature.type === "shell" && !feature.suppressed &&
+        !isShellSource(document.features.find(item => item.id === feature.sourceFeatureId))) {
+      issues.push({ source: "feature", sourceId: feature.id, message: "Shell opening owner was lost, suppressed or changed. Restore its positive distance extrusion or suppress the Shell feature." });
+    }
     if (feature.type === "fit" && !feature.suppressed) {
       const component = featureComponentId(document, feature);
       const sourceFeatures = feature.followSourcePlacement ? new Map(document.features.map(item => [item.id, item])) : undefined;
@@ -786,6 +791,13 @@ function validatePersistedFields(document: CadDocument): ValidationIssue[] {
       checkFeature(Boolean(pattern && typeof pattern === "object" && !Array.isArray(pattern) &&
         (pattern.type === "linear" ? expression(pattern.count) && expression(pattern.spacing) && ["X", "Y"].includes(pattern.direction)
           : pattern.type === "circular" && expression(pattern.count) && expression(pattern.angle) && expression(pattern.centerX) && expression(pattern.centerY))), "Malformed feature pattern settings.");
+    }
+    if (feature.type === "shell") {
+      checkFeature(
+        typeof feature.sourceFeatureId === "string" && feature.sourceFeatureId.length > 0 && feature.sourceFeatureId.length <= 320 &&
+          (feature.opening === "startCap" || feature.opening === "endCap") && expression(feature.wallThickness),
+        "Malformed Shell feature. Specify a source extrusion, start/end cap and wall thickness expression.",
+      );
     }
     if (feature.type === "fillet" || feature.type === "chamfer") {
       checkFeature(

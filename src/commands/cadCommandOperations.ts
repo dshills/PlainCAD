@@ -1,4 +1,5 @@
 import type { CadDocument, ExpressionRef, ExtrudeTermination, FacePlaneReference, Feature, OriginPlane, Sketch, SketchDimension } from "../cad/document/schema";
+import { isShellSource, requireShellOpening } from "../cad/features/shellFeature";
 import { deleteFeature, nowIso, touchDocument, upsertFeature, upsertParameter, upsertSketch } from "../cad/document/CadDocument";
 import { addComponent, featureComponentId, renameComponent } from "../cad/document/components";
 import { withComponentPlacement } from "../cad/document/componentPlacement";
@@ -324,11 +325,22 @@ export function applyCadCommand(document: CadDocument, call: CadCommandCall | Ty
     if ("error" in resolved) throw new Error(resolved.error);
     const base = { id: createId("feature"), createdAt: nowIso(), name: string("name", call.command.endsWith("fillet") ? "Fillet" : "Chamfer")!, componentId: featureComponentId(document, resolved[0].feature), targetEdgeRefs: edges };
     putFeature(call.command.endsWith("fillet") ? { ...base, type: "fillet", radius: positive(string("radius")!, "Radius") } : { ...base, type: "chamfer", distance: positive(string("distance")!, "Distance") });
+  } else if (call.command === "cad.feature.shell") {
+    const sourceFeatureId = reference(args.sourceFeatureId, "sourceFeatureId");
+    const source = document.features.find(item => item.id === sourceFeatureId);
+    if (!isShellSource(source)) throw new Error("Shell requires an active positive distance new-body extrusion.");
+    putFeature({
+      id: createId("feature"), type: "shell", name: string("name", "Shell")!,
+      componentId: featureComponentId(document, source), sourceFeatureId,
+      opening: requireShellOpening(args.opening),
+      wallThickness: positive(string("wallThickness")!, "Wall thickness"),
+    });
+    result.bodyId = stableBodyIdForFeature(sourceFeatureId);
   } else if (call.command === "cad.feature.update") {
     const id = reference(args.featureId, "featureId");
     const feature = document.features.find(item => item.id === id);
     if (!feature) throw new Error("Feature reference was lost.");
-    const allowed = new Set(["featureId", "name", "suppressed", ...(feature.type === "extrude" ? ["distance", "direction", "operation", "targetBodyIds"] : feature.type === "revolve" ? ["angle", "axis", "operation", "targetBodyIds"] : feature.type === "hole" ? ["diameter", "depth", "throughAll", "direction", "targetBodyIds"] : feature.type === "fillet" ? ["radius"] : feature.type === "chamfer" ? ["distance"] : [])]);
+    const allowed = new Set(["featureId", "name", "suppressed", ...(feature.type === "extrude" ? ["distance", "direction", "operation", "targetBodyIds"] : feature.type === "revolve" ? ["angle", "axis", "operation", "targetBodyIds"] : feature.type === "hole" ? ["diameter", "depth", "throughAll", "direction", "targetBodyIds"] : feature.type === "fillet" ? ["radius"] : feature.type === "chamfer" ? ["distance"] : feature.type === "shell" ? ["opening", "wallThickness"] : [])]);
     for (const key of Object.keys(args)) if (!allowed.has(key)) throw new Error(`${key} is not a setting for ${feature.type}.`);
     let updated: Feature = { ...feature, ...(args.name === undefined ? {} : { name: string("name")! }), ...(args.suppressed === undefined ? {} : { suppressed: args.suppressed as boolean }) };
     if (updated.type === "extrude") {
@@ -354,6 +366,11 @@ export function applyCadCommand(document: CadDocument, call: CadCommandCall | Ty
       if (args.throughAll === true) updated = { ...updated, depth: "throughAll" };
     } else if (updated.type === "fillet" && args.radius !== undefined) updated = { ...updated, radius: positive(string("radius")!, "Radius") };
     else if (updated.type === "chamfer" && args.distance !== undefined) updated = { ...updated, distance: positive(string("distance")!, "Distance") };
+    else if (updated.type === "shell") {
+      if (args.opening !== undefined) updated = { ...updated, opening: requireShellOpening(args.opening) };
+      if (args.wallThickness !== undefined && string("wallThickness") !== updated.wallThickness.expression)
+        updated = { ...updated, wallThickness: positive(string("wallThickness")!, "Wall thickness") };
+    }
     if ((updated.type === "extrude" || updated.type === "revolve") && args.operation !== undefined) updated = { ...updated, operation: string("operation") as "newBody" | "join" | "cut" };
     if ((updated.type === "extrude" || updated.type === "revolve") && updated.operation === "newBody") {
       if (args.targetBodyIds !== undefined) throw new Error("New-body features cannot specify boolean targets.");

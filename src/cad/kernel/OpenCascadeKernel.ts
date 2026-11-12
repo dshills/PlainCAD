@@ -1,10 +1,11 @@
 import { assertMeshBudget } from "../resourceLimits";
 import { measureNativeBores } from "./nativeDrawing";
 import { exportNativeStep, importNativeStep, stepBindingDiagnostic, stepImportBindingDiagnostic } from "./nativeStep";
+import { createNativeShell, nativeShellAvailable } from "./nativeShell";
 import initOpenCascadeModule from "opencascade.js/dist/opencascade.wasm.js";
 import openCascadeWasmUrl from "opencascade.js/dist/opencascade.wasm.wasm?url";
 import { createId } from "../document/ids";
-import { ComponentPlacement, RevolveAxisReference, TopologyRef } from "../document/schema";
+import { ComponentPlacement, RevolveAxisReference, ShellFeature, TopologyRef } from "../document/schema";
 import { placePlane, placementTransform } from "../document/componentPlacement";
 import {
   HoleScopeError,
@@ -65,6 +66,7 @@ class EdgeProofSignatureUnavailable extends Error {}
 
 type KernelHandle =
   | { kind: "stepImport"; occtShape?: unknown }
+  | { kind: "shell"; occtShape?: unknown }
   | {
       kind: "box";
       width: number;
@@ -291,6 +293,20 @@ export class OpenCascadeKernel implements KernelAdapter {
     const { bounds: _bounds, ...assertions } = imported.proof;
     this.assertions.set(imported.shape, assertions);
     return { id, kernelHandle: { kind: "stepImport", occtShape: imported.shape } };
+  }
+  static shellAvailable(): boolean {
+    return nativeShellAvailable(OpenCascadeKernel.openCascade);
+  }
+  shell(shape: KernelShape, opening: ShellFeature["opening"], wall: number): KernelShape {
+    const oc = OpenCascadeKernel.openCascade, base = shape.kernelHandle as KernelHandle | undefined;
+    if (!oc || base?.kind !== "extrusion" || !base.occtShape)
+      throw new Error("Shell requires an unmodified native rectangular extrusion.");
+    const { native, proof } = createNativeShell(
+      oc, base.occtShape, base.profile, base.distance, base.transform ?? sketchPlaneTransform("XY"),
+      opening, wall, this.measureNative(base.occtShape),
+    );
+    this.assertions.set(native, proof);
+    return { id: createId("shape"), kernelHandle: { kind: "shell", occtShape: native } satisfies KernelHandle };
   }
   exportStep(shapes: readonly KernelShape[]) {
     const oc = OpenCascadeKernel.openCascade;

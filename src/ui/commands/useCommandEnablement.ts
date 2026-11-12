@@ -3,6 +3,7 @@ import { useManufacturingCoach } from "./manufacturingCoachState";
 import { useProductFamily } from "./productFamilyState";
 import { useShopDrawing } from "./shopDrawingState";
 import { useFittedPart } from "./fittedPartState";
+import { useShell } from "../../state/shellDraftState";
 import { useViewerState } from "../../state/viewerState";
 import { useComponentPlacement } from "./componentPlacementState";
 import { usePartLibrary } from "./partLibraryState";
@@ -52,6 +53,7 @@ export function useCommandEnablement() {
   useProductFamily(state => state.frame);
   useShopDrawing(state => state.frame);
   useFittedPart(state => state.frame);
+  useShell(state => state.frame);
   useComponentPlacement(state => state.frame);
   usePartLibrary(state => state.frame);
   useStepExport(state => state.frame);

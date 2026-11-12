@@ -11,8 +11,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Date: 2026-10-09.
 - Change: five-item command automation batch: typed semantic CAD commands, transactional native plans, built-in command agent, recorded workflows and live access to the open project; includes the authored-parameter diagnostic fix.
 - Result: type checks, 1646 unit/component tests in 211 files, build/bundle budget (58 bundles, largest 498.24 kB), all 328 development browser cases and all 55 production cases passed.
-- Completed items since that full gate: **3**.
-- Next full gate: after **2** more completed items.
+- Completed items since that full gate: **4**.
+- Next full gate: on the next completed item.
 
 ## Completed batch
 
@@ -1378,3 +1378,26 @@ Both focused development cases and the built CSP case passed, including
 UI/registry import, Undo/Redo, save/open, STL, and in-flight same-ID replacement.
 Existing linked-sketch import advisory only; no large-bundle warnings. Cadence:
 **3** completed items since the last full gate.
+
+
+## Native modeling item 4: Shell (completed before item 3)
+
+Shell removes a selected start/end cap from an unmodified native rectangular
+positive distance extrusion and offsets the remaining walls inward. Schema 22
+stores the source owner, opening role and thickness expression. Native rebuild
+proves one valid solid and exact remaining volume. The original body ID, source
+feature and name remain stable on cold and cached rebuilds. Preview/Apply is one
+Undo; CLI/agent creation, geometry changes and reactivation require a native plan.
+
+Independent internal review caught modified-owner eligibility for To Face,
+cached naming drift and a direct registry bypass around native validation.
+Fixes and the final lazy-loader boundary were re-reviewed and signed off.
+
+`npm run check:item` passed type checks, 1655 unit/component tests, the bundle
+budget and 5 development/14 production smoke cases. Three focused development
+cases verified native Shell and STEP together, including saved-project reopen.
+The final guard passed 22 focused Shell/plan tests; the final built CSP case
+passed and the largest of 63 bundles was 496.29 kB. Moving the lazy loader to
+the command module eliminated the intermediate circular chunk warning. The
+existing linked-sketch import advisory remains. Cadence **4**; the next item
+requires the full gate.

@@ -48,6 +48,8 @@ export interface RebuildResult {
   /** Actual loaded reader, native bounds and filesystem support, even in an empty project. */
   stepImportAvailable?: boolean;
   stepImportDiagnostic?: string;
+  /** Actual loaded native thick-solid bindings. */
+  shellAvailable?: boolean;
   /** Explicit STEP export rebuilds only; native handles never cross the worker. */
   nativeStepExport?: NativeStepExport;
   /** Explicit disposable drawing rebuild only; native handles never cross workers. */

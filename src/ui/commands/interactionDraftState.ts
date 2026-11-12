@@ -2,6 +2,7 @@ import { useManufacturingCoach } from "./manufacturingCoachState";
 import { useProductFamily } from "./productFamilyState";
 import { useShopDrawing } from "./shopDrawingState";
 import { useFittedPart } from "./fittedPartState";
+import { useShell } from "../../state/shellDraftState";
 import { useComponentPlacement } from "./componentPlacementState";
 import { usePartLibrary } from "./partLibraryState";
 import { useStepImport } from "./stepImportState";
@@ -31,7 +32,7 @@ export const useSketchTrimExtend = create<{ frame?: SketchTrimExtendFrame; mode:
 export const useFacePocket = create<{ frame?: FacePocketFrame }>(() => ({}));
 export const useFeaturePattern = create<{ frame?: FeaturePatternFrame }>(() => ({}));
 
-export type InteractionDraftOwner = "commandPlan" | "inspection" | "drawing" | "family" | "coach" | "fit" | "solidDimension" | "sketchRefinement" | "constraint" | "trimExtend" | "facePocket" | "replication" | "featureAddition" | "offset" | "reusablePart" | "pattern" | "projection" | "partLibrary" | "componentPlacement" | "stepExport" | "stepImport";
+export type InteractionDraftOwner = "commandPlan" | "inspection" | "drawing" | "family" | "coach" | "fit" | "shell" | "solidDimension" | "sketchRefinement" | "constraint" | "trimExtend" | "facePocket" | "replication" | "featureAddition" | "offset" | "reusablePart" | "pattern" | "projection" | "partLibrary" | "componentPlacement" | "stepExport" | "stepImport";
 /** Each draft can inspect competing owners without counting its own frame. */
 export function interactionDraftBusy(owner?: InteractionDraftOwner) {
   return Boolean(
@@ -41,6 +42,7 @@ export function interactionDraftBusy(owner?: InteractionDraftOwner) {
     (owner !== "coach" && useManufacturingCoach.getState().frame) ||
     (owner !== "fit" && useFittedPart.getState().frame) ||
     (owner !== "stepImport" && useStepImport.getState().frame) ||
+    (owner !== "shell" && useShell.getState().frame) ||
     (owner !== "stepExport" && useStepExport.getState().frame) ||
     (owner !== "componentPlacement" && useComponentPlacement.getState().frame) ||
     (owner !== "partLibrary" && usePartLibrary.getState().frame) ||
