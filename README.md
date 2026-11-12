@@ -1,5 +1,41 @@
 # PlainCAD
 
+Browser-first, local-first parametric CAD for mechanical parts. Draw sketches,
+create native solids, edit dimensions, and save an editable project or export STL.
+Optional AI assistance supports Anthropic, OpenAI, and Google.
+
+**Make something you can hold.** From a pocketed housing to a forty-part fixture,
+explore real native geometry in your browser—and keep the editable project on your device.
+
+![Metallic ORBIT drive housing in PlainCAD's dark studio view, showing the recessed chamber, bearing bore and mounting holes](docs/images/orbit-studio.png)
+
+**Start with the details.** Inspect the ORBIT housing's pockets, bores and rounded
+edges, then make it your own with six editable parameters.
+[Try the housing](docs/examples/orbit-drive-housing.pcaddoc) · [Run PlainCAD locally](#quick-start)
+
+## See what you can build
+
+![Forty-part rotary fixture concept in PlainCAD, with a slotted platter, four clamps, central hub and mounting base](docs/images/rotary-fixture-studio.png)
+
+**See the whole design.** This rotary fixture concept brings forty native parts
+into one local project. Explore the components, inspect its feature history, and
+try changing the platter thickness.
+[Open the rotary fixture](docs/examples/10-rotary-fixture.pcaddoc)
+
+![Eleven-part parallel robot gripper concept in PlainCAD's studio view, showing the jaws, contact pads and pocketed palm](docs/images/robot-gripper-studio.png)
+
+**Give your next idea a shape.** Explore a parallel gripper's pocketed palm,
+slotted jaws and contact pads, then try its editable jaw-span parameter.
+[Open the gripper](docs/examples/07-robot-gripper.pcaddoc)
+
+These are screenshots of actual OpenCascade geometry in PlainCAD's Saturn Command
+theme and studio view. The fixture and gripper are static learning concepts;
+mechanism motion and manufacturing readiness are not demonstrated. Download an
+example and choose **File → Open project** to explore it. The
+[example gallery](docs/examples/README.md) documents tested edits and model limits.
+
+## Model, edit, automate
+
 Menus, tools and dialogs route through one discoverable command registry. Use
 `window.plaincadCommands` or `npm run cad` to drive the same guarded actions from
 scripts and agents. See [shared commands and CLI examples](docs/COMMANDS.md).
@@ -17,10 +53,6 @@ selection, native modeling and Undo. Copy its temporary capability privately int
 `PLAINCAD_LIVE_TOKEN`, then use `npm run cad:live` with JSON requests. This loopback
 relay requires the local development/preview server. Disconnect revokes access;
 static hosting does not include the relay. See [live connection setup](docs/LIVE_SESSION.md).
-
-Browser-first, local-first parametric CAD for mechanical parts. Draw sketches,
-create native solids, edit dimensions, and save an editable project or export STL.
-Optional AI assistance supports Anthropic, OpenAI, and Google.
 
 PlainCAD uses React 19, TypeScript, Vite, Zustand, Three.js, and OpenCascade.js.
 CAD runs locally in the browser through a geometry worker. An optional local Node
