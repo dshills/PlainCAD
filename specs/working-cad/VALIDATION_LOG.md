@@ -11,8 +11,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Date: 2026-11-12.
 - Change: shared face-to-pocket, STEP import, Shell, and native machined references; includes the feature palette search repair.
 - Result: type checks, 1663 unit/component tests in 214 files, build/bundle budget (63 bundles, largest 496.93 kB), 335 development browser cases (38.6m), and 61 production browser cases (4.7m) passed.
-- Completed items since that full gate: **0**.
-- Next full gate: after five more completed items.
+- Completed items since that full gate: **1**.
+- Next full gate: after four more completed items.
 
 ## Completed batch
 
@@ -1426,3 +1426,26 @@ measurement, nested pockets on the original body, stale-reference rejection,
 repair, and save/reopen. The existing linked-sketch import advisory remains.
 Preliminary runs do not count toward the gate. This successful run resets cadence
 to **0**.
+
+
+## Native modeling item 5: configuration fabrication package
+
+One ZIP contains the selected saved variant's editable project, round-trip
+verified STEP, per-body manifold STL, one SVG shop drawing, parts CSV, and a
+manifest of exact native body properties. All artifacts use one native rebuild.
+Cancel, configuration edits, or a replaced project invalidate pending work.
+
+Independent internal review reproduced a same-volume distorted binary STL and
+a shifted tessellation with otherwise matching native geometry. The final checks
+validate the encoded STL coordinates and compare the ordered mesh bounds to the
+independent expected variant bounds. The reviewer verified both regressions and
+signed off the final patch.
+
+The integrated `npm run check:item` passed type checks, **1668** unit/component
+tests in **215** files, the bundle budget, **5** development and **14** production
+smoke cases. Focused package acceptance passed in development and production,
+including ZIP inspection, reopen, native volume and bounds, and stale rejection.
+The final integrated build with the palette search repair passed (**68** bundles,
+largest **497.07 kB**); the focused built CSP case passed again. The existing
+linked-sketch import advisory remains. Cadence **1**; the full gate is due after
+four more completed items.

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createBoxMesh } from "../cad/kernel/meshConversion";
 import { validateMesh } from "../fabrication/meshValidation";
 import { buildStlExport } from "../fabrication/exportPlan";
-import { crc32 } from "../fabrication/zip";
+import { crc32, zipFiles } from "../fabrication/zip";
 import { safeFilename, uniqueFilenames } from "../persistence/filenames";
 import { MODEL_RESOURCE_LIMITS } from "../cad/resourceLimits";
 import type { RenderMesh } from "../cad/kernel/KernelAdapter";
@@ -187,5 +187,11 @@ describe("fabrication validation", () => {
     expect(new Set(names.map((n) => n.toLowerCase())).size).toBe(3);
     expect(names[2]).toMatch(/-3.stl$/);
     expect(names.every((n) => n.length <= 180)).toBe(true);
+  });
+  it("counts ZIP metadata against a bounded archive's byte limit", () => {
+    const files = [{ filename: "drawing.svg", bytes: new TextEncoder().encode("<svg/>").buffer }];
+    const exactSize = zipFiles(files).byteLength;
+    expect(zipFiles(files, exactSize).byteLength).toBe(exactSize);
+    expect(() => zipFiles(files, exactSize - 1)).toThrow(/byte-size limit/);
   });
 });

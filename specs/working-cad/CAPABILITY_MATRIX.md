@@ -1383,6 +1383,25 @@ size/volume, and preview it. **Apply** changes the current model in one Undo ste
 with configuration/part filenames plus a manifest of native volumes and bounds.
 Canceling or replacing the project invalidates pending results and downloads.
 
+For a successfully compared variant with native STEP support, preview its row
+and choose a drawing body. **Generate fabrication package** freezes that variant
+and runs one isolated OpenCascade rebuild. Exact native body IDs, solid counts,
+volumes, areas and world tessellation bounds must match its current comparison;
+STEP is reimported and its world bounds and geometry are verified. Written STL
+coordinates and extents are checked against the source mesh. Parts whose float32
+rounding exceeds 0.01% of an axis extent (within 0.000001–0.01 mm) require
+relocation closer to the origin or STEP export. The same rebuild supplies separate
+fully validated per-body STLs and the chosen body's SVG drawing, including an
+automatic middle-Z section and a CSV list of all bodies. The ZIP includes the
+editable variant project and a manifest of the configuration and exact body
+proofs. Generation does not apply the configuration or change Undo history.
+**Download fabrication package** is explicit and requires the same compared
+variant, drawing body, document and rebuild. Download consumes the prepared archive;
+generate again for another copy. A change or cancellation invalidates the proof.
+The package is limited to the existing native body/mesh and STEP
+limits, a 64 MiB ZIP including headers, and a 60-second worker deadline. One
+drawing body per package; separate STLs are not merged or packed on a print bed.
+
 Configurations persist in schema 20 and keep stable parameter references and
 derived formulas through renames. Unitless edits use the parameter's current
 dimension and project unit defaults; explicit units retain their meaning. Locked

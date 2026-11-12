@@ -13,7 +13,7 @@ export function crc32(bytes: Uint8Array): number {
   return (crc ^ 0xffffffff) >>> 0;
 }
 /** Uncompressed ZIP, with deterministic names and timestamps; inputs are sanitized by the export planner. */
-export function zipFiles(files: ExportFile[]): ArrayBuffer {
+export function zipFiles(files: ExportFile[], maxBytes = 0xffffffff): ArrayBuffer {
   const names = files.map((file) => new TextEncoder().encode(file.filename));
   const size = files.reduce(
     (n, file, i) =>
@@ -22,7 +22,7 @@ export function zipFiles(files: ExportFile[]): ArrayBuffer {
   );
   if (
     files.length > 0xffff ||
-    size > 0xffffffff ||
+    size > Math.min(maxBytes, 0xffffffff) ||
     names.some((name) => name.length > 0xffff)
   )
     throw new Error(

@@ -395,7 +395,7 @@ export const commands: CadCommand[] = [
     state.updateDocument(current => current !== document ? current : { ...posed, assemblyJoints: document.assemblyJoints!.filter(item => item.id !== joint.id) });
   } },
   { id: "manufacturing.coach", label: "Manufacturing coach", description: "Screen printing, CNC or laser concerns; highlight bodies and preview supported corrections.", enablementKey: "manufacturingCoach", run: () => beginCoach() },
-  { id: "family.manage", label: "Product configurations", description: "Save named parameter sets, compare native variants and batch-export part STL files.", enablementKey: "productFamily", run: () => beginFamily() },
+  { id: "family.manage", label: "Product configurations", description: "Save named parameter sets, compare native variants and export STL archives or a fabrication package.", enablementKey: "productFamily", run: () => beginFamily() },
   { id: "drawing.open", label: "Shop drawing", description: "Generate current native part dimensions, bore callouts, orthographic/section SVG and a parts list.", enablementKey: "shopDrawing", run: () => beginDrawing() },
   { id: "fit.create", label: "Build a fitted part", description: "Create a linked enclosure, L bracket or open adapter sleeve around a native part.", enablementKey: "createFit", run: () => beginFit() },
   { id: "fit.edit", label: "Edit fitted part", description: "Repair the reference or edit clearance, wall thickness and fitted style.", enablementKey: "editFit", run: () => beginFit(true) },

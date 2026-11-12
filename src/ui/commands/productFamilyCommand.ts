@@ -52,19 +52,22 @@ export async function compareFamily(frame: FamilyFrame, ids: readonly string[], 
   }
   return variants;
 }
-function assertVariant(variant: FamilyVariant) {
-  if (!issued.has(variant) || !currentFamilyFrame(variant.frame) || !variant.result || variant.error) throw new Error("Compare this current configuration successfully before Apply or export.");
+export function isCurrentFamilyVariant(variant: FamilyVariant) {
+  return issued.has(variant) && currentFamilyFrame(variant.frame) && Boolean(variant.result) && !variant.error;
+}
+export function assertFamilyVariant(variant: FamilyVariant) {
+  if (!isCurrentFamilyVariant(variant) || !variant.result) throw new Error("Compare this current configuration successfully before Apply or export.");
   assertNativeSolidPreview(variant.result, variant.document.id);
 }
 export function applyFamilyVariant(variant: FamilyVariant) {
-  assertVariant(variant);
+  assertFamilyVariant(variant);
   useCadStore.getState().updateDocument(current => current === variant.frame.document ? variant.document : current);
   if (useCadStore.getState().history.present === variant.frame.document) throw new Error("Configuration could not be applied. Review project diagnostics.");
   issued.delete(variant); cancelFamily();
 }
 export async function exportFamily(variants: readonly FamilyVariant[], signal: AbortSignal, progress: (message: string) => void) {
   if (!variants.length || variants.length > 8 || new Set(variants.map(variant => variant.id)).size !== variants.length) throw new Error("Compare 1–8 unique configurations before batch export.");
-  variants.forEach(assertVariant);
+  variants.forEach(assertFamilyVariant);
   if (variants.some(variant => variant.frame !== variants[0].frame)) throw new Error("Configurations must come from the same current comparison.");
   const files: ExportFile[] = [], manifest: unknown[] = []; let bytes = 0;
   const variantNames = uniqueFilenames(variants.map(variant => variant.name)).map(name => name.replace(/\.stl$/i, ""));
@@ -72,10 +75,10 @@ export async function exportFamily(variants: readonly FamilyVariant[], signal: A
     const result = variant.result!, labels = bodyDisplayNames(variant.document, result.bodies), names = uniqueFilenames(result.meshes.map(mesh => `v${index + 1}-${variantNames[index]}--${labels[mesh.bodyId] ?? mesh.bodyId}`));
     const parts: unknown[] = [];
     for (const [partIndex, mesh] of result.meshes.entries()) {
-      if (signal.aborted) throw new Error("Batch export canceled."); assertVariant(variant);
+      if (signal.aborted) throw new Error("Batch export canceled."); assertFamilyVariant(variant);
       progress(`Exporting ${variant.name} · ${labels[mesh.bodyId] ?? mesh.bodyId}…`);
       const output = await exportFabrication({ document: variant.document, meshes: [mesh], bodies: result.bodies.filter(body => body.id === mesh.bodyId), mode: "separate", fullChecks: true }, signal, progress);
-      if (signal.aborted) throw new Error("Batch export canceled."); assertVariant(variant);
+      if (signal.aborted) throw new Error("Batch export canceled."); assertFamilyVariant(variant);
       bytes += output.file.bytes.byteLength; if (bytes > 64 * 1024 * 1024) throw new Error("Batch exceeds the 64 MiB archive resource limit. Export fewer configurations.");
       files.push({ filename: names[partIndex], bytes: output.file.bytes });
       parts.push({ bodyId: mesh.bodyId, name: labels[mesh.bodyId], filename: names[partIndex], volumeMm3: mesh.geometryAssertions!.volume, boundsMm: mesh.bounds, warnings: output.warnings });
@@ -84,12 +87,12 @@ export async function exportFamily(variants: readonly FamilyVariant[], signal: A
   }
   files.push({ filename: "manifest.json", bytes: new TextEncoder().encode(JSON.stringify({ units: "mm", configurations: manifest }, null, 2)).buffer });
   const archive = zipFiles(files); if (archive.byteLength > 64 * 1024 * 1024) throw new Error("Archive exceeds 64 MiB including metadata.");
-  if (signal.aborted) throw new Error("Batch export canceled."); variants.forEach(assertVariant);
+  if (signal.aborted) throw new Error("Batch export canceled."); variants.forEach(assertFamilyVariant);
   const file = { filename: safeFilename(variants[0].frame.document.name, ".zip", "-configurations"), bytes: archive };
   issuedArchives.set(file, [...variants]); return file;
 }
 export function downloadFamily(variants: readonly FamilyVariant[], file: ExportFile) {
   const proof = issuedArchives.get(file);
   if (!proof || proof.length !== variants.length || proof.some((variant, index) => variant !== variants[index])) throw new Error("Generate a current batch archive before downloading.");
-  variants.forEach(assertVariant); downloadArrayBuffer(file.bytes, file.filename, "application/zip"); issuedArchives.delete(file);
+  variants.forEach(assertFamilyVariant); downloadArrayBuffer(file.bytes, file.filename, "application/zip"); issuedArchives.delete(file);
 }

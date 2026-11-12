@@ -6,12 +6,18 @@ import { rebuildDocument } from "../cad/features/rebuildGraph";
 import { evaluateParameters } from "../cad/parameters/expressionEvaluator";
 import { previewModeling } from "../cad/worker/extrudePreviewClient";
 import { useCadStore } from "../state/useCadStore";
+import { generateConfigurationPackage } from "../fabrication/configurationPackageClient";
+import { downloadArrayBuffer } from "../persistence/exportProject";
 import { applyFamilyVariant, beginFamily, cancelFamily, captureFamilyFrame, compareFamily, exportFamily, useProductFamily } from "../ui/commands/productFamilyCommand";
+import { downloadFamilyPackage, prepareFamilyPackage } from "../ui/commands/configurationPackageCommand";
 vi.mock("../cad/worker/extrudePreviewClient", () => ({ previewModeling: vi.fn() }));
+vi.mock("../fabrication/configurationPackageClient", () => ({ generateConfigurationPackage: vi.fn() }));
+vi.mock("../persistence/exportProject", async importOriginal => ({ ...await importOriginal<typeof import("../persistence/exportProject")>(), downloadArrayBuffer: vi.fn() }));
 const worker = vi.mocked(previewModeling);
-function native(document: CadDocument) { const result = rebuildDocument({ ...document, features: document.features.filter(feature => feature.type !== "fit") }); return { ...result, success: true, errors: [], meshes: result.meshes.map(mesh => ({ ...mesh, geometrySource: "opencascade" as const, geometryAssertions: { valid: true as const, volume: 1000, surfaceArea: 100, solidCount: 1 } })) }; }
+const packageWorker = vi.mocked(generateConfigurationPackage);
+function native(document: CadDocument) { const result = rebuildDocument({ ...document, features: document.features.filter(feature => feature.type !== "fit") }); return { ...result, success: true, stepExportAvailable: true, errors: [], meshes: result.meshes.map(mesh => ({ ...mesh, geometrySource: "opencascade" as const, geometryAssertions: { valid: true as const, volume: 1000, surfaceArea: 100, solidCount: 1 } })) }; }
 function setup() { cancelFamily(); const document = importProjectText(readFileSync("src/persistence/fixtures/schema-v20.pcaddoc", "utf8")); useCadStore.setState({ history: { past: [], present: document, future: [] }, documentSession: 120, fileBusy: false, rebuild: { status: "succeeded", kernelReady: true, result: native(document) }, selection: { selectedIds: [] } }); worker.mockImplementation(async document => native(document)); beginFamily(); return { document, frame: captureFamilyFrame(useProductFamily.getState().frame!) }; }
-beforeEach(() => { cancelFamily(); worker.mockReset(); }); afterEach(() => { cancelFamily(); useCadStore.setState(useCadStore.getInitialState()); });
+beforeEach(() => { cancelFamily(); worker.mockReset(); packageWorker.mockReset(); vi.mocked(downloadArrayBuffer).mockReset(); }); afterEach(() => { cancelFamily(); vi.unstubAllGlobals(); useCadStore.setState(useCadStore.getInitialState()); });
 it("compares without edits then applies an issued current native variant with one Undo", async () => {
   const { document, frame } = setup(); const rows = await compareFamily(frame, ["configuration-small", "configuration-large"], new AbortController().signal, () => {});
   expect(useCadStore.getState().history.present).toBe(document); expect(rows[1].document.parameters.width.expression).toBe("30mm"); expect(() => applyFamilyVariant({ ...rows[1] })).toThrow(/Compare/);
@@ -36,4 +42,42 @@ it("recalls legacy unitless expressions without adopting current project unit de
   const [row] = await compareFamily(captureFamilyFrame(useProductFamily.getState().frame!), ["configuration-small"], new AbortController().signal, () => {});
   expect(row.error).toBeUndefined();
   applyFamilyVariant(row); expect(evaluateParameters(useCadStore.getState().history.present.parameters).values.width).toMatchObject({ dimension: "scalar", value: 30 });
+});
+
+const packageFile = { filename: "large-fabrication.zip", bytes: new ArrayBuffer(36) };
+it("packages the compared variant without applying it and permits one explicit download for the same drawing part", async () => {
+  vi.stubGlobal("Worker", class {});
+  const { document, frame } = setup();
+  const [variant] = await compareFamily(frame, ["configuration-large"], new AbortController().signal, () => {});
+  const [first, second] = variant.result!.meshes;
+  packageWorker.mockResolvedValue(packageFile);
+  const prepared = await prepareFamilyPackage(variant, second.bodyId, new AbortController().signal, () => {});
+  expect(packageWorker.mock.calls[0].slice(0, 5)).toEqual([variant.document, variant.id, variant.result!.meshes, second.bodyId, frame.owner.session]);
+  expect(packageWorker.mock.calls[0][0].parameters.width.expression).toBe("30mm");
+  expect(useCadStore.getState().history).toMatchObject({ present: document, past: [] });
+  expect(downloadArrayBuffer).not.toHaveBeenCalled();
+  expect(() => downloadFamilyPackage({ ...prepared }, variant, second.bodyId)).toThrow(/current fabrication package/);
+  expect(() => downloadFamilyPackage(prepared, variant, first.bodyId)).toThrow(/current fabrication package/);
+  downloadFamilyPackage(prepared, variant, second.bodyId);
+  expect(downloadArrayBuffer).toHaveBeenCalledExactlyOnceWith(packageFile.bytes, packageFile.filename, "application/zip");
+  expect(() => downloadFamilyPackage(prepared, variant, second.bodyId)).toThrow(/current fabrication package/);
+});
+
+it("aborts pending fabrication on same-ID replacement and rejects already-prepared archives", async () => {
+  vi.stubGlobal("Worker", class {});
+  const { document, frame } = setup();
+  const [variant] = await compareFamily(frame, ["configuration-large"], new AbortController().signal, () => {});
+  const bodyId = variant.result!.meshes[0].bodyId;
+  packageWorker.mockResolvedValueOnce(packageFile);
+  const prepared = await prepareFamilyPackage(variant, bodyId, new AbortController().signal, () => {});
+  let complete!: (file: typeof packageFile) => void;
+  packageWorker.mockImplementationOnce(() => new Promise(resolve => { complete = resolve; }));
+  const pending = prepareFamilyPackage(variant, bodyId, new AbortController().signal, () => {});
+  await vi.waitFor(() => expect(packageWorker).toHaveBeenCalledTimes(2));
+  useCadStore.setState({ documentSession: frame.owner.session + 1, history: { past: [], present: { ...document }, future: [] } });
+  expect(packageWorker.mock.calls[1][5].aborted).toBe(true);
+  complete(packageFile);
+  await expect(pending).rejects.toThrow(/changed during fabrication/);
+  expect(() => downloadFamilyPackage(prepared, variant, bodyId)).toThrow(/current fabrication package/);
+  expect(downloadArrayBuffer).not.toHaveBeenCalled();
 });

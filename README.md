@@ -751,6 +751,14 @@ size/volume, and preview it. **Apply** changes the current model in one Undo ste
 with configuration/part filenames plus a manifest of native volumes and bounds.
 Canceling or replacing the project invalidates pending results and downloads.
 
+To hand off one variant, preview its comparison row and choose a **Drawing part**.
+**Generate fabrication package** checks one native rebuild and prepares an
+editable `.pcaddoc`, validated STEP, separate STLs, one SVG shop drawing, and a
+CSV list of all bodies. **Download fabrication package** saves the ZIP without
+applying the variant to your current project. A changed part choice or project
+requires a fresh package. If binary STL rounding would change dimensions at a
+distant placement, move the part closer to the origin or export STEP instead.
+
 Configurations persist in schema 20 and keep stable parameter references and
 derived formulas through renames. Unitless edits use the parameter's current
 dimension and project unit defaults; explicit units retain their meaning. Locked
