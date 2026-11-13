@@ -10,9 +10,10 @@ import * as packFiles from "../persistence/libraryPackFile";
 import { PartLibraryPanel } from "../ui/panels/PartLibraryPanel";
 import { beginPartLibrary, cancelPartLibrary, PART_LIBRARY_DRAG_TYPE, usePartLibrary } from "../ui/commands/partLibraryCommand";
 const png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9WlWv4sAAAAASUVORK5CYII=";
-beforeEach(() => {
+beforeEach(async () => {
   cancelPartLibrary(); useInspectionState.setState({ picking: false }); useTargetScopeCapture.setState({ busy: false }); useFileJobs.getState().cancel();
   useCadStore.getState().setDocument(createBoxTemplate());
+  await waitFor(() => expect(useCadStore.getState().rebuild.status).toBe("succeeded"));
   const source = createBoxTemplate();
   vi.spyOn(repository, "listLibrarySnapshot").mockResolvedValue({ entries: [repository.createLibraryEntry(source, source.rootComponentId, "Saved block", png)], damaged: [], limited: false });
 });

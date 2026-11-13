@@ -9,6 +9,7 @@ import { measureModelTargets } from "../cad/inspection/modelMeasurements";
 import { ModelMeasurementReadout } from "./ModelMeasurementReadout";
 import { createPresentationLights } from "./presentationLights";
 import { createStudioLighting } from "./studioLighting";
+import { createStudioEffectsController } from "./studioEffectsController";
 import { studioBackground } from "./studioAppearance";
 import { DemandRenderer } from "./demandRenderer";
 import { DisplayMeshRefinement } from "./displayMeshRefinement";
@@ -202,8 +203,14 @@ export function CadViewer() {
         result.meshes === renderedMeshesRef.current && document === renderedDocumentRef.current
         ? { document, result, session: documentSession } : undefined;
     };
-    const drawScene = (viewCamera: THREE.PerspectiveCamera, fine: boolean) =>
-      refinement.draw(modelGroup, fine, () => renderer.render(scene, viewCamera));
+    const drawScene = (viewCamera: THREE.PerspectiveCamera, fine: boolean, cameraSettling: boolean, capture?: { section?: THREE.Plane }) => {
+      const view = useViewerState.getState(), state = useCadStore.getState();
+      const applyEffects = view.session === state.documentSession && view.presentationMode === "render" &&
+        (capture || (!moving && !cameraSettling && !currentAiCanvasPreview(state)));
+      refinement.draw(modelGroup, fine, () => studioEffects.draw(
+        viewCamera, applyEffects ? view.studioEffects : undefined, capture ? capture.section : clippingRef.current, Boolean(capture),
+      ));
+    };
     const wantsFine = () => {
       if (moving || !modelGroup.visible || currentAiCanvasPreview(useCadStore.getState())) return false;
       const bounds = boundsFromMeshes(meshesRef.current);
@@ -223,7 +230,7 @@ export function CadViewer() {
       const fine = wantsFine();
       const frame = fine ? refinementFrame() : undefined;
       if (frame && !useCadStore.getState().fileBusy) void refinement.request(frame);
-      drawScene(camera, fine);
+      drawScene(camera, fine, changed);
       frameListeners.current.forEach((listener) => listener());
       return changed || (moving && !interacting);
     });
@@ -231,6 +238,7 @@ export function CadViewer() {
     const refinement = new DisplayMeshRefinement(refinementFrame, invalidate);
     const unsubscribeRefinement = useCadStore.subscribe(refinement.sync.bind(refinement));
     const studioLighting = createStudioLighting(scene, renderer, invalidate);
+    const studioEffects = createStudioEffectsController(renderer, scene, modelGroup, invalidate);
     const refreshQuality = (sharp = false) => {
       const state = useCadStore.getState(), view = useViewerState.getState();
       const current = view.session === state.documentSession;
@@ -358,12 +366,14 @@ export function CadViewer() {
       }
       await Promise.all([
         appearance.presentationMode === "render" ? studioLighting.ready() : undefined,
+        appearance.presentationMode === "render" ? studioEffects.ready(appearance.studioEffects) : undefined,
         frame ? refinement.request(frame, request.signal) : undefined,
       ]);
       checkCurrent();
       const currentView = useViewerState.getState();
       if (appearance.presentationMode !== currentView.presentationMode || appearance.studioMaterial !== currentView.studioMaterial ||
           appearance.studioLighting !== currentView.studioLighting || appearance.studioBackdrop !== currentView.studioBackdrop ||
+          appearance.studioEffects !== currentView.studioEffects ||
           appearance.showGrid !== currentView.showGrid ||
           appearance.showModelEdges !== currentView.showModelEdges ||
           appearance.showHiddenModelEdges !== currentView.showHiddenModelEdges)
@@ -386,7 +396,7 @@ export function CadViewer() {
           for (const child of scene.children) child.visible = child === modelGroup || child instanceof THREE.Light;
         }
         // Copy immediately after rendering: WebGL's default buffer is transient.
-        drawScene(exportCamera, true);
+        drawScene(exportCamera, true, false, { section: selectedMesh ? undefined : clipping });
         return copyCanvasPng(renderer.domElement);
       } finally {
         if (renderer.getPixelRatio() !== previousRatio) renderer.setPixelRatio(previousRatio);
@@ -396,7 +406,7 @@ export function CadViewer() {
         for (const saved of visibility) saved.object.visible = saved.visible;
         applySelection(modelGroup, selectedBodyIdRef.current, highlightedBodyIdsRef.current);
         applyClipping(modelGroup, clippingRef.current);
-        drawScene(camera, wantsFine());
+        drawScene(camera, wantsFine(), moving);
       }
     });
     const unregisterCamera = registerCameraController({
@@ -424,6 +434,7 @@ export function CadViewer() {
         bufferWidth: renderer.domElement.width, bufferHeight: renderer.domElement.height,
       },
       studioLighting: studioLighting.inspect(),
+      studioEffects: studioEffects.inspect(),
       modelEdges: modelMeshes.inspectEdges(),
       aiPreview: runtimeRef.current?.aiProposal ? { mode: useAiCanvasPreview.getState().mode, meshes: runtimeRef.current.aiProposal.inspect() } : undefined,
       presentation: { mode: modelGroup.userData.presentationMode ?? "model", gridVisible: grid.visible, axesVisible: axes.visible, sketchVisible: sketchGroup.visible, measurementVisible: measurementGroup.visible, lights: scene.children.filter((object) => object instanceof THREE.Light && object.visible).length, shadowMaps: renderer.shadowMap.enabled },
@@ -475,7 +486,8 @@ export function CadViewer() {
     window.addEventListener("plaincad:fit-view", fit);
     window.addEventListener("plaincad:reset-camera", reset);
 
-    renderer.domElement.addEventListener("webglcontextrestored", invalidate);
+    const contextRestored = () => { studioEffects.contextRestored(); invalidate(); };
+    renderer.domElement.addEventListener("webglcontextrestored", contextRestored);
     invalidate();
 
     const guardAiPreview = (event: MouseEvent) => {
@@ -576,7 +588,7 @@ export function CadViewer() {
       unsubscribeRefinement();
       refinement.dispose();
       frames.dispose();
-      renderer.domElement.removeEventListener("webglcontextrestored", invalidate);
+      renderer.domElement.removeEventListener("webglcontextrestored", contextRestored);
       resizeObserver?.disconnect();
       window.removeEventListener("resize", resize);
       window.removeEventListener("plaincad:fit-view", fit);
@@ -592,6 +604,7 @@ export function CadViewer() {
       runtimeRef.current?.aiProposal?.dispose();
       clearAiCanvasPreview();
       studioLighting.dispose();
+      studioEffects.dispose();
       modelMeshes.dispose();
       scene.remove(modelGroup, sketchGroup);
       if (runtimeRef.current) disposeSketchOverlayObjects(sketchGroup, runtimeRef.current.sketchResources);
@@ -675,7 +688,7 @@ export function CadViewer() {
     return () => { canceled = true; };
   }, [aiPreview, aiPreviewMode, document, session, rebuild.result, rebuild.status, fileBusy, componentId, selection, presentationMode, view.studioMaterial, view.showModelEdges, view.showHiddenModelEdges, hidden, section.session, section.axis, section.offset, section.positive]);
 
-  useEffect(() => { runtimeRef.current?.refreshQuality(); }, [view.presentationMode, view.studioMaterial, view.studioBackdrop, view.studioLighting, view.showGrid, view.showModelEdges, view.showHiddenModelEdges, view.optimizeWhileMoving, view.session, session]);
+  useEffect(() => { runtimeRef.current?.refreshQuality(); }, [view.presentationMode, view.studioMaterial, view.studioBackdrop, view.studioLighting, view.studioEffects, view.showGrid, view.showModelEdges, view.showHiddenModelEdges, view.optimizeWhileMoving, view.session, session]);
 
   useEffect(() => {
     const runtime = runtimeRef.current;

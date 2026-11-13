@@ -1,7 +1,8 @@
 import { useCadStore, type CadStore } from "../../state/useCadStore";
-import { useViewerState, STUDIO_BACKDROP_IDS, STUDIO_MATERIAL_IDS, validStudioLighting, type StudioLighting, type StudioBackdrop, type StudioMaterial } from "../../state/viewerState";
+import { useViewerState, STUDIO_BACKDROP_IDS, STUDIO_MATERIAL_IDS, validStudioLighting, validStudioEffects, type StudioLighting, type StudioBackdrop, type StudioMaterial } from "../../state/viewerState";
 import { STANDARD_VIEWS, type StandardView } from "../../cad/inspection/cameraViews";
 import { runCommand } from "./commandRegistry";
+import type { StudioEffectsSettings } from "../../viewer/studioEffects";
 import { captureCamera, restoreCamera } from "../../viewer/cameraController";
 
 export interface StudioCommandContext {
@@ -11,6 +12,7 @@ export interface StudioCommandContext {
   backdrop?: StudioBackdrop;
   composition?: StandardView;
   lighting?: Partial<StudioLighting>;
+  effects?: Partial<StudioEffectsSettings>;
 }
 
 /** The registry loads this module lazily; a late import cannot style a new file. */
@@ -23,6 +25,7 @@ export async function setStudioAppearance(input: StudioCommandContext | undefine
   if (input.material !== undefined && !STUDIO_MATERIAL_IDS.includes(input.material)) return false;
   if (input.backdrop !== undefined && !STUDIO_BACKDROP_IDS.includes(input.backdrop)) return false;
   if (input.lighting && !validStudioLighting({ ...view.studioLighting, ...input.lighting })) return false;
+  if (input.effects && !validStudioEffects(input.effects)) return false;
   if (input.composition !== undefined && !STANDARD_VIEWS.includes(input.composition)) return false;
   let previousCamera: ReturnType<typeof captureCamera>;
   const rollbackCamera = () => {
@@ -60,6 +63,6 @@ export async function setStudioAppearance(input: StudioCommandContext | undefine
       return false;
     }
   }
-  view.setStudioAppearance(input.session, { material: input.material, backdrop: input.backdrop, lighting: input.lighting });
+  view.setStudioAppearance(input.session, { material: input.material, backdrop: input.backdrop, lighting: input.lighting, effects: input.effects });
   return true;
 }

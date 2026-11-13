@@ -8,7 +8,7 @@ import "./studioPanel.css";
 
 export function StudioPanel({ hasGeometry }: { hasGeometry: boolean }) {
   const frame = useCadStore(useShallow((state) => ({ session: state.documentSession, documentId: state.history.present.id, busy: state.fileBusy })));
-  const appearance = useViewerState(useShallow((view) => ({ material: view.studioMaterial, backdrop: view.studioBackdrop, lighting: view.studioLighting })));
+  const appearance = useViewerState(useShallow((view) => ({ material: view.studioMaterial, backdrop: view.studioBackdrop, lighting: view.studioLighting, effects: view.studioEffects })));
   const enabled = useCommandEnablement();
   const change = (settings: Omit<StudioCommandContext, "session" | "documentId">) =>
     void runCommand("view.studioAppearance", { studio: { session: frame.session, documentId: frame.documentId, ...settings } });
@@ -49,6 +49,16 @@ export function StudioPanel({ hasGeometry }: { hasGeometry: boolean }) {
         <label>Exposure <output>{appearance.lighting.exposure} EV</output>
           <input aria-label="Studio exposure" type="range" min={-2} max={2} step={0.1} value={appearance.lighting.exposure} disabled={frame.busy}
             onChange={event => change({ lighting: { exposure: event.target.valueAsNumber } })} />
+        </label>
+        <label className="studio-effect-toggle">
+          <input type="checkbox" checked={appearance.effects.ambientOcclusion} disabled={frame.busy}
+            onChange={event => change({ effects: { ambientOcclusion: event.target.checked } })} />
+          Ambient occlusion
+        </label>
+        <label className="studio-effect-toggle">
+          <input type="checkbox" checked={appearance.effects.groundShadow} disabled={frame.busy}
+            onChange={event => change({ effects: { groundShadow: event.target.checked } })} />
+          Ground shadow
         </label>
         <div role="group" aria-label="Studio camera compositions" className="studio-compositions">
           {(["isometric", "top", "front", "right"] as const).map((composition) =>

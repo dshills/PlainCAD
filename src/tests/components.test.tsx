@@ -315,6 +315,7 @@ describe("component project ownership", () => {
         name: "Sketch on Front (XZ) plane",
       }),
     );
+    await act(() => vi.dynamicImportSettled());
     const canvas = await screen.findByRole("region", { name: "Sketch canvas" });
     expect(canvas).toHaveTextContent("XZ");
     await act(async () => {

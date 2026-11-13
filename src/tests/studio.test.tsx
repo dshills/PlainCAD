@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { useCadStore } from "../state/useCadStore";
 import { useViewerState, type StudioMaterial } from "../state/viewerState";
 import { createBoxTemplate } from "../templates/templates";
@@ -64,6 +64,21 @@ describe("product photo studio", () => {
     expect(useCadStore.getState().rebuild).toBe(before.rebuild);
     expect(serializeProject(useCadStore.getState().history.present)).toBe(savedBefore);
     expect(screen.getByRole("button", { name: "Download studio PNG" })).toBeDisabled();
+  });
+
+  it("toggles Render effects through shared commands without saving them to the project", async () => {
+    const before = useCadStore.getState();
+    render(<StudioPanel hasGeometry />);
+    fireEvent.click(screen.getByRole("checkbox", { name: "Ambient occlusion" }));
+    await waitFor(() => expect(useViewerState.getState().studioEffects.ambientOcclusion).toBe(false));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Ground shadow" }));
+    await waitFor(() => expect(useViewerState.getState().studioEffects.groundShadow).toBe(false));
+    expect(useCadStore.getState().history).toBe(before.history);
+    expect(useCadStore.getState().rebuild).toBe(before.rebuild);
+    expect(serializeProject(before.history.present)).not.toMatch(/ambientOcclusion|groundShadow/);
+    expect(await setStudioAppearance({ ...context(), effects: { groundShadow: "yes" as never } }, before)).toBe(false);
+    act(() => useViewerState.getState().openDocument(before.history.present, before.documentSession + 1));
+    expect(useViewerState.getState().studioEffects).toEqual({ ambientOcclusion: true, groundShadow: true });
   });
 
   it("reports an application failure separately from a command-load failure", async () => {

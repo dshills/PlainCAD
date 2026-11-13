@@ -11,8 +11,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Date: 2026-11-12.
 - Change: metric and Unified inch fastener and hole presets, native threads, and native lead screw/nut pairs.
 - Result: type checks, 1680 unit/component tests in 216 files, build/bundle budget (70 bundles, largest 496.21 kB), 337 development browser cases plus three corrected cases rerun, and 62 production browser cases passed.
-- Completed items since that full gate: **4**.
-- Next full gate: after 1 more completed items.
+- Completed items since that full gate: **5**.
+- Next full gate: after all five rendering items are complete, per user request.
 
 ## Completed batch
 
@@ -1583,3 +1583,24 @@ The serial reduced gate passed 1683 unit/component tests, 71 JavaScript bundles
 (largest 496.70 kB), five development and 14 production smoke tests. The serial
 run resolved four existing unit assertions that failed during concurrent tests.
 The existing linked-sketch import advisory remains.
+
+## Rendering item 4: bounded studio effects (2026-11-13)
+
+Render adds screen-space ambient occlusion and a soft ground shadow with
+independent toggles. Effects are cached after camera movement, use bounded
+render targets, and are included in PNGs. Capture reports effect failures.
+
+Independent internal review approved the final effect and capture lifecycle.
+Three focused Chromium cases passed, including image comparisons for each
+pass and reuse of the shadow cache after zoom. Initial reduced gates exposed
+existing test races under contention. The sketch test waits for the lazy
+editor import and the part-library fixture waits for its accepted rebuild.
+Independent review verified the test changes.
+
+Type checks passed. The last complete unit run passed 1686 of 1688 cases;
+the two unrelated failures passed in a focused rerun that also rechecked the
+final fixture fixes (32 passed). The remaining reduced gate stages passed
+separately: 72 bundles (largest 496.70 kB), five development and 14 production
+smoke tests. The production smoke test restarted after a local port conflict.
+The existing linked-sketch import advisory remains. The full gate is deferred
+until the rendering batch is complete, as requested.

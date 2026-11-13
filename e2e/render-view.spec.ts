@@ -59,7 +59,9 @@ test("native Render keeps geometry/camera/visibility, hides overlays, idles with
       expect(render.cameraTarget[axis]).toBeCloseTo(model.cameraTarget[axis], 8);
     }
     expect(render.cameraUp).toEqual(model.cameraUp);
-    expect(render.performance?.drawCalls).toBeLessThan(model.performance!.drawCalls);
+    expect(render.studioEffects).toMatchObject({ ambientOcclusion: true, groundShadow: true });
+    expect(render.studioEffects!.drawCalls).toBe(render.performance!.drawCalls);
+    expect(render.studioEffects!.occlusionWidth).toBeLessThanOrEqual(720);
     expect(render.performance?.scheduled).toBe(false);
   }).toPass();
   await expect(page.getByRole("group", { name: "Solid driving dimensions" })).toHaveCount(0);
