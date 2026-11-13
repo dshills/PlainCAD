@@ -1,5 +1,5 @@
 import { useCadStore, type CadStore } from "../../state/useCadStore";
-import { useViewerState, STUDIO_BACKDROP_IDS, STUDIO_MATERIAL_IDS, type StudioBackdrop, type StudioMaterial } from "../../state/viewerState";
+import { useViewerState, STUDIO_BACKDROP_IDS, STUDIO_MATERIAL_IDS, validStudioLighting, type StudioLighting, type StudioBackdrop, type StudioMaterial } from "../../state/viewerState";
 import { STANDARD_VIEWS, type StandardView } from "../../cad/inspection/cameraViews";
 import { runCommand } from "./commandRegistry";
 import { captureCamera, restoreCamera } from "../../viewer/cameraController";
@@ -10,6 +10,7 @@ export interface StudioCommandContext {
   material?: StudioMaterial;
   backdrop?: StudioBackdrop;
   composition?: StandardView;
+  lighting?: Partial<StudioLighting>;
 }
 
 /** The registry loads this module lazily; a late import cannot style a new file. */
@@ -21,6 +22,7 @@ export async function setStudioAppearance(input: StudioCommandContext | undefine
       input.documentId !== state.history.present.id || view.session !== input.session || view.presentationMode !== "render") return false;
   if (input.material !== undefined && !STUDIO_MATERIAL_IDS.includes(input.material)) return false;
   if (input.backdrop !== undefined && !STUDIO_BACKDROP_IDS.includes(input.backdrop)) return false;
+  if (input.lighting && !validStudioLighting({ ...view.studioLighting, ...input.lighting })) return false;
   if (input.composition !== undefined && !STANDARD_VIEWS.includes(input.composition)) return false;
   let previousCamera: ReturnType<typeof captureCamera>;
   const rollbackCamera = () => {
@@ -58,6 +60,6 @@ export async function setStudioAppearance(input: StudioCommandContext | undefine
       return false;
     }
   }
-  view.setStudioAppearance(input.session, { material: input.material, backdrop: input.backdrop });
+  view.setStudioAppearance(input.session, { material: input.material, backdrop: input.backdrop, lighting: input.lighting });
   return true;
 }

@@ -31,6 +31,7 @@ test("built studio lazy controls and real material/backdrop PNG export work unde
   await page.getByRole("button", { name: "Render view", exact: true }).click();
   await page.getByLabel("Studio finish").selectOption("metal");
   await page.getByLabel("Studio backdrop").selectOption("warm");
+  await page.getByLabel("Studio lighting").selectOption("rim");
   await expect(page.getByLabel("Studio finish")).toHaveValue("metal");
   await expect(page.getByLabel("Studio backdrop")).toHaveValue("warm");
   await page.getByRole("group", { name: "Studio camera compositions" }).getByRole("button", { name: "Hero", exact: true }).click();
@@ -38,6 +39,15 @@ test("built studio lazy controls and real material/backdrop PNG export work unde
   await page.getByRole("button", { name: "Download studio PNG", exact: true }).click();
   const warm = await inspectPngDownload(page, await download, info.outputPath("studio-production-warm.png"));
   expect(await corner(page, warm.bytes)).toEqual([232, 223, 207, 255]);
+  await page.getByLabel("Studio exposure").fill("1");
+  await expect(page.getByLabel("Studio exposure")).toHaveValue("1");
+  const brighterDownload = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download studio PNG", exact: true }).click();
+  const brighter = await inspectPngDownload(page, await brighterDownload, info.outputPath("studio-production-exposed.png"));
+  expect(await corner(page, brighter.bytes)).toEqual([232, 223, 207, 255]);
+  expect(brighter.bytes.equals(warm.bytes)).toBe(false);
+  await page.getByLabel("Studio exposure").fill("0");
+  await expect(page.getByLabel("Studio exposure")).toHaveValue("0");
   // Isolate material changes: same camera and backdrop, different actual model
   // pixels. The later dark-backdrop check cannot mask an unapplied finish.
   await page.getByLabel("Studio finish").selectOption("powder");

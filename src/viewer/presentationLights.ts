@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import type { PresentationMode } from "../state/viewerState";
 
-/** Cheap fixed studio lighting: no shadow maps, textures or additional passes. */
+/** Direct lighting stays inexpensive and complements the Render environment. */
 export function createPresentationLights(scene: THREE.Scene) {
   const ambient = new THREE.HemisphereLight("#ffffff", "#a8b0ad", 2.6);
   const key = new THREE.DirectionalLight("#ffffff", 2);
@@ -13,10 +13,10 @@ export function createPresentationLights(scene: THREE.Scene) {
   scene.add(ambient, key, fill, rim);
   return {
     setMode(mode: PresentationMode) {
-      ambient.intensity = mode === "render" ? 1.7 : 2.6;
-      key.intensity = mode === "render" ? 3.1 : 2;
-      fill.intensity = mode === "render" ? 1.2 : 0;
-      rim.intensity = mode === "render" ? 2 : 0;
+      ambient.intensity = mode === "render" ? 0.5 : 2.6;
+      key.intensity = mode === "render" ? 1.35 : 2;
+      fill.intensity = mode === "render" ? 0.35 : 0;
+      rim.intensity = mode === "render" ? 0.65 : 0;
       // Zero-intensity directional lights are still considered by Three.js;
       // visibility excludes the inactive lights from the Model shader.
       fill.visible = rim.visible = mode === "render";

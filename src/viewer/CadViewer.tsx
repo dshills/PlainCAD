@@ -8,6 +8,7 @@ import { addMeasurementOverlays, installMeasurementPicking, visibleMeasurementTa
 import { measureModelTargets } from "../cad/inspection/modelMeasurements";
 import { ModelMeasurementReadout } from "./ModelMeasurementReadout";
 import { createPresentationLights } from "./presentationLights";
+import { createStudioLighting } from "./studioLighting";
 import { studioBackground } from "./studioAppearance";
 import { DemandRenderer } from "./demandRenderer";
 import { fitCameraBounds } from "./cameraFit";
@@ -204,6 +205,7 @@ export function CadViewer() {
       return changed || (moving && !interacting);
     });
     const invalidate = frames.invalidate;
+    const studioLighting = createStudioLighting(scene, renderer, invalidate);
     const refreshQuality = (sharp = false) => {
       const state = useCadStore.getState(), view = useViewerState.getState();
       const current = view.session === state.documentSession;
@@ -225,6 +227,7 @@ export function CadViewer() {
         appliedPresentationMode = mode;
         appliedStudioMaterial = material;
       }
+      studioLighting.apply(mode, view.studioLighting);
       grid.visible = !current || view.showGrid;
       const reduced = moving && optimize && !sharp;
       const ratio = reduced ? Math.min(sharpPixelRatio, 1) : sharpPixelRatio;
@@ -291,7 +294,9 @@ export function CadViewer() {
       invalidate();
     };
     runtimeRef.current = { background, grid, camera, controls, applyPose, modelGroup, modelMeshes, refreshQuality, invalidate, fit, sketchGroup, measurementGroup, operationPicking, sketchResources: createSketchOverlayResources() };
-    const unregisterPng = registerPngCapture("viewer", (request) => {
+    const unregisterPng = registerPngCapture("viewer", async (request) => {
+      if (useViewerState.getState().presentationMode === "render") await studioLighting.ready();
+      if (disposed) throw new Error("The drawing view changed. Reopen the current model before exporting PNG.");
       if (currentAiCanvasPreview(useCadStore.getState()) || runtimeRef.current?.aiProposal)
         throw new Error("Apply or cancel the AI preview before exporting PNG.");
       if (request.document !== renderedDocumentRef.current || request.result?.meshes !== renderedMeshesRef.current || request.session !== useCadStore.getState().documentSession)
@@ -367,6 +372,7 @@ export function CadViewer() {
         drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles,
         bufferWidth: renderer.domElement.width, bufferHeight: renderer.domElement.height,
       },
+      studioLighting: studioLighting.inspect(),
       aiPreview: runtimeRef.current?.aiProposal ? { mode: useAiCanvasPreview.getState().mode, meshes: runtimeRef.current.aiProposal.inspect() } : undefined,
       presentation: { mode: modelGroup.userData.presentationMode ?? "model", gridVisible: grid.visible, axesVisible: axes.visible, sketchVisible: sketchGroup.visible, measurementVisible: measurementGroup.visible, lights: scene.children.filter((object) => object instanceof THREE.Light && object.visible).length, shadowMaps: renderer.shadowMap.enabled },
       resources: { geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, programs: renderer.info.programs?.length ?? 0 },
@@ -531,6 +537,7 @@ export function CadViewer() {
       renderer.domElement.removeEventListener("keydown", contextKey);
       runtimeRef.current?.aiProposal?.dispose();
       clearAiCanvasPreview();
+      studioLighting.dispose();
       modelMeshes.dispose();
       scene.remove(modelGroup, sketchGroup);
       if (runtimeRef.current) disposeSketchOverlayObjects(sketchGroup, runtimeRef.current.sketchResources);
@@ -614,7 +621,7 @@ export function CadViewer() {
     return () => { canceled = true; };
   }, [aiPreview, aiPreviewMode, document, session, rebuild.result, rebuild.status, fileBusy, componentId, selection, presentationMode, view.studioMaterial, view.showModelEdges, hidden, section.session, section.axis, section.offset, section.positive]);
 
-  useEffect(() => { runtimeRef.current?.refreshQuality(); }, [view.presentationMode, view.studioMaterial, view.studioBackdrop, view.showGrid, view.showModelEdges, view.optimizeWhileMoving, view.session, session]);
+  useEffect(() => { runtimeRef.current?.refreshQuality(); }, [view.presentationMode, view.studioMaterial, view.studioBackdrop, view.studioLighting, view.showGrid, view.showModelEdges, view.optimizeWhileMoving, view.session, session]);
 
   useEffect(() => {
     const runtime = runtimeRef.current;

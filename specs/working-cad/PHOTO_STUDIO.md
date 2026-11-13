@@ -1,7 +1,8 @@
 # Product photo studio
 
 Render view opens a collapsible Photo studio panel over the existing viewport.
-Choose a finish, backdrop and camera composition, then Download studio PNG.
+Choose a finish, backdrop, lighting and camera composition, then select
+**Download studio PNG**.
 The PNG captures the actual current native model, visible bodies, section and
 camera at full resolution. It excludes the HTML studio controls and CAD editing
 overlays. Existing rebuild and stale-document export checks still apply.
@@ -20,11 +21,15 @@ any project resets them. Model restores the original colors, lighting and theme
 background. Saved named camera views remain the existing way to retain a pose.
 Studio preferences never enter project JSON or Undo history.
 
-Appearance changes reuse the existing native geometry buffers, materials and
-four fixed studio lights. No texture downloads, shadow maps, extra render passes
-or continuous animation are added. The demand renderer continues sleeping when
-idle. Studio controls and detailed Views controls load lazily to keep the initial
-JavaScript within the bundle budget.
+Softbox, Rim highlights and Warm workshop create local HDR lighting from broad
+sources. Adjust light rotation to place reflections and exposure to set the
+model brightness. Neutral tone mapping preserves detail in bright highlights.
+The chosen environment supplies reflections while the backdrop stays a solid
+color. Studio lighting is generated on demand and requires no texture downloads.
+
+Lighting changes reuse existing native mesh buffers and request a frame only when
+needed. The viewer stops drawing once idle. Studio controls and the environment
+generator load lazily.
 
 Native acceptance is in `e2e/studio.spec.ts`; built-app CSP and PNG acceptance is
 in `production-e2e/studio.spec.ts`. Existing Render acceptance continues covering

@@ -5,6 +5,19 @@ import { bodyComponentId } from "../cad/document/components";
 export type PresentationMode = "model" | "render";
 export const STUDIO_MATERIAL_IDS = ["original", "metal", "powder"] as const;
 export const STUDIO_BACKDROP_IDS = ["theme", "neutral", "warm", "dark"] as const;
+export const STUDIO_ENVIRONMENT_IDS = ["softbox", "rim", "workshop"] as const;
+export type StudioEnvironment = typeof STUDIO_ENVIRONMENT_IDS[number];
+export interface StudioLighting {
+  environment: StudioEnvironment;
+  rotation: number;
+  exposure: number;
+}
+const DEFAULT_STUDIO_LIGHTING: StudioLighting = { environment: "softbox", rotation: 0, exposure: 0 };
+export function validStudioLighting(lighting: StudioLighting) {
+  return STUDIO_ENVIRONMENT_IDS.includes(lighting.environment) &&
+    Number.isFinite(lighting.rotation) && Math.abs(lighting.rotation) <= 180 &&
+    Number.isFinite(lighting.exposure) && Math.abs(lighting.exposure) <= 2;
+}
 export type StudioMaterial = typeof STUDIO_MATERIAL_IDS[number];
 export type StudioBackdrop = typeof STUDIO_BACKDROP_IDS[number];
 interface AppearancePreferences { showModelEdges: boolean; showGrid: boolean; }
@@ -18,13 +31,14 @@ interface ViewerState {
   presentationMode: PresentationMode;
   studioMaterial: StudioMaterial;
   studioBackdrop: StudioBackdrop;
+  studioLighting: StudioLighting;
   modelPreferences: AppearancePreferences;
   renderPreferences: AppearancePreferences;
   showGrid: boolean;
   showModelEdges: boolean;
   optimizeWhileMoving: boolean;
   setPresentationMode(session: number, mode: PresentationMode): void;
-  setStudioAppearance(session: number, change: { material?: StudioMaterial; backdrop?: StudioBackdrop }): void;
+  setStudioAppearance(session: number, change: { material?: StudioMaterial; backdrop?: StudioBackdrop; lighting?: Partial<StudioLighting> }): void;
   toggleGrid(session: number): void;
   toggleModelEdges(session: number): void;
   toggleMovingQuality(session: number): void;
@@ -61,6 +75,7 @@ const defaults = {
   presentationMode: "model" as PresentationMode,
   studioMaterial: "original" as StudioMaterial,
   studioBackdrop: "theme" as StudioBackdrop,
+  studioLighting: DEFAULT_STUDIO_LIGHTING,
   modelPreferences: { showModelEdges: true, showGrid: true },
   renderPreferences: { showModelEdges: false, showGrid: false },
   showGrid: true,
@@ -98,7 +113,10 @@ export const useViewerState = create<ViewerState>((set, get) => {
       if (view.session !== session || view.presentationMode !== "render") return;
       if (change.material !== undefined && !STUDIO_MATERIAL_IDS.includes(change.material)) return;
       if (change.backdrop !== undefined && !STUDIO_BACKDROP_IDS.includes(change.backdrop)) return;
+      const lighting = change.lighting && { ...view.studioLighting, ...change.lighting };
+      if (lighting && !validStudioLighting(lighting)) return;
       set({
+        ...(lighting ? { studioLighting: lighting } : {}),
         ...(change.material === undefined ? {} : { studioMaterial: change.material }),
         ...(change.backdrop === undefined ? {} : { studioBackdrop: change.backdrop }),
       });

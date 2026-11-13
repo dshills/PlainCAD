@@ -11,8 +11,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Date: 2026-11-12.
 - Change: metric and Unified inch fastener and hole presets, native threads, and native lead screw/nut pairs.
 - Result: type checks, 1680 unit/component tests in 216 files, build/bundle budget (70 bundles, largest 496.21 kB), 337 development browser cases plus three corrected cases rerun, and 62 production browser cases passed.
-- Completed items since that full gate: **1**.
-- Next full gate: after four more completed items.
+- Completed items since that full gate: **2**.
+- Next full gate: after 3 more completed items.
 
 ## Completed batch
 
@@ -1539,3 +1539,17 @@ linked-sketch import advisory remains. Focused gallery checks passed one
 development case and five production cases. These checked all four built covers,
 editable projects, saved views, thread definitions, and two native solids at
 the expected volumes per project. Cadence is one item since the full gate.
+
+## Rendering item 1: HDR studio lighting (2026-11-13)
+
+Render view now uses locally generated HDR environments, neutral tone mapping,
+light rotation, and exposure. Model keeps its existing direct lighting. The
+environment module loads on demand and PNG capture waits for it before drawing.
+
+Independent internal review found a capture race during environment loading.
+The fix awaits readiness and rejects stale or unavailable captures. Re-review
+approved the final change. The isolated reduced gate passed 1680 unit/component
+tests, the 71-bundle budget (largest 496.21 kB), five development smoke tests,
+and 14 production smoke tests. Five focused native Render/Studio cases and the
+production Studio CSP/PNG case also passed. The existing linked-sketch import
+advisory remains.

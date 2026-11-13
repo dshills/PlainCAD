@@ -47,13 +47,19 @@ describe("product photo studio", () => {
     report.mockRestore();
   });
 
-  it("changes display finishes/backdrop through shared commands without history, rebuild or durable data", async () => {
+  it("changes studio display settings through shared commands without history, rebuild or durable data", async () => {
     const before = useCadStore.getState(), savedBefore = serializeProject(before.history.present);
     render(<StudioPanel hasGeometry />);
     fireEvent.change(screen.getByLabelText("Studio finish"), { target: { value: "metal" } });
     await waitFor(() => expect(useViewerState.getState().studioMaterial).toBe("metal"));
     fireEvent.change(screen.getByLabelText("Studio backdrop"), { target: { value: "warm" } });
     await waitFor(() => expect(useViewerState.getState().studioBackdrop).toBe("warm"));
+    fireEvent.change(screen.getByLabelText("Studio lighting"), { target: { value: "rim" } });
+    await waitFor(() => expect(useViewerState.getState().studioLighting.environment).toBe("rim"));
+    fireEvent.change(screen.getByLabelText("Studio light rotation"), { target: { value: "45" } });
+    await waitFor(() => expect(useViewerState.getState().studioLighting.rotation).toBe(45));
+    fireEvent.change(screen.getByLabelText("Studio exposure"), { target: { value: "0.5" } });
+    await waitFor(() => expect(useViewerState.getState().studioLighting.exposure).toBe(0.5));
     expect(useCadStore.getState().history).toBe(before.history);
     expect(useCadStore.getState().rebuild).toBe(before.rebuild);
     expect(serializeProject(useCadStore.getState().history.present)).toBe(savedBefore);
@@ -102,6 +108,8 @@ describe("product photo studio", () => {
   it("validates runtime settings and resets them on reopen while remembering Render settings across mode switches", async () => {
     const state = useCadStore.getState(), view = useViewerState.getState();
     expect(await setStudioAppearance({ ...context(), material: "unsupported" as StudioMaterial }, state)).toBe(false);
+    expect(await setStudioAppearance({ ...context(), lighting: { rotation: Infinity } }, state)).toBe(false);
+    expect(await setStudioAppearance({ ...context(), lighting: { exposure: 3 } }, state)).toBe(false);
     expect(await setStudioAppearance({ ...context(), material: "metal", backdrop: "dark" }, state)).toBe(true);
     view.setPresentationMode(state.documentSession, "model");
     view.setStudioAppearance(state.documentSession, { material: "powder" });

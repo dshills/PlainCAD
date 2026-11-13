@@ -48,6 +48,7 @@ test("studio finishes/backdrops reuse native buffers, preserve history and camer
   await expect.poll(async () => (await viewer(page)).meshes[0].appearance?.metalness).toBe(0.65);
   await page.getByLabel("Studio backdrop", { exact: true }).selectOption("warm");
   await expect.poll(async () => (await viewer(page)).background).toBe("e8dfcf");
+  await expect.poll(async () => (await viewer(page)).studioLighting).toMatchObject({ environment: "softbox", ready: true, toneMapped: true });
   const metal = await idle(page);
   expect(metal.meshes[0]).toMatchObject({ geometryId: model.meshes[0].geometryId, positions: model.meshes[0].positions, normals: model.meshes[0].normals, indices: model.meshes[0].indices, appearance: { roughness: 0.48, metalness: 0.65, color: "bbc4cc" } });
   metal.cameraPosition.forEach((value, axis) => expect(value).toBeCloseTo(model.cameraPosition[axis], 8));
@@ -79,7 +80,8 @@ test("studio finishes/backdrops reuse native buffers, preserve history and camer
   const powder = await idle(page);
   expect(powder.meshes[0].geometryId).toBe(metal.meshes[0].geometryId);
   expect(powder.meshes[0].appearance?.color).toBe(model.meshes[0].appearance?.color);
-  expect(powder.resources).toEqual(resources);
+  expect(powder.resources.geometries).toBe(resources.geometries);
+  expect(powder.resources.textures).toBe(resources.textures);
   const powderDownload = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download studio PNG", exact: true }).click();
   const powderPng = await inspectPngDownload(page, await powderDownload, info.outputPath("studio-powder-midnight.png"));
@@ -90,6 +92,7 @@ test("studio finishes/backdrops reuse native buffers, preserve history and camer
   expect(after.past).toBe(before.past);
   await page.getByRole("button", { name: "Model view", exact: true }).click();
   await expect.poll(async () => (await viewer(page)).background).toBe(model.background);
+  await expect.poll(async () => (await viewer(page)).studioLighting).toMatchObject({ ready: false, toneMapped: false });
   await expect.poll(async () => (await viewer(page)).meshes[0].appearance).toEqual(model.meshes[0].appearance);
   await page.getByRole("button", { name: "Render view", exact: true }).click();
   await expect(page.getByLabel("Studio finish")).toHaveValue("powder");

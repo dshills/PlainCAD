@@ -1,6 +1,6 @@
 import { useShallow } from "zustand/react/shallow";
 import { useCadStore } from "../state/useCadStore";
-import { useViewerState, type StudioBackdrop, type StudioMaterial } from "../state/viewerState";
+import { useViewerState, type StudioBackdrop, type StudioEnvironment, type StudioMaterial } from "../state/viewerState";
 import { runCommand } from "../ui/commands/commandRegistry";
 import { useCommandEnablement } from "../ui/commands/useCommandEnablement";
 import type { StudioCommandContext } from "../ui/commands/studioCommand";
@@ -8,7 +8,7 @@ import "./studioPanel.css";
 
 export function StudioPanel({ hasGeometry }: { hasGeometry: boolean }) {
   const frame = useCadStore(useShallow((state) => ({ session: state.documentSession, documentId: state.history.present.id, busy: state.fileBusy })));
-  const appearance = useViewerState(useShallow((view) => ({ material: view.studioMaterial, backdrop: view.studioBackdrop })));
+  const appearance = useViewerState(useShallow((view) => ({ material: view.studioMaterial, backdrop: view.studioBackdrop, lighting: view.studioLighting })));
   const enabled = useCommandEnablement();
   const change = (settings: Omit<StudioCommandContext, "session" | "documentId">) =>
     void runCommand("view.studioAppearance", { studio: { session: frame.session, documentId: frame.documentId, ...settings } });
@@ -33,6 +33,22 @@ export function StudioPanel({ hasGeometry }: { hasGeometry: boolean }) {
             <option value="warm">Warm paper</option>
             <option value="dark">Midnight</option>
           </select>
+        </label>
+        <label>Lighting
+          <select aria-label="Studio lighting" value={appearance.lighting.environment} disabled={frame.busy}
+            onChange={event => change({ lighting: { environment: event.target.value as StudioEnvironment } })}>
+            <option value="softbox">Softbox</option>
+            <option value="rim">Rim highlights</option>
+            <option value="workshop">Warm workshop</option>
+          </select>
+        </label>
+        <label>Light rotation <output>{appearance.lighting.rotation}°</output>
+          <input aria-label="Studio light rotation" type="range" min={-180} max={180} step={5} value={appearance.lighting.rotation} disabled={frame.busy}
+            onChange={event => change({ lighting: { rotation: event.target.valueAsNumber } })} />
+        </label>
+        <label>Exposure <output>{appearance.lighting.exposure} EV</output>
+          <input aria-label="Studio exposure" type="range" min={-2} max={2} step={0.1} value={appearance.lighting.exposure} disabled={frame.busy}
+            onChange={event => change({ lighting: { exposure: event.target.valueAsNumber } })} />
         </label>
         <div role="group" aria-label="Studio camera compositions" className="studio-compositions">
           {(["isometric", "top", "front", "right"] as const).map((composition) =>
