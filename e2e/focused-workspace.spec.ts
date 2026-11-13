@@ -15,6 +15,16 @@ test.use({
     await use(focusedWorkspaceStorageState(baseURL));
   },
 });
+async function openDrawingWorkspace(page: Page) {
+  await page.goto("/");
+  // The initial fallback result also reports "succeeded". Wait for the worker
+  // before drawing so the loading banner cannot move the canvas mid-gesture.
+  await expect
+    .poll(async () => (await aiSnapshot(page)).kernelReady, { timeout: 30000 })
+    .toBe(true);
+  await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+}
+
 async function volume(page: Page, expected: number) {
   await expect(async () => {
     const state = await aiSnapshot(page);
@@ -51,8 +61,7 @@ async function clickLocal(page: Page, x: number, y: number) {
 test("focused sketch deletion cleans references, rejects typing, diagnoses lost native profiles and restores geometry through undo/save/open", async ({
   page,
 }, info) => {
-  await page.goto("/");
-  await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+  await openDrawingWorkspace(page);
   await openNewPartMenu(page);
   await page.getByRole("button", { name: "Draw a shape", exact: true }).click();
   await page
@@ -233,8 +242,7 @@ test("focused sketch deletion cleans references, rejects typing, diagnoses lost 
 test("focused mouse sketch, native extrude/cut, parameter edit, save/open and STL work without the full workspace", async ({
   page,
 }, info) => {
-  await page.goto("/");
-  await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+  await openDrawingWorkspace(page);
   await expect(page.getByLabel("Workspace layout")).toHaveValue("focused");
   await expect(
     page.getByRole("heading", { name: "Dependencies" }),
@@ -477,8 +485,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
   test(`focused precise sketch sizes on ${plane} drive native geometry, inline edits, undo and saved STL`, async ({
     page,
   }, info) => {
-    await page.goto("/");
-    await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+    await openDrawingWorkspace(page);
     await openNewPartMenu(page);
     await page
       .getByRole("button", { name: "Draw a shape", exact: true })
@@ -593,8 +600,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
 test("focused mouse drags, cancellation and circle size edits preserve analytic geometry and expose dimension failures", async ({
   page,
 }, info) => {
-  await page.goto("/");
-  await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+  await openDrawingWorkspace(page);
   await openNewPartMenu(page);
   await page.getByRole("button", { name: "Draw a shape", exact: true }).click();
   await page
@@ -646,14 +652,7 @@ test("focused mouse drags, cancellation and circle size edits preserve analytic 
   await page
     .getByRole("button", { name: "Draw tool: circle", exact: true })
     .click();
-  // Responsive toolbars can shift the drag's origin between browsers. Place the
-  // hole inside the rectangle actually drawn, with clearance after resizing.
-  const outlineId = Object.keys(before.document.sketches)[0];
-  await expect.poll(async () => (await aiSnapshot(page)).result?.solvedSketches?.[outlineId]?.lines.length).toBe(4);
-  const outline = (await aiSnapshot(page)).result!.solvedSketches![outlineId].lines;
-  const corners = outline.map(line => line.start);
-  const xs = corners.map(point => point.x), ys = corners.map(point => point.y);
-  await clickLocal(page, (Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2);
+  await clickLocal(page, 10, 6);
   await page.getByLabel("Draft diameter", { exact: true }).fill("4mm");
   await page.getByLabel("Draft diameter", { exact: true }).press("Enter");
   await expect(
@@ -732,8 +731,7 @@ test("compact sketch size drafts and selected dimensions remain usable across th
   page,
 }, info) => {
   await page.setViewportSize({ width: 760, height: 900 });
-  await page.goto("/");
-  await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+  await openDrawingWorkspace(page);
   await openNewPartMenu(page);
   await page.getByRole("button", { name: "Draw a shape", exact: true }).click();
   await page

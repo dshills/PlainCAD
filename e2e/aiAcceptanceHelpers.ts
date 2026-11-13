@@ -10,6 +10,7 @@ export async function aiSnapshot(page: Page): Promise<{
   session: number;
   past: number;
   status: string;
+  kernelReady: boolean;
 }> {
   return page.evaluate(async () => {
     const path = "/src/state/useCadStore.ts",
@@ -20,6 +21,7 @@ export async function aiSnapshot(page: Page): Promise<{
       session: state.documentSession,
       past: state.history.past.length,
       status: state.rebuild.status,
+      kernelReady: state.rebuild.kernelReady,
     };
   });
 }

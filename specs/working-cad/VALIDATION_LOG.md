@@ -1684,3 +1684,11 @@ when the drag began at a different position. The test now places the hole at
 the midpoint of the solved rectangle and asserts one closed profile with one
 inner loop before checking native extrusion volume. Type checks and the focused
 drag case passed in Chromium, Firefox, and WebKit. Internal re-review approved.
+
+GitHub run 43506470606 exposed the common cause: the kernel loading banner
+disappeared after canvas coordinates were measured, shifting the drawing by
+36 CSS pixels in WebKit. The focused drawing tests now wait for kernel
+readiness and the rendered success indicator before pointer input. The drag
+test again uses the intended fixed hole center and retains the profile and
+native volume assertions. Type checks and all 27 Focused workspace cases
+passed across local Chromium, Firefox and WebKit. Internal re-review approved.
