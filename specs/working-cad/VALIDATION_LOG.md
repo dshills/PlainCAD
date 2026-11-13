@@ -1677,3 +1677,10 @@ All 15 Workbench browser cases passed across the initial run and targeted
 reruns, and four focused AI/workspace cases passed on local Firefox and WebKit.
 Linux Firefox created WebGL2 under Xvfb. The emulated Linux AI workflow timed
 out during kernel startup. The existing linked-sketch import advisory remains.
+
+GitHub run 43503195729 passed Workbench and Firefox AI. The WebKit trace
+showed that the fixed hole coordinates in the drag test could touch the outline
+when the drag began at a different position. The test now places the hole at
+the midpoint of the solved rectangle and asserts one closed profile with one
+inner loop before checking native extrusion volume. Type checks and the focused
+drag case passed in Chromium, Firefox, and WebKit. Internal re-review approved.

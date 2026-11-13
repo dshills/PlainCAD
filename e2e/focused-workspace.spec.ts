@@ -646,7 +646,14 @@ test("focused mouse drags, cancellation and circle size edits preserve analytic 
   await page
     .getByRole("button", { name: "Draw tool: circle", exact: true })
     .click();
-  await clickLocal(page, 10, 6);
+  // Responsive toolbars can shift the drag's origin between browsers. Place the
+  // hole inside the rectangle actually drawn, with clearance after resizing.
+  const outlineId = Object.keys(before.document.sketches)[0];
+  await expect.poll(async () => (await aiSnapshot(page)).result?.solvedSketches?.[outlineId]?.lines.length).toBe(4);
+  const outline = (await aiSnapshot(page)).result!.solvedSketches![outlineId].lines;
+  const corners = outline.map(line => line.start);
+  const xs = corners.map(point => point.x), ys = corners.map(point => point.y);
+  await clickLocal(page, (Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2);
   await page.getByLabel("Draft diameter", { exact: true }).fill("4mm");
   await page.getByLabel("Draft diameter", { exact: true }).press("Enter");
   await expect(
@@ -706,6 +713,9 @@ test("focused mouse drags, cancellation and circle size edits preserve analytic 
   await page.mouse.up();
   expect((await aiSnapshot(page)).document).toEqual(beforeBlur.document);
   expect((await aiSnapshot(page)).past).toBe(beforeBlur.past);
+  const profile = (await aiSnapshot(page)).result?.profiles?.[sketch.id];
+  expect(profile).toHaveLength(1);
+  expect(profile![0].innerLoops).toHaveLength(1);
   await page.screenshot({ path: info.outputPath("direct-sketch.jpg") });
   await page
     .getByRole("button", { name: "Finish Sketch", exact: true })
