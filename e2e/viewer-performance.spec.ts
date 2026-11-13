@@ -79,9 +79,13 @@ test("native ORBIT orbit/zoom uses reduced resolution and edge passes, restores 
   expect(moving.performance!.bufferWidth).toBe(Math.floor(settled.performance!.bufferWidth / 2));
   expect(moving.performance!.bufferHeight).toBe(Math.floor(settled.performance!.bufferHeight / 2));
   expect(moving.meshes[0].geometryId).toBe(settled.meshes[0].geometryId);
-  const download = page.waitForEvent("download");
-  await page.evaluate(async () => { const path = "/src/ui/commands/commandRegistry.ts"; await (await import(path)).runCommand("file.exportProjectPng"); });
-  const png = await inspectPngDownload(page, await download, info.outputPath("orbit-sharp-during-motion.png"));
+  // A cold export can wait up to 20 seconds for fine geometry before encoding.
+  // The interaction-quality budget is measured separately after release.
+  const [download] = await Promise.all([
+    page.waitForEvent("download", { timeout: 35000 }),
+    page.evaluate(async () => { const path = "/src/ui/commands/commandRegistry.ts"; await (await import(path)).runCommand("file.exportProjectPng"); }),
+  ]);
+  const png = await inspectPngDownload(page, download, info.outputPath("orbit-sharp-during-motion.png"));
   expect(png.pixels.width).toBe(settled.performance!.bufferWidth);
   expect(png.pixels.height).toBe(settled.performance!.bufferHeight);
   expect((await viewer(page)).performance?.pixelRatio).toBe(1);
