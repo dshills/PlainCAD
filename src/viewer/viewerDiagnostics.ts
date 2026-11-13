@@ -4,6 +4,7 @@ import type { OperationTargetSnapshot } from "./operationDropPicking";
 // geometry, camera, or store mutation is exposed to the browser tests here.
 export interface ViewerSnapshot {
   background: string;
+  displayDetail?: { status: "pending" | "ready" | "unavailable"; triangles: number };
   studioLighting?: Partial<import("../state/viewerState").StudioLighting> & { ready: boolean; toneMapped: boolean };
   aiPreview?: { mode: "before" | "after"; meshes: Array<{ bodyId: string; geometryId: string; visible: boolean; positions: number[]; indices: number[] }> };
   presentation?: { mode: "model" | "render"; gridVisible: boolean; axesVisible: boolean; sketchVisible: boolean; measurementVisible: boolean; lights: number; shadowMaps: boolean };

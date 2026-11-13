@@ -2,6 +2,7 @@ import { createFittedPartShape, followFittedPlacements } from "./fittedPart";
 import { resolveAssemblyPlacements } from "../document/assemblyJoints";
 import { assemblyCollisions } from "./assemblyCollisions";
 import { NativeFeatureCache } from "./nativeFeatureCache";
+import { refineNativeDisplayMeshes, type DisplayMeshRequest } from "../kernel/displayMesh";
 import type { NativeStepExport } from "../kernel/nativeStep";
 import { applyComponentPlacements } from "./componentPlacement";
 import { placedPoint, placedVector, placementTransform } from "../document/componentPlacement";
@@ -71,6 +72,8 @@ const sketchSeeds = new Map<
 interface RebuildOptions {
   /** Worker heartbeat between bounded synchronous modeling operations. */
   onNativeProgress?: (stage: string) => void;
+    /** Disposable viewer job only. Native handles remain owned by this rebuild. */
+    displayMeshRequest?: DisplayMeshRequest["bodies"];
     /** Export current world-positioned native solids before their ownership ends. */
     exportStepBodyIds?: readonly string[];
     captureDrawingBodyId?: string;
@@ -794,6 +797,11 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
       errors.push({ id: "export:step", source: "export", message: error instanceof Error ? error.message : "Native STEP export failed." });
     }
   }
+  let displayMeshes: RebuildResult["displayMeshes"];
+  if (options.displayMeshRequest && !errors.length) {
+    try { displayMeshes = refineNativeDisplayMeshes(kernel, runtimeBodies, options.displayMeshRequest); }
+    catch (error) { errors.push({ id: "display:detail", source: "kernel", message: error instanceof Error ? error.message : "Fine display tessellation failed." }); }
+  }
   let disposalFailures = 0;
   shapesToDispose.forEach((shape) => {
     try {
@@ -836,6 +844,7 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
     ...(stepImportDiagnostic ? { stepImportDiagnostic } : {}),
     ...(nativeStepExport ? { nativeStepExport } : {}),
     ...(nativeDrawingGeometry ? { nativeDrawingGeometry } : {}),
+    ...(displayMeshes ? { displayMeshes } : {}),
     ...(capturedTargetBodyIds !== undefined ? { capturedTargetBodyIds } : {}),
     metrics: {
       parameterEvaluationMs,

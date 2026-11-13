@@ -6,6 +6,7 @@ import { RenderMesh, type AvailableCapEdge } from "../kernel/KernelAdapter";
 import type { Quantity } from "../parameters/units";
 import type { NativeStepExport } from "../kernel/nativeStep";
 import type { NativeDrawingGeometry } from "../kernel/nativeDrawing";
+import type { DisplayMesh } from "../kernel/displayMesh";
 
 export interface CadBody {
   id: string;
@@ -66,6 +67,8 @@ export interface RebuildResult {
   nativeStepExport?: NativeStepExport;
   /** Explicit disposable drawing rebuild only; native handles never cross workers. */
   nativeDrawingGeometry?: NativeDrawingGeometry;
+  /** Viewer-only refinement request. Accepted and fabrication meshes stay separate. */
+  displayMeshes?: DisplayMesh[];
 }
 
 export interface RebuildMetrics {

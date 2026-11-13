@@ -1,4 +1,5 @@
 import { assertMeshBudget } from "../resourceLimits";
+import { occtSurfaceNormals } from "./occtSurfaceNormals";
 import { measureNativeBores } from "./nativeDrawing";
 import { exportNativeStep, importNativeStep, stepBindingDiagnostic, stepImportBindingDiagnostic } from "./nativeStep";
 import { createNativeShell, nativeShellAvailable } from "./nativeShell";
@@ -1528,6 +1529,7 @@ export class OpenCascadeKernel implements KernelAdapter {
     );
     const positions: number[] = [];
     const indices: number[] = [];
+    const surfaceNormals: Array<[number, Float32Array]> = [];
     try {
       for (; explorer.More(); explorer.Next()) {
         const faceShape = explorer.Current();
@@ -1567,6 +1569,10 @@ export class OpenCascadeKernel implements KernelAdapter {
               } finally {
                 deleteOcct(orientation);
               }
+              if (options.analyticNormals) {
+                const normals = occtSurfaceNormals(oc, face, triangulation, reversed);
+                if (normals) surfaceNormals.push([offset * 3, normals]);
+              }
               for (
                 let index = 1;
                 index <= triangulation.NbTriangles();
@@ -1600,11 +1606,19 @@ export class OpenCascadeKernel implements KernelAdapter {
       deleteOcct(mesh);
     }
     if (positions.length === 0 || indices.length === 0) return undefined;
+    const normals = computeNormals(positions, indices);
+    for (const [offset, exact] of surfaceNormals) for (let index = 0; index < exact.length; index += 3) {
+      const x = exact[index], y = exact[index + 1], z = exact[index + 2];
+      if (x === 0 && y === 0 && z === 0) continue;
+      normals[offset + index] = x;
+      normals[offset + index + 1] = y;
+      normals[offset + index + 2] = z;
+    }
     return {
       id: bodyId,
       bodyId,
       positions,
-      normals: computeNormals(positions, indices),
+      normals,
       indices,
       color: "#8fb7b4",
       bounds: boundsFromPositions(positions),

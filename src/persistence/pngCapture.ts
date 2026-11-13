@@ -7,6 +7,7 @@ export interface PngCaptureRequest {
   result?: RebuildResult;
   sketchId?: string;
   bodyId?: string;
+  signal?: AbortSignal;
 }
 type Capture = (request: PngCaptureRequest) => Promise<Blob>;
 const captures = new Map<"viewer" | "sketch", Capture>();

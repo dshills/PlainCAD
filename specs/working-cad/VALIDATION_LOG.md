@@ -11,8 +11,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Date: 2026-11-12.
 - Change: metric and Unified inch fastener and hole presets, native threads, and native lead screw/nut pairs.
 - Result: type checks, 1680 unit/component tests in 216 files, build/bundle budget (70 bundles, largest 496.21 kB), 337 development browser cases plus three corrected cases rerun, and 62 production browser cases passed.
-- Completed items since that full gate: **2**.
-- Next full gate: after 3 more completed items.
+- Completed items since that full gate: **3**.
+- Next full gate: after 2 more completed items.
 
 ## Completed batch
 
@@ -1553,3 +1553,19 @@ tests, the 71-bundle budget (largest 496.21 kB), five development smoke tests,
 and 14 production smoke tests. Five focused native Render/Studio cases and the
 production Studio CSP/PNG case also passed. The existing linked-sketch import
 advisory remains.
+
+## Rendering item 2: native close-up detail (2026-11-13)
+
+Close zoom and PNG capture request a bounded, finer OpenCascade display mesh.
+The disposable worker verifies body identities, bounds and exact volumes
+against the accepted model. Surface derivatives provide normals where available.
+Display buffers are cached for one accepted rebuild, with stale results
+discarded and the modeling mesh kept for picking and fabrication.
+
+Independent internal review verified worker cancellation and synchronous buffer
+restoration. PNG now rechecks viewport availability and WebGL state after
+awaiting detail. The isolated reduced gate passed 1682 unit/component tests,
+71 JavaScript bundles (largest 496.21 kB), five development and 14 production
+smoke tests. Three focused Chromium cases covered close-up ORBIT geometry,
+revision replacement with a lead screw, Render and moving PNG, and unchanged
+STL geometry. The existing linked-sketch import advisory remains.

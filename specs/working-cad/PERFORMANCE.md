@@ -169,7 +169,13 @@ loop. Model changes, theme, resize/layout, selection/highlights, visibility,
 measurements, section clipping, picker hover/previews, camera commands, and
 restored WebGL contexts request a fresh frame. Solid driving-dimension labels
 subscribe to viewer frames and their own size changes instead of polling at idle.
-PNG capture still renders full-resolution pixels synchronously before copying.
+Close zoom and PNG capture can request finer OpenCascade triangles and
+surface-derivative normals from a disposable worker. The cache holds one
+accepted revision and is cleared on edits and project replacement. The viewer
+draws the ordinary mesh while the worker prepares detail, during camera movement,
+and when a resource limit prevents refinement. Picking and STL use the accepted
+model mesh. PNG capture waits for bounded detail preparation, then copies the
+full-resolution pixels immediately after drawing.
 
 Visible 3D sketch points use one instanced sphere batch for normal points and one
 for failed sketches, only when those groups contain points. The spheres retain

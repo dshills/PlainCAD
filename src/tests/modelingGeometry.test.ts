@@ -22,6 +22,7 @@ import { faceOwnerModifiedBefore, resolveDocumentPlanes, sketchPlaneTransform, s
 import { clearNativeFeatureCache, rebuildDocument } from "../cad/features/rebuildGraph";
 import { createExtrudeEdgeRef } from "../cad/features/topologyRefs";
 import { TESSELLATION_LOD } from "../cad/kernel/tessellationCache";
+import { refineNativeDisplayMeshes } from "../cad/kernel/displayMesh";
 import { getDisposableScopeMetrics } from "../cad/kernel/disposableScope";
 import { resolveRevolveAxis } from "../cad/features/revolveAxis";
 import { createEmptyDocument, createExtrudeFeature, upsertFeature, upsertParameter, upsertSketch } from "../cad/document/CadDocument";
@@ -92,6 +93,41 @@ function volume(shape: ReturnType<typeof kernel.createBox>, solidCount = 1) {
 vi.setConfig({ testTimeout: 30000, hookTimeout: 60000 });
 beforeAll(async () => OpenCascadeKernel.initialize());
 describe("native modeling geometry", () => {
+  it("refines a placed tube with exact outer, bore and cap normals while keeping the accepted mesh intact", () => {
+    const sketch = addCircleAt(addCircleAt(createXySketch(), "0mm", "0mm", "8mm"), "0mm", "0mm", "4mm");
+    const source = kernel.extrudeProfile(detectProfiles(solveSketch(sketch, {})).profiles[0], 12);
+    const placed = kernel.placeShape(source, { translation: [20, 5, -2], rotation: [0, Math.PI / 2, 0] });
+    try {
+      const mesh = kernel.tessellate(placed, TESSELLATION_LOD.default);
+      const originalTriangles = mesh.indices.length;
+      const bodies = new Map([["tube", { shape: placed, mesh }]]);
+      const [detail] = refineNativeDisplayMeshes(kernel, bodies, [{ id: "tube", volume: Math.PI * 48 * 12, bounds: mesh.bounds }]);
+      expect(detail.indices.length).toBeGreaterThan(originalTriangles);
+      expect(mesh.indices).toHaveLength(originalTriangles);
+      expect(detail.normals).toHaveLength(detail.positions.length);
+      const orientations = new Set<string>();
+      for (let offset = 0; offset < detail.positions.length; offset += 3) {
+        const x = detail.positions[offset], y = detail.positions[offset + 1] - 5, z = detail.positions[offset + 2] + 2;
+        const nx = detail.normals[offset], ny = detail.normals[offset + 1], nz = detail.normals[offset + 2];
+        const radius = Math.hypot(y, z);
+        expect(Math.hypot(nx, ny, nz)).toBeCloseTo(1, 5);
+        if (Math.abs(nx) > .99) {
+          expect(nx).toBeCloseTo(x > 26 ? 1 : -1, 5);
+          orientations.add("cap");
+        } else {
+          expect(nx).toBeCloseTo(0, 5);
+          const outer = radius > 6;
+          expect((y * ny + z * nz) / radius).toBeCloseTo(outer ? 1 : -1, 5);
+          orientations.add(outer ? "wall" : "bore");
+        }
+      }
+      expect(orientations).toEqual(new Set(["cap", "wall", "bore"]));
+      expect(() => refineNativeDisplayMeshes(kernel, bodies, [{ id: "tube", volume: 1, bounds: mesh.bounds }])).toThrow(/accepted geometry/);
+    } finally {
+      kernel.disposeShape(placed);
+      kernel.disposeShape(source);
+    }
+  });
   it("cuts a linked face region using its rebuilt profile and the current authored depth unit", () => {
     let document = createEmptyDocument("Linked face pocket");
     const execute = (call: CadCommandCall) => {

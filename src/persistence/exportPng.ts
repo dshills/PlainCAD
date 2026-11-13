@@ -26,10 +26,11 @@ export async function exportPng(scope: PngScope) {
       if (scope === "body" && (!bodyId || !result.meshes.some((mesh) => mesh.bodyId === bodyId)))
         throw new Error("Select a rebuilt body in the project or viewer before exporting its PNG.");
     }
-    const image = capturePng(scope === "sketch" ? "sketch" : "viewer", { document, session, result, sketchId: sketch?.id, bodyId });
-    // Observe encoding failures even if a file-job subscriber throws during setup.
-    void image.catch(() => undefined);
+    // Freeze sketch pixels before a busy update can change the SVG controls.
+    const drawing = sketch ? capturePng("sketch", { document, session, result, sketchId: sketch.id }) : undefined;
+    void drawing?.catch(() => undefined);
     controller = beginFileJob("Preparing PNG image…");
+    const image = drawing ?? capturePng("viewer", { document, session, result, bodyId, signal: controller.signal });
     state.setFileError(undefined);
     const blob = await image;
     const bytes = await blob.arrayBuffer();

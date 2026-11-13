@@ -11,6 +11,7 @@ import { createPresentationLights } from "./presentationLights";
 import { createStudioLighting } from "./studioLighting";
 import { studioBackground } from "./studioAppearance";
 import { DemandRenderer } from "./demandRenderer";
+import { DisplayMeshRefinement } from "./displayMeshRefinement";
 import { fitCameraBounds } from "./cameraFit";
 import { ViewerToolbar } from "./ViewerToolbar";
 import { addSketchMarkers, inspectSketchMarkers, type SketchMarker } from "./sketchMarkers";
@@ -193,6 +194,23 @@ export function CadViewer() {
     let appliedPresentationMode: PresentationMode | undefined;
     let appliedStudioMaterial: StudioMaterial | undefined;
     let appliedBackground: string | undefined;
+    const refinementFrame = () => {
+      const { history, rebuild, documentSession } = useCadStore.getState();
+      const result = rebuild.result, document = history.present;
+      return rebuild.status === "succeeded" && result?.success && result.documentId === document.id &&
+        result.meshes === renderedMeshesRef.current && document === renderedDocumentRef.current
+        ? { document, result, session: documentSession } : undefined;
+    };
+    const drawScene = (viewCamera: THREE.PerspectiveCamera, fine: boolean) =>
+      refinement.draw(modelGroup, fine, () => renderer.render(scene, viewCamera));
+    const wantsFine = () => {
+      if (moving || !modelGroup.visible || currentAiCanvasPreview(useCadStore.getState())) return false;
+      const bounds = boundsFromMeshes(meshesRef.current);
+      if (!bounds) return false;
+      const span = new THREE.Vector3(...bounds.min).distanceTo(new THREE.Vector3(...bounds.max));
+      const visibleHeight = 2 * camera.position.distanceTo(controls.target) * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+      return visibleHeight <= span * .8;
+    };
     const frames = new DemandRenderer(() => {
       if (!host.clientWidth || !host.clientHeight || renderer.getContext().isContextLost()) return false;
       const changed = controls.update();
@@ -200,11 +218,17 @@ export function CadViewer() {
         moving = false;
         refreshQuality();
       }
-      renderer.render(scene, camera);
+      refinement.sync();
+      const fine = wantsFine();
+      const frame = fine ? refinementFrame() : undefined;
+      if (frame && !useCadStore.getState().fileBusy) void refinement.request(frame);
+      drawScene(camera, fine);
       frameListeners.current.forEach((listener) => listener());
       return changed || (moving && !interacting);
     });
     const invalidate = frames.invalidate;
+    const refinement = new DisplayMeshRefinement(refinementFrame, invalidate);
+    const unsubscribeRefinement = useCadStore.subscribe(refinement.sync.bind(refinement));
     const studioLighting = createStudioLighting(scene, renderer, invalidate);
     const refreshQuality = (sharp = false) => {
       const state = useCadStore.getState(), view = useViewerState.getState();
@@ -295,20 +319,52 @@ export function CadViewer() {
     };
     runtimeRef.current = { background, grid, camera, controls, applyPose, modelGroup, modelMeshes, refreshQuality, invalidate, fit, sketchGroup, measurementGroup, operationPicking, sketchResources: createSketchOverlayResources() };
     const unregisterPng = registerPngCapture("viewer", async (request) => {
-      if (useViewerState.getState().presentationMode === "render") await studioLighting.ready();
-      if (disposed) throw new Error("The drawing view changed. Reopen the current model before exporting PNG.");
-      if (currentAiCanvasPreview(useCadStore.getState()) || runtimeRef.current?.aiProposal)
-        throw new Error("Apply or cancel the AI preview before exporting PNG.");
-      if (request.document !== renderedDocumentRef.current || request.result?.meshes !== renderedMeshesRef.current || request.session !== useCadStore.getState().documentSession)
-        throw new Error("The drawing view is updating. Wait for the current model, then export PNG again.");
-      if (!host.clientWidth || !host.clientHeight)
-        throw new Error("Open the 3D view before exporting its PNG.");
-      if (renderer.getContext().isContextLost())
-        throw new Error("3D rendering was interrupted. Reload the project before exporting PNG.");
-      const selectedMesh = request.bodyId ? request.result.meshes.find((mesh) => mesh.bodyId === request.bodyId) : undefined;
+      const frame = refinementFrame();
+      const checkCurrent = () => {
+        if (request.signal?.aborted) throw new Error("PNG export cancelled.");
+        if (disposed) throw new Error("The drawing view changed. Reopen the current model before exporting PNG.");
+        if (currentAiCanvasPreview(useCadStore.getState()) || runtimeRef.current?.aiProposal)
+          throw new Error("Apply or cancel the AI preview before exporting PNG.");
+        const current = refinementFrame();
+        if (!current || request.document !== current.document || request.result !== current.result || request.session !== current.session)
+          throw new Error("The drawing view is updating. Wait for the current model, then export PNG again.");
+        if (!host.clientWidth || !host.clientHeight)
+          throw new Error("Open the 3D view before exporting its PNG.");
+        if (renderer.getContext().isContextLost())
+          throw new Error("3D rendering was interrupted. Reload the project before exporting PNG.");
+      };
+      checkCurrent();
+      const selectedMesh = request.bodyId ? frame?.result.meshes.find((mesh) => mesh.bodyId === request.bodyId) : undefined;
       if (request.bodyId && !selectedMesh) throw new Error("Selected body is no longer available. Select a rebuilt body again.");
       if (!request.bodyId && !modelGroup.children.some((object) => object.visible))
         throw new Error("All bodies are hidden. Show a body before exporting the project view.");
+      const exportCamera = camera.clone();
+      const visibleIds = new Set(modelGroup.children.filter(object => object.visible).map(object => object.userData.bodyId));
+      const clipping = clippingRef.current?.clone();
+      const appearance = useViewerState.getState();
+      if (selectedMesh) {
+        const bounds = selectedMesh.bounds;
+        const center = new THREE.Vector3(...bounds.min).add(new THREE.Vector3(...bounds.max)).multiplyScalar(0.5);
+        const span = new THREE.Vector3(...bounds.max).sub(new THREE.Vector3(...bounds.min)).length();
+        const direction = camera.position.clone().sub(controls.target).normalize();
+        const angle = Math.atan(Math.tan(THREE.MathUtils.degToRad(exportCamera.fov / 2)) * Math.min(1, exportCamera.aspect));
+        const distance = Math.max(span, 1) / (2 * Math.sin(angle)) * 1.2;
+        exportCamera.position.copy(center).addScaledVector(direction, distance);
+        exportCamera.lookAt(center);
+        Object.assign(exportCamera, cameraClipRange(distance, span));
+        exportCamera.updateProjectionMatrix();
+      }
+      await Promise.all([
+        appearance.presentationMode === "render" ? studioLighting.ready() : undefined,
+        frame ? refinement.request(frame, request.signal) : undefined,
+      ]);
+      checkCurrent();
+      const currentView = useViewerState.getState();
+      if (appearance.presentationMode !== currentView.presentationMode || appearance.studioMaterial !== currentView.studioMaterial ||
+          appearance.studioLighting !== currentView.studioLighting || appearance.studioBackdrop !== currentView.studioBackdrop ||
+          appearance.showGrid !== currentView.showGrid ||
+          appearance.showModelEdges !== currentView.showModelEdges)
+        throw new Error("Studio appearance changed during PNG export. Export the current view again.");
       // Encode full-resolution pixels even if a camera gesture is still settling.
       const previousRatio = renderer.getPixelRatio();
       const previousEdges = edgesVisible;
@@ -319,25 +375,14 @@ export function CadViewer() {
         sketchGroup.visible = false;
         measurementGroup.visible = false;
         applySelection(modelGroup, undefined, []);
-        let exportCamera = camera;
+        for (const child of modelGroup.children)
+          child.visible = selectedMesh ? child.userData.bodyId === request.bodyId : visibleIds.has(child.userData.bodyId);
+        applyClipping(modelGroup, selectedMesh ? undefined : clipping);
         if (selectedMesh) {
           for (const child of scene.children) child.visible = child === modelGroup || child instanceof THREE.Light;
-          for (const child of modelGroup.children) child.visible = child.userData.bodyId === request.bodyId;
-          applyClipping(modelGroup, undefined);
-          exportCamera = camera.clone();
-          const bounds = selectedMesh.bounds;
-          const center = new THREE.Vector3(...bounds.min).add(new THREE.Vector3(...bounds.max)).multiplyScalar(0.5);
-          const span = new THREE.Vector3(...bounds.max).sub(new THREE.Vector3(...bounds.min)).length();
-          const direction = camera.position.clone().sub(controls.target).normalize();
-          const angle = Math.atan(Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * Math.min(1, camera.aspect));
-          const distance = Math.max(span, 1) / (2 * Math.sin(angle)) * 1.2;
-          exportCamera.position.copy(center).addScaledVector(direction, distance);
-          exportCamera.lookAt(center);
-          Object.assign(exportCamera, cameraClipRange(distance, span));
-          exportCamera.updateProjectionMatrix();
         }
         // Copy immediately after rendering: WebGL's default buffer is transient.
-        renderer.render(scene, exportCamera);
+        drawScene(exportCamera, true);
         return copyCanvasPng(renderer.domElement);
       } finally {
         if (renderer.getPixelRatio() !== previousRatio) renderer.setPixelRatio(previousRatio);
@@ -346,7 +391,7 @@ export function CadViewer() {
         for (const saved of visibility) saved.object.visible = saved.visible;
         applySelection(modelGroup, selectedBodyIdRef.current, highlightedBodyIdsRef.current);
         applyClipping(modelGroup, clippingRef.current);
-        renderer.render(scene, camera);
+        drawScene(camera, wantsFine());
       }
     });
     const unregisterCamera = registerCameraController({
@@ -364,6 +409,7 @@ export function CadViewer() {
     });
 
     const unregisterDiagnostics = import.meta.env.DEV ? registerViewerDiagnostics(() => ({
+      displayDetail: refinement.inspect(),
       performance: {
         ...frames.inspect(),
         markerBatches: sketchGroup.children.filter((object) => object instanceof THREE.InstancedMesh).length,
@@ -521,6 +567,8 @@ export function CadViewer() {
       unregisterDiagnostics?.();
       unregisterCamera();
       unregisterPng();
+      unsubscribeRefinement();
+      refinement.dispose();
       frames.dispose();
       renderer.domElement.removeEventListener("webglcontextrestored", invalidate);
       resizeObserver?.disconnect();

@@ -15,6 +15,7 @@ export interface KernelShape {
 export interface TessellationOptions {
   linearDeflection: number;
   angularDeflection: number;
+  analyticNormals?: boolean;
 }
 
 export interface GeometryAssertions {
