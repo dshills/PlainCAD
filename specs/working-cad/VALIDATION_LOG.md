@@ -11,8 +11,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Date: 2026-11-13.
 - Change: HDR studio lighting, native close-up meshes, CAD edges, studio effects, component finishes and fixed-size PNGs.
 - Result: type checks, 1688 unit/component tests plus the corrected AI fixture rerun, build/bundle budget (72 bundles, largest 496.93 kB), 342 development cases plus the corrected studio suite rerun, and 66 production cases passed.
-- Completed items since that full gate: **1**.
-- Next full gate: after 4 more completed items.
+- Completed items since that full gate: **2**.
+- Next full gate: after 3 more completed items.
 
 ## Completed batch
 
@@ -1637,3 +1637,20 @@ passed 1684 of 1689 cases. All five affected files passed on an isolated rerun
 (44 tests). The remaining reduced gate stages passed separately, including the
 build (72 bundles, largest 496.93 kB), five development smoke cases, and 14
 production smoke cases. The existing linked-sketch import advisory remains.
+
+## Dependabot development tooling updates (2026-11-13)
+
+Updated Vite to 7.3.8 for GitHub alerts #15, #16 (high), #17, #19 and #20.
+This version also covers GHSA-p4f5-76q4-ffq7. Vitest 4.1.12 updates its
+matching `@vitest/mocker` dependency for alerts #18 and #21. Independent
+internal review approved the manifest and lockfile and verified that unrelated
+package metadata was preserved.
+
+A clean Node 22 `npm ci` succeeded. `npm ls` confirmed one Vite 7.3.8 and
+`@vitest/mocker` 4.1.12. `npm audit` reported zero vulnerabilities. Type
+checks passed. Under sustained system load the initial unit run passed 1655 of
+1689 cases. The 28 affected test files passed in an isolated rerun with retries
+and a longer test timeout (245 tests). The remaining reduced gate stages passed
+separately: the build budget (72 bundles, largest 496.93 kB), five development
+smoke cases and 14 production smoke cases. The existing linked-sketch Vite
+import advisory remains.
