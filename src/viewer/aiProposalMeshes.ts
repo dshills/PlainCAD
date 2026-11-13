@@ -8,13 +8,13 @@ export class AiProposalMeshes {
   private meshes = new ModelMeshes();
   private result?: AiCanvasPreview["result"];
   readonly group = this.meshes.group;
-  update(preview: AiCanvasPreview, mode: PresentationMode, material: StudioMaterial, edges: boolean, hidden: readonly string[], plane?: THREE.Plane) {
+  update(preview: AiCanvasPreview, mode: PresentationMode, material: StudioMaterial, edges: boolean, hiddenEdges: boolean, hidden: readonly string[], plane?: THREE.Plane) {
     if (this.result !== preview.result) {
       this.meshes.update(preview.result.meshes);
       this.result = preview.result;
     }
     this.meshes.setPresentationMode(mode, material);
-    this.meshes.setEdgesVisible(edges);
+    this.meshes.setEdgesVisible(edges, mode === "model" && hiddenEdges);
     const changed = new Set(preview.bodyIds);
     for (const child of this.group.children) {
       if (!(child instanceof THREE.Mesh) || !(child.material instanceof THREE.MeshStandardMaterial)) continue;
@@ -37,10 +37,10 @@ export class AiProposalMeshes {
   dispose() { this.meshes.dispose(); this.result = undefined; this.group.removeFromParent(); }
 }
 
-export function renderAiProposal(runtime: { aiProposal?: AiProposalMeshes; aiOverlayVisibility?: { sketch: boolean; measurement: boolean; mode: PresentationMode }; modelGroup: THREE.Group; sketchGroup: THREE.Group; measurementGroup: THREE.Group; invalidate(): void }, preview: AiCanvasPreview, mode: "before" | "after", presentation: PresentationMode, material: StudioMaterial, edges: boolean, hidden: readonly string[], plane?: THREE.Plane) {
+export function renderAiProposal(runtime: { aiProposal?: AiProposalMeshes; aiOverlayVisibility?: { sketch: boolean; measurement: boolean; mode: PresentationMode }; modelGroup: THREE.Group; sketchGroup: THREE.Group; measurementGroup: THREE.Group; invalidate(): void }, preview: AiCanvasPreview, mode: "before" | "after", presentation: PresentationMode, material: StudioMaterial, edges: boolean, hiddenEdges: boolean, hidden: readonly string[], plane?: THREE.Plane) {
   runtime.aiOverlayVisibility ??= { sketch: runtime.sketchGroup.visible, measurement: runtime.measurementGroup.visible, mode: presentation };
   const proposal = runtime.aiProposal ??= new AiProposalMeshes();
-  proposal.update(preview, presentation, material, edges, hidden, plane);
+  proposal.update(preview, presentation, material, edges, hiddenEdges, hidden, plane);
   if (!proposal.group.parent) runtime.modelGroup.parent?.add(proposal.group);
   proposal.group.visible = mode === "after";
   runtime.modelGroup.visible = mode === "before";

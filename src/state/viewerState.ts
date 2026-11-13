@@ -36,11 +36,13 @@ interface ViewerState {
   renderPreferences: AppearancePreferences;
   showGrid: boolean;
   showModelEdges: boolean;
+  showHiddenModelEdges: boolean;
   optimizeWhileMoving: boolean;
   setPresentationMode(session: number, mode: PresentationMode): void;
   setStudioAppearance(session: number, change: { material?: StudioMaterial; backdrop?: StudioBackdrop; lighting?: Partial<StudioLighting> }): void;
   toggleGrid(session: number): void;
   toggleModelEdges(session: number): void;
+  toggleHiddenModelEdges(session: number): void;
   toggleMovingQuality(session: number): void;
   openDocument(document: CadDocument, session: number): void;
   toggleBody(
@@ -80,6 +82,7 @@ const defaults = {
   renderPreferences: { showModelEdges: false, showGrid: false },
   showGrid: true,
   showModelEdges: true,
+  showHiddenModelEdges: false,
   optimizeWhileMoving: true,
 };
 // Runtime view preferences never enter document history or project JSON.
@@ -128,6 +131,10 @@ export const useViewerState = create<ViewerState>((set, get) => {
     toggleModelEdges: (session) => {
       const view = current(session);
       set({ ...view, session, showModelEdges: !view.showModelEdges });
+    },
+    toggleHiddenModelEdges: (session) => {
+      const view = current(session);
+      set({ ...view, session, showHiddenModelEdges: !view.showHiddenModelEdges });
     },
     toggleMovingQuality: (session) => {
       const view = current(session);

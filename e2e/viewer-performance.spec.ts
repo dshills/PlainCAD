@@ -58,6 +58,16 @@ test("native ORBIT orbit/zoom uses reduced resolution and edge passes, restores 
   await ready(page, "ORBIT drive housing", 1);
   const original = await aiSnapshot(page), settled = await viewer(page);
   expect(settled.performance).toMatchObject({ pixelRatio: 2, sharpPixelRatio: 2, moving: false, showModelEdges: true });
+  expect(settled.modelEdges).toEqual([
+    expect.objectContaining({ source: "brep", visible: true, hiddenVisible: false, segments: expect.any(Number) }),
+  ]);
+  expect(settled.modelEdges![0].segments).toBeGreaterThan(100);
+  const hiddenEdges = page.getByLabel("Show hidden CAD edges", { exact: true });
+  await hiddenEdges.check();
+  await expect.poll(async () => (await viewer(page)).modelEdges?.[0].hiddenVisible).toBe(true);
+  await expect.poll(async () => (await viewer(page)).performance?.drawCalls).toBeGreaterThan(settled.performance!.drawCalls);
+  await hiddenEdges.uncheck();
+  await expect.poll(async () => (await viewer(page)).modelEdges?.[0].hiddenVisible).toBe(false);
   const canvas = page.locator(".viewer-canvas canvas").first(), box = (await canvas.boundingBox())!;
   await page.mouse.move(box.x + box.width * 0.55, box.y + box.height * 0.55);
   await page.mouse.down();
@@ -88,6 +98,7 @@ test("native ORBIT orbit/zoom uses reduced resolution and edge passes, restores 
   const zoomRestoreMs = await restoredQualityDelay(page);
   await expect(canvas).toHaveAttribute("data-input-pixel-ratio", "1");
   await page.getByLabel("Show model edges", { exact: true }).uncheck();
+  await expect(hiddenEdges).toBeDisabled();
   await expect.poll(async () => (await viewer(page)).performance?.showModelEdges).toBe(false);
   await expect.poll(async () => (await viewer(page)).performance?.drawCalls).toBeLessThan(sharp.performance!.drawCalls);
   await page.getByLabel("Optimize while moving", { exact: true }).uncheck();

@@ -11,8 +11,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Date: 2026-11-12.
 - Change: metric and Unified inch fastener and hole presets, native threads, and native lead screw/nut pairs.
 - Result: type checks, 1680 unit/component tests in 216 files, build/bundle budget (70 bundles, largest 496.21 kB), 337 development browser cases plus three corrected cases rerun, and 62 production browser cases passed.
-- Completed items since that full gate: **3**.
-- Next full gate: after 2 more completed items.
+- Completed items since that full gate: **4**.
+- Next full gate: after 1 more completed items.
 
 ## Completed batch
 
@@ -1569,3 +1569,17 @@ awaiting detail. The isolated reduced gate passed 1682 unit/component tests,
 smoke tests. Three focused Chromium cases covered close-up ORBIT geometry,
 revision replacement with a lead screw, Render and moving PNG, and unchanged
 STL geometry. The existing linked-sketch import advisory remains.
+
+## Rendering item 3: native CAD edges (2026-11-13)
+
+Model view now draws native BRep edges and can show dim hidden edges. Curve
+sampling skips periodic seams and tangent boundaries. Close-up display swaps
+matching surface and edge buffers, with bounded work and fallback display.
+
+Independent internal review approved the final edge budgets, AI preview
+settings and fine-buffer swap. Three focused Chromium tests passed for the
+ORBIT close-up, moving PNG capture, and the 40-body rebuild and project reopen.
+The serial reduced gate passed 1683 unit/component tests, 71 JavaScript bundles
+(largest 496.70 kB), five development and 14 production smoke tests. The serial
+run resolved four existing unit assertions that failed during concurrent tests.
+The existing linked-sketch import advisory remains.

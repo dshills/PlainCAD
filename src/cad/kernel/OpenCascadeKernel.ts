@@ -1,6 +1,7 @@
 import { assertMeshBudget } from "../resourceLimits";
 import { occtSurfaceNormals } from "./occtSurfaceNormals";
 import { measureNativeBores } from "./nativeDrawing";
+import { nativeDisplayEdges, type DisplayEdgeBudget } from "./nativeDisplayEdges";
 import { exportNativeStep, importNativeStep, stepBindingDiagnostic, stepImportBindingDiagnostic } from "./nativeStep";
 import { createNativeShell, nativeShellAvailable } from "./nativeShell";
 import { cutNativeThread, nativeThreadsAvailable } from "./nativeThreads";
@@ -216,6 +217,12 @@ export class OpenCascadeKernel implements KernelAdapter {
       if (![...bounds.min, ...bounds.max].every(Number.isFinite) || bounds.min.some((n, i) => n >= bounds.max[i])) throw new Error("Reference solid has invalid native bounds.");
       return bounds;
     });
+  }
+
+  nativeDisplayEdges(shape: KernelShape, maxSegments: number, budget?: DisplayEdgeBudget): Float32Array {
+    const oc = OpenCascadeKernel.openCascade, native = (shape.kernelHandle as KernelHandle | undefined)?.occtShape;
+    if (!oc || !native) throw new Error("Display edges require a native solid.");
+    return nativeDisplayEdges(oc, native, maxSegments, budget);
   }
 
   nativeDrawingGeometry(shape: KernelShape) {

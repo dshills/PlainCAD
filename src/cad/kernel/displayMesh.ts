@@ -1,12 +1,18 @@
 import type { CadDocument } from "../document/schema";
 import type { BoundingBox, KernelAdapter, KernelShape, RenderMesh } from "./KernelAdapter";
 import { MODEL_RESOURCE_LIMITS } from "../resourceLimits";
+import { MAX_PROJECT_EDGE_SEGMENTS, MAX_PROJECT_EDGE_USES } from "./nativeDisplayEdges";
+
+// Close-ups intentionally use denser boundary polylines. Retain the same
+// project-wide byte cap while giving the individual body under inspection room.
+const MAX_FINE_BODY_EDGE_SEGMENTS = 24_000;
 
 export interface DisplayMesh {
   bodyId: string;
   positions: Float32Array;
   normals: Float32Array;
   indices: Uint32Array;
+  nativeEdgeSegments?: Float32Array;
 }
 
 export interface DisplayMeshRequest {
@@ -24,6 +30,8 @@ export function refineNativeDisplayMeshes(
       new Set(requests.map(body => body.id)).size !== requests.length)
     throw new Error("Close-up detail requires a bounded set of current native bodies.");
   let triangles = 0, vertices = 0;
+  let edgeSegmentsRemaining = MAX_PROJECT_EDGE_SEGMENTS;
+  const edgeBudget = { edgeUses: MAX_PROJECT_EDGE_USES };
   const refined: DisplayMesh[] = [];
   for (const request of requests) {
     const source = bodies.get(request.id);
@@ -45,11 +53,19 @@ export function refineNativeDisplayMeshes(
     vertices += detail.positions.length / 3;
     if (triangles > MODEL_RESOURCE_LIMITS.maxTriangles || vertices > MODEL_RESOURCE_LIMITS.maxVerticesPerBody)
       throw new Error("Fine display tessellation exceeds its resource limit.");
+    let nativeEdgeSegments: Float32Array | undefined;
+    if (edgeSegmentsRemaining && edgeBudget.edgeUses > 0) {
+      try {
+        nativeEdgeSegments = kernel.nativeDisplayEdges?.(source.shape, Math.min(edgeSegmentsRemaining, MAX_FINE_BODY_EDGE_SEGMENTS), edgeBudget);
+        edgeSegmentsRemaining -= (nativeEdgeSegments?.length ?? 0) / 6;
+      } catch { /* Keep the refined shaded surface when its display lines exceed the budget. */ }
+    }
     refined.push({
       bodyId: request.id,
       positions: new Float32Array(detail.positions),
       normals: new Float32Array(detail.normals),
       indices: new Uint32Array(detail.indices),
+      ...(nativeEdgeSegments ? { nativeEdgeSegments } : {}),
     });
   }
   return refined;

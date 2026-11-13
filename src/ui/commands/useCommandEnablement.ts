@@ -48,6 +48,8 @@ export function useCommandEnablement() {
   useAiDrawer(state => state.open);
   useAiFacePicking(state => state.frame);
   useViewerState(state => state.session);
+  useViewerState(state => state.presentationMode);
+  useViewerState(state => state.showModelEdges);
   useViewerState(state => state.hiddenBodyIds);
   useViewerState(state => state.hiddenComponentIds);
   useManufacturingCoach(state => state.frame);

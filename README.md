@@ -555,7 +555,7 @@ preserve native geometry and idle rendering. See [Photo studio](specs/working-ca
 
 The 3D view defaults to **Optimize while moving**: orbit, pan and zoom use at most
 1× pixel density and hide model edge lines, then schedule sharp detail after 50 ms of idle input, without waiting for the damping tail. Actual restoration also includes the full-resolution frame time. Turn this off in **Views** to keep full detail during
-movement. **Show model edges** controls solid edge lines independently. These
+movement. **Show model edges** uses native CAD edges on rebuilt solids. In Model view, **Show hidden CAD edges** adds dim lines behind visible faces. Smooth joins and periodic seams leave the shaded surface uninterrupted. These
 choices are temporary view settings and reset when a project opens. Unchanged
 bodies reuse viewer buffers and cached edge lines across rebuilds; changed or
 removed bodies replace/dispose their own resources. The 3D view redraws for scene

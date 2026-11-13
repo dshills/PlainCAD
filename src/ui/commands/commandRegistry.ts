@@ -222,6 +222,7 @@ export interface CommandEnablement {
   exportSketchPng: boolean;
   saveNamedView: boolean;
   restoreNamedView: boolean;
+  toggleHiddenModelEdges: boolean;
   createExtrude: boolean;
   createRevolve: boolean;
   selectedFeature: boolean;
@@ -239,6 +240,11 @@ export interface CommandEnablement {
   drawSketch: boolean;
   deleteSketchEntity: boolean;
   selectAllSketchEntities: boolean;
+}
+
+function canToggleHiddenModelEdges(session: number): boolean {
+  const view = useViewerState.getState();
+  return view.session === session && view.presentationMode === "model" && view.showModelEdges;
 }
 
 export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useTargetScopeCapture.getState().busy, canvasActive = Boolean(useSketchCanvas.getState().active), guidedHoleActive = Boolean(useGuidedHole.getState().draft), guidedHoleStartBlocked = Boolean(useExtrudeDraft.getState().draft || useHoleDraft.getState().draft || useModelingDraft.getState().draft || useProjectWorkflow.getState().active), exportDialogOpen = useFileJobs.getState().exportOpen, operationBusy = operationDraftBusy(), operationFrameActive = Boolean(useOperationDrop.getState().frame)): CommandEnablement {
@@ -313,6 +319,7 @@ export function selectCommandEnablement(state: CadStore, scopeCaptureBusy = useT
     selectAllSketchEntities: !targetPickerActive && canvasActive && canSelectAllCanvasEntities(state),
     deleteSketchEntity: !targetPickerActive && canvasActive && Boolean(selectedCanvasEntity(state)),
     document: Boolean(state.history.present),
+    toggleHiddenModelEdges: canToggleHiddenModelEdges(state.documentSession),
     saveNamedView: !targetPickerActive && (state.history.present.viewState?.namedViews?.length ?? 0) < MAX_NAMED_VIEWS,
     restoreNamedView: Boolean(state.history.present.viewState?.namedViews?.length),
     undo: !transientPickerActive && state.history.past.length > 0,
@@ -489,6 +496,10 @@ export const commands: CadCommand[] = [
   { id: "file.projectGallery", label: "Project gallery", description: "Browse real example parts and recently saved local projects.", enablementKey: "outsideGuidedHole", run: () => beginProjectGallery() },
   { id: "view.toggleGrid", label: "Toggle Ground Grid", description: "Show or hide the ground grid in the current view preset and project PNG images.", enablementKey: "document", run: (context) => { const state = useCadStore.getState(); if (context.documentSession !== undefined && context.documentSession !== state.documentSession) return; useViewerState.getState().toggleGrid(state.documentSession); } },
   { id: "view.toggleModelEdges", label: "Toggle Model Edges", description: "Show or hide solid edge lines in the 3D view and PNG images.", enablementKey: "document", run: () => useViewerState.getState().toggleModelEdges(useCadStore.getState().documentSession) },
+  { id: "view.toggleHiddenModelEdges", label: "Toggle Hidden Model Edges", description: "Show occluded CAD edges as dim lines in Model view when model edges are enabled.", enablementKey: "toggleHiddenModelEdges", run: () => {
+    const session = useCadStore.getState().documentSession;
+    if (canToggleHiddenModelEdges(session)) useViewerState.getState().toggleHiddenModelEdges(session);
+  } },
   { id: "view.toggleMovingQuality", label: "Toggle Movement Optimization", description: "Use lower resolution and hide model edges while moving the camera, then restore detail promptly after input ends.", enablementKey: "document", run: () => useViewerState.getState().toggleMovingQuality(useCadStore.getState().documentSession) },
   { id: "view.exitIsolation", label: "Exit isolation", description: "Restore all component and part visibility while preserving source sketch visibility.", enablementKey: "document", run: () => useViewerState.getState().showAllBodies(useCadStore.getState().documentSession) },
   { id: "view.showAllBodies", label: "Show All Bodies", enablementKey: "document", run: () => useViewerState.getState().showAllBodies(useCadStore.getState().documentSession) },

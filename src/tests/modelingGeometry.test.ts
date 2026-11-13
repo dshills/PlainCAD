@@ -93,6 +93,33 @@ function volume(shape: ReturnType<typeof kernel.createBox>, solidCount = 1) {
 vi.setConfig({ testTimeout: 30000, hookTimeout: 60000 });
 beforeAll(async () => OpenCascadeKernel.initialize());
 describe("native modeling geometry", () => {
+  it("draws native cylinder rims without its periodic seam or tangent fillet boundaries", () => {
+    const circle = addCircleAt(createXySketch(), "0mm", "0mm", "5mm");
+    const profile = detectProfiles(solveSketch(circle, {})).profiles[0];
+    const cylinder = kernel.extrudeProfile(profile, 10);
+    const shapes = [cylinder];
+    try {
+      kernel.tessellate(cylinder, options);
+      const edges = kernel.nativeDisplayEdges(cylinder, 1000);
+      expect(edges.length / 6).toBeGreaterThan(24);
+      const levels = new Set<number>();
+      for (let index = 0; index < edges.length; index += 6) {
+        expect(edges[index + 2]).toBe(edges[index + 5]);
+        expect(Math.hypot(edges[index], edges[index + 1])).toBeCloseTo(5, 5);
+        expect(Math.hypot(edges[index + 3], edges[index + 4])).toBeCloseTo(5, 5);
+        levels.add(edges[index + 2]);
+      }
+      expect(levels).toEqual(new Set([0, 10]));
+      const round = kernel.fillet(cylinder, [createExtrudeEdgeRef("base", "endCapPerimeter")], 1);
+      shapes.push(round);
+      kernel.tessellate(round, options);
+      const roundedEdges = kernel.nativeDisplayEdges(round, 1000);
+      expect(roundedEdges.length / 6).toBeGreaterThan(12);
+      for (let index = 2; index < roundedEdges.length; index += 3) expect(roundedEdges[index]).toBe(0);
+      expect(() => kernel.nativeDisplayEdges(cylinder, 2)).toThrow(/display segment budget/);
+    } finally { shapes.forEach(shape => kernel.disposeShape(shape)); }
+  });
+
   it("refines a placed tube with exact outer, bore and cap normals while keeping the accepted mesh intact", () => {
     const sketch = addCircleAt(addCircleAt(createXySketch(), "0mm", "0mm", "8mm"), "0mm", "0mm", "4mm");
     const source = kernel.extrudeProfile(detectProfiles(solveSketch(sketch, {})).profiles[0], 12);

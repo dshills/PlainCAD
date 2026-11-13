@@ -62,13 +62,13 @@ it("allows a captured undefined result only for an empty settled project", () =>
 });
 it("owns and disposes separate proposal buffers, reuses identical before/after buffers and retains unchanged parts", () => {
   const cache = new AiProposalMeshes(), input = proposal();
-  cache.update(input, "model", "original", false, []);
+  cache.update(input, "model", "original", false, false, []);
   expect(cache.inspect().map((item) => item.bodyId)).toEqual(["old", "new"]);
   const old = cache.group.children[0] as THREE.Mesh, changed = cache.group.children[1] as THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>;
   const dispose = vi.spyOn(old.geometry, "dispose");
   expect(changed.material.emissive.getHexString()).toBe("126878");
   expect((old.material as THREE.MeshStandardMaterial).emissive.getHexString()).toBe("000000");
-  cache.update(input, "render", "metal", false, []);
+  cache.update(input, "render", "metal", false, false, []);
   expect(cache.group.children[0]).toBe(old);
   expect(cache.inspect()[1].positions).toEqual(Array.from(input.result.meshes[1].positions));
   expect(dispose).not.toHaveBeenCalled();

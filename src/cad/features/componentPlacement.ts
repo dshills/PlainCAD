@@ -18,7 +18,16 @@ export function placedComponentMesh(mesh: RenderMesh, placement: ComponentPlacem
     if (![n.x, n.y, n.z].every(Number.isFinite)) throw new Error("Positioned component contains nonfinite normals.");
     normals.push(n.x, n.y, n.z);
   }
-  return { ...mesh, positions, normals, bounds: { min, max } };
+  const nativeEdgeSegments = mesh.nativeEdgeSegments?.slice();
+  if (nativeEdgeSegments) {
+    for (let i = 0; i < nativeEdgeSegments.length; i += 3) {
+      const p = placedPoint(frame, { x: nativeEdgeSegments[i], y: nativeEdgeSegments[i + 1], z: nativeEdgeSegments[i + 2] });
+      nativeEdgeSegments[i] = p.x;
+      nativeEdgeSegments[i + 1] = p.y;
+      nativeEdgeSegments[i + 2] = p.z;
+    }
+  }
+  return { ...mesh, positions, normals, bounds: { min, max }, ...(nativeEdgeSegments ? { nativeEdgeSegments } : {}) };
 }
 
 /** Stage all component placements before publishing any positioned body. */

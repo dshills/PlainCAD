@@ -20,10 +20,15 @@ it("keeps the pick mesh installed, reuses fine geometry, and disposes replaced r
     new Promise(resolve => { completed.push(resolve); signals.push(signal); }));
   const invalidate = vi.fn(), refinement = new DisplayMeshRefinement(() => current, invalidate);
   const original = new THREE.BufferGeometry(), model = new THREE.Mesh(original);
+  const originalEdges = new THREE.BufferGeometry();
+  const visible = new THREE.LineSegments(originalEdges), hidden = new THREE.LineSegments(originalEdges);
+  visible.userData.edgeOwner = hidden.userData.edgeOwner = true;
+  model.add(visible, hidden);
   const group = new THREE.Group();
   group.add(model);
   model.userData.bodyId = mesh.bodyId;
-  const detail: DisplayMesh = { bodyId: mesh.bodyId, positions: new Float32Array(mesh.positions), normals: new Float32Array(mesh.normals), indices: new Uint32Array(mesh.indices) };
+  const nativeEdgeSegments = new Float32Array([0, 0, 0, 2, 0, 0]);
+  const detail: DisplayMesh = { bodyId: mesh.bodyId, positions: new Float32Array(mesh.positions), normals: new Float32Array(mesh.normals), indices: new Uint32Array(mesh.indices), nativeEdgeSegments };
 
   const old = refinement.request(current);
   current = { ...current, session: 2 };
@@ -45,17 +50,25 @@ it("keeps the pick mesh installed, reuses fine geometry, and disposes replaced r
   expect(refinement.inspect()).toEqual({ status: "ready", triangles: mesh.indices.length / 3 });
   expect(invalidate).toHaveBeenCalledOnce();
   expect(requestDisplayMeshes).toHaveBeenCalledTimes(2);
-  const dispose = vi.fn();
+  const dispose = vi.fn(), disposeEdges = vi.fn();
   expect(() => refinement.draw(group, true, () => {
     expect(model.geometry).not.toBe(original);
+    expect(visible.geometry).not.toBe(originalEdges);
+    expect(visible.geometry).toBe(hidden.geometry);
+    expect(visible.geometry.getAttribute("position").array).toBe(nativeEdgeSegments);
     model.geometry.addEventListener("dispose", dispose);
+    visible.geometry.addEventListener("dispose", disposeEdges);
     throw new Error("Draw interrupted");
   })).toThrow("Draw interrupted");
   expect(model.geometry).toBe(original);
+  expect(visible.geometry).toBe(originalEdges);
+  expect(hidden.geometry).toBe(originalEdges);
   refinement.draw(group, false, () => expect(model.geometry).toBe(original));
   current = { ...current, document: { ...document } };
   refinement.sync();
   expect(dispose).toHaveBeenCalledOnce();
+  expect(disposeEdges).toHaveBeenCalledOnce();
   expect(refinement.inspect()).toBeUndefined();
   original.dispose();
+  originalEdges.dispose();
 });

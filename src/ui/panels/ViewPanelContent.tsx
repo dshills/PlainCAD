@@ -9,7 +9,8 @@ import {
   removeNamedCamera,
   type SectionAxis,
 } from "../../cad/inspection/cameraViews";
-import { runCommand } from "../commands/commandRegistry";
+import { isCommandEnabledForSnapshot, runCommand } from "../commands/commandRegistry";
+import { useCommandEnablement } from "../commands/useCommandEnablement";
 import { CommitInput } from "./CommitInput";
 export function ViewPanelContent() {
   const session = useCadStore((s) => s.documentSession);
@@ -22,6 +23,8 @@ function ViewSession({ session }: { session: number }) {
   const mode = viewer.session === session ? viewer.presentationMode : "model";
   const showGrid = viewer.session !== session || viewer.showGrid;
   const showEdges = viewer.session !== session || viewer.showModelEdges;
+  const showHiddenEdges = useViewerState(view => view.session === session && view.showHiddenModelEdges);
+  const commandEnablement = useCommandEnablement();
   const optimize = viewer.session !== session || viewer.optimizeWhileMoving;
   const [name, setName] = useState(""),
     [error, setError] = useState("");
@@ -39,6 +42,7 @@ function ViewSession({ session }: { session: number }) {
       <p className="muted">Render uses studio lighting and clean overlays. Camera, part visibility and native geometry stay as you set them. Each preset remembers its edges and grid for this project session.</p>
       <label><input type="checkbox" checked={showGrid} onChange={() => void runCommand("view.toggleGrid")} />Show ground grid</label>
       <label><input type="checkbox" checked={showEdges} onChange={() => void runCommand("view.toggleModelEdges")} />Show model edges</label>
+      <label><input type="checkbox" checked={showHiddenEdges} disabled={!isCommandEnabledForSnapshot("view.toggleHiddenModelEdges", commandEnablement)} onChange={() => void runCommand("view.toggleHiddenModelEdges")} />Show hidden CAD edges</label>
       <label><input type="checkbox" checked={optimize} onChange={() => void runCommand("view.toggleMovingQuality")} />Optimize while moving</label>
       <p className="muted">Movement uses lower resolution and hides edge lines. Full detail returns just after movement ends; PNG downloads always use full resolution.</p>
       <div className="view-presets">

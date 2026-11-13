@@ -39,7 +39,7 @@ async function handleRequest(request: WorkerRequest) {
         heartbeat("rebuild_init");
         await OpenCascadeKernel.initialize();
         heartbeat("rebuilding");
-        const result = rebuildDocument(request.document as CadDocument, { epoch: request.epoch, onNativeProgress: heartbeat });
+        const result = rebuildDocument(request.document as CadDocument, { epoch: request.epoch, onNativeProgress: heartbeat, includeDisplayEdges: true });
         post({ type: "rebuildResult", requestId: request.requestId, epoch: request.epoch, result });
         return;
       }

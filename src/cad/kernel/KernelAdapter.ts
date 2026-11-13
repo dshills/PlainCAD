@@ -55,6 +55,8 @@ export interface RenderMesh {
     | "toFace"
     | "stepImport";
   geometryAssertions?: GeometryAssertions;
+  /** Display-only BRep line pairs in the same frame as the vertices. */
+  nativeEdgeSegments?: Float32Array;
   bounds: BoundingBox;
 }
 
@@ -75,6 +77,7 @@ export interface KernelAdapter {
   /** Rigidly position a complete component with independent native ownership. */
   placeShape?(shape: KernelShape, placement: ComponentPlacement): KernelShape;
   nativeBounds?(shape: KernelShape): BoundingBox;
+  nativeDisplayEdges?(shape: KernelShape, maxSegments: number, budget?: import("./nativeDisplayEdges").DisplayEdgeBudget): Float32Array;
   nativeDrawingGeometry?(shape: KernelShape): NativeDrawingGeometry;
   createBox(width: number, height: number, depth: number): KernelShape;
   extrudeProfile(

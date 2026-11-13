@@ -5,6 +5,7 @@ import { NativeFeatureCache } from "./nativeFeatureCache";
 import { refineNativeDisplayMeshes, type DisplayMeshRequest } from "../kernel/displayMesh";
 import type { NativeStepExport } from "../kernel/nativeStep";
 import { applyComponentPlacements } from "./componentPlacement";
+import { attachDisplayEdges } from "./displayEdges";
 import { placedPoint, placedVector, placementTransform } from "../document/componentPlacement";
 import { bodyComponentId } from "../document/components";
 import { nativeFeatureSignature } from "./nativeFeatureSignature";
@@ -70,6 +71,7 @@ const sketchSeeds = new Map<
 >();
 
 interface RebuildOptions {
+  includeDisplayEdges?: boolean;
   /** Worker heartbeat between bounded synchronous modeling operations. */
   onNativeProgress?: (stage: string) => void;
     /** Disposable viewer job only. Native handles remain owned by this rebuild. */
@@ -672,6 +674,7 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
     catch (error) { errors.push({ id: "fit:placement", source: "kernel", message: error instanceof Error ? error.message : String(error) }); }
   }
   const placedPlanes = placeDocumentPlanes(document, planes);
+  if (!errors.length && options.includeDisplayEdges) attachDisplayEdges(kernel, runtimeBodies.values(), warnings);
   if (!errors.length) {
     try { applyComponentPlacements(document, kernel, runtimeBodies, shapesToDispose); }
     catch (error) {

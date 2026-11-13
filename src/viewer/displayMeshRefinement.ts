@@ -11,11 +11,13 @@ interface RefinementFrame {
 }
 
 type Surface = THREE.Mesh<THREE.BufferGeometry>;
+type EdgeLines = THREE.LineSegments<THREE.BufferGeometry>;
+interface DisplayBuffers { surface: THREE.BufferGeometry; edges?: THREE.BufferGeometry }
 interface Entry {
   frame: RefinementFrame;
   controller: AbortController;
   pending?: Promise<void>;
-  geometries?: Map<string, THREE.BufferGeometry>;
+  geometries?: Map<string, DisplayBuffers>;
   failed?: boolean;
 }
 
@@ -55,17 +57,22 @@ export class DisplayMeshRefinement {
       if (this.entry !== entry || controller.signal.aborted || !this.matches(frame)) return;
       if (meshes.length !== bodies.length || meshes.some((mesh, index) => mesh.bodyId !== bodies[index].id))
         throw new Error("Fine detail did not return the current body set.");
-      const geometries = new Map<string, THREE.BufferGeometry>();
+      const geometries = new Map<string, DisplayBuffers>();
       try {
         for (const mesh of meshes) {
           const geometry = new THREE.BufferGeometry();
-          geometries.set(mesh.bodyId, geometry);
+          const buffers: DisplayBuffers = { surface: geometry };
+          geometries.set(mesh.bodyId, buffers);
           geometry.setAttribute("position", new THREE.BufferAttribute(mesh.positions, 3));
           geometry.setAttribute("normal", new THREE.BufferAttribute(mesh.normals, 3));
           geometry.setIndex(new THREE.BufferAttribute(mesh.indices, 1));
+          if (mesh.nativeEdgeSegments) {
+            buffers.edges = new THREE.BufferGeometry();
+            buffers.edges.setAttribute("position", new THREE.BufferAttribute(mesh.nativeEdgeSegments, 3));
+          }
         }
       } catch (error) {
-        geometries.forEach(geometry => geometry.dispose());
+        geometries.forEach(disposeDisplayBuffers);
         throw error;
       }
       entry.geometries = geometries;
@@ -82,14 +89,22 @@ export class DisplayMeshRefinement {
   draw(group: THREE.Group, fine: boolean, draw: () => void) {
     const entry = this.entry;
     if (!fine || !entry?.geometries || !this.matches(entry.frame)) { draw(); return; }
-    const replaced: Array<[Surface, THREE.BufferGeometry]> = [];
+    const replaced: Array<[Surface | EdgeLines, THREE.BufferGeometry]> = [];
     try {
       for (const object of group.children) {
         if (!(object instanceof THREE.Mesh) || !object.visible) continue;
-        const geometry = entry.geometries.get(object.userData.bodyId);
-        if (geometry) {
-          replaced.push([object, object.geometry]);
-          object.geometry = geometry;
+        const buffers = entry.geometries.get(object.userData.bodyId);
+        if (!buffers) continue;
+        const lines = object.children.filter((child): child is EdgeLines =>
+          child instanceof THREE.LineSegments && child.visible && child.userData.edgeOwner === true);
+        // Use matched solid/edge geometry. If the optional edge budget is
+        // exhausted, preserve the accepted surface when displaying its lines.
+        if (lines.length && !buffers.edges) continue;
+        replaced.push([object, object.geometry]);
+        object.geometry = buffers.surface;
+        if (buffers.edges) for (const line of lines) {
+          replaced.push([line, line.geometry]);
+          line.geometry = buffers.edges;
         }
       }
       draw();
@@ -103,7 +118,7 @@ export class DisplayMeshRefinement {
     if (!entry || !this.matches(entry.frame)) return;
     return {
       status: entry.geometries ? "ready" as const : entry.failed ? "unavailable" as const : "pending" as const,
-      triangles: entry.geometries ? [...entry.geometries.values()].reduce((sum, geometry) => sum + (geometry.index?.count ?? 0) / 3, 0) : 0,
+      triangles: entry.geometries ? [...entry.geometries.values()].reduce((sum, { surface }) => sum + (surface.index?.count ?? 0) / 3, 0) : 0,
     };
   }
 
@@ -111,8 +126,13 @@ export class DisplayMeshRefinement {
     const entry = this.entry;
     this.entry = undefined;
     entry?.controller.abort();
-    entry?.geometries?.forEach(geometry => geometry.dispose());
+    entry?.geometries?.forEach(disposeDisplayBuffers);
   }
+}
+
+function disposeDisplayBuffers({ surface, edges }: DisplayBuffers) {
+  surface.dispose();
+  edges?.dispose();
 }
 
 function waitForRefinement(pending: Promise<void> | undefined, signal?: AbortSignal) {

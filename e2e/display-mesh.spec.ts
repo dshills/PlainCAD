@@ -25,6 +25,10 @@ test("zoomed native display uses finer triangles without replacing the pick geom
   await canvas.hover();
   await page.mouse.wheel(0, -1300);
   await expect.poll(async () => (await view(page)).displayDetail?.status, { timeout: 25000 }).toBe("ready");
+  await expect.poll(async () => {
+    const frame = await view(page);
+    return frame.performance?.triangles === frame.displayDetail?.triangles;
+  }).toBe(true);
   const sharp = await view(page);
   expect(sharp.displayDetail!.triangles).toBeGreaterThan(first.meshes[0].indices.length / 3);
   expect(sharp.performance!.triangles).toBe(sharp.displayDetail!.triangles);

@@ -5,7 +5,8 @@ import type { RenderMesh } from "../cad/kernel/KernelAdapter";
 
 interface RenderedBody {
   source: RenderMesh;
-  edges?: THREE.LineSegments<THREE.EdgesGeometry, THREE.LineBasicMaterial>;
+  edges?: THREE.LineSegments<THREE.BufferGeometry, THREE.LineBasicMaterial>;
+  hiddenEdges?: THREE.LineSegments<THREE.BufferGeometry, THREE.LineBasicMaterial>;
   object: THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>;
 }
 function sameValues(a: ArrayLike<number>, b: ArrayLike<number>) {
@@ -15,7 +16,9 @@ function sameValues(a: ArrayLike<number>, b: ArrayLike<number>) {
   return true;
 }
 function sameGeometry(a: RenderMesh, b: RenderMesh) {
-  return sameValues(a.positions, b.positions) && sameValues(a.normals, b.normals) && sameValues(a.indices, b.indices);
+  return a.geometrySource === b.geometrySource && sameValues(a.positions, b.positions) && sameValues(a.normals, b.normals) && sameValues(a.indices, b.indices) &&
+    (a.nativeEdgeSegments === b.nativeEdgeSegments ||
+      (a.nativeEdgeSegments !== undefined && b.nativeEdgeSegments !== undefined && sameValues(a.nativeEdgeSegments, b.nativeEdgeSegments)));
 }
 function createBody(source: RenderMesh): RenderedBody {
   const geometry = new THREE.BufferGeometry();
@@ -36,11 +39,12 @@ function createBody(source: RenderMesh): RenderedBody {
     throw error;
   }
 }
-function disposeBody({ object, edges }: RenderedBody) {
+function disposeBody({ object, edges, hiddenEdges }: RenderedBody) {
   object.geometry.dispose();
   object.material.dispose();
   edges?.geometry.dispose();
   edges?.material.dispose();
+  hiddenEdges?.material.dispose();
   object.removeFromParent();
 }
 
@@ -102,16 +106,21 @@ export class ModelMeshes {
     material.flatShading = false;
   }
 
-  setEdgesVisible(visible: boolean) {
+  setEdgesVisible(visible: boolean, showHidden = false) {
     let created = false;
     for (const body of this.bodies.values()) {
       const { object } = body;
-      if (visible && !body.edges) {
-        const geometry = new THREE.EdgesGeometry(object.geometry);
+      const native = body.source.geometrySource === "opencascade";
+      const segments = body.source.nativeEdgeSegments;
+      if (visible && !body.edges && (!native || segments?.length)) {
+        const geometry = native ? new THREE.BufferGeometry() : new THREE.EdgesGeometry(object.geometry);
         let material: THREE.LineBasicMaterial | undefined;
         try {
-          material = new THREE.LineBasicMaterial({ color: "#31413c" });
+          if (native && segments) geometry.setAttribute("position", new THREE.BufferAttribute(segments, 3));
+          material = new THREE.LineBasicMaterial({ color: "#31413c", depthWrite: false });
           const edges = new THREE.LineSegments(geometry, material);
+          edges.renderOrder = 1;
+          edges.raycast = () => undefined;
           edges.userData.edgeOwner = true;
           edges.userData.edgeColor = "#31413c";
           object.add(edges);
@@ -124,8 +133,33 @@ export class ModelMeshes {
         }
       }
       if (body.edges) body.edges.visible = visible;
+      if (visible && showHidden && native && body.edges && !body.hiddenEdges) {
+        // The opaque solid depth decides which segments are behind a surface.
+        // This layer shares its buffer and contributes no new depth values.
+        const material = new THREE.LineBasicMaterial({
+          color: "#31413c", depthFunc: THREE.GreaterDepth, depthWrite: false, transparent: true, opacity: 0.28,
+        });
+        const hiddenEdges = new THREE.LineSegments(body.edges.geometry, material);
+        hiddenEdges.raycast = () => undefined;
+        hiddenEdges.userData.edgeOwner = true;
+        hiddenEdges.userData.edgeColor = "#31413c";
+        object.add(hiddenEdges);
+        body.hiddenEdges = hiddenEdges;
+        created = true;
+      }
+      if (body.hiddenEdges) body.hiddenEdges.visible = visible && showHidden;
     }
     return created;
+  }
+
+  inspectEdges() {
+    return [...this.bodies.values()].map(({ source, edges, hiddenEdges }) => ({
+      bodyId: source.bodyId,
+      source: source.nativeEdgeSegments ? "brep" : source.geometrySource === "opencascade" ? "unavailable" : "mesh",
+      segments: edges ? edges.geometry.getAttribute("position").count / 2 : 0,
+      visible: edges?.visible ?? false,
+      hiddenVisible: hiddenEdges?.visible ?? false,
+    }));
   }
 
   dispose() {

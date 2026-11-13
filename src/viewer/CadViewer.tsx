@@ -191,6 +191,7 @@ export function CadViewer() {
     let moving = false, interacting = false, lastInput = 0;
     let keepFitted = false;
     let edgesVisible = true;
+    let hiddenEdgesVisible = false;
     let appliedPresentationMode: PresentationMode | undefined;
     let appliedStudioMaterial: StudioMaterial | undefined;
     let appliedBackground: string | undefined;
@@ -257,7 +258,8 @@ export function CadViewer() {
       const ratio = reduced ? Math.min(sharpPixelRatio, 1) : sharpPixelRatio;
       if (renderer.getPixelRatio() !== ratio) renderer.setPixelRatio(ratio);
       edgesVisible = showEdges && !reduced;
-      if (modelMeshes.setEdgesVisible(edgesVisible)) {
+      hiddenEdgesVisible = current && mode === "model" && view.showHiddenModelEdges;
+      if (modelMeshes.setEdgesVisible(edgesVisible, hiddenEdgesVisible)) {
         applyClipping(modelGroup, clippingRef.current);
         applySelection(modelGroup, selectedBodyIdRef.current, highlightedBodyIdsRef.current);
       }
@@ -363,11 +365,13 @@ export function CadViewer() {
       if (appearance.presentationMode !== currentView.presentationMode || appearance.studioMaterial !== currentView.studioMaterial ||
           appearance.studioLighting !== currentView.studioLighting || appearance.studioBackdrop !== currentView.studioBackdrop ||
           appearance.showGrid !== currentView.showGrid ||
-          appearance.showModelEdges !== currentView.showModelEdges)
+          appearance.showModelEdges !== currentView.showModelEdges ||
+          appearance.showHiddenModelEdges !== currentView.showHiddenModelEdges)
         throw new Error("Studio appearance changed during PNG export. Export the current view again.");
       // Encode full-resolution pixels even if a camera gesture is still settling.
       const previousRatio = renderer.getPixelRatio();
       const previousEdges = edgesVisible;
+      const previousHiddenEdges = hiddenEdgesVisible;
       const visibility = [...new Set([...scene.children, ...modelGroup.children, sketchGroup, measurementGroup])].map((object) => ({ object, visible: object.visible }));
       try {
         refreshQuality(true);
@@ -386,8 +390,9 @@ export function CadViewer() {
         return copyCanvasPng(renderer.domElement);
       } finally {
         if (renderer.getPixelRatio() !== previousRatio) renderer.setPixelRatio(previousRatio);
-        modelMeshes.setEdgesVisible(previousEdges);
+        modelMeshes.setEdgesVisible(previousEdges, previousHiddenEdges);
         edgesVisible = previousEdges;
+        hiddenEdgesVisible = previousHiddenEdges;
         for (const saved of visibility) saved.object.visible = saved.visible;
         applySelection(modelGroup, selectedBodyIdRef.current, highlightedBodyIdsRef.current);
         applyClipping(modelGroup, clippingRef.current);
@@ -419,6 +424,7 @@ export function CadViewer() {
         bufferWidth: renderer.domElement.width, bufferHeight: renderer.domElement.height,
       },
       studioLighting: studioLighting.inspect(),
+      modelEdges: modelMeshes.inspectEdges(),
       aiPreview: runtimeRef.current?.aiProposal ? { mode: useAiCanvasPreview.getState().mode, meshes: runtimeRef.current.aiProposal.inspect() } : undefined,
       presentation: { mode: modelGroup.userData.presentationMode ?? "model", gridVisible: grid.visible, axesVisible: axes.visible, sketchVisible: sketchGroup.visible, measurementVisible: measurementGroup.visible, lights: scene.children.filter((object) => object instanceof THREE.Light && object.visible).length, shadowMaps: renderer.shadowMap.enabled },
       resources: { geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, programs: renderer.info.programs?.length ?? 0 },
@@ -658,7 +664,7 @@ export function CadViewer() {
     }
     void import("./aiProposalMeshes").then(({ renderAiProposal }) => {
       if (canceled || runtimeRef.current !== runtime || !currentAiCanvasPreview(useCadStore.getState(), preview)) return;
-      renderAiProposal(runtime, preview, aiPreviewMode, presentationMode, view.studioMaterial, view.showModelEdges, hidden, clippingRef.current);
+      renderAiProposal(runtime, preview, aiPreviewMode, presentationMode, view.studioMaterial, view.showModelEdges, view.showHiddenModelEdges, hidden, clippingRef.current);
     }).catch((error) => {
       console.error("AI preview failed", error);
       if (currentAiCanvasPreview(useCadStore.getState(), preview)) {
@@ -667,9 +673,9 @@ export function CadViewer() {
       }
     });
     return () => { canceled = true; };
-  }, [aiPreview, aiPreviewMode, document, session, rebuild.result, rebuild.status, fileBusy, componentId, selection, presentationMode, view.studioMaterial, view.showModelEdges, hidden, section.session, section.axis, section.offset, section.positive]);
+  }, [aiPreview, aiPreviewMode, document, session, rebuild.result, rebuild.status, fileBusy, componentId, selection, presentationMode, view.studioMaterial, view.showModelEdges, view.showHiddenModelEdges, hidden, section.session, section.axis, section.offset, section.positive]);
 
-  useEffect(() => { runtimeRef.current?.refreshQuality(); }, [view.presentationMode, view.studioMaterial, view.studioBackdrop, view.studioLighting, view.showGrid, view.showModelEdges, view.optimizeWhileMoving, view.session, session]);
+  useEffect(() => { runtimeRef.current?.refreshQuality(); }, [view.presentationMode, view.studioMaterial, view.studioBackdrop, view.studioLighting, view.showGrid, view.showModelEdges, view.showHiddenModelEdges, view.optimizeWhileMoving, view.session, session]);
 
   useEffect(() => {
     const runtime = runtimeRef.current;
