@@ -177,7 +177,7 @@ export function appendProject(target: CadDocument, source: CadDocument, options:
       name = `${baseName.slice(0, 120 - suffix.length)}${suffix}`;
     }
     names.add(name);
-    return [remap(id), { id: remap(id), name, ...(original.placement ? { placement: { translation: [...original.placement.translation] as [number, number, number], rotation: [...original.placement.rotation] as [number, number, number] } } : {}) }];
+    return [remap(id), { id: remap(id), name, ...(original.appearance ? { appearance: original.appearance } : {}), ...(original.placement ? { placement: { translation: [...original.placement.translation] as [number, number, number], rotation: [...original.placement.rotation] as [number, number, number] } } : {}) }];
   }));
   const jointFace = (id: string, componentId: string) => {
     const owners = features.filter(feature => feature.type === "extrude" && featureComponentId(bound, feature) === componentId && (

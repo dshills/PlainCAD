@@ -1237,18 +1237,19 @@ reference visibility, undo/redo, project round trips and STL.
 
 ## Model and Render presentation presets
 
-Public viewport and Views commands switch temporary presentation state without
-editing the durable document, history, camera or part visibility. Each preset
-remembers independent grid/edge choices until project replacement; Model defaults
-show both and Render defaults hide both. Render also hides axes, sketch/measurement
-and driving-dimension overlays and selection colors, while native body picking remains
-available. Existing native positions, normals, triangulation and body IDs are reused.
-A fixed hemisphere plus key/fill/rim lights and material appearance provide studio
-shading with no textures, shadows or ray tracing. The demand renderer, movement DPR
-and cached buffers remain in use. Project/part PNG captures use the active preset at
-full resolution and restore temporary capture state. Native browser checks cover
-buffer identity, idle frames, camera/picking, parameter rebuilds, save/open, PNG and
-STL; a production CSP check compares changed PNG pixels and byte-identical STL.
+Public viewport and Views commands switch presentation without changing the
+camera or part visibility. Model shows native CAD edges and can show dim
+occluded edges. Render hides edit overlays by default and uses local HDR
+lighting with neutral tone mapping. Screen-space ambient occlusion and the
+ground shadow use bounded buffers on settled Render frames and PNG capture.
+Component finishes are durable visual presets. Lighting, exposure and effects
+are session settings.
+
+A close zoom or PNG request can use a cached finer native display mesh for
+the current rebuild. The normal modeling mesh remains available for picking and
+fabrication. PNG captures use the active preset and can export at viewport,
+1920 × 1080 or 3840 × 2160 resolution. The viewer restores its camera, buffer
+size and visibility after capture.
 
 ## Simplified fabrication task
 

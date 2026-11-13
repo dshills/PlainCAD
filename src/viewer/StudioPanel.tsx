@@ -4,6 +4,8 @@ import { useViewerState, type StudioBackdrop, type StudioEnvironment, type Studi
 import { runCommand } from "../ui/commands/commandRegistry";
 import { useCommandEnablement } from "../ui/commands/useCommandEnablement";
 import type { StudioCommandContext } from "../ui/commands/studioCommand";
+import { StudioComponentFinish } from "./StudioComponentFinish";
+import { StudioPng } from "./StudioPng";
 import "./studioPanel.css";
 
 export function StudioPanel({ hasGeometry }: { hasGeometry: boolean }) {
@@ -65,8 +67,8 @@ export function StudioPanel({ hasGeometry }: { hasGeometry: boolean }) {
             <button type="button" key={composition} disabled={frame.busy || !hasGeometry}
               onClick={() => change({ composition })}>{composition === "isometric" ? "Hero" : composition[0].toUpperCase() + composition.slice(1)}</button>)}
         </div>
-        <button type="button" className="ds-primary" disabled={!enabled.exportProjectPng}
-          onClick={() => void runCommand("file.exportProjectPng")}>Download studio PNG</button>
+        {hasGeometry ? <StudioComponentFinish key={`finish-${frame.session}`} /> : null}
+        <StudioPng key={`png-${frame.session}`} enabled={enabled.exportProjectPng} />
         <p className="muted">Uses your current camera, visible parts and section.</p>
       </div>
     </details>

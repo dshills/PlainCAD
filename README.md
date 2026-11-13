@@ -537,21 +537,16 @@ resize; manual camera gestures and restored camera poses preserve their framing
 until Fit is requested again. Fit uses both viewport dimensions.
 
 Use the viewport **Model / Render** controls or the matching **Views** presets.
-Model shows modeling overlays; Render uses smooth native shading and fixed studio
-lighting, with grid, axes, edges, sketch overlays, dimensions, and selection highlights
-hidden by default. **Show ground grid** and **Show model edges** are independent
-preferences for each preset during the current project session. Opening a project
-restores Model defaults. Camera poses, part visibility, and CAD geometry are preserved;
-project and selected-part PNG downloads match the current preset. Render is a lightweight
-raster view with no ray tracing or shadow passes and retains demand rendering and
-movement optimization.
+Model shows editing overlays and native CAD edges. Render hides grid, axes,
+edges, sketches, dimensions and selection highlights by default. Each view
+remembers its grid and edge settings until a project opens. The viewer keeps the
+same camera pose and part visibility when switching views. A close zoom or PNG
+capture can use a finer native display mesh.
 
-Render also opens a collapsible **Photo studio** with metal and powder-coat display
-finishes, theme/neutral/warm/midnight backdrops, and Hero/Top/Front/Right camera
-compositions. **Download studio PNG** captures the actual model at full resolution.
-Finishes are visual approximations; the metal preset uses rough metallic shading
-without directional brush textures. Settings last for the project session and
-preserve native geometry and idle rendering. See [Photo studio](specs/working-cad/PHOTO_STUDIO.md).
+Open **Photo studio** in Render to choose HDR lighting, exposure, backdrop and
+camera composition. Ambient occlusion and soft ground shadows appear on settled
+frames. Assign component finishes for an editable project, then download a PNG
+at viewport resolution, 1920 × 1080, or 3840 × 2160. [Photo studio](specs/working-cad/PHOTO_STUDIO.md)
 
 The 3D view defaults to **Optimize while moving**: orbit, pan and zoom use at most
 1× pixel density and hide model edge lines, then schedule sharp detail after 50 ms of idle input, without waiting for the damping tail. Actual restoration also includes the full-resolution frame time. Turn this off in **Views** to keep full detail during

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { readFile } from "node:fs/promises";
 import { inspectPngDownload } from "../e2e/pngDownload";
 import type { Page } from "@playwright/test";
 
@@ -64,6 +65,16 @@ test("built studio lazy controls and real material/backdrop PNG export work unde
   const dark = await inspectPngDownload(page, await second, info.outputPath("studio-production-dark.png"));
   expect(await corner(page, dark.bytes)).toEqual([23, 29, 41, 255]);
   expect(dark.bytes.equals(warm.bytes)).toBe(false);
+  await page.getByLabel("Studio PNG size").selectOption("uhd");
+  const [fixedSizeDownload] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("button", { name: "Download studio PNG", exact: true }).click(),
+  ]);
+  const fixedSizePath = info.outputPath("studio-production-uhd.png");
+  await fixedSizeDownload.saveAs(fixedSizePath);
+  const fixedSize = await readFile(fixedSizePath);
+  expect(fixedSize.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a");
+  expect([fixedSize.readUInt32BE(16), fixedSize.readUInt32BE(20)]).toEqual([3840, 2160]);
   await page.getByRole("button", { name: "Model view", exact: true }).click();
   await expect(page.getByRole("complementary", { name: "Product photo studio" })).toHaveCount(0);
   expect(violations).toEqual([]);

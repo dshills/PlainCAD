@@ -1,3 +1,4 @@
+import type { PngResolution } from "./pngResolution";
 import { useCadStore } from "../state/useCadStore";
 import { useSketchCanvas } from "../ui/commands/sketchCanvasCommand";
 import { beginFileJob, fileJobCurrent, finishFileJob } from "./fileJobs";
@@ -8,7 +9,7 @@ import { bodyDisplayNames } from "../cad/document/bodyDisplayNames";
 
 export type PngScope = "project" | "body" | "sketch";
 
-export async function exportPng(scope: PngScope) {
+export async function exportPng(scope: PngScope, resolution?: PngResolution) {
   const state = useCadStore.getState();
   if (state.fileBusy) return;
   const document = state.history.present, session = state.documentSession, result = state.rebuild.result;
@@ -30,7 +31,7 @@ export async function exportPng(scope: PngScope) {
     const drawing = sketch ? capturePng("sketch", { document, session, result, sketchId: sketch.id }) : undefined;
     void drawing?.catch(() => undefined);
     controller = beginFileJob("Preparing PNG image…");
-    const image = drawing ?? capturePng("viewer", { document, session, result, bodyId, signal: controller.signal });
+    const image = drawing ?? capturePng("viewer", { document, session, result, bodyId, signal: controller.signal, resolution });
     state.setFileError(undefined);
     const blob = await image;
     const bytes = await blob.arrayBuffer();

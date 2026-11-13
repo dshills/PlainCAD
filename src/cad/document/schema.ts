@@ -1,6 +1,6 @@
 import type { HolePreset } from "../hardware/fastenerCatalog";
 
-export const CURRENT_SCHEMA_VERSION = 25;
+export const CURRENT_SCHEMA_VERSION = 26;
 
 export type UnitSystem = "metric" | "imperial";
 
@@ -50,6 +50,7 @@ export interface CadComponent {
   id: string;
   name: string;
   placement?: ComponentPlacement;
+  appearance?: import("./componentAppearance").ComponentAppearance;
 }
 
 export interface CadParameter {

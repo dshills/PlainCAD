@@ -13,6 +13,7 @@ export class AiProposalMeshes {
       this.meshes.update(preview.result.meshes);
       this.result = preview.result;
     }
+    this.meshes.setComponentFinishes(preview.candidate ?? preview.document);
     this.meshes.setPresentationMode(mode, material);
     this.meshes.setEdgesVisible(edges, mode === "model" && hiddenEdges);
     const changed = new Set(preview.bodyIds);

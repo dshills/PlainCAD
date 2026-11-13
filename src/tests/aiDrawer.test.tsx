@@ -51,13 +51,14 @@ function acceptSource() {
   useCadStore.setState({ rebuild: { status: "succeeded", kernelReady: true,
     result: { documentId: state.history.present.id, success: true, meshes: [], bodies: [], errors: [], warnings: [], durationMs: 0 } } });
 }
-beforeEach(() => {
+beforeEach(async () => {
   useOperationDrop.setState({ frame: undefined });
   useExtrudeDraft.setState({ draft: undefined });
   useModelingDraft.setState({ draft: undefined });
   useGeometryHighlight.setState({ highlight: undefined });
   useCadStore.setState(useCadStore.getInitialState(), true);
   useCadStore.getState().setDocument(createEmptyDocument());
+  await waitFor(() => expect(useCadStore.getState().rebuild.status).toBe("succeeded"));
   acceptSource();
   useAiDrawer.setState({ open: true });
   mocks.providers.mockResolvedValue(

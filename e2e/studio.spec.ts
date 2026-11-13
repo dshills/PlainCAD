@@ -49,11 +49,11 @@ test("studio finishes/backdrops reuse native buffers, preserve history and camer
   await page.getByLabel("Studio backdrop", { exact: true }).selectOption("warm");
   await expect.poll(async () => (await viewer(page)).background).toBe("e8dfcf");
   await expect.poll(async () => (await viewer(page)).studioLighting).toMatchObject({ environment: "softbox", ready: true, toneMapped: true });
+  await expect.poll(async () => (await viewer(page)).studioEffects).toMatchObject({ ambientOcclusion: true, groundShadow: true });
   const metal = await idle(page);
   expect(metal.meshes[0]).toMatchObject({ geometryId: model.meshes[0].geometryId, positions: model.meshes[0].positions, normals: model.meshes[0].normals, indices: model.meshes[0].indices, appearance: { roughness: 0.48, metalness: 0.65, color: "bbc4cc" } });
   metal.cameraPosition.forEach((value, axis) => expect(value).toBeCloseTo(model.cameraPosition[axis], 8));
   expect(metal.cameraTarget).toEqual(model.cameraTarget);
-  const resources = metal.resources;
   const metalDownload = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download studio PNG", exact: true }).click();
   const metalPng = await inspectPngDownload(page, await metalDownload, info.outputPath("studio-metal-warm.png"));
@@ -73,6 +73,9 @@ test("studio finishes/backdrops reuse native buffers, preserve history and camer
     return [...context.getImageData(0, 0, 1, 1).data];
   }, `data:image/png;base64,${metalPng.bytes.toString("base64")}`);
   expect(corner).toEqual([232, 223, 207, 255]);
+  // The first export can allocate a cached fine mesh. Compare resource counts
+  // after capture has warmed both that mesh and the studio effect targets.
+  const resources = (await idle(page)).resources;
   await page.getByLabel("Studio finish", { exact: true }).selectOption("powder");
   await expect.poll(async () => (await viewer(page)).meshes[0].appearance?.roughness).toBe(0.85);
   await page.getByLabel("Studio backdrop", { exact: true }).selectOption("dark");
@@ -86,6 +89,9 @@ test("studio finishes/backdrops reuse native buffers, preserve history and camer
   await page.getByRole("button", { name: "Download studio PNG", exact: true }).click();
   const powderPng = await inspectPngDownload(page, await powderDownload, info.outputPath("studio-powder-midnight.png"));
   expect(powderPng.bytes.equals(metalPng.bytes)).toBe(false);
+  const afterExport = (await idle(page)).resources;
+  expect(afterExport.geometries).toBe(resources.geometries);
+  expect(afterExport.textures).toBe(resources.textures);
   const after = await aiSnapshot(page);
   expect(after.document).toEqual(before.document);
   expect(after.result).toEqual(before.result);
@@ -121,7 +127,9 @@ test("studio camera compositions follow CAD axes, retain finishes on actual rebu
   await page.getByRole("button", { name: "Render view", exact: true }).click();
   await page.getByLabel("Studio finish").selectOption("metal");
   await expect.poll(async () => (await viewer(page)).meshes[0].appearance?.metalness).toBe(0.65);
-  const original = await viewer(page);
+  await expect.poll(async () => (await viewer(page)).studioLighting?.ready).toBe(true);
+  await expect.poll(async () => (await viewer(page)).studioEffects).toMatchObject({ ambientOcclusion: true, groundShadow: true });
+  const original = await idle(page);
   const studio = page.getByRole("group", { name: "Studio camera compositions" });
   for (const [name, direction] of [["Top", [0, 0, 1]], ["Front", [0, -1, 0]], ["Right", [1, 0, 0]], ["Hero", [1, -1, 1]]] as const) {
     await studio.getByRole("button", { name, exact: true }).click();

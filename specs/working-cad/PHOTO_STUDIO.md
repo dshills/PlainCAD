@@ -4,14 +4,15 @@ Render view opens a collapsible Photo studio panel over the existing viewport.
 Choose a finish, backdrop, lighting and camera composition, then select
 **Download studio PNG**.
 The PNG captures the actual current native model, visible bodies, section and
-camera at full resolution. It excludes the HTML studio controls and CAD editing
-overlays. Existing rebuild and stale-document export checks still apply.
+camera. Choose viewport resolution, 1920 × 1080, or 3840 × 2160.
+Fixed-size captures preserve the current camera pose and expand the frame as
+needed to fit its original contents. PNGs exclude the HTML studio controls and
+CAD editing overlays. Existing rebuild and stale-document export checks still apply.
 
-Original part colors preserve the existing Render appearance. Metallic
-approximation uses neutral color, roughness 0.48 and metalness 0.65; it does not
-simulate directional brush textures. Powder coat approximation retains each
-part's color with roughness 0.85 and metalness 0. These are display presets for
-all visible parts, not engineering material assignments or per-body finishes.
+Original uses the part colors. Metallic uses a neutral color with roughness
+0.48 and metalness 0.65. Powder coat retains the part colors with roughness
+0.85 and metalness 0. The studio finish applies to components without an
+assigned finish.
 
 Backdrops are the current UI theme, neutral gray, warm paper or midnight.
 Hero, Top, Front and Right use the existing standard CAD camera directions and
@@ -19,7 +20,7 @@ fit the currently visible bodies. Manual orbit/pan/zoom stays available. Studio
 settings persist while switching Model/Render within a project session; opening
 any project resets them. Model restores the original colors, lighting and theme
 background. Saved named camera views remain the existing way to retain a pose.
-Studio preferences never enter project JSON or Undo history.
+Lighting, backdrop and the studio finish stay in the session.
 
 Softbox, Rim highlights and Warm workshop create local HDR lighting from broad
 sources. Adjust light rotation to place reflections and exposure to set the
@@ -42,3 +43,8 @@ generator load lazily.
 Native acceptance is in `e2e/studio.spec.ts`; built-app CSP and PNG acceptance is
 in `production-e2e/studio.spec.ts`. Existing Render acceptance continues covering
 motion/full-resolution capture and STL/save/open geometry compatibility.
+
+Use **Component finish** to apply satin steel, blue anodized aluminum, brass,
+or matte graphite polymer to a component in Render view. Components using
+**Use studio finish** inherit the session finish. Component finishes save in
+the editable project and support Undo. They affect visual appearance.

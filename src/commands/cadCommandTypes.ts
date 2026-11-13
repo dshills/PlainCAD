@@ -1,3 +1,4 @@
+import type { ComponentAppearance } from "../cad/document/componentAppearance";
 import type { CanvasPoint, CanvasTool } from "../cad/sketch/canvasGeometry";
 import type { CanvasSizeInput } from "../cad/sketch/sizedCanvasGeometry";
 import type { LeadScrewFeature, OriginPlane, ShellFeature, SketchDimension, ThreadFeature, UnitSettings } from "../cad/document/schema";
@@ -25,6 +26,7 @@ export type CadCommandArguments = {
   "cad.parameter.update": { parameterId: string; name?: string; expression?: string; authoredUnit?: AuthoredUnit; group?: string };
   "cad.component.create": { name: string; as?: string };
   "cad.component.rename": { componentId: string; name: string };
+  "cad.component.appearance": { componentId: string; finish: ComponentAppearance | "default" };
   "cad.component.place": { componentId: string; translation: [number, number, number]; rotation: [number, number, number] };
   "cad.sketch.create": { name: string; plane: OriginPlane; componentId?: string; offset?: string; as?: string };
   "cad.sketch.createOnFace": Face & { name: string; componentId?: string; as?: string };

@@ -1,3 +1,4 @@
+import { COMPONENT_APPEARANCES } from "../cad/document/componentAppearance";
 import type { CommandDescriptor } from "./registry";
 import type { CadCommandArguments } from "./cadCommandTypes";
 import { FASTENER_SIZES } from "../cad/hardware/fastenerCatalog";
@@ -40,6 +41,7 @@ export const CAD_COMMAND_SCHEMAS = {
   "cad.parameter.update": objectSchema({ parameterId: referenceSchema, name: nameSchema, expression: expressionSchema, authoredUnit: unit, group: nameSchema }, ["parameterId"]),
   "cad.component.create": objectSchema({ name: nameSchema, as: aliasSchema }, ["name"]),
   "cad.component.rename": objectSchema({ componentId: referenceSchema, name: nameSchema }, ["componentId", "name"]),
+  "cad.component.appearance": objectSchema({ componentId: referenceSchema, finish: enumSchema(["default", ...COMPONENT_APPEARANCES]) }, ["componentId", "finish"]),
   "cad.component.place": objectSchema({ componentId: referenceSchema, translation: vector, rotation }, ["componentId", "translation", "rotation"]),
   "cad.sketch.create": objectSchema({ name: nameSchema, componentId: referenceSchema, plane: enumSchema(["XY", "XZ", "YZ"]), offset: expressionSchema, as: aliasSchema }, ["name", "plane"]),
   "cad.sketch.createOnFace": objectSchema({ name: nameSchema, componentId: referenceSchema, featureId: referenceSchema, stableFaceId: referenceSchema, as: aliasSchema }, ["name", "featureId", "stableFaceId"]),

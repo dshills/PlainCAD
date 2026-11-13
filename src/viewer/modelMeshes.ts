@@ -1,5 +1,8 @@
 import * as THREE from "three";
 import type { PresentationMode, StudioMaterial } from "../state/viewerState";
+import type { CadDocument } from "../cad/document/schema";
+import { bodyComponentId } from "../cad/document/components";
+import { COMPONENT_FINISHES } from "./componentFinishes";
 import { STUDIO_MATERIALS } from "./studioAppearance";
 import type { RenderMesh } from "../cad/kernel/KernelAdapter";
 
@@ -53,6 +56,7 @@ export class ModelMeshes {
   private bodies = new Map<string, RenderedBody>();
   private mode: PresentationMode = "model";
   private studioMaterial: StudioMaterial = "original";
+  private appearanceDocument?: CadDocument;
   readonly group = new THREE.Group();
 
   update(sources: readonly RenderMesh[]) {
@@ -93,13 +97,23 @@ export class ModelMeshes {
     for (const body of this.bodies.values()) this.applyAppearance(body);
   }
 
+  setComponentFinishes(document: CadDocument) {
+    if (this.appearanceDocument === document) return;
+    this.appearanceDocument = document;
+    for (const body of this.bodies.values()) this.applyAppearance(body);
+  }
+
   private applyAppearance(body: RenderedBody) {
     const material = body.object.material;
-    const appearance = this.mode === "render" ? STUDIO_MATERIALS[this.studioMaterial] : { roughness: 0.55, metalness: 0.05 };
+    const document = this.appearanceDocument;
+    const componentId = this.mode === "render" && document ? bodyComponentId(document, body.source.bodyId) : undefined;
+    const finish = componentId && document ? document.components[componentId]?.appearance : undefined;
+    const component = finish ? COMPONENT_FINISHES[finish] : undefined;
+    const appearance = component ?? (this.mode === "render" ? STUDIO_MATERIALS[this.studioMaterial] : { roughness: 0.55, metalness: 0.05 });
     material.roughness = appearance.roughness;
     material.metalness = appearance.metalness;
-    body.object.userData.presentationColor = this.mode === "render" && this.studioMaterial === "metal"
-      ? "#bbc4cc" : body.object.userData.baseColor;
+    body.object.userData.presentationColor = component?.color ??
+      (this.mode === "render" && this.studioMaterial === "metal" ? "#bbc4cc" : body.object.userData.baseColor);
     material.color.set(body.object.userData.presentationColor);
     // Interpolate the existing per-face native vertex normals. Keep hard-edge
     // splits, positions and triangulation intact; STL still uses native data.

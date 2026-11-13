@@ -216,3 +216,20 @@ and 10,076 native triangles remain unchanged. Raw before/after data and scope
 limits are in [viewer-idle-markers.json](performance-evidence/viewer-idle-markers.json).
 This demonstrates reduced idle and marker submission work in this workload;
 it does not measure wattage, GPU execution time, or broad-device FPS.
+
+## Studio and close-up checks
+
+A local headless Chromium check ran with software WebGL while other validation
+jobs were active. ORBIT and the four-start lead screw rebuilt as valid native
+solids, showed HDR lighting and both studio effects, and issued no WebGL draws
+during a settled 450 ms interval. These are observations under that load.
+
+| Project | Modeling triangles | Close-up triangles | Time observed waiting for detail | 1920 × 1080 PNG with detail cached |
+| --- | ---: | ---: | ---: | ---: |
+| ORBIT housing | 10,076 | 32,800 | 7.9 s | 2.1 s |
+| Four-start lead screw and nut | 6,720 | 26,200 | 20.1 s | 2.3 s |
+
+The native browser fixture test separately exercised all 40 rotary fixture
+bodies through parameter editing, Undo, and project replacement. The measured
+close-up wait includes native rebuild and tessellation in the disposable
+worker. The viewer displays the modeling mesh during that wait.

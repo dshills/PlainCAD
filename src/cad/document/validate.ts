@@ -2,6 +2,7 @@ import { STEP_IMPORT_PROJECT_MAX_BYTES, stepSourceDiagnostic } from "./stepImpor
 import { assemblyJointIssues } from "./assemblyJoints";
 import { configurationIssues } from "./configurationValidation";
 import { componentScopeIssues, featureComponentId, sketchComponentId } from "./components";
+import { isComponentAppearance } from "./componentAppearance";
 import { validComponentPlacement } from "./componentPlacement";
 
 import { targetBodyIds } from "./bodyScopes";
@@ -64,6 +65,8 @@ export function validateDocument(document: CadDocument, mode: "modeling" | "stor
   for (const [id, component] of Object.entries(document.components)) {
     if (!component || typeof component !== "object" || Array.isArray(component) || component.id !== id || typeof component.name !== "string" || !component.name.trim() || component.name.length > 120)
       issues.push({ source: "document", sourceId: id, message: "Component must have a matching ID and a name of 1–120 characters." });
+    if (component?.appearance !== undefined && !isComponentAppearance(component.appearance))
+      issues.push({ source: "document", sourceId: id, message: "Component appearance must be a supported finish preset." });
     if (component?.placement !== undefined && !validComponentPlacement(component.placement))
       issues.push({ source: "document", sourceId: id, message: "Component placement needs three finite millimeter translations (at most 100000000) and three radian rotations (at most 360 degrees)." });
   }

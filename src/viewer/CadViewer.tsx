@@ -8,6 +8,7 @@ import { addMeasurementOverlays, installMeasurementPicking, visibleMeasurementTa
 import { measureModelTargets } from "../cad/inspection/modelMeasurements";
 import { ModelMeasurementReadout } from "./ModelMeasurementReadout";
 import { createPresentationLights } from "./presentationLights";
+import { atPngResolution } from "./renderPngResolution";
 import { createStudioLighting } from "./studioLighting";
 import { createStudioEffectsController } from "./studioEffectsController";
 import { studioBackground } from "./studioAppearance";
@@ -373,10 +374,8 @@ export function CadViewer() {
       const currentView = useViewerState.getState();
       if (appearance.presentationMode !== currentView.presentationMode || appearance.studioMaterial !== currentView.studioMaterial ||
           appearance.studioLighting !== currentView.studioLighting || appearance.studioBackdrop !== currentView.studioBackdrop ||
-          appearance.studioEffects !== currentView.studioEffects ||
-          appearance.showGrid !== currentView.showGrid ||
-          appearance.showModelEdges !== currentView.showModelEdges ||
-          appearance.showHiddenModelEdges !== currentView.showHiddenModelEdges)
+          appearance.studioEffects !== currentView.studioEffects || appearance.showGrid !== currentView.showGrid ||
+          appearance.showModelEdges !== currentView.showModelEdges || appearance.showHiddenModelEdges !== currentView.showHiddenModelEdges)
         throw new Error("Studio appearance changed during PNG export. Export the current view again.");
       // Encode full-resolution pixels even if a camera gesture is still settling.
       const previousRatio = renderer.getPixelRatio();
@@ -396,8 +395,10 @@ export function CadViewer() {
           for (const child of scene.children) child.visible = child === modelGroup || child instanceof THREE.Light;
         }
         // Copy immediately after rendering: WebGL's default buffer is transient.
-        drawScene(exportCamera, true, false, { section: selectedMesh ? undefined : clipping });
-        return copyCanvasPng(renderer.domElement);
+        return atPngResolution(renderer, exportCamera, request.resolution, captureCamera => {
+          drawScene(captureCamera, true, false, { section: selectedMesh ? undefined : clipping });
+          return copyCanvasPng(renderer.domElement);
+        });
       } finally {
         if (renderer.getPixelRatio() !== previousRatio) renderer.setPixelRatio(previousRatio);
         modelMeshes.setEdgesVisible(previousEdges, previousHiddenEdges);
@@ -642,6 +643,14 @@ export function CadViewer() {
     resources.circleMaterial.color.set(colors.circle);
     runtime.refreshQuality();
   }, [theme]);
+
+  useEffect(() => {
+    const runtime = runtimeRef.current;
+    if (!runtime) return;
+    runtime.modelMeshes.setComponentFinishes(document);
+    applySelection(runtime.modelGroup, selectedBodyIdRef.current, highlightedBodyIdsRef.current);
+    runtime.invalidate();
+  }, [document]);
 
   useEffect(() => {
     const runtime = runtimeRef.current;

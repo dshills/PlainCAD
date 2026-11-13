@@ -41,6 +41,11 @@ and file actions. `document.import` takes `{text}`; `file.openProject` takes
 Some commands open dialogs, such as multi-body STL export; discover and use their
 mounted controls to configure and apply the task.
 
+Use `cad.component.appearance` with a component ID and a `finish` of
+`steel`, `aluminum`, `brass`, `polymer`, or `default` to restore the
+studio finish. `file.exportProjectPng` accepts `pngResolution` of `viewport`,
+`hd` (1920 × 1080), or `uhd` (3840 × 2160).
+
 ## UI interaction commands
 
 The Vite transform in `scripts/command-instrumentation.ts` routes JSX callbacks,

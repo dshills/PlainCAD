@@ -8,11 +8,11 @@ missing or the count cannot be determined, establish a baseline with the full ga
 
 ## Last successful full gate
 
-- Date: 2026-11-12.
-- Change: metric and Unified inch fastener and hole presets, native threads, and native lead screw/nut pairs.
-- Result: type checks, 1680 unit/component tests in 216 files, build/bundle budget (70 bundles, largest 496.21 kB), 337 development browser cases plus three corrected cases rerun, and 62 production browser cases passed.
-- Completed items since that full gate: **5**.
-- Next full gate: after all five rendering items are complete, per user request.
+- Date: 2026-11-13.
+- Change: HDR studio lighting, native close-up meshes, CAD edges, studio effects, component finishes and fixed-size PNGs.
+- Result: type checks, 1688 unit/component tests plus the corrected AI fixture rerun, build/bundle budget (72 bundles, largest 496.93 kB), 342 development cases plus the corrected studio suite rerun, and 66 production cases passed.
+- Completed items since that full gate: **0**.
+- Next full gate: after 5 more completed items.
 
 ## Completed batch
 
@@ -1604,3 +1604,22 @@ separately: 72 bundles (largest 496.70 kB), five development and 14 production
 smoke tests. The production smoke test restarted after a local port conflict.
 The existing linked-sketch import advisory remains. The full gate is deferred
 until the rendering batch is complete, as requested.
+
+## Rendering item 5: component finishes and fixed-size PNGs (2026-11-13)
+
+Render supports saved component finishes in schema 26 and viewport, 1080p, and
+4K PNG output. Fixed-size capture preserves the camera pose and restores the
+live viewport size. Native Chromium verified two finishes across save/open
+with unchanged body identities and exact volumes. The built app exported a
+3840 × 2160 PNG under CSP. Independent internal review approved the schema,
+command enablement, capture staleness guards, and final test adjustments.
+
+Full validation began after all five items were implemented. Type checks passed.
+The unit run passed 1688 of 1689 tests. The AI fixture now waits for its pending
+rebuild before installing the mocked result, and all 15 tests in that file
+passed on rerun. The final production build passed the 500 kB budget with 72
+bundles and a largest bundle of 496.93 kB. The existing Vite linked-sketch import
+advisory remains. The development suite passed 342 of 343 cases. The studio
+resource check now measures after the first PNG warms the fine mesh cache and
+verifies subsequent exports reuse resources. All three studio tests passed on
+rerun. All 66 production browser cases passed. The cadence resets to zero.

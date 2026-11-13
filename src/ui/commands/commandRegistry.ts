@@ -118,7 +118,7 @@ import { recordAiHistoryChange, canUndoAiChange, canRedoAiChange, type AiHistory
 import { beginAiFacePicking, clearAiFacePicking } from "../../state/aiFacePicking";
 import { currentAiCanvasPreview, clearAiCanvasPreview } from "../../state/aiCanvasPreview";
 
-async function exportCurrentPng(scope: "project" | "body" | "sketch") {
+async function exportCurrentPng(scope: "project" | "body" | "sketch", resolution?: import("../../persistence/pngResolution").PngResolution) {
   const captured = useCadStore.getState(), canvas = useSketchCanvas.getState().active;
   const { exportPng } = await import("../../persistence/exportPng");
   const current = useCadStore.getState();
@@ -128,7 +128,7 @@ async function exportCurrentPng(scope: "project" | "body" | "sketch") {
     current.setFileError("Project or image selection changed. Request the current PNG again.");
     return;
   }
-  await exportPng(scope);
+  await exportPng(scope, resolution);
 }
 
 export interface CommandContext {
@@ -144,6 +144,7 @@ export interface CommandContext {
   componentId?: string;
   componentName?: string;
   projectName?: string;
+  pngResolution?: import("../../persistence/pngResolution").PngResolution;
   viewName?: string;
   viewId?: string;
   documentSession?: number;
@@ -358,7 +359,7 @@ export function isCommandEnabledForSnapshot(
 }
 
 export const commands: CadCommand[] = [
-  { id: "file.exportProjectPng", label: "Download project view PNG", description: "Capture the current 3D camera, visible bodies and section view without sketch or selection overlays.", enablementKey: "exportProjectPng", run: () => exportCurrentPng("project") },
+  { id: "file.exportProjectPng", label: "Download project view PNG", description: "Capture the current 3D camera, visible bodies and section view without sketch or selection overlays.", enablementKey: "exportProjectPng", run: ({ pngResolution }) => exportCurrentPng("project", pngResolution) },
   { id: "file.exportBodyPng", label: "Download selected part PNG", description: "Select a body, then download a fitted image of that body alone.", enablementKey: "exportBodyPng", run: () => exportCurrentPng("body") },
   { id: "file.exportSketchPng", label: "Download sketch PNG", description: "Open a sketch, then capture the drawing with its visible dimensions and constraints.", enablementKey: "exportSketchPng", run: () => exportCurrentPng("sketch") },
   { id: "sketch.link.showSource", internal: true, label: "Show linked sketch source", enablementKey: "linkedSketchShowSource", run: async ({ linkedSketchTarget }) => { const module = await import("./linkedSketchCommand"); module.showLinkedSketchSource(linkedSketchTarget); } },
@@ -878,7 +879,7 @@ export const commands: CadCommand[] = [
 /** Compatibility metadata lookup; the runtime executor lives in commands/registry. */
 export const commandById = new Map(commands.map(command => [command.id, command]));
 
-const contextFields = ["sketchId", "componentId", "componentName", "projectName", "viewName", "viewId", "documentSession", "operationTargetId", "operation", "file"];
+const contextFields = ["sketchId", "componentId", "componentName", "projectName", "viewName", "viewId", "documentSession", "operationTargetId", "operation", "file", "pngResolution"];
 for (const command of commands) bindCommand({ id: command.id, label: command.label, description: command.description, kind: "domain", input: { type: "object", additionalProperties: false, properties: Object.fromEntries(contextFields.map((field): [string, JsonValue] => [field, field === "documentSession" ? { type: "integer" } : field === "file" ? { type: "object", properties: { name: { type: "string" }, text: { type: "string" }, type: { type: "string" } } } : { type: "string" }])) } }, {
   id: "domain", label: () => command.label,
   available: () => {
@@ -900,6 +901,8 @@ for (const command of commands) bindCommand({ id: command.id, label: command.lab
         context.documentSession = value as number;
       } else Object.assign(context, { [field]: stringArgument(value, field, 5000) });
     }
+    if (context.pngResolution !== undefined && !["viewport", "hd", "uhd"].includes(context.pngResolution))
+      throw new Error("PNG resolution must be viewport, hd, or uhd.");
     if (context.operation !== undefined && !["extrude", "fillet", "chamfer"].includes(context.operation)) throw new Error("Operation must be extrude, fillet or chamfer.");
     if (context.documentSession !== undefined && context.documentSession !== useCadStore.getState().documentSession) throw new Error("Project replaced. Refresh discovery.");
     if (["file.openProject", "file.dropProject"].includes(command.id) && !context.file) throw new Error("Supply file {name,text,type} to open a project from a script.");

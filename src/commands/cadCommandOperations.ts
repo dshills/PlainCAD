@@ -1,3 +1,4 @@
+import { withComponentAppearance, type ComponentAppearance } from "../cad/document/componentAppearance";
 import type { CadDocument, ExpressionRef, ExtrudeTermination, FacePlaneReference, Feature, LeadNutFeature, LeadScrewFeature, OriginPlane, Sketch, SketchDimension, ThreadFeature } from "../cad/document/schema";
 import { isShellSource, requireShellOpening } from "../cad/features/shellFeature";
 import { holePresetDiameter, isHolePreset } from "../cad/hardware/fastenerCatalog";
@@ -153,6 +154,11 @@ export function applyCadCommand(document: CadDocument, call: CadCommandCall | Ty
     const id = getComponent();
     next = renameComponent(document, id, string("name")!);
     result = { id };
+  } else if (call.command === "cad.component.appearance") {
+    const componentId = getComponent();
+    const finish = string("finish") as ComponentAppearance | "default";
+    next = withComponentAppearance(document, componentId, finish === "default" ? undefined : finish);
+    result.id = componentId;
   } else if (call.command === "cad.component.place") {
     const id = getComponent();
     next = touchDocument(withComponentPlacement(document, id, { translation: args.translation as [number, number, number], rotation: args.rotation as [number, number, number] }));
