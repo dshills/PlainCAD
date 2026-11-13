@@ -24,7 +24,8 @@ async function fixture(page: Page) {
 async function editSketch(page: Page) {
   const parts = page.getByRole("button", { name: "Parts", exact: true });
   if (await parts.getAttribute("aria-expanded") !== "true") await parts.press("Enter");
-  await page.getByRole("button", { name: /^Section XY plane, \d+ entities$/ }).press("Enter");
+  await page.getByRole("complementary", { name: "Parts browser" })
+    .getByRole("button").filter({ hasText: /^Section\b/ }).press("Enter");
   if (await parts.getAttribute("aria-expanded") === "true") await parts.press("Enter");
   await page.getByRole("button", { name: "Draw", exact: true }).press("Enter");
   const edit = page.getByRole("navigation", { name: "Main CAD commands" }).getByRole("button", { name: "Edit sketch canvas", exact: true });
@@ -140,7 +141,7 @@ test("AI mode descriptions and consent controls remain reachable in compact prod
   page.on("pageerror", (error) => errors.push(error.message));
   await page.route("**/api/ai/status", (route) => route.fulfill({ json: { providers: ["anthropic", "openai", "google"].map((id) => ({ id, label: id, available: true, model: "test-model" })) } }));
   await fixture(page);
-  await page.getByRole("button", { name: "Open AI drawer", exact: true }).press("Enter");
+  await page.getByRole("button", { name: "Open AI assistant", exact: true }).press("Enter");
   const featureMode = page.getByRole("button", { name: "Add features to this part", exact: true });
   await reachable(featureMode); await featureMode.press("Enter");
   const panel = page.getByLabel("AI feature additions", { exact: true });

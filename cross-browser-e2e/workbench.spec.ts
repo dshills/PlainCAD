@@ -1,6 +1,7 @@
 import { expect, test, type Page, type Locator } from "@playwright/test";
 import { readFile, writeFile } from "node:fs/promises";
 import { stlSignedVolume } from "../e2e/aiAcceptanceHelpers";
+import { openNewPartMenu } from "../e2e/newPartWorkflow";
 
 async function fileMenu(page: Page) {
   const menu = page.locator(".file-menu");
@@ -11,7 +12,7 @@ async function nativeVolume(page: Page) {
   const component = page.getByRole("button", { name: "Activate component Browser bracket", exact: true });
   await expect(component).toBeVisible();
   if (await component.getAttribute("aria-pressed") !== "true") await component.click();
-  await page.locator(".body-row").getByRole("button", { name: "Extrude 1", exact: true }).click();
+  await page.locator(".body-row").getByRole("button", { name: "Browser bracket", exact: true }).click();
   await page.getByRole("button", { name: "Properties", exact: true }).click();
   await page.getByLabel("Task panel").selectOption("inspector");
   await expect(page.getByText("Solids", { exact: true }).locator("..").locator("dd")).toHaveText("1");
@@ -60,6 +61,7 @@ test("keyboard-assisted non-template Draw → Make solid → native save/open/ST
   const response = await page.goto("/");
   expect(response?.headers()["content-security-policy"]).toContain("worker-src 'self'");
   await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+  await openNewPartMenu(page);
   const name = page.getByLabel("Part name", { exact: true });
   await name.fill("Browser bracket");
   // macOS WebKit follows Safari's default Option-Tab policy for button traversal.
@@ -75,10 +77,6 @@ test("keyboard-assisted non-template Draw → Make solid → native save/open/ST
   await page.getByLabel("Draft height", { exact: true }).fill("20mm");
   await page.getByLabel("Draft height", { exact: true }).press("Enter");
   await page.getByRole("button", { name: "Finish Sketch", exact: true }).press("Enter");
-  const handoff = page.getByRole("region", { name: "Make solid from finished sketch" });
-  const make = handoff.getByRole("button", { name: "Make solid", exact: true });
-  await expect(make).toBeEnabled();
-  await make.press("Enter");
   const dialog = page.getByRole("dialog", { name: "Extrude", exact: true });
   await expect(dialog).toBeVisible();
   await dialog.getByLabel("Extrude distance", { exact: true }).fill("6mm");
@@ -122,6 +120,7 @@ test("compact Workbench start and dock controls stay reachable with keyboard and
   const desktopPreference = await page.evaluate(() => localStorage.getItem("plaincad.workbench.v1"));
   await expect(parts).toHaveAttribute("aria-expanded", "false");
   await expect(details).toHaveAttribute("aria-expanded", "false");
+  await openNewPartMenu(page);
   await reachable(partName);
   await reachable(draw);
   expect(await page.evaluate(() => localStorage.getItem("plaincad.workbench.v1"))).toBe(desktopPreference);
@@ -130,12 +129,13 @@ test("compact Workbench start and dock controls stay reachable with keyboard and
     await page.locator(".workbench-settings > summary").click();
     await page.getByLabel("UI theme").selectOption(theme);
     await page.locator(".workbench-settings > summary").click();
+    await openNewPartMenu(page);
     await partName.focus();
     await partName.press(browserName === "webkit" && process.platform === "darwin" ? "Alt+Tab" : "Tab");
     await expect(draw).toBeFocused();
     const colors = await start.evaluate((element) => {
       const button = element.querySelector(".project-start-actions > button")!;
-      const text = element.querySelector("p")!;
+      const text = element.querySelector(".project-start-name")!;
       return { text: getComputedStyle(text).color, surface: getComputedStyle(element).backgroundColor,
         action: getComputedStyle(button).color, actionSurface: getComputedStyle(button).backgroundColor,
         outline: getComputedStyle(button).outlineStyle, outlineWidth: getComputedStyle(button).outlineWidth };
@@ -161,6 +161,7 @@ test("compact Workbench start and dock controls stay reachable with keyboard and
   await page.getByRole("button", { name: "Close Details", exact: true }).press("Enter");
   await expect(details).toBeFocused();
   await expect(details).toHaveAttribute("aria-expanded", "false");
+  await openNewPartMenu(page);
   await reachable(partName);
   await reachable(draw);
   // Equivalent layout space to a 1366 × 900 desktop viewport reduced at 200%

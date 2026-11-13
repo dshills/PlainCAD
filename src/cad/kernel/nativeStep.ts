@@ -53,6 +53,9 @@ export function assertStepRoundTrip(before: StepGeometryProof[], after: StepGeom
   }
 }
 let taskCounter = 0;
+// The installed Wasm bindings can pass longer filenames incorrectly to OCCT.
+// Use the same known short name for both native calls and route it to the task file.
+const NATIVE_STEP_FILENAME = "model.step";
 const OPEN_ACCESS_MASK = 3, OPEN_WRITE_ONLY = 1, OPEN_CREATE = 64, OPEN_TRUNCATE = 512;
 interface StepFileStream { path: string; fd: number; position: number }
 /** Installed 1.1.1 routes filename strings incorrectly through std::string.
@@ -100,7 +103,7 @@ export function exportNativeStep(oc: Record<string, any>, shapes: readonly any[]
       const writer = scope.use(new oc.STEPControl_Writer_1());
       const done = oc.IFSelect_ReturnStatus.IFSelect_RetDone.value;
       for (const shape of shapes) if (writer.Transfer(shape, oc.STEPControl_StepModelType.STEPControl_AsIs, true).value !== done) throw new Error("Native STEP transfer failed. No file was exported.");
-      if (routedNativeFileCall(oc, path, "write", () => writer.Write("model.step")).value !== done) throw new Error("Native STEP writing failed. No file was exported.");
+      if (routedNativeFileCall(oc, path, "write", () => writer.Write(NATIVE_STEP_FILENAME)).value !== done) throw new Error("Native STEP writing failed. No file was exported.");
       const size = oc.FS.stat(path).size;
       if (!Number.isSafeInteger(size) || size <= 0 || size > STEP_EXPORT_MAX_BYTES) throw new Error("STEP file is empty or exceeds the 32 MiB file resource limit.");
       const encoded = oc.FS.readFile(path) as Uint8Array;
@@ -108,7 +111,7 @@ export function exportNativeStep(oc: Record<string, any>, shapes: readonly any[]
       const text = new TextDecoder().decode(encoded);
       if (!text.startsWith("ISO-10303-21;") || !text.trimEnd().endsWith("END-ISO-10303-21;") || !/SI_UNIT\s*\(\s*\.MILLI\.\s*,\s*\.METRE\.\s*\)/.test(text)) throw new Error("Native STEP file is malformed or does not use millimetres.");
       const reader = scope.use(new oc.STEPControl_Reader_1());
-      if (routedNativeFileCall(oc, path, "read", () => reader.ReadFile("model.step")).value !== done || reader.NbRootsForTransfer() !== shapes.length || reader.TransferRoots() !== shapes.length || reader.NbShapes() !== shapes.length) throw new Error("Native STEP round trip lost or merged body roots.");
+      if (routedNativeFileCall(oc, path, "read", () => reader.ReadFile(NATIVE_STEP_FILENAME)).value !== done || reader.NbRootsForTransfer() !== shapes.length || reader.TransferRoots() !== shapes.length || reader.NbShapes() !== shapes.length) throw new Error("Native STEP round trip lost or merged body roots.");
       const after = shapes.map((_shape, index) => geometryProof(oc, scope.use(reader.Shape(index + 1))));
       assertStepRoundTrip(before, after);
       return { bytes: encoded.slice().buffer, before, after, units: "mm" };
@@ -132,12 +135,11 @@ export function importNativeStep(oc: Record<string, any>, source: string): { sha
     return withDisposableScope(scope => {
       const reader = scope.use(new oc.STEPControl_Reader_1());
       const done = oc.IFSelect_ReturnStatus.IFSelect_RetDone.value;
-      routedNativeFileCall(oc, path, "read", () => {
-        if (reader.ReadFile("source.step").value !== done)
-          throw new Error("OpenCascade could not read the STEP file. Re-export the source solid.");
-        if (reader.NbRootsForTransfer() !== 1 || reader.TransferRoots() !== 1 || reader.NbShapes() !== 1)
-          throw new Error("Import needs one STEP root containing one solid. Export assembly parts individually.");
-      });
+      const read = routedNativeFileCall(oc, path, "read", () => reader.ReadFile(NATIVE_STEP_FILENAME));
+      if (read.value !== done)
+        throw new Error("OpenCascade could not read the STEP file. Re-export the source solid.");
+      if (reader.NbRootsForTransfer() !== 1 || reader.TransferRoots() !== 1 || reader.NbShapes() !== 1)
+        throw new Error("Import needs one STEP root containing one solid. Export assembly parts individually.");
       const shape = scope.use(reader.Shape(1));
       if (!shape || shape.IsNull() || shape.ShapeType().value !== oc.TopAbs_ShapeEnum.TopAbs_SOLID.value)
         throw new Error("Import needs a closed STEP solid. Assemblies, compounds and open surfaces are unsupported.");

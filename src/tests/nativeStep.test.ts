@@ -35,7 +35,12 @@ describe("installed native STEP writer/reader geometry and ownership", () => {
   it("reimports curved subtractive solids and separately transferred overlapping placed bodies with exact volumes and world bounds", () => {
     vi.stubGlobal("document", undefined);
     const box = kernel.createBox(20, 10, 10);
-    const circle = addCircleAt(createXySketch(), "0mm", "0mm", "2mm"), profile = detectProfiles(solveSketch(circle, {})).profiles[0];
+    // This fixture needs an authored circle and tests STEP transfer of the cut solid.
+    const circle = addCircleAt({ ...createXySketch(), solveMode: "validate" }, "0mm", "0mm", "2mm");
+    const solved = solveSketch(circle, {});
+    expect(solved.errors).toEqual([]);
+    const [profile] = detectProfiles(solved).profiles;
+    expect(profile).toBeDefined();
     const tool = kernel.extrudeProfile(profile, 10, sketchPlaneTransform("XY")), cut = kernel.cut(box, tool);
     const posed = kernel.placeShape(cut, { translation: [31, -7, 9], rotation: [0, 0, Math.PI / 2] });
     const overlap = kernel.cloneShape(posed);

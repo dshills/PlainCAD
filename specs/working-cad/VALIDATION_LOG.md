@@ -11,8 +11,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Date: 2026-11-13.
 - Change: HDR studio lighting, native close-up meshes, CAD edges, studio effects, component finishes and fixed-size PNGs.
 - Result: type checks, 1688 unit/component tests plus the corrected AI fixture rerun, build/bundle budget (72 bundles, largest 496.93 kB), 342 development cases plus the corrected studio suite rerun, and 66 production cases passed.
-- Completed items since that full gate: **2**.
-- Next full gate: after 3 more completed items.
+- Completed items since that full gate: **3**.
+- Next full gate: after 2 more completed items.
 
 ## Completed batch
 
@@ -1654,3 +1654,26 @@ and a longer test timeout (245 tests). The remaining reduced gate stages passed
 separately: the build budget (72 bundles, largest 496.93 kB), five development
 smoke cases and 14 production smoke cases. The existing linked-sketch Vite
 import advisory remains.
+
+## Linux CI and cross-browser workflow repairs (2026-11-13)
+
+GitHub runs 43484674885 and 43478928011 reported two native STEP failures,
+stale Workbench workflow expectations, and missing Firefox WebGL2. The STEP
+adapter now uses one short native filename for reads and writes and restores its
+file hook before transfer. The curved export fixture resolves its authored
+circle without a timing-dependent constraint solve. Browser tests follow the
+current New part, body naming and AI controls, and seed the Focused layout on
+the running server's origin. Linux Firefox uses Xvfb and Mesa. CI runs the
+344 development tests across four disjoint Chromium shards, with production
+checks and per-engine AI jobs running independently.
+
+Independent internal review and actionlint passed. Reduced validation passed
+Node 22 type checks, all 1689 unit/component tests, the 500 kB build budget
+(72 bundles, largest 496.93 kB), five development and 14 production smoke
+cases. Local validation used one unit worker, up to two retries and a longer
+unit test timeout under machine contention, plus an alternate development
+port. Linux x64 Node 22 passed all nine STEP cases with retries enabled.
+All 15 Workbench browser cases passed across the initial run and targeted
+reruns, and four focused AI/workspace cases passed on local Firefox and WebKit.
+Linux Firefox created WebGL2 under Xvfb. The emulated Linux AI workflow timed
+out during kernel startup. The existing linked-sketch import advisory remains.

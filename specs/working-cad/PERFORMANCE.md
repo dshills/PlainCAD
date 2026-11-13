@@ -28,7 +28,7 @@ proofs continue to contribute to total rebuild time.
 Run `npm run test:browser -- e2e/performance.spec.ts` after installing Chromium.
 The release gate includes this test. Playwright writes `performance.json` under
 the test's `test-results/` directory and attaches it to the test; GitHub Actions
-uploads that directory as `browser-results` even when a later check fails.
+uploads that directory as `chromium-modeling-<shard>` even if a check fails.
 
 The fixed scenario has one parameter, two XY sketches, a 12mm rectangle extrusion,
 and a real native circular through-cut. After kernel readiness, five width-edit
@@ -93,7 +93,7 @@ other browsers still need broader coverage.
 
 After `npm run build`, run `npm run test:production -- production-e2e/performance.spec.ts`.
 The release gate also runs this benchmark, and CI includes its `performance.json`
-and STLs under `test-results/production/` in the existing `browser-results` artifact.
+and STLs under `test-results/production/` in the `production-browser-results` artifact.
 Both benchmarks import the same controlled fixture and use five warmup edits,
 twenty measured edits, one export warmup and ten measured exports.
 

@@ -31,6 +31,8 @@ export default defineConfig({
       use: {
         ...devices["Desktop Firefox"],
         viewport: { width: 1600, height: 1000 },
+        // Linux CI supplies a virtual display for Firefox's WebGL2 context.
+        headless: !(process.env.CI && process.platform === "linux"),
       },
     },
     {

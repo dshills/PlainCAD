@@ -10,7 +10,10 @@ import {
 import { applyExtrusion } from "./extrudeWorkflow";
 // Keep minimal-workspace compatibility coverage separate from the new default workbench suite.
 test.use({
-  storageState: focusedWorkspaceStorageState("http://127.0.0.1:5279"),
+  storageState: async ({ baseURL }, use) => {
+    if (!baseURL) throw new Error("The focused workspace tests require a base URL.");
+    await use(focusedWorkspaceStorageState(baseURL));
+  },
 });
 async function volume(page: Page, expected: number) {
   await expect(async () => {

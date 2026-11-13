@@ -639,6 +639,10 @@ npm run test:cross-browser
 npm run test:ai:browser
 ```
 
+GitHub Actions runs Firefox with a virtual display and Mesa software rendering
+so the browser can create a WebGL2 context. The development Chromium suite
+runs in four shards and the production suite runs in its own job.
+
 Run focused tests with `npm test -- src/tests/document.test.ts`. Test suites own
 their server ports and do not reuse an already-running server. Stop `npm run preview`
 on 5280 before production tests, `check:item`, or `release:check`; the two suites on 5281 must run
