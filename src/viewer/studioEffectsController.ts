@@ -13,13 +13,14 @@ export function createStudioEffectsController(renderer: THREE.WebGLRenderer, sce
     pending ??= import("./studioEffects").then(({ createStudioEffects }) => {
       if (!disposed) {
         effects = createStudioEffects();
-        invalidate();
       }
     }).catch(error => {
       if (!disposed) {
         unavailable = true;
         console.warn("Studio effects could not load.", error);
       }
+    }).finally(() => {
+      if (!disposed) invalidate();
     });
     return pending;
   }
@@ -27,6 +28,7 @@ export function createStudioEffectsController(renderer: THREE.WebGLRenderer, sce
     Boolean(settings && (settings.ambientOcclusion || settings.groundShadow));
 
   return {
+    isLoading: (settings: StudioEffectsSettings) => enabled(settings) && Boolean(pending && !effects && !unavailable),
     async ready(settings?: StudioEffectsSettings) {
       if (!enabled(settings)) return;
       await prepare();

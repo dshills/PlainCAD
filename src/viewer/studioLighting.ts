@@ -8,6 +8,7 @@ export function createStudioLighting(scene: THREE.Scene, renderer: THREE.WebGLRe
   let disposed = false;
   let factory: typeof import("./studioEnvironment").createStudioEnvironment | undefined;
   let pending: Promise<void> | undefined;
+  let loading = false;
 
   const applyEnvironment = () => {
     if (!current || !factory || disposed) return;
@@ -32,15 +33,19 @@ export function createStudioLighting(scene: THREE.Scene, renderer: THREE.WebGLRe
       }
       if (factory) applyEnvironment();
       else if (!pending) {
+        loading = true;
         pending = import("./studioEnvironment").then(module => {
           factory = module.createStudioEnvironment;
           applyEnvironment();
-          if (!disposed) invalidate();
         }).catch(error => {
           if (!disposed) console.warn("Studio environment could not load. Direct lights remain available.", error);
+        }).finally(() => {
+          loading = false;
+          if (!disposed) invalidate();
         });
       }
     },
+    isLoading: () => Boolean(current && loading),
     async ready() {
       await pending;
       if (current && !scene.environment)

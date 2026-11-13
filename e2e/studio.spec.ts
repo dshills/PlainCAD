@@ -36,6 +36,51 @@ async function idle(page: Page) {
   return settled;
 }
 
+test("render status tracks studio loading and fine detail without blocking viewport controls", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const lighting = (url: URL) => url.pathname.endsWith("/studioEnvironment.ts");
+  const detail = (url: URL) => url.pathname.includes("extrudePreviewWorker") && url.searchParams.has("worker_file");
+  let releaseLighting!: () => void, releaseDetail!: () => void;
+  const lightingGate = new Promise<void>(resolve => { releaseLighting = resolve; });
+  const detailGate = new Promise<void>(resolve => { releaseDetail = resolve; });
+  await page.route(lighting, async route => { await lightingGate; await route.continue(); });
+  await page.route(detail, async route => { await detailGate; await route.abort(); });
+  try {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Load parametric box template", exact: true }).click();
+    await ready(page, 80000);
+    const render = page.getByRole("button", { name: "Render view", exact: true });
+    const model = page.getByRole("button", { name: "Model view", exact: true });
+    const status = page.locator(".viewer-render-status[role='status']");
+    await expect(status).toBeEmpty();
+    await render.click();
+    await expect(status).toHaveText("Preparing studio render…");
+    expect(await status.evaluate(node => getComputedStyle(node, "::before").animationName)).toBe("none");
+    await model.click();
+    await expect(status).toBeEmpty();
+    await render.click();
+    await expect(status).toHaveText("Preparing studio render…");
+    releaseLighting();
+    await expect(status).toBeEmpty();
+    await expect.poll(async () => (await viewer(page)).studioLighting?.ready).toBe(true);
+
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.getByLabel("3D modeling canvas", { exact: true }).hover();
+    await page.mouse.wheel(0, -1300);
+    await expect(status).toHaveText("Rendering fine detail…");
+    expect(await status.evaluate(node => getComputedStyle(node, "::before").animationName)).toBe("viewer-render-spin");
+    await expect(status).toHaveCSS("pointer-events", "none");
+    releaseDetail();
+    await expect(status).toBeEmpty();
+    await expect.poll(async () => (await viewer(page)).displayDetail?.status).toBe("unavailable");
+    expect((await viewer(page)).meshes).toHaveLength(1);
+    await idle(page);
+  } finally {
+    releaseLighting();
+    releaseDetail();
+  }
+});
+
 test("studio finishes/backdrops reuse native buffers, preserve history and camera, export actual pixels, and reset on reopen", async ({ page }, info) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));

@@ -23,7 +23,7 @@ import { installSketchPlanePicking } from "./sketchPlanePicking";
 import type { RebuildResult } from "../cad/worker/workerProtocol";
 import { useThemeState } from "../state/useThemeState";
 import { viewerThemeColors } from "../ui/themes/themes";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { registerViewerDiagnostics } from "./viewerDiagnostics";
@@ -85,6 +85,7 @@ const MOVEMENT_RESTORE_DELAY_MS = 50;
 
 export function CadViewer() {
   const theme = useThemeState((state) => state.theme);
+  const [renderStatus, setRenderStatus] = useState("");
   const hostRef = useRef<HTMLDivElement>(null);
   const frameListeners = useRef(new Set<() => void>());
   const subscribeFrames = useRef((listener: () => void) => {
@@ -220,8 +221,17 @@ export function CadViewer() {
       const visibleHeight = 2 * camera.position.distanceTo(controls.target) * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
       return visibleHeight <= span * .8;
     };
+    let shownRenderStatus = "";
+    const publishRenderStatus = (status: string) => {
+      if (status === shownRenderStatus) return;
+      shownRenderStatus = status;
+      setRenderStatus(status);
+    };
     const frames = new DemandRenderer(() => {
-      if (!host.clientWidth || !host.clientHeight || renderer.getContext().isContextLost()) return false;
+      if (!host.clientWidth || !host.clientHeight || renderer.getContext().isContextLost()) {
+        publishRenderStatus("");
+        return false;
+      }
       const changed = controls.update();
       if (moving && !interacting && performance.now() - lastInput >= MOVEMENT_RESTORE_DELAY_MS) {
         moving = false;
@@ -230,8 +240,12 @@ export function CadViewer() {
       refinement.sync();
       const fine = wantsFine();
       const frame = fine ? refinementFrame() : undefined;
-      if (frame && !useCadStore.getState().fileBusy) void refinement.request(frame);
+      const state = useCadStore.getState(), view = useViewerState.getState();
+      const refining = frame && !state.fileBusy && refinement.request(frame);
       drawScene(camera, fine, changed);
+      const render = view.session === state.documentSession && view.presentationMode === "render";
+      const loadingStudio = studioLighting.isLoading() || studioEffects.isLoading(view.studioEffects);
+      publishRenderStatus(!render ? "" : loadingStudio ? "Preparing studio render…" : refining ? "Rendering fine detail…" : "");
       frameListeners.current.forEach((listener) => listener());
       return changed || (moving && !interacting);
     });
@@ -807,7 +821,12 @@ export function CadViewer() {
     const hit = ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 0, 1), 0), new THREE.Vector3());
     if (!hit) { useCadStore.getState().setFileError("This view cannot place a part on the XY ground plane. Use an angled or top view, or Insert at origin."); return; }
     void beginLibraryPlacement(id, { x: hit.x, y: hit.y, z: hit.z });
-  }}>{presentationMode === "model" && (!aiPreview || aiPreviewMode === "before") ? <ModelMeasurementReadout project={dimensionProjector.current} subscribeFrames={subscribeFrames.current} /> : null}{presentationMode === "model" && (!aiPreview || aiPreviewMode === "before") && !inspection.picking ? <SolidDimensionOverlay dimensions={dimensions} project={dimensionProjector.current} subscribeFrames={subscribeFrames.current} /> : null}<ViewerToolbar hasGeometry={(aiPreviewMode === "after" && currentAiCanvasPreview(useCadStore.getState(), aiPreview) ? aiPreview!.result.meshes : meshes).some((mesh) => !hidden.includes(mesh.bodyId))} /></div>;
+  }}>
+    <div className="viewer-render-status" role="status">{presentationMode === "render" ? renderStatus : ""}</div>
+    {presentationMode === "model" && (!aiPreview || aiPreviewMode === "before") ? <ModelMeasurementReadout project={dimensionProjector.current} subscribeFrames={subscribeFrames.current} /> : null}
+    {presentationMode === "model" && (!aiPreview || aiPreviewMode === "before") && !inspection.picking ? <SolidDimensionOverlay dimensions={dimensions} project={dimensionProjector.current} subscribeFrames={subscribeFrames.current} /> : null}
+    <ViewerToolbar hasGeometry={(aiPreviewMode === "after" && currentAiCanvasPreview(useCadStore.getState(), aiPreview) ? aiPreview!.result.meshes : meshes).some((mesh) => !hidden.includes(mesh.bodyId))} />
+  </div>;
 }
 
 function applyClipping(group: THREE.Group, plane: THREE.Plane | undefined) {

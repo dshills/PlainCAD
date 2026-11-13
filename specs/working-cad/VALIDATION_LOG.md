@@ -11,8 +11,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Date: 2026-11-13.
 - Change: HDR studio lighting, native close-up meshes, CAD edges, studio effects, component finishes and fixed-size PNGs.
 - Result: type checks, 1688 unit/component tests plus the corrected AI fixture rerun, build/bundle budget (72 bundles, largest 496.93 kB), 342 development cases plus the corrected studio suite rerun, and 66 production cases passed.
-- Completed items since that full gate: **0**.
-- Next full gate: after 5 more completed items.
+- Completed items since that full gate: **1**.
+- Next full gate: after 4 more completed items.
 
 ## Completed batch
 
@@ -1623,3 +1623,17 @@ advisory remains. The development suite passed 342 of 343 cases. The studio
 resource check now measures after the first PNG warms the fine mesh cache and
 verifies subsequent exports reuse resources. All three studio tests passed on
 rerun. All 66 production browser cases passed. The cadence resets to zero.
+
+## Render loading indicator (2026-11-13)
+
+Render displays a nonblocking status and spinner while studio lighting or
+effects load and while a close-up mesh is being prepared. The live status
+clears when work settles and respects reduced-motion preferences.
+
+Independent internal review approved the change. Five focused Chromium tests
+passed, including delayed studio loading, switching views, reduced motion,
+and failed fine detail. Type checks passed. The reduced gate's full unit run
+passed 1684 of 1689 cases. All five affected files passed on an isolated rerun
+(44 tests). The remaining reduced gate stages passed separately, including the
+build (72 bundles, largest 496.93 kB), five development smoke cases, and 14
+production smoke cases. The existing linked-sketch import advisory remains.

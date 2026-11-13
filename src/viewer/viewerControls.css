@@ -4,3 +4,37 @@
 .viewer-controls button[aria-pressed="true"] { border-color: var(--accent); background: var(--selected-bg); }
 .viewer-controls { max-width: calc(100% - 24px); flex-wrap: wrap; }
 .studio-controls[role="alert"] { position: absolute; top: 12px; right: 12px; z-index: 6; width: 272px; max-width: calc(100% - 24px); padding: 12px; background: var(--panel); color: var(--text); border: 1px solid var(--border); font-size: 12px; }
+
+.viewer-render-status {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 7;
+  pointer-events: none;
+}
+.viewer-render-status:not(:empty) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 24px);
+  padding: 6px 10px;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control, 4px);
+  font-size: 12px;
+}
+.viewer-render-status:not(:empty)::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: viewer-render-spin 0.8s linear infinite;
+}
+@keyframes viewer-render-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .viewer-render-status:not(:empty)::before { animation: none; }
+}
