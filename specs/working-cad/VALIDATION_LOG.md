@@ -11,8 +11,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Date: 2026-11-12.
 - Change: metric and Unified inch fastener and hole presets, native threads, and native lead screw/nut pairs.
 - Result: type checks, 1680 unit/component tests in 216 files, build/bundle budget (70 bundles, largest 496.21 kB), 337 development browser cases plus three corrected cases rerun, and 62 production browser cases passed.
-- Completed items since that full gate: **0**.
-- Next full gate: after five more completed items.
+- Completed items since that full gate: **1**.
+- Next full gate: after four more completed items.
 
 ## Completed batch
 
@@ -1518,3 +1518,24 @@ and Export commands after a lead screw test timed out on a redundant palette
 click. All three cases passed on rerun. The App component suite was rerun
 after the palette fix. The final build passed with 70 bundles, largest
 496.21 kB. All 62 production browser tests passed (4.7 minutes). The existing linked-sketch import advisory remains.
+
+## Threaded hardware in the project gallery (2026-11-13)
+
+Added the four demonstrated editable hardware projects and their native PNG
+covers. The numbered examples use the existing gallery catalog, search, import,
+and replacement flow. Small project files are emitted as same-origin assets so
+both gallery open and live preview can fetch them under production CSP.
+
+Independent internal review approved the final changes, including the asset
+packaging fix. The reviewer verified that all four assets match the demonstrated
+projects, fit the live rotation triangle budget, and accept representative
+feature edits with valid native rebuilds.
+
+The final `npm run check:item` passed type checks, 1680 unit/component tests in
+216 files, the build budget (70 bundles, largest 496.21 kB), five development
+smoke cases, and 14 production smoke cases. An earlier production inspector
+assertion timed out and passed on the final gate rerun. The existing Vite
+linked-sketch import advisory remains. Focused gallery checks passed one
+development case and five production cases. These checked all four built covers,
+editable projects, saved views, thread definitions, and two native solids at
+the expected volumes per project. Cadence is one item since the full gate.

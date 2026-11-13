@@ -1,8 +1,9 @@
 # PlainCAD example projects
 
-Ten distinct editable mechanical designs, from two parts to forty. All were
-rebuilt with the real OpenCascade browser worker, edited through a driving
-parameter, saved/reopened, and exported as separate validated STL files.
+The built-in gallery has fourteen editable projects. The original ten mechanical
+designs range from two parts to forty. Each was rebuilt with the OpenCascade
+browser worker, edited through a driving parameter, saved and reopened, and
+exported as separate validated STL files.
 These are learning and workflow examples, not production-qualified mechanisms.
 
 ## Open and explore
@@ -12,8 +13,9 @@ These are learning and workflow examples, not production-qualified mechanisms.
 2. In PlainCAD, choose **File → Open project**, or drop the file onto the workspace.
 3. Open **Project** on the left. Search for a component, then **Activate** or
    **Isolate** it. Use **All tools → Show All Bodies** to restore the entire design.
-4. Open the **Parameters** tab and try the specific edit in the table. Undo restores
-   the original. The tested edits are examples, not a guarantee for arbitrary values.
+4. For the original ten designs, open **Parameters** and try the edit in the
+   table. For the threaded projects, select a feature in **History** and choose
+   **Edit Feature**. Undo restores the original.
 5. Use **Fit** (or `F`) after opening a dock. On a compact viewport, find **Fit View**
    through **All tools**. Open **History** to inspect sketches and feature steps.
 6. **Save** downloads an editable local project. **File → Export STL** opens body
@@ -21,7 +23,8 @@ These are learning and workflow examples, not production-qualified mechanisms.
    preserves world positions. **File → Download project view PNG** captures the view;
    select a body for an isolated part PNG, or open a sketch for its drawing PNG.
 
-Parts means modeled component bodies; each project also has an empty root named
+In the original ten designs, parts means modeled component bodies. Each of those
+projects has an empty root named
 **Project reference**. Components share project coordinates. There are no assembly
 joints, motion, placement transforms, nested assemblies, threads, or engineering
 load calculations. Clearance and inter-body interference are not qualified.
@@ -167,9 +170,27 @@ No application runtime code changed, so the full release suite was not rerun.
 
 [Read the screenshot-backed workflow audit](WORKFLOW_AUDIT.md) for the manual
 sketch-to-solid walkthrough, complex-project navigation, and prioritized UI fixes.
-The ten gallery projects were authored using the existing immutable document
+The original ten gallery projects were authored using the existing immutable document
 helpers; they were not all drawn by hand through the UI. No AI provider call was
 needed to create their geometry.
 
 The earlier single-body [ORBIT drive housing](orbit-drive-housing.pcaddoc) remains
 available as an additional example.
+
+## Threaded hardware
+
+Open **File → Project gallery** and search by name, or download the editable files.
+Each includes a saved **Thread detail** view. Select a thread feature in
+**History** and choose **Edit Feature** to explore its settings. The components
+are posed apart so you can see the internal and external threads. The profiles
+use nominal geometry.
+
+| Project | Native render | Modeled geometry |
+|---|---|---|
+| [Trapezoidal lead screw and nut](11-trapezoidal-lead-screw.pcaddoc) | [PNG](images/11-trapezoidal-lead-screw.png) | Right-hand, four-start Ø8 mm screw with 2 mm pitch and 8 mm lead |
+| [Left-hand Acme lead screw and nut](12-acme-lead-screw.pcaddoc) | [PNG](images/12-acme-lead-screw.png) | Two-start Ø⅜ in screw with 0.08 in pitch and 0.16 in lead |
+| [M6 socket screw and tapped collar](13-m6-threaded-pair.pcaddoc) | [PNG](images/13-m6-threaded-pair.png) | M6 × 1 external and internal threads |
+| [Quarter-inch UNC screw and tapped block](14-quarter-inch-unc.pcaddoc) | [PNG](images/14-quarter-inch-unc.png) | 1/4-20 UNC external and internal threads |
+
+The production gallery acceptance test loads each screenshot and rebuilds its
+project as two valid native solids with the expected volumes.

@@ -66,10 +66,11 @@ flange, fillet/chamfer treatments, a recessed chamber, bearing bore, counterbore
 mounting and cover holes, and relief slots. [Open the editable example](docs/examples/orbit-drive-housing.pcaddoc)
 with **File → Open**, or drop the project file onto the workspace.
 
-Explore the [ten-project example gallery](docs/examples/README.md), from a two-part
-cable guide to a 40-part rotary fixture, with editable files, native PNG previews,
-[geometry validation](docs/examples/VALIDATION.json), and a
-[workflow usability audit](docs/examples/WORKFLOW_AUDIT.md).
+Explore the [example gallery](docs/examples/README.md) for editable projects and
+native renders. It includes a two-part cable guide, a 40-part rotary fixture, and
+[four threaded hardware examples](docs/examples/README.md#threaded-hardware).
+The original ten designs have recorded [geometry validation](docs/examples/VALIDATION.json)
+and a [workflow usability audit](docs/examples/WORKFLOW_AUDIT.md).
 
 Successful builds show underconstrained-sketch freedom as optional guidance in
 Issues. Kernel, profile, parameter, and worker problems remain prominent.
@@ -240,7 +241,7 @@ result invalidate Apply. Finish or cancel an active task before starting another
 
 ### Workspace and themes
 
-Open **File → Project gallery** to browse ten editable examples with real model
+Open **File → Project gallery** to browse fourteen editable examples with real model
 images, part/feature counts and complexity labels. Enable live previews, then hover or focus a card to
 inspect a bounded native rotation; reduced-motion settings keep it still. Recently
 saved projects are the last five local manual-save copies in browser recovery

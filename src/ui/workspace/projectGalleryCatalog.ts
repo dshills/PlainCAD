@@ -1,4 +1,5 @@
-const projectUrls = import.meta.glob<string>("../../../docs/examples/[0-9]*.pcaddoc", { query: "?url", import: "default", eager: true });
+// Project files are fetched under connect-src 'self', including small examples.
+const projectUrls = import.meta.glob<string>("../../../docs/examples/[0-9]*.pcaddoc", { query: "?url&no-inline", import: "default", eager: true });
 const imageUrls = import.meta.glob<string>("../../../docs/examples/images/*.png", { query: "?url", import: "default", eager: true });
 export interface GalleryExample { id: string; name: string; description: string; parts: number; features: number; complexity: string; parameter: string; projectUrl: string; thumbnail: string }
 const rows = [
@@ -12,5 +13,9 @@ const rows = [
   ["08-belt-drive", "Twin-pulley drive cassette", "Stepped pulleys, bearings and windowed cover.", 18, 29, "Advanced", "pulley_height: 10 → 12 mm"],
   ["09-heat-exchanger", "Sixteen-tube heat exchanger", "Bored headers, side-plane tubes and guard.", 28, 37, "Highly complex", "tube_length: 148 → 152 mm"],
   ["10-rotary-fixture", "Rotary machining fixture", "Turned hub, slotted platter and four clamps.", 40, 68, "Highly complex", "platter_thickness: 14 → 16 mm"],
+  ["11-trapezoidal-lead-screw", "Trapezoidal lead screw and nut", "Right-hand, four-start thread with 2 mm pitch and 8 mm lead.", 2, 2, "Intermediate", "editing screw length in History"],
+  ["12-acme-lead-screw", "Left-hand Acme lead screw and nut", "Two-start, ⅜-inch lead screw with 0.08-inch pitch and a linked nut.", 2, 2, "Intermediate", "editing handedness in History"],
+  ["13-m6-threaded-pair", "M6 socket screw and tapped collar", "Metric M6 × 1 external and internal threads with a hex drive socket.", 2, 5, "Intermediate", "editing external thread length in History"],
+  ["14-quarter-inch-unc", "Quarter-inch UNC screw and tapped block", "1/4-20 UNC socket screw and a rectangular block with a modeled internal thread.", 2, 5, "Intermediate", "editing internal thread length in History"],
 ] as const;
 export const GALLERY_EXAMPLES: GalleryExample[] = rows.map(([id, name, description, parts, features, complexity, parameter]) => ({ id, name, description, parts, features, complexity, parameter, projectUrl: projectUrls[`../../../docs/examples/${id}.pcaddoc`], thumbnail: imageUrls[`../../../docs/examples/images/${id}.png`] }));

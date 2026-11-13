@@ -15,7 +15,7 @@ test("gallery previews actual example geometry without mutating the project, pro
   await page.getByRole("button", { name: "Project gallery", exact: true }).click();
   const gallery = page.getByRole("dialog", { name: "Project gallery", exact: true });
   await expect(gallery).toBeVisible();
-  await expect(gallery.getByRole("img")).toHaveCount(10);
+  await expect(gallery.getByRole("img")).toHaveCount(14);
   const cover = gallery.getByRole("img", { name: "Cable guide mount actual native CAD geometry" });
   await expect(async () => expect(await cover.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(100)).toPass();
   await gallery.getByLabel("Live native previews").check();

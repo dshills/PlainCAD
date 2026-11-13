@@ -1,0 +1,615 @@
+{
+  "components": {
+    "component_1d46bb50": {
+      "id": "component_1d46bb50",
+      "name": "Tapped block",
+      "placement": {
+        "rotation": [
+          0.25,
+          0.33,
+          -0.18
+        ],
+        "translation": [
+          8,
+          3,
+          0
+        ]
+      }
+    },
+    "component_8c5c803d": {
+      "id": "component_8c5c803d",
+      "name": "Root Component"
+    },
+    "component_e9c77c30": {
+      "id": "component_e9c77c30",
+      "name": "1/4-20 UNC socket screw",
+      "placement": {
+        "rotation": [
+          0,
+          1.32,
+          0.1
+        ],
+        "translation": [
+          -9,
+          0,
+          8
+        ]
+      }
+    }
+  },
+  "createdAt": "2026-11-13T14:50:22.041Z",
+  "displayUnits": {
+    "angle": "deg",
+    "length": "mm"
+  },
+  "features": [
+    {
+      "angle": {
+        "authoredUnit": "deg",
+        "expression": "360deg",
+        "unit": "deg"
+      },
+      "axis": {
+        "axis": "Z",
+        "type": "origin"
+      },
+      "componentId": "component_e9c77c30",
+      "createdAt": "2026-11-13T14:50:22.799Z",
+      "id": "feature_3b2bfa64",
+      "name": "Screw blank",
+      "operation": "newBody",
+      "profileId": "sketch_8b05ef68:profile:p1mix12n",
+      "sketchId": "sketch_8b05ef68",
+      "timelineStep": 2,
+      "type": "revolve"
+    },
+    {
+      "componentId": "component_e9c77c30",
+      "createdAt": "2026-11-13T14:50:22.801Z",
+      "direction": "negative",
+      "distance": {
+        "authoredUnit": "mm",
+        "expression": "0.1200000000in",
+        "unit": "mm"
+      },
+      "id": "feature_f0397b36",
+      "name": "Hex socket",
+      "operation": "cut",
+      "profileId": "sketch_2271f0f2:profile:p33wljl",
+      "sketchId": "sketch_2271f0f2",
+      "targetBodyIds": [
+        "body:feature_3b2bfa64"
+      ],
+      "timelineStep": 4,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_1d46bb50",
+      "createdAt": "2026-11-13T14:50:24.608Z",
+      "direction": "positive",
+      "distance": {
+        "authoredUnit": "mm",
+        "expression": "0.36in",
+        "unit": "mm"
+      },
+      "id": "feature_870e220e",
+      "name": "Tap-drilled stock",
+      "operation": "newBody",
+      "profileId": "sketch_357bb553:profile:p1am2hq5",
+      "sketchId": "sketch_357bb553",
+      "timelineStep": 6,
+      "type": "extrude"
+    },
+    {
+      "componentId": "component_e9c77c30",
+      "createdAt": "2026-11-13T14:50:25.616Z",
+      "hand": "right",
+      "id": "feature_7105a8ff",
+      "name": "External thread",
+      "side": "external",
+      "size": "1/4-20",
+      "targetBodyId": "body:feature_3b2bfa64",
+      "threadLength": {
+        "authoredUnit": "mm",
+        "expression": "0.375in",
+        "unit": "mm"
+      },
+      "threadOffset": {
+        "authoredUnit": "mm",
+        "expression": "0mm",
+        "unit": "mm"
+      },
+      "timelineStep": 7,
+      "type": "thread"
+    },
+    {
+      "componentId": "component_1d46bb50",
+      "createdAt": "2026-11-13T14:50:28.267Z",
+      "hand": "right",
+      "id": "feature_a7c0b239",
+      "name": "Internal thread",
+      "side": "internal",
+      "size": "1/4-20",
+      "targetBodyId": "body:feature_870e220e",
+      "threadLength": {
+        "authoredUnit": "mm",
+        "expression": "0.25in",
+        "unit": "mm"
+      },
+      "threadOffset": {
+        "authoredUnit": "mm",
+        "expression": "0mm",
+        "unit": "mm"
+      },
+      "timelineStep": 8,
+      "type": "thread"
+    }
+  ],
+  "id": "doc_075ef7c2",
+  "name": "Quarter-inch UNC screw and tapped block",
+  "parameters": {},
+  "rootComponentId": "component_8c5c803d",
+  "schemaVersion": 25,
+  "sketches": {
+    "sketch_2271f0f2": {
+      "componentId": "component_e9c77c30",
+      "constraints": [],
+      "createdAt": "2026-11-13T14:50:22.801Z",
+      "dimensions": [],
+      "entities": {
+        "line_000b7028": {
+          "endPointId": "point_c91eaab1",
+          "id": "line_000b7028",
+          "startPointId": "point_852b0c60",
+          "type": "line"
+        },
+        "line_669b96bf": {
+          "endPointId": "point_48706c4d",
+          "id": "line_669b96bf",
+          "startPointId": "point_49d3aae1",
+          "type": "line"
+        },
+        "line_984acb9f": {
+          "endPointId": "point_82a604a2",
+          "id": "line_984acb9f",
+          "startPointId": "point_c91eaab1",
+          "type": "line"
+        },
+        "line_9ea5aeef": {
+          "endPointId": "point_852b0c60",
+          "id": "line_9ea5aeef",
+          "startPointId": "point_48706c4d",
+          "type": "line"
+        },
+        "line_a97c2503": {
+          "endPointId": "point_1c9456b0",
+          "id": "line_a97c2503",
+          "startPointId": "point_82a604a2",
+          "type": "line"
+        },
+        "line_ff5a3ca9": {
+          "endPointId": "point_49d3aae1",
+          "id": "line_ff5a3ca9",
+          "startPointId": "point_1c9456b0",
+          "type": "line"
+        },
+        "point_1c9456b0": {
+          "id": "point_1c9456b0",
+          "type": "point",
+          "x": {
+            "authoredUnit": "mm",
+            "expression": "0.0541265877in",
+            "unit": "mm"
+          },
+          "y": {
+            "authoredUnit": "mm",
+            "expression": "-0.0937500000in",
+            "unit": "mm"
+          }
+        },
+        "point_48706c4d": {
+          "id": "point_48706c4d",
+          "type": "point",
+          "x": {
+            "authoredUnit": "mm",
+            "expression": "0.0541265877in",
+            "unit": "mm"
+          },
+          "y": {
+            "authoredUnit": "mm",
+            "expression": "0.0937500000in",
+            "unit": "mm"
+          }
+        },
+        "point_49d3aae1": {
+          "id": "point_49d3aae1",
+          "type": "point",
+          "x": {
+            "authoredUnit": "mm",
+            "expression": "0.1082531755in",
+            "unit": "mm"
+          },
+          "y": {
+            "authoredUnit": "mm",
+            "expression": "0.0000000000in",
+            "unit": "mm"
+          }
+        },
+        "point_82a604a2": {
+          "id": "point_82a604a2",
+          "type": "point",
+          "x": {
+            "authoredUnit": "mm",
+            "expression": "-0.0541265877in",
+            "unit": "mm"
+          },
+          "y": {
+            "authoredUnit": "mm",
+            "expression": "-0.0937500000in",
+            "unit": "mm"
+          }
+        },
+        "point_852b0c60": {
+          "id": "point_852b0c60",
+          "type": "point",
+          "x": {
+            "authoredUnit": "mm",
+            "expression": "-0.0541265877in",
+            "unit": "mm"
+          },
+          "y": {
+            "authoredUnit": "mm",
+            "expression": "0.0937500000in",
+            "unit": "mm"
+          }
+        },
+        "point_c91eaab1": {
+          "id": "point_c91eaab1",
+          "type": "point",
+          "x": {
+            "authoredUnit": "mm",
+            "expression": "-0.1082531755in",
+            "unit": "mm"
+          },
+          "y": {
+            "authoredUnit": "mm",
+            "expression": "0.0000000000in",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_2271f0f2",
+      "name": "Hex socket",
+      "plane": {
+        "base": "XY",
+        "offset": {
+          "authoredUnit": "mm",
+          "expression": "0.2500000000in",
+          "unit": "mm"
+        },
+        "type": "offset"
+      },
+      "solveMode": "driving",
+      "timelineStep": 3
+    },
+    "sketch_357bb553": {
+      "componentId": "component_1d46bb50",
+      "constraints": [
+        {
+          "entityIds": [
+            "line_e518ee93"
+          ],
+          "id": "constraint_ba408974",
+          "pointIds": [],
+          "type": "horizontal"
+        },
+        {
+          "entityIds": [
+            "line_018ae597"
+          ],
+          "id": "constraint_39803fd6",
+          "pointIds": [],
+          "type": "vertical"
+        },
+        {
+          "entityIds": [
+            "line_d3d1424d"
+          ],
+          "id": "constraint_89e795f0",
+          "pointIds": [],
+          "type": "horizontal"
+        },
+        {
+          "entityIds": [
+            "line_065c29bb"
+          ],
+          "id": "constraint_95e13f71",
+          "pointIds": [],
+          "type": "vertical"
+        }
+      ],
+      "createdAt": "2026-11-13T14:50:23.581Z",
+      "dimensions": [],
+      "entities": {
+        "circle_9a1a6364": {
+          "centerPointId": "point_822294c0",
+          "id": "circle_9a1a6364",
+          "radius": {
+            "authoredUnit": "mm",
+            "expression": "0.1005in",
+            "unit": "mm"
+          },
+          "type": "circle"
+        },
+        "line_018ae597": {
+          "endPointId": "point_0b1cd7c9",
+          "id": "line_018ae597",
+          "startPointId": "point_a2821160",
+          "type": "line"
+        },
+        "line_065c29bb": {
+          "endPointId": "point_f296a8db",
+          "id": "line_065c29bb",
+          "startPointId": "point_453f524b",
+          "type": "line"
+        },
+        "line_d3d1424d": {
+          "endPointId": "point_453f524b",
+          "id": "line_d3d1424d",
+          "startPointId": "point_0b1cd7c9",
+          "type": "line"
+        },
+        "line_e518ee93": {
+          "endPointId": "point_a2821160",
+          "id": "line_e518ee93",
+          "startPointId": "point_f296a8db",
+          "type": "line"
+        },
+        "point_0b1cd7c9": {
+          "id": "point_0b1cd7c9",
+          "type": "point",
+          "x": {
+            "authoredUnit": "mm",
+            "expression": "(-6.5mm) + (13mm)",
+            "unit": "mm"
+          },
+          "y": {
+            "authoredUnit": "mm",
+            "expression": "(-6mm) + (12mm)",
+            "unit": "mm"
+          }
+        },
+        "point_453f524b": {
+          "id": "point_453f524b",
+          "type": "point",
+          "x": {
+            "authoredUnit": "mm",
+            "expression": "-6.5mm",
+            "unit": "mm"
+          },
+          "y": {
+            "authoredUnit": "mm",
+            "expression": "(-6mm) + (12mm)",
+            "unit": "mm"
+          }
+        },
+        "point_822294c0": {
+          "id": "point_822294c0",
+          "type": "point",
+          "x": {
+            "authoredUnit": "mm",
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "authoredUnit": "mm",
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "point_a2821160": {
+          "id": "point_a2821160",
+          "type": "point",
+          "x": {
+            "authoredUnit": "mm",
+            "expression": "(-6.5mm) + (13mm)",
+            "unit": "mm"
+          },
+          "y": {
+            "authoredUnit": "mm",
+            "expression": "-6mm",
+            "unit": "mm"
+          }
+        },
+        "point_f296a8db": {
+          "id": "point_f296a8db",
+          "type": "point",
+          "x": {
+            "authoredUnit": "mm",
+            "expression": "-6.5mm",
+            "unit": "mm"
+          },
+          "y": {
+            "authoredUnit": "mm",
+            "expression": "-6mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_357bb553",
+      "name": "Tap-drill profile",
+      "plane": {
+        "plane": "XY",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 5
+    },
+    "sketch_8b05ef68": {
+      "componentId": "component_e9c77c30",
+      "constraints": [],
+      "createdAt": "2026-11-13T14:50:22.799Z",
+      "dimensions": [],
+      "entities": {
+        "line_49c21e33": {
+          "endPointId": "point_3269d76e",
+          "id": "line_49c21e33",
+          "startPointId": "point_3a1ff640",
+          "type": "line"
+        },
+        "line_550539c2": {
+          "endPointId": "point_dfc419b9",
+          "id": "line_550539c2",
+          "startPointId": "point_51c2d71e",
+          "type": "line"
+        },
+        "line_9ff9ef39": {
+          "endPointId": "point_3a1ff640",
+          "id": "line_9ff9ef39",
+          "startPointId": "point_dfc419b9",
+          "type": "line"
+        },
+        "line_be13eab7": {
+          "endPointId": "point_426f4108",
+          "id": "line_be13eab7",
+          "startPointId": "point_3269d76e",
+          "type": "line"
+        },
+        "line_be4ddefb": {
+          "endPointId": "point_33c87a48",
+          "id": "line_be4ddefb",
+          "startPointId": "point_426f4108",
+          "type": "line"
+        },
+        "line_d5c77cc9": {
+          "endPointId": "point_51c2d71e",
+          "id": "line_d5c77cc9",
+          "startPointId": "point_33c87a48",
+          "type": "line"
+        },
+        "point_3269d76e": {
+          "id": "point_3269d76e",
+          "type": "point",
+          "x": {
+            "authoredUnit": "mm",
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "authoredUnit": "mm",
+            "expression": "-(0.625in)",
+            "unit": "mm"
+          }
+        },
+        "point_33c87a48": {
+          "id": "point_33c87a48",
+          "type": "point",
+          "x": {
+            "authoredUnit": "mm",
+            "expression": "0.1250000000in",
+            "unit": "mm"
+          },
+          "y": {
+            "authoredUnit": "mm",
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "point_3a1ff640": {
+          "id": "point_3a1ff640",
+          "type": "point",
+          "x": {
+            "authoredUnit": "mm",
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "authoredUnit": "mm",
+            "expression": "0.2500000000in",
+            "unit": "mm"
+          }
+        },
+        "point_426f4108": {
+          "id": "point_426f4108",
+          "type": "point",
+          "x": {
+            "authoredUnit": "mm",
+            "expression": "0.1250000000in",
+            "unit": "mm"
+          },
+          "y": {
+            "authoredUnit": "mm",
+            "expression": "-(0.625in)",
+            "unit": "mm"
+          }
+        },
+        "point_51c2d71e": {
+          "id": "point_51c2d71e",
+          "type": "point",
+          "x": {
+            "authoredUnit": "mm",
+            "expression": "0.1875000000in",
+            "unit": "mm"
+          },
+          "y": {
+            "authoredUnit": "mm",
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "point_dfc419b9": {
+          "id": "point_dfc419b9",
+          "type": "point",
+          "x": {
+            "authoredUnit": "mm",
+            "expression": "0.1875000000in",
+            "unit": "mm"
+          },
+          "y": {
+            "authoredUnit": "mm",
+            "expression": "0.2500000000in",
+            "unit": "mm"
+          }
+        }
+      },
+      "id": "sketch_8b05ef68",
+      "name": "Fastener profile",
+      "plane": {
+        "plane": "XZ",
+        "type": "origin"
+      },
+      "solveMode": "driving",
+      "timelineStep": 1
+    }
+  },
+  "timelineCursor": 8,
+  "units": "metric",
+  "unitSettings": {
+    "angle": "deg",
+    "length": "mm"
+  },
+  "updatedAt": "2026-11-13T14:50:47.264Z",
+  "viewState": {
+    "namedViews": [
+      {
+        "cameraPosition": [
+          29.252742,
+          -31.097109,
+          38.063801
+        ],
+        "cameraTarget": [
+          -3.47452,
+          1.630153,
+          5.336539
+        ],
+        "cameraUp": [
+          0,
+          0,
+          1
+        ],
+        "id": "view_5c9e561b",
+        "name": "Thread detail"
+      }
+    ]
+  }
+}

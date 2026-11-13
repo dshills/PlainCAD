@@ -108,12 +108,12 @@ function GalleryContents() {
     </li>)}</ul>;
   }
   return <ModalDialog label="Project gallery" className="project-gallery" onDismiss={closeProjectGallery}>
-    <div className="gallery-heading"><div><p className="gallery-eyebrow">PLAINCAD / EXPLORE</p><h2>Make something yours.</h2><p>Open an editable design, explore its history, then change a parameter.</p></div><button type="button" onClick={closeProjectGallery}>Close gallery</button></div>
+    <div className="gallery-heading"><div><p className="gallery-eyebrow">PLAINCAD / EXPLORE</p><h2>Make something yours.</h2><p>Open an editable design and try the suggested edit.</p></div><button type="button" onClick={closeProjectGallery}>Close gallery</button></div>
     <div className="gallery-controls"><label>Find a project<input value={search} onChange={event => setSearch(event.target.value)} placeholder="Name or complexity"/></label><label><input type="checkbox" checked={live} disabled={reduced} onChange={event => { setLive(event.target.checked); setActive(undefined); }}/>Live native previews</label><span>{reduced ? "Reduced motion: static covers." : "Optional rotation runs for five seconds while hovered or focused."}</span></div>
     {error ? <p role="alert">{error}</p> : null}
     {busy ? <p role="status">Opening project…</p> : null}
     <section aria-label="Recent saved projects"><h3>Recent saved projects</h3><p>Last manually saved copies on this browser. Newer autosaves remain available in Recovery. Keep downloaded project files as your portable copies.</p>{loading ? <p role="status">Reading saved projects…</p> : recent.length ? cards(recent) : <p>Save a project to add it here.</p>}</section>
-    <section aria-label="Example projects"><h3>Example projects</h3><p>Ten mechanical designs, from two parts to forty. Try the suggested parameter edit to explore each design.</p>{cards(GALLERY_EXAMPLES)}{!GALLERY_EXAMPLES.some(matches) && !recent.some(matches) ? <p>No projects match your search.</p> : null}</section>
+    <section aria-label="Example projects"><h3>Example projects</h3><p>Mechanical designs from two to forty parts, including lead screws and threaded fasteners.</p>{cards(GALLERY_EXAMPLES)}{!GALLERY_EXAMPLES.some(matches) && !recent.some(matches) ? <p>No projects match your search.</p> : null}</section>
   </ModalDialog>;
 }
 export function ProjectGalleryPanel() {

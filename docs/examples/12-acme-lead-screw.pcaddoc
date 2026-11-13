@@ -1,0 +1,130 @@
+{
+  "components": {
+    "component_3503aed5": {
+      "id": "component_3503aed5",
+      "name": "Lead screw",
+      "placement": {
+        "rotation": [
+          0,
+          -1.25,
+          0.15
+        ],
+        "translation": [
+          -2,
+          0,
+          5
+        ]
+      }
+    },
+    "component_b71ef911": {
+      "id": "component_b71ef911",
+      "name": "Matching nut",
+      "placement": {
+        "rotation": [
+          0.25,
+          0.33,
+          -0.18
+        ],
+        "translation": [
+          8,
+          3,
+          0
+        ]
+      }
+    },
+    "component_e294508c": {
+      "id": "component_e294508c",
+      "name": "Root Component"
+    }
+  },
+  "createdAt": "2026-11-13T14:48:55.184Z",
+  "displayUnits": {
+    "angle": "deg",
+    "length": "mm"
+  },
+  "features": [
+    {
+      "componentId": "component_3503aed5",
+      "createdAt": "2026-11-13T14:48:56.078Z",
+      "diameter": {
+        "authoredUnit": "mm",
+        "expression": "0.375in",
+        "unit": "mm"
+      },
+      "form": "acme",
+      "hand": "left",
+      "id": "feature_caaefa77",
+      "name": "Lead screw",
+      "operation": "newBody",
+      "pitch": {
+        "authoredUnit": "mm",
+        "expression": "0.08in",
+        "unit": "mm"
+      },
+      "screwLength": {
+        "authoredUnit": "mm",
+        "expression": "0.85in",
+        "unit": "mm"
+      },
+      "starts": 2,
+      "timelineStep": 1,
+      "type": "leadScrew"
+    },
+    {
+      "clearance": {
+        "authoredUnit": "mm",
+        "expression": "0.004in",
+        "unit": "mm"
+      },
+      "componentId": "component_b71ef911",
+      "createdAt": "2026-11-13T14:49:02.191Z",
+      "id": "feature_64d75561",
+      "name": "Matching nut",
+      "nutLength": {
+        "authoredUnit": "mm",
+        "expression": "0.42in",
+        "unit": "mm"
+      },
+      "operation": "newBody",
+      "screwFeatureId": "feature_caaefa77",
+      "timelineStep": 2,
+      "type": "leadNut"
+    }
+  ],
+  "id": "doc_92e12c20",
+  "name": "Left-hand Acme lead screw and nut",
+  "parameters": {},
+  "rootComponentId": "component_e294508c",
+  "schemaVersion": 25,
+  "sketches": {},
+  "timelineCursor": 2,
+  "units": "metric",
+  "unitSettings": {
+    "angle": "deg",
+    "length": "mm"
+  },
+  "updatedAt": "2026-11-13T14:49:42.505Z",
+  "viewState": {
+    "namedViews": [
+      {
+        "cameraPosition": [
+          29.095084,
+          -31.51173,
+          39.168213
+        ],
+        "cameraTarget": [
+          -3.266944,
+          0.850297,
+          6.806186
+        ],
+        "cameraUp": [
+          0,
+          0,
+          1
+        ],
+        "id": "view_b97d3426",
+        "name": "Thread detail"
+      }
+    ]
+  }
+}

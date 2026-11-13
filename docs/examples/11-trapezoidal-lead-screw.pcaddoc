@@ -1,0 +1,130 @@
+{
+  "components": {
+    "component_108fb4ef": {
+      "id": "component_108fb4ef",
+      "name": "Matching nut",
+      "placement": {
+        "rotation": [
+          0.25,
+          0.33,
+          -0.18
+        ],
+        "translation": [
+          8,
+          3,
+          0
+        ]
+      }
+    },
+    "component_5ee35cfc": {
+      "id": "component_5ee35cfc",
+      "name": "Root Component"
+    },
+    "component_f7f90547": {
+      "id": "component_f7f90547",
+      "name": "Lead screw",
+      "placement": {
+        "rotation": [
+          0,
+          -1.25,
+          0.15
+        ],
+        "translation": [
+          -2,
+          0,
+          5
+        ]
+      }
+    }
+  },
+  "createdAt": "2026-11-13T14:47:22.964Z",
+  "displayUnits": {
+    "angle": "deg",
+    "length": "mm"
+  },
+  "features": [
+    {
+      "componentId": "component_f7f90547",
+      "createdAt": "2026-11-13T14:47:23.764Z",
+      "diameter": {
+        "authoredUnit": "mm",
+        "expression": "8mm",
+        "unit": "mm"
+      },
+      "form": "trapezoidal",
+      "hand": "right",
+      "id": "feature_477f9f58",
+      "name": "Lead screw",
+      "operation": "newBody",
+      "pitch": {
+        "authoredUnit": "mm",
+        "expression": "2mm",
+        "unit": "mm"
+      },
+      "screwLength": {
+        "authoredUnit": "mm",
+        "expression": "18mm",
+        "unit": "mm"
+      },
+      "starts": 4,
+      "timelineStep": 1,
+      "type": "leadScrew"
+    },
+    {
+      "clearance": {
+        "authoredUnit": "mm",
+        "expression": "0.1mm",
+        "unit": "mm"
+      },
+      "componentId": "component_108fb4ef",
+      "createdAt": "2026-11-13T14:47:34.434Z",
+      "id": "feature_4bef5777",
+      "name": "Matching nut",
+      "nutLength": {
+        "authoredUnit": "mm",
+        "expression": "10mm",
+        "unit": "mm"
+      },
+      "operation": "newBody",
+      "screwFeatureId": "feature_477f9f58",
+      "timelineStep": 2,
+      "type": "leadNut"
+    }
+  ],
+  "id": "doc_830f7168",
+  "name": "Trapezoidal lead screw and nut",
+  "parameters": {},
+  "rootComponentId": "component_5ee35cfc",
+  "schemaVersion": 25,
+  "sketches": {},
+  "timelineCursor": 2,
+  "units": "metric",
+  "unitSettings": {
+    "angle": "deg",
+    "length": "mm"
+  },
+  "updatedAt": "2026-11-13T14:48:37.426Z",
+  "viewState": {
+    "namedViews": [
+      {
+        "cameraPosition": [
+          26.811258,
+          -27.629775,
+          34.770446
+        ],
+        "cameraTarget": [
+          -1.92207,
+          1.103553,
+          6.037117
+        ],
+        "cameraUp": [
+          0,
+          0,
+          1
+        ],
+        "id": "view_c34d6796",
+        "name": "Thread detail"
+      }
+    ]
+  }
+}
