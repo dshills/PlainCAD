@@ -101,5 +101,5 @@ native BRep volume is asserted separately to five decimal places. Additional
 coverage checks one properties panel, retained uncommitted drafts, search,
 keyboard resizing, local preference isolation, three themes and compact overlays.
 
-Keep `design-qa.md` as the visual comparison record. Run exact Prism Anthropic
-`claude-sonnet-5-5` review and `npm run release:check` before a handoff or commit.
+Keep `design-qa.md` as the visual comparison record. Follow the independent
+internal review and validation workflow in [AGENTS.md](AGENTS.md).

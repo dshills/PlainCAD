@@ -127,8 +127,8 @@ large CAD chunk warnings remain. Provider flows use browser fixtures/status chec
 no live AI recipe generation was needed for this UI change.
 
 Implementation checklist: retain the shared tokens/components for new controls;
-keep actual command enablement and geometry diagnostics; run the full release
-gate and exact Prism model review before committing.
+keep actual command enablement and geometry diagnostics; follow the independent
+internal review and validation workflow in [AGENTS.md](AGENTS.md).
 
 No actionable P0/P1/P2 visual findings remain in the implemented scope.
 

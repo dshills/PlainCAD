@@ -440,7 +440,12 @@ Guided issue cards and **Save or export…** are implemented within the repair/e
 
 Acceptance: users can recover from a gap, a conflicting dimension and a lost face reference; choose/export the intended bodies; and explain whether they saved an editable project or exported a mesh.
 
-For each implementation step, follow the established workflow: focused behavioral and geometry tests, Prism review with Anthropic `claude-sonnet-5-5`, address actionable findings, run the full release gate for code changes, and commit separately. The status above describes the implemented subset. Broader operation destinations, arbitrary or automatic repairs, accessibility studies and usability sessions remain planned.
+For each implementation step, follow the independent internal review and
+validation workflow in [AGENTS.md](../../AGENTS.md), with focused behavioral
+and geometry tests for the affected work. Address actionable findings and
+commit each step separately. The status above describes the implemented subset.
+Broader operation destinations, arbitrary or automatic repairs, accessibility
+studies and usability sessions remain planned.
 
 ## 18. How to prove that it is easier
 
