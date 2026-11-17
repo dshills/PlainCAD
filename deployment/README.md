@@ -1,14 +1,25 @@
 # Production deployment
 
-Build with `npm ci`, `npm run kernel:plainsolid` (using the Go version in
-`scripts/plainsolid-pin.json`), and `npm run build`. Serve `dist/` over HTTPS from a stable
-origin. Project downloads and IndexedDB recovery stay on the user's device;
-changing the origin changes access to that origin's recovery storage.
+Build PlainSolid with the exact Go version in the kernel pin. The setup command
+fetches the pinned public commit and writes the WASM binary and matching Go
+runtime that Vite checks before bundling. [Kernel pin](../scripts/plainsolid-pin.json)
+
+```sh
+npm ci
+npm run kernel:plainsolid
+npm run build
+```
+
+Deploy the complete `dist/` directory to a stable HTTPS origin. Recovery data
+is stored in IndexedDB for that origin, so changing the hostname, scheme, or port
+changes which recovery data the browser can access.
 
 `deployment/securityHeaders.ts` is the policy source. The build emits:
 
 - `dist/_headers` for static hosts that support this header-file format.
 - `dist/nginx-security-headers.conf` for inclusion in an Nginx server block.
+- `dist/kernel/plainsolid-kernel.json` for the source revision, Go version, and
+  asset hashes. `dist/kernel/plainsolid-NOTICE.txt` contains the license notices.
 
 Apply the security headers to **all** responses, including JavaScript modules,
 geometry/import/export worker entry points, WASM, HTML, and error responses.
@@ -36,18 +47,27 @@ can otherwise omit parent security headers under the default inheritance rules.
 See [Nginx add_header](https://nginx.org/en/docs/http/ngx_http_headers_module.html#add_header). Use `Cache-Control: no-cache` for HTML
 and long immutable caching for hashed `/assets/` files. Keep the previous asset
 set available during rollout so open tabs can finish lazy worker imports.
+Revalidate the unversioned kernel manifest and notice along with HTML.
 
-The development server uses port 5278 and HMR. The production preview uses port
-5280 with strict port selection and the actual security response headers:
+For a manual check, the production preview serves `dist/` on port 5280
+with the deployment security headers.
 
 ```sh
-npm run build
 npm run preview -- --host 127.0.0.1
+```
+
+Stop the manual preview before running the production tests. Playwright
+starts its own preview on the same port.
+
+```sh
+npx playwright install chromium
 npm run test:production
 ```
 
-`npm run release:check` runs type checking, unit/component tests, the build, the
-Chromium development acceptance suite, and a separate Chromium production suite.
+`npm run release:check` runs type checking, unit/component and selected-kernel
+contracts, the build, and both Chromium suites.
+The production CSP checks compare the fingerprinted WASM response to the build
+manifest and exercise recovery from a temporary kernel download failure.
 The production test performs native parameter edits, STL, project save/open,
 IndexedDB recovery, and native union under CSP; checks resource headers; and probes
 blocked inline scripts, JavaScript evaluation and remote fetch. It reads recovery

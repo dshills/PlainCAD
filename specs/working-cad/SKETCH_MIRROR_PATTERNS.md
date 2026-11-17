@@ -42,7 +42,7 @@ expressions; changing it updates the offsets. Unbound coordinates and radii copy
 the actual solved values as independent numeric seeds. No schema change is needed.
 
 A bare-sketch preview reports that no solid was modeled. With downstream
-features, Apply requires successful current OpenCascade results, valid BReps,
+features, Apply requires a successful native rebuild of the candidate, valid BReps,
 one solid per exported mesh, and finite positive volumes. Results are tied to
 the exact immutable plan, file session, component, canvas session and selected
 IDs. Canceled, competing, stale and cross-proposal worker results cannot Apply.
@@ -53,5 +53,4 @@ proof. Panel tests cover Cancel, one Undo, focus restoration and stale results.
 `e2e/sketch-replication.spec.ts` exercises both modes through public UI controls:
 dimension-driven holes in a real extruded plate, exact native volumes and XY/Z
 orientation, Cancel, one Undo/Redo, shared radius edit, save/open, and signed STL
-volume. Browser results must be reported separately; unit tests alone do not
-establish OpenCascade or WebGL behavior.
+volume. Browser acceptance verifies native geometry and WebGL behavior.

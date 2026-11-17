@@ -86,8 +86,8 @@ preview proof and one Undo Apply as local edits. A bare sketch reports solve-onl
 validation; downstream solids require valid native geometry.
 
 Provider transport tests use controlled upstream responses for all three adapters;
-browser acceptance uses controlled provider replies with real worker/OpenCascade
-geometry, including clarification, late Cancel, native dimensions/volume, one Undo,
+browser acceptance uses controlled provider replies with native geometry from browser
+workers, including clarification, late Cancel, native dimensions/volume, one Undo,
 save/open and signed STL volume. This does not prove unrestricted natural-language
 understanding. Separate live smoke requests with only a synthetic rectangle
 returned validated resize actions from all three configured adapters on 2026-10-06;

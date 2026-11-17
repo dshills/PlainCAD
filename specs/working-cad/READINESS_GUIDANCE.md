@@ -30,4 +30,4 @@ plane failures, pending/stale result protection, underconstrained readiness,
 fallback/native reporting and visible disabled prerequisites. The focused browser
 cases in `e2e/workbench-readiness.spec.ts` exercise current diagnostics through
 explicit outline and dimension repairs; the outline case verifies real
-OpenCascade extrusion volume, BRep validity and solid count.
+native extrusion volume, BRep validity and solid count.

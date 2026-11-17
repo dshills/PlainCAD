@@ -30,7 +30,7 @@ origin, offset, or supported feature-owned faces; world-axis coordinates are not
 substituted for the source plane.
 
 The geometry worker recreates the current source tool for each instance and
-requires native OpenCascade geometry. Conservative analytic envelopes skip native
+requires valid native geometry. Conservative analytic envelopes skip native
 pairwise checks only for provably disjoint tools; unknown or overlapping envelopes
 retain native proof. Native common-volume checks reject tool
 overlaps, including overlap with the original. Atomic scoped cuts reject copies

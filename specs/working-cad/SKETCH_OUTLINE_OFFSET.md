@@ -86,7 +86,7 @@ endpoint contacts.
 invalidation, one-step Undo/Redo, cancellation, same-ID replacement and proof
 identity.
 
-`e2e/sketch-outline-offset.spec.ts` contains real OpenCascade worker acceptance
+`e2e/sketch-outline-offset.spec.ts` contains native worker acceptance
 flows for inward XY and outward XZ rectangular walls, inward/outward parameterized
 circle rims, concave XY walls and analytic XZ/YZ capsule rims, exact BRep validity/solid count/volume, coordinate orientation,
 Undo/Redo, collapse/export readiness, save/open and exported STL volume. Native

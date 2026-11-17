@@ -43,7 +43,7 @@ reference must remain resolvable. Superseded unused target endpoints are cleaned
 standalone points and feature centers remain.
 
 A sketch-only preview reports a sketch solve. When downstream features exist,
-Apply requires a successful OpenCascade preview with native geometry assertions.
+Apply requires a successful preview from the active geometry kernel with native geometry assertions.
 Worker-issued results are bound to the exact candidate. Source object identity,
 document session, component and sketch session are checked again at Apply.
 
@@ -57,6 +57,6 @@ continue to pass their target `id`. Shared analytic helpers are in
 Focused tests cover circle conversion, cyclic seam selection, signed arc trimming
 and extension, finite curve filtering, protected references and save/load. Native
 acceptance cases cover a trimmed XY semicircle and extended YZ quarter-circle,
-checking exact OpenCascade BRep volume, bounds/orientation, Undo/Redo, save/open
+checking exact native BRep volume, bounds/orientation, Undo/Redo, save/open
 and STL tessellation volume. Exact solid geometry distinguishes analytic arcs from
 endpoint chords; STL is checked within 0.5% because it is a tessellated export.

@@ -1,25 +1,20 @@
 # PlainCAD example projects
 
-The built-in gallery has fourteen editable projects. The original ten mechanical
-designs range from two parts to forty. Each was rebuilt with the OpenCascade
-browser worker, edited through a driving parameter, saved and reopened, and
-exported as separate validated STL files.
-These are learning and workflow examples, not production-qualified mechanisms.
+The built-in gallery contains fourteen editable projects for learning modeling
+workflows. Eight rebuild with the default PlainSolid kernel, including all four
+threaded examples. The [ORBIT drive housing](orbit-drive-housing.pcaddoc) is a
+separate example that also rebuilds with PlainSolid.
 
-With PlainSolid, the cable guide, spacer stack, instrument panel, rotary fixture
-and all four threaded examples rebuild from their original project files. The
-ORBIT drive housing from the main README also rebuilds. The gallery marks the
-angle bracket, motor flange, valve cartridge, robot gripper, pulley cassette
-and heat exchanger as requiring the OpenCascade comparison build. Their original
-files and covers are preserved. To open one locally, use
-`VITE_CAD_KERNEL=opencascade npm run dev` as described in the
-[kernel setup](../../README.md#plainsolid-backend).
+For a project marked **Requires the OpenCascade comparison build**, start PlainCAD with
+`VITE_CAD_KERNEL=opencascade npm run dev` and open its original `.pcaddoc` file.
+The gallery shows the feature that prevents opening or previewing the example
+under PlainSolid. [Kernel setup](../../README.md#plainsolid-backend)
 
 ## Open and explore
 
-1. Download a `.pcaddoc` file below. On GitHub, use the file's **Download raw file**
-   action; do not save the GitHub HTML page.
-2. In PlainCAD, choose **File → Open project**, or drop the file onto the workspace.
+1. In Workbench, choose **File → Project gallery** and open an available project.
+   Or use **Download raw file** on GitHub to download a `.pcaddoc` from this guide.
+2. For a downloaded file, choose **File → Open project** or drop it onto the workspace.
 3. Open **Project** on the left. Search for a component, then **Activate** or
    **Isolate** it. Use **All tools → Show All Bodies** to restore the entire design.
 4. For the original ten designs, open **Parameters** and try the edit in the
@@ -43,21 +38,22 @@ supported starting point for editing each design.
 
 ## Gallery
 
-| Project | Parts | Features / sketches | Complexity | Try this parameter edit (mm) |
-|---|---:|---:|---|---|
-| [Cable guide mount](01-cable-guide.pcaddoc) | 2 | 4 / 3 | Beginner | `foot_thickness`: 5 → 6 |
-| [Precision spacer stack](02-spacer-stack.pcaddoc) | 3 | 3 / 3 | Beginner | `spacer_height`: 20 → 24 |
-| [Angle bracket fixture](03-angle-fixture.pcaddoc) | 3 | 7 / 6 | Beginner/intermediate | `web_height`: 36 → 40 |
-| [Elevated instrument panel](04-panel-standoffs.pcaddoc) | 5 | 7 / 7 | Intermediate | `post_height`: 18 → 22 |
-| [Motor mounting flange](05-motor-flange.pcaddoc) | 6 | 16 / 15 | Intermediate | `flange_thickness`: 8 → 10 |
-| [Flanged valve cartridge](06-flanged-valve.pcaddoc) | 8 | 16 / 15 | Intermediate/advanced | `valve_height`: 32 → 36 |
-| [Parallel robot gripper concept](07-robot-gripper.pcaddoc) | 11 | 22 / 22 | Advanced | `jaw_span`: 56 → 60 |
-| [Twin-pulley drive cassette](08-belt-drive.pcaddoc) | 18 | 29 / 28 | Advanced | `pulley_height`: 10 → 12 |
-| [Sixteen-tube heat exchanger](09-heat-exchanger.pcaddoc) | 28 | 37 / 37 | Highly complex | `tube_length`: 148 → 152 |
-| [Rotary machining fixture concept](10-rotary-fixture.pcaddoc) | 40 | 68 / 66 | Highly complex | `platter_thickness`: 14 → 16 |
+| Project | Parts | Features / sketches | Complexity | Try this parameter edit (mm) | Kernel compatibility |
+|---|---:|---:|---|---|---|
+| [Cable guide mount](01-cable-guide.pcaddoc) | 2 | 4 / 3 | Beginner | `foot_thickness`: 5 → 6 | PlainSolid |
+| [Precision spacer stack](02-spacer-stack.pcaddoc) | 3 | 3 / 3 | Beginner | `spacer_height`: 20 → 24 | PlainSolid |
+| [Angle bracket fixture](03-angle-fixture.pcaddoc) | 3 | 7 / 6 | Beginner/intermediate | `web_height`: 36 → 40 | Requires OpenCascade for the rounded bracket chamfer |
+| [Elevated instrument panel](04-panel-standoffs.pcaddoc) | 5 | 7 / 7 | Intermediate | `post_height`: 18 → 22 | PlainSolid |
+| [Motor mounting flange](05-motor-flange.pcaddoc) | 6 | 16 / 15 | Intermediate | `flange_thickness`: 8 → 10 | Requires OpenCascade for the curved stock and boss union |
+| [Flanged valve cartridge](06-flanged-valve.pcaddoc) | 8 | 16 / 15 | Intermediate/advanced | `valve_height`: 32 → 36 | Requires OpenCascade for the curved union and side bore |
+| [Parallel robot gripper concept](07-robot-gripper.pcaddoc) | 11 | 22 / 22 | Advanced | `jaw_span`: 56 → 60 | Requires OpenCascade for the actuator pocket |
+| [Twin-pulley drive cassette](08-belt-drive.pcaddoc) | 18 | 29 / 28 | Advanced | `pulley_height`: 10 → 12 | Requires OpenCascade for the stepped pulley unions |
+| [Sixteen-tube heat exchanger](09-heat-exchanger.pcaddoc) | 28 | 37 / 37 | Highly complex | `tube_length`: 148 → 152 | Requires OpenCascade for the side-plane header bores |
+| [Rotary machining fixture concept](10-rotary-fixture.pcaddoc) | 40 | 68 / 66 | Highly complex | `platter_thickness`: 14 → 16 | PlainSolid |
 
-The original parameter edit checks above used OpenCascade. Fixed dimensions outside
-those expressions do not automatically follow arbitrary feature edits. In particular:
+Compatibility refers to rebuilding the saved model at its authored dimensions.
+The original parameter edit checks used OpenCascade. Other dimensions follow
+their own expressions and constraints.
 
 - Spacer washer thickness stays at 4 mm; the angle fixture's holes/pins stay at Z=25 mm.
 - The angle fixture's “Web fastener” components represent smooth alignment pins
@@ -152,15 +148,16 @@ Forty static components, a turned hub, slotted platter, bearing stack, four clam
 
 [Download editable project](10-rotary-fixture.pcaddoc)
 
-## Validation and usability findings
+## Original gallery validation and usability findings
 
-[VALIDATION.json](VALIDATION.json) records this run's per-body BRep validity,
+The original OpenCascade run recorded per-body BRep validity,
 solid count, exact volume, mesh bounds, parameter edit/undo results, save/open
 checks, and decoded binary STL measurements. Across the ten projects: **124 native
 bodies, 209 features, and 202 sketches**. Every final body is one valid solid with
 positive exact volume. Every ZIP has the expected number of uniquely named STLs;
 all coordinates are finite, and signed mesh volumes are positive. The largest
 observed tessellated-volume difference from BRep was below **0.18%**.
+[Original validation results](VALIDATION.json)
 
 The angle fixture independently checks XZ extrusion along negative Y; the heat
 exchanger checks sixteen YZ tubes along positive X against their analytical annular
@@ -183,9 +180,6 @@ The original ten gallery projects were authored using the existing immutable doc
 helpers; they were not all drawn by hand through the UI. No AI provider call was
 needed to create their geometry.
 
-The earlier single-body [ORBIT drive housing](orbit-drive-housing.pcaddoc) remains
-available as an additional example.
-
 ## Threaded hardware
 
 Open **File → Project gallery** and search by name, or download the editable files.
@@ -201,5 +195,5 @@ use nominal geometry.
 | [M6 socket screw and tapped collar](13-m6-threaded-pair.pcaddoc) | [PNG](images/13-m6-threaded-pair.png) | M6 × 1 external and internal threads |
 | [Quarter-inch UNC screw and tapped block](14-quarter-inch-unc.pcaddoc) | [PNG](images/14-quarter-inch-unc.png) | 1/4-20 UNC external and internal threads |
 
-The production gallery acceptance test loads each screenshot and rebuilds its
-project as two valid native solids with the expected volumes.
+The PlainSolid production gallery acceptance test loads each screenshot and
+rebuilds its project as two valid native solids with the expected volumes.

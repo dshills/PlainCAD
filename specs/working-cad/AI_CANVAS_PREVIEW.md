@@ -1,7 +1,7 @@
 # AI proposals in the modeling canvas
 
-An accepted AI proposal is rendered as real, native OpenCascade geometry in the
-existing 3D viewport. It uses the current camera, world coordinates and clipping
+A successfully rebuilt AI proposal appears in the existing 3D viewport using
+native geometry from the active kernel. It uses the current camera, world coordinates and clipping
 plane. The proposed result is the complete project, so adding a component keeps
 existing project parts visible. Changed and new bodies receive a cyan highlight.
 Before shows the original accepted model; After shows the native proposal. Neither

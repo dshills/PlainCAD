@@ -1,12 +1,17 @@
 # Named first part
 
-The empty-project start card asks for a Part name and offers Draw or Describe.
-Draw keeps that name while choosing Top/Front/Side or a supported face. Confirming
-the plane creates the component and Sketch 1 together in one Undo edit and starts
-the mouse drawing canvas. Cancel creates neither. The breadcrumb retains the
-sketch name when individual sketch entities are selected.
+Open **New part**, enter a **Part name**, and choose **Draw a shape**.
+Choose Top (XY), Front (XZ), Side (YZ), or a supported face. Confirming the
+plane creates the component and Sketch 1 together in one Undo edit and opens
+the drawing canvas. The breadcrumb retains the sketch name when you select
+individual entities.
 
-Describe prepares a named New part request in the existing AI drawer. The name is
+For a first solid, choose **Rectangle**, drag between its corners, and choose
+**Finish Sketch**. A closed profile in the guided workflow opens an extrusion
+preview. Set **Thickness** in the Extrude panel, then choose **Apply** when the
+preview is ready. The body appears under the component you named.
+
+**Describe a part with AI** prepares a named request in the existing AI drawer. The name is
 temporary until an explicit native preview Apply; Cancel publishes no component.
 Provider-generated content still passes the ordinary bounded recipe validation.
 No provider request happens merely by choosing Describe. The starter name belongs

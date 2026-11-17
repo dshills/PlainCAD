@@ -332,7 +332,7 @@ Detection must reject or warn on dirty sketch geometry such as zero-length segme
 
 Profiles must have stable identifiers that can survive ordinary parameter edits and sketch re-solves. The primary matching strategy must use the graph of stable sketch entity IDs, entity lineage/provenance for split or derived segments, connectivity, winding, loop role, and containment relationship. Spatial heuristics may be used only when the topological graph is identical and the displacement is within a small configured epsilon relative to model size. If a sketch edit changes the underlying entity graph enough that rebinding is ambiguous, dependent features must fail with a source-linked "profile reference lost" diagnostic instead of binding to an arbitrary profile.
 
-Profile validation must detect self-intersecting loops before kernel operations. Self-intersections must fail profile detection with source-linked diagnostics rather than being passed to OpenCascade.
+Profile validation must detect self-intersecting loops before kernel operations. Profile detection must reject self-intersections with source-linked diagnostics.
 
 ### 7.7 Feature Graph
 
@@ -544,7 +544,7 @@ STL export must:
 
 STEP export should be added only when:
 
-- OpenCascade.js support is reliable in the deployed environment,
+- native STEP export works reliably in the deployed environment,
 - the exporter can operate from rebuilt kernel shapes,
 - output can be validated with at least a smoke test, such as non-empty file output with a valid STEP header and, where feasible, kernel round-trip import,
 - UI states can accurately communicate availability.

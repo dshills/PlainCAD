@@ -169,7 +169,7 @@ loop. Model changes, theme, resize/layout, selection/highlights, visibility,
 measurements, section clipping, picker hover/previews, camera commands, and
 restored WebGL contexts request a fresh frame. Solid driving-dimension labels
 subscribe to viewer frames and their own size changes instead of polling at idle.
-Close zoom and PNG capture can request finer OpenCascade triangles and
+Close zoom and PNG capture can request finer native tessellation and
 surface-derivative normals from a disposable worker. The cache holds one
 accepted revision and is cleared on edits and project replacement. The viewer
 draws the ordinary mesh while the worker prepares detail, during camera movement,

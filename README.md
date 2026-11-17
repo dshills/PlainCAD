@@ -1,8 +1,9 @@
 # PlainCAD
 
-Browser-first, local-first parametric CAD for mechanical parts. Draw sketches,
-create native solids, edit dimensions, and save an editable project or export STL.
-Optional AI assistance supports Anthropic, OpenAI, and Google.
+PlainCAD is local-first parametric CAD for mechanical parts. Draw sketches,
+build solids with PlainSolid in your browser, edit dimensions, and save an
+editable project or export it for fabrication. Optional AI assistance supports
+Anthropic, OpenAI, and Google. [PlainSolid geometry kernel](https://github.com/dshills/PlainSolid)
 
 **Make something you can hold.** From a pocketed housing to a forty-part fixture,
 explore real native geometry in your browser—and keep the editable project on your device.
@@ -29,12 +30,11 @@ slotted jaws and contact pads, then try its editable jaw-span parameter.
 This example currently needs the OpenCascade comparison build.
 [Open the gripper](docs/examples/07-robot-gripper.pcaddoc)
 
-These screenshots show native geometry in PlainCAD's Saturn Command theme and
-studio view. They were captured before the switch to PlainSolid. The fixture and
-gripper are static learning concepts;
-mechanism motion and manufacturing readiness are not demonstrated. Download an
-example and choose **File → Open project** to explore it. The
-[example gallery](docs/examples/README.md) documents tested edits and model limits.
+These screenshots were captured in the Saturn Command theme and studio view before
+the switch to PlainSolid. The fixture and gripper are static learning concepts.
+Download an example and choose **File → Open project**. The gallery guide lists
+which projects rebuild with PlainSolid and which need the comparison build.
+[Example gallery and compatibility](docs/examples/README.md)
 
 ## Model, edit, automate
 
@@ -56,9 +56,10 @@ selection, native modeling and Undo. Copy its temporary capability privately int
 relay requires the local development/preview server. Disconnect revokes access;
 static hosting does not include the relay. See [live connection setup](docs/LIVE_SESSION.md).
 
-PlainCAD uses React 19, TypeScript, Vite, Zustand, Three.js, and [PlainSolid](https://github.com/dshills/PlainSolid).
-PlainSolid runs as Go WebAssembly in local browser workers. An optional local Node
-gateway handles AI requests and keeps provider credentials out of the browser.
+PlainCAD uses React 19, TypeScript, Vite, Zustand, and Three.js. The app compiles
+PlainSolid to WebAssembly and runs it in local browser workers. An optional
+local Node gateway handles AI requests and keeps provider credentials out of
+the browser.
 
 ![ORBIT drive housing in PlainCAD's Saturn Command workbench, showing its recessed chamber, bearing bore, mounting counterbores, relief slots, and feature timeline](docs/images/orbit-drive-housing.png)
 
@@ -129,9 +130,9 @@ booleans and edge treatments must change actual geometry before they succeed.
 
 ## Quick Start
 
-Requirements: Node.js `^20.19.0` or `>=22.12.0`, npm, Git, Go
-`1.27.4` to build PlainSolid, and a modern desktop browser with WebAssembly and
-WebGL support.
+Install Node.js `^20.19.0` or `>=22.12.0`, npm, Git, `tar`, and the exact
+Go version in the kernel pin (currently `1.27.4`). Use a desktop browser
+with Web Workers, WebAssembly, and WebGL2. [Kernel pin](scripts/plainsolid-pin.json)
 
 ```sh
 git clone https://github.com/dshills/PlainCAD.git
@@ -141,14 +142,20 @@ npm run kernel:plainsolid
 npm run dev
 ```
 
-Open <http://localhost:5278>. Vite uses a strict port and reports a collision
-instead of silently choosing another port. To override it:
+Open [localhost:5278](http://localhost:5278). If the port is in use, start the
+server on a different port.
 
 ```sh
 npm run dev -- --host 127.0.0.1 --port 5288
 ```
 
 Keep port 5279 free for the development browser tests.
+
+To try a complete modeling workflow, choose **New part → Draw a shape**, pick the
+**Top (XY)** plane, and draw a closed rectangle with the **Rectangle** tool.
+Choose **Finish Sketch**, set **Thickness** in the Extrude panel, and select **Apply**.
+Use **Save** for the editable `.pcaddoc` or **File → Save or export** for a
+fabrication file. [First-part guide](specs/working-cad/FIRST_PART.md)
 
 To build and serve the production app locally:
 
@@ -605,42 +612,38 @@ remain runtime data.
 
 ### PlainSolid backend
 
-PlainSolid is the default for the app and all geometry workers, including
-previews, drawings, fabrication and STEP. Build the WebAssembly binary and
-matching Go runtime once, or again when [the kernel pin](scripts/plainsolid-pin.json)
-changes. The setup command fetches the pinned public commit. To build without
-fetching, run `npm run kernel:plainsolid -- ../PlainSolid` against a local Git
-checkout containing that commit. Local uncommitted changes do not enter the build.
+PlainSolid is the default geometry kernel for modeling, previews, drawings,
+fabrication, and STEP. Run `npm run kernel:plainsolid` before the first dev or
+production build and after the pin changes. The command fetches the pinned
+public commit. It can also build that commit from a local checkout using
+`npm run kernel:plainsolid -- ../PlainSolid`. [Kernel pin](scripts/plainsolid-pin.json)
+
+Open an existing `.pcaddoc` to rebuild its feature history with the active
+kernel. If PlainSolid rejects a feature, inspect its entry in **Issues** and
+repair or suppress it before exporting. For projects that need OpenCascade,
+choose the comparison kernel when starting Vite or building the app. [Supported geometry and limits](specs/working-cad/CAPABILITY_MATRIX.md#modeling-availability-and-limits)
 
 ```sh
-npm run kernel:plainsolid
-npm run test:plainsolid
-npm run release:check
-npm run test:cross-browser
+VITE_CAD_KERNEL=opencascade npm run dev
+VITE_CAD_KERNEL=opencascade npm run build
 ```
 
-Vite checks the generated assets and pinned revision for development and production
-builds. Production serves the fingerprinted WASM with the app, along with build
-provenance in `kernel/plainsolid-kernel.json` and license notices. Project files
-remain provider-independent. PlainSolid has narrower geometry support in some
-domains; an unsupported feature reports a diagnostic instead of switching kernels
-or producing an approximate solid. See the [capability matrix](specs/working-cad/CAPABILITY_MATRIX.md#modeling-availability-and-limits).
-
-For comparisons or to recover geometry outside PlainSolid's current coverage,
-explicitly launch or build with `VITE_CAD_KERNEL=opencascade`. The default build
-does not ship that provider. The general unit suite retains OpenCascade-specific
-and fallback fixtures; PlainSolid has a separate real-WASM contract suite, and
-the browser suites exercise the selected provider.
+Production includes a fingerprinted WebAssembly asset, the build manifest, and
+license notices. The ordinary unit suite covers OpenCascade-specific and fallback
+fixtures. `npm run test:plainsolid` checks actual PlainSolid WebAssembly, and
+browser suites check geometry from the selected build. [Deployment and verification](deployment/README.md)
 
 | Command | Purpose |
 | --- | --- |
+| `npm run kernel:plainsolid` | Build the pinned PlainSolid WASM and matching Go runtime. |
 | `npm run dev` | Vite development server, strict port 5278. |
 | `npm run lint` | TypeScript application and browser-test checks; not an ESLint/style check. |
 | `npm test` / `npm run test:watch` | Vitest unit/component tests, once or in watch mode. |
+| `npm run test:plainsolid` | Verify generated kernel assets and run real-WASM contracts. |
 | `npm run build` | TypeScript checks and production output in `dist/`. |
 | `npm run preview` | Local production preview, strict port 5280. |
-| `npm run check:item` | Per-item reduced gate: type checks, all unit/component tests, build/bundle budget, development native modeling/stale-result smoke tests, and focused production modeling/AI/CSP tests. |
-| `npm run release:check` | Type checking, unit/component tests, build, development Chromium acceptance, and built-app production CSP acceptance. |
+| `npm run check:item` | Type checks, unit/component and selected-kernel contracts, production build, and development and built-app browser smoke suites. |
+| `npm run release:check` | Type checks, unit/component and selected-kernel contracts, production build, and full development and production Chromium suites. |
 | `npm run test:browser` | Native development Chromium suite, strict port 5279. |
 | `npm run test:browser:smoke` | Development non-template modeling and stale-worker-result smoke tests, strict port 5279. |
 | `npm run test:production` | Built-app Chromium CSP suite, strict port 5280; build first. |
@@ -674,7 +677,8 @@ npm run test:cross-browser
 npm run test:ai:browser
 ```
 
-GitHub Actions runs Firefox with a virtual display and Mesa software rendering
+GitHub Actions builds the pinned kernel once per workflow and shares the assets
+with the validation jobs. It runs Firefox with a virtual display and Mesa software rendering
 so the browser can create a WebGL2 context. The development Chromium suite
 runs in four shards and the production suite runs in its own job.
 
@@ -729,8 +733,12 @@ supported scopes documented in the capability matrix. Native failures report
 the source and preserve upstream previews for repair.
 
 - **Port collision:** stop the conflicting server or choose a different explicit port.
-- **Kernel/WebAssembly load failure:** check browser console, network requests,
-  and deployment worker/WASM MIME and security headers. Modeling tasks require native geometry.
+- **Missing or mismatched kernel assets.** Run `npm run kernel:plainsolid`
+  with the pinned Go version, then restart Vite.
+- **Kernel fails to load in the browser.** Check that browser workers are
+  enabled and that the host serves the worker and WASM assets with the expected
+  MIME types and security headers. Reopen the project after a temporary fetch
+  failure to start a fresh worker. [Deployment guide](deployment/README.md)
 - **STL unavailable:** finish/cancel tasks, wait for the current rebuild, then repair
   or suppress failing features and select exportable bodies.
 - **Import failure:** inspect the visible error for malformed/unsupported data or

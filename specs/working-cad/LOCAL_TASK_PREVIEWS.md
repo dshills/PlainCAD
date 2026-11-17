@@ -10,4 +10,4 @@ Changing an input immediately clears Apply and aborts an outstanding request. Ra
 
 Details contains offset hole policy and implementation limits, copy semantics, projection construction mode, and exact trim/extend pick coordinates. Required hole choices are shown automatically when the chosen outline has holes. Trim/Extend shows manual coordinates until a canvas pick exists, then collapses them to favor drawing with the mouse. Ordinary required inputs remain visible.
 
-These automatic previews only solve and rebuild CAD locally. They never call an AI provider. Sketch-only proposals explicitly say that no solid was modeled; operations with solids retain their existing OpenCascade proof requirements. Geometry support and limits are unchanged.
+These automatic previews only solve and rebuild CAD locally. They never call an AI provider. Sketch-only proposals explicitly say that no solid was modeled; operations with solids require a successful native rebuild of the proposed geometry.

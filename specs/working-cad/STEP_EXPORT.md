@@ -30,8 +30,10 @@ Missing writes, malformed files, unit changes, no solids, changed geometry or lo
 body roots fail with a diagnostic and no download. Runtime proof records and STEP
 bytes are never persisted in project files or ordinary rebuild results.
 
-PlainSolid exports are limited to 1–32 unique current bodies, 1 MiB of STEP data
-and 60 seconds. Larger projects require an explicit selection for each file.
+PlainSolid exports are limited to 1–32 unique current bodies, 1 MiB of STEP data,
+and 60 seconds. In projects with more than 32 bodies, **Select all STEP bodies**
+is disabled and the selection starts empty. Select a batch of bodies for each
+STEP file. If the file exceeds 1 MiB, select fewer bodies for that export.
 The OpenCascade comparison build retains its 64-body and 32 MiB limits.
 Unsupported STEP topology fails validation. Request IDs and document-session epochs
 are checked at the client boundary; native handles remain worker-only and owned
@@ -39,7 +41,7 @@ exchange data and feature-cache handles are disposed on success and failure.
 Terminating a failed/cancelled worker releases
 its entire native runtime.
 
-## Installed binding compatibility
+## OpenCascade comparison build
 
 The installed OpenCascade.js 1.1.1 bindings accept filename strings for
 `STEPControl_Writer.Write` and `STEPControl_Reader.ReadFile`, but route a corrupted

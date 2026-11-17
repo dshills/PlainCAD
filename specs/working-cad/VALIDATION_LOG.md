@@ -11,8 +11,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Date: 2026-11-17.
 - Change: PlainSolid as the default browser geometry kernel.
 - Result: type checks, 1692 unit/component tests, four real WASM contracts, build/bundle budget (69 bundles, largest 497.27 kB), 346 development and 68 production browser cases passed. Also passed 15 cross-browser Workbench and 54 cross-browser AI/Focused cases.
-- Completed items since that full gate: **0**.
-- Next full gate: after 5 more completed items.
+- Completed items since that full gate: **1**.
+- Next full gate: after 4 more completed items.
 
 ## Completed batch
 
@@ -1734,3 +1734,14 @@ for particular edge/Boolean combinations; their cards explain the limitations
 before opening or previewing, and the explicit comparison build passed its
 gallery check. PlainSolid STEP export enforces 32 bodies and a 1 MiB output
 limit. Independent internal review approved the final diff and test fixups.
+
+## PlainSolid documentation refresh (2026-11-17)
+
+Item 1 after the PlainSolid default-kernel release gate. Independent internal
+re-review approved the README and guide updates after the first-part and gallery
+labels were checked against Workbench. Verified 149 local Markdown links.
+
+`npm run check:item` passed type checks, 1692 unit/component tests, four real-WASM
+contracts, the production build and 500 kB bundle budget, six development smoke
+cases, and 16 production smoke cases. The two first-part development cases and
+five production gallery cases also passed.

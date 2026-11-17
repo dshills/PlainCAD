@@ -61,7 +61,7 @@ Apply. Selection changes invalidate the proposal through the refinement guard.
 - `canvasSnapping.test.ts`: pixel tolerances, existing-point priority, draft
   extents, intersections/tangent feedback, total snap suspension and dense-area
   feedback, alongside existing snapping regressions.
-- `sketch-mouse.spec.ts`: real Chromium/OpenCascade on XY and XZ, view-only pan
+- `sketch-mouse.spec.ts`: native Chromium geometry on XY and XZ, view-only pan
   and Escape restoration, analytic tangent and intersection mouse drawing,
   temporary Alt suspension, cancelled/accepted group translation, one Undo,
   Redo, stable entity IDs/design intent, exact native volume and plane-oriented

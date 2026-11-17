@@ -55,5 +55,5 @@ Before calling the application broadly accessible, conduct live screen-reader
 sessions (including announcement of current native preview and validation
 diagnostics), actual browser zoom at 200% and higher, high-contrast OS preferences,
 and keyboard-only modeling with alternatives to drawing. The new cross-engine
-workflow is bounded desktop coverage, not a guarantee for mobile input or every
-OpenCascade operation on each engine.
+workflow covers the specified desktop tasks. See the validation log for the
+PlainSolid runs in Chromium, Firefox, and WebKit. [Validation log](VALIDATION_LOG.md#default-plainsolid-geometry-kernel-2026-11-17)

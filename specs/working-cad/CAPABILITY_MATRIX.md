@@ -218,18 +218,20 @@ See [export hub scope](EXPORT_HUB.md).
 
 ## Review scope
 
-Reviewed against source and automated tests on 2026-10-06. This is the current
-implementation status, not a declaration that the working-CAD spec is complete.
+The PlainSolid default passed development and production Chromium suites and
+Workbench and AI workflows in Chromium, Firefox, and WebKit on 2026-11-17.
+See the validation record for the pinned kernel, test counts, and comparison
+build checks. [Validation log](VALIDATION_LOG.md#default-plainsolid-geometry-kernel-2026-11-17)
+
 Unit/component tests exercise fallback geometry and jsdom. Chromium acceptance
-coverage now verifies native OpenCascade rectangle extrusion and circular through-cut
+coverage verifies native rectangle extrusion and circular through-cut
 on XY/XZ/YZ, parameter edits, save/open, binary STL normals/volume/coordinates,
 Z-up camera/grid, rendered mesh/sketch alignment, stale worker delivery, and
 reinitialization after an old worker fails. A second native workflow covers
 hand-authored arc/line extrusion with construction geometry, driving radius edits,
 face offsets and upstream edits, conflict/export gating, save/open/STL, and explicit
-repair after suppressing a plane owner. This
-bounded workflow does not establish unrestricted OpenCascade modeling support.
-Native-WASM unit tests additionally check exact volumes, BRep validity, solid counts,
+repair after suppressing a plane owner.
+Kernel tests additionally check exact volumes, BRep validity, solid counts,
 positive tessellation winding, boolean failure paths, scoped disposal, partial
 revolves/world axes/offset line axes, fillet/chamfer volume and surface-area changes, and flat/sloped
 finite-face termination. Chromium modeling-operation workflows cover creation,
@@ -318,7 +320,7 @@ for tested combinations and explicit gaps.
 | Capability | Current behavior | Availability |
 | --- | --- | --- |
 | Extrude new body | Positive/negative/symmetric extrusion of straight polygon loops, full circles, and supported line/arc outlines including rounded rectangles and slots. Supported interior loops include straight polygon holes in polygon stock and full circles in supported round or planar stock; arbitrary curved inner loops are unavailable. Symmetric distance is total span. | Creation dialog with native preview, explicit profile/distance/direction/operation and Apply/Cancel; inspector |
-| Extrude cut | Up to 64 explicit saved target IDs; atomic updates of all targets; native world-coordinate tools; valid nonempty solid output with reduced exact volume; disjoint/no-op and empty cuts diagnosed; narrow rectangle/circular-through-hole fallback | Creation dialog with explicit targets and native preview; Inspector |
+| Extrude cut | Up to 64 explicit saved target IDs for supported stock and tool combinations. Updates are atomic. The result must contain valid nonempty solids with reduced exact volume. Disjoint, empty, unchanged, and unsupported cuts produce diagnostics. | Creation dialog with explicit targets and native preview; Inspector |
 | Extrude join | Up to 64 ordered explicit targets; atomic native connected union; first target ID/name survives, secondary targets absorbed; tool must add exact volume beyond target union; disconnected/no-op joins diagnosed; no fallback | Creation dialog with explicit targets and native preview; Inspector |
 | Through all | Projects all selected target bounds along the sketch normal for positive/negative directions or a symmetric total span; wrong-side targets diagnosed; subject to cut/join limits | Creation dialog with explicit targets, direction and native preview; Inspector |
 | Extrude to face | Positive termination of straight polygon loops or a full circle on a supported upstream feature-owned planar cap/straight side, including sloped faces; native checks enforce finite face coverage. A circular source cannot have inner loops. | Creation dialog with explicit face selection and native preview; Inspector with repair |
@@ -832,7 +834,7 @@ operation and saved target scope are editable. The native sweep and full downstr
 rebuild must both succeed before Apply; canceled, invalid and stale drafts leave
 history unchanged. IDs, ownership and timeline ordering survive one undoable edit.
 Operation and downstream previews run sequentially to stop on a failed operation
-and avoid retaining two live OpenCascade workers; this adds latency on larger
+and avoid retaining two live geometry workers. This adds latency on larger
 projects. Native acceptance also repairs a failed first Revolve with no published
 body, so repair does not depend on an old successful output mesh.
 

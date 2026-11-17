@@ -8,7 +8,7 @@ Primary assumptions:
 
 - The product remains browser-first and local-first.
 - The serialized `CadDocument` remains the durable source of truth.
-- OpenCascade.js remains isolated behind the kernel adapter and worker boundary.
+- PlainSolid, the default kernel, runs behind the kernel adapter and worker boundary.
 - Runtime shapes, meshes, workers, viewer state, and kernel handles remain disposable artifacts.
 - Every phase must leave the app runnable, buildable, and covered by focused tests.
 - Feature breadth is secondary to predictable rebuilds, source-linked diagnostics, and durable project files.
@@ -132,7 +132,7 @@ Make the project file format durable enough to support repeated schema evolution
 - Old project fixtures load or fail with clear messages.
 - Future schema versions fail safely.
 - Project import cannot mutate prototypes.
-- Migrations run without OpenCascade or viewer initialization.
+- Migrations run without initializing the kernel or viewer.
 
 ## 5. Phase 2 - Parameter System Expansion
 
@@ -474,7 +474,7 @@ Add the next practical feature types after extrude while preserving validation-f
   - profile does not cross axis,
   - profile does not self-intersect before or during revolution,
   - output will not collapse to zero volume.
-- Add a kernel-level validation pass, such as OpenCascade shape checking where available, before accepting revolve results.
+- Add a kernel-level validation pass before accepting revolve results.
 - Add revolve new body, cut, and join.
 - Add simple cylindrical hole feature:
   - target body,
@@ -548,11 +548,11 @@ Support fillet and chamfer only on stable, supported feature-owned edge roles.
 
 ### Goal
 
-Keep modeling responsive and prevent OpenCascade/WASM lifecycle failures during longer sessions.
+Keep modeling responsive and prevent kernel worker lifecycle failures during longer sessions.
 
 ### Tasks
 
-- Add a shared disposable-scope utility for OpenCascade.js handles.
+- Add a shared disposable-scope utility for native handles.
 - Require per-operation and nested loop scopes for transient handles.
 - Track cached handle ownership.
 - Delete cached kernel objects on invalidation, eviction, replacement, and worker shutdown.
@@ -654,7 +654,7 @@ Make fabrication export reliable for single-body and multi-body parts.
   - self-intersections where practical.
 - Compute STL normals with kernel surface orientation where available, and validate against triangle winding and BREP orientation so inverted or inconsistent boolean output is detected before export.
 - Add export worker path for expensive validation.
-- Add STEP export only if OpenCascade support proves reliable:
+- Qualify native STEP export in the deployed environment.
   - valid STEP header smoke test,
   - optional kernel round-trip import,
   - clear UI availability states.
@@ -790,7 +790,7 @@ Prepare the working CAD system for sustained use and future feature expansion.
   - multi-plane bracket,
   - subtractive pocket or hole.
 - Review Content Security Policy and DOM-sink safety.
-- Audit package size and consider code splitting for OpenCascade and heavy worker paths.
+- Audit package size and consider code splitting for heavy worker paths.
 
 ### Tests
 

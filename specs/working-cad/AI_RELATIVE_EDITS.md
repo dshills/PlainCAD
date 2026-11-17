@@ -25,7 +25,7 @@ compound instructions do not use this local grammar. Existing absolute numeric
 assignments and their opposite-direction diagnostics remain separate.
 
 A local recipe is still a proposal. Normal immutable document helpers preserve
-stable parameter, feature and body identities. Native OpenCascade preview and
+stable parameter, feature and body identities. A successful native geometry preview and
 explicit Apply are required before project history changes; the same Undo/Redo
 workflow handles the applied result. Relative interpretation alone is not proof
 that a proposed modeling operation succeeds.
