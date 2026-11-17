@@ -27,14 +27,13 @@ try changing the platter thickness.
 
 **Give your next idea a shape.** Explore a parallel gripper's pocketed palm,
 slotted jaws and contact pads, then try its editable jaw-span parameter.
-This example currently needs the OpenCascade comparison build.
 [Open the gripper](docs/examples/07-robot-gripper.pcaddoc)
 
 These screenshots were captured in the Saturn Command theme and studio view before
 the switch to PlainSolid. The fixture and gripper are static learning concepts.
-Download an example and choose **File → Open project**. The gallery guide lists
-which projects rebuild with PlainSolid and which need the comparison build.
-[Example gallery and compatibility](docs/examples/README.md)
+Download an example and choose **File → Open project**. The gallery guide includes the
+editable files and suggested parameter changes.
+[Example gallery](docs/examples/README.md)
 
 ## Model, edit, automate
 
@@ -71,8 +70,7 @@ with **File → Open**, or drop the project file onto the workspace.
 
 The gallery includes 33 editable projects with rendered covers and a suggested edit
 for each. Try a slotted bench stop, a tapered hose reducer, a sample rack, or a
-40-part rotary fixture. Twenty-seven rebuild with PlainSolid, and six require the
-OpenCascade comparison build. [Example gallery](docs/examples/README.md)
+40-part rotary fixture. All 33 rebuild with the default PlainSolid kernel. [Example gallery](docs/examples/README.md)
 The original ten designs have recorded [geometry validation](docs/examples/VALIDATION.json)
 and a [workflow usability audit](docs/examples/WORKFLOW_AUDIT.md).
 
@@ -254,8 +252,8 @@ result invalidate Apply. Finish or cancel an active task before starting another
 ### Workspace and themes
 
 Open **File → Project gallery** to search by name or suggested edit, or filter by
-collection, difficulty, and PlainSolid compatibility. Enable **Live native previews**
-to rotate compatible models while you hover or focus **Preview**. The gallery also
+collection and difficulty. Enable **Live native previews** to rotate models with
+up to 10,000 mesh triangles while you hover or focus **Preview**. The gallery also
 shows up to five manually saved projects from browser recovery storage. Opening an
 example uses the same unsaved-project protection as dropping a project file.
 

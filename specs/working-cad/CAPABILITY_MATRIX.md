@@ -314,8 +314,15 @@ can support a different set of geometry. A feature outside PlainSolid's domain
 fails at its source and blocks export until repaired or suppressed. Its availability
 in the toolbar means the operation can be attempted on eligible inputs; native
 preview still has to prove the result before Apply. See the upstream
-[PlainCAD readiness record](https://github.com/dshills/PlainSolid/blob/71f6197633972d74b6c1301b13db8e1f1b2fbb90/docs/PLAINCAD_READINESS.md)
+[PlainCAD readiness record](https://github.com/dshills/PlainSolid/blob/f16da30106d323e7ebf7ceba6d09d20c1ef1ed70/docs/PLAINCAD_READINESS.md)
 for tested combinations and explicit gaps.
+
+The default kernel rebuilds all 33 built-in gallery designs. Qualified feature
+chains include the angle fixture's rounded-cap chamfer, the motor flange's
+filleted stock and joined boss, the valve cartridge's chamfered annular join
+and bolt holes, the gripper's rounded blind pocket, the pulleys' coaxial
+annular joins, and the heat exchanger's opposed blind bore patterns.
+[Gallery projects](../../docs/examples/README.md)
 
 | Capability | Current behavior | Availability |
 | --- | --- | --- |

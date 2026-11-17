@@ -5,17 +5,12 @@ import { prepareProjectDrop } from "../commands/projectDropCommand";
 import { importProjectFile } from "../../persistence/importProject";
 import { recentGalleryProjects, type GalleryProject } from "../../persistence/projectGallery";
 import { previewModeling } from "../../cad/worker/extrudePreviewClient";
-import { NativeKernel } from "../../cad/kernel/NativeKernel";
-import type { NativeGeometrySource } from "../../cad/kernel/geometrySource";
 import { drawGalleryPreview, galleryPreviewFaces } from "../../viewer/galleryPreview";
 import { GALLERY_COLLECTIONS, GALLERY_DIFFICULTIES, GALLERY_EXAMPLES } from "./projectGalleryCatalog";
 import { closeProjectGallery, useProjectGallery } from "./projectGalleryState";
 import "./projectGallery.css";
 
-interface Card { id: string; name: string; thumbnail?: string; parts: number; features: number; complexity: string; collection?: string; text?: string; projectUrl?: string; description?: string; parameter?: string; plainSolidLimit?: string }
-function blockedExample(card: Card, source: NativeGeometrySource): string | undefined {
-  return source === "plainsolid" ? card.plainSolidLimit : undefined;
-}
+interface Card { id: string; name: string; thumbnail?: string; parts: number; features: number; complexity: string; collection?: string; text?: string; projectUrl?: string; description?: string; parameter?: string }
 async function projectFile(card: Card, signal: AbortSignal): Promise<File> {
   if (card.text !== undefined) return new File([card.text], `${card.name}.pcaddoc`);
   if (!card.projectUrl) throw new Error("This example has no project file. Open another example or a local project.");
@@ -75,7 +70,6 @@ function GalleryContents() {
   const [search, setSearch] = useState("");
   const [collection, setCollection] = useState("");
   const [difficulty, setDifficulty] = useState("");
-  const [compatible, setCompatible] = useState(false);
   const [live, setLive] = useState(false);
   const [active, setActive] = useState<Card>();
   const recentHeading = useRef<HTMLHeadingElement>(null);
@@ -93,7 +87,7 @@ function GalleryContents() {
     return () => { controller.abort(); request.current?.abort(); };
   }, []);
   async function open(card: Card) {
-    if (request.current || busy || blockedExample(card, NativeKernel.source)) return;
+    if (request.current || busy) return;
     const state = useCadStore.getState(), project = state.history.present, session = state.documentSession;
     const controller = new AbortController(); request.current = controller;
     setBusy(true); setError(undefined); setActive(undefined);
@@ -116,40 +110,34 @@ function GalleryContents() {
   };
   const examples = GALLERY_EXAMPLES.filter(card => matches(card) &&
     (!collection || card.collection === collection) &&
-    (!difficulty || card.complexity === difficulty) &&
-    (!compatible || !blockedExample(card, NativeKernel.source)),
+    (!difficulty || card.complexity === difficulty),
   );
-  const hasUnavailableExamples = GALLERY_EXAMPLES.some(card => blockedExample(card, NativeKernel.source));
   const saved = recent.filter(matches);
   function clearFilters() {
     setSearch("");
     setCollection("");
     setDifficulty("");
-    setCompatible(false);
     setActive(undefined);
   }
   function cards(entries: Card[]) {
-    return <ul className="gallery-grid">{entries.map(card => {
-      const limit = blockedExample(card, NativeKernel.source);
-      const detailsId = limit ? `gallery-limit-${card.id}` : undefined;
-      const unavailable = busy || Boolean(limit);
-      return <li className="gallery-card" key={card.id} onPointerEnter={() => { if (live && !reduced && !unavailable) setActive(card); }} onPointerLeave={() => setActive(current => current?.id === card.id ? undefined : current)} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setActive(current => current?.id === card.id ? undefined : current); }}>
-        <div className="gallery-picture">{card.thumbnail ? <img src={card.thumbnail} alt={`${card.name} actual native CAD geometry`} loading="lazy" decoding="async"/> : <p>No saved cover yet</p>}{active?.id === card.id && !limit ? <GalleryLivePreview card={active}/> : null}</div>
+    return <ul className="gallery-grid">{entries.map(card => (
+      <li className="gallery-card" key={card.id} onPointerEnter={() => { if (live && !reduced && !busy) setActive(card); }} onPointerLeave={() => setActive(current => current?.id === card.id ? undefined : current)} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setActive(current => current?.id === card.id ? undefined : current); }}>
+        <div className="gallery-picture">{card.thumbnail ? <img src={card.thumbnail} alt={`${card.name} actual native CAD geometry`} loading="lazy" decoding="async"/> : <p>No saved cover yet</p>}{active?.id === card.id ? <GalleryLivePreview card={active}/> : null}</div>
         <div className="gallery-card-copy">
           <p className="gallery-card-category">{card.collection ? `${card.collection} · ` : ""}{card.complexity}</p>
           <h3>{card.name}</h3>
           <p>{card.description ?? "Your last manually saved editable project."}</p>
           <p className="gallery-counts">{card.parts} {card.text !== undefined ? (card.parts === 1 ? "component" : "components") : (card.parts === 1 ? "part" : "parts")} · {card.features} {card.features === 1 ? "feature" : "features"}</p>
           <div className="gallery-card-actions">
-            {limit ? <p className="gallery-parameter" id={detailsId}><strong>Requires the OpenCascade comparison build.</strong> {limit}</p> : card.parameter ? <p className="gallery-parameter"><strong>Try</strong> {card.parameter}</p> : null}
+            {card.parameter ? <p className="gallery-parameter"><strong>Try</strong> {card.parameter}</p> : null}
             <div className="gallery-card-buttons">
-              <button type="button" disabled={unavailable} aria-label={`Open ${card.name}`} aria-describedby={detailsId} onClick={() => void open(card)}>Open</button>
-              {live && !reduced ? <button type="button" disabled={unavailable} aria-label={`Preview ${card.name}`} aria-describedby={detailsId} onFocus={() => setActive(card)} onClick={() => setActive({ ...card })}>Preview</button> : null}
+              <button type="button" disabled={busy} aria-label={`Open ${card.name}`} onClick={() => void open(card)}>Open</button>
+              {live && !reduced ? <button type="button" disabled={busy} aria-label={`Preview ${card.name}`} onFocus={() => setActive(card)} onClick={() => setActive({ ...card })}>Preview</button> : null}
             </div>
           </div>
         </div>
-      </li>;
-    })}</ul>;
+      </li>
+    ))}</ul>;
   }
   return <ModalDialog label="Project gallery" className="project-gallery" onDismiss={closeProjectGallery}>
     <div className="gallery-heading"><div><h2>Project gallery</h2><p>Open an editable example and try the suggested change.</p></div><button type="button" onClick={closeProjectGallery}>Close gallery</button></div>
@@ -166,7 +154,6 @@ function GalleryContents() {
         </select></label>
       </div>
       <div className="gallery-filter-options">
-        {hasUnavailableExamples ? <label><input type="checkbox" checked={compatible} onChange={event => { setCompatible(event.target.checked); setActive(undefined); }}/>Works with PlainSolid</label> : null}
         <label><input type="checkbox" checked={live && !reduced} disabled={reduced} onChange={event => { setLive(event.target.checked); setActive(undefined); }}/>Live native previews</label>
         {reduced ? <span>Reduced motion uses static covers.</span> : null}
         {recent.length ? <button className="gallery-recent-link" type="button" onClick={() => recentHeading.current?.focus()}>Recent saves</button> : null}

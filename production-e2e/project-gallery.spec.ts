@@ -1,6 +1,5 @@
 import { test, expect } from "@playwright/test";
 import { readFile } from "node:fs/promises";
-import { expectedGeometrySource } from "../e2e/expectedGeometrySource";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 test("built gallery serves native assets, previews under CSP, opens an editable example and downloads its actual model PNG", async ({ page }) => {
@@ -13,19 +12,7 @@ test("built gallery serves native assets, previews under CSP, opens an editable 
   await expect(gallery.getByRole("img")).toHaveCount(33);
   await expect(async () => expect(await gallery.getByRole("img").first().evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(100)).toPass();
   await gallery.getByLabel("Live native previews").check();
-  const legacy = gallery.getByRole("button", { name: "Open Angle bracket fixture", exact: true });
-  if (expectedGeometrySource === "plainsolid") {
-    await expect(gallery.getByText("Requires the OpenCascade comparison build.", { exact: true })).toHaveCount(6);
-    await expect(legacy).toBeDisabled();
-    await expect(legacy).toHaveAccessibleDescription(/chamfer on the rounded bracket/);
-    await expect(gallery.getByRole("button", { name: "Preview Angle bracket fixture", exact: true })).toBeDisabled();
-    await gallery.getByLabel("Works with PlainSolid").check();
-    await expect(gallery.getByRole("img")).toHaveCount(27);
-    await expect(legacy).toHaveCount(0);
-    await gallery.getByLabel("Works with PlainSolid").uncheck();
-  } else {
-    await expect(legacy).toBeEnabled();
-  }
+  await expect(gallery.getByRole("button", { name: /^Open /, disabled: false })).toHaveCount(33);
   await gallery.getByRole("button", { name: "Preview Cable guide mount", exact: true }).focus();
   const canvas = gallery.getByLabel("Native rotating preview of Cable guide mount");
   await expect(canvas).toBeVisible({ timeout: 40000 });
@@ -95,6 +82,77 @@ test("compact gallery filters open the sample rack and its suggested edit rebuil
   expect(geometry.edited.height).toBeCloseTo(45, 5);
   expect(geometry.edited.volume - geometry.original.volume).toBeCloseTo(4 * Math.PI * 3 ** 2 * 8, 4);
 });
+
+const { projects: originalExamples } = JSON.parse(
+  await readFile(new URL("../docs/examples/VALIDATION.json", import.meta.url), "utf8"),
+) as {
+  projects: Array<{
+    order: number;
+    name: string;
+    parameter: string;
+    original: number;
+    edited: number;
+    native: { bodies: Array<{ bodyId: string; volume: number }> };
+    parameterEdit: { totalVolumeMm3: number };
+  }>;
+};
+
+for (const example of originalExamples.filter(({ order }) => [3, 5, 6, 7, 8, 9].includes(order))) {
+  test(`gallery opens and rebuilds ${example.name} after its suggested edit`, async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+    await page.getByText("File", { exact: true }).click();
+    await page.getByRole("button", { name: "Project gallery", exact: true }).click();
+    const gallery = page.getByRole("dialog", { name: "Project gallery", exact: true });
+    await gallery.getByLabel("Find a project").fill(example.name);
+    await expect(gallery.getByText(`changing ${example.parameter} from ${example.original} to ${example.edited} mm`)).toBeVisible();
+    await gallery.getByRole("button", { name: `Open ${example.name}`, exact: true }).click();
+    await expect(gallery).toBeHidden();
+    await expect(page.locator(".project-title")).toHaveText(example.name);
+
+    const { original, edited } = await page.evaluate(async ({ parameter, edited }) => {
+      const commands = window.plaincadCommands;
+      const snapshot = await commands.execute({ command: "runtime.snapshot" });
+      if (!snapshot.ok) throw new Error(snapshot.error.message);
+      const { session, document } = snapshot.value as { session: number; document: { parameters: Record<string, { id: string }> } };
+      async function readBodies() {
+        const result = await commands.execute({ command: "runtime.awaitNative", session, arguments: { timeoutMs: 45000 } });
+        if (!result.ok) throw new Error(result.error.message);
+        const { rebuild } = result.value as { rebuild: { bodies: Array<{
+          id: string;
+          bounds: { min: number[]; max: number[] };
+          assertions: { valid: boolean; solidCount: number; volume: number };
+        }> } };
+        return rebuild.bodies;
+      }
+      const original = await readBodies();
+      const update = await commands.execute({
+        command: "parameter.update", session,
+        arguments: { parameterId: document.parameters[parameter].id, patch: { expression: `${edited}mm` } },
+      });
+      if (!update.ok) throw new Error(update.error.message);
+      return { original, edited: await readBodies() };
+    }, { parameter: example.parameter, edited: example.edited });
+
+    const references = new Map(example.native.bodies.map(body => [body.bodyId, body.volume]));
+    expect(original.map(body => body.id).sort()).toEqual([...references.keys()].sort());
+    expect(edited.map(body => body.id).sort()).toEqual([...references.keys()].sort());
+    for (const body of [...original, ...edited]) {
+      expect(body.assertions).toMatchObject({ valid: true, solidCount: 1 });
+      expect(body.assertions.volume).toBeGreaterThan(0);
+    }
+    for (const body of original) expect(body.assertions.volume).toBeCloseTo(references.get(body.id)!, 2);
+    const editedVolume = edited.reduce((sum, body) => sum + body.assertions.volume, 0);
+    expect(editedVolume).toBeCloseTo(example.parameterEdit.totalVolumeMm3, 1);
+    const originalBodies = new Map(original.map(body => [body.id, body]));
+    expect(edited.some(body => {
+      const before = originalBodies.get(body.id)!;
+      return Math.abs(body.assertions.volume - before.assertions.volume) > 0.005 ||
+        body.bounds.min.some((value, axis) => Math.abs(value - before.bounds.min[axis]) > 0.001) ||
+        body.bounds.max.some((value, axis) => Math.abs(value - before.bounds.max[axis]) > 0.001);
+    })).toBe(true);
+  });
+}
 
 const threadedExamples = [
   { name: "Trapezoidal lead screw and nut", volumes: [744.073, 628.451], form: "trapezoidal", starts: 4, hand: "right" },

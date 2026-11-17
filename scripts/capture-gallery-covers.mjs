@@ -4,42 +4,32 @@ import { chromium } from "@playwright/test";
 const examples = new URL("../docs/examples/", import.meta.url);
 const requested = process.argv.slice(2);
 const browser = await chromium.launch({ args: ["--enable-webgl", "--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"] });
-const plainSolidUrl = process.env.PLAINCAD_GALLERY_URL ?? "http://127.0.0.1:5278";
-const comparisonUrl = process.env.PLAINCAD_GALLERY_COMPARISON_URL ?? "http://127.0.0.1:5288";
+const galleryUrl = process.env.PLAINCAD_GALLERY_URL ?? "http://127.0.0.1:5278";
 const captures = [];
 let failures = 0;
 try {
-  const plainSolid = await browser.newPage();
-  await plainSolid.goto(plainSolidUrl, { waitUntil: "domcontentloaded" });
-  const catalog = await plainSolid.evaluate(async () => {
+  const page = await browser.newPage();
+  await page.goto(galleryUrl, { waitUntil: "domcontentloaded" });
+  const catalog = await page.evaluate(async () => {
     const { GALLERY_EXAMPLES } = await import("/src/ui/workspace/projectGalleryCatalog.ts");
-    return GALLERY_EXAMPLES.map(({ id, plainSolidLimit }) => ({ id, comparisonOnly: Boolean(plainSolidLimit) }));
+    return GALLERY_EXAMPLES.map(({ id, parts }) => ({ id, parts }));
   });
   const projects = catalog.filter(({ id }) => !requested.length || requested.includes(id));
   if (!projects.length || (requested.length && projects.length !== requested.length)) {
     throw new Error("Specify existing gallery examples by filename without the .pcaddoc suffix.");
   }
-  // Separate sessions keep each kernel's Vite provider and worker lifetime independent.
-  await Promise.all([false, true].map(async comparisonOnly => {
-    const group = projects.filter(project => project.comparisonOnly === comparisonOnly);
-    if (!group.length) return;
-    const source = comparisonOnly ? "opencascade" : "plainsolid";
-    const page = comparisonOnly ? await browser.newPage() : plainSolid;
-    if (comparisonOnly) await page.goto(comparisonUrl, { waitUntil: "domcontentloaded" });
-    for (const { id } of group) {
-      const filename = `${id}.pcaddoc`;
-      try {
-        const text = await readFile(new URL(filename, examples), "utf8");
-        const cover = await page.evaluate(capture, { filename, text, source });
-        captures.push({ id, image: cover.image });
-        console.log(`${filename}: ${cover.bodies} native bodies · ${cover.volume.toFixed(6)} mm³ (${source})`);
-      } catch (error) {
-        failures++;
-        console.error(`${filename}: ${error.message}`);
-      }
+  for (const { id, parts } of projects) {
+    const filename = `${id}.pcaddoc`;
+    try {
+      const text = await readFile(new URL(filename, examples), "utf8");
+      const cover = await page.evaluate(capture, { filename, text, parts });
+      captures.push({ id, image: cover.image });
+      console.log(`${filename}: ${parts} native bodies · ${cover.volume.toFixed(6)} mm³ (plainsolid)`);
+    } catch (error) {
+      failures++;
+      console.error(`${filename}: ${error.message}`);
     }
-    await page.close();
-  }));
+  }
 } finally {
   await browser.close();
 }
@@ -49,7 +39,7 @@ for (const { id, image } of captures) {
 }
 if (failures) process.exitCode = 1;
 
-async function capture({ filename, text, source }) {
+async function capture({ filename, text, parts }) {
   const [{ importProjectFile }, { previewModeling }, { bodyComponentId }, THREE] = await Promise.all([
     import("/src/persistence/importProject.ts"),
     import("/src/cad/worker/extrudePreviewClient.ts"),
@@ -61,9 +51,9 @@ async function capture({ filename, text, source }) {
   const result = await previewModeling(document, signal);
   const meshes = result.meshes;
   if (!result.success) throw new Error(result.errors.map(error => error.message).join(" "));
-  if (!meshes.length || meshes.some(mesh => mesh.geometrySource !== source || !mesh.geometryAssertions?.valid ||
+  if (meshes.length !== parts || meshes.some(mesh => mesh.geometrySource !== "plainsolid" || !mesh.geometryAssertions?.valid ||
     mesh.geometryAssertions.solidCount < 1 || !Number.isFinite(mesh.geometryAssertions.volume) || mesh.geometryAssertions.volume <= 0)) {
-    throw new Error(`Expected valid solids from the ${source} browser worker.`);
+    throw new Error(`Expected ${parts} valid bodies from the PlainSolid browser worker, got ${meshes.length}.`);
   }
 
   // Fit the projected native vertices so tall and wide subjects use the same
@@ -134,7 +124,6 @@ async function capture({ filename, text, source }) {
     renderer.render(scene, camera);
     return {
       image: renderer.domElement.toDataURL("image/png"),
-      bodies: meshes.length,
       volume: meshes.reduce((sum, mesh) => sum + mesh.geometryAssertions.volume, 0),
     };
   } finally {

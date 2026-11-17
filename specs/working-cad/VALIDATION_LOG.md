@@ -11,8 +11,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Date: 2026-11-17.
 - Change: PlainSolid as the default browser geometry kernel.
 - Result: type checks, 1692 unit/component tests, four real WASM contracts, build/bundle budget (69 bundles, largest 497.27 kB), 346 development and 68 production browser cases passed. Also passed 15 cross-browser Workbench and 54 cross-browser AI/Focused cases.
-- Completed items since that full gate: **2**.
-- Next full gate: after 3 more completed items.
+- Completed items since that full gate: **3**.
+- Next full gate: after 2 more completed items.
 
 ## Completed batch
 
@@ -1761,3 +1761,18 @@ production build and bundle budget (69 bundles, largest 497.27 kB), six
 development smoke cases and 16 production smoke cases. One development and
 six production gallery cases also passed, including the rack's measured
 native volume and Z spacing after editing its suggested parameter.
+
+## All gallery projects on PlainSolid (2026-11-17)
+
+Item 3 after the default-kernel release gate. PlainSolid `c10afb21` fetched
+and built with Go 1.27.4. The WASM hash matched the published qualification.
+Chromium rendered all 33 saved projects, and their 33 edited variants also
+rebuilt as valid native solids. All six formerly restricted projects now open
+directly from the gallery and have PlainSolid covers.
+
+Independent internal review approved the final diff. `npm run check:item`
+passed type checks, 1692 unit/component tests, four WASM contracts, the build
+and JavaScript bundle budget (largest 497.27 kB), six development smoke cases,
+and 16 production smoke cases. One development and 12 production gallery cases
+passed, including the six repaired projects' stable body IDs, reference volumes,
+and geometry changes after their suggested edits.

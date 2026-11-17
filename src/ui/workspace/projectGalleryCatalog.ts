@@ -6,7 +6,7 @@ export const GALLERY_DIFFICULTIES = ["Beginner", "Intermediate", "Advanced", "Hi
 type Collection = typeof GALLERY_COLLECTIONS[number];
 type Difficulty = typeof GALLERY_DIFFICULTIES[number];
 
-export interface GalleryExample { id: string; name: string; description: string; parts: number; features: number; collection: Collection; complexity: Difficulty; parameter: string; projectUrl: string; thumbnail: string; plainSolidLimit?: string }
+export interface GalleryExample { id: string; name: string; description: string; parts: number; features: number; collection: Collection; complexity: Difficulty; parameter: string; projectUrl: string; thumbnail: string }
 const rows = [
   ["01-cable-guide", "Cable guide mount", "Rounded foot, annular guide and mounting holes.", 2, 4, "Fixtures", "Beginner", "changing foot_thickness from 5 to 6 mm"],
   ["02-spacer-stack", "Precision spacer stack", "Three annular parts with a shared bore.", 3, 3, "Hardware", "Beginner", "changing spacer_height from 20 to 24 mm"],
@@ -40,18 +40,9 @@ const rows = [
   ["30-lab-rack", "Eight-position sample rack", "Two drilled decks spaced by four posts with one shared clearance parameter.", 6, 8, "Shop tools", "Advanced", "changing rack_clearance from 28 to 36 mm"],
   ["31-reel-stand", "Reel stand assembly", "Side plates, spindle, and base model a multi-part stand with linked width.", 4, 4, "Motion", "Advanced", "changing stand_width from 48 to 56 mm"],
   ["32-bending-die", "Bench bending die set", "A V-block and matching wedge punch on an offset blank plate.", 3, 3, "Fixtures", "Advanced", "changing die_length from 34 to 42 mm"],
-  ["orbit-drive-housing", "ORBIT drive housing", "A recessed drive housing with a bearing bore, counterbores, and relief slots.", 1, 16, "Enclosures", "Advanced", "editing the bearing bore in History"],
+  ["orbit-drive-housing", "ORBIT drive housing", "A recessed drive housing with a bearing bore, counterbores, and relief slots.", 1, 16, "Enclosures", "Advanced", "changing bore_diameter from 40 to 38 mm"],
 ] as const satisfies ReadonlyArray<readonly [string, string, string, number, number, Collection, Difficulty, string]>;
-// Compatibility of these exact saved projects on the pinned PlainSolid kernel.
-const plainSolidLimits: Partial<Record<typeof rows[number][0], string>> = {
-  "03-angle-fixture": "The chamfer on the rounded bracket cannot rebuild in PlainSolid.",
-  "05-motor-flange": "The flange's curved stock and boss union cannot rebuild in PlainSolid.",
-  "06-flanged-valve": "The cartridge's curved union and side bore cannot rebuild in PlainSolid.",
-  "07-robot-gripper": "The palm's actuator pocket cannot rebuild in PlainSolid.",
-  "08-belt-drive": "The pulleys' stepped unions cannot rebuild in PlainSolid.",
-  "09-heat-exchanger": "The headers' side-plane bores cannot rebuild in PlainSolid.",
-};
 export const GALLERY_EXAMPLES: GalleryExample[] = rows.map(([id, name, description, parts, features, collection, complexity, parameter]) => ({
-  id, name, description, parts, features, collection, complexity, parameter, plainSolidLimit: plainSolidLimits[id],
+  id, name, description, parts, features, collection, complexity, parameter,
   projectUrl: projectUrls[`../../../docs/examples/${id}.pcaddoc`], thumbnail: imageUrls[`../../../docs/examples/images/${id}.png`],
 }));
