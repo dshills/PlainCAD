@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { aiSnapshot } from "./aiAcceptanceHelpers";
 import { aiPlatePlan } from "../src/tests/fixtures/aiPlan";
 import { createBoxTemplate } from "../src/templates/templates";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 for (const [layout, theme] of [["workbench", "saturn"], ["focused", "dark"], ["full", "light"]] as const) {
   test(`AI uses the ${layout} bottom dock without changing native geometry`, async ({ page }, info) => {
@@ -17,7 +18,7 @@ for (const [layout, theme] of [["workbench", "saturn"], ["focused", "dark"], ["f
     await expect(async () => {
       const state = await aiSnapshot(page);
       expect(state.status).toBe("succeeded");
-      expect(state.result?.meshes[0].geometrySource).toBe("opencascade");
+      expect(state.result?.meshes[0].geometrySource).toBe(expectedGeometrySource);
       expect(state.result?.meshes[0].geometryAssertions).toMatchObject({ valid: true, solidCount: 1 });
       expect(state.result?.meshes[0].geometryAssertions?.volume).toBeCloseTo(80000, 6);
     }).toPass();
@@ -92,7 +93,7 @@ test("switching from docked AI to History cancels native proposals and rejects a
     return (await import(path)).useAiCanvasPreview.getState().preview?.result;
   });
   expect(nativeProposal?.meshes).toHaveLength(1);
-  expect(nativeProposal?.meshes[0].geometrySource).toBe("opencascade");
+  expect(nativeProposal?.meshes[0].geometrySource).toBe(expectedGeometrySource);
   expect(nativeProposal?.meshes[0].geometryAssertions).toMatchObject({ valid: true, solidCount: 1 });
   expect(nativeProposal?.meshes[0].geometryAssertions?.volume).toBeCloseTo(12000 - Math.PI * 2 ** 2 * 5, 5);
   await expect.poll(async () => page.evaluate(async () => {

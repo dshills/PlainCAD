@@ -2,6 +2,7 @@ import { expect, test, type Page, type Locator } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import type { CadDocument } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 async function state(page: Page): Promise<{ document: CadDocument; result: RebuildResult; status: string; past: number }> {
   return page.evaluate(async () => {
@@ -14,7 +15,7 @@ async function native(page: Page, expectedVolume: number) {
     const snapshot = await state(page);
     expect(snapshot.status).toBe("succeeded"); expect(snapshot.result.success).toBe(true); expect(snapshot.result.errors).toEqual([]);
     expect(snapshot.result.meshes).toHaveLength(1);
-    expect(snapshot.result.meshes[0]).toMatchObject({ geometrySource: "opencascade", geometryAssertions: { valid: true, solidCount: 1 } });
+    expect(snapshot.result.meshes[0]).toMatchObject({ geometrySource: expectedGeometrySource, geometryAssertions: { valid: true, solidCount: 1 } });
     expect(Math.abs(snapshot.result.meshes[0].geometryAssertions!.volume - expectedVolume) / expectedVolume).toBeLessThan(1e-8);
   }).toPass({ timeout: 25000 });
 }

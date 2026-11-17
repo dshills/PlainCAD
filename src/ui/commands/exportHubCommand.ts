@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../../cad/kernel/geometrySource";
 import type { CadStore } from "../../state/useCadStore";
 import { useCadStore } from "../../state/useCadStore";
 import { useFileJobs } from "../../persistence/fileJobs";
@@ -19,7 +20,7 @@ export function exportHubAvailability(state = useCadStore.getState()) {
     const model = canExportStl(state);
     const bodyId = selection?.kind === "body" && selection.documentId === state.history.present.id && result?.meshes.some(mesh => mesh.bodyId === selection.id) ? selection.id : undefined;
     const sketch = selectedCanvasSketch(state);
-    const step = model && Boolean(result?.stepExportAvailable && result.meshes.length && result.meshes.every(mesh => mesh.geometrySource === "opencascade" && mesh.geometryAssertions?.valid && mesh.geometryAssertions.volume > 0 && mesh.geometryAssertions.solidCount > 0)) && typeof Worker !== "undefined";
+    const step = model && Boolean(result?.stepExportAvailable && result.meshes.length && result.meshes.every(mesh => isNativeGeometrySource(mesh.geometrySource) && mesh.geometryAssertions?.valid && mesh.geometryAssertions.volume > 0 && mesh.geometryAssertions.solidCount > 0)) && typeof Worker !== "undefined";
     return { step, projectImage: model, bodyImage: model && Boolean(bodyId), bodyId, sketchId: sketch?.id, sketchName: sketch?.name, library: typeof indexedDB !== "undefined" };
 }
 /** End the hub before shared command guards run; no task or download is claimed here. */

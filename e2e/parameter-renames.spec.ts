@@ -3,6 +3,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import type { CadDocument } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 async function snapshot(
   page: Page,
 ): Promise<{ document: CadDocument; status: string; result: RebuildResult }> {
@@ -77,7 +78,7 @@ test("parameter IDs survive rename, undo/redo, old-name reuse, save/open and nat
   await ready(page);
   const edited = await snapshot(page),
     mesh = edited.result.meshes[0];
-  expect(mesh.geometrySource).toBe("opencascade");
+  expect(mesh.geometrySource).toBe(expectedGeometrySource);
   expect(mesh.bounds.max[0] - mesh.bounds.min[0]).toBeCloseTo(91);
   const saving = page.waitForEvent("download");
   await page.getByRole("button", { name: "Save project", exact: true }).click();

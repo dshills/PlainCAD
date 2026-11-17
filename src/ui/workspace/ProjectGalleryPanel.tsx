@@ -5,12 +5,17 @@ import { prepareProjectDrop } from "../commands/projectDropCommand";
 import { importProjectFile } from "../../persistence/importProject";
 import { recentGalleryProjects, type GalleryProject } from "../../persistence/projectGallery";
 import { previewModeling } from "../../cad/worker/extrudePreviewClient";
+import { NativeKernel } from "../../cad/kernel/NativeKernel";
+import type { NativeGeometrySource } from "../../cad/kernel/geometrySource";
 import { drawGalleryPreview, galleryPreviewFaces } from "../../viewer/galleryPreview";
 import { GALLERY_EXAMPLES } from "./projectGalleryCatalog";
 import { closeProjectGallery, useProjectGallery } from "./projectGalleryState";
 import "./projectGallery.css";
 
-interface Card { id: string; name: string; thumbnail?: string; parts: number; features: number; complexity: string; text?: string; projectUrl?: string; description?: string; parameter?: string }
+interface Card { id: string; name: string; thumbnail?: string; parts: number; features: number; complexity: string; text?: string; projectUrl?: string; description?: string; parameter?: string; plainSolidLimit?: string }
+function blockedExample(card: Card, source: NativeGeometrySource): string | undefined {
+  return source === "plainsolid" ? card.plainSolidLimit : undefined;
+}
 async function projectFile(card: Card, signal: AbortSignal): Promise<File> {
   if (card.text !== undefined) return new File([card.text], `${card.name}.pcaddoc`);
   if (!card.projectUrl) throw new Error("This example has no project file. Open another example or a local project.");
@@ -84,7 +89,7 @@ function GalleryContents() {
     return () => { controller.abort(); request.current?.abort(); };
   }, []);
   async function open(card: Card) {
-    if (request.current || busy) return;
+    if (request.current || busy || blockedExample(card, NativeKernel.source)) return;
     const state = useCadStore.getState(), project = state.history.present, session = state.documentSession;
     const controller = new AbortController(); request.current = controller;
     setBusy(true); setError(undefined); setActive(undefined);
@@ -102,10 +107,23 @@ function GalleryContents() {
   }
   const matches = (card: Card) => `${card.name} ${card.complexity} ${card.description ?? ""}`.toLowerCase().includes(search.toLowerCase().trim());
   function cards(entries: Card[]) {
-    return <ul className="gallery-grid">{entries.filter(matches).map(card => <li className="gallery-card" key={card.id} onPointerEnter={() => { if (live && !reduced && !busy) setActive(card); }} onPointerLeave={() => setActive(current => current?.id === card.id ? undefined : current)} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setActive(current => current?.id === card.id ? undefined : current); }}>
-      <div className="gallery-picture">{card.thumbnail ? <img src={card.thumbnail} alt={`${card.name} actual native CAD geometry`} loading="lazy"/> : <p>No saved cover yet. Open to explore the actual model.</p>}{active?.id === card.id ? <GalleryLivePreview card={active}/> : null}</div>
-      <div className="gallery-card-copy"><span className="gallery-complexity">{card.complexity}</span><h3>{card.name}</h3><p>{card.description ?? "Your last manually saved editable project."}</p><p className="gallery-counts">{card.parts} {card.text !== undefined ? "components" : "parts"} · {card.features} features</p>{card.parameter ? <p className="gallery-parameter">Try {card.parameter}</p> : null}<button type="button" disabled={busy} onClick={() => void open(card)}>Open {card.name}</button>{live && !reduced ? <button type="button" className="gallery-preview-button" disabled={busy} onFocus={() => setActive(card)} onClick={() => setActive({ ...card })}>Preview {card.name}</button> : null}</div>
-    </li>)}</ul>;
+    return <ul className="gallery-grid">{entries.filter(matches).map(card => {
+      const limit = blockedExample(card, NativeKernel.source);
+      const detailsId = limit ? `gallery-limit-${card.id}` : undefined;
+      const unavailable = busy || Boolean(limit);
+      return <li className="gallery-card" key={card.id} onPointerEnter={() => { if (live && !reduced && !unavailable) setActive(card); }} onPointerLeave={() => setActive(current => current?.id === card.id ? undefined : current)} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setActive(current => current?.id === card.id ? undefined : current); }}>
+        <div className="gallery-picture">{card.thumbnail ? <img src={card.thumbnail} alt={`${card.name} actual native CAD geometry`} loading="lazy"/> : <p>No saved cover yet. Open to explore the actual model.</p>}{active?.id === card.id && !limit ? <GalleryLivePreview card={active}/> : null}</div>
+        <div className="gallery-card-copy">
+          <span className="gallery-complexity">{card.complexity}</span>
+          <h3>{card.name}</h3>
+          <p>{card.description ?? "Your last manually saved editable project."}</p>
+          <p className="gallery-counts">{card.parts} {card.text !== undefined ? "components" : "parts"} · {card.features} features</p>
+          {limit ? <p className="gallery-parameter" id={detailsId}><strong>Requires the OpenCascade comparison build.</strong> {limit}</p> : card.parameter ? <p className="gallery-parameter">Try {card.parameter}</p> : null}
+          <button type="button" disabled={unavailable} aria-describedby={detailsId} onClick={() => void open(card)}>Open {card.name}</button>
+          {live && !reduced ? <button type="button" className="gallery-preview-button" disabled={unavailable} aria-describedby={detailsId} onFocus={() => setActive(card)} onClick={() => setActive({ ...card })}>Preview {card.name}</button> : null}
+        </div>
+      </li>;
+    })}</ul>;
   }
   return <ModalDialog label="Project gallery" className="project-gallery" onDismiss={closeProjectGallery}>
     <div className="gallery-heading"><div><p className="gallery-eyebrow">PLAINCAD / EXPLORE</p><h2>Make something yours.</h2><p>Open an editable design and try the suggested edit.</p></div><button type="button" onClick={closeProjectGallery}>Close gallery</button></div>

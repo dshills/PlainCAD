@@ -3,6 +3,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { readFile, writeFile } from "node:fs/promises";
 import type { CadDocument } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 type State = { document: CadDocument; status: string; result?: RebuildResult };
 async function snapshot(page: Page): Promise<State> {
@@ -49,7 +50,7 @@ function arcBody(state: State, radius: number, z: number) {
   const mesh = state.result!.meshes.find(
     (m) => m.bodyId === `body:${feature.id}`,
   )!;
-  expect(mesh.geometrySource).toBe("opencascade");
+  expect(mesh.geometrySource).toBe(expectedGeometrySource);
   expect(volume(mesh.positions, mesh.indices)).toBeGreaterThan(
     ((Math.PI * radius * radius) / 2) * 5 * 0.99,
   );
@@ -366,7 +367,7 @@ test("Inspector repairs imported sketch point references and edits native arc di
     const mesh = state.result!.meshes.find(
       (mesh) => mesh.bodyId === `body:${ids.feature}`,
     )!;
-    expect(mesh.geometrySource).toBe("opencascade");
+    expect(mesh.geometrySource).toBe(expectedGeometrySource);
     expect(mesh.geometryAssertions).toMatchObject({
       valid: true,
       solidCount: 1,

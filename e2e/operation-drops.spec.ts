@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { aiSnapshot, stlSignedVolume } from "./aiAcceptanceHelpers";
 import { applyExtrusion } from "./extrudeWorkflow";
 import type { OperationTargetSnapshot } from "../src/viewer/operationDropPicking";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 async function ready(page: Page, volume?: number) {
   await expect(async () => {
@@ -13,7 +14,7 @@ async function ready(page: Page, volume?: number) {
     if (volume !== undefined) {
       expect(state.result!.meshes).toHaveLength(1);
       const mesh = state.result!.meshes[0];
-      expect(mesh.geometrySource).toBe("opencascade");
+      expect(mesh.geometrySource).toBe(expectedGeometrySource);
       expect(mesh.geometryAssertions).toMatchObject({
         valid: true,
         solidCount: 1,

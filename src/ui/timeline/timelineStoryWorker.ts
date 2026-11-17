@@ -1,4 +1,4 @@
-import { OpenCascadeKernel } from "../../cad/kernel/OpenCascadeKernel";
+import { NativeKernel } from "../../cad/kernel/NativeKernel";
 import { rebuildDocument } from "../../cad/features/rebuildGraph";
 import { timelineStoryDocuments } from "../../cad/document/timelineStory";
 import type { CadDocument } from "../../cad/document/schema";
@@ -8,7 +8,7 @@ import { changedStoryBodies, nativeStoryGeometry } from "./timelineStoryProof";
 self.onmessage = async (event: MessageEvent<{ document: CadDocument; featureId: string }>) => {
   try {
     const snapshots = timelineStoryDocuments(event.data.document, event.data.featureId);
-    await OpenCascadeKernel.initialize();
+    await NativeKernel.initialize();
     const before = nativeStoryGeometry(rebuildDocument(snapshots.before), "Before");
     const after = nativeStoryGeometry(rebuildDocument(snapshots.after), "After");
     const changed = changedStoryBodies(before, after);

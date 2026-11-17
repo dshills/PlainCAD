@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { readFile } from "node:fs/promises";
+import { expectedGeometrySource } from "../e2e/expectedGeometrySource";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 test("built gallery serves native assets, previews under CSP, opens an editable example and downloads its actual model PNG", async ({ page }) => {
@@ -12,6 +13,15 @@ test("built gallery serves native assets, previews under CSP, opens an editable 
   await expect(gallery.getByRole("img")).toHaveCount(14);
   await expect(async () => expect(await gallery.getByRole("img").first().evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(100)).toPass();
   await gallery.getByLabel("Live native previews").check();
+  const legacy = gallery.getByRole("button", { name: "Open Angle bracket fixture", exact: true });
+  if (expectedGeometrySource === "plainsolid") {
+    await expect(gallery.getByText("Requires the OpenCascade comparison build.", { exact: true })).toHaveCount(6);
+    await expect(legacy).toBeDisabled();
+    await expect(legacy).toHaveAccessibleDescription(/chamfer on the rounded bracket/);
+    await expect(gallery.getByRole("button", { name: "Preview Angle bracket fixture", exact: true })).toBeDisabled();
+  } else {
+    await expect(legacy).toBeEnabled();
+  }
   await gallery.getByRole("button", { name: "Preview Cable guide mount", exact: true }).focus();
   const canvas = gallery.getByLabel("Native rotating preview of Cable guide mount");
   await expect(canvas).toBeVisible({ timeout: 40000 });

@@ -2,12 +2,13 @@ import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import type { CadDocument } from "../src/cad/document/schema";
 import { aiSnapshot, stlSignedVolume } from "./aiAcceptanceHelpers";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 async function command(page: Page, id: string) { await page.evaluate(async id => { const path = "/src/ui/commands/commandRegistry.ts"; await (await import(path)).runCommand(id); }, id); }
 async function geometry(page: Page, volume: number, min = [-4, -4, -4], max = [24, 14, 7]) {
   await expect(async () => {
     const state = await aiSnapshot(page); expect(state.status).toBe("succeeded"); expect(state.result?.errors).toEqual([]);
     const mesh = state.result!.meshes.find(mesh => mesh.bodyId !== "body:first-solid" && mesh.bodyId !== "body:second-solid")!;
-    expect(mesh.geometrySource).toBe("opencascade"); expect(mesh.geometryAssertions).toMatchObject({ valid: true, solidCount: 1 }); expect(mesh.geometryAssertions!.volume).toBeCloseTo(volume, 6);
+    expect(mesh.geometrySource).toBe(expectedGeometrySource); expect(mesh.geometryAssertions).toMatchObject({ valid: true, solidCount: 1 }); expect(mesh.geometryAssertions!.volume).toBeCloseTo(volume, 6);
     for (const axis of [0, 1, 2]) { expect(mesh.bounds.min[axis]).toBeCloseTo(min[axis], 5); expect(mesh.bounds.max[axis]).toBeCloseTo(max[axis], 5); }
   }).toPass({ timeout: 30000 });
 }

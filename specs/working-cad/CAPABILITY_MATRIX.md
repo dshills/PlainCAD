@@ -306,24 +306,36 @@ See `DESIGN_SYSTEM.md` and `design-qa.md` for design rules and comparison eviden
 
 ## Modeling availability and limits
 
+The default geometry provider is [PlainSolid](https://github.com/dshills/PlainSolid).
+The app uses the same project format and feature history; a different provider
+can support a different set of geometry. A feature outside PlainSolid's domain
+fails at its source and blocks export until repaired or suppressed. Its availability
+in the toolbar means the operation can be attempted on eligible inputs; native
+preview still has to prove the result before Apply. See the upstream
+[PlainCAD readiness record](https://github.com/dshills/PlainSolid/blob/71f6197633972d74b6c1301b13db8e1f1b2fbb90/docs/PLAINCAD_READINESS.md)
+for tested combinations and explicit gaps.
+
 | Capability | Current behavior | Availability |
 | --- | --- | --- |
-| Extrude new body | Positive/negative/symmetric distance native wire/face/prism extrusion of closed line/arc/circle loops and holes; symmetric distance is total span; fallback triangulates sampled boundaries | Creation dialog with native preview, explicit profile/distance/direction/operation and Apply/Cancel; inspector |
+| Extrude new body | Positive/negative/symmetric extrusion of straight polygon loops, full circles, and supported line/arc outlines including rounded rectangles and slots. Supported interior loops include straight polygon holes in polygon stock and full circles in supported round or planar stock; arbitrary curved inner loops are unavailable. Symmetric distance is total span. | Creation dialog with native preview, explicit profile/distance/direction/operation and Apply/Cancel; inspector |
 | Extrude cut | Up to 64 explicit saved target IDs; atomic updates of all targets; native world-coordinate tools; valid nonempty solid output with reduced exact volume; disjoint/no-op and empty cuts diagnosed; narrow rectangle/circular-through-hole fallback | Creation dialog with explicit targets and native preview; Inspector |
 | Extrude join | Up to 64 ordered explicit targets; atomic native connected union; first target ID/name survives, secondary targets absorbed; tool must add exact volume beyond target union; disconnected/no-op joins diagnosed; no fallback | Creation dialog with explicit targets and native preview; Inspector |
 | Through all | Projects all selected target bounds along the sketch normal for positive/negative directions or a symmetric total span; wrong-side targets diagnosed; subject to cut/join limits | Creation dialog with explicit targets, direction and native preview; Inspector |
-| Extrude to face | Positive termination on an upstream unmodified feature-owned planar cap/straight side, including sloped faces; native half-space trimming; end-cap area/intersection checks enforce finite face and holes | Creation dialog with explicit face selection and native preview; Inspector with repair |
+| Extrude to face | Positive termination of straight polygon loops or a full circle on a supported upstream feature-owned planar cap/straight side, including sloped faces; native checks enforce finite face coverage. A circular source cannot have inner loops. | Creation dialog with explicit face selection and native preview; Inspector with repair |
 | Negative/symmetric extrude | Distance and through-all supported with a shifted start plane and unchanged coordinate basis; distance owners publish native-validated retained cap/straight-side sketch planes and authored edge treatments; to-face tools remain positive-only | Inspector; unsupported to-face combinations disabled and diagnosed |
-| Revolve | Native analytic closed line/arc/circle profiles with holes; coplanar world X/Y/Z or same-sketch line axes; angles greater than 0 through 360 degrees; cross-axis/zero-volume/invalid output rejected | Native preview-and-Apply creation dialog with explicit profile/axis/angle; inspector; narrow full-Y/XY rectangular fallback for loaded documents without kernel |
+| Revolve | Native straight polygons or full circles with no inner loops; coplanar world X/Y/Z or same-sketch line axes; angles greater than 0 through 360 degrees; cross-axis/zero-volume/invalid output rejected | Native preview-and-Apply creation dialog with explicit profile/axis/angle; inspector |
 | Revolve cut/join | Native cut on up to 64 explicit saved targets with atomic publication; join merges an ordered explicit scope into one connected solid; boolean validity/volume checks | Creation dialog with explicit native target previews; Inspector with cut/join scope checkboxes and lost-reference removal |
 | Capture intersected targets | Native common-volume checks on current upstream solids and extrude/revolve/hole tools; saved IDs only; preserves an intersected join primary; ignores downstream bodies; empty/failed/stale probes leave the scope intact; face-only joins remain explicit | Shared command and Inspector button; dedicated worker with cancellation/time limit |
 | Hole | Up to 64 explicit saved target IDs and 64 sketch point centers; native aggregate cylindrical tools; every center must cut some target, every target must lose exact volume; atomic output publication; positive blind depths or through-all, with positive/negative sketch-normal direction; empty/duplicate/lost centers/targets and no-op cuts diagnosed | Native preview-and-Apply creation and editing; fresh upstream choices, separate edited-operation/downstream checks, source/center/target repair, stable IDs and one undo; direct repair inspector |
-| Fillet/chamfer | Real native geometry on feature-owned cap perimeters, individual complete line/arc/circle cap edges, or a source line’s two extrusion-direction corners; BRep/solid-count/volume-or-surface-change checks; retained authored edges also work after native booleans; grouped perimeters require every original edge and exclude new Cut/Join edges; lost/trimmed/ambiguous edges fail | Native preview-and-Apply creation dialogs with size/role/source/owner choices; repair inspector |
+| Fillet/chamfer | Real native treatments on supported authored extrusion edges, including selected straight cap/axial edges, rectangular cap perimeters and circular rims. Retained edges after a Boolean can be used when the entire original edge is proven; arbitrary curved or transient edges and unsupported full perimeters fail. Validity, solid count and measurable geometry change are required. | Native preview-and-Apply creation dialogs with size/role/source/owner choices; repair inspector |
 | Offset/face sketch planes | Expression-driven origin/face offsets; upstream distance-extrusion caps and straight outer sides; retained native faces after Cut/Join supported at the sketch’s timeline position; removed/split/ambiguous/suppressed/missing faces require repair | Create Sketch with signed expression-driven origin/face offsets; Sketch tools with explicit replacement selection; lost planes fail rebuild |
-| STEP | Native writer/reader round trip validates selected world-positioned BReps, solid/root counts, exact volume, bounds and millimetres; separate solids, no assembly/history export; 64 bodies/32 MiB/60 seconds | Export STEP body selection; Generate validated STEP; current proof required before Download |
+| STEP | Supported planar and analytic STEP solids import and export in millimetres. Export reopens the exchange geometry and verifies selected world-positioned solids, counts, volume and bounds. PlainSolid export supports up to 32 bodies and 1 MiB of STEP data. Unsupported entity graphs or topology fail explicitly; no general STEP or assembly/history support. | Export STEP body selection; Generate validated STEP; current proof required before Download |
 
 Failed operations retain upstream preview bodies but fail rebuild and disable STL.
 Downstream modifiers on a failed body are blocked. Suppression permits recovery.
+PlainSolid bounds each prism profile to 128 vertices across its loops and each
+worker to 256 live handles. PlainCAD releases obsolete geometry between features
+and frees cached shapes as needed before large operations.
 Native modeling results include runtime-only validity, exact volume/surface area, and solid-count
 assertions; these are never saved in project JSON. Splitting a body by a cut may yield
 multiple valid solids in one stable target-body compound. Empty cuts fail explicitly.
@@ -1304,7 +1316,7 @@ but these workloads do not establish a latency budget for large parts. Adapters
 without native edge proofs conservatively offer no targets; the shipped native
 adapter implements the probe, and fallback meshes never authorize edge picking.
 
-Validated native feature output reuse uses independently owned OpenCascade copies, with 128-entry/256-shape bounds and a 32 MiB mesh/signature estimate. Document/session/kernel changes clear ownership. Native allocation size is not measured by that estimate; exact BRep validity, volume and shape-count bounds remain authoritative. See [incremental limits](INCREMENTAL_NATIVE.md).
+Validated native feature output reuse holds independently owned shape copies, with at most 128 cached shapes in PlainSolid and a 32 MiB mesh/signature estimate. Large operations reserve handle capacity before the kernel starts. Document/session/kernel changes clear ownership. Native allocation size is not measured by that estimate; exact BRep validity, volume and shape-count bounds remain authoritative. See [incremental limits](INCREMENTAL_NATIVE.md).
 
 Schema 16 stores finite rigid component placement: translations within ±100,000,000 mm and Euler rotations within ±360 degrees. Move component offers pointer/keyboard handles and numeric fields; Apply requires an exact current native candidate with unchanged body IDs and solid counts. Independent moved bodies retain exact volume; traced consumers of schema-17 world projections may change geometry under normal native validity checks. Completed native BReps and mesh normals/vertices are positioned together. Legacy projections stay in authored coordinates; new links follow source/target world placement on parallel planes. Face-based creation retains its documented matching-placement scope. Schema-18 rigid/hinge/slider joints support an acyclic one-parent component graph; nested project hierarchies remain unavailable. See the assembly section below.
 
@@ -1314,7 +1326,7 @@ Feature pattern controls offer signed spacing, circular center and sweep pointer
 
 The local part library saves one self-contained editable component with a bounded native PNG thumbnail. IndexedDB is limited to 50 entries/25 MiB with atomic writes and quota/cancellation diagnostics. Drag insertion uses the viewport ray on XY z=0; keyboard insertion starts at origin. Full candidate native validation precedes one-step Apply. Saved copies remain local to the browser, with independent inserted identities/parameters; external links and automatic source updates are unavailable. Inserted components can be connected with supported assembly joints.
 
-Native STEP export uses a disposable OpenCascade worker to rebuild selected bodies at saved world poses, write real STEP solids and reimport the actual file. Download requires current matching native BRep validity, solid/root counts, exact volumes, bounds and millimetre units. Separate bodies remain separate; editable history, labels and assembly structure are retained in project files. Cancellation, changed documents, missing bindings and native failures produce diagnostics without authorizing stale downloads. See [STEP export](STEP_EXPORT.md).
+Native STEP export uses a disposable geometry worker to rebuild selected bodies at saved world poses, write real STEP solids and reimport the actual file. Download requires current matching native BRep validity, solid/root counts, exact volumes, bounds and millimetre units. Separate bodies remain separate; editable history, labels and assembly structure are retained in project files. Cancellation, changed documents and native failures produce diagnostics without authorizing stale downloads. See [STEP export](STEP_EXPORT.md).
 
 Native STEP import previews a bounded local exchange file containing one root
 and one closed solid. Apply adds an independent component with stable body
@@ -1378,7 +1390,7 @@ volume. Resource/collision limits explicitly mark analysis incomplete.
 Open **Product configurations** from the command palette or active component
 settings. Save the current editable parameter expressions with a unique name;
 **Edit** changes a saved variant without changing the current model. Select up to
-eight variants and **Compare** to rebuild each with OpenCascade, inspect body
+eight variants and **Compare** to rebuild each with the native kernel, inspect body
 size/volume, and preview it. **Apply** changes the current model in one Undo step.
 **Download configuration STL archive** validates each part and creates an archive
 with configuration/part filenames plus a manifest of native volumes and bounds.
@@ -1386,7 +1398,7 @@ Canceling or replacing the project invalidates pending results and downloads.
 
 For a successfully compared variant with native STEP support, preview its row
 and choose a drawing body. **Generate fabrication package** freezes that variant
-and runs one isolated OpenCascade rebuild. Exact native body IDs, solid counts,
+and runs one isolated native rebuild. Exact native body IDs, solid counts,
 volumes, areas and world tessellation bounds must match its current comparison;
 STEP is reimported and its world bounds and geometry are verified. Written STL
 coordinates and extents are checked against the source mesh. Parts whose float32

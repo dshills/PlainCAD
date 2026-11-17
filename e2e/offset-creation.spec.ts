@@ -2,6 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { applyExtrusion } from "./extrudeWorkflow";
 import type { CadDocument } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 const PLANE_LABEL = {
   XY: "Top (XY)",
   XZ: "Front (XZ)",
@@ -110,7 +111,7 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
         )
         .toBeCloseTo(72, 7);
       const mesh = (await state(page)).result.meshes[0];
-      expect(mesh.geometrySource).toBe("opencascade");
+      expect(mesh.geometrySource).toBe(expectedGeometrySource);
       expect(mesh.geometryAssertions).toMatchObject({
         valid: true,
         solidCount: 1,
@@ -228,7 +229,7 @@ test("Create Sketch offset from a native end cap follows owner distance edits", 
     .toBeCloseTo(16, 6);
   snapshot = await state(page);
   mesh = snapshot.result.meshes.find((mesh) => mesh.bodyId === childId)!;
-  expect(mesh.geometrySource).toBe("opencascade");
+  expect(mesh.geometrySource).toBe(expectedGeometrySource);
   expect(mesh.geometryAssertions!.volume).toBeCloseTo(45 * Math.PI, 7);
   expect(mesh.bounds.max[2]).toBeCloseTo(21, 6);
 });

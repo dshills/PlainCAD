@@ -1,4 +1,4 @@
-import { assertStepSelection } from "../../fabrication/stepExport";
+import { assertStepSelection, stepBodyLimit } from "../../fabrication/stepExport";
 import { downloadArrayBuffer, projectFilename } from "../../persistence/exportProject";
 import { beginFileJob, fileJobCurrent, finishFileJob, useFileJobs } from "../../persistence/fileJobs";
 import { useCadStore } from "../../state/useCadStore";
@@ -12,7 +12,7 @@ export async function prepareStepExport() {
   const controller = beginFileJob("Preparing validated native STEP export…"); stepExportRuntime.controller = controller;
   const unsubscribe = useCadStore.subscribe(state => { if (!stepExportCurrent(frame, state)) controller.abort(); });
   try {
-    assertStepSelection(frame.bodyIds, frame.result.meshes.map(mesh => mesh.bodyId));
+    assertStepSelection(frame.bodyIds, frame.result.meshes.map(mesh => mesh.bodyId), stepBodyLimit(frame.result.meshes[0]?.geometrySource));
     const { exportStepDocument } = await import("../../fabrication/stepExportClient");
     const prepared = await exportStepDocument(frame.document, [...frame.bodyIds], frame.session, controller.signal, message => {
       if (fileJobCurrent(controller)) useFileJobs.setState({ message });

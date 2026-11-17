@@ -7,6 +7,7 @@ const root = fileURLToPath(new URL("..", import.meta.url));
 const origin = process.env.PLAINCAD_BENCHMARK_URL ?? "http://127.0.0.1:5278";
 const output = resolve(process.argv[2] ?? "test-results/viewer-interaction.json");
 const browser = await chromium.launch({ headless: true });
+const expectedKernel = process.env.VITE_CAD_KERNEL === "opencascade" ? "opencascade" : "plainsolid";
 const reports = [];
 try {
   const page = await browser.newPage({ viewport: { width: 1600, height: 1000 }, deviceScaleFactor: 2 });
@@ -41,8 +42,8 @@ try {
       if (snapshot.session > 0 && snapshot.status === "succeeded" && snapshot.meshes?.length === count) break;
       await page.waitForTimeout(100);
     }
-    if (snapshot.status !== "succeeded" || snapshot.meshes?.length !== count || !snapshot.meshes.every((mesh) => mesh.source === "opencascade" && mesh.volume > 0))
-      throw new Error("Expected native model is unavailable. Restart the development server before measuring.");
+    if (snapshot.status !== "succeeded" || snapshot.meshes?.length !== count || !snapshot.meshes.every((mesh) => mesh.source === expectedKernel && mesh.volume > 0))
+      throw new Error(`Expected ${expectedKernel} model is unavailable. Start the corresponding development server before measuring.`);
     await page.waitForTimeout(1000);
     const box = await page.locator(".viewer-canvas canvas").first().boundingBox();
     if (!box) throw new Error("Viewer is unavailable.");

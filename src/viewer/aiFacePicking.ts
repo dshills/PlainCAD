@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../cad/kernel/geometrySource";
 import * as THREE from "three";
 import { faceChoiceAt, sketchPlaneChoices } from "../cad/sketch/planePicking";
 import { useCadStore } from "../state/useCadStore";
@@ -26,7 +27,7 @@ export function installAiFacePicking(canvas: HTMLCanvasElement, camera: THREE.Pe
     const hit = ray.intersectObjects(model.children.filter((object) => object.visible), true).find((item) => item.object instanceof THREE.Mesh && (!clipping() || clipping()!.distanceToPoint(item.point) >= 0));
     const bodyId = hit?.object.userData.bodyId as string | undefined;
     const mesh = frame.result.meshes.find((item) => item.bodyId === bodyId);
-    if (!hit?.face || !bodyId || !mesh || mesh.geometrySource !== "opencascade" || !mesh.geometryAssertions?.valid || bodyComponentId(frame.document, bodyId) !== frame.componentId) {
+    if (!hit?.face || !bodyId || !mesh || !isNativeGeometrySource(mesh.geometrySource) || !mesh.geometryAssertions?.valid || bodyComponentId(frame.document, bodyId) !== frame.componentId) {
       useAiFacePicking.setState({ message: "Choose a visible native part in the active component." }); return;
     }
     const normal = hit.face.normal.clone().applyMatrix3(new THREE.Matrix3().getNormalMatrix(hit.object.matrixWorld)).normalize();

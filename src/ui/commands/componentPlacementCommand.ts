@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../../cad/kernel/geometrySource";
 import { withAssemblyJoint } from "../../cad/document/assemblyJoints";
 import type { AssemblyJoint, CadDocument, ComponentPlacement } from "../../cad/document/schema";
 import type { RebuildResult } from "../../cad/worker/workerProtocol";
@@ -36,7 +37,7 @@ function idle(state: CadStore, own = false) {
 export function canBeginComponentPlacement(state = useCadStore.getState()) {
   const document = state.history.present, result = state.rebuild.result;
   if (document.features.some(feature => feature.type === "fit" && !feature.suppressed && feature.followSourcePlacement && feature.componentId === state.activeComponentId) || document.assemblyJoints?.some(joint => joint.childComponentId === state.activeComponentId) || !idle(state) || !document.components[state.activeComponentId] || state.rebuild.status !== "succeeded" || !result?.success || result.documentId !== document.id) return false;
-  return result.meshes.some((mesh) => bodyComponentId(document, mesh.bodyId) === state.activeComponentId && mesh.geometrySource === "opencascade" && mesh.geometryAssertions?.valid);
+  return result.meshes.some((mesh) => bodyComponentId(document, mesh.bodyId) === state.activeComponentId && isNativeGeometrySource(mesh.geometrySource) && mesh.geometryAssertions?.valid);
 }
 export function beginComponentPlacement(componentId = useCadStore.getState().activeComponentId) {
   const state = useCadStore.getState();
@@ -92,7 +93,7 @@ export function applyComponentPlacement(preview: ComponentPlacementPreview, plac
 }
 
 export function canBeginAssemblyMotion(state = useCadStore.getState()) {
-  return idle(state) && Boolean(state.history.present.assemblyJoints?.length) && state.rebuild.status === "succeeded" && Boolean(state.rebuild.result?.success) && state.rebuild.result?.documentId === state.history.present.id && Object.hasOwn(state.history.present.components, state.activeComponentId) && Boolean(state.rebuild.result?.meshes.length && state.rebuild.result.meshes.every(mesh => mesh.geometrySource === "opencascade" && mesh.geometryAssertions?.valid && Number.isFinite(mesh.geometryAssertions.volume) && mesh.geometryAssertions.volume > 0 && mesh.geometryAssertions.solidCount > 0));
+  return idle(state) && Boolean(state.history.present.assemblyJoints?.length) && state.rebuild.status === "succeeded" && Boolean(state.rebuild.result?.success) && state.rebuild.result?.documentId === state.history.present.id && Object.hasOwn(state.history.present.components, state.activeComponentId) && Boolean(state.rebuild.result?.meshes.length && state.rebuild.result.meshes.every(mesh => isNativeGeometrySource(mesh.geometrySource) && mesh.geometryAssertions?.valid && Number.isFinite(mesh.geometryAssertions.volume) && mesh.geometryAssertions.volume > 0 && mesh.geometryAssertions.solidCount > 0));
 }
 export function beginAssemblyMotion() {
   const state = useCadStore.getState();

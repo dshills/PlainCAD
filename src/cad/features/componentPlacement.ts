@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../kernel/geometrySource";
 import type { CadDocument, ComponentPlacement } from "../document/schema";
 import { bodyComponentId } from "../document/components";
 import { placedPoint, placedVector, placementTransform } from "../document/componentPlacement";
@@ -37,7 +38,7 @@ export function applyComponentPlacements<T extends { shape: KernelShape; mesh?: 
     const component = bodyComponentId(document, id), placement = component ? document.components[component]?.placement : undefined;
     if (!placement || [...placement.translation, ...placement.rotation].every(n => n === 0)) continue;
     let shape = body.shape;
-    if (body.mesh?.geometrySource === "opencascade") {
+    if (isNativeGeometrySource(body.mesh?.geometrySource)) {
       if (!kernel.placeShape) throw new Error("This kernel cannot position native components.");
       shape = kernel.placeShape(shape, placement); owned.add(shape);
     }

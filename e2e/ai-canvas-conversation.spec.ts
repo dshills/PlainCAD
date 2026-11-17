@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { aiPlatePlan } from "../src/tests/fixtures/aiPlan";
 import { aiSnapshot } from "./aiAcceptanceHelpers";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 async function nativeVolume(page: Page, expected: number) {
   await expect(async () => {
     const state = await aiSnapshot(page);
@@ -8,7 +9,7 @@ async function nativeVolume(page: Page, expected: number) {
     expect(state.result?.documentId).toBe(state.document.id);
     expect(state.result?.meshes).toHaveLength(1);
     const mesh = state.result!.meshes[0];
-    expect(mesh.geometrySource).toBe("opencascade");
+    expect(mesh.geometrySource).toBe(expectedGeometrySource);
     expect(mesh.geometryAssertions).toMatchObject({ valid: true, solidCount: 1 });
     expect(mesh.geometryAssertions!.volume).toBeCloseTo(expected, 5);
   }).toPass({ timeout: 30000 });
@@ -51,7 +52,7 @@ test("canvas conversation creates a part then halves thickness locally with nati
     });
     expect(preview?.meshes).toHaveLength(1);
     expect(preview?.meshes[0].geometryAssertions).toMatchObject({ valid: true, solidCount: 1 });
-    expect(preview?.meshes[0].geometrySource).toBe("opencascade");
+    expect(preview?.meshes[0].geometrySource).toBe(expectedGeometrySource);
     expect(preview?.meshes[0].geometryAssertions?.volume).toBeCloseTo(volume / 2, 5);
   }).toPass({ timeout: 30000 });
   await expect(page.locator(".viewer-canvas canvas")).toHaveCount(1);

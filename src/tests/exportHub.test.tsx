@@ -22,7 +22,7 @@ function open(goal: RegExp) { beginSaveOrExport(); render(<FabricationPanel />);
 it("shows five plain output goals and distinguishes unavailable native STEP", () => {
   open(/Other CAD/); expect(screen.getAllByRole("radio")).toHaveLength(5);
   expect(screen.getByRole("button", { name: "Choose parts for STEP" })).toBeDisabled();
-  expect(screen.getByRole("status")).toHaveTextContent("valid OpenCascade solids");
+  expect(screen.getByRole("status")).toHaveTextContent("valid native solids");
   expect(screen.getByText(/does not keep PlainCAD/)).toBeVisible();
 });
 it("closes the hub before handing selected native solids to the STEP command", async () => {

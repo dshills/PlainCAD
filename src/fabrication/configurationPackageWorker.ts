@@ -1,6 +1,8 @@
 import { importProjectText } from "../persistence/projectCodec";
 import type { JobReply } from "../persistence/backgroundJob";
 import { assertConfigurationPackageRequest, buildConfigurationPackage, type ConfigurationPackageReply, type ConfigurationPackageRequest } from "./configurationPackage";
+import { NativeKernel } from "../cad/kernel/NativeKernel";
+import { assertStepSelection, stepBodyLimit } from "./stepExport";
 
 type PackageWorkerReply = JobReply<ConfigurationPackageReply>;
 
@@ -13,14 +15,14 @@ self.onmessage = async (event: MessageEvent<ConfigurationPackageRequest>) => {
   try {
     const request = event.data;
     assertConfigurationPackageRequest(request);
+    assertStepSelection(request.bodyIds, undefined, stepBodyLimit(NativeKernel.source));
     const document = importProjectText(request.projectText);
     if (!document.configurations?.some(item => item.id === request.configurationId)) throw new Error("Configuration no longer exists.");
     progress("Rebuilding the selected configuration and validating STEP…");
-    const { OpenCascadeKernel } = await import("../cad/kernel/OpenCascadeKernel");
     const { rebuildDocument, clearNativeFeatureCache } = await import("../cad/features/rebuildGraph");
     clearCache = clearNativeFeatureCache;
-    await OpenCascadeKernel.initialize();
-    const unavailable = OpenCascadeKernel.stepExportDiagnostic();
+    await NativeKernel.initialize();
+    const unavailable = NativeKernel.stepExportDiagnostic();
     if (unavailable) throw new Error(unavailable);
     const rebuilt = rebuildDocument(document, {
       epoch: request.session, reuseNativeFeatures: false,

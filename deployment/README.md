@@ -1,6 +1,7 @@
 # Production deployment
 
-Build with `npm ci` and `npm run build`. Serve `dist/` over HTTPS from a stable
+Build with `npm ci`, `npm run kernel:plainsolid` (using the Go version in
+`scripts/plainsolid-pin.json`), and `npm run build`. Serve `dist/` over HTTPS from a stable
 origin. Project downloads and IndexedDB recovery stay on the user's device;
 changing the origin changes access to that origin's recovery storage.
 

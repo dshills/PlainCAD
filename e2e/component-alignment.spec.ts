@@ -8,6 +8,7 @@ import { solveSketch } from "../src/cad/sketch/SketchSolver";
 import { detectProfiles } from "../src/cad/sketch/profileDetection";
 import { stableFaceId } from "../src/cad/sketch/planes";
 import { aiSnapshot, stlSignedVolume } from "./aiAcceptanceHelpers";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 function fixture() {
   let document = createEmptyDocument("Aligned components");
   document = { ...document, components: { ...document.components, [document.rootComponentId]: { ...document.components[document.rootComponentId], name: "Source part" } } };
@@ -27,7 +28,7 @@ async function check(page: Page, featureId: string, min: number[], max: number[]
   await expect(async () => {
     const state = await aiSnapshot(page); expect(state.status).toBe("succeeded"); expect(state.result?.success).toBe(true); expect(state.result?.errors).toEqual([]); expect(state.result?.meshes).toHaveLength(2);
     const mesh = state.result!.meshes.find(mesh => mesh.bodyId === `body:${featureId}`)!;
-    expect(mesh).toMatchObject({ geometrySource: "opencascade", geometryAssertions: { valid: true, solidCount: 1 } }); expect(mesh.geometryAssertions!.volume).toBeCloseTo(volume, 7);
+    expect(mesh).toMatchObject({ geometrySource: expectedGeometrySource, geometryAssertions: { valid: true, solidCount: 1 } }); expect(mesh.geometryAssertions!.volume).toBeCloseTo(volume, 7);
     for (const axis of [0, 1, 2]) { expect(mesh.bounds.min[axis]).toBeCloseTo(min[axis], 7); expect(mesh.bounds.max[axis]).toBeCloseTo(max[axis], 7); }
   }).toPass({ timeout: 30000 });
 }

@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { aiSnapshot } from "./aiAcceptanceHelpers";
 import { assertStepProofs, expectedStepProofs, generatePublicStep, loadStepFixture, observeStepProofs, stepTranscripts } from "./stepExportHelpers";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 async function native(page: Page, depth = 5) {
   await expect(async () => {
     const state = await aiSnapshot(page);
@@ -10,7 +11,7 @@ async function native(page: Page, depth = 5) {
     expect(state.result!.meshes).toHaveLength(2);
     expect(state.result!.errors).toEqual([]);
     state.result!.meshes.forEach((mesh, index) => {
-      expect(mesh).toMatchObject({ geometrySource: "opencascade", geometryAssertions: { valid: true, solidCount: 1 } });
+      expect(mesh).toMatchObject({ geometrySource: expectedGeometrySource, geometryAssertions: { valid: true, solidCount: 1 } });
       expect(Math.abs(mesh.geometryAssertions!.volume / expectedStepProofs(depth)[index].volume - 1)).toBeLessThan(1e-8);
     });
   }).toPass({ timeout: 30000 });

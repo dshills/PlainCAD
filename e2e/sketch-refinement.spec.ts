@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { aiSnapshot, stlSignedVolume } from "./aiAcceptanceHelpers";
 import { workbenchTaskFixture } from "./workbenchTaskFixtures";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 test("local sketch refinement previews native downstream geometry, Cancel, one Undo, save/open and STL", async ({ page }, info) => {
   let providerRequests = 0;
@@ -39,7 +40,7 @@ test("local sketch refinement previews native downstream geometry, Cancel, one U
     commands.useSketchRefinement.setState({ frame: undefined });
     return { diagnostic, unchanged: store.getState().history.present === before, source: preview.result.meshes[0].geometrySource, volume: preview.volume };
   });
-  expect(mixedNativeProof).toMatchObject({ diagnostic: "Refinement result does not match this proposal. Generate a fresh preview.", unchanged: true, source: "opencascade" });
+  expect(mixedNativeProof).toMatchObject({ diagnostic: "Refinement result does not match this proposal. Generate a fresh preview.", unchanged: true, source: expectedGeometrySource });
   expect(mixedNativeProof.volume).toBeCloseTo(19200, 4);
   await request.fill("make this rectangle 60 x 40 mm");
   const before = await aiSnapshot(page);
@@ -55,7 +56,7 @@ test("local sketch refinement previews native downstream geometry, Cancel, one U
   await expect(async () => {
     const state = await aiSnapshot(page);
     expect(state.status).toBe("succeeded");
-    expect(state.result?.meshes[0]).toMatchObject({ geometrySource: "opencascade", geometryAssertions: { valid: true, solidCount: 1 } });
+    expect(state.result?.meshes[0]).toMatchObject({ geometrySource: expectedGeometrySource, geometryAssertions: { valid: true, solidCount: 1 } });
     expect(state.result?.meshes[0].geometryAssertions?.volume).toBeCloseTo(19200, 4);
     expect(state.past).toBe(before.past + 1);
     const sketch = Object.values(state.document.sketches)[0];

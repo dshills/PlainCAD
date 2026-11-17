@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../../cad/kernel/geometrySource";
 import type { RenderMesh } from "../../cad/kernel/KernelAdapter";
 import type { CadDocument } from "../../cad/document/schema";
 import type { RebuildResult } from "../../cad/worker/workerProtocol";
@@ -24,7 +25,7 @@ function ready(state: CadStore, own = false) {
     !useGuidedHole.getState().draft && !useProjectWorkflow.getState().active && !operationDraftBusy() && !useTargetScopeCapture.getState().busy && !useFileJobs.getState().exportOpen && !currentAiCanvasPreview(state);
 }
 export function canCoach(state = useCadStore.getState()) {
-  return Boolean(ready(state) && state.rebuild.result?.meshes.length && state.rebuild.result.meshes.every(mesh => mesh.geometrySource === "opencascade" && mesh.geometryAssertions?.valid));
+  return Boolean(ready(state) && state.rebuild.result?.meshes.length && state.rebuild.result.meshes.every(mesh => isNativeGeometrySource(mesh.geometrySource) && mesh.geometryAssertions?.valid));
 }
 export function beginCoach() {
   const state = useCadStore.getState(); if (!canCoach(state)) throw new Error("Finish the current task and wait for a native model before Manufacturing coach.");
@@ -39,7 +40,7 @@ const proven = new WeakSet<CoachPreview>();
 /** Compare affected native outputs, including equal-volume shape changes. */
 export function nativeMeshChanged(before: RenderMesh, after: RenderMesh) {
   const a = before.geometryAssertions, b = after.geometryAssertions;
-  if (before.geometrySource !== "opencascade" || after.geometrySource !== "opencascade" || !a?.valid || !b?.valid || ![a.volume, b.volume, a.surfaceArea, b.surfaceArea].every(value => Number.isFinite(value) && value > 0)) throw new Error("Correction comparison requires valid native geometry measurements.");
+  if (!isNativeGeometrySource(before.geometrySource) || !isNativeGeometrySource(after.geometrySource) || !a?.valid || !b?.valid || ![a.volume, b.volume, a.surfaceArea, b.surfaceArea].every(value => Number.isFinite(value) && value > 0)) throw new Error("Correction comparison requires valid native geometry measurements.");
   const changed = (first: number, second: number) => Math.abs(first - second) > Math.max(1e-7, Math.abs(first) * 1e-9);
   return changed(a.volume, b.volume) || changed(a.surfaceArea, b.surfaceArea) || [0, 1, 2].some(axis => changed(before.bounds.min[axis], after.bounds.min[axis]) || changed(before.bounds.max[axis], after.bounds.max[axis]));
 }

@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../../cad/kernel/geometrySource";
 import { useFacePocketIntent } from "./facePocketIntentState";
 import { interactionDraftBusy, useFacePocket } from "./interactionDraftState";
 export { useFacePocket } from "./interactionDraftState";
@@ -45,7 +46,7 @@ export function facePocketFaces(state: CadStore = useCadStore.getState()) {
     const owner = state.history.present.features.find((feature) => feature.id === reference.featureId);
     const mesh = result.meshes.find((item) => item.bodyId === choice.bodyId);
     return Boolean(owner && featureComponentId(state.history.present, owner) === state.activeComponentId &&
-      mesh?.geometrySource === "opencascade" && mesh.geometryAssertions?.valid &&
+      isNativeGeometrySource(mesh?.geometrySource) && mesh.geometryAssertions?.valid &&
       mesh.geometryAssertions.solidCount === 1 && mesh.geometryAssertions.volume > 0 &&
       guidedFaceTriangles(choice, mesh).length);
   });

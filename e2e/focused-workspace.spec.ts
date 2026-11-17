@@ -8,6 +8,7 @@ import {
   assertAiAcceptanceViewer,
 } from "./aiAcceptanceHelpers";
 import { applyExtrusion } from "./extrudeWorkflow";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 // Keep minimal-workspace compatibility coverage separate from the new default workbench suite.
 test.use({
   storageState: async ({ baseURL }, use) => {
@@ -33,7 +34,7 @@ async function volume(page: Page, expected: number) {
     expect(state.result?.success).toBe(true);
     expect(state.result?.meshes).toHaveLength(1);
     const mesh = state.result!.meshes[0];
-    expect(mesh.geometrySource).toBe("opencascade");
+    expect(mesh.geometrySource).toBe(expectedGeometrySource);
     expect(mesh.geometryAssertions).toMatchObject({
       valid: true,
       solidCount: 1,
@@ -555,13 +556,14 @@ for (const plane of ["XY", "XZ", "YZ"] as const) {
     );
     await label.focus();
     await label.press("Enter");
-    await expect(
-      page.getByLabel("Sketch size expression", { exact: true }),
-    ).toBeFocused();
-    await page.getByLabel("Sketch size expression", { exact: true }).fill("30");
-    await page
-      .getByLabel("Sketch size expression", { exact: true })
-      .press("Enter");
+    const expression = page.getByLabel("Sketch size expression", { exact: true });
+    await expect(expression).toBeFocused();
+    await expect(expression).toHaveValue("2cm");
+    await expression.clear();
+    await expect(expression).toHaveValue("");
+    await expression.fill("30");
+    await expect(expression).toHaveValue("30");
+    await expression.press("Enter");
     await expect(
       page.getByRole("group", { name: "Sketch drawing canvas", exact: true }),
     ).toBeFocused();

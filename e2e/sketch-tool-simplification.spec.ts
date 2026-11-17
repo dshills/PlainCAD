@@ -3,6 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { aiSnapshot, stlSignedVolume } from "./aiAcceptanceHelpers";
 import { applyExtrusion } from "./extrudeWorkflow";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -14,7 +15,7 @@ async function ready(page: Page, volume?: number) {
     if (volume !== undefined) {
       expect(state.result!.meshes).toHaveLength(1);
       const mesh = state.result!.meshes[0];
-      expect(mesh.geometrySource).toBe("opencascade");
+      expect(mesh.geometrySource).toBe(expectedGeometrySource);
       expect(mesh.geometryAssertions).toMatchObject({ valid: true, solidCount: 1 });
       expect(mesh.geometryAssertions!.volume).toBeCloseTo(volume, 6);
     }

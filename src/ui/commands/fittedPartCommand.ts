@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../../cad/kernel/geometrySource";
 import { useFittedPart } from "./fittedPartState";
 export { useFittedPart } from "./fittedPartState";
 import type { CadDocument, FittedPartFeature } from "../../cad/document/schema";
@@ -40,7 +41,7 @@ export function canBuildFit(state = useCadStore.getState(), edit = false) {
   // Broken references remain repairable using another source in a new native preview.
   if (edit) return Boolean(selectedFit(state));
   return state.rebuild.status === "succeeded" && result?.success && result.documentId === document.id &&
-    Object.keys(document.components).length < MODEL_RESOURCE_LIMITS.maxComponents && Boolean(result.meshes.length && result.meshes.every(mesh => mesh.geometrySource === "opencascade" && mesh.geometryAssertions?.valid));
+    Object.keys(document.components).length < MODEL_RESOURCE_LIMITS.maxComponents && Boolean(result.meshes.length && result.meshes.every(mesh => isNativeGeometrySource(mesh.geometrySource) && mesh.geometryAssertions?.valid));
 }
 export function beginFit(edit = false) {
   const state = useCadStore.getState();

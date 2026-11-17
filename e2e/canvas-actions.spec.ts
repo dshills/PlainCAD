@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { aiSnapshot } from "./aiAcceptanceHelpers";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 async function selectFirstBody(page: Page, showAll = false) {
   await page.evaluate(async (restore) => {
@@ -17,7 +18,7 @@ test("native canvas contextual actions support keyboard menus, hide, base editin
   await page.evaluate(async () => { const tp = "/src/templates/templates.ts", sp = "/src/state/useCadStore.ts"; (await import(sp)).useCadStore.getState().setDocument((await import(tp)).createBoxTemplate()); });
   await expect(async () => { const state = await aiSnapshot(page); expect(state.status).toBe("succeeded"); expect(state.result?.meshes).toHaveLength(1); }).toPass();
   const before = await aiSnapshot(page);
-  expect(before.result?.meshes[0].geometrySource).toBe("opencascade");
+  expect(before.result?.meshes[0].geometrySource).toBe(expectedGeometrySource);
   expect(before.result?.meshes[0].geometryAssertions?.valid).toBe(true);
   const volume = before.result!.meshes[0].geometryAssertions!.volume;
   await selectFirstBody(page);

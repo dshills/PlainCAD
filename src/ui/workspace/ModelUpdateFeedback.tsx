@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../../cad/kernel/geometrySource";
 import { useEffect, useRef, useState } from "react";
 import type { RenderMesh } from "../../cad/kernel/KernelAdapter";
 import { useCadStore } from "../../state/useCadStore";
@@ -32,7 +33,7 @@ export function ModelUpdateFeedback() {
     const result = rebuild.result;
     if (rebuild.status !== "succeeded" || !result?.success || result.documentId !== documentId || previous.current.result === result) return;
     previous.current.result = result;
-    if (result.meshes.some((mesh) => mesh.geometrySource !== "opencascade" || !mesh.geometryAssertions?.valid || mesh.geometryAssertions.solidCount < 1 || !Number.isFinite(mesh.geometryAssertions.volume) || mesh.geometryAssertions.volume <= 0)) return;
+    if (result.meshes.some((mesh) => !isNativeGeometrySource(mesh.geometrySource) || !mesh.geometryAssertions?.valid || mesh.geometryAssertions.solidCount < 1 || !Number.isFinite(mesh.geometryAssertions.volume) || mesh.geometryAssertions.volume <= 0)) return;
     const before = previous.current.meshes;
     previous.current.meshes = result.meshes;
     if (before && !sameModelGeometry(before, result.meshes)) setConfirmation((value) => value + 1);

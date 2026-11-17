@@ -1,6 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { aiSnapshot, stlSignedVolume } from "./aiAcceptanceHelpers";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 async function nativeReady(page: Page, distance = 10) {
   await expect(async () => {
@@ -11,7 +12,7 @@ async function nativeReady(page: Page, distance = 10) {
     expect(snapshot.result?.errors).toEqual([]);
     expect(snapshot.result?.meshes).toHaveLength(2);
     for (const mesh of snapshot.result!.meshes) {
-      expect(mesh.geometrySource).toBe("opencascade");
+      expect(mesh.geometrySource).toBe(expectedGeometrySource);
       expect(mesh.geometryAssertions).toMatchObject({
         valid: true,
         solidCount: 1,

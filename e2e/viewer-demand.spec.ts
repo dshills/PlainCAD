@@ -2,6 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { writeFile } from "node:fs/promises";
 import { aiSnapshot } from "./aiAcceptanceHelpers";
 import type { ViewerSnapshot } from "../src/viewer/viewerDiagnostics";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 async function viewer(page: Page): Promise<ViewerSnapshot> {
   return page.evaluate(async () => { const path = "/src/viewer/viewerDiagnostics.ts"; return (await import(path)).inspectViewer(); });
@@ -14,7 +15,7 @@ async function loadOrbit(page: Page) {
     expect(state.document.name).toBe("ORBIT drive housing");
     expect(state.status).toBe("succeeded");
     expect(state.result?.meshes).toHaveLength(1);
-    expect(state.result!.meshes[0].geometrySource).toBe("opencascade");
+    expect(state.result!.meshes[0].geometrySource).toBe(expectedGeometrySource);
     expect(state.result!.meshes[0].geometryAssertions).toMatchObject({ valid: true, solidCount: 1 });
     expect(state.result!.meshes[0].geometryAssertions!.volume).toBeCloseTo(272452.36918433453, 4);
   }).toPass();

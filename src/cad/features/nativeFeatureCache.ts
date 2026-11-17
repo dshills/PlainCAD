@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../kernel/geometrySource";
 import type { KernelAdapter, KernelShape, RenderMesh } from "../kernel/KernelAdapter";
 
 export interface CachedRuntimeBody {
@@ -33,7 +34,11 @@ export class NativeFeatureCache {
   misses = 0;
   disposalFailures = 0;
 
-  constructor(private limits = DEFAULT_LIMITS) {}
+  private readonly limits: typeof DEFAULT_LIMITS;
+
+  constructor(limits: Partial<typeof DEFAULT_LIMITS> = {}) {
+    this.limits = { ...DEFAULT_LIMITS, ...limits };
+  }
 
   begin(namespace: string, kernel: KernelAdapter, epoch?: number) {
     this.disposalFailures = 0;
@@ -68,7 +73,7 @@ export class NativeFeatureCache {
 
   stage(key: string, bodies: Array<[string, CachedRuntimeBody]>, removedIds: string[]): number | undefined {
     const version = this.nextVersion++;
-    if (!this.kernel?.cloneShape || key.length > 262144 || bodies.some(([, body]) => body.mesh?.geometrySource !== "opencascade" || !body.mesh.geometryAssertions?.valid)) return undefined;
+    if (!this.kernel?.cloneShape || key.length > 262144 || bodies.some(([, body]) => !isNativeGeometrySource(body.mesh?.geometrySource) || !body.mesh.geometryAssertions?.valid)) return undefined;
     const bytes = key.length * 2 + bodies.reduce((sum, [, body]) => sum + meshBytes(body.mesh), 0);
     if (bytes > this.limits.bytes || bodies.length > this.limits.shapes) return undefined;
     // Reserve room before creating native copies, including partial-copy paths.
@@ -123,6 +128,19 @@ export class NativeFeatureCache {
   get size() { return this.entries.size; }
   get retainedShapes() { return this.shapes + this.pendingShapes(); }
   get retainedBytes() { return this.bytes + this.pendingBytes(); }
+
+  /** Reserve room for runtime shapes without keeping an entire feature cache
+   * artificially small for the worst possible operation. */
+  trimShapes(maximum: number) {
+    while (this.retainedShapes > Math.max(0, maximum)) {
+      const committed = this.entries.keys().next().value;
+      if (committed !== undefined) { this.remove(committed); continue; }
+      const pending = this.pending.keys().next().value;
+      if (pending === undefined) break;
+      this.disposeBodies(this.pending.get(pending)!.bodies);
+      this.pending.delete(pending);
+    }
+  }
 
   private rollback() {
     for (const entry of this.pending.values()) this.disposeBodies(entry.bodies);

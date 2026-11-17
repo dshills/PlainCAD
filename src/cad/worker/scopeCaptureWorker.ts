@@ -1,4 +1,4 @@
-import { OpenCascadeKernel } from "../kernel/OpenCascadeKernel";
+import { NativeKernel } from "../kernel/NativeKernel";
 import {
   captureDocumentTargetScope,
   scopeFeatureFromDocument,
@@ -13,7 +13,7 @@ self.onmessage = async (event: MessageEvent<ScopeCaptureRequest>) => {
     const { document, featureId } = event.data;
     const feature = scopeFeatureFromDocument(document, featureId);
     self.postMessage({ progress: "Initializing native scope capture…" });
-    await OpenCascadeKernel.initialize();
+    await NativeKernel.initialize();
     self.postMessage({ progress: "Checking native body/tool intersections…" });
     self.postMessage({ result: captureDocumentTargetScope(document, feature) });
   } catch (error) {

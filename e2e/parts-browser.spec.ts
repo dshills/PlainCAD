@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 // Exercise the compact dock, independently of the full-layout acceptance default.
 test.use({ storageState: { cookies: [], origins: [] } });
@@ -18,7 +19,7 @@ test("compact Parts rows support keyboard activation, contextual isolation, and 
   expect(original.result.success).toBe(true);
   expect(original.result.meshes).toHaveLength(2);
   for (const mesh of original.result.meshes) {
-    expect(mesh.geometrySource).toBe("opencascade");
+    expect(mesh.geometrySource).toBe(expectedGeometrySource);
     expect(mesh.geometryAssertions).toMatchObject({ valid: true, solidCount: 1 });
     expect(mesh.geometryAssertions.volume).toBeGreaterThan(0);
   }

@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import type { CadDocument } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
 import { applyModeling } from "./modelingWorkflow";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 async function snapshot(
   page: Page,
 ): Promise<{ document: CadDocument; result: RebuildResult; past: number }> {
@@ -103,7 +104,7 @@ test("Revolve previews a construction-axis torus, diagnoses axis/angle errors, c
     angle: { expression: "90deg" },
     axis: { type: "sketchLine", lineId },
   });
-  expect(mesh.geometrySource).toBe("opencascade");
+  expect(mesh.geometrySource).toBe(expectedGeometrySource);
   expect(mesh.geometryAssertions).toMatchObject({ valid: true, solidCount: 1 });
   expect(mesh.geometryAssertions!.volume).toBeCloseTo(10 * Math.PI ** 2, 7);
   for (const [axis, min, max] of [

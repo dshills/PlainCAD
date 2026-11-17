@@ -27,11 +27,14 @@ retained entry. The cache clears on a changed document ID, kernel instance or
 worker epoch; terminating the worker releases its WASM heap. An explicit clear
 helper is available for direct native callers.
 
-Cache ownership is bounded to 128 entries, 256 native shape wrappers and 32 MiB
+Cache ownership is bounded to 128 entries, 128 native shape wrappers with
+PlainSolid (256 with the comparison provider), and 32 MiB
 of estimated mesh/signature storage, including pending admissions. Native BRep
 allocation sizes cannot be measured by this estimate: the native shape count is
-the separate bound. Current-rebuild transient native shapes are owned and
-released through the existing rebuild lifetime. Admission or retrieval copy
+the separate bound. PlainSolid's worker permits 256 live handles in total.
+After each feature and its reference checks, the rebuild releases tools and
+replaced bodies. Before a large operation it releases enough cached handles for
+the operation's tools, outputs and transient work. Admission or retrieval copy
 failures skip reuse, dispose partial copies, and issue a diagnostic warning.
 
 Runtime metrics expose hits, misses, retained entries/shapes/estimated bytes and

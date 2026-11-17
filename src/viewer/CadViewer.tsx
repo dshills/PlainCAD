@@ -227,12 +227,21 @@ export function CadViewer() {
       shownRenderStatus = status;
       setRenderStatus(status);
     };
+    let lastFrameTime = performance.now();
     const frames = new DemandRenderer(() => {
       if (!host.clientWidth || !host.clientHeight || renderer.getContext().isContextLost()) {
         publishRenderStatus("");
         return false;
       }
-      const changed = controls.update();
+      const now = performance.now();
+      const ticks = interacting ? 1 : Math.min(60, Math.max(1, Math.floor((now - Math.max(lastFrameTime, lastInput)) / (1000 / 60))));
+      lastFrameTime = now;
+      let changed = controls.update();
+      // Camera damping is measured per update. Advance missed nominal
+      // frames without drawing them when the graphics renderer is slow.
+      for (let tick = 1; tick < ticks && changed; tick++) {
+        changed = controls.update();
+      }
       if (moving && !interacting && performance.now() - lastInput >= MOVEMENT_RESTORE_DELAY_MS) {
         moving = false;
         refreshQuality();

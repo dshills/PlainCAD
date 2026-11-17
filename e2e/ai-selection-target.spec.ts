@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { aiSnapshot } from "./aiAcceptanceHelpers";
 import { separatePartsPlan } from "../src/tests/fixtures/aiTargetsPlan";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 async function providers(page: Page) {
   await page.route("**/api/ai/status", route => route.fulfill({ json: { providers: ["anthropic", "openai", "google"].map(id => ({ id, label: id, available: true, model: "test-model" })) } }));
@@ -13,7 +14,7 @@ async function ready(page: Page, volume: number) {
     expect(state.status).toBe("succeeded");
     expect(state.result?.success).toBe(true);
     expect(state.result?.meshes.length).toBeGreaterThan(0);
-    expect(state.result!.meshes.every(mesh => mesh.geometrySource === "opencascade" && mesh.geometryAssertions?.valid && mesh.geometryAssertions.solidCount === 1)).toBe(true);
+    expect(state.result!.meshes.every(mesh => mesh.geometrySource === expectedGeometrySource && mesh.geometryAssertions?.valid && mesh.geometryAssertions.solidCount === 1)).toBe(true);
     expect(state.result!.meshes.reduce((sum, mesh) => sum + mesh.geometryAssertions!.volume, 0)).toBeCloseTo(volume, 5);
   }).toPass({ timeout: 30000 });
 }

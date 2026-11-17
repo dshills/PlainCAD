@@ -6,6 +6,7 @@ import { detectProfiles } from "../src/cad/sketch/profileDetection";
 import type { CadDocument, Sketch } from "../src/cad/document/schema";
 import { aiSnapshot } from "./aiAcceptanceHelpers";
 import { applyExtrusion } from "./extrudeWorkflow";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 async function load(page: Page, document: CadDocument, sketch: Sketch) {
   await page.goto("/");
@@ -28,7 +29,7 @@ async function native(page: Page, volume: number) {
     const state = await aiSnapshot(page);
     expect(state.status).toBe("succeeded"); expect(state.result!.errors).toEqual([]);
     expect(state.result!.meshes).toHaveLength(1);
-    expect(state.result!.meshes[0]).toMatchObject({ geometrySource: "opencascade", geometryAssertions: { valid: true, solidCount: 1 } });
+    expect(state.result!.meshes[0]).toMatchObject({ geometrySource: expectedGeometrySource, geometryAssertions: { valid: true, solidCount: 1 } });
     expect(state.result!.meshes[0].geometryAssertions!.volume).toBeCloseTo(volume, 6);
   }).toPass();
 }

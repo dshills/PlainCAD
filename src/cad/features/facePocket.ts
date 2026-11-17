@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../kernel/geometrySource";
 import { featureComponentId, sketchComponentId } from "../document/components";
 import type { CadDocument, ExtrudeFeature } from "../document/schema";
 import type { RebuildResult } from "../worker/workerProtocol";
@@ -17,7 +18,7 @@ export function facePocketFeature(document: CadDocument, feature: ExtrudeFeature
 export function assertPocketCut(result: RebuildResult, bodyId: string, baseVolume: number) {
   const mesh = result.meshes.find(item => item.bodyId === bodyId);
   const proof = mesh?.geometryAssertions;
-  if (mesh?.geometrySource !== "opencascade" || mesh.kernelOperation !== "cut" || !proof?.valid ||
+  if (!isNativeGeometrySource(mesh?.geometrySource) || mesh.kernelOperation !== "cut" || !proof?.valid ||
       proof.solidCount !== 1 || !(proof.volume > 0) ||
       !(proof.volume < baseVolume - Math.max(1e-7, baseVolume * 1e-9)))
     throw new Error("The pocket must remove measurable material and leave one valid native solid. Move the region onto the face or reduce the depth.");

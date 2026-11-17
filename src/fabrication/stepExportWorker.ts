@@ -1,5 +1,6 @@
 import { importProjectText } from "../persistence/projectCodec";
-import { assertStepSelection, type StepExportRequest, type StepExportReply } from "./stepExport";
+import { assertStepSelection, stepBodyLimit, type StepExportRequest, type StepExportReply } from "./stepExport";
+import { NativeKernel } from "../cad/kernel/NativeKernel";
 let accepted = false;
 self.onmessage = async (event: MessageEvent<StepExportRequest>) => {
   if (accepted) { self.postMessage({ error: "A disposable STEP worker accepts one export only." }); return; }
@@ -8,14 +9,13 @@ self.onmessage = async (event: MessageEvent<StepExportRequest>) => {
   try {
     const request = event.data;
     if (!request || !Number.isSafeInteger(request.requestId) || request.requestId <= 0 || !Number.isSafeInteger(request.epoch) || request.epoch < 0 || !Array.isArray(request.bodyIds)) throw new Error("STEP worker request is malformed.");
-    assertStepSelection(request.bodyIds);
+    assertStepSelection(request.bodyIds, undefined, stepBodyLimit(NativeKernel.source));
     const document = importProjectText(JSON.stringify(request.document));
     self.postMessage({ progress: "Rebuilding selected STEP bodies with native geometry…" });
-    const { OpenCascadeKernel } = await import("../cad/kernel/OpenCascadeKernel");
     const { rebuildDocument, clearNativeFeatureCache } = await import("../cad/features/rebuildGraph");
     clearCache = clearNativeFeatureCache;
-    await OpenCascadeKernel.initialize();
-    const unavailable = OpenCascadeKernel.stepExportDiagnostic();
+    await NativeKernel.initialize();
+    const unavailable = NativeKernel.stepExportDiagnostic();
     if (unavailable) throw new Error(unavailable);
     self.postMessage({ progress: "Writing STEP and verifying its native round trip…" });
     const rebuilt = rebuildDocument(document, { exportStepBodyIds: request.bodyIds, epoch: request.epoch, reuseNativeFeatures: false });

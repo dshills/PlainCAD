@@ -38,7 +38,7 @@ export default function TimelineStoryPreview({ document, featureId }: { document
         <figure><img src={story.afterImage} alt={`Solid geometry after ${feature.name}; changed parts highlighted cyan`} width="208" height="168" /><figcaption>After · {story.afterSolids} solids · {volume(story.afterVolume)}</figcaption></figure>
       </div>
       <p className="timeline-story-summary">{story.changedBodies ? `${story.changedBodies} changed ${story.changedBodies === 1 ? "part" : "parts"} in cyan` : story.removedBodies ? `${story.removedBodies} removed ${story.removedBodies === 1 ? "part" : "parts"}` : "Geometry unchanged"} {story.changedBodies && story.removedBodies ? ` · ${story.removedBodies} removed ${story.removedBodies === 1 ? "part" : "parts"}` : ""} · {story.afterVolume >= story.beforeVolume ? "+" : "−"}{volume(Math.abs(story.afterVolume - story.beforeVolume))} material</p>
-      <small>OpenCascade solids at this step, with current parameters. Preview only.</small>
+      <small>Native solids at this step, with current parameters. Preview only.</small>
     </>}
   </aside>;
 }

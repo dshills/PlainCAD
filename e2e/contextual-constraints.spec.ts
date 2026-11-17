@@ -4,6 +4,7 @@ import { buildContextualConstraint } from "../src/cad/sketch/contextualConstrain
 import { detectProfiles } from "../src/cad/sketch/profileDetection";
 import { evaluateExpressionRef, evaluateParameters } from "../src/cad/parameters/expressionEvaluator";
 import { workbenchTaskFixture } from "./workbenchTaskFixtures";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 test("selected sketch relation previews native geometry, cancels, applies once, and rejects stale selection", async ({ page }) => {
   const fixture = workbenchTaskFixture("Extrude");
@@ -51,7 +52,7 @@ test("selected sketch relation previews native geometry, cancels, applies once, 
   await expect(async () => {
     const state = await aiSnapshot(page), mesh = state.result!.meshes[0];
     expect(state.status).toBe("succeeded");
-    expect(mesh).toMatchObject({ geometrySource: "opencascade", geometryAssertions: { valid: true, solidCount: 1 } });
+    expect(mesh).toMatchObject({ geometrySource: expectedGeometrySource, geometryAssertions: { valid: true, solidCount: 1 } });
     expect(mesh.geometryAssertions?.volume).toBeCloseTo(expectedVolume, 4);
     expect(mesh.geometryAssertions?.volume).not.toBeCloseTo(source.result!.meshes[0].geometryAssertions!.volume, 3);
     expect(state.past).toBe(source.past + 1);

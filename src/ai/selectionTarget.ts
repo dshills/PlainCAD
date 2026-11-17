@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../cad/kernel/geometrySource";
 import type { CadDocument, SelectionRef } from "../cad/document/schema";
 import type { RebuildResult } from "../cad/worker/workerProtocol";
 import type { SketchPlaneChoice } from "../cad/sketch/planePicking";
@@ -27,7 +28,7 @@ export function selectionAiTarget(document: CadDocument, componentId: string, se
     if (hiddenBodyIds.includes(id)) return undefined;
     const mesh = result?.success && result.documentId === document.id ? result.meshes.find(item => item.bodyId === id) : undefined;
     const proof = mesh?.geometryAssertions;
-    return mesh?.geometrySource === "opencascade" && proof?.valid && Number.isFinite(proof.volume) && proof.volume > 0 &&
+    return isNativeGeometrySource(mesh?.geometrySource) && proof?.valid && Number.isFinite(proof.volume) && proof.volume > 0 &&
       Number.isInteger(proof.solidCount) && proof.solidCount > 0 && bodyComponentId(document, id) === componentId ? mesh : undefined;
   };
   const unsupported = (diagnostic: string): SelectionAiTarget => ({ kind: "unsupported", label: "Choose a target", scope: "edit", bodyIds: [], diagnostic });

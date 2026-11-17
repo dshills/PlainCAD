@@ -1,3 +1,7 @@
+import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import type { Plugin } from "vite";
 import {
   SECURITY_HEADERS,
   staticHostHeaders,
@@ -9,8 +13,49 @@ import { aiPlugin } from "./server/aiMiddleware";
 import { liveSessionPlugin } from "./server/liveSessionMiddleware";
 import { commandInstrumentation } from "./scripts/command-instrumentation";
 
+// The ordinary unit suite exercises OpenCascade and fallback fixtures directly.
+// PlainSolid has its own WASM contract suite.
+const provider = process.env.VITEST === "true"
+  ? "opencascade"
+  : process.env.VITE_CAD_KERNEL ?? "plainsolid";
+if (provider !== "opencascade" && provider !== "plainsolid") {
+  throw new Error("VITE_CAD_KERNEL must be opencascade or plainsolid.");
+}
+
+function nativeKernel(): Plugin {
+  const selected = fileURLToPath(new URL("./src/cad/kernel/PlainSolidKernel.ts", import.meta.url));
+  return {
+    name: "plaincad-native-kernel",
+    enforce: "pre",
+    resolveId(source) {
+      if (provider === "plainsolid" && /(?:^|\/)NativeKernel$/.test(source)) return selected;
+    },
+  };
+}
+
+function plainSolidAssets(): Plugin {
+  const check = fileURLToPath(new URL("./scripts/check-plainsolid-assets.mjs", import.meta.url));
+  return {
+    name: "plaincad-plainsolid-assets",
+    buildStart() {
+      execFileSync(process.execPath, [check], { stdio: "inherit" });
+    },
+    generateBundle() {
+      for (const name of ["plainsolid-kernel.json", "plainsolid-NOTICE.txt"]) {
+        this.emitFile({
+          type: "asset",
+          fileName: `kernel/${name}`,
+          source: readFileSync(new URL(`./src/cad/kernel/${name}`, import.meta.url)),
+        });
+      }
+    },
+  };
+}
+
 export default defineConfig({
   plugins: [
+    nativeKernel(),
+    ...(provider === "plainsolid" ? [plainSolidAssets()] : []),
     commandInstrumentation(),
     react(),
     aiPlugin(),
@@ -46,8 +91,8 @@ export default defineConfig({
         onlyExplicitManualChunks: true,
         manualChunks(id) {
           const path = id.replaceAll("\\", "/");
-          // Shared CommonJS glue must not import the application entry point.
-          if (path.includes("commonjsHelpers.js")) return "module-helpers";
+          // Shared loader helpers must not import the application entry point.
+          if (path.includes("commonjsHelpers.js") || path.includes("vite/preload-helper.js")) return "module-helpers";
           if (path.includes("/node_modules/three/build/three.core.js")) return "three-core";
           if (path.includes("/node_modules/three/")) return "three-renderer";
           if (/\/node_modules\/(react|react-dom|scheduler|zustand|use-sync-external-store)\//.test(path)) return "react-runtime";
@@ -71,6 +116,7 @@ export default defineConfig({
   preview: { port: 5280, strictPort: true, headers: SECURITY_HEADERS },
   worker: {
     format: "es",
+    plugins: () => [nativeKernel()],
   },
   server: {
     port: 5278,

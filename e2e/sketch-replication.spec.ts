@@ -7,6 +7,7 @@ import { solveSketch } from "../src/cad/sketch/SketchSolver";
 import { evaluateParameters } from "../src/cad/parameters/expressionEvaluator";
 import { detectProfiles } from "../src/cad/sketch/profileDetection";
 import { aiSnapshot, stlSignedVolume } from "./aiAcceptanceHelpers";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 function replicationFixture() {
   let sketch = addCircleAt(addCornerRectangle(createXySketch("Plate holes"), "24mm", "16mm"), "4mm", "5mm", "1mm");
@@ -31,7 +32,7 @@ for (const mode of ["mirror", "linear"] as const) {
       expect(state.result?.errors).toEqual([]);
       expect(state.result?.meshes).toHaveLength(1);
       const mesh = state.result!.meshes[0];
-      expect(mesh).toMatchObject({ geometrySource: "opencascade", geometryAssertions: { valid: true, solidCount: 1 } });
+      expect(mesh).toMatchObject({ geometrySource: expectedGeometrySource, geometryAssertions: { valid: true, solidCount: 1 } });
       expect(Math.abs(mesh.geometryAssertions!.volume / expected - 1), `Native BRep volume ${mesh.geometryAssertions!.volume} mm³; expected ${expected} mm³ (relative tolerance 1e-7)`).toBeLessThan(1e-7);
       expect(mesh.bounds.min).toEqual([0, 0, 0]);
       expect(mesh.bounds.max).toEqual([24, 16, 8]);

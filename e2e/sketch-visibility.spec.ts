@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import type { CadDocument } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
 import type { ViewerSnapshot } from "../src/viewer/viewerDiagnostics";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 async function ready(page: Page) {
   await expect.poll(() => page.evaluate(async () => {
     const path = "/src/state/useCadStore.ts", state = (await import(path)).useCadStore.getState();
@@ -95,7 +96,7 @@ test("individual sketch hiding filters real viewer overlays while native editing
   });
   await ready(page);
   const before = await snapshot(page);
-  expect(before.result.meshes[0].geometrySource).toBe("opencascade");
+  expect(before.result.meshes[0].geometrySource).toBe(expectedGeometrySource);
   expect(before.result.meshes[0].geometryAssertions!.volume).toBeCloseTo(
     2000,
     7,

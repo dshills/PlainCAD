@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { aiSnapshot } from "./aiAcceptanceHelpers";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 test("native edit confirmation follows changed geometry and reduced-motion disables workbench effects", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -8,7 +9,7 @@ test("native edit confirmation follows changed geometry and reduced-motion disab
   await expect(async () => {
     const snapshot = await aiSnapshot(page);
     expect(snapshot.status).toBe("succeeded");
-    expect(snapshot.result?.meshes[0].geometrySource).toBe("opencascade");
+    expect(snapshot.result?.meshes[0].geometrySource).toBe(expectedGeometrySource);
     expect(snapshot.result?.meshes[0].geometryAssertions?.volume).toBeCloseTo(80000, 6);
   }).toPass();
   await expect(page.locator(".model-update-feedback")).toBeAttached();

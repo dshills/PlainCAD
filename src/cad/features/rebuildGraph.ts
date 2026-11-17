@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../kernel/geometrySource";
 import { createFittedPartShape, followFittedPlacements } from "./fittedPart";
 import { resolveAssemblyPlacements } from "../document/assemblyJoints";
 import { assemblyCollisions } from "./assemblyCollisions";
@@ -41,7 +42,7 @@ import {
 import { evaluateExpressionRef } from "../parameters/expressionEvaluator";
 import { solveSketch } from "../sketch/SketchSolver";
 import { detectProfiles } from "../sketch/profileDetection";
-import { OpenCascadeKernel } from "../kernel/OpenCascadeKernel";
+import { NativeKernel } from "../kernel/NativeKernel";
 import { evaluateParameters } from "../parameters/expressionEvaluator";
 import { validateDocument } from "../document/validate";
 import {
@@ -56,12 +57,13 @@ import { placeDocumentPlanes, resolveDocumentPlanes, SketchPlaneTransform } from
 import { planFeatureGraph, stableBodyIdForFeature } from "./featureGraph";
 import { resolveRevolveAxis } from "./revolveAxis";
 import { resolveSupportedEdgeRefs } from "./topologyRefs";
-import { featurePatternTransforms, patternSource, patternToolBounds, patternBoundsMayOverlap } from "./featurePattern";
+import { featurePatternTransforms, patternSource, patternToolBounds, patternBoundsMayOverlap, MAX_FEATURE_PATTERN_COUNT } from "./featurePattern";
 import type { FeaturePatternFeature } from "../document/schema";
 
-const kernel = new OpenCascadeKernel();
+const kernel = new NativeKernel();
 const edgeProofCache = new NativeEdgeProofCache();
-const nativeFeatureCache = new NativeFeatureCache();
+const liveHandleLimit = NativeKernel.liveHandleLimit;
+const nativeFeatureCache = new NativeFeatureCache(liveHandleLimit === undefined ? {} : { shapes: Math.floor(liveHandleLimit / 2) });
 
 export function clearNativeFeatureCache() { nativeFeatureCache.clear(); }
 let seedDocumentId: string | undefined;
@@ -93,7 +95,7 @@ export function rebuildDocument(document: CadDocument, options: RebuildOptions =
 }
 function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions): RebuildResult {
   const started = performance.now();
-  const shellAvailable = OpenCascadeKernel.shellAvailable();
+  const shellAvailable = NativeKernel.shellAvailable();
   const disposableMetricsStarted = getDisposableScopeMetrics();
   nativeFeatureCache.begin(document.id, kernel, options.epoch);
   const errors: RebuildError[] = [];
@@ -234,7 +236,7 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
       });
     }
   }
-  const nativeReferences = OpenCascadeKernel.isInitialized() && typeof kernel.validatePlanarFace === "function";
+  const nativeReferences = NativeKernel.isInitialized() && typeof kernel.validatePlanarFace === "function";
   const planes = resolveDocumentPlanes(
     document,
     evaluated.values,
@@ -253,6 +255,18 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
   const meshes = [];
   const shapesToDispose = new Set<KernelShape>();
   const runtimeBodies = new Map<string, RuntimeBody>();
+  let disposalFailures = 0, shapeDisposalAttempts = 0;
+  const dispose = (shape: KernelShape) => {
+    if (!shapesToDispose.delete(shape)) return;
+    shapeDisposalAttempts += 1;
+    try { kernel.disposeShape?.(shape); }
+    catch { disposalFailures += 1; }
+  };
+  const releaseInactiveShapes = () => {
+    if (liveHandleLimit === undefined) return;
+    const active = new Set([...runtimeBodies.values()].map(body => body.shape));
+    for (const shape of shapesToDispose) if (!active.has(shape)) dispose(shape);
+  };
   const bodyVersions = new Map<string, number>();
   const canReuseNative = nativeReferences && typeof kernel.cloneShape === "function" && options.reuseNativeFeatures !== false && !options.captureTargetScopeFeatureId;
   let beforePresetHole: NonNullable<RebuildResult["nativeDrawingGeometry"]>["beforePresetHole"];
@@ -288,6 +302,14 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
       let reused = false;
       let beforeBodies: Map<string, RuntimeBody> | undefined;
       try {
+        if (liveHandleLimit !== undefined) {
+          // Reserve room for all simultaneous tools and results before an
+          // atomic operation starts. Keep additional room for transient proofs.
+          const tools = feature.type === "hole" ? feature.centerPointIds.length :
+            feature.type === "pattern" ? MAX_FEATURE_PATTERN_COUNT : 1;
+          const reserve = tools + Math.max(1, affectedIds.length) + 8;
+          nativeFeatureCache.trimShapes(liveHandleLimit - shapesToDispose.size - reserve);
+        }
         if (options.captureDrawingBodyId && affectedIds.includes(options.captureDrawingBodyId)) {
           beforePresetHole = undefined;
           if (feature.type === "hole" && feature.preset && affectedIds.length === 1) {
@@ -387,9 +409,10 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
           beforeBodies = new Map(runtimeBodies);
         }
         operationCount += 1;
+        options.onNativeProgress?.("native_feature");
         if (feature.type === "stepImport") {
           try {
-            if (!kernel.importStep) throw new Error("STEP import requires the native OpenCascade reader.");
+            if (!kernel.importStep) throw new Error("STEP import requires the native STEP reader.");
             const shape = kernel.importStep(feature.stepSource);
             shapesToDispose.add(shape);
             const bodyId = stableBodyIdForFeature(feature.id);
@@ -397,7 +420,7 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
             setRuntimeBody(runtimeBodies, bodyId, { shape, mesh, featureId: feature.id, name: feature.name, planeKey: "" });
           } catch (error) {
             errors.push({ id: `feature:${feature.id}:step-import`, source: "feature", sourceId: feature.id,
-              message: error instanceof Error ? error.message : "OpenCascade rejected the STEP geometry. Re-export the source solid." });
+              message: error instanceof Error ? error.message : "The geometry kernel rejected the STEP geometry. Re-export the source solid." });
           }
           continue;
         }
@@ -637,6 +660,12 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
           });
         }
       } finally {
+        // Pocket-floor proof can inspect the original and new shapes. Run it
+        // before disposing replaced bodies or admitting cached copies.
+        if (errors.length > errorsBefore) {
+          for (const id of affectedIds) if (id) failedBodies.add(id);
+        } else if (!capture) nativePlanes?.afterFeature(feature.id, affectedIds);
+        releaseInactiveShapes();
         // Publish cache deltas only after the feature's atomic native publication.
         if (!reused && beforeBodies && errors.length === errorsBefore) {
           const changed = [...runtimeBodies].filter(([id, body]) => beforeBodies!.get(id) !== body);
@@ -652,10 +681,6 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
             }
           }
         }
-        // Also runs for every continue above, including invalid face planes.
-        if (errors.length > errorsBefore) {
-          for (const id of affectedIds) if (id) failedBodies.add(id);
-        } else if (!capture) nativePlanes?.afterFeature(feature.id, affectedIds);
       }
     }
     nativePlanes?.finish();
@@ -665,7 +690,7 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
   let assemblyCollisionStatus: "complete" | "incomplete" = document.assemblyJoints?.length ? "incomplete" : "complete";
   if (!errors.length && document.assemblyJoints?.length) {
     try {
-      if (!nativeReferences) throw new Error("Assembly joints require native OpenCascade geometry.");
+      if (!nativeReferences) throw new Error("Assembly joints require native solid geometry.");
       document = resolveAssemblyPlacements(document, currentNativeFaces(planes.faces.filter(face => face.role !== "pocketFloor"), kernel, runtimeBodies, failedBodies));
     } catch (error) { errors.push({ id: "assembly:joints", source: "kernel", message: error instanceof Error ? error.message : String(error) }); }
   }
@@ -681,6 +706,7 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
       errors.push({ id: "component:placement", source: "kernel", message: `Component placement failed: ${error instanceof Error ? error.message : String(error)}` });
       for (const id of runtimeBodies.keys()) failedBodies.add(id);
     }
+    releaseInactiveShapes();
   }
   if (!errors.length && document.assemblyJoints?.length) {
     try {
@@ -707,8 +733,10 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
       const current = [...runtimeBodies.values()];
       let merged = current[0].shape;
       for (const body of current.slice(1)) {
-        merged = kernel.unionForExport(merged, body.shape);
+        const previous = merged;
+        merged = kernel.unionForExport(previous, body.shape);
         shapesToDispose.add(merged);
+        if (liveHandleLimit !== undefined && previous !== current[0].shape && previous !== merged) dispose(previous);
       }
       const mesh = withStableBodyId(
         kernel.tessellate(merged, TESSELLATION_LOD.default),
@@ -805,19 +833,12 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
     try { displayMeshes = refineNativeDisplayMeshes(kernel, runtimeBodies, options.displayMeshRequest); }
     catch (error) { errors.push({ id: "display:detail", source: "kernel", message: error instanceof Error ? error.message : "Fine display tessellation failed." }); }
   }
-  let disposalFailures = 0;
-  shapesToDispose.forEach((shape) => {
-    try {
-      kernel.disposeShape?.(shape);
-    } catch {
-      disposalFailures += 1;
-    }
-  });
+  shapesToDispose.forEach(dispose);
 
   nativeFeatureCache.finish(errors.length === 0);
   const disposableMetricsFinished = getDisposableScopeMetrics();
-  const stepDiagnostic = OpenCascadeKernel.stepExportDiagnostic();
-  const stepImportDiagnostic = OpenCascadeKernel.stepImportDiagnostic();
+  const stepDiagnostic = NativeKernel.stepExportDiagnostic();
+  const stepImportDiagnostic = NativeKernel.stepImportDiagnostic();
 
   return {
     documentId: document.id,
@@ -841,7 +862,7 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
     parameterValues: evaluated.values,
     stepExportAvailable: nativeReferences && !stepDiagnostic,
     shellAvailable,
-    threadsAvailable: nativeReferences && OpenCascadeKernel.threadsAvailable(),
+    threadsAvailable: nativeReferences && NativeKernel.threadsAvailable(),
     ...(stepDiagnostic ? { stepExportDiagnostic: stepDiagnostic } : {}),
     stepImportAvailable: nativeReferences && !stepImportDiagnostic,
     ...(stepImportDiagnostic ? { stepImportDiagnostic } : {}),
@@ -866,7 +887,7 @@ function rebuildDocumentInternal(document: CadDocument, options: RebuildOptions)
       operationCount,
       cacheSize: runtimeBodies.size,
       wasmHeapCapacityBytes: kernel.getWasmHeapCapacityBytes?.(),
-      shapeDisposalAttempts: shapesToDispose.size,
+      shapeDisposalAttempts,
       shapeDisposalFailures: disposalFailures,
       scopedHandles: {
         registered: disposableMetricsFinished.registered - disposableMetricsStarted.registered,
@@ -895,14 +916,14 @@ function rebuildPatternFeature(
   errors: RebuildError[],
 ) {
   try {
-    if (!OpenCascadeKernel.isInitialized() || !kernel.cutScope || !kernel.hasCommonVolume)
-      throw new Error("Feature patterns require native OpenCascade geometry; fallback meshes cannot repeat cuts.");
+    if (!NativeKernel.isInitialized() || !kernel.cutScope || !kernel.hasCommonVolume)
+      throw new Error("Feature patterns require native solid geometry; fallback meshes cannot repeat cuts.");
     const source = patternSource(document, feature.sourceFeatureId),
       plane = planes.get(source.sketchId),
       solved = solvedSketches.get(source.sketchId);
     if (!plane || !solved || solved.errors.length) throw new Error("Pattern source sketch or plane was lost. Repair it first.");
     const targets = feature.targetBodyIds.map(bodyId => ({ bodyId, body: runtimeBodies.get(bodyId) }));
-    if (!targets.length || targets.some(target => !target.body?.mesh || target.body.mesh.geometrySource !== "opencascade"))
+    if (!targets.length || targets.some(target => !target.body?.mesh || !isNativeGeometrySource(target.body.mesh.geometrySource)))
       throw new Error("Pattern targets were lost or are not current native solids. Restore the source body scope.");
     const transforms = featurePatternTransforms(feature.pattern, plane, parameters);
     let depth: number;
@@ -1201,10 +1222,10 @@ function rebuildHoleFeature(
     // The fallback remains single-target. Native scope validation allows each
     // center to hit a different body, while rejecting unused centers and targets.
     const native = targets.every(
-      (target) => target.body!.mesh!.geometrySource === "opencascade",
+      (target) => isNativeGeometrySource(target.body!.mesh!.geometrySource),
     );
     if (targets.length > 1 && (!kernel.cutScope || !native))
-      throw new Error("Multi-body holes require native OpenCascade geometry.");
+      throw new Error("Multi-body holes require native solid geometry.");
     const cuts =
       native && kernel.cutScope
         ? kernel.cutScope(
@@ -1554,5 +1575,5 @@ function sketchPlaneKey(sketch: CadDocument["sketches"][string]): string {
 
 function kernelErrorMessage(type: string, error: unknown): string {
   if (error instanceof Error) return error.message;
-  return `${type} failed: OpenCascade rejected the geometry (${String(error)}). Adjust the feature size, axis, or references.`;
+  return `${type} failed: The geometry kernel rejected the geometry (${String(error)}). Adjust the feature size, axis, or references.`;
 }

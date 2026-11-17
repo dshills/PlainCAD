@@ -15,7 +15,7 @@ Describe the intended changes and choose **Generate command preview**. Ambiguous
 requests produce a clarification without edits. Answer in the same input to ask
 for a revised plan. A complete plan lists each command and its arguments, along
 with warnings about shared parameters or destructive edits. Every operation and
-the final result are validated locally through OpenCascade. The proposed geometry
+the final result are validated locally by the browser's native geometry kernel. The proposed geometry
 appears in the main viewport; the accepted document and Undo history are preserved
 until you choose **Apply command plan**. Apply commits the whole plan as one Undo
 step. Cancel, closing the mode, failure or a stale source preserves accepted CAD.

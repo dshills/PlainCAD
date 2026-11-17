@@ -2,6 +2,7 @@ import { test, expect, type Locator, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { aiSnapshot, stlSignedVolume } from "./aiAcceptanceHelpers";
 import type { CadDocument, OriginPlane } from "../src/cad/document/schema";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 async function ready(page: Page) {
   await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
@@ -106,7 +107,7 @@ async function assertNative(page: Page, expected: number) {
     expect(state.result?.errors).toEqual([]);
     expect(state.result?.meshes).toHaveLength(1);
     const mesh = state.result!.meshes[0];
-    expect(mesh.geometrySource).toBe("opencascade");
+    expect(mesh.geometrySource).toBe(expectedGeometrySource);
     expect(mesh.geometryAssertions).toMatchObject({
       valid: true,
       solidCount: 1,

@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../../cad/kernel/geometrySource";
 import { holePresetDiameter, type HolePreset } from "../../cad/hardware/fastenerCatalog";
 import type {
   CadDocument,
@@ -56,7 +57,7 @@ export function editableHole(state: CadStore) {
     state.rebuild.result?.documentId !== document.id ||
     state.rebuild.result.meshes.some(
       (mesh) =>
-        mesh.geometrySource !== "opencascade" ||
+        !isNativeGeometrySource(mesh.geometrySource) ||
         !mesh.geometryAssertions?.valid,
     )
   )
@@ -124,7 +125,7 @@ export function holeCreationContext(state: CadStore, sketchId?: string) {
     rebuild.result.meshes
       .filter(
         (m) =>
-          m.geometrySource === "opencascade" && m.geometryAssertions?.valid,
+          isNativeGeometrySource(m.geometrySource) && m.geometryAssertions?.valid,
       )
       .map((m) => m.bodyId),
   );
@@ -219,7 +220,7 @@ export function stageHole(
       baseResult.documentId !== draft.documentId ||
       baseResult.meshes.some(
         (mesh) =>
-          mesh.geometrySource !== "opencascade" ||
+          !isNativeGeometrySource(mesh.geometrySource) ||
           !mesh.geometryAssertions?.valid,
       )
     )
@@ -328,7 +329,7 @@ export function assertNativeHolePreview(
     !result.meshes.length ||
     result.meshes.some(
       (mesh) =>
-        mesh.geometrySource !== "opencascade" ||
+        !isNativeGeometrySource(mesh.geometrySource) ||
         !mesh.geometryAssertions?.valid ||
         !(mesh.geometryAssertions.volume > 0) ||
         !(mesh.geometryAssertions.solidCount > 0),

@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { aiSnapshot } from "./aiAcceptanceHelpers";
 import { inspectPngDownload } from "./pngDownload";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 test("native project/isolated part and dimensioned sketch download real PNG pixels without changing the design or camera", async ({ page }, info) => {
   const errors: string[] = [];
@@ -26,7 +27,7 @@ test("native project/isolated part and dimensioned sketch download real PNG pixe
     expect(state.result?.documentId).toBe(state.document.id);
     expect(state.result?.meshes).toHaveLength(2);
     for (const mesh of state.result!.meshes) {
-      expect(mesh.geometrySource).toBe("opencascade");
+      expect(mesh.geometrySource).toBe(expectedGeometrySource);
       expect(mesh.geometryAssertions).toMatchObject({ valid: true, solidCount: 1 });
       expect(mesh.geometryAssertions!.volume).toBeCloseTo(Math.PI * 100 * 12, 5);
     }
@@ -84,7 +85,7 @@ test("ORBIT opens without used sketch dots and exports clean PNG pixels even whe
     expect(state.result?.documentId).toBe(state.document.id);
     expect(state.result?.meshes).toHaveLength(1);
     const mesh = state.result!.meshes[0];
-    expect(mesh.geometrySource).toBe("opencascade");
+    expect(mesh.geometrySource).toBe(expectedGeometrySource);
     expect(mesh.geometryAssertions).toMatchObject({ valid: true, solidCount: 1 });
     expect(mesh.geometryAssertions!.volume).toBeCloseTo(272452.36918433453, 4);
   }).toPass();

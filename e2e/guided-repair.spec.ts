@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { applyExtrusion } from "./extrudeWorkflow";
 import type { CadDocument } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 async function snapshot(page: Page): Promise<{ document: CadDocument; status: string; result: RebuildResult; past: number }> {
   return page.evaluate(async () => {
@@ -18,7 +19,7 @@ async function ready(page: Page, volume?: number) {
     expect(state.result.errors).toEqual([]);
     if (volume !== undefined) {
       expect(state.result.meshes).toHaveLength(1);
-      expect(state.result.meshes[0].geometrySource).toBe("opencascade");
+      expect(state.result.meshes[0].geometrySource).toBe(expectedGeometrySource);
       expect(state.result.meshes[0].geometryAssertions).toMatchObject({ valid: true, solidCount: 1 });
       expect(state.result.meshes[0].geometryAssertions!.volume).toBeCloseTo(volume, 5);
     }

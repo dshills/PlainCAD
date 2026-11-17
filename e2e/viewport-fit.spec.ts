@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { aiSnapshot } from "./aiAcceptanceHelpers";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -38,7 +39,7 @@ test("fitted native model remains wholly visible through docks and compact resiz
   await page.locator('input[type="file"]').setInputFiles("docs/examples/orbit-drive-housing.pcaddoc");
   await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
   const original = await aiSnapshot(page);
-  expect(original.result!.meshes[0].geometrySource).toBe("opencascade");
+  expect(original.result!.meshes[0].geometrySource).toBe(expectedGeometrySource);
   await page.getByRole("button", { name: "Fit model in viewport", exact: true }).click();
   await expectCompleteBounds(page);
   await page.getByRole("button", { name: "Toggle task dock", exact: true }).click();

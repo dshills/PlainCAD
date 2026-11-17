@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { aiSnapshot } from "./aiAcceptanceHelpers";
 import { inspectPngDownload } from "./pngDownload";
 import type { ViewerSnapshot } from "../src/viewer/viewerDiagnostics";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 async function viewer(page: Page): Promise<ViewerSnapshot> {
   return page.evaluate(async () => {
@@ -15,7 +16,7 @@ async function ready(page: Page, volume: number) {
     const state = await aiSnapshot(page);
     expect(state.status).toBe("succeeded");
     expect(state.result?.documentId).toBe(state.document.id);
-    expect(state.result?.meshes[0]).toMatchObject({ geometrySource: "opencascade", geometryAssertions: { valid: true, solidCount: 1 } });
+    expect(state.result?.meshes[0]).toMatchObject({ geometrySource: expectedGeometrySource, geometryAssertions: { valid: true, solidCount: 1 } });
     expect(state.result?.meshes[0].geometryAssertions?.volume).toBeCloseTo(volume, 5);
     expect((await viewer(page)).meshes).toHaveLength(1);
   }).toPass({ timeout: 30000 });

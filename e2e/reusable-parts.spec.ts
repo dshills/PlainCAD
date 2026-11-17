@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { createBoxTemplate, createMountingPlateTemplate } from "../src/templates/templates";
 import { aiSnapshot, stlSignedVolume } from "./aiAcceptanceHelpers";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 test("inserts independent editable parts at their source origin, preserves undo, saves/reopens and exports real native STL", async ({ page }) => {
@@ -33,7 +34,7 @@ test("inserts independent editable parts at their source origin, preserves undo,
     expect(snapshot.status).toBe("succeeded");
     expect(snapshot.document.id).toBe(target.id);
     expect(snapshot.result!.meshes).toHaveLength(2);
-    for (const mesh of snapshot.result!.meshes) expect(mesh).toMatchObject({ geometrySource: "opencascade", geometryAssertions: { valid: true, solidCount: 1 } });
+    for (const mesh of snapshot.result!.meshes) expect(mesh).toMatchObject({ geometrySource: expectedGeometrySource, geometryAssertions: { valid: true, solidCount: 1 } });
     expect(snapshot.result!.meshes[0].geometryAssertions!.volume).toBeCloseTo(80000, 6);
     expect(snapshot.result!.meshes[1].geometryAssertions!.volume).toBeCloseTo((80 * 50 - 4 * Math.PI * 1.6 ** 2) * 5, 6);
     expect(snapshot.result!.meshes[0].bounds.min).toEqual([-40, -25, 0]);
@@ -62,7 +63,7 @@ test("inserts independent editable parts at their source origin, preserves undo,
     expect(snapshot.result).toMatchObject({ documentId: target.id, success: true });
     expect(snapshot.result!.meshes).toHaveLength(2);
     expect(snapshot.result!.meshes[1].bounds.max[0]).toBe(50);
-    for (const mesh of snapshot.result!.meshes) expect(mesh.geometrySource).toBe("opencascade");
+    for (const mesh of snapshot.result!.meshes) expect(mesh.geometrySource).toBe(expectedGeometrySource);
   }).toPass({ timeout: 30000 });
   const selected = (await aiSnapshot(page)).result!.meshes[1].bodyId;
   const exported = page.waitForEvent("download");

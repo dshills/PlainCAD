@@ -2,6 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import type { ViewerSnapshot } from "../src/viewer/viewerDiagnostics";
 import type { CadDocument } from "../src/cad/document/schema";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 async function snapshot(page: Page) {
   return page.evaluate(async () => {
     const p = "/src/viewer/viewerDiagnostics.ts";
@@ -21,7 +22,7 @@ async function ready(page: Page) {
     });
     expect(s.status).toBe("succeeded");
     expect(s.result?.documentId).toBe(s.doc.id);
-    expect(s.result?.meshes[0].geometrySource).toBe("opencascade");
+    expect(s.result?.meshes[0].geometrySource).toBe(expectedGeometrySource);
   }).toPass({ timeout: 20000 });
 }
 async function direction(page: Page) {

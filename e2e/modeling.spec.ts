@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import type { CadDocument } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
 import type { ViewerSnapshot } from "../src/viewer/viewerDiagnostics";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 type BrowserState = { document: CadDocument; status: string; result?: RebuildResult };
 
@@ -61,7 +62,7 @@ function assertGeometry(state: BrowserState, thickness: number, cut: boolean, pl
   expect(state.status).toBe("succeeded");
   expect(state.result?.meshes).toHaveLength(1);
   const mesh = state.result!.meshes[0];
-  expect(mesh.geometrySource).toBe("opencascade");
+  expect(mesh.geometrySource).toBe(expectedGeometrySource);
   expect(mesh.kernelOperation).toBe(cut ? "cut" : "extrusion");
   const expectedVolume = (80 * 50 - (cut ? Math.PI * 10 ** 2 : 0)) * thickness;
   // OpenCascade tessellation approximates the circle; require positive outward

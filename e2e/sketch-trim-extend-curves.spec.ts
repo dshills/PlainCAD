@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { aiSnapshot, stlSignedVolume } from "./aiAcceptanceHelpers";
 import type { SketchEntity } from "../src/cad/document/schema";
 import { applyExtrusion } from "./extrudeWorkflow";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 async function ready(page: Page, volume?: number) {
   await expect(async () => {
@@ -11,7 +12,7 @@ async function ready(page: Page, volume?: number) {
     expect(state.result?.documentId).toBe(state.document.id);
     if (volume !== undefined) {
       expect(state.result!.meshes).toHaveLength(1);
-      expect(state.result!.meshes[0]).toMatchObject({ geometrySource: "opencascade", geometryAssertions: { valid: true, solidCount: 1 } });
+      expect(state.result!.meshes[0]).toMatchObject({ geometrySource: expectedGeometrySource, geometryAssertions: { valid: true, solidCount: 1 } });
       expect(state.result!.meshes[0].geometryAssertions!.volume).toBeCloseTo(volume, 6);
     }
   }).toPass({ timeout: 30000 });
@@ -55,7 +56,7 @@ for (const mode of ["trim", "extend"] as const) test(`analytic ${mode === "trim"
   await ready(page);
   let fullDiskVolume: number | undefined;
   if (mode === "trim") {
-    fullDiskVolume = await page.evaluate(async (ids) => {
+    fullDiskVolume = await page.evaluate(async ({ ids, geometrySource }) => {
       const storePath = "/src/state/useCadStore.ts", docPath = "/src/cad/document/CadDocument.ts", previewPath = "/src/cad/worker/extrudePreviewClient.ts";
       const { useCadStore } = await import(storePath), doc = await import(docPath), { previewModeling } = await import(previewPath);
       const solverPath = "/src/cad/sketch/SketchSolver.ts", profilesPath = "/src/cad/sketch/profileDetection.ts";
@@ -72,11 +73,11 @@ for (const mode of ["trim", "extend"] as const) test(`analytic ${mode === "trim"
       const candidate = doc.upsertFeature(baseline, doc.createExtrudeFeature({ name: "Read-only baseline disk", sketchId: ids.sketchId, profileId: profile.id,
         distance: { expression: "4mm", unit: "mm" }, operation: "newBody", direction: "positive" }));
       const result = await previewModeling(candidate, new AbortController().signal), mesh = result.meshes[0];
-      if (!result.success || result.meshes.length !== 1 || mesh.geometrySource !== "opencascade" || !mesh.geometryAssertions.valid || mesh.geometryAssertions.solidCount !== 1)
+      if (!result.success || result.meshes.length !== 1 || mesh.geometrySource !== geometrySource || !mesh.geometryAssertions.valid || mesh.geometryAssertions.solidCount !== 1)
         throw new Error("Baseline native disk assertions failed");
       if (useCadStore.getState().history.present !== source) throw new Error("Read-only baseline changed the document");
       return mesh.geometryAssertions.volume;
-    }, ids);
+    }, { ids, geometrySource: expectedGeometrySource });
     expect(fullDiskVolume).toBeCloseTo(400 * Math.PI, 6);
   }
   await page.getByRole("button", { name: "Edit sketch canvas", exact: true }).click();

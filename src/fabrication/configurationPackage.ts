@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../cad/kernel/geometrySource";
 import type { BoundingBox, RenderMesh } from "../cad/kernel/KernelAdapter";
 import type { StepGeometryProof } from "../cad/kernel/nativeStep";
 import type { RebuildResult } from "../cad/worker/workerProtocol";
@@ -56,7 +57,7 @@ function assertBodyProofs(ids: readonly string[], meshes: readonly RenderMesh[],
   }
   ids.forEach((id, index) => {
     const mesh = byId.get(id), measured = mesh?.geometryAssertions, proof = proofs[index];
-    if (mesh?.geometrySource !== "opencascade" || measured?.valid !== true || proof?.valid !== true ||
+    if (!isNativeGeometrySource(mesh?.geometrySource) || measured?.valid !== true || proof?.valid !== true ||
         !Number.isSafeInteger(proof.solidCount) || proof.solidCount <= 0 || measured.solidCount !== proof.solidCount ||
         !Number.isFinite(proof.volume) || proof.volume <= 0 || !Number.isFinite(measured.volume) || measured.volume <= 0 ||
         Math.abs(measured.volume - proof.volume) > Math.max(1e-7, proof.volume * 1e-8) ||

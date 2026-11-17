@@ -1,11 +1,12 @@
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { aiSnapshot, stlSignedVolume } from "./aiAcceptanceHelpers";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 async function command(page: Page, id: string, args = {}) { await page.evaluate(async ({ id, args }) => { const path = "/src/ui/commands/commandRegistry.ts"; await (await import(path)).runCommand(id, args); }, { id, args }); }
 async function geometry(page: Page, min: number[], max: number[], collisions = 0) {
   await expect(async () => {
     const state = await aiSnapshot(page); expect(state.status).toBe("succeeded"); expect(state.result?.errors).toEqual([]); expect(state.result?.success).toBe(true);
-    expect(state.result?.meshes).toHaveLength(2); for (const mesh of state.result!.meshes) { expect(mesh.geometrySource).toBe("opencascade"); expect(mesh.geometryAssertions).toMatchObject({ valid: true, solidCount: 1 }); expect(mesh.geometryAssertions!.volume).toBeCloseTo(1000, 7); }
+    expect(state.result?.meshes).toHaveLength(2); for (const mesh of state.result!.meshes) { expect(mesh.geometrySource).toBe(expectedGeometrySource); expect(mesh.geometryAssertions).toMatchObject({ valid: true, solidCount: 1 }); expect(mesh.geometryAssertions!.volume).toBeCloseTo(1000, 7); }
     const mesh = state.result!.meshes.find(mesh => mesh.bodyId === "body:second-solid")!;
     for (const axis of [0, 1, 2]) { expect(mesh.bounds.min[axis]).toBeCloseTo(min[axis], 6); expect(mesh.bounds.max[axis]).toBeCloseTo(max[axis], 6); }
     expect(state.result?.assemblyCollisionStatus).toBe("complete");

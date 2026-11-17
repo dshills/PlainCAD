@@ -2,6 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import type { CadDocument, OriginPlane } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 async function snapshot(
   page: Page,
 ): Promise<{ document: CadDocument; status: string; result: RebuildResult }> {
@@ -22,7 +23,7 @@ async function ready(page: Page, volume?: number) {
     expect(state.result.errors).toEqual([]);
     if (volume !== undefined) {
       const mesh = state.result.meshes[0];
-      expect(mesh.geometrySource).toBe("opencascade");
+      expect(mesh.geometrySource).toBe(expectedGeometrySource);
       expect(mesh.geometryAssertions).toMatchObject({
         valid: true,
         solidCount: 1,

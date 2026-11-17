@@ -18,10 +18,10 @@ self.onmessage = async (event: MessageEvent<FabricationRequest>) => {
       bodies = request.bodies;
     if (request.mode === "merged") {
       self.postMessage({ progress: "Building native union…" });
-      const { OpenCascadeKernel } =
-        await import("../cad/kernel/OpenCascadeKernel");
+      const { NativeKernel } =
+        await import("../cad/kernel/NativeKernel");
       const { rebuildDocument } = await import("../cad/features/rebuildGraph");
-      await OpenCascadeKernel.initialize();
+      await NativeKernel.initialize();
       const result = rebuildDocument(request.document, { exportUnion: true, exportBodyIds: request.bodyIds });
       if (!result.success)
         throw new Error(result.errors.map((error) => error.message).join(" "));

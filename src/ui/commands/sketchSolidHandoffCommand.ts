@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../../cad/kernel/geometrySource";
 import { faceReferenceBodyId } from "../../cad/document/faceReferences";
 import { useFacePocketIntent } from "./facePocketIntentState";
 import { beginExtrudeCreation, useExtrudeDraft } from "./extrudeCommand";
@@ -141,7 +142,7 @@ export function sketchPocketTarget(state: CadStore = useCadStore.getState()) {
   const face = result?.availableFaces?.find((item) => item.id === plane.stableFaceId && item.featureId === plane.featureId);
   const body = result?.bodies.find((item) => item.id === bodyId);
   const mesh = result?.meshes.find((item) => item.bodyId === bodyId);
-  if (bodyComponentId(source.document, bodyId) !== source.componentId || !face || (face.bodyId && face.bodyId !== bodyId) || !body || mesh?.geometrySource !== "opencascade" || !mesh.geometryAssertions?.valid ||
+  if (bodyComponentId(source.document, bodyId) !== source.componentId || !face || (face.bodyId && face.bodyId !== bodyId) || !body || !isNativeGeometrySource(mesh?.geometrySource) || !mesh.geometryAssertions?.valid ||
       mesh.geometryAssertions.solidCount !== 1 || !(mesh.geometryAssertions.volume > 0)) return;
   return { bodyId, name: body.name, faceId: face.id, baseVolume: mesh.geometryAssertions.volume };
 }

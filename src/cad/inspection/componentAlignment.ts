@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../kernel/geometrySource";
 import type { CadDocument, ComponentPlacement } from "../document/schema";
 import { bodyComponentId } from "../document/components";
 import { placementTransform, placedPoint, placedVector, validComponentPlacement } from "../document/componentPlacement";
@@ -31,7 +32,7 @@ function unit(p: Point3): Point3 {
 
 /** Only current, native-validated authored references authorize alignment. */
 export function componentAlignmentTargets(document: CadDocument, result: RebuildResult): ComponentAlignmentTarget[] {
-  const native = new Set(result.meshes.filter(mesh => mesh.geometrySource === "opencascade" && mesh.geometryAssertions?.valid).map(mesh => mesh.bodyId));
+  const native = new Set(result.meshes.filter(mesh => isNativeGeometrySource(mesh.geometrySource) && mesh.geometryAssertions?.valid).map(mesh => mesh.bodyId));
   let visits = 0;
   const faceMarker = (bodyId: string, origin: Point3, normal: Point3): Point3 | undefined => {
     const mesh = result.meshes.find(mesh => mesh.bodyId === bodyId);

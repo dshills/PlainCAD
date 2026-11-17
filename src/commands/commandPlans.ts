@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../cad/kernel/geometrySource";
 import type { CadDocument } from "../cad/document/schema";
 import type { RebuildResult } from "../cad/worker/workerProtocol";
 import { assertPocketCut } from "../cad/features/facePocket";
@@ -73,7 +74,7 @@ function nativeProof(result: RebuildResult, document: CadDocument) {
   if (document.features.some(feature => !feature.suppressed) && !result.meshes.length) throw new Error("Native validation produced no solid geometry for the active features.");
   for (const mesh of result.meshes) {
     const proof = mesh.geometryAssertions;
-    if (mesh.geometrySource !== "opencascade" || !proof?.valid || !Number.isInteger(proof.solidCount) || proof.solidCount < 1 || !Number.isFinite(proof.volume) || proof.volume <= 0)
+    if (!isNativeGeometrySource(mesh.geometrySource) || !proof?.valid || !Number.isInteger(proof.solidCount) || proof.solidCount < 1 || !Number.isFinite(proof.volume) || proof.volume <= 0)
       throw new Error(`Body ${mesh.bodyId} has no valid native solid/volume proof. Unsupported modeling cannot be applied.`);
   }
   return result.meshes.map(mesh => ({ bodyId: mesh.bodyId, ...mesh.geometryAssertions! }));
@@ -135,7 +136,7 @@ export async function previewCommandPlan(value: CommandPlanInput) {
           if (!bodyId) throw new Error("Pocket did not identify its native target body.");
           const mesh = prior?.meshes.find(item => item.bodyId === bodyId);
           const proof = mesh?.geometryAssertions;
-          if (mesh?.geometrySource !== "opencascade" || !proof?.valid || proof.solidCount !== 1 || !(proof.volume > 0))
+          if (!isNativeGeometrySource(mesh?.geometrySource) || !proof?.valid || proof.solidCount !== 1 || !(proof.volume > 0))
             throw new Error("Pocket requires a single current native target body before the cut.");
           assertPocketCut(result, bodyId, proof.volume);
         }

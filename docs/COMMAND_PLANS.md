@@ -1,7 +1,7 @@
 # Transactional modeling plans
 
 `plan.preview` accepts a bounded sequence of stable `cad.*` commands. It builds a
-private candidate and proves OpenCascade geometry before showing it in the main
+private candidate and verifies native geometry before showing it in the main
 viewport. The accepted document, autosave data, selection and undo history remain
 unchanged until `plan.apply`. Apply commits the complete candidate through the
 normal document store as one history edit; Undo restores the preceding project.

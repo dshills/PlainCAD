@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../cad/kernel/geometrySource";
 import { featureComponentId } from "../cad/document/components";
 import { faceReferenceBodyId } from "../cad/document/faceReferences";
 import type { CadStore } from "../state/useCadStore";
@@ -8,7 +9,7 @@ export function nativeCommandFaces(state: CadStore) {
   const result = rebuild.result;
   if (rebuild.status !== "succeeded" || !rebuild.kernelReady || !result?.success || result.documentId !== present.id) return [];
   const owners = new Map(present.features.map(feature => [feature.id, feature]));
-  const nativeBodies = new Set(result.meshes.filter(mesh => mesh.geometrySource === "opencascade" &&
+  const nativeBodies = new Set(result.meshes.filter(mesh => isNativeGeometrySource(mesh.geometrySource) &&
     mesh.geometryAssertions?.valid && mesh.geometryAssertions.solidCount === 1 && mesh.geometryAssertions.volume > 0).map(mesh => mesh.bodyId));
   return (result.availableFaces ?? []).flatMap(face => {
     const owner = owners.get(face.featureId);

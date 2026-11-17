@@ -8,11 +8,11 @@ missing or the count cannot be determined, establish a baseline with the full ga
 
 ## Last successful full gate
 
-- Date: 2026-11-13.
-- Change: HDR studio lighting, native close-up meshes, CAD edges, studio effects, component finishes and fixed-size PNGs.
-- Result: type checks, 1688 unit/component tests plus the corrected AI fixture rerun, build/bundle budget (72 bundles, largest 496.93 kB), 342 development cases plus the corrected studio suite rerun, and 66 production cases passed.
-- Completed items since that full gate: **3**.
-- Next full gate: after 2 more completed items.
+- Date: 2026-11-17.
+- Change: PlainSolid as the default browser geometry kernel.
+- Result: type checks, 1692 unit/component tests, four real WASM contracts, build/bundle budget (69 bundles, largest 497.27 kB), 346 development and 68 production browser cases passed. Also passed 15 cross-browser Workbench and 54 cross-browser AI/Focused cases.
+- Completed items since that full gate: **0**.
+- Next full gate: after 5 more completed items.
 
 ## Completed batch
 
@@ -1701,3 +1701,36 @@ preparing the image. The ORBIT test allows 35 seconds for a cold fine-mesh
 request (bounded to 20 seconds) plus encoding. Its full-size pixel and
 interaction restoration assertions are unchanged. Type checks, two local
 Chromium repetitions, and independent internal review passed.
+
+## Default PlainSolid geometry kernel (2026-11-17)
+
+Integrated the existing provider work from `codex/plainsolid-backend`
+(`efae4d2`) and selected PlainSolid by default for browser modeling, previews,
+history, drawings, exchange and fabrication workers. Existing project files
+keep their schema and authored IDs. OpenCascade is an explicit comparison
+build and remains available for previous-kernel fixtures.
+
+A clean public HTTPS fetch and Go 1.27.4 build of PlainSolid revision
+`71f6197633972d74b6c1301b13db8e1f1b2fbb90` reproduced the installed hashes.
+The production CSP test verified the browser received only fingerprinted
+PlainSolid WASM, matching the manifest. CI builds and shares the pinned material
+across its jobs; actionlint passed. A blocked worker reports an actionable
+diagnostic, and a transient WASM 503 recovers after the next project open.
+
+The development gate passed all 346 cases with three Chromium workers. All 68
+production cases, 15 cross-browser Workbench cases and 54 AI/Focused cases passed.
+The inline-dimension fixture was hardened to verify replacement text after a
+concurrent run submitted an invalid expression; all three engines passed with
+the correction. All 1692 unit/component tests and four real PlainSolid WASM
+contracts passed. The build passed its 500 kB limit (69 bundles, largest
+497.27 kB); the previous linked-sketch import advisory remains.
+
+The 48-body regression passed with 258 lifetime allocations, exact final
+volumes and zero disposal failures. The rotary fixture still reuses its native
+feature and edge proofs after rename. Live browser audits opened eight gallery
+examples and the ORBIT housing with valid native geometry and checked the
+recorded volumes where available. Six original gallery files need OpenCascade
+for particular edge/Boolean combinations; their cards explain the limitations
+before opening or previewing, and the explicit comparison build passed its
+gallery check. PlainSolid STEP export enforces 32 bodies and a 1 MiB output
+limit. Independent internal review approved the final diff and test fixups.

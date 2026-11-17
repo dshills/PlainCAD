@@ -2,6 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { createBoxTemplate } from "../src/templates/templates";
 import { aiSnapshot, stlSignedVolume } from "./aiAcceptanceHelpers";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -39,7 +40,7 @@ async function nativeVolume(page: Page, expected: number) {
     expect(state.status).toBe("succeeded");
     expect(state.result?.meshes).toHaveLength(1);
     expect(state.result!.meshes[0]).toMatchObject({
-      geometrySource: "opencascade",
+      geometrySource: expectedGeometrySource,
       geometryAssertions: { valid: true, solidCount: 1 },
     });
     expect(state.result!.meshes[0].geometryAssertions!.volume).toBeCloseTo(

@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { aiSnapshot, stlSignedVolume } from "./aiAcceptanceHelpers";
 import { workbenchTaskFixture } from "./workbenchTaskFixtures";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 for (const provider of ["anthropic", "openai", "google"]) test(`${provider} sketch conversation validates native geometry before explicit Apply`, async ({ page }, info) => {
   const requests: Array<Record<string, unknown>> = [];
@@ -53,7 +54,7 @@ for (const provider of ["anthropic", "openai", "google"]) test(`${provider} sket
   await expect(async () => {
     const current = await aiSnapshot(page), mesh = current.result?.meshes[0];
     expect(current.status).toBe("succeeded"); expect(current.past).toBe(before.past + 1);
-    expect(mesh).toMatchObject({ geometrySource: "opencascade", geometryAssertions: { valid: true, solidCount: 1 } });
+    expect(mesh).toMatchObject({ geometrySource: expectedGeometrySource, geometryAssertions: { valid: true, solidCount: 1 } });
     expect(mesh?.geometryAssertions?.volume).toBeCloseTo(19200, 4);
     expect(mesh!.bounds.max[0] - mesh!.bounds.min[0]).toBeCloseTo(60, 5);
     expect(mesh!.bounds.max[1] - mesh!.bounds.min[1]).toBeCloseTo(40, 5);
@@ -112,7 +113,7 @@ test("provider shared-parameter edits require explicit choice and preserve sketc
   await expect(async () => {
     const state = await aiSnapshot(page), mesh = state.result?.meshes[0];
     expect(state.status).toBe("succeeded"); expect(state.past).toBe(before.past + 1);
-    expect(mesh).toMatchObject({ geometrySource: "opencascade", geometryAssertions: { valid: true, solidCount: 1 } });
+    expect(mesh).toMatchObject({ geometrySource: expectedGeometrySource, geometryAssertions: { valid: true, solidCount: 1 } });
     expect(mesh?.geometryAssertions?.volume).toBeCloseTo(4608, 5);
     expect(state.document.parameters.width.expression).toBe("36mm");
     expect(state.document.sketches[sketch.id].dimensions[0].expression.expression).toBe("width");

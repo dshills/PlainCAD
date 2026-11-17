@@ -2,6 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import type { CadDocument } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 async function snapshot(page: Page): Promise<{
   document: CadDocument;
@@ -140,7 +141,7 @@ async function ready(page: Page, volume: number, operation?: string) {
       mesh = state.result?.meshes[0];
     expect(state.status).toBe("succeeded");
     expect(mesh).toMatchObject({
-      geometrySource: "opencascade",
+      geometrySource: expectedGeometrySource,
       geometryAssertions: { valid: true, solidCount: 1 },
     });
     expect(

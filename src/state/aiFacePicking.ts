@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../cad/kernel/geometrySource";
 import { create } from "zustand";
 import type { CadDocument } from "../cad/document/schema";
 import type { RebuildResult } from "../cad/worker/workerProtocol";
@@ -8,7 +9,7 @@ export const useAiFacePicking = create<{ frame?: AiFacePickFrame; message?: stri
 export function beginAiFacePicking() {
   const state = useCadStore.getState(), result = state.rebuild.result;
   if (state.fileBusy || state.rebuild.status !== "succeeded" || !result?.success || result.documentId !== state.history.present.id ||
-      !result.meshes.some(mesh => mesh.geometrySource === "opencascade" && mesh.geometryAssertions?.valid &&
+      !result.meshes.some(mesh => isNativeGeometrySource(mesh.geometrySource) && mesh.geometryAssertions?.valid &&
         Number.isFinite(mesh.geometryAssertions.volume) && mesh.geometryAssertions.volume > 0 && Number.isInteger(mesh.geometryAssertions.solidCount) && mesh.geometryAssertions.solidCount > 0)) return false;
   useAiFacePicking.setState({ frame: { document: state.history.present, result, session: state.documentSession, componentId: state.activeComponentId }, message: "Click a supported planar face on the model." });
   return true;

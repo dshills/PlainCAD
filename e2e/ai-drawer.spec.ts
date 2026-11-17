@@ -20,6 +20,7 @@ import {
 import type { AiPlan } from "../src/ai/plan";
 import type { CadDocument } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 async function snapshot(page: Page): Promise<{
   document: CadDocument;
@@ -109,7 +110,7 @@ test("AI cap/straight-side sketches and to-face extrusion produce native geometr
     expect(
       original.result!.meshes.every(
         (m) =>
-          m.geometrySource === "opencascade" &&
+          m.geometrySource === expectedGeometrySource &&
           m.geometryAssertions?.valid &&
           m.geometryAssertions.solidCount === 1,
       ),
@@ -344,7 +345,7 @@ test("AI compound profiles create exact native sleeves, hollow sections and isla
       .toBeCloseTo(volume, 4);
     const original = await snapshot(page);
     expect(original.result?.meshes[0]).toMatchObject({
-      geometrySource: "opencascade",
+      geometrySource: expectedGeometrySource,
       geometryAssertions: { valid: true, solidCount: 1 },
     });
     if (recipe !== aiRingPlan) continue;
@@ -781,7 +782,7 @@ test("all three provider choices create real native previews; Cancel/Apply, para
   expect(applied.past).toBe(before.past + 1);
   expect(Object.keys(applied.document.components)).toHaveLength(2);
   const mesh = applied.result!.meshes[0];
-  expect(mesh.geometrySource).toBe("opencascade");
+  expect(mesh.geometrySource).toBe(expectedGeometrySource);
   expect(mesh.kernelOperation).toBe("cut");
   expect(mesh.geometryAssertions).toMatchObject({ valid: true, solidCount: 1 });
   expect(mesh.geometryAssertions!.volume).toBeCloseTo(12000 - 20 * Math.PI, 5);
@@ -898,7 +899,7 @@ test("AI polygons, analytic arcs and indexed Hole patterns produce exact native 
     await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
     const state = await snapshot(page),
       mesh = state.result!.meshes.at(-1)!;
-    expect(mesh.geometrySource).toBe("opencascade");
+    expect(mesh.geometrySource).toBe(expectedGeometrySource);
     expect(mesh.geometryAssertions!.valid).toBe(true);
     expect(mesh.geometryAssertions!.solidCount).toBe(1);
     expect(Math.abs(mesh.geometryAssertions!.volume / volume - 1)).toBeLessThan(

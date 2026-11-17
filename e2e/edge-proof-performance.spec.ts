@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import { readFile, writeFile } from "node:fs/promises";
 import type { CadDocument } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 test("large example edits reuse native features and exact edge proofs without stale geometry", async ({ page }, info) => {
   test.setTimeout(180000);
@@ -51,7 +52,7 @@ test("large example edits reuse native features and exact edge proofs without st
     expect(s.result!.meshes.reduce((sum, m) => sum + m.geometryAssertions!.volume, 0)).not.toBeCloseTo(warm.meshes.reduce((sum, m) => sum + m.geometryAssertions!.volume, 0), 2);
   }).toPass({ timeout: 90000 });
   const edited = (await snapshot()).result!;
-  expect(edited.meshes.every((m) => m.geometrySource === "opencascade" && m.geometryAssertions?.valid)).toBe(true);
+  expect(edited.meshes.every((m) => m.geometrySource === expectedGeometrySource && m.geometryAssertions?.valid)).toBe(true);
   expect(edited.metrics?.disposalFailures).toBe(0);
   expect(edited.metrics?.nativeFeatureCacheHits).toBeGreaterThan(0);
   expect(edited.metrics?.operationCount).toBeGreaterThan(0);

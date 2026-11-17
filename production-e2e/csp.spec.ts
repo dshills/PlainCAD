@@ -18,7 +18,10 @@ import { detectProfiles } from "../src/cad/sketch/profileDetection";
 import { solveSketch } from "../src/cad/sketch/SketchSolver";
 import { evaluateParameters } from "../src/cad/parameters/expressionEvaluator";
 import { test, expect, type Page } from "@playwright/test";
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
+import { expectedGeometrySource } from "../e2e/expectedGeometrySource";
+import { stepCommand } from "../e2e/stepImportAcceptance";
 import {
   CONTENT_SECURITY_POLICY,
   SECURITY_HEADERS,
@@ -72,11 +75,92 @@ async function observeCsp(page: Page) {
   );
   return { errors, violations, workerUrls, assetHeaderJobs };
 }
+
+if (expectedGeometrySource === "plainsolid") {
+  test("default kernel reports unavailable browser workers without claiming a native rebuild", async ({ page }) => {
+    await page.addInitScript(() => {
+      Reflect.deleteProperty(globalThis, "Worker");
+    });
+    await page.goto("/");
+    await expect(page.locator(".rebuild-pill")).toHaveText("failed");
+    expect(await stepCommand(page, { command: "runtime.snapshot" })).toMatchObject({
+      ok: true,
+      value: { rebuild: { status: "failed", native: false, bodies: [], errors: [
+        { source: "kernel", message: expect.stringContaining("PlainSolid needs browser workers") },
+      ] } },
+    });
+  });
+  test("a failed PlainSolid WASM fetch recovers on the next project open", async ({ page, context }) => {
+    let failedFetch = false;
+    await context.route(/\/assets\/plainsolid-kernel-[^/]+\.wasm$/, async route => {
+      if (failedFetch) await route.continue();
+      else {
+        failedFetch = true;
+        await route.fulfill({ status: 503 });
+      }
+    });
+    await page.goto("/");
+    await expect(page.locator(".rebuild-pill")).toHaveText("failed");
+    expect(failedFetch).toBe(true);
+    expect(await stepCommand(page, { command: "runtime.snapshot" })).toMatchObject({
+      ok: true,
+      value: { rebuild: { native: false, errors: [
+        { source: "kernel", message: expect.stringContaining("PlainSolid WASM fetch failed: 503") },
+      ] } },
+    });
+    const project = createBoxTemplate();
+    await expect(page.getByText("Autosave ready", { exact: true })).toBeVisible();
+    await page.locator('input[type="file"]').first().setInputFiles({
+      name: "after-wasm-retry.pcaddoc", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(project)),
+    });
+    await expect(async () => {
+      expect(await stepCommand(page, { command: "runtime.snapshot" })).toMatchObject({
+        ok: true, value: { document: { id: project.id } },
+      });
+    }).toPass();
+    expect(await stepCommand(page, { command: "runtime.awaitNative" })).toMatchObject({
+      ok: true,
+      value: { rebuild: { native: true, errors: [], bodies: [
+        { assertions: { valid: true, solidCount: 1, volume: 80000 } },
+      ] } },
+    });
+  });
+}
 test("built app enforces CSP while native modeling, import, recovery and STL workers operate", async ({
   page,
 }, info) => {
   const { errors, violations, workerUrls, assetHeaderJobs } =
     await observeCsp(page);
+  const kernelRequests: string[] = [];
+  const plainSolidResponses: Array<Promise<{ status: number; sha256: string }>> = [];
+  const plainSolidAsset = /^\/assets\/plainsolid-kernel-[^/]+\.wasm$/;
+  const context = page.context();
+  context.on("request", (request) => kernelRequests.push(new URL(request.url()).pathname));
+  const observedPlainSolidStatuses: number[] = [];
+  context.on("response", (response) => {
+    if (plainSolidAsset.test(new URL(response.url()).pathname)) {
+      observedPlainSolidStatuses.push(response.status());
+    }
+  });
+  // Read and forward the actual preview response while it is in flight.
+  // Chromium's inspector can evict large WASM bodies before response.body().
+  await context.route((url) => plainSolidAsset.test(url.pathname), async (route) => {
+    const forwarded = (async () => {
+      const upstream = await route.fetch({ maxRedirects: 0 });
+      try {
+        const body = await upstream.body();
+        await route.fulfill({ response: upstream, body });
+        return {
+          status: upstream.status(),
+          sha256: createHash("sha256").update(body).digest("hex"),
+        };
+      } finally {
+        await upstream.dispose();
+      }
+    })();
+    plainSolidResponses.push(forwarded);
+    await forwarded;
+  });
   const response = await page.goto("/");
   for (const [header, value] of Object.entries(SECURITY_HEADERS))
     expect(response!.headers()[header.toLowerCase()]).toBe(value);
@@ -93,6 +177,16 @@ test("built app enforces CSP while native modeling, import, recovery and STL wor
   await page.getByRole("button", { name: "Box Extrude", exact: true }).click();
   await expect(page.getByText("Volume (mm³)", { exact: true })).toBeVisible();
   expect(workerUrls.some((url) => /geometryWorker/.test(url))).toBe(true);
+  const native = await stepCommand(page, { command: "runtime.awaitNative" });
+  expect(native).toMatchObject({
+    ok: true,
+    value: { rebuild: { native: true, errors: [], bodies: [
+      { assertions: { valid: true, solidCount: 1 } },
+    ] } },
+  });
+  if (!native.ok) throw new Error(native.error.message);
+  const { rebuild } = native.value as { rebuild: { bodies: { assertions: { volume: number } }[] } };
+  expect(rebuild.bodies[0].assertions.volume).toBeCloseTo(80000, 8);
   const width = page.getByRole("textbox", {
     name: "Parameter width expression",
     exact: true,
@@ -218,6 +312,33 @@ test("built app enforces CSP while native modeling, import, recovery and STL wor
   expect(workerUrls.some((url) => /exportWorker/.test(url))).toBe(true);
   const assetHeaders = await Promise.all(assetHeaderJobs);
   expect(assetHeaders.some((asset) => asset.url.endsWith(".wasm"))).toBe(true);
+  const occtRequests = kernelRequests.filter((path) =>
+    /\/(?:opencascade|occt)[^/]*\.(?:js|mjs|wasm)$/i.test(path),
+  );
+  const plainSolidRequests = kernelRequests.filter((path) => plainSolidAsset.test(path));
+  if (expectedGeometrySource === "plainsolid") {
+    expect(plainSolidRequests.length).toBeGreaterThan(0);
+    expect(new Set(plainSolidRequests).size).toBe(1);
+    expect(kernelRequests).not.toContain("/assets/plainsolid-kernel.wasm");
+    expect(occtRequests).toEqual([]);
+    const manifestResponse = await page.request.get("/kernel/plainsolid-kernel.json");
+    expect(manifestResponse.ok()).toBe(true);
+    const manifest = await manifestResponse.json() as {
+      revision: string;
+      wasmSha256: string;
+    };
+    expect(manifest.revision).toMatch(/^[a-f0-9]{40}$/);
+    expect(manifest.wasmSha256).toMatch(/^[a-f0-9]{64}$/);
+    const loaded = await Promise.all(plainSolidResponses);
+    expect(loaded.length).toBeGreaterThan(0);
+    expect(observedPlainSolidStatuses).toEqual(loaded.map(() => 200));
+    for (const asset of loaded) {
+      expect(asset).toEqual({ status: 200, sha256: manifest.wasmSha256 });
+    }
+  } else {
+    expect(kernelRequests.some((path) => /\/assets\/plainsolid-kernel(?:-[^/]+)?\.wasm$/.test(path))).toBe(false);
+    expect(occtRequests.some((path) => path.endsWith(".wasm"))).toBe(true);
+  }
   expect(
     assetHeaders.every((asset) => asset.csp === CONTENT_SECURITY_POLICY),
   ).toBe(true);

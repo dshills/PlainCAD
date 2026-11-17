@@ -3,6 +3,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import type { CadDocument } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 async function state(page: Page): Promise<{
   document: CadDocument;
@@ -129,7 +130,7 @@ test("local project → active components → plane-based sketches → native bo
   const coverMesh = snapshot.result!.meshes.find(
     (mesh) => mesh.bodyId === coverBody,
   )!;
-  expect(bracketMesh.geometrySource).toBe("opencascade");
+  expect(bracketMesh.geometrySource).toBe(expectedGeometrySource);
   expect(bracketMesh.geometryAssertions).toMatchObject({
     valid: true,
     solidCount: 1,

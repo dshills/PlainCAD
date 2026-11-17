@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../../cad/kernel/geometrySource";
 import type { CadStore } from "../../state/useCadStore";
 import { bodyComponentId, sketchComponentId } from "../../cad/document/components";
 import type { RebuildError } from "../../cad/worker/workerProtocol";
@@ -139,13 +140,13 @@ export function nextModelingAction(state: ReadinessSnapshot): NextModelingAction
     ? result?.meshes.find((mesh) => mesh.bodyId === selected.id)
     : result?.meshes.find((mesh) => bodyComponentId(document, mesh.bodyId) === state.activeComponentId);
   if (solid) {
-    const native = solid.geometrySource === "opencascade" && solid.geometryAssertions?.valid === true;
+    const native = isNativeGeometrySource(solid.geometrySource) && solid.geometryAssertions?.valid === true;
     return {
       state: "ready-solid",
       title: native ? "Refine your solid" : "Inspect geometry availability",
       description: native
         ? "Select a feature in History to change its dimensions, or place holes on a supported planar face. Draw another sketch to add or remove material."
-        : "The current mesh uses fallback geometry. Native face and edge operations require OpenCascade; inspect Issues for the supported limits.",
+        : "The current mesh uses fallback geometry. Native face and edge operations require the geometry kernel. Inspect Issues for the supported limits.",
       command: native ? "feature.guidedHole" : undefined,
       label: native ? "Place holes on face" : undefined,
     };
@@ -190,7 +191,7 @@ export function modelingPrerequisite(
     return "Finish Sketch before using a solid-modeling action.";
   }
   if (command === "feature.edit" && !state.rebuild.kernelReady) {
-    return "Feature preview editing requires OpenCascade. Inspect Issues if the kernel could not load.";
+    return "Feature preview editing requires the geometry kernel. Inspect Issues if the kernel could not load.";
   }
   const prerequisites: Record<string, string> = {
     "feature.extrude": "Select a sketch with a usable closed profile. Repair its geometry or plane before extruding.",

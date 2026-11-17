@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import type { ViewerSnapshot } from "../src/viewer/viewerDiagnostics";
 import { THEME_STORAGE_KEY, viewerThemeColors } from "../src/ui/themes/themes";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 async function snapshot(page: Page) {
   return page.evaluate(async () => {
@@ -26,7 +27,7 @@ async function ready(page: Page, volume?: number) {
     expect(state.rebuild.status).toBe("succeeded");
     if (volume !== undefined) {
       const mesh = state.rebuild.result!.meshes[0];
-      expect(mesh.geometrySource).toBe("opencascade");
+      expect(mesh.geometrySource).toBe(expectedGeometrySource);
       expect(mesh.geometryAssertions).toMatchObject({
         valid: true,
         solidCount: 1,

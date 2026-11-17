@@ -69,6 +69,25 @@ describe("native feature cache ownership", () => {
     expect(cache.retainedShapes).toBe(0);
   });
 
+  it("makes room for a large operation by releasing committed and pending native copies", () => {
+    const { kernel, body, dispose } = fixture(), cache = new NativeFeatureCache();
+    cache.begin("doc", kernel);
+    cache.stage("previous", [["a", body]], []);
+    cache.finish(true);
+    cache.stage("first", [["b", body]], []);
+    cache.stage("last", [["c", body]], []);
+    cache.trimShapes(1);
+    expect(cache.read("previous")).toBeUndefined();
+    expect(cache.retainedShapes).toBe(1);
+    expect(dispose).toHaveBeenCalledTimes(2);
+    cache.finish(true);
+    expect(cache.read("first")).toBeUndefined();
+    const remaining = cache.read("last")!;
+    expect(remaining.bodies[0][0]).toBe("c");
+    kernel.disposeShape!(remaining.bodies[0][1].shape);
+    cache.clear();
+  });
+
   it("refuses fallback, oversized signatures and entries without native validation", () => {
     const { kernel, body, clone } = fixture(), cache = new NativeFeatureCache();
     cache.begin("doc", kernel);

@@ -7,6 +7,7 @@ import { solveSketch } from "../src/cad/sketch/SketchSolver";
 import { detectProfiles } from "../src/cad/sketch/profileDetection";
 import type { Sketch } from "../src/cad/document/schema";
 import { aiSnapshot, stlSignedVolume } from "./aiAcceptanceHelpers";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 function fixture(arc: boolean) {
   const child = addComponent(createEmptyDocument("Linked source navigation"), "Cover");
   let source: Sketch = createSketchOnPlane("Source outline", "XY");
@@ -25,7 +26,7 @@ async function native(page: Page, radius: number, arc: boolean) {
   await expect(async () => {
     const state = await aiSnapshot(page);
     expect(state.status).toBe("succeeded"); expect(state.result!.errors).toEqual([]); expect(state.result!.meshes).toHaveLength(1);
-    expect(state.result!.meshes[0]).toMatchObject({ geometrySource: "opencascade", geometryAssertions: { valid: true, solidCount: 1 } });
+    expect(state.result!.meshes[0]).toMatchObject({ geometrySource: expectedGeometrySource, geometryAssertions: { valid: true, solidCount: 1 } });
     expect(state.result!.meshes[0].geometryAssertions!.volume).toBeCloseTo(Math.PI * radius * radius * 8 / (arc ? 2 : 1), 6);
   }).toPass();
 }

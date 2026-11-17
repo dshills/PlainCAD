@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { aiSnapshot, stlSignedVolume } from "./aiAcceptanceHelpers";
 import { applyExtrusion } from "./extrudeWorkflow";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 async function ready(page: Page, volume?: number) {
   await expect(async () => {
@@ -9,7 +10,7 @@ async function ready(page: Page, volume?: number) {
     expect(state.status).toBe("succeeded"); expect(state.result?.success).toBe(true);
     if (volume !== undefined) {
       expect(state.result!.meshes).toHaveLength(1);
-      expect(state.result!.meshes[0]).toMatchObject({ geometrySource: "opencascade", geometryAssertions: { valid: true, solidCount: 1 } });
+      expect(state.result!.meshes[0]).toMatchObject({ geometrySource: expectedGeometrySource, geometryAssertions: { valid: true, solidCount: 1 } });
       expect(state.result!.meshes[0].geometryAssertions!.volume).toBeCloseTo(volume, 6);
     }
   }).toPass({ timeout: 30000 });

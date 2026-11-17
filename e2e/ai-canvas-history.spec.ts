@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { aiPlatePlan } from "../src/tests/fixtures/aiPlan";
 import { aiSnapshot } from "./aiAcceptanceHelpers";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 async function nativeVolume(page: Page, expected: number) {
   await expect(async () => {
@@ -11,7 +12,7 @@ async function nativeVolume(page: Page, expected: number) {
     if (expected === 0) { expect(state.result?.meshes).toHaveLength(0); return; }
     expect(state.result?.meshes).toHaveLength(1);
     const mesh = state.result!.meshes[0];
-    expect(mesh.geometrySource).toBe("opencascade");
+    expect(mesh.geometrySource).toBe(expectedGeometrySource);
     expect(mesh.geometryAssertions).toMatchObject({ valid: true, solidCount: 1 });
     expect(mesh.geometryAssertions!.volume).toBeCloseTo(expected, 5);
   }).toPass({ timeout: 30000 });

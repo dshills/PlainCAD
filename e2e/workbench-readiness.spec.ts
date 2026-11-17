@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { aiSnapshot } from "./aiAcceptanceHelpers";
 import { applyExtrusion } from "./extrudeWorkflow";
 import type { Sketch } from "../src/cad/document/schema";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -51,7 +52,7 @@ test("workbench guides an open outline through explicit repair to a native solid
     expect(after.past).toBe(before.past + 2);
     expect(after.result?.meshes).toHaveLength(1);
     expect(after.result!.meshes[0]).toMatchObject({
-      geometrySource: "opencascade", geometryAssertions: { valid: true, solidCount: 1 },
+      geometrySource: expectedGeometrySource, geometryAssertions: { valid: true, solidCount: 1 },
     });
     expect(after.result!.meshes[0].geometryAssertions!.volume).toBeCloseTo(2000, 5);
   }).toPass({ timeout: 30000 });

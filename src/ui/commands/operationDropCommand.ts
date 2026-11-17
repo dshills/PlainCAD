@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../../cad/kernel/geometrySource";
 import { useFileJobs } from "../../persistence/fileJobs";
 import { create } from "zustand";
 import { createId } from "../../cad/document/ids";
@@ -93,7 +94,7 @@ function nativeContext(state: OperationDropContext) {
     state.rebuild.result.documentId === state.history.present.id &&
     state.rebuild.result.meshes.every(
       (mesh) =>
-        mesh.geometrySource === "opencascade" && mesh.geometryAssertions?.valid,
+        isNativeGeometrySource(mesh.geometrySource) && mesh.geometryAssertions?.valid,
     ),
   );
 }
@@ -158,7 +159,7 @@ export function operationDropTargets(
       const mesh = result.meshes.find((m) => m.bodyId === bodyId);
       if (
         hidden.includes(bodyId) ||
-        mesh?.geometrySource !== "opencascade" ||
+        !isNativeGeometrySource(mesh?.geometrySource) ||
         !mesh.geometryAssertions?.valid ||
         !["extrusion", "cut", "fuse"].includes(mesh.kernelOperation ?? "")
       )

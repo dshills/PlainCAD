@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../cad/kernel/geometrySource";
 import { create } from "zustand";
 import type { CadDocument, SelectionRef } from "../cad/document/schema";
 import type { RebuildResult } from "../cad/worker/workerProtocol";
@@ -43,7 +44,7 @@ export function publishAiCanvasPreview(input: AiCanvasPreview): boolean {
   const state = useCadStore.getState();
   const result = input.result;
   if (result.documentId !== input.document.id || !result.success || result.errors.length || !result.meshes.length || result.meshes.some((mesh) =>
-    mesh.geometrySource !== "opencascade" || mesh.geometryAssertions?.valid !== true ||
+    !isNativeGeometrySource(mesh.geometrySource) || mesh.geometryAssertions?.valid !== true ||
     !Number.isInteger(mesh.geometryAssertions.solidCount) || mesh.geometryAssertions.solidCount < 1 ||
     !Number.isFinite(mesh.geometryAssertions.volume) || mesh.geometryAssertions.volume <= 0)) return false;
   const bodyIds = [...new Set(input.bodyIds)];
@@ -65,7 +66,7 @@ useCadStore.subscribe((state) => {
 export function publishCommandCanvasPreview(input: AiCanvasPreview): boolean {
   if (!input.planId || !input.candidate || input.result.documentId !== input.candidate.id ||
     !input.result.success || input.result.errors.length || input.result.meshes.some(mesh =>
-      mesh.geometrySource !== "opencascade" || mesh.geometryAssertions?.valid !== true ||
+      !isNativeGeometrySource(mesh.geometrySource) || mesh.geometryAssertions?.valid !== true ||
       !Number.isInteger(mesh.geometryAssertions.solidCount) || mesh.geometryAssertions.solidCount < 1 ||
       !Number.isFinite(mesh.geometryAssertions.volume) || mesh.geometryAssertions.volume <= 0)) return false;
   if (!currentAiCanvasPreview(useCadStore.getState(), input)) return false;

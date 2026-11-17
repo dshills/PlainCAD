@@ -84,7 +84,7 @@ Interaction receipts report `dispatched` and whether the registered handler was
 Interaction execution confirms dispatch; native geometry or asynchronous work
 may still be pending. `runtime.snapshot` reports current geometry proof, errors,
 history and project data. `runtime.awaitNative` waits for a nonempty current
-OpenCascade result with valid solid assertions. Empty models, fallback meshes,
+native result with valid solid assertions. Empty models, fallback meshes,
 failed builds and intervening edits produce diagnostics. `runtime.waitForCommand`
 waits for an available command ID or label/property, such as an Apply button.
 
@@ -132,8 +132,8 @@ running until their work finishes. Artifact paths describe completed saves.
 
 The CLI starts an isolated Chromium session against a loopback app URL. It does
 not attach to the user's current tab. Pass a saved project or import one through
-the API. Modeling still uses browser WebAssembly workers and OpenCascade, rather
-than a separate Node kernel.
+the API. Modeling uses the app's browser WebAssembly workers, with PlainSolid
+as the default kernel.
 
 Agents can discover and execute these JSON commands through an existing browser
 session or CLI. Provider credentials and executable code are not transport fields.

@@ -5,6 +5,7 @@ import { addCornerRectangle, createSketchOnPlane } from "../src/cad/sketch/Sketc
 import { solveSketch } from "../src/cad/sketch/SketchSolver";
 import { detectProfiles } from "../src/cad/sketch/profileDetection";
 import { aiSnapshot, stlSignedVolume } from "./aiAcceptanceHelpers";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 function fixture() {
   const sketch = addCornerRectangle(createSketchOnPlane("Asymmetric outline", "XY"), "width", "20mm");
   const profile = detectProfiles(solveSketch(sketch, { width: { value: 30, unit: "mm", dimension: "length" } })).profiles[0];
@@ -16,7 +17,7 @@ async function native(page: Page, volume: number, min: number[], max: number[]) 
     const state = await aiSnapshot(page);
     expect(state.status).toBe("succeeded"); expect(state.result!.errors).toEqual([]); expect(state.result!.meshes).toHaveLength(1);
     const mesh = state.result!.meshes[0];
-    expect(mesh).toMatchObject({ geometrySource: "opencascade", geometryAssertions: { valid: true, solidCount: 1 } });
+    expect(mesh).toMatchObject({ geometrySource: expectedGeometrySource, geometryAssertions: { valid: true, solidCount: 1 } });
     expect(mesh.geometryAssertions!.volume).toBeCloseTo(volume, 7);
     mesh.bounds.min.forEach((value, axis) => expect(value).toBeCloseTo(min[axis], 7)); mesh.bounds.max.forEach((value, axis) => expect(value).toBeCloseTo(max[axis], 7));
   }).toPass({ timeout: 30000 });

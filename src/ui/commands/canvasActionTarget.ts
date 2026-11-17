@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../../cad/kernel/geometrySource";
 import type { CadDocument } from "../../cad/document/schema";
 import type { RebuildResult } from "../../cad/worker/workerProtocol";
 import { hiddenViewerBodies, useViewerState } from "../../state/viewerState";
@@ -19,7 +20,7 @@ export function selectedCanvasActionTarget(state: CadStore): CanvasActionTarget 
       state.rebuild.status !== "succeeded" || !result?.success || result.documentId !== state.history.present.id) return;
   if (hiddenViewerBodies(state.history.present, [selected.id], state.documentSession, useViewerState.getState()).length) return;
   const mesh = result.meshes.find(item => item.bodyId === selected.id);
-  if (mesh?.geometrySource !== "opencascade" || !mesh.geometryAssertions?.valid || !Number.isFinite(mesh.geometryAssertions.volume) || mesh.geometryAssertions.volume <= 0 || mesh.geometryAssertions.solidCount <= 0) return;
+  if (!isNativeGeometrySource(mesh?.geometrySource) || !mesh.geometryAssertions?.valid || !Number.isFinite(mesh.geometryAssertions.volume) || mesh.geometryAssertions.volume <= 0 || mesh.geometryAssertions.solidCount <= 0) return;
   const owner = state.history.present.features.find(feature => `body:${feature.id}` === selected.id && !feature.suppressed);
   return { document: state.history.present, session: state.documentSession, result,
     componentId: state.activeComponentId, bodyId: selected.id, ...(owner ? { featureId: owner.id } : {}) };

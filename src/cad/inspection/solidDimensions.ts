@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../kernel/geometrySource";
 import type { SolidDimensionField } from "./solidDimensionEdit";
 import type { CadDocument, ExpressionRef, Feature, SelectionRef } from "../document/schema";
 import { featureComponentId } from "../document/components";
@@ -67,7 +68,7 @@ export function solidDimensions(
     !hiddenBodyIds.includes(id) && visited.has(dependencyKey("feature", writer)),
   ).map(([id]) => id);
   const meshes = result.meshes.filter((mesh) => bodyIds.includes(mesh.bodyId) &&
-    mesh.geometrySource === "opencascade" && mesh.geometryAssertions?.valid);
+    isNativeGeometrySource(mesh.geometrySource) && mesh.geometryAssertions?.valid);
   if (!meshes.length) return [];
   // An annotation is attached to one affected solid. It describes the feature,
   // not a measured length along an arbitrary BRep face or its bounding box.

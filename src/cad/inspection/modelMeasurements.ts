@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../kernel/geometrySource";
 import type { CadDocument } from "../document/schema";
 import type { RebuildResult } from "../worker/workerProtocol";
 import type { Point3 } from "../sketch/planes";
@@ -47,7 +48,7 @@ export function modelMeasurementTargets(document: CadDocument, result: RebuildRe
       targets.push(target);
     }
   };
-  const native = new Set(result.meshes.filter((mesh) => mesh.geometrySource === "opencascade" && mesh.geometryAssertions?.valid).map((mesh) => mesh.bodyId));
+  const native = new Set(result.meshes.filter((mesh) => isNativeGeometrySource(mesh.geometrySource) && mesh.geometryAssertions?.valid).map((mesh) => mesh.bodyId));
   for (const rim of result.availableHoleRims ?? []) {
     if (!native.has(rim.bodyId) || !Number.isFinite(rim.radius) || rim.radius <= 0) continue;
     const path = Array.from({ length: CIRCLE_PATH_POINTS }, (_, index) => {

@@ -70,7 +70,8 @@ test("guided holes save preset intent and place a verified tap-drill callout on 
   await openNewPartMenu(page);
   await page.locator("summary").filter({ hasText: "Start from example" }).click();
   await page.getByRole("button", { name: "Load parametric box template" }).click();
-  await page.getByRole("button", { name: "Place holes on face" }).click();
+  await page.getByRole("toolbar", { name: "Contextual CAD tools" })
+    .getByRole("button", { name: "Place holes on face", exact: true }).click();
   await page.getByRole("button", { name: "Hole on Box Extrude — end cap", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Place holes on face" });
   await dialog.getByLabel("Hole size preset").selectOption("4-40");

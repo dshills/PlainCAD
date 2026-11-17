@@ -1,11 +1,12 @@
 import { test, expect, type Page } from "@playwright/test";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 async function current(page: Page) {
   await expect(async () => {
-    const state = await page.evaluate(async () => {
+    const state = await page.evaluate(async (geometrySource) => {
       const path = "/src/state/useCadStore.ts", s = (await import(path)).useCadStore.getState();
-      return { status: s.rebuild.status, success: s.rebuild.result?.success, native: s.rebuild.result?.meshes.every((mesh: { geometrySource: string; geometryAssertions?: { valid: boolean } }) => mesh.geometrySource === "opencascade" && mesh.geometryAssertions?.valid) };
-    });
+      return { status: s.rebuild.status, success: s.rebuild.result?.success, native: s.rebuild.result?.meshes.every((mesh: { geometrySource: string; geometryAssertions?: { valid: boolean } }) => mesh.geometrySource === geometrySource && mesh.geometryAssertions?.valid) };
+    }, expectedGeometrySource);
     expect(state).toEqual({ status: "succeeded", success: true, native: true });
   }).toPass();
 }

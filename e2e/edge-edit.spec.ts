@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import type { CadDocument } from "../src/cad/document/schema";
 import type { ResolvedSketch } from "../src/cad/sketch/SketchSolver";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 async function snapshot(
   page: Page,
 ): Promise<{
@@ -215,7 +216,7 @@ test("Edit Fillet/Chamfer preserves multiple authored refs, validates downstream
   );
   expect(state.result.meshes[0]).toMatchObject({
     bodyId: `body:${ids.owner}`,
-    geometrySource: "opencascade",
+    geometrySource: expectedGeometrySource,
     kernelOperation: "chamfer",
     geometryAssertions: { valid: true, solidCount: 1 },
   });

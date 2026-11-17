@@ -7,6 +7,7 @@ import {
   stlSignedVolume,
 } from "./aiAcceptanceHelpers";
 import { applyExtrusion } from "./extrudeWorkflow";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 async function nativeVolume(page: Page, expected: number) {
@@ -18,7 +19,7 @@ async function nativeVolume(page: Page, expected: number) {
     expect(state.result?.meshes).toHaveLength(1);
     const mesh = state.result!.meshes[0];
     expect(mesh).toMatchObject({
-      geometrySource: "opencascade",
+      geometrySource: expectedGeometrySource,
       geometryAssertions: { valid: true, solidCount: 1 },
     });
     expect(mesh.geometryAssertions!.volume).toBeCloseTo(expected, 5);

@@ -1,10 +1,11 @@
+import { isNativeGeometrySource } from "../cad/kernel/geometrySource";
 import type { RenderMesh } from "../cad/kernel/KernelAdapter";
 import { canvasPng } from "./pngCapture";
 import { PART_LIBRARY_LIMITS, validateLibraryThumbnail } from "./partLibrary";
 
 /** A small deterministic shaded thumbnail of actual native tessellation, without an extra WebGL context. */
 export async function libraryThumbnail(meshes: RenderMesh[]): Promise<string> {
-  if (!meshes.length || meshes.some(mesh => mesh.geometrySource !== "opencascade" || !mesh.geometryAssertions?.valid)) throw new Error("Save a successfully rebuilt native component to create its thumbnail.");
+  if (!meshes.length || meshes.some(mesh => !isNativeGeometrySource(mesh.geometrySource) || !mesh.geometryAssertions?.valid)) throw new Error("Save a successfully rebuilt native component to create its thumbnail.");
   const triangleCount = meshes.reduce((count, mesh) => count + mesh.indices.length / 3, 0);
   if (triangleCount > 50000) throw new Error("Part thumbnail exceeds 50,000 triangles. Use a coarser display tessellation or simplify this component.");
   const canvas = document.createElement("canvas");

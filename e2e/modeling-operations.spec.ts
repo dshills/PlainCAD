@@ -3,6 +3,7 @@ import { applyModeling } from "./modelingWorkflow";
 import { readFile } from "node:fs/promises";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
 import type { CadDocument } from "../src/cad/document/schema";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 type State = { document: CadDocument; status: string; result?: RebuildResult };
 async function snapshot(page: Page): Promise<State> {
@@ -42,7 +43,7 @@ function geometry(
   operation: string,
 ) {
   const mesh = state.result!.meshes.find((m) => m.bodyId === `body:${id}`)!;
-  expect(mesh.geometrySource).toBe("opencascade");
+  expect(mesh.geometrySource).toBe(expectedGeometrySource);
   expect(mesh.kernelOperation).toBe(operation);
   expect(mesh.geometryAssertions).toMatchObject({ valid: true, solidCount: 1 });
   expect(

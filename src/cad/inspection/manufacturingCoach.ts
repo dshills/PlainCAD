@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../kernel/geometrySource";
 import type { CadDocument, Feature } from "../document/schema";
 import type { RebuildResult } from "../worker/workerProtocol";
 import type { RenderMesh } from "../kernel/KernelAdapter";
@@ -40,7 +41,7 @@ export function overhangArea(mesh: RenderMesh, angle: number, budget: { visits: 
 }
 export function manufacturingReport(document: CadDocument, result: RebuildResult, settings: CoachSettings): CoachReport {
   if (!validCoachSettings(settings)) throw new Error("Enter finite positive wall/tool sizes, nonnegative clearance and an overhang angle from 1–89 degrees.");
-  if (!result.success || result.documentId !== document.id || !result.meshes.length || result.meshes.some(mesh => mesh.geometrySource !== "opencascade" || !mesh.geometryAssertions?.valid)) throw new Error("Manufacturing coach requires a current successful native model.");
+  if (!result.success || result.documentId !== document.id || !result.meshes.length || result.meshes.some(mesh => !isNativeGeometrySource(mesh.geometrySource) || !mesh.geometryAssertions?.valid)) throw new Error("Manufacturing coach requires a current successful native model.");
   const parameters = evaluateParameters(document.parameters), graph = buildDependencyGraph(document);
   if (parameters.errors.length) throw new Error("Repair parameter expressions before manufacturing analysis.");
   const length = (feature: Feature, field: string) => {

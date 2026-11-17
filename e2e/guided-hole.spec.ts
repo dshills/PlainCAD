@@ -2,6 +2,7 @@ import { test, expect, type Locator, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { aiSnapshot, stlSignedVolume } from "./aiAcceptanceHelpers";
 import type { RenderMesh } from "../src/cad/kernel/KernelAdapter";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 type Plane = "XY" | "XZ" | "YZ";
 const CENTERS = [
@@ -65,7 +66,7 @@ async function ready(page: Page, volume: number) {
     expect(state.result?.documentId).toBe(state.document.id);
     expect(state.result?.errors).toEqual([]);
     expect(state.result?.meshes).toHaveLength(1);
-    expect(mesh?.geometrySource).toBe("opencascade");
+    expect(mesh?.geometrySource).toBe(expectedGeometrySource);
     expect(mesh?.geometryAssertions).toMatchObject({
       valid: true,
       solidCount: 1,

@@ -1,13 +1,14 @@
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { aiSnapshot, stlSignedVolume } from "./aiAcceptanceHelpers";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 async function openFamily(page: Page) {
   await page.keyboard.press("ControlOrMeta+k"); const palette = page.getByRole("dialog", { name: "Command Palette", exact: true });
   await palette.getByLabel("Filter commands").fill("Product configurations"); await palette.getByRole("button", { name: /^Product configurations/ }).click();
   return page.getByRole("dialog", { name: "Product configurations", exact: true });
 }
 function unpack(bytes: Buffer) { const files: { name: string; bytes: Buffer }[] = []; for (let offset = 0; bytes.readUInt32LE(offset) === 0x04034b50;) { const size = bytes.readUInt32LE(offset + 18), nameLength = bytes.readUInt16LE(offset + 26), start = offset + 30 + nameLength + bytes.readUInt16LE(offset + 28); files.push({ name: bytes.subarray(offset + 30, offset + 30 + nameLength).toString(), bytes: bytes.subarray(start, start + size) }); offset = start + size; } return files; }
-async function width(page: Page, expected: number) { await expect(async () => { const state = await aiSnapshot(page); expect(state.status).toBe("succeeded"); const mesh = state.result?.meshes.find(mesh => mesh.bodyId === "body:first-solid"); expect(mesh?.geometrySource).toBe("opencascade"); expect(mesh?.geometryAssertions).toMatchObject({ valid: true, solidCount: 1 }); expect(mesh?.bounds.max[0]).toBeCloseTo(expected, 6); }).toPass({ timeout: 30000 }); }
+async function width(page: Page, expected: number) { await expect(async () => { const state = await aiSnapshot(page); expect(state.status).toBe("succeeded"); const mesh = state.result?.meshes.find(mesh => mesh.bodyId === "body:first-solid"); expect(mesh?.geometrySource).toBe(expectedGeometrySource); expect(mesh?.geometryAssertions).toMatchObject({ valid: true, solidCount: 1 }); expect(mesh?.bounds.max[0]).toBeCloseTo(expected, 6); }).toPass({ timeout: 30000 }); }
 test("native configuration comparison, batch STL and apply/undo remain associative through save/open", async ({ page }, info) => {
   await page.goto("/"); await page.locator('input[type="file"]').first().setInputFiles("src/persistence/fixtures/schema-v20.pcaddoc"); await width(page, 20);
   const before = await aiSnapshot(page); let dialog = await openFamily(page);

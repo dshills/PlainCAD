@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { aiSnapshot, stlSignedVolume } from "./aiAcceptanceHelpers";
 import { inspectPngDownload } from "./pngDownload";
 import { assertStepProofs, expectedStepProofs, loadStepFixture, observeStepProofs, stepTranscripts } from "./stepExportHelpers";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 async function selectImageSource(page: Page, kind: "body" | "sketch", id: string) {
     await page.evaluate(async ({ kind, id }) => {
         const path = "/src/state/useCadStore.ts";
@@ -26,7 +27,7 @@ test("unified hub produces editable project, validated STL/STEP, project/part/sk
         const state = await aiSnapshot(page);
         expect(state.status).toBe("succeeded");
         expect(state.result!.meshes).toHaveLength(2);
-        state.result!.meshes.forEach((mesh, index) => { expect(mesh).toMatchObject({ geometrySource: "opencascade", geometryAssertions: { valid: true, solidCount: 1 } }); expect(mesh.geometryAssertions!.volume).toBeCloseTo(expectedStepProofs()[index].volume, 5); });
+        state.result!.meshes.forEach((mesh, index) => { expect(mesh).toMatchObject({ geometrySource: expectedGeometrySource, geometryAssertions: { valid: true, solidCount: 1 } }); expect(mesh.geometryAssertions!.volume).toBeCloseTo(expectedStepProofs()[index].volume, 5); });
     }).toPass();
     const before = await aiSnapshot(page);
     let dialog = await hub(page), downloading = page.waitForEvent("download");

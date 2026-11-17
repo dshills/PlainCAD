@@ -10,8 +10,8 @@ self.onmessage = async (event: MessageEvent<DrawingRequest>) => {
     if (!request || !Number.isSafeInteger(request.requestId) || request.requestId < 1 || !Number.isSafeInteger(request.session) || request.session < 0 || typeof request.bodyId !== "string" || !request.bodyId || request.bodyId.length > 160 || (request.sectionHeight !== undefined && !Number.isFinite(request.sectionHeight))) throw new Error("Drawing request is malformed.");
     const document = importProjectText(JSON.stringify(request.document));
     self.postMessage({ progress: "Rebuilding current native drawing geometry…" });
-    const { OpenCascadeKernel } = await import("../cad/kernel/OpenCascadeKernel"), { rebuildDocument, clearNativeFeatureCache } = await import("../cad/features/rebuildGraph");
-    clear = clearNativeFeatureCache; await OpenCascadeKernel.initialize();
+    const { NativeKernel } = await import("../cad/kernel/NativeKernel"), { rebuildDocument, clearNativeFeatureCache } = await import("../cad/features/rebuildGraph");
+    clear = clearNativeFeatureCache; await NativeKernel.initialize();
     const result = rebuildDocument(document, { captureDrawingBodyId: request.bodyId, epoch: request.session, reuseNativeFeatures: false });
     if (!result.success) throw new Error(result.errors.map(error => error.message).join(" ") || "Native drawing rebuild failed.");
     self.postMessage({ progress: "Projecting views and tracing the native mesh section…" });

@@ -26,10 +26,12 @@ try changing the platter thickness.
 
 **Give your next idea a shape.** Explore a parallel gripper's pocketed palm,
 slotted jaws and contact pads, then try its editable jaw-span parameter.
+This example currently needs the OpenCascade comparison build.
 [Open the gripper](docs/examples/07-robot-gripper.pcaddoc)
 
-These are screenshots of actual OpenCascade geometry in PlainCAD's Saturn Command
-theme and studio view. The fixture and gripper are static learning concepts;
+These screenshots show native geometry in PlainCAD's Saturn Command theme and
+studio view. They were captured before the switch to PlainSolid. The fixture and
+gripper are static learning concepts;
 mechanism motion and manufacturing readiness are not demonstrated. Download an
 example and choose **File → Open project** to explore it. The
 [example gallery](docs/examples/README.md) documents tested edits and model limits.
@@ -54,13 +56,13 @@ selection, native modeling and Undo. Copy its temporary capability privately int
 relay requires the local development/preview server. Disconnect revokes access;
 static hosting does not include the relay. See [live connection setup](docs/LIVE_SESSION.md).
 
-PlainCAD uses React 19, TypeScript, Vite, Zustand, Three.js, and OpenCascade.js.
-CAD runs locally in the browser through a geometry worker. An optional local Node
+PlainCAD uses React 19, TypeScript, Vite, Zustand, Three.js, and [PlainSolid](https://github.com/dshills/PlainSolid).
+PlainSolid runs as Go WebAssembly in local browser workers. An optional local Node
 gateway handles AI requests and keeps provider credentials out of the browser.
 
 ![ORBIT drive housing in PlainCAD's Saturn Command workbench, showing its recessed chamber, bearing bore, mounting counterbores, relief slots, and feature timeline](docs/images/orbit-drive-housing.png)
 
-**ORBIT drive housing** — a real OpenCascade model with 16 features, 14 sketches,
+**ORBIT drive housing** — an editable native model with 16 features, 14 sketches,
 and six editable parameters, shown in Saturn Command. The part includes a rounded
 flange, fillet/chamfer treatments, a recessed chamber, bearing bore, counterbored
 mounting and cover holes, and relief slots. [Open the editable example](docs/examples/orbit-drive-housing.pcaddoc)
@@ -69,6 +71,7 @@ with **File → Open**, or drop the project file onto the workspace.
 Explore the [example gallery](docs/examples/README.md) for editable projects and
 native renders. It includes a two-part cable guide, a 40-part rotary fixture, and
 [four threaded hardware examples](docs/examples/README.md#threaded-hardware).
+The gallery identifies projects that need the OpenCascade comparison build.
 The original ten designs have recorded [geometry validation](docs/examples/VALIDATION.json)
 and a [workflow usability audit](docs/examples/WORKFLOW_AUDIT.md).
 
@@ -126,13 +129,15 @@ booleans and edge treatments must change actual geometry before they succeed.
 
 ## Quick Start
 
-Requirements: Node.js `^20.19.0` or `>=22.12.0`, npm, and a modern desktop browser
-with WebAssembly and WebGL support.
+Requirements: Node.js `^20.19.0` or `>=22.12.0`, npm, Git, Go
+`1.27.4` to build PlainSolid, and a modern desktop browser with WebAssembly and
+WebGL support.
 
 ```sh
 git clone https://github.com/dshills/PlainCAD.git
 cd PlainCAD
 npm ci
+npm run kernel:plainsolid
 npm run dev
 ```
 
@@ -440,7 +445,7 @@ bounded scope and invalidation rules.
 
 Choose **Command agent** in the AI dock for registry-based creation and editing.
 It sends editable project JSON only after explicit consent. Proposals are checked
-against the command catalog and proved locally by OpenCascade. Review them in the
+against the command catalog and proved locally by PlainSolid. Review them in the
 main viewport, then Apply once or Cancel. Both the AI dock and task-dock Apply
 record guarded AI Undo/Redo provenance. Conversations stay with their project and
 target, including when sharing is unchecked or the mode is hidden. See
@@ -522,7 +527,7 @@ saved world positions in millimetres. A native reader verifies the actual output
 BRep validity, solid counts, exact volumes and bounds before download becomes
 available. Cancellation or a changed model invalidates prepared output. STEP
 contains geometric solids; editable history and component hierarchy stay in the
-project file. Exports are limited to 64 bodies, 32 MiB and 60 seconds. See
+project file. PlainSolid exports support up to 32 bodies, 1 MiB and 60 seconds. See
 [STEP export](specs/working-cad/STEP_EXPORT.md) for binding and geometry limits.
 
 Use **File → Import STEP solid** (or the command palette) to preview a local
@@ -592,10 +597,40 @@ remain runtime data.
 | Constraints and dimensions, combined | 512 per sketch; 20,000 total |
 | Feature dependency depth / bodies | 100 / 64 |
 | Centers per Hole feature | 64 |
+| PlainSolid prism profile / live handles per worker | 128 vertices across the profile's loops / 256 handles |
 | Tessellation per body | 100,000 triangles; 300,000 vertices |
 | Total tessellation / export intersection tests | 250,000 triangles / 2,000,000 tests |
 
 ## Development and Validation
+
+### PlainSolid backend
+
+PlainSolid is the default for the app and all geometry workers, including
+previews, drawings, fabrication and STEP. Build the WebAssembly binary and
+matching Go runtime once, or again when [the kernel pin](scripts/plainsolid-pin.json)
+changes. The setup command fetches the pinned public commit. To build without
+fetching, run `npm run kernel:plainsolid -- ../PlainSolid` against a local Git
+checkout containing that commit. Local uncommitted changes do not enter the build.
+
+```sh
+npm run kernel:plainsolid
+npm run test:plainsolid
+npm run release:check
+npm run test:cross-browser
+```
+
+Vite checks the generated assets and pinned revision for development and production
+builds. Production serves the fingerprinted WASM with the app, along with build
+provenance in `kernel/plainsolid-kernel.json` and license notices. Project files
+remain provider-independent. PlainSolid has narrower geometry support in some
+domains; an unsupported feature reports a diagnostic instead of switching kernels
+or producing an approximate solid. See the [capability matrix](specs/working-cad/CAPABILITY_MATRIX.md#modeling-availability-and-limits).
+
+For comparisons or to recover geometry outside PlainSolid's current coverage,
+explicitly launch or build with `VITE_CAD_KERNEL=opencascade`. The default build
+does not ship that provider. The general unit suite retains OpenCascade-specific
+and fallback fixtures; PlainSolid has a separate real-WASM contract suite, and
+the browser suites exercise the selected provider.
 
 | Command | Purpose |
 | --- | --- |
@@ -677,7 +712,7 @@ for the latest feature batch's reproducible checks and separate live smoke resul
 | `src/app/`, `src/ui/` | App shell, design system, panels, commands, and interaction tasks. |
 | `src/cad/document/`, `src/state/` | Durable schema, validation/migrations, immutable history, and rebuild scheduling. |
 | `src/cad/parameters/`, `src/cad/sketch/` | Units/expressions, sketch solving, profiles, and editing planners. |
-| `src/cad/features/`, `src/cad/kernel/`, `src/cad/worker/` | Dependencies, OpenCascade, tessellation/STL, and worker lifecycle. |
+| `src/cad/features/`, `src/cad/kernel/`, `src/cad/worker/` | Dependencies, PlainSolid, tessellation/STL, and worker lifecycle. |
 | `src/viewer/`, `src/templates/` | Three.js rendering and editable example models. |
 | `src/persistence/` | Import safety, deterministic project files, and recovery. |
 | `src/ai/`, `server/` | Bounded AI plans and local provider gateway. |
@@ -702,8 +737,8 @@ the source and preserve upstream previews for repair.
   resource limits. The current project remains intact after a failed import.
 - **AI unavailable:** configure server-side keys, restart Vite, and check the chosen
   model's account access. Static hosting has no local gateway.
-- **Bundle size:** React, Three.js core/renderer, CAD logic, and the OpenCascade
-  loader use separate production chunks. In the default Workbench, the sketch
+- **Bundle size:** React, Three.js core/renderer, and CAD logic use separate
+  production chunks. In the default Workbench, the sketch
   editor and expanded AI assistant load when first opened and retain drafts when hidden.
   The compact canvas launcher works in all layouts. `npm run build` enforces a
   500 kB uncompressed budget for every JavaScript bundle, including workers;
@@ -739,7 +774,7 @@ Activate a moving component and choose Move component. Set Keep connected to Rig
 
 Schema 18 saves at most 32 joints in an acyclic graph, with one parent per moving component. Parents may themselves have joints. Rigid joints follow the parent; hinge angles use degrees around the parent face origin/normal; sliders move in millimeters along that normal. Parent placement and mating-plane changes rebuild the children. Missing, absorbed or unsupported mating faces require deleting and recreating the joint. World-space sketch projection links cannot coexist with joints yet.
 
-Collision checks use native OpenCascade common volume, with a 256 overlapping body-pair budget. Colliding bodies turn orange and produce diagnostics. Touching faces are not volumetric collisions. These checks examine the current position; swept-path simulation, contact dynamics, arbitrary cylindrical mates and joint export in STEP remain future work. STL/STEP exports contain actual positioned solids.
+Collision checks use the kernel's common volume, with a 256 overlapping body-pair budget. Colliding bodies turn orange and produce diagnostics. Touching faces are not volumetric collisions. These checks examine the current position; swept-path simulation, contact dynamics, arbitrary cylindrical mates and joint export in STEP remain future work. STL/STEP exports contain actual positioned solids.
 
 Remove joint in component settings also repairs a broken mating reference: a current native pose is retained; after a failed rebuild the component returns to its authored pose. Undo restores the removed joint.
 
@@ -826,7 +861,7 @@ classes or simulate motion.
 Open **Product configurations** from the command palette or active component
 settings. Save the current editable parameter expressions with a unique name;
 **Edit** changes a saved variant without changing the current model. Select up to
-eight variants and **Compare** to rebuild each with OpenCascade, inspect body
+eight variants and **Compare** to rebuild each with the native kernel, inspect body
 size/volume, and preview it. **Apply** changes the current model in one Undo step.
 **Download configuration STL archive** validates each part and creates an archive
 with configuration/part filenames plus a manifest of native volumes and bounds.

@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { createBoxTemplate } from "../src/templates/templates";
 import { aiSnapshot, stlSignedVolume } from "./aiAcceptanceHelpers";
 import { PART_LIBRARY_LIMITS } from "../src/persistence/partLibrary";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 async function openLibrary(page: Page) {
@@ -21,7 +22,7 @@ test("persists an editable native part and thumbnail, drags to XY placement, pre
     await expect(async () => {
       const snapshot = await aiSnapshot(page);
       expect(snapshot.session).toBeGreaterThan(before); expect(snapshot.document.id).toBe(target.id); expect(snapshot.status).toBe("succeeded");
-      expect(snapshot.result?.meshes).toHaveLength(1); expect(snapshot.result!.meshes[0]).toMatchObject({ geometrySource: "opencascade", geometryAssertions: { valid: true, solidCount: 1 } });
+      expect(snapshot.result?.meshes).toHaveLength(1); expect(snapshot.result!.meshes[0]).toMatchObject({ geometrySource: expectedGeometrySource, geometryAssertions: { valid: true, solidCount: 1 } });
       expect(snapshot.result!.meshes[0].geometryAssertions!.volume).toBeCloseTo(80000, 6);
     }).toPass({ timeout: 30000 });
   };
@@ -73,7 +74,7 @@ test("persists an editable native part and thumbnail, drags to XY placement, pre
   expect(Math.hypot(projectedOrigin.x - dropPoint.x, projectedOrigin.y - dropPoint.y)).toBeLessThan(2);
   expect(staged.candidate.components[staged.componentId].placement!.translation).toEqual([staged.origin.x, staged.origin.y, staged.origin.z]);
   expect(staged.result!.meshes).toHaveLength(2);
-  for (const mesh of staged.result!.meshes) { expect(mesh.geometrySource).toBe("opencascade"); expect(mesh.geometryAssertions!.volume).toBeCloseTo(80000, 6); }
+  for (const mesh of staged.result!.meshes) { expect(mesh.geometrySource).toBe(expectedGeometrySource); expect(mesh.geometryAssertions!.volume).toBeCloseTo(80000, 6); }
   expect((await aiSnapshot(page)).document.features).toHaveLength(1);
   await dialog.getByRole("button", { name: "Cancel placement", exact: true }).click();
   expect((await aiSnapshot(page)).document.features).toHaveLength(1); expect((await aiSnapshot(page)).past).toBe(0);
@@ -158,7 +159,7 @@ test("damaged stored copies can be deleted through recovery UI without importing
   await page.locator('input[type="file"]').first().setInputFiles({ name: "recovery-target.pcaddoc", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(target)) });
   await expect(async () => {
     const snapshot = await aiSnapshot(page); expect(snapshot.document.id).toBe(target.id); expect(snapshot.status).toBe("succeeded"); expect(snapshot.result?.meshes).toHaveLength(1);
-    expect(snapshot.result!.meshes[0].geometrySource).toBe("opencascade");
+    expect(snapshot.result!.meshes[0].geometrySource).toBe(expectedGeometrySource);
   }).toPass({ timeout: 30000 });
   const before = await aiSnapshot(page);
   await page.evaluate(async () => {

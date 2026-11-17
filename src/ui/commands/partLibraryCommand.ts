@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../../cad/kernel/geometrySource";
 import type { CadStore } from "../../state/useCadStore";
 import { useCadStore } from "../../state/useCadStore";
 import { bodyComponentId } from "../../cad/document/components";
@@ -200,7 +201,7 @@ export function assertLibraryPlacementResult(result: RebuildResult, frame: PartL
   const placement = frame.placement;
   if (!placement || result.documentId !== placement.candidate.id || !result.success) throw new Error(result.errors.map(error => error.message).join(" ") || "Insertion preview failed. Repair the saved part or current project.");
   const inserted = result.meshes.filter(mesh => bodyComponentId(placement.candidate, mesh.bodyId) === placement.componentId);
-  if (!inserted.length || result.meshes.some(mesh => mesh.geometrySource !== "opencascade" || !mesh.geometryAssertions?.valid || !(mesh.geometryAssertions.volume > 0) || !(mesh.geometryAssertions.solidCount > 0))) throw new Error("Insertion preview must produce valid native solids for the saved component and current project.");
+  if (!inserted.length || result.meshes.some(mesh => !isNativeGeometrySource(mesh.geometrySource) || !mesh.geometryAssertions?.valid || !(mesh.geometryAssertions.volume > 0) || !(mesh.geometryAssertions.solidCount > 0))) throw new Error("Insertion preview must produce valid native solids for the saved component and current project.");
 }
 export async function beginLibraryPlacement(id: string, origin: Point3 = { x: 0, y: 0, z: 0 }) {
   const current = usePartLibrary.getState().frame;

@@ -16,7 +16,7 @@ export function nativeProjectionValidator(document: CadDocument, kernel: KernelA
     while (next < pending.length && rank.get(pending[next].id)! < limit) {
       const sketch = pending[next++];
       try {
-        if (!native || !kernel.availableExtrudeCapEdges) throw new Error("Linked projections require native OpenCascade boundary validation.");
+        if (!native || !kernel.availableExtrudeCapEdges) throw new Error("Linked projections require native solid boundary validation.");
         for (const projection of sketch.projections!) {
           const source = projectionSource(document, sketch, projection);
           const bodyId = stableBodyIdForFeature(source.id), body = bodies.get(bodyId);

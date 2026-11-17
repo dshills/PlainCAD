@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../../cad/kernel/geometrySource";
 import type { RenderMesh } from "../../cad/kernel/KernelAdapter";
 import type { RebuildResult } from "../../cad/worker/workerProtocol";
 
@@ -7,7 +8,7 @@ export function nativeStoryGeometry(result: RebuildResult, label: string): Story
   let triangles = 0, volume = 0, solids = 0;
   for (const mesh of result.meshes) {
     const proof = mesh.geometryAssertions;
-    if (mesh.geometrySource !== "opencascade" || !proof?.valid || !Number.isFinite(proof.volume) || proof.volume <= 0 || !Number.isSafeInteger(proof.solidCount) || proof.solidCount < 1) throw new Error(`${label}: this history step has no validated native solid geometry.`);
+    if (!isNativeGeometrySource(mesh.geometrySource) || !proof?.valid || !Number.isFinite(proof.volume) || proof.volume <= 0 || !Number.isSafeInteger(proof.solidCount) || proof.solidCount < 1) throw new Error(`${label}: this history step has no validated native solid geometry.`);
     triangles += mesh.indices.length / 3;
     volume += proof.volume; solids += proof.solidCount;
   }

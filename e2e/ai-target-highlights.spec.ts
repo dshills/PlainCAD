@@ -1,6 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import type { CadDocument } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 async function snapshot(page: Page) {
   return page.evaluate(async () => {
     const path = "/src/state/useCadStore.ts";
@@ -32,7 +33,7 @@ async function expectNative(page: Page, volumes: number[]) {
     .toBe(2);
   const meshes = (await snapshot(page)).result.meshes;
   for (const [i, mesh] of meshes.entries()) {
-    expect(mesh.geometrySource).toBe("opencascade");
+    expect(mesh.geometrySource).toBe(expectedGeometrySource);
     expect(mesh.geometryAssertions).toMatchObject({
       valid: true,
       solidCount: 1,

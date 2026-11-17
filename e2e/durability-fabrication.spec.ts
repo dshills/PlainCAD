@@ -4,6 +4,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import type { CadDocument } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 async function state(
   page: Page,
 ): Promise<{ document: CadDocument; status: string; result?: RebuildResult }> {
@@ -385,7 +386,7 @@ test("bounded recovery retention and migration of a stored released schema", asy
   await ready(page);
   const result = await state(page);
   expect(result.document.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
-  expect(result.result!.meshes[0].geometrySource).toBe("opencascade");
+  expect(result.result!.meshes[0].geometrySource).toBe(expectedGeometrySource);
   expect(result.result!.meshes[0].geometryAssertions!.volume).toBeCloseTo(
     1000 - Math.PI * 5,
     4,

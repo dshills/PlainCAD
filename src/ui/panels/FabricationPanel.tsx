@@ -230,7 +230,7 @@ function ExportDialog({
             {goal === "step" ? <>
               <p>Export precise solids in millimeters at their project positions. STEP keeps separate solids; it does not keep PlainCAD’s editable feature history.</p>
               <p>{bodies.length} parts available. The next screen lets you choose parts, validate a native export and download it.</p>
-              {!hubAvailability.step ? <p role="status">Other CAD export needs current, valid OpenCascade solids and browser worker support. Rebuild or repair the model first.</p> : <p role="status">Ready to choose parts for STEP.</p>}
+              {!hubAvailability.step ? <p role="status">Other CAD export needs current, valid native solids and browser worker support. Rebuild or repair the model first.</p> : <p role="status">Ready to choose parts for STEP.</p>}
             </> : goal === "library" ? <>
               <p>Back up the complete local part library, including editable sketches and features, as one .pcadlib file. This includes saved library copies rather than the current project alone.</p>
               <p>Review saved parts in the library, then choose Download library backup. Invalid or incomplete storage stops backup with a diagnostic.</p>

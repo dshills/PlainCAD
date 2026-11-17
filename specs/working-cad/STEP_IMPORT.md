@@ -6,12 +6,13 @@ solid at its original position alongside the current project. **Add STEP solid**
 creates one component and its imported body as one Undo step. Cancel discards
 the draft. Replacing the project or changing its current rebuild cancels pending
 work and invalidates Apply.
-The tool becomes available after a successful current native rebuild confirms
-the reader and filesystem bindings, including on an empty project. Finish an
+The tool becomes available after a successful current rebuild confirms native
+STEP reader support, including on an empty project. Finish an
 active face-picking or modeling task before starting or applying an import.
 
-The first import scope accepts one ISO-10303-21 STEP root that resolves to one
-closed native solid. Assemblies, compounds, open surfaces, references to
+The import scope accepts supported planar or analytic ISO-10303-21 STEP
+geometry with one root that resolves to one closed native solid. Assemblies,
+compounds, unsupported entity graphs, open surfaces, references to
 external files and guessed original parametric history are unsupported.
 The native reader interprets STEP units in millimetres and retains coordinates
 and orientation. BRep validity, positive exact volume and area, finite bounds,
@@ -23,8 +24,8 @@ face or edge roles for drawing or edge treatment.
 Each plain ASCII source is limited to 512 KiB and 12,000 entity declarations.
 The combined embedded source limit is 2 MiB per project; the existing portable
 project and native resource limits still apply. Preview runs in the disposable
-30-second native worker. The STEP reader's filesystem access is confined to
-the task-owned source file. Native failures identify the imported feature and
+30-second native worker. PlainSolid reads the bounded source in memory
+without accessing external files. Native failures identify the imported feature and
 never publish fallback geometry.
 
 Schema 21 stores a bounded original STEP source string on each import feature.

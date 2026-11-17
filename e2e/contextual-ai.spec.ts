@@ -2,6 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import type { CadDocument } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 async function snapshot(
   page: Page,
@@ -32,7 +33,7 @@ async function expectNative(page: Page, distance: number) {
     )
     .toBeCloseTo(volume(distance), 4);
   const mesh = (await snapshot(page)).result!.meshes[0];
-  expect(mesh.geometrySource).toBe("opencascade");
+  expect(mesh.geometrySource).toBe(expectedGeometrySource);
   expect(mesh.geometryAssertions).toMatchObject({ valid: true, solidCount: 1 });
 }
 

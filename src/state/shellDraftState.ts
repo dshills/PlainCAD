@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../cad/kernel/geometrySource";
 import { create } from "zustand";
 import { stableBodyIdForFeature } from "../cad/document/ids";
 import { isShellSource, rectangularShellDimensions } from "../cad/features/shellFeature";
@@ -23,7 +24,7 @@ export function shellTarget(state: CadStore, edit: boolean) {
   const caps = ["endCap", "startCap"] as const;
   if (existing) return { source, existing, result, openings: [...caps] };
   const mesh = result.meshes.find(item => item.bodyId === stableBodyIdForFeature(source.id));
-  if (mesh?.geometrySource !== "opencascade" || mesh.kernelOperation !== "extrusion" ||
+  if (!isNativeGeometrySource(mesh?.geometrySource) || mesh.kernelOperation !== "extrusion" ||
       mesh.geometryAssertions?.solidCount !== 1 || !mesh.geometryAssertions.valid) return;
   const profile = result.profiles?.[source.sketchId]?.find(item => item.id === source.profileId || item.alternateIds?.includes(source.profileId));
   if (!profile || !rectangularShellDimensions(profile)) return;

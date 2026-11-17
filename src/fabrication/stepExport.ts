@@ -1,10 +1,14 @@
 import { MODEL_RESOURCE_LIMITS } from "../cad/resourceLimits";
 import { assertStepRoundTrip, STEP_EXPORT_MAX_BYTES, type NativeStepExport } from "../cad/kernel/nativeStep";
 import type { CadDocument } from "../cad/document/schema";
+import type { GeometrySource } from "../cad/kernel/geometrySource";
 export interface StepExportRequest { requestId: number; epoch: number; document: CadDocument; bodyIds: string[] }
 export interface StepExportReply { requestId: number; epoch: number; bodyIds: string[]; output: NativeStepExport }
-export function assertStepSelection(ids: readonly string[], available?: readonly string[]): void {
-  if (!ids.length || ids.length > MODEL_RESOURCE_LIMITS.maxBodies || new Set(ids).size !== ids.length || ids.some(id => typeof id !== "string" || !id || id.length > 160)) throw new Error("Choose 1–64 unique current bodies for STEP export.");
+export function stepBodyLimit(source?: GeometrySource): number {
+  return source === "plainsolid" ? 32 : MODEL_RESOURCE_LIMITS.maxBodies;
+}
+export function assertStepSelection(ids: readonly string[], available?: readonly string[], maxBodies = stepBodyLimit()): void {
+  if (!ids.length || ids.length > maxBodies || new Set(ids).size !== ids.length || ids.some(id => typeof id !== "string" || !id || id.length > 160)) throw new Error(`Choose 1–${maxBodies} unique current bodies for STEP export.`);
   if (available && ids.some(id => !available.includes(id))) throw new Error("A selected STEP body is no longer available. Select export bodies again.");
 }
 export function assertStepReply(reply: StepExportReply, request: StepExportRequest): void {

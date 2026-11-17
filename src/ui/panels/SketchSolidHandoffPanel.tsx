@@ -67,7 +67,7 @@ export function SketchSolidHandoffPanel() {
       ? "Your closed region is selected. Make solid opens a thickness preview; Apply creates the feature."
       : "Click a highlighted region in the canvas, or choose it below. Make solid opens its thickness preview."
     : readiness.state === "ready-sketch" && !state.rebuild.kernelReady
-      ? "OpenCascade is required to check these regions and make a native solid. Inspect Issues if the kernel could not load."
+      ? "The geometry kernel is required to check these regions and make a native solid. Inspect Issues if the kernel could not load."
       : readiness.description;
   return <section className="sketch-solid-handoff" aria-label="Make solid from finished sketch">
     <h2>{source.document.sketches[source.sketchId].name}: {faceSketch ? "remove material" : "make it solid"}</h2>

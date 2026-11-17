@@ -1,7 +1,7 @@
 // Project files are fetched under connect-src 'self', including small examples.
 const projectUrls = import.meta.glob<string>("../../../docs/examples/[0-9]*.pcaddoc", { query: "?url&no-inline", import: "default", eager: true });
 const imageUrls = import.meta.glob<string>("../../../docs/examples/images/*.png", { query: "?url", import: "default", eager: true });
-export interface GalleryExample { id: string; name: string; description: string; parts: number; features: number; complexity: string; parameter: string; projectUrl: string; thumbnail: string }
+export interface GalleryExample { id: string; name: string; description: string; parts: number; features: number; complexity: string; parameter: string; projectUrl: string; thumbnail: string; plainSolidLimit?: string }
 const rows = [
   ["01-cable-guide", "Cable guide mount", "Rounded foot, annular guide and mounting holes.", 2, 4, "Beginner", "foot_thickness: 5 → 6 mm"],
   ["02-spacer-stack", "Precision spacer stack", "Three annular parts with a shared bore.", 3, 3, "Beginner", "spacer_height: 20 → 24 mm"],
@@ -18,4 +18,16 @@ const rows = [
   ["13-m6-threaded-pair", "M6 socket screw and tapped collar", "Metric M6 × 1 external and internal threads with a hex drive socket.", 2, 5, "Intermediate", "editing external thread length in History"],
   ["14-quarter-inch-unc", "Quarter-inch UNC screw and tapped block", "1/4-20 UNC socket screw and a rectangular block with a modeled internal thread.", 2, 5, "Intermediate", "editing internal thread length in History"],
 ] as const;
-export const GALLERY_EXAMPLES: GalleryExample[] = rows.map(([id, name, description, parts, features, complexity, parameter]) => ({ id, name, description, parts, features, complexity, parameter, projectUrl: projectUrls[`../../../docs/examples/${id}.pcaddoc`], thumbnail: imageUrls[`../../../docs/examples/images/${id}.png`] }));
+// Compatibility of these exact saved projects on the pinned PlainSolid kernel.
+const plainSolidLimits: Partial<Record<typeof rows[number][0], string>> = {
+  "03-angle-fixture": "The chamfer on the rounded bracket cannot rebuild in PlainSolid.",
+  "05-motor-flange": "The flange's curved stock and boss union cannot rebuild in PlainSolid.",
+  "06-flanged-valve": "The cartridge's curved union and side bore cannot rebuild in PlainSolid.",
+  "07-robot-gripper": "The palm's actuator pocket cannot rebuild in PlainSolid.",
+  "08-belt-drive": "The pulleys' stepped unions cannot rebuild in PlainSolid.",
+  "09-heat-exchanger": "The headers' side-plane bores cannot rebuild in PlainSolid.",
+};
+export const GALLERY_EXAMPLES: GalleryExample[] = rows.map(([id, name, description, parts, features, complexity, parameter]) => ({
+  id, name, description, parts, features, complexity, parameter, plainSolidLimit: plainSolidLimits[id],
+  projectUrl: projectUrls[`../../../docs/examples/${id}.pcaddoc`], thumbnail: imageUrls[`../../../docs/examples/images/${id}.png`],
+}));

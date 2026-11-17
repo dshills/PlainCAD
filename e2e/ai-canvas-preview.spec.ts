@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { aiSnapshot } from "./aiAcceptanceHelpers";
 import type { ViewerSnapshot } from "../src/viewer/viewerDiagnostics";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 async function viewer(page: Page): Promise<ViewerSnapshot> {
   return page.evaluate(async () => {
     const path = "/src/viewer/viewerDiagnostics.ts";
@@ -41,7 +42,7 @@ test("AI native proposal uses the main camera, preserves existing parts and hist
   const first = await publish(page);
   expect(first.accepted).toBe(true);
   expect(first.result.meshes).toHaveLength(2);
-  expect(first.result.meshes.every((mesh) => mesh.geometrySource === "opencascade" && mesh.geometryAssertions?.valid && mesh.geometryAssertions.solidCount === 1)).toBe(true);
+  expect(first.result.meshes.every((mesh) => mesh.geometrySource === expectedGeometrySource && mesh.geometryAssertions?.valid && mesh.geometryAssertions.solidCount === 1)).toBe(true);
   expect(first.result.meshes.reduce((sum, mesh) => sum + mesh.geometryAssertions!.volume, 0)).toBeCloseTo(80500, 5);
   await expect.poll(async () => (await viewer(page)).aiPreview?.meshes.length).toBe(2);
   const shown = await viewer(page);

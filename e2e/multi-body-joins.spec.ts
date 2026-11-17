@@ -2,6 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import type { CadDocument } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 type State = { document: CadDocument; status: string; result?: RebuildResult };
 async function state(page: Page): Promise<State> {
@@ -24,7 +25,7 @@ async function ready(page: Page, ids: string[], volumes: number[]) {
     expect(s.result?.metrics?.disposalFailures).toBe(0);
     for (const [i, id] of ids.entries()) {
       const mesh = s.result!.meshes.find((m) => m.bodyId === id)!;
-      expect(mesh.geometrySource).toBe("opencascade");
+      expect(mesh.geometrySource).toBe(expectedGeometrySource);
       expect(mesh.geometryAssertions).toMatchObject({
         valid: true,
         solidCount: 1,
@@ -298,7 +299,7 @@ test("native multi-target join rejects a contained tool and retains the original
   ).toContain("added no volume");
   expect(s.result!.meshes).toHaveLength(4);
   for (const mesh of s.result!.meshes) {
-    expect(mesh.geometrySource).toBe("opencascade");
+    expect(mesh.geometrySource).toBe(expectedGeometrySource);
     expect(mesh.geometryAssertions).toMatchObject({
       valid: true,
       solidCount: 1,

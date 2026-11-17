@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../../cad/kernel/geometrySource";
 import { activeMatchingNuts } from "../../cad/hardware/leadScrewSettings";
 import { beginCoach, canCoach } from "./manufacturingCoachCommand";
 import { bindCommand, executeCommand, invokeCommand, isRegisteredCommandAvailable, subscribeCommandExecutions, type JsonValue } from "../../commands/registry";
@@ -61,7 +62,7 @@ import {
 } from "../../persistence/fileJobs";
 import { saveRecovery } from "../../persistence/autosave";
 import { RefObject } from "react";
-import { CadStore, useCadStore } from "../../state/useCadStore";
+import { CadStore, markProjectOpening, useCadStore } from "../../state/useCadStore";
 import { useStepImport } from "./stepImportState";
 import { canApplyStepImport, canOpenStepImport } from "./stepImportAvailability";
 import { canOpenStepExport, openStepExport } from "./stepExportCommand";
@@ -565,6 +566,7 @@ export const commands: CadCommand[] = [
       }
       const controller = beginFileJob("Opening project…");
       const previous = useCadStore.getState().history.present;
+      const clearOpening = markProjectOpening();
       try {
         const document = await importProjectFile(
           ctx.file,
@@ -589,6 +591,7 @@ export const commands: CadCommand[] = [
                 : "Project file could not be opened.",
             );
       } finally {
+        clearOpening();
         finishFileJob(controller);
       }
     },
@@ -1051,7 +1054,7 @@ function selectedExportBody(state: CadStore): string | undefined {
 function selectedThreadTarget(state: CadStore): string | undefined {
   const feature = getSelectedFeature(state);
   const bodyId = selectedExportBody(state) ?? (feature && "operation" in feature && feature.operation === "newBody" ? `body:${feature.id}` : undefined);
-  return state.rebuild.result?.meshes.some(mesh => mesh.bodyId === bodyId && mesh.geometrySource === "opencascade" &&
+  return state.rebuild.result?.meshes.some(mesh => mesh.bodyId === bodyId && isNativeGeometrySource(mesh.geometrySource) &&
     mesh.geometryAssertions?.solidCount === 1) ? bodyId : undefined;
 }
 
@@ -1192,7 +1195,7 @@ function edgeTreatmentOwner(state = useCadStore.getState()) {
   const mesh = state.rebuild.result?.meshes.find(
     (m) => m.bodyId === stableBodyIdForFeature(feature.id),
   );
-  return mesh?.geometrySource === "opencascade" &&
+  return isNativeGeometrySource(mesh?.geometrySource) &&
     ["extrusion", "cut", "fuse", "fillet", "chamfer"].includes(mesh.kernelOperation ?? "")
     ? feature
     : undefined;

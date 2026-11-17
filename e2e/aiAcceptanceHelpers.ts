@@ -3,6 +3,7 @@ import type { CadDocument } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
 import type { ViewerSnapshot } from "../src/viewer/viewerDiagnostics";
 import type { AiAcceptanceCase } from "../src/tests/fixtures/aiAcceptanceCorpus";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 export async function aiSnapshot(page: Page): Promise<{
   document: CadDocument;
@@ -39,7 +40,7 @@ export async function assertAiAcceptanceGeometry(
     expect(state.result!.meshes).toHaveLength(example.bodies);
     let actualVolume = 0;
     for (const mesh of state.result!.meshes) {
-      expect(mesh.geometrySource).toBe("opencascade");
+      expect(mesh.geometrySource).toBe(expectedGeometrySource);
       expect(mesh.geometryAssertions).toMatchObject({
         valid: true,
         solidCount: 1,

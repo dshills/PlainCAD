@@ -8,6 +8,7 @@ import type {
 } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
 import { applyExtrusion } from "./extrudeWorkflow";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 async function snapshot(
   page: Page,
 ): Promise<{ document: CadDocument; result: RebuildResult; status: string }> {
@@ -34,7 +35,7 @@ function geometry(
 ) {
   const mesh = result.meshes.find((mesh) => mesh.bodyId === `body:${id}`)!;
   expect(mesh).toBeDefined();
-  expect(mesh.geometrySource).toBe("opencascade");
+  expect(mesh.geometrySource).toBe(expectedGeometrySource);
   expect(mesh.geometryAssertions).toMatchObject({ valid: true, solidCount: 1 });
   expect(mesh.geometryAssertions!.volume).toBeCloseTo(volume, 6);
   if (operation) expect(mesh.kernelOperation).toBe(operation);

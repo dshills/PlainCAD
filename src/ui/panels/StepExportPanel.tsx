@@ -2,6 +2,7 @@ import { ModalDialog } from "../ModalDialog";
 import { useCadStore } from "../../state/useCadStore";
 import { bodyDisplayNames } from "../../cad/document/bodyDisplayNames";
 import { useFileJobs } from "../../persistence/fileJobs";
+import { stepBodyLimit } from "../../fabrication/stepExport";
 import { cancelStepExport, setStepExportBodies, stepExportCurrent, useStepExport } from "../commands/stepExportCommand";
 import { downloadPreparedStep, prepareStepExport } from "../commands/stepExportJob";
 import "./StepExportPanel.css";
@@ -11,13 +12,19 @@ export function StepExportPanel() {
   const message = useFileJobs(state => state.message);
   if (!frame) return null;
   const names = bodyDisplayNames(frame.document, frame.result.bodies);
+  const maxBodies = stepBodyLimit(frame.result.meshes[0]?.geometrySource);
+  const requiresSelection = frame.result.meshes.length > maxBodies;
   return <ModalDialog label="Export STEP" className="model-dialog step-export-dialog" onDismiss={cancelStepExport}>
     <h2>Export native STEP solids</h2>
     <p>Selected bodies remain separate solids at their saved world positions. STEP carries millimetre geometry for other CAD tools; assembly joints, component labels and editable feature history remain in the project file.</p>
     <fieldset disabled={frame.busy || !current}><legend>Bodies to export</legend>
-      <button type="button" onClick={() => setStepExportBodies(frame.result.meshes.map(mesh => mesh.bodyId))}>Select all STEP bodies</button>
+      {requiresSelection ? <p>Select up to {maxBodies} bodies per STEP file.</p> : null}
+      <button type="button" disabled={requiresSelection} onClick={() => setStepExportBodies(frame.result.meshes.map(mesh => mesh.bodyId))}>Select all STEP bodies</button>
       <button type="button" onClick={() => setStepExportBodies([])}>Clear STEP bodies</button>
-      {frame.result.bodies.map(body => <label key={body.id}><input type="checkbox" checked={frame.bodyIds.includes(body.id)} onChange={event => setStepExportBodies(event.target.checked ? [...frame.bodyIds, body.id] : frame.bodyIds.filter(id => id !== body.id))}/>{names[body.id] ?? body.name}</label>)}
+      {frame.result.bodies.map(body => {
+        const checked = frame.bodyIds.includes(body.id);
+        return <label key={body.id}><input type="checkbox" checked={checked} disabled={!checked && frame.bodyIds.length >= maxBodies} onChange={event => setStepExportBodies(event.target.checked ? [...frame.bodyIds, body.id] : frame.bodyIds.filter(id => id !== body.id))}/>{names[body.id] ?? body.name}</label>;
+      })}
     </fieldset>
     {frame.busy ? <p role="status">{message ?? "Validating native STEP round trip…"}</p> : null}
     {!current ? <p role="alert">The model changed. Cancel and reopen STEP export after rebuilding.</p> : null}

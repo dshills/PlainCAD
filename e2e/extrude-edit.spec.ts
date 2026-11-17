@@ -1,6 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import type { CadDocument } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 async function snapshot(page: Page): Promise<{
   document: CadDocument;
   result: RebuildResult;
@@ -149,7 +150,7 @@ test("Edit Extrude verifies native replacement and downstream Cut, cancels, reje
   );
   expect(state.result.meshes[0]).toMatchObject({
     bodyId: `body:${baseId}`,
-    geometrySource: "opencascade",
+    geometrySource: expectedGeometrySource,
     kernelOperation: "cut",
     geometryAssertions: { valid: true, solidCount: 1 },
   });

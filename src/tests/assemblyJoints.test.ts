@@ -54,7 +54,7 @@ describe("durable native assemblies", () => {
     expect(assemblyJointIssues({ ...document, assemblyJoints: [joint, { ...joint, id: "reverse", childComponentId: joint.parentComponentId, parentComponentId: joint.childComponentId }] })[0].message).toMatch(/cycle/);
     expect(() => placed({ ...document, assemblyJoints: [{ ...joint, sourceFaceId: "lost" }] })).toThrow(/lost or modified/);
     expect(() => importProjectText(JSON.stringify({ ...document, assemblyJoints: [{ ...joint, value: "3" }] }))).toThrow(/joint/);
-    expect(rebuildDocument(document)).toMatchObject({ success: false, errors: expect.arrayContaining([expect.objectContaining({ message: expect.stringContaining("native OpenCascade") })]) });
+    expect(rebuildDocument(document)).toMatchObject({ success: false, errors: expect.arrayContaining([expect.objectContaining({ message: expect.stringContaining("native solid geometry") })]) });
   });
   it("reports incomplete collision analysis without claiming verified clearance at the probe limit", () => {
     const document = load(), original = document.features[0], native = vi.fn(() => false);

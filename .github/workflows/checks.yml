@@ -13,7 +13,34 @@ permissions:
   contents: read
 
 jobs:
+  plainsolid-kernel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - id: kernel-pin
+        run: node -p '"go-version=" + require("./scripts/plainsolid-pin.json").go' >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ steps.kernel-pin.outputs.go-version }}
+          cache: false
+      - run: npm run kernel:plainsolid
+      - uses: actions/upload-artifact@v4
+        with:
+          name: plainsolid-kernel
+          path: |
+            src/cad/kernel/plainsolid-kernel.wasm
+            src/cad/kernel/plainsolid-kernel.json
+            src/cad/kernel/plainsolid-NOTICE.txt
+            src/cad/kernel/wasm_exec.js
+          if-no-files-found: error
+          retention-days: 7
+
   check:
+    needs: plainsolid-kernel
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -23,8 +50,12 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: plainsolid-kernel
+          path: src/cad/kernel
       - run: npx playwright install --with-deps chromium
-      - run: npm run lint && npm test && npm run build
+      - run: npm run lint && npm test && npm run test:plainsolid && npm run build
       - run: npm run test:production
       - uses: actions/upload-artifact@v4
         if: always()
@@ -34,6 +65,7 @@ jobs:
           retention-days: 7
 
   chromium-modeling:
+    needs: plainsolid-kernel
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -47,6 +79,10 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: plainsolid-kernel
+          path: src/cad/kernel
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser -- --shard=${{ matrix.shard }}/4
       - uses: actions/upload-artifact@v4
@@ -57,6 +93,7 @@ jobs:
           retention-days: 7
 
   ai-cross-browser:
+    needs: plainsolid-kernel
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
@@ -72,6 +109,10 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: plainsolid-kernel
+          path: src/cad/kernel
       - run: npx playwright install --with-deps ${{ matrix.browser }}
       - run: xvfb-run --auto-servernum npm run test:ai:browser -- --project=${{ matrix.browser }}
       - uses: actions/upload-artifact@v4
@@ -82,6 +123,7 @@ jobs:
           retention-days: 7
 
   workbench-cross-browser:
+    needs: plainsolid-kernel
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -93,6 +135,10 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: plainsolid-kernel
+          path: src/cad/kernel
       - run: npx playwright install --with-deps chromium firefox webkit
       - run: xvfb-run --auto-servernum npm run test:cross-browser
       - uses: actions/upload-artifact@v4

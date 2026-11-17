@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../kernel/geometrySource";
 import type { CadDocument } from "../document/schema";
 import type { RebuildResult } from "../worker/workerProtocol";
 import type { NativeBore } from "../kernel/nativeDrawing";
@@ -50,7 +51,7 @@ function currentBorePresets(document: CadDocument, result: RebuildResult, bodyId
 }
 export function buildShopDrawing(document: CadDocument, result: RebuildResult, bodyId: string, sectionHeight?: number): ShopDrawing {
   const mesh = result.meshes.find(mesh => mesh.bodyId === bodyId), geometry = result.nativeDrawingGeometry;
-  if (!result.success || result.documentId !== document.id || !mesh || !geometry || !validBounds(geometry.bounds) || !result.meshes.length || result.meshes.some(mesh => mesh.geometrySource !== "opencascade" || !mesh.geometryAssertions?.valid || !Number.isFinite(mesh.geometryAssertions.volume) || !(mesh.geometryAssertions.volume > 0) || !Number.isSafeInteger(mesh.geometryAssertions.solidCount) || mesh.geometryAssertions.solidCount < 1)) throw new Error("Shop drawings require successful current native geometry and exact measurements. Repair or reselect the source part.");
+  if (!result.success || result.documentId !== document.id || !mesh || !geometry || !validBounds(geometry.bounds) || !result.meshes.length || result.meshes.some(mesh => !isNativeGeometrySource(mesh.geometrySource) || !mesh.geometryAssertions?.valid || !Number.isFinite(mesh.geometryAssertions.volume) || !(mesh.geometryAssertions.volume > 0) || !Number.isSafeInteger(mesh.geometryAssertions.solidCount) || mesh.geometryAssertions.solidCount < 1)) throw new Error("Shop drawings require successful current native geometry and exact measurements. Repair or reselect the source part.");
   assertDrawingMesh(mesh);
   if (geometry.bores.length > 64 || geometry.bores.some(bore => ![bore.diameter, bore.length, ...bore.start, ...bore.direction].every(Number.isFinite) || bore.diameter <= 0 || bore.length <= 0 || Math.abs(Math.hypot(...bore.direction) - 1) > 1e-7)) throw new Error("Native bore drawing measurements are invalid or excessive.");
   const bounds = geometry.bounds, labels = bodyDisplayNames(document, result.bodies), name = labels[bodyId] ?? bodyId, dimensions = bounds.max.map((value, axis) => value - bounds.min[axis]) as [number, number, number];

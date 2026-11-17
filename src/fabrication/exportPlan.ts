@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../cad/kernel/geometrySource";
 import type { RenderMesh } from "../cad/kernel/KernelAdapter";
 import type { CadBody } from "../cad/worker/workerProtocol";
 import { exportMeshesToStl } from "../cad/kernel/stlExport";
@@ -35,7 +36,7 @@ export function buildStlExport(
   if (
     mode === "merged" &&
     (meshes.length !== 1 ||
-      meshes[0].geometrySource !== "opencascade" ||
+      !isNativeGeometrySource(meshes[0].geometrySource) ||
       !fullChecks)
   )
     throw new Error(

@@ -87,7 +87,7 @@ function ModelingDialog({ draft }: { draft: ModelingDraft }) {
         if (!draft.editing)
           return { result: await previewModeling(staged, controller.signal) };
         // Verify the operation first and stop on failure. Sequential jobs also
-        // dispose one OpenCascade worker before allocating the downstream worker;
+        // dispose one geometry worker before allocating the downstream worker;
         // this trades preview latency for bounded simultaneous kernel memory.
         const operationResult = await previewModeling(
           documentAtFeature(staged, feature.id, true),

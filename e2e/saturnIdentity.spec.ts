@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -49,7 +50,7 @@ test("Saturn instrument treatments preserve workbench controls, native geometry 
     const state = await nativeSnapshot(page);
     expect(state.rebuild.status).toBe("succeeded");
     expect(state.rebuild.result?.meshes[0]).toMatchObject({
-      geometrySource: "opencascade",
+      geometrySource: expectedGeometrySource,
       geometryAssertions: { valid: true, solidCount: 1 },
     });
     expect(state.rebuild.result?.meshes[0].geometryAssertions?.volume).toBeCloseTo(80000, 5);

@@ -2,6 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { createBoxTemplate } from "../src/templates/templates";
 import { aiSnapshot } from "./aiAcceptanceHelpers";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 test.use({ storageState: { cookies: [], origins: [] } });
 async function openLibrary(page: Page) {
   await page.getByText("New part", { exact: true }).click();
@@ -49,7 +50,7 @@ test("backs up native editable parts, downloads individual projects, previews/ca
   const placement = page.getByRole("dialog", { name: "Place library part", exact: true });
   await expect(placement.getByRole("button", { name: "Apply library insertion", exact: true })).toBeEnabled({ timeout: 30000 });
   await placement.getByRole("button", { name: "Apply library insertion", exact: true }).click();
-  await expect(async () => { const s = await aiSnapshot(page); expect(s.status).toBe("succeeded"); expect(s.result!.meshes).toHaveLength(2); for (const mesh of s.result!.meshes) { expect(mesh.geometrySource).toBe("opencascade"); expect(mesh.geometryAssertions).toMatchObject({ valid: true, solidCount: 1 }); expect(mesh.geometryAssertions!.volume).toBeCloseTo(80000, 6); } }).toPass({ timeout: 30000 });
+  await expect(async () => { const s = await aiSnapshot(page); expect(s.status).toBe("succeeded"); expect(s.result!.meshes).toHaveLength(2); for (const mesh of s.result!.meshes) { expect(mesh.geometrySource).toBe(expectedGeometrySource); expect(mesh.geometryAssertions).toMatchObject({ valid: true, solidCount: 1 }); expect(mesh.geometryAssertions!.volume).toBeCloseTo(80000, 6); } }).toPass({ timeout: 30000 });
   await page.getByRole("group", { name: "Project dock tabs" }).getByRole("button", { name: "Parameters", exact: true }).click();
   const width = page.getByLabel("Parameter width_2 expression", { exact: true }); await width.fill("100mm"); await width.press("Tab");
   await expect(async () => { const s = await aiSnapshot(page); expect(s.status).toBe("succeeded"); expect(s.result!.meshes[0].geometryAssertions!.volume).toBeCloseTo(80000, 6); expect(s.result!.meshes[1].geometryAssertions!.volume).toBeCloseTo(100000, 6); }).toPass({ timeout: 30000 });

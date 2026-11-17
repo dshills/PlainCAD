@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../cad/kernel/geometrySource";
 import * as THREE from "three";
 import type { CadDocument } from "../cad/document/schema";
 import type { DisplayMeshRequest } from "../cad/kernel/displayMesh";
@@ -44,7 +45,7 @@ export class DisplayMeshRefinement {
 
     const bodies: DisplayMeshRequest["bodies"] = frame.result.meshes.flatMap(mesh => {
       const proof = mesh.geometryAssertions;
-      return mesh.geometrySource === "opencascade" && proof?.valid && Number.isFinite(proof.volume)
+      return isNativeGeometrySource(mesh.geometrySource) && proof?.valid && Number.isFinite(proof.volume)
         ? [{ id: mesh.bodyId, bounds: mesh.bounds, volume: proof.volume }] : [];
     });
     if (!bodies.length || bodies.length !== frame.result.meshes.length) return;

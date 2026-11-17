@@ -1,6 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import type { ViewerSnapshot } from "../src/viewer/viewerDiagnostics";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 async function ready(page: Page) {
   await expect
     .poll(() =>
@@ -91,7 +92,7 @@ test("component visibility/isolation filters native bodies, sketch overlays and 
   expect(original.document).toBe(authored);
   expect(original.result.success).toBe(true);
   for (const mesh of original.result.meshes) {
-    expect(mesh.geometrySource).toBe("opencascade");
+    expect(mesh.geometrySource).toBe(expectedGeometrySource);
     expect(mesh.geometryAssertions).toMatchObject({
       valid: true,
       solidCount: 1,

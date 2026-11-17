@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../../cad/kernel/geometrySource";
 import type { CadDocument, ExpressionRef, FeaturePatternFeature, FeaturePatternSettings } from "../../cad/document/schema";
 import type { CadStore } from "../../state/useCadStore";
 import { useCadStore } from "../../state/useCadStore";
@@ -51,7 +52,7 @@ export function selectedPatternSource(state: CadStore) {
     selection?.kind !== "feature" || selection.documentId !== document.id) return;
   const source = document.features.find(item => item.id === selection.id);
   if (!isPatternSource(source) || featureComponentId(document, source) !== state.activeComponentId || !targetBodyIds(source).length) return;
-  if (targetBodyIds(source).some(id => !result.meshes.some(mesh => mesh.bodyId === id && mesh.geometrySource === "opencascade" && mesh.geometryAssertions?.valid))) return;
+  if (targetBodyIds(source).some(id => !result.meshes.some(mesh => mesh.bodyId === id && isNativeGeometrySource(mesh.geometrySource) && mesh.geometryAssertions?.valid))) return;
   return source;
 }
 export function beginFeaturePattern() {

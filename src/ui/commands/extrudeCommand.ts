@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../../cad/kernel/geometrySource";
 import { useFacePocketIntent } from "./facePocketIntentState";
 import { interactionDraftBusy } from "./interactionDraftState";
 import { assertPocketCut } from "../../cad/features/facePocket";
@@ -70,7 +71,7 @@ export function extrudeContext(state: CadStore, sketchId: string) {
       state.rebuild.result?.meshes.some(
         (mesh) =>
           mesh.bodyId === body.id &&
-          mesh.geometrySource === "opencascade" &&
+          isNativeGeometrySource(mesh.geometrySource) &&
           mesh.geometryAssertions?.valid,
       ),
   );
@@ -127,7 +128,7 @@ export function editableExtrude(state: CadStore) {
     state.rebuild.result?.documentId !== state.history.present.id ||
     state.rebuild.result.meshes.some(
       (mesh) =>
-        mesh.geometrySource !== "opencascade" ||
+        !isNativeGeometrySource(mesh.geometrySource) ||
         !mesh.geometryAssertions?.valid,
     )
   )
@@ -189,7 +190,7 @@ export function assertNativeExtrudePreview(
     !result.meshes.length ||
     result.meshes.some(
       (mesh) =>
-        mesh.geometrySource !== "opencascade" ||
+        !isNativeGeometrySource(mesh.geometrySource) ||
         !mesh.geometryAssertions?.valid ||
         !(mesh.geometryAssertions.volume > 0) ||
         !(mesh.geometryAssertions.solidCount > 0),

@@ -3,6 +3,7 @@ import { writeFile } from "node:fs/promises";
 import { aiSnapshot } from "./aiAcceptanceHelpers";
 import { inspectPngDownload } from "./pngDownload";
 import type { ViewerSnapshot } from "../src/viewer/viewerDiagnostics";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 test.use({ deviceScaleFactor: 2 });
 async function viewer(page: Page): Promise<ViewerSnapshot> {
@@ -16,7 +17,7 @@ async function ready(page: Page, name: string, count: number) {
     expect(state.result?.documentId).toBe(state.document.id);
     expect(state.result?.meshes).toHaveLength(count);
     for (const mesh of state.result!.meshes) {
-      expect(mesh.geometrySource).toBe("opencascade");
+      expect(mesh.geometrySource).toBe(expectedGeometrySource);
       expect(mesh.geometryAssertions).toMatchObject({ valid: true, solidCount: 1 });
       expect(mesh.geometryAssertions!.volume).toBeGreaterThan(0);
     }

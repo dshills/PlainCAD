@@ -1,6 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import type { CadDocument } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 async function snapshot(
   page: Page,
 ): Promise<{ document: CadDocument; result: RebuildResult; past: number }> {
@@ -121,7 +122,7 @@ test("profile choice and negative XZ native preview cancel cleanly and apply onl
     direction: "negative",
     distance: { expression: "7mm" },
   });
-  expect(mesh.geometrySource).toBe("opencascade");
+  expect(mesh.geometrySource).toBe(expectedGeometrySource);
   expect(mesh.geometryAssertions).toMatchObject({ valid: true, solidCount: 1 });
   expect(mesh.geometryAssertions!.volume).toBeCloseTo(Math.PI * 9 * 7, 7);
   // RenderMesh bounds come from tessellated circles (linear deflection), not analytic extrema.

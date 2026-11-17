@@ -1,10 +1,11 @@
+import { isNativeGeometrySource } from "../cad/kernel/geometrySource";
 import type { RenderMesh } from "../cad/kernel/KernelAdapter";
 interface Face { points: number[][]; normal: number[] }
 interface ProjectedFace { face: Face; points: Array<{ x: number; y: number; depth: number }>; normal: number[]; depth: number }
 interface PreviewGeometry { faces: Face[]; center: number[]; radius: number; projected: ProjectedFace[] }
 /** Bounded CPU preview of actual native triangles, independent of the project camera. */
 export function galleryPreviewFaces(meshes: RenderMesh[]): PreviewGeometry {
-  if (!meshes.length || meshes.some(mesh => mesh.geometrySource !== "opencascade" || !mesh.geometryAssertions?.valid)) throw new Error("A live gallery preview requires valid native geometry.");
+  if (!meshes.length || meshes.some(mesh => !isNativeGeometrySource(mesh.geometrySource) || !mesh.geometryAssertions?.valid)) throw new Error("A live gallery preview requires valid native geometry.");
   if (meshes.some(mesh => !mesh.indices.length || mesh.indices.length % 3 || mesh.positions.length % 3 || mesh.normals.length !== mesh.positions.length)) throw new Error("Gallery preview has incomplete native triangles or normals.");
   const count = meshes.reduce((sum, mesh) => sum + mesh.indices.length / 3, 0);
   if (!Number.isInteger(count) || count <= 0) throw new Error("Gallery preview has no complete native triangles.");

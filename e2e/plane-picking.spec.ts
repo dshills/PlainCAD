@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { applyExtrusion } from "./extrudeWorkflow";
 import type { CadDocument } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 async function snapshot(
   page: Page,
 ): Promise<{
@@ -144,7 +145,7 @@ test("native cap picking persists its reference and follows owner edits through 
   const childMesh = state.result.meshes.find(
     (mesh) => mesh.bodyId === `body:${child.id}`,
   )!;
-  expect(childMesh.geometrySource).toBe("opencascade");
+  expect(childMesh.geometrySource).toBe(expectedGeometrySource);
   expect(childMesh.geometryAssertions!.volume).toBeCloseTo(Math.PI * 9 * 5, 7);
   expect(childMesh.bounds.min[2]).toBeCloseTo(10, 6);
   expect(childMesh.bounds.max[2]).toBeCloseTo(15, 6);

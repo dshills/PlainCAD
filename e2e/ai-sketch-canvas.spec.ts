@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { aiSnapshot } from "./aiAcceptanceHelpers";
 import { workbenchTaskFixture } from "./workbenchTaskFixtures";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 test("AI sketch proposal uses the existing drawing canvas, preserves camera/history and validates native Apply/Undo", async ({ page }) => {
   await page.goto("/");
@@ -42,7 +43,7 @@ test("AI sketch proposal uses the existing drawing canvas, preserves camera/hist
   await expect(overlay).toHaveCount(0);
   await expect(async () => {
     const current = await aiSnapshot(page);
-    expect(current.result?.meshes[0]).toMatchObject({ geometrySource: "opencascade", geometryAssertions: { valid: true, solidCount: 1 } });
+    expect(current.result?.meshes[0]).toMatchObject({ geometrySource: expectedGeometrySource, geometryAssertions: { valid: true, solidCount: 1 } });
     expect(current.result?.meshes[0].geometryAssertions?.volume).toBeCloseTo(2240, 3);
     expect(current.past).toBe(before.past + 1);
   }).toPass();

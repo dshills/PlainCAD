@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../../cad/kernel/geometrySource";
 import { BEFORE_LINKED_SOURCE_EDIT_EVENT, CANCEL_SKETCH_GESTURE_EVENT } from "./sketchCanvasEvents";
 import type { CadDocument, SketchProjection } from "../../cad/document/schema";
 import { sketchComponentId } from "../../cad/document/components";
@@ -51,7 +52,7 @@ export function showLinkedSketchSource(context = linkedSketchContext()) {
   const state = currentContext(context), source = linkedSketchSource(context), result = state.rebuild.result;
   if (!source || !canNavigateLinkedSketchSource(context.link.id) || !result) throw new Error("The source is missing or unavailable. Repair this link using a supported boundary.");
   state.select({ kind: "feature", documentId: context.document.id, id: source.feature.id }, { preserveActiveComponent: true });
-  const nativeBodyIds = new Set(result.meshes.filter((mesh) => mesh.geometrySource === "opencascade" && mesh.geometryAssertions?.valid && mesh.geometryAssertions.solidCount > 0 && mesh.geometryAssertions.volume > 0).map((mesh) => mesh.bodyId));
+  const nativeBodyIds = new Set(result.meshes.filter((mesh) => isNativeGeometrySource(mesh.geometrySource) && mesh.geometryAssertions?.valid && mesh.geometryAssertions.solidCount > 0 && mesh.geometryAssertions.volume > 0).map((mesh) => mesh.bodyId));
   showGeometryHighlight({ document: context.document, session: context.session, result, source: "repair", componentId: state.activeComponentId,
     bodyIds: result.bodies.filter((body) => body.featureId === source.feature.id && nativeBodyIds.has(body.id)).map((body) => body.id) });
   useWorkspaceState.getState().setPanel("inspector");

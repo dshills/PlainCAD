@@ -4,6 +4,7 @@ import { test, expect, type Page } from "@playwright/test";
 import type { CadDocument, Sketch } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
 import { applyExtrusion } from "./extrudeWorkflow";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 test.use({
   storageState: focusedWorkspaceStorageState("http://127.0.0.1:5279"),
@@ -173,7 +174,7 @@ async function extrudeRepaired(page: Page) {
     const model = await snapshot(page),
       meshes = model.result!.meshes;
     expect(meshes).toHaveLength(1);
-    expect(meshes[0].geometrySource).toBe("opencascade");
+    expect(meshes[0].geometrySource).toBe(expectedGeometrySource);
     expect(meshes[0].geometryAssertions).toMatchObject({
       valid: true,
       solidCount: 1,

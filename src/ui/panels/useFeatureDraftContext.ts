@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../../cad/kernel/geometrySource";
 import { useEffect, useState } from "react";
 import type { CadDocument } from "../../cad/document/schema";
 import { documentAtFeature } from "../../cad/document/featureStage";
@@ -45,7 +46,7 @@ export function useFeatureDraftContext(
           result.documentId !== document.id ||
           result.meshes.some(
             (mesh) =>
-              mesh.geometrySource !== "opencascade" ||
+              !isNativeGeometrySource(mesh.geometrySource) ||
               !mesh.geometryAssertions?.valid,
           )
         )

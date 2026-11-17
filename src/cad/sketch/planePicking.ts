@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../kernel/geometrySource";
 import type {
   CadDocument,
   FacePlaneReference,
@@ -44,7 +45,7 @@ export function sketchPlaneChoices(
     result.meshes
       .filter(
         (mesh) =>
-          mesh.geometrySource === "opencascade" &&
+          isNativeGeometrySource(mesh.geometrySource) &&
           mesh.geometryAssertions?.valid,
       )
       .map((mesh) => mesh.bodyId),

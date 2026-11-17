@@ -7,8 +7,8 @@ BReps before export, so the file uses the same world coordinates and millimetres
 the modeled project. STEP retains geometric solids; editable sketches, feature
 history, component labels, joints and assembly hierarchy remain in `.pcaddoc`.
 
-The command requires a successful current native rebuild, actual installed STEP
-writer/reader/filesystem bindings, browser worker support and no competing edit or
+The command requires a successful current native rebuild, a kernel with STEP
+writer and reader support, browser worker support and no competing edit or
 file task. Select bodies, choose **Generate validated STEP**, and review the native
 verification status before **Download STEP file** becomes available. Cancel or
 Escape terminates the disposable export worker. Changing the project, session or
@@ -17,10 +17,10 @@ model cannot be downloaded. Body selection changes discard prepared files.
 
 Generation rebuilds the complete source in an isolated native worker and accesses
 the selected world-positioned shapes immediately before their normal disposal.
-The native `STEPControl_Writer` transfers each body separately. The same worker
-then reimports its actual bytes with `STEPControl_Reader`, checks body/root counts,
-valid BReps, native solid counts, exact BRep-integrated volumes and native bounds
-for each root. The installed writer/reader pair is verified to retain transfer
+The native writer transfers each body separately. The same worker reimports the
+actual bytes, checks body/root counts, valid BReps, native solid counts, exact
+BRep-integrated volumes and native bounds for each root. The writer/reader pair
+is verified to retain transfer
 order using distinct placed bodies and overlapping duplicates. A changed root
 order fails verification safely; labels or hierarchy are not inferred from it.
 Volume tolerance is the greater of 1e-7 cubic millimetres and 1e-8
@@ -30,12 +30,13 @@ Missing writes, malformed files, unit changes, no solids, changed geometry or lo
 body roots fail with a diagnostic and no download. Runtime proof records and STEP
 bytes are never persisted in project files or ordinary rebuild results.
 
-Exports are limited to 1–64 unique current bodies, the existing project/model
-limits, 32 MiB of STEP data and 60 seconds. The native filesystem write is bounded
-before oversized buffers are allocated. Request IDs and document-session epochs
+PlainSolid exports are limited to 1–32 unique current bodies, 1 MiB of STEP data
+and 60 seconds. Larger projects require an explicit selection for each file.
+The OpenCascade comparison build retains its 64-body and 32 MiB limits.
+Unsupported STEP topology fails validation. Request IDs and document-session epochs
 are checked at the client boundary; native handles remain worker-only and owned
-writer, reader, reimported shapes, filesystem files and feature-cache handles are
-disposed on success and failure. Terminating a failed/cancelled worker releases
+exchange data and feature-cache handles are disposed on success and failure.
+Terminating a failed/cancelled worker releases
 its entire native runtime.
 
 ## Installed binding compatibility

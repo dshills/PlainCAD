@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../kernel/geometrySource";
 import type { KernelAdapter, KernelShape, RenderMesh } from "../kernel/KernelAdapter";
 import type { RebuildWarning } from "../worker/workerProtocol";
 import { MAX_BODY_EDGE_SEGMENTS, MAX_PROJECT_EDGE_SEGMENTS, MAX_PROJECT_EDGE_USES } from "../kernel/nativeDisplayEdges";
@@ -13,7 +14,7 @@ export function attachDisplayEdges(
   let remaining = MAX_PROJECT_EDGE_SEGMENTS;
   const budget = { edgeUses: MAX_PROJECT_EDGE_USES };
   for (const body of bodies) {
-    if (!body.mesh || body.mesh.geometrySource !== "opencascade") continue;
+    if (!body.mesh || !isNativeGeometrySource(body.mesh.geometrySource)) continue;
     try {
       if (!remaining) throw new Error("The project exceeds the display segment budget.");
       if (budget.edgeUses <= 0) throw new Error("Project exceeds the native edge traversal budget.");

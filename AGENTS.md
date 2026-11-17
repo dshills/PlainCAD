@@ -3,7 +3,8 @@
 ## Project and scope
 
 PlainCAD is a browser-first, local-first parametric CAD application for mechanical
-parts. It uses React 19, TypeScript, Vite, Zustand, Three.js, and OpenCascade.js.
+parts. It uses React 19, TypeScript, Vite, Zustand, Three.js, and the PlainSolid
+Go geometry kernel compiled to WebAssembly.
 CAD remains local with no modeling backend. An optional loopback-only Vite AI
 gateway in `server/` keeps provider credentials out of the browser. Prioritize predictable rebuilds, durable
 project files, and useful diagnostics when extending CAD capabilities.
@@ -18,6 +19,8 @@ that a capability works end to end.
 
 - Use Node.js `^20.19.0` or `>=22.12.0` and npm.
 - Use `npm ci` for a clean installation from `package-lock.json`.
+- Run `npm run kernel:plainsolid` with the Go version in `scripts/plainsolid-pin.json`
+  before the first development or production build and whenever that pin changes.
 - `npm run dev` starts Vite on port 5278 with `strictPort` enabled. To override it, use
   `npm run dev -- --host 127.0.0.1 --port 5279`.
 - `npm run lint` runs TypeScript checking; it is not an ESLint/style check.
@@ -62,7 +65,7 @@ configuration files. Keep `package-lock.json` consistent with dependency changes
 - `src/cad/sketch/`: sketch entities, planes, solving, and profile detection.
 - `src/cad/features/`: dependency planning, rebuild orchestration, stable body
   identities, and supported topology references.
-- `src/cad/kernel/`: kernel adapter, OpenCascade integration, mesh conversion,
+- `src/cad/kernel/`: PlainSolid adapter, optional OpenCascade comparison provider, mesh conversion,
   tessellation cache, disposal helpers, and STL generation.
 - `src/cad/worker/`: geometry worker, request/response protocol, and lifecycle rules.
 - `src/state/`: Zustand document history, selection, rebuild state, and selectors.
@@ -98,10 +101,10 @@ configuration files. Keep `package-lock.json` consistent with dependency changes
 5. Treat imported JSON as untrusted. Preserve unsafe-key rejection, depth and
    entity limits, migration, and final validation before replacing project state.
    Do not merge arbitrary imported objects into the store.
-6. Keep OpenCascade integration behind the kernel adapter and geometry worker.
+6. Keep PlainSolid and other native kernel integration behind the kernel adapter and geometry worker.
    Worker messages must remain structured-clone compatible. Preserve request ID
    and epoch checks, timeout handling, and rejection of stale rebuild results.
-7. Dispose OpenCascade objects and Three.js resources at their ownership boundary,
+7. Dispose native shape handles and Three.js resources at their ownership boundary,
    including failure paths. Do not serialize runtime handles or retain them in
    caches after their owning shapes have been disposed.
 8. Route every UI, script and agent action through `src/commands/registry.ts`.
@@ -141,7 +144,7 @@ Prefer geometry assertions over assertions that only confirm a feature object
 exists. Documentation-only changes generally need a diff review.
 
 jsdom tests and fallback rebuilds do not establish that WebAssembly, WebGL, or
-OpenCascade geometry works in a browser. For changes to the worker/kernel/viewer
+PlainSolid geometry works in a browser. For changes to the worker/kernel/viewer
 or modeling UI, run the reduced native browser suite for each item and focused
 acceptance tests for additional affected behavior; run the complete browser
 suite on the five-item cadence above. Smoke-test affected workflows when possible:

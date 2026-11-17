@@ -1,12 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { aiSnapshot, stlSignedVolume } from "./aiAcceptanceHelpers";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 async function ready(page: Page, volume: number) {
   await expect(async () => {
     const state = await aiSnapshot(page);
     expect(state.status).toBe("succeeded"); expect(state.result?.documentId).toBe(state.document.id);
     expect(state.result?.meshes).toHaveLength(1);
-    expect(state.result!.meshes[0].geometrySource).toBe("opencascade");
+    expect(state.result!.meshes[0].geometrySource).toBe(expectedGeometrySource);
     expect(state.result!.meshes[0].geometryAssertions).toMatchObject({ valid: true, solidCount: 1 });
     const actual = state.result!.meshes[0].geometryAssertions!.volume;
     expect(Math.abs(actual - volume), `Native volume ${actual} must match expected ${volume}`).toBeLessThan(Math.max(1e-6, Math.abs(volume) * 1e-7));

@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { aiSnapshot } from "./aiAcceptanceHelpers";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 test("timeline build story shows native before/after solids and discards obsolete previews without editing the project", async ({ page }) => {
   const errors: string[] = []; page.on("pageerror", error => errors.push(error.message));
@@ -16,7 +17,7 @@ test("timeline build story shows native before/after solids and discards obsolet
   });
   await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
   const before = await aiSnapshot(page);
-  expect(before.result?.meshes[0].geometrySource).toBe("opencascade");
+  expect(before.result?.meshes[0].geometrySource).toBe(expectedGeometrySource);
   const initialVolume = before.result!.meshes[0].geometryAssertions!.volume;
   expect(initialVolume).toBeCloseTo(80000 - Math.PI * 25 * 20, 2);
   const positions = before.result!.meshes[0].positions;

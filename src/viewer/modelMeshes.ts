@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../cad/kernel/geometrySource";
 import * as THREE from "three";
 import type { PresentationMode, StudioMaterial } from "../state/viewerState";
 import type { CadDocument } from "../cad/document/schema";
@@ -124,7 +125,7 @@ export class ModelMeshes {
     let created = false;
     for (const body of this.bodies.values()) {
       const { object } = body;
-      const native = body.source.geometrySource === "opencascade";
+      const native = isNativeGeometrySource(body.source.geometrySource);
       const segments = body.source.nativeEdgeSegments;
       if (visible && !body.edges && (!native || segments?.length)) {
         const geometry = native ? new THREE.BufferGeometry() : new THREE.EdgesGeometry(object.geometry);
@@ -169,7 +170,7 @@ export class ModelMeshes {
   inspectEdges() {
     return [...this.bodies.values()].map(({ source, edges, hiddenEdges }) => ({
       bodyId: source.bodyId,
-      source: source.nativeEdgeSegments ? "brep" : source.geometrySource === "opencascade" ? "unavailable" : "mesh",
+      source: source.nativeEdgeSegments ? "brep" : isNativeGeometrySource(source.geometrySource) ? "unavailable" : "mesh",
       segments: edges ? edges.geometry.getAttribute("position").count / 2 : 0,
       visible: edges?.visible ?? false,
       hiddenVisible: hiddenEdges?.visible ?? false,

@@ -1,3 +1,5 @@
+import { isNativeGeometrySource } from "../../cad/kernel/geometrySource";
+import { stepBodyLimit } from "../../fabrication/stepExport";
 import { useCadStore, type CadStore } from "../../state/useCadStore";
 import { fileJobCurrent, useFileJobs } from "../../persistence/fileJobs";
 import { interactionDraftBusy } from "./interactionDraftState";
@@ -13,7 +15,7 @@ import { stepExportRuntime, useStepExport, type StepExportFrame } from "./stepEx
 export { useStepExport } from "./stepExportState";
 function nativeCurrent(state: CadStore): boolean {
   const result = state.rebuild.result;
-  return state.rebuild.status === "succeeded" && state.rebuild.kernelReady && Boolean(result?.success && result.documentId === state.history.present.id && result.stepExportAvailable && result.meshes.length && result.meshes.every(mesh => mesh.geometrySource === "opencascade" && mesh.geometryAssertions?.valid && mesh.geometryAssertions.volume > 0 && mesh.geometryAssertions.solidCount > 0));
+  return state.rebuild.status === "succeeded" && state.rebuild.kernelReady && Boolean(result?.success && result.documentId === state.history.present.id && result.stepExportAvailable && result.meshes.length && result.meshes.every(mesh => isNativeGeometrySource(mesh.geometrySource) && mesh.geometryAssertions?.valid && mesh.geometryAssertions.volume > 0 && mesh.geometryAssertions.solidCount > 0));
 }
 function competingTask() {
   return Boolean(interactionDraftBusy("stepExport") || useSketchCanvas.getState().active || useProjectWorkflow.getState().active || useExtrudeDraft.getState().draft || useHoleDraft.getState().draft || useModelingDraft.getState().draft || useGuidedHole.getState().draft || useTargetScopeCapture.getState().busy || operationDraftBusy() || useFileJobs.getState().exportOpen);
@@ -27,7 +29,10 @@ export function stepExportCurrent(frame: StepExportFrame, state = useCadStore.ge
 export function openStepExport() {
   const state = useCadStore.getState();
   if (!canOpenStepExport(state)) { state.setFileError(state.rebuild.result?.stepExportDiagnostic ?? "STEP export requires current successful native solids and browser worker support. Finish other tasks and rebuild first."); return; }
-  useStepExport.setState({ frame: { document: state.history.present, session: state.documentSession, result: state.rebuild.result!, bodyIds: state.rebuild.result!.meshes.map(mesh => mesh.bodyId), busy: false } });
+  const result = state.rebuild.result!;
+  const bodyIds = result.meshes.length <= stepBodyLimit(result.meshes[0]?.geometrySource)
+    ? result.meshes.map(mesh => mesh.bodyId) : [];
+  useStepExport.setState({ frame: { document: state.history.present, session: state.documentSession, result, bodyIds, busy: false } });
 }
 export function cancelStepExport() {
   if (stepExportRuntime.controller && fileJobCurrent(stepExportRuntime.controller)) useFileJobs.getState().cancel();
@@ -37,5 +42,10 @@ export function cancelStepExport() {
 export function setStepExportBodies(bodyIds: string[]) {
   const frame = useStepExport.getState().frame;
   if (!frame || frame.busy || !stepExportCurrent(frame)) return;
+  const limit = stepBodyLimit(frame.result.meshes[0]?.geometrySource);
+  if (bodyIds.length > limit) {
+    useStepExport.setState({ frame: { ...frame, error: `Select at most ${limit} bodies per STEP file.` } });
+    return;
+  }
   useStepExport.setState({ frame: { ...frame, bodyIds, prepared: undefined, error: undefined } });
 }

@@ -197,6 +197,9 @@ function resolveFallbackHandle(handle: KernelHandle): KernelHandle | undefined {
 }
 
 export class OpenCascadeKernel implements KernelAdapter {
+  static readonly source = "opencascade";
+  static readonly requiresWorker = false;
+  static readonly liveHandleLimit: number | undefined = undefined;
   private readonly assertions = new WeakMap<object, GeometryAssertions>();
 
   private measureNative(shape: any): GeometryAssertions {

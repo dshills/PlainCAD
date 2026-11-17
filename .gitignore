@@ -11,3 +11,10 @@ test-results/
 
 # Local visual verification captures (see design-qa.md).
 design-artifacts/
+
+# Generated PlainSolid kernel assets and matching Go runtime
+/src/cad/kernel/wasm_exec.js
+/src/cad/kernel/plainsolid-kernel.wasm
+/src/cad/kernel/plainsolid-kernel.json
+/src/cad/kernel/plainsolid-NOTICE.txt
+/src/cad/kernel/.plainsolid-*/

@@ -2,6 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import type { CadDocument } from "../src/cad/document/schema";
 import type { ViewerSnapshot } from "../src/viewer/viewerDiagnostics";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 async function ready(page: Page) {
   await expect(async () => {
@@ -20,7 +21,7 @@ async function ready(page: Page) {
     expect(
       state.result?.meshes.every(
         (mesh: { geometrySource: string }) =>
-          mesh.geometrySource === "opencascade",
+          mesh.geometrySource === expectedGeometrySource,
       ),
     ).toBe(true);
   }).toPass({ timeout: 20000 });

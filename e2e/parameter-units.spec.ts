@@ -3,6 +3,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import type { CadDocument } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 async function state(page: Page) {
   return page.evaluate(async () => {
@@ -23,7 +24,7 @@ async function ready(page: Page, width: number) {
     expect(s.result?.documentId).toBe(s.document.id);
     expect(s.result?.errors).toEqual([]);
     const mesh = s.result!.meshes[0];
-    expect(mesh.geometrySource).toBe("opencascade");
+    expect(mesh.geometrySource).toBe(expectedGeometrySource);
     expect(mesh.geometryAssertions).toMatchObject({
       valid: true,
       solidCount: 1,

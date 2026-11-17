@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../../cad/kernel/geometrySource";
 import { useMemo, useState } from "react";
 import type {
   CadDocument,
@@ -45,7 +46,7 @@ export function EdgeDraftControls({
         meshes.some(
           (mesh) =>
             mesh.bodyId === stableBodyIdForFeature(owner.id) &&
-            mesh.geometrySource === "opencascade" &&
+            isNativeGeometrySource(mesh.geometrySource) &&
             mesh.geometryAssertions?.valid,
         ),
     );

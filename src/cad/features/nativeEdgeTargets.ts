@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../kernel/geometrySource";
 import type { CadDocument } from "../document/schema";
 import type { KernelAdapter, KernelShape, RenderMesh } from "../kernel/KernelAdapter";
 import type { AvailableEdge, RebuildWarning } from "../worker/workerProtocol";
@@ -20,7 +21,7 @@ export function currentNativeEdges(
   for (const owner of document.features) {
     if (owner.type !== "extrude" || owner.suppressed || owner.operation !== "newBody" || (owner.termination && owner.termination.type !== "distance")) continue;
     const bodyId = stableBodyIdForFeature(owner.id), body = bodies.get(bodyId);
-    if (!body || failedBodies.has(bodyId) || body.mesh?.geometrySource !== "opencascade" || !body.mesh.geometryAssertions?.valid || !["extrusion", "cut", "fuse"].includes(body.mesh.kernelOperation ?? "")) continue;
+    if (!body || failedBodies.has(bodyId) || !isNativeGeometrySource(body.mesh?.geometrySource) || !body.mesh.geometryAssertions?.valid || !["extrusion", "cut", "fuse"].includes(body.mesh.kernelOperation ?? "")) continue;
     try {
       for (const edge of cache ? cache.read(kernel, body.shape) : kernel.availableExtrudeCapEdges(body.shape)) {
         const target = { ...edge, featureId: owner.id, bodyId };

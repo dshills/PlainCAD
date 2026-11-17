@@ -6,6 +6,7 @@ import { solveSketch } from "../src/cad/sketch/SketchSolver";
 import { detectProfiles } from "../src/cad/sketch/profileDetection";
 import type { WorkerResponse } from "../src/cad/worker/workerProtocol";
 import type { CadDocument } from "../src/cad/document/schema";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 declare global {
@@ -34,7 +35,7 @@ async function nativeVolume(page: Page, volume: number) {
     expect(state.status).toBe("succeeded");
     expect(state.result?.errors).toEqual([]);
     expect(state.result?.meshes).toHaveLength(1);
-    expect(state.result?.meshes[0]).toMatchObject({ geometrySource: "opencascade", geometryAssertions: { valid: true, solidCount: 1 } });
+    expect(state.result?.meshes[0]).toMatchObject({ geometrySource: expectedGeometrySource, geometryAssertions: { valid: true, solidCount: 1 } });
     expect(state.result?.meshes[0].geometryAssertions?.volume).toBeCloseTo(volume, 5);
   }).toPass();
 }

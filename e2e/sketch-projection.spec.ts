@@ -6,6 +6,7 @@ import { solveSketch } from "../src/cad/sketch/SketchSolver";
 import { detectProfiles } from "../src/cad/sketch/profileDetection";
 import type { OriginPlane } from "../src/cad/document/schema";
 import { aiSnapshot } from "./aiAcceptanceHelpers";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 function fixture(oblique = false, plane: OriginPlane = "XY") {
   const sketch = addCornerRectangle(createSketchOnPlane("Source rectangle", plane), "width", "20mm");
   const profile = detectProfiles(solveSketch(sketch, { width: { value: 30, unit: "mm", dimension: "length" } })).profiles[0];
@@ -20,7 +21,7 @@ async function native(page: Page, volume: number) {
     const state = await aiSnapshot(page);
     expect(state.status).toBe("succeeded"); expect(state.result!.errors).toEqual([]);
     expect(state.result!.meshes).toHaveLength(1);
-    expect(state.result!.meshes[0]).toMatchObject({ geometrySource: "opencascade", geometryAssertions: { valid: true, solidCount: 1 } });
+    expect(state.result!.meshes[0]).toMatchObject({ geometrySource: expectedGeometrySource, geometryAssertions: { valid: true, solidCount: 1 } });
     expect(state.result!.meshes[0].geometryAssertions!.volume).toBeCloseTo(volume, 7);
   }).toPass();
 }

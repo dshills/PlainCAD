@@ -4,6 +4,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import type { CadDocument, OriginPlane } from "../src/cad/document/schema";
 import type { RebuildResult } from "../src/cad/worker/workerProtocol";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 type State = { document: CadDocument; status: string; result?: RebuildResult };
 async function snapshot(page: Page): Promise<State> {
@@ -94,7 +95,7 @@ function native(state: State, id: string, volume: number) {
   const mesh = state.result!.meshes.find(
     (mesh) => mesh.bodyId === `body:${id}`,
   )!;
-  expect(mesh.geometrySource).toBe("opencascade");
+  expect(mesh.geometrySource).toBe(expectedGeometrySource);
   expect(mesh.geometryAssertions).toMatchObject({ valid: true, solidCount: 1 });
   expect(mesh.geometryAssertions!.volume).toBeCloseTo(volume, 6);
   return mesh;

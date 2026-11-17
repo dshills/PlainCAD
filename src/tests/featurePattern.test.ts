@@ -115,7 +115,7 @@ describe("associative subtractive feature patterns", () => {
       const bad = { ...document, features: document.features.map(f => f.id === "pattern" ? { ...f, ...patch } : f) };
       expect(() => importProjectText(JSON.stringify(bad))).toThrow();
     }
-    expect(rebuildDocument(document).errors.some(error => error.sourceId === "pattern" && error.message.includes("native OpenCascade"))).toBe(true);
+    expect(rebuildDocument(document).errors.some(error => error.sourceId === "pattern" && error.message.includes("native solid geometry"))).toBe(true);
   });
   it("locks shared commands, requires issued current previews, and retains history on stale submissions", () => {
     const { document: patterned } = fixture(), document = { ...patterned, features: patterned.features.filter(f => f.type !== "pattern") };

@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import { aiSnapshot, stlSignedVolume } from "./aiAcceptanceHelpers";
 import { applyExtrusion } from "./extrudeWorkflow";
 import { aiPlatePlan } from "../src/tests/fixtures/aiPlan";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -15,7 +16,7 @@ async function nativePart(page: Page, volume: number, componentName: string) {
     expect(state.result?.errors).toEqual([]);
     expect(state.result?.meshes).toHaveLength(1);
     expect(state.result!.meshes[0]).toMatchObject({
-      geometrySource: "opencascade",
+      geometrySource: expectedGeometrySource,
       geometryAssertions: { valid: true, solidCount: 1 },
     });
     expect(state.result!.meshes[0].geometryAssertions!.volume).toBeCloseTo(volume, 5);

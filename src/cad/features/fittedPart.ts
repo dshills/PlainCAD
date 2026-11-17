@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../kernel/geometrySource";
 import type { CadDocument, ComponentPlacement, FittedPartFeature } from "../document/schema";
 import { bodyComponentId, featureComponentId } from "../document/components";
 import { IDENTITY_PLACEMENT, withComponentPlacement } from "../document/componentPlacement";
@@ -29,7 +30,7 @@ export function fittedPartPlan(bounds: BoundingBox, clearance: number, wall: num
   return plan;
 }
 export function createFittedPartShape(feature: FittedPartFeature, source: KernelShape, kernel: KernelAdapter, parameters: Record<string, Quantity>, owned: Set<KernelShape>): { shape: KernelShape; mesh: RenderMesh } {
-  if (!kernel.nativeBounds || !kernel.placeShape) throw new Error("Fitted parts require native OpenCascade solid bounds and transforms.");
+  if (!kernel.nativeBounds || !kernel.placeShape) throw new Error("Fitted parts require native solid bounds and transforms.");
   const length = (field: "clearance" | "wallThickness") => {
     const evaluated = evaluateExpressionRef(feature[field], { parameters });
     if (evaluated.error || evaluated.quantity?.dimension !== "length") throw new Error(evaluated.error ?? `${field} must resolve to millimeters.`);
@@ -43,7 +44,7 @@ export function createFittedPartShape(feature: FittedPartFeature, source: Kernel
   });
   const result = plan.operation === "cut" ? kernel.cut(boxes[0], boxes[1]) : kernel.fuse(boxes[0], boxes[1]); owned.add(result);
   const mesh = kernel.tessellate(result, TESSELLATION_LOD.default), proof = mesh.geometryAssertions;
-  if (mesh.geometrySource !== "opencascade" || !proof?.valid || proof.solidCount !== 1 || Math.abs(proof.volume - plan.volume) > Math.max(1e-7, plan.volume * 1e-8)) throw new Error("Fitted geometry failed native validity, solid-count or exact-volume checks.");
+  if (!isNativeGeometrySource(mesh.geometrySource) || !proof?.valid || proof.solidCount !== 1 || Math.abs(proof.volume - plan.volume) > Math.max(1e-7, plan.volume * 1e-8)) throw new Error("Fitted geometry failed native validity, solid-count or exact-volume checks.");
   return { shape: result, mesh };
 }
 /** A fitted component follows the reference's resolved pose without saving transient geometry. */

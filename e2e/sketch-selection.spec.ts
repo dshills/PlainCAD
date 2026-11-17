@@ -3,6 +3,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { aiSnapshot, stlSignedVolume } from "./aiAcceptanceHelpers";
 import { applyExtrusion } from "./extrudeWorkflow";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 async function clientPoint(page: Page, x: number, y: number) {
@@ -47,7 +48,7 @@ async function nativeVolume(page: Page, expected: number) {
     const state = await aiSnapshot(page);
     expect(state.status).toBe("succeeded");
     expect(state.result?.meshes).toHaveLength(1);
-    expect(state.result!.meshes[0].geometrySource).toBe("opencascade");
+    expect(state.result!.meshes[0].geometrySource).toBe(expectedGeometrySource);
     expect(state.result!.meshes[0].geometryAssertions).toMatchObject({
       valid: true,
       solidCount: 1,

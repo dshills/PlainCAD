@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { aiSnapshot, stlSignedVolume } from "./aiAcceptanceHelpers";
 import type { OperationTarget } from "../src/ui/commands/operationDropCommand";
 import { applyModeling } from "./modelingWorkflow";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 type Case = { plane: "XY" | "XZ" | "YZ"; mode: "cut" | "join" | "split"; direction: "positive" | "symmetric" };
 async function fixture(page: Page, settings: Case) {
@@ -50,7 +51,7 @@ async function ready(page: Page, volume?: number, solids = 1) {
     expect(state.result?.errors).toEqual([]);
     expect(state.result?.meshes).toHaveLength(1);
     const mesh = state.result!.meshes[0];
-    expect(mesh.geometrySource).toBe("opencascade");
+    expect(mesh.geometrySource).toBe(expectedGeometrySource);
     expect(mesh.geometryAssertions).toMatchObject({ valid: true, solidCount: solids });
     if (volume !== undefined) expect(Math.abs(mesh.geometryAssertions!.volume / volume - 1)).toBeLessThan(1e-7);
   }).toPass({ timeout: 30000 });

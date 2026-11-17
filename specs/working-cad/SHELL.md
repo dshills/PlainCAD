@@ -16,8 +16,8 @@ leave room for the cavity on both sides and at the remaining floor. The kernel
 checks the opening at the feature's timeline position; if an earlier operation
 modifies its source, move that operation after Shell or suppress it.
 
-OpenCascade's thick-solid operation removes the selected cap and offsets the
-remaining faces inward. The preview and normal rebuild verify that the result
+PlainSolid builds the cavity using the selected opening and the exact inward
+wall and floor offsets. The preview and normal rebuild verify that the result
 is one valid native solid with the exact expected remaining material volume.
 A no-op, collapsed wall or lost opening produces a diagnostic. The opening
 stores the source extrusion ID and its cap role; no kernel handles or preview

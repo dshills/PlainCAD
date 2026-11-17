@@ -2,6 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { aiSnapshot, stlSignedVolume } from "./aiAcceptanceHelpers";
 import { applyExtrusion } from "./extrudeWorkflow";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 async function client(page: Page, x: number, y: number) {
   const svg = page.getByRole("group", {
@@ -30,7 +31,7 @@ async function ready(page: Page, volume?: number) {
     if (volume !== undefined) {
       const mesh = state.result!.meshes[0];
       expect(state.result!.meshes).toHaveLength(1);
-      expect(mesh.geometrySource).toBe("opencascade");
+      expect(mesh.geometrySource).toBe(expectedGeometrySource);
       expect(mesh.geometryAssertions).toMatchObject({
         valid: true,
         solidCount: 1,

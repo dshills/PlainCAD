@@ -10,6 +10,7 @@ import { CURRENT_SCHEMA_VERSION } from "../src/cad/document/schema";
 import type { CadDocument, ComponentPlacement, OriginPlane, Sketch } from "../src/cad/document/schema";
 import { TESSELLATION_LOD } from "../src/cad/kernel/tessellationCache";
 import { aiSnapshot, stlSignedVolume } from "./aiAcceptanceHelpers";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 function fixture(plane: OriginPlane = "XY", arc = false) {
   const source = addComponent(createEmptyDocument("World linked part"), "Source"), destination = addComponent(source.document, "Destination");
@@ -32,7 +33,7 @@ async function native(page: Page, expected: number[]) {
     const state = await aiSnapshot(page);
     expect(state.status).toBe("succeeded"); expect(state.result!.errors).toEqual([]); expect(state.result!.meshes).toHaveLength(expected.length);
     state.result!.meshes.forEach((mesh, index) => {
-      expect(mesh).toMatchObject({ geometrySource: "opencascade", geometryAssertions: { valid: true, solidCount: 1 } });
+      expect(mesh).toMatchObject({ geometrySource: expectedGeometrySource, geometryAssertions: { valid: true, solidCount: 1 } });
       expect(mesh.geometryAssertions!.volume).toBeCloseTo(expected[index], 6);
     });
   }).toPass({ timeout: 30000 });

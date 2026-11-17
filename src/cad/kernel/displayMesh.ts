@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "./geometrySource";
 import type { CadDocument } from "../document/schema";
 import type { BoundingBox, KernelAdapter, KernelShape, RenderMesh } from "./KernelAdapter";
 import { MODEL_RESOURCE_LIMITS } from "../resourceLimits";
@@ -36,7 +37,7 @@ export function refineNativeDisplayMeshes(
   for (const request of requests) {
     const source = bodies.get(request.id);
     const mesh = source?.mesh;
-    if (!source || mesh?.geometrySource !== "opencascade" || !mesh.geometryAssertions?.valid ||
+    if (!source || !isNativeGeometrySource(mesh?.geometrySource) || !mesh.geometryAssertions?.valid ||
         Math.abs(mesh.geometryAssertions.volume - request.volume) > Math.max(1e-6, request.volume * 1e-8) ||
         !(["min", "max"] as const).every(bound => mesh.bounds[bound].every((value, index) =>
           Math.abs(value - request.bounds[bound][index]) <= 1e-6)))
@@ -47,7 +48,7 @@ export function refineNativeDisplayMeshes(
       angularDeflection: .08,
       analyticNormals: true,
     });
-    if (detail.geometrySource !== "opencascade" || !detail.geometryAssertions?.valid)
+    if (!isNativeGeometrySource(detail.geometrySource) || !detail.geometryAssertions?.valid)
       throw new Error("Fine display requires valid native tessellation.");
     triangles += detail.indices.length / 3;
     vertices += detail.positions.length / 3;

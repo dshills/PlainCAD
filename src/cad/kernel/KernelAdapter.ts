@@ -1,3 +1,4 @@
+import type { GeometrySource } from "./geometrySource";
 import { ComponentPlacement, RevolveAxisReference, ShellFeature, ThreadFeature, TopologyRef } from "../document/schema";
 import type { ThreadDimensions } from "../hardware/threadSettings";
 import type { LeadScrewDimensions } from "../hardware/leadScrewSettings";
@@ -39,7 +40,7 @@ export interface RenderMesh {
   color?: string;
   /** Runtime-only exact assembly collision highlight. */
   assemblyCollision?: boolean;
-  geometrySource?: "opencascade" | "fallback";
+  geometrySource?: GeometrySource;
   kernelOperation?:
     | "box"
     | "extrusion"

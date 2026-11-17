@@ -1,6 +1,6 @@
 import { rebuildDocument } from "../features/rebuildGraph";
 import { exportMeshesToStl } from "../kernel/stlExport";
-import { OpenCascadeKernel } from "../kernel/OpenCascadeKernel";
+import { NativeKernel } from "../kernel/NativeKernel";
 import { CadDocument } from "../document/schema";
 import { WorkerRequest, WorkerResponse } from "./workerProtocol";
 
@@ -31,13 +31,13 @@ async function handleRequest(request: WorkerRequest) {
     switch (request.type) {
       case "initialize": {
         heartbeat("kernel_init");
-        await OpenCascadeKernel.initialize();
+        await NativeKernel.initialize();
         post({ type: "initialized", requestId: request.requestId, epoch: request.epoch });
         return;
       }
       case "rebuild": {
         heartbeat("rebuild_init");
-        await OpenCascadeKernel.initialize();
+        await NativeKernel.initialize();
         heartbeat("rebuilding");
         const result = rebuildDocument(request.document as CadDocument, { epoch: request.epoch, onNativeProgress: heartbeat, includeDisplayEdges: true });
         post({ type: "rebuildResult", requestId: request.requestId, epoch: request.epoch, result });
@@ -45,7 +45,7 @@ async function handleRequest(request: WorkerRequest) {
       }
       case "exportStl": {
         heartbeat("export_init");
-        await OpenCascadeKernel.initialize();
+        await NativeKernel.initialize();
         heartbeat("rebuilding");
         const result = rebuildDocument(request.document as CadDocument, { epoch: request.epoch, onNativeProgress: heartbeat });
         heartbeat("exporting");

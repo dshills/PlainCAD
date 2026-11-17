@@ -6,6 +6,15 @@ browser worker, edited through a driving parameter, saved and reopened, and
 exported as separate validated STL files.
 These are learning and workflow examples, not production-qualified mechanisms.
 
+With PlainSolid, the cable guide, spacer stack, instrument panel, rotary fixture
+and all four threaded examples rebuild from their original project files. The
+ORBIT drive housing from the main README also rebuilds. The gallery marks the
+angle bracket, motor flange, valve cartridge, robot gripper, pulley cassette
+and heat exchanger as requiring the OpenCascade comparison build. Their original
+files and covers are preserved. To open one locally, use
+`VITE_CAD_KERNEL=opencascade npm run dev` as described in the
+[kernel setup](../../README.md#plainsolid-backend).
+
 ## Open and explore
 
 1. Download a `.pcaddoc` file below. On GitHub, use the file's **Download raw file**
@@ -47,7 +56,7 @@ supported starting point for editing each design.
 | [Sixteen-tube heat exchanger](09-heat-exchanger.pcaddoc) | 28 | 37 / 37 | Highly complex | `tube_length`: 148 → 152 |
 | [Rotary machining fixture concept](10-rotary-fixture.pcaddoc) | 40 | 68 / 66 | Highly complex | `platter_thickness`: 14 → 16 |
 
-Only the paired parameter values above were verified. Fixed dimensions outside
+The original parameter edit checks above used OpenCascade. Fixed dimensions outside
 those expressions do not automatically follow arbitrary feature edits. In particular:
 
 - Spacer washer thickness stays at 4 mm; the angle fixture's holes/pins stay at Z=25 mm.

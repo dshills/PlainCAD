@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { aiSnapshot, stlSignedVolume } from "./aiAcceptanceHelpers";
 import { inspectPngDownload } from "./pngDownload";
 import type { ViewerSnapshot } from "../src/viewer/viewerDiagnostics";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 test.use({ deviceScaleFactor: 2 });
 async function viewer(page: Page): Promise<ViewerSnapshot> {
@@ -24,7 +25,7 @@ async function ready(page: Page) {
     expect(state.result?.success).toBe(true);
     expect(state.result?.documentId).toBe(state.document.id);
     expect(state.result?.meshes).toHaveLength(1);
-    expect(state.result!.meshes[0].geometrySource).toBe("opencascade");
+    expect(state.result!.meshes[0].geometrySource).toBe(expectedGeometrySource);
     expect(state.result!.meshes[0].geometryAssertions).toMatchObject({ valid: true, solidCount: 1 });
     expect(state.result!.meshes[0].geometryAssertions!.volume).toBeGreaterThan(0);
     expect((await viewer(page)).meshes).toHaveLength(1);
@@ -130,7 +131,7 @@ test("Render survives a native parameter rebuild and sharp PNG during motion, th
     const state = await aiSnapshot(page), rebuilt = await viewer(page);
     expect(state.status).toBe("succeeded");
     expect(state.result?.success).toBe(true);
-    expect(state.result!.meshes[0].geometrySource).toBe("opencascade");
+    expect(state.result!.meshes[0].geometrySource).toBe(expectedGeometrySource);
     expect(state.result!.meshes[0].geometryAssertions).toMatchObject({ valid: true, solidCount: 1 });
     expect(state.result!.meshes[0].geometryAssertions!.volume).toBeCloseTo(90000, 5);
     expect(rebuilt.meshes[0].geometryId).not.toBe(before.meshes[0].geometryId);

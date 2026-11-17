@@ -1,9 +1,10 @@
 import { test, expect, type Page } from "@playwright/test";
 import { aiSnapshot } from "./aiAcceptanceHelpers";
 import type { ViewerSnapshot } from "../src/viewer/viewerDiagnostics";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 async function command(page: Page, id: string) { await page.evaluate(async id => { const path = "/src/ui/commands/commandRegistry.ts"; await (await import(path)).runCommand(id); }, id); }
 async function openCoach(page: Page) { await command(page, "manufacturing.coach"); const dialog = page.getByRole("dialog", { name: "Manufacturing coach", exact: true }); await dialog.getByText("Screening thresholds", { exact: true }).click(); await dialog.getByLabel("Minimum wall (mm)").fill("3"); await dialog.getByRole("button", { name: "Fitted wall below threshold", exact: true }).click(); await expect(dialog.getByRole("status").filter({ hasText: "Native correction ready" })).toBeVisible(); return dialog; }
-async function volume(page: Page, value: number) { await expect(async () => { const state = await aiSnapshot(page); expect(state.status).toBe("succeeded"); const mesh = state.result?.meshes.find(mesh => mesh.bodyId === "body:fitted-solid"); expect(mesh?.geometrySource).toBe("opencascade"); expect(mesh?.geometryAssertions).toMatchObject({ valid: true, solidCount: 1 }); expect(mesh?.geometryAssertions?.volume).toBeCloseTo(value, 6); }).toPass({ timeout: 30000 }); }
+async function volume(page: Page, value: number) { await expect(async () => { const state = await aiSnapshot(page); expect(state.status).toBe("succeeded"); const mesh = state.result?.meshes.find(mesh => mesh.bodyId === "body:fitted-solid"); expect(mesh?.geometrySource).toBe(expectedGeometrySource); expect(mesh?.geometryAssertions).toMatchObject({ valid: true, solidCount: 1 }); expect(mesh?.geometryAssertions?.volume).toBeCloseTo(value, 6); }).toPass({ timeout: 30000 }); }
 test("native coach highlights affected bodies, cancels or applies one correction and supports undo", async ({ page }) => {
   await page.goto("/"); await page.locator('input[type="file"]').first().setInputFiles("src/persistence/fixtures/schema-v19.pcaddoc"); await volume(page, 2520); const before = await aiSnapshot(page);
   await page.evaluate(async () => {

@@ -560,7 +560,7 @@ export function App() {
           <strong>Loading CAD kernel...</strong>
           <span>
             {rebuild.message ??
-              "OpenCascade is starting in a worker. Geometry commands will run when it is ready."}
+              "The geometry kernel is starting in a worker. Geometry commands will run when it is ready."}
           </span>
         </div>
       ) : null}

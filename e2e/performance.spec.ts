@@ -9,6 +9,7 @@ import {
   EXPORT_WARMUP,
   EXPORT_TRIALS,
 } from "./nativeBenchmarkFixture";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 async function state(page: Page) {
   return page.evaluate(async () => {
@@ -32,7 +33,7 @@ async function ready(page: Page, documentId: string, width: number) {
     expect(s.result?.documentId).toBe(documentId);
     expect(s.result?.meshes).toHaveLength(1);
     const mesh = s.result!.meshes[0];
-    expect(mesh.geometrySource).toBe("opencascade");
+    expect(mesh.geometrySource).toBe(expectedGeometrySource);
     expect(mesh.kernelOperation).toBe("cut");
     expect(mesh.geometryAssertions).toMatchObject({
       valid: true,

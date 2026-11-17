@@ -1,11 +1,11 @@
-import { OpenCascadeKernel } from "../kernel/OpenCascadeKernel";
+import { NativeKernel } from "../kernel/NativeKernel";
 import { rebuildDocument } from "../features/rebuildGraph";
 import type { CadDocument } from "../document/schema";
 import type { DisplayMeshRequest } from "../kernel/displayMesh";
 
 self.onmessage = async (event: MessageEvent<CadDocument | DisplayMeshRequest>) => {
   try {
-    await OpenCascadeKernel.initialize();
+    await NativeKernel.initialize();
     const request = event.data;
     if ("document" in request) {
       const result = rebuildDocument(request.document, { displayMeshRequest: request.bodies, reuseNativeFeatures: false });

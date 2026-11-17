@@ -100,7 +100,7 @@ describe("linked complete cap sketch projections", () => {
     expect(errors[0]).toMatchObject({ source: "sketch", sourceId: f.target.id, message: expect.stringContaining("split or lost") });
     const fallback = rebuildDocument(f.plan.document);
     expect(fallback.success).toBe(false);
-    expect(fallback.errors.some((error) => error.message.includes("native OpenCascade"))).toBe(true);
+    expect(fallback.errors.some((error) => error.message.includes("native solid boundary validation"))).toBe(true);
   });
 
   it("preserves well-typed lost owners for repair while diagnosing modeling and refusing failed break-link results", () => {

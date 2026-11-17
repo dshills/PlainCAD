@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { aiSnapshot, stlSignedVolume } from "./aiAcceptanceHelpers";
+import { expectedGeometrySource } from "./expectedGeometrySource";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -11,7 +12,7 @@ test("solid driving labels edit authored formulas through native preview, Cancel
   await expect(async () => {
     const state = await aiSnapshot(page);
     expect(state.status).toBe("succeeded");
-    expect(state.result?.meshes[0]).toMatchObject({ geometrySource: "opencascade", geometryAssertions: { valid: true, solidCount: 1 } });
+    expect(state.result?.meshes[0]).toMatchObject({ geometrySource: expectedGeometrySource, geometryAssertions: { valid: true, solidCount: 1 } });
     expect(state.result?.meshes[0].geometryAssertions?.volume).toBeCloseTo(80000, 5);
   }).toPass();
   await page.locator(".body-row").getByRole("button").first().click();

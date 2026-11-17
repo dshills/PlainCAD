@@ -7,6 +7,7 @@ import { createEmptyDocument, removeParameter, upsertParameter } from "../cad/do
 import { CadParameter } from "../cad/document/schema";
 import { createId } from "../cad/document/ids";
 import { rebuildDocument } from "../cad/features/rebuildGraph";
+import { NativeKernel } from "../cad/kernel/NativeKernel";
 import { RebuildResult, WorkerRequest, WorkerResponse } from "../cad/worker/workerProtocol";
 import { createWorkerRequest, isWorkerRequestExpired, shouldAcceptWorkerResponse, REBUILD_DEBOUNCE_MS, WORKER_TIMEOUTS_MS } from "../cad/worker/workerLifecycle";
 import GeometryWorker from "../cad/worker/geometryWorker?worker";
@@ -23,6 +24,12 @@ interface RebuildState {
   result?: RebuildResult;
   kernelReady: boolean;
   message?: string;
+}
+
+interface ProjectOpening {
+  document: CadDocument;
+  restore: RebuildState;
+  displayed?: RebuildState;
 }
 
 export interface CadStore {
@@ -60,6 +67,34 @@ let kernelInitialized = false;
 let kernelInitializing = false;
 let queuedRebuildDocument: CadDocument | undefined;
 let rebuildDebounce: ReturnType<typeof setTimeout> | undefined;
+let projectOpening: ProjectOpening | undefined;
+
+export function markProjectOpening(): () => void {
+  const state = useCadStore.getState();
+  const previous = projectOpening;
+  const restore = previous?.document === state.history.present && previous.displayed === state.rebuild
+    ? previous.restore : state.rebuild;
+  const opening: ProjectOpening = { document: state.history.present, restore };
+  projectOpening = opening;
+  useCadStore.setState({ rebuild: withProjectOpening(state, restore) });
+  return () => {
+    if (projectOpening !== opening) return;
+    projectOpening = undefined;
+    const current = useCadStore.getState();
+    if (current.history.present === opening.document && current.rebuild === opening.displayed)
+      useCadStore.setState({ rebuild: opening.restore });
+  };
+}
+
+function withProjectOpening(state: CadStore, rebuild: RebuildState): RebuildState {
+  const opening = projectOpening;
+  if (!opening || opening.document !== state.history.present || rebuild.status !== "succeeded")
+    return rebuild;
+  const displayed = { ...rebuild, status: "queued" as const, message: "Opening project…" };
+  opening.restore = rebuild;
+  opening.displayed = displayed;
+  return displayed;
+}
 const pendingWorkerRequests = new Map<
   number,
   {
@@ -235,7 +270,33 @@ export const useCadStore = create<CadStore>((set, get) => ({
     latestKernelInitRequestId = requestId;
     kernelInitializing = true;
     set({ rebuild: { ...get().rebuild, status: "loadingKernel", message: "Loading CAD kernel...", kernelReady: false } });
-    const worker = getGeometryWorker();
+    const failInitialization = (message: string) => {
+      if (requestId !== latestKernelInitRequestId) return;
+      kernelInitializing = false;
+      set({
+        rebuild: {
+          status: "failed",
+          result: {
+            documentId: get().history.present.id,
+            success: false,
+            bodies: [],
+            meshes: [],
+            errors: [{ id: `worker:${requestId}`, source: "kernel", message }],
+            warnings: [],
+            durationMs: 0,
+          },
+          kernelReady: false,
+          message,
+        },
+      });
+    };
+    let worker: Worker | undefined;
+    try {
+      worker = getGeometryWorker();
+    } catch (error) {
+      failInitialization(`Could not start the CAD geometry worker: ${error instanceof Error ? error.message : String(error)}`);
+      return;
+    }
     if (worker) {
       pendingWorkerRequests.set(requestId, {
         kind: "initialize",
@@ -247,23 +308,10 @@ export const useCadStore = create<CadStore>((set, get) => ({
         maxElapsedMs: WORKER_TIMEOUTS_MS.initialize * 2,
         onError: (message) => {
           if (requestId !== latestKernelInitRequestId) return;
-          kernelInitializing = false;
-          set({
-            rebuild: {
-              status: "failed",
-              result: {
-                documentId: get().history.present.id,
-                success: false,
-                bodies: [],
-                meshes: [],
-                errors: [{ id: `worker:${requestId}`, source: "kernel", message }],
-                warnings: [],
-                durationMs: 0,
-              },
-              kernelReady: false,
-              message,
-            },
-          });
+          // A failed WASM load can leave the worker with a rejected bootstrap
+          // promise. A subsequent edit or project open needs a fresh worker.
+          if (geometryWorker === worker) failPendingWorkerRequests(message);
+          failInitialization(message);
         },
         onInitialized: () => {
           if (requestId !== latestKernelInitRequestId) return;
@@ -276,6 +324,10 @@ export const useCadStore = create<CadStore>((set, get) => ({
       armWorkerTimeout(requestId);
       const request: WorkerRequest = createWorkerRequest({ type: "initialize" }, requestId, workerEpoch);
       worker.postMessage(request);
+      return;
+    }
+    if (NativeKernel.requiresWorker) {
+      failInitialization("PlainSolid needs browser workers for modeling. Open PlainCAD in a browser with Web Workers enabled.");
       return;
     }
     kernelInitializing = false;
@@ -341,7 +393,7 @@ function flushQueuedRebuild(
           flushQueuedRebuild(set, get);
           return;
         }
-        set({ rebuild: { status: result.success ? "succeeded" : "failed", result, kernelReady: kernelInitialized, message: result.success ? "Rebuild complete." : "Rebuild failed." } });
+        set({ rebuild: withProjectOpening(get(), { status: result.success ? "succeeded" : "failed", result, kernelReady: kernelInitialized, message: result.success ? "Rebuild complete." : "Rebuild failed." }) });
         if (queuedRebuildDocument) flushQueuedRebuild(set, get);
       },
       onError: (message) => {
@@ -375,7 +427,7 @@ function flushQueuedRebuild(
     return;
   }
   const result = rebuildDocument(document);
-  set({ rebuild: { status: result.success ? "succeeded" : "failed", result, kernelReady: kernelInitialized, message: result.success ? "Rebuild complete." : "Rebuild failed." } });
+  set({ rebuild: withProjectOpening(get(), { status: result.success ? "succeeded" : "failed", result, kernelReady: kernelInitialized, message: result.success ? "Rebuild complete." : "Rebuild failed." }) });
 }
 
 function nextRequestId(): number {

@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../../cad/kernel/geometrySource";
 import { createId } from "../../cad/document/ids";
 import { interactionDraftBusy } from "./interactionDraftState";
 import { featureComponentId } from "../../cad/document/components";
@@ -56,7 +57,7 @@ export function editableModelingFeature(state: CadStore) {
     state.rebuild.result?.documentId !== state.history.present.id ||
     state.rebuild.result.meshes.some(
       (mesh) =>
-        mesh.geometrySource !== "opencascade" ||
+        !isNativeGeometrySource(mesh.geometrySource) ||
         !mesh.geometryAssertions?.valid,
     )
   )
@@ -119,7 +120,7 @@ export function assertNativeSolidPreview(
     !result.meshes.length ||
     result.meshes.some(
       (mesh) =>
-        mesh.geometrySource !== "opencascade" ||
+        !isNativeGeometrySource(mesh.geometrySource) ||
         !mesh.geometryAssertions?.valid ||
         !(mesh.geometryAssertions.volume > 0) ||
         !(mesh.geometryAssertions.solidCount > 0),

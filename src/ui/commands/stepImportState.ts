@@ -1,3 +1,4 @@
+import { isNativeGeometrySource } from "../../cad/kernel/geometrySource";
 import { create } from "zustand";
 import type { CadStore } from "../../state/useCadStore";
 import type { CadDocument } from "../../cad/document/schema";
@@ -28,7 +29,7 @@ export function stepImportNativeReady(state: CadStore) {
   return state.rebuild.kernelReady && state.rebuild.status === "succeeded" &&
     Boolean(result?.success && result.stepImportAvailable &&
       result.documentId === state.history.present.id &&
-      result.meshes.every(mesh => mesh.geometrySource === "opencascade"));
+      result.meshes.every(mesh => isNativeGeometrySource(mesh.geometrySource)));
 }
 export function stepImportSourceMatches(frame: StepImportFrame, state: CadStore) {
   return state.history.present === frame.source && state.documentSession === frame.session &&
