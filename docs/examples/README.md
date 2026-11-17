@@ -11,6 +11,8 @@ including the six original projects that needed OpenCascade in an earlier build.
    Filter by **Collection** or **Difficulty**. Search
    also matches the names of suggested parameters. On GitHub, use **Download raw file**
    to download a `.pcaddoc` from this guide.
+   You can switch directly from an untouched example. PlainCAD asks before
+   replacing an example with edits.
 2. For a downloaded file, choose **File → Open project** or drop it onto the workspace.
 3. Open **Project** on the left. Search for a component, then **Activate** or
    **Isolate** it. Use **All tools → Show All Bodies** to restore the entire design.

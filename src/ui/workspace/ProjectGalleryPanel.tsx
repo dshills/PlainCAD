@@ -99,7 +99,11 @@ function GalleryContents() {
       request.current = undefined;
       closeProjectGallery();
       // Replacement validation reports to the shared file error surface after this dialog closes.
-      try { await prepareProjectDrop(file); } catch (error) { useCadStore.getState().setFileError(error instanceof Error ? error.message : String(error)); }
+      try {
+        await prepareProjectDrop(file, card.text === undefined ? "gallery-example" : "file");
+      } catch (error) {
+        useCadStore.getState().setFileError(error instanceof Error ? error.message : String(error));
+      }
     } catch (error) { if (!controller.signal.aborted) setError(error instanceof Error ? error.message : String(error)); }
     finally { if (request.current === controller) request.current = undefined; if (!controller.signal.aborted) setBusy(false); }
   }

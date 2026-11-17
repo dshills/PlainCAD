@@ -254,8 +254,9 @@ result invalidate Apply. Finish or cancel an active task before starting another
 Open **File → Project gallery** to search by name or suggested edit, or filter by
 collection and difficulty. Enable **Live native previews** to rotate models with
 up to 10,000 mesh triangles while you hover or focus **Preview**. The gallery also
-shows up to five manually saved projects from browser recovery storage. Opening an
-example uses the same unsaved-project protection as dropping a project file.
+shows up to five manually saved projects from browser recovery storage. You can
+switch directly from an untouched example. PlainCAD asks before replacing an
+example with edits.
 
 The default **Docked Workbench** places Project/Parameters on the left,
 Task/Properties on the right, and History/AI/Issues in a shared resizable bottom dock. AI input and responses stay in that dock; proposed geometry appears in the main canvas. **Draw**, **Solid**,

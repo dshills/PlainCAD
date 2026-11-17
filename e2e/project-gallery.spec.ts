@@ -46,3 +46,49 @@ test("gallery previews actual example geometry without mutating the project, pro
   await expect(gallery.getByLabel("Live native previews")).toBeDisabled();
   expect(errors).toEqual([]);
 });
+
+test("switches untouched gallery examples directly and protects edits until undone", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+  const gallery = page.getByRole("dialog", { name: "Project gallery", exact: true });
+  const replacement = page.getByRole("dialog", { name: "Open dropped project", exact: true });
+  async function chooseExample(name: string) {
+    await page.getByText("File", { exact: true }).click();
+    await page.getByRole("button", { name: "Project gallery", exact: true }).click();
+    await gallery.getByRole("button", { name: `Open ${name}`, exact: true }).click();
+    await expect(gallery).toBeHidden();
+  }
+  async function expectOpened(name: string) {
+    await expect(page.locator(".project-title")).toHaveText(name);
+    await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+    await expect(replacement).toBeHidden();
+  }
+
+  await chooseExample("Angle bracket fixture");
+  await expectOpened("Angle bracket fixture");
+  await chooseExample("Precision spacer stack");
+  await expectOpened("Precision spacer stack");
+  const before = await aiSnapshot(page);
+  const originalVolume = before.result!.meshes.reduce((sum, mesh) => sum + mesh.geometryAssertions!.volume, 0);
+
+  await page.evaluate(async ({ session, parameterId }) => {
+    const result = await window.plaincadCommands.execute({
+      command: "parameter.update", session,
+      arguments: { parameterId, patch: { expression: "24mm" } },
+    });
+    if (!result.ok) throw new Error(result.error.message);
+  }, { session: before.session, parameterId: before.document.parameters.spacer_height.id });
+  await expect(async () => {
+    const edited = await aiSnapshot(page);
+    expect(edited.status).toBe("succeeded");
+    expect(edited.result!.meshes.reduce((sum, mesh) => sum + mesh.geometryAssertions!.volume, 0)).toBeGreaterThan(originalVolume);
+  }).toPass();
+
+  await chooseExample("Motor mounting flange");
+  await expect(replacement).toBeVisible();
+  await replacement.getByRole("button", { name: "Keep current project", exact: true }).click();
+  expect((await aiSnapshot(page)).document.parameters.spacer_height.expression).toBe("24mm");
+  await page.getByRole("button", { name: "Undo", exact: true }).click();
+  await chooseExample("Motor mounting flange");
+  await expectOpened("Motor mounting flange");
+});

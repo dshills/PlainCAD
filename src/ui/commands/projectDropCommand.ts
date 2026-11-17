@@ -19,16 +19,32 @@ import { useModelingDraft } from "./modelingDraftCommand";
 import { useProjectWorkflow } from "./projectWorkflowCommand";
 import { useGuidedHole } from "./guidedHoleCommand";
 
+type ProjectFileSource = "file" | "gallery-example";
+
 interface PendingProjectDrop {
   document: CadDocument;
   previous: CadDocument;
   session: number;
   filename: string;
+  source: ProjectFileSource;
 }
 export const useProjectDrop = create<{
   pending?: PendingProjectDrop;
   saving: boolean;
 }>(() => ({ saving: false }));
+
+// Undo restores the original document object. The session prevents a later
+// open of the same object from inheriting the gallery's clean baseline.
+const galleryBaselines = new WeakMap<CadDocument, number>();
+
+function openReplacement(document: CadDocument, source: ProjectFileSource) {
+  const previous = useCadStore.getState();
+  previous.setDocument(document);
+  const current = useCadStore.getState();
+  if (source === "gallery-example" && previous.documentSession !== current.documentSession) {
+    galleryBaselines.set(current.history.present, current.documentSession);
+  }
+}
 
 function activeModelingTask() {
   return Boolean(
@@ -62,7 +78,7 @@ export function isCurrentProjectDrop(
   );
 }
 
-export async function prepareProjectDrop(file: File) {
+export async function prepareProjectDrop(file: File, source: ProjectFileSource = "file") {
   const state = useCadStore.getState();
   const blocked = projectDropBlockedReason();
   if (blocked) {
@@ -97,7 +113,8 @@ export async function prepareProjectDrop(file: File) {
       throw new Error(
         "Project changed while validating the dropped file. Drop it again.",
       );
-    // Protect every nonempty project, including unsaved template/recovery documents.
+    // Keep the existing protection for work that did not come from a built-in
+    // example, including nonempty templates and recovery copies.
     const comparable = (document: CadDocument) => {
       const {
         id: _id,
@@ -118,11 +135,12 @@ export async function prepareProjectDrop(file: File) {
       current.history.past.length > 0 ||
       JSON.stringify(comparable(previous)) !==
         JSON.stringify(comparable(createEmptyDocument()));
-    if (hasWork)
+    const cleanExample = galleryBaselines.get(previous) === session;
+    if (hasWork && !cleanExample)
       useProjectDrop.setState({
-        pending: { document, previous, session, filename: file.name },
+        pending: { document, previous, session, filename: file.name, source },
       });
-    else current.setDocument(document);
+    else openReplacement(document, source);
   } catch (error) {
     if (fileJobCurrent(controller))
       state.setFileError(
@@ -151,7 +169,7 @@ export function replaceWithDroppedProject() {
       );
     return;
   }
-  useCadStore.getState().setDocument(pending.document);
+  openReplacement(pending.document, pending.source);
   useProjectDrop.setState({ pending: undefined });
 }
 

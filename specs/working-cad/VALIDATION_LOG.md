@@ -11,8 +11,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Date: 2026-11-17.
 - Change: PlainSolid as the default browser geometry kernel.
 - Result: type checks, 1692 unit/component tests, four real WASM contracts, build/bundle budget (69 bundles, largest 497.27 kB), 346 development and 68 production browser cases passed. Also passed 15 cross-browser Workbench and 54 cross-browser AI/Focused cases.
-- Completed items since that full gate: **3**.
-- Next full gate: after 2 more completed items.
+- Completed items since that full gate: **4**.
+- Next full gate: after 1 more completed item.
 
 ## Completed batch
 
@@ -1776,3 +1776,16 @@ and JavaScript bundle budget (largest 497.27 kB), six development smoke cases,
 and 16 production smoke cases. One development and 12 production gallery cases
 passed, including the six repaired projects' stable body IDs, reference volumes,
 and geometry changes after their suggested edits.
+
+## Switch untouched gallery examples directly (2026-11-17)
+
+Item 4 after the default-kernel release gate. A built-in example's loaded
+snapshot can be replaced directly. Parameter changes still trigger the
+replacement prompt, and Undo restores the clean snapshot. The development
+browser regression verified Angle bracket → Precision spacer switching, a real
+native parameter edit, cancellation, and a direct switch after Undo.
+
+Independent internal review approved the diff. `npm run check:item` passed type
+checks, 1692 unit/component tests, four WASM contracts, the build and JavaScript
+bundle budget (largest 497.49 kB), six development smoke cases, and 16 production
+smoke cases. Two development and 12 production gallery cases also passed.
