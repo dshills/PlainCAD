@@ -1,5 +1,5 @@
 import { CURRENT_SCHEMA_VERSION } from "../cad/document/schema";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { validateDocument } from "../cad/document/validate";
 import { Sketch } from "../cad/document/schema";
 import {
@@ -232,6 +232,40 @@ describe("driving sketch foundations", () => {
     expect(exhausted.errors.some((e) => e.message.includes("budget"))).toBe(
       true,
     );
+  });
+  it("budgets numerical iterations after preparing the sketch equations", () => {
+    const { sketch, a, b, line } = lineSketch();
+    const fixed = addConstraint(sketch, "fixed", { pointIds: [a, b] });
+    let elapsed = 0;
+    const coldSketch = {
+      ...fixed,
+      get entities() {
+        elapsed = 75;
+        return fixed.entities;
+      },
+    };
+    const clock = vi.spyOn(performance, "now").mockImplementation(() => elapsed);
+    try {
+      const solved = solveSketch(coldSketch, {});
+      expect(solved.errors).toEqual([]);
+      expect(solved.status).toBe("fullyConstrained");
+      expect(solved.degreesOfFreedom).toBe(0);
+      expect(solved.points[b]).toMatchObject({ x: 8, y: 3 });
+
+      clock.mockImplementation(() => {
+        elapsed += 75;
+        return elapsed;
+      });
+      const unsettled = addConstraint(sketch, "horizontal", { entityIds: [line] });
+      const exhausted = solveSketch(unsettled, {});
+      expect(exhausted.status).toBe("nonConverged");
+      expect(exhausted.errors).toContainEqual(expect.objectContaining({
+        constraintId: sketch.id,
+        message: expect.stringContaining("iteration/time budget"),
+      }));
+    } finally {
+      clock.mockRestore();
+    }
   });
   it("extracts true mixed arc/line boundaries, stable identity, and excludes construction", () => {
     let sketch = dSketch();

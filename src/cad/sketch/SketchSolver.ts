@@ -96,7 +96,6 @@ export function solveSketch(
       seedUsed: false,
     };
   }
-  const started = performance.now();
   const errors: SketchSolveError[] = [];
   const rows: Row[] = [];
   const x: number[] = [];
@@ -618,6 +617,9 @@ export function solveSketch(
     options.maxElapsedMs ?? SOLVER_LIMITS.elapsedMs,
     SOLVER_LIMITS.elapsedMs,
   );
+  // Equation preparation is bounded by the sketch limits above. Start the
+  // numeric budget here so cold expression setup cannot exhaust it.
+  const started = performance.now();
   if (errors.length === 0) {
     for (; iterations <= maxIterations; iterations++) {
       if (performance.now() - started > maxTime) {

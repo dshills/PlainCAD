@@ -9,10 +9,10 @@ missing or the count cannot be determined, establish a baseline with the full ga
 ## Last successful full gate
 
 - Date: 2026-11-17.
-- Change: PlainSolid as the default browser geometry kernel.
-- Result: type checks, 1692 unit/component tests, four real WASM contracts, build/bundle budget (69 bundles, largest 497.27 kB), 346 development and 68 production browser cases passed. Also passed 15 cross-browser Workbench and 54 cross-browser AI/Focused cases.
-- Completed items since that full gate: **4**.
-- Next full gate: after 1 more completed item.
+- Change: Separate sketch solver time budget from equation preparation.
+- Result: Type checks, 1693 unit/component tests, four real WASM contracts, build/bundle budget (69 bundles, largest 497.49 kB), 347 development and 75 production browser cases passed. Six fresh WebKit mounting-plate workflows also passed.
+- Completed items since that full gate: **0**.
+- Next full gate: after 5 more completed items.
 
 ## Completed batch
 
@@ -1789,3 +1789,15 @@ Independent internal review approved the diff. `npm run check:item` passed type
 checks, 1692 unit/component tests, four WASM contracts, the build and JavaScript
 bundle budget (largest 497.49 kB), six development smoke cases, and 16 production
 smoke cases. Two development and 12 production gallery cases also passed.
+
+## WebKit mounting-plate solver budget (2026-11-17)
+
+Item 5 completes the current batch. In CI, cold sketch preparation exhausted
+the 50 ms solve budget and left Apply disabled. The regression test reproduced
+the budget diagnostic before the fix. It now verifies constrained geometry and
+rank after slow equation preparation, plus an elapsed-time failure when the
+numerical phase itself exhausts the budget.
+
+Independent internal review approved the diff. The full release stages passed
+with three Chromium development workers and one production worker. The original
+WebKit mounting-plate AI test passed six times in fresh local browser workers.
