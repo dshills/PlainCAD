@@ -11,8 +11,8 @@ missing or the count cannot be determined, establish a baseline with the full ga
 - Date: 2026-11-17.
 - Change: PlainSolid as the default browser geometry kernel.
 - Result: type checks, 1692 unit/component tests, four real WASM contracts, build/bundle budget (69 bundles, largest 497.27 kB), 346 development and 68 production browser cases passed. Also passed 15 cross-browser Workbench and 54 cross-browser AI/Focused cases.
-- Completed items since that full gate: **1**.
-- Next full gate: after 4 more completed items.
+- Completed items since that full gate: **2**.
+- Next full gate: after 3 more completed items.
 
 ## Completed batch
 
@@ -1745,3 +1745,19 @@ labels were checked against Workbench. Verified 149 local Markdown links.
 contracts, the production build and 500 kB bundle budget, six development smoke
 cases, and 16 production smoke cases. The two first-part development cases and
 five production gallery cases also passed.
+
+## Expanded project gallery (2026-11-17)
+
+Item 2 after the PlainSolid default-kernel release gate. The gallery now has
+33 editable projects, including 18 new samples and ORBIT. Native Chromium
+rebuilt every new project at its original and suggested parameter values.
+All 33 cover captures matched their catalog body counts, and the original
+ten matched their recorded OpenCascade volumes. The six comparison-only
+covers were captured with OpenCascade. Reviewed desktop and 390-pixel layouts.
+
+Independent internal re-review approved the final changes. `npm run check:item`
+passed type checks, 1692 unit/component tests, four real-WASM contracts, the
+production build and bundle budget (69 bundles, largest 497.27 kB), six
+development smoke cases and 16 production smoke cases. One development and
+six production gallery cases also passed, including the rack's measured
+native volume and Z spacing after editing its suggested parameter.

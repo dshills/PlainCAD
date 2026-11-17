@@ -1,0 +1,431 @@
+{
+  "schemaVersion": 26,
+  "id": "example-22-spool-and-axle",
+  "name": "Cable spool and axle",
+  "units": "metric",
+  "unitSettings": {
+    "length": "mm",
+    "angle": "deg"
+  },
+  "createdAt": "2026-11-17T12:00:00.000Z",
+  "updatedAt": "2026-11-17T12:00:00.000Z",
+  "rootComponentId": "example-22-spool-and-axle-root",
+  "components": {
+    "example-22-spool-and-axle-root": {
+      "id": "example-22-spool-and-axle-root",
+      "name": "Project reference"
+    },
+    "example-22-spool-and-axle-part-1": {
+      "id": "example-22-spool-and-axle-part-1",
+      "name": "Reel",
+      "appearance": "polymer"
+    },
+    "example-22-spool-and-axle-part-28": {
+      "id": "example-22-spool-and-axle-part-28",
+      "name": "Axle",
+      "appearance": "steel"
+    },
+    "example-22-spool-and-axle-part-34": {
+      "id": "example-22-spool-and-axle-part-34",
+      "name": "Axle pin",
+      "appearance": "aluminum"
+    }
+  },
+  "parameters": {
+    "spool_width": {
+      "id": "example-22-spool-and-axle-parameter",
+      "name": "spool_width",
+      "expression": "22mm",
+      "value": 22,
+      "unit": "mm"
+    }
+  },
+  "sketches": {
+    "example-22-spool-and-axle-sketch-2": {
+      "id": "example-22-spool-and-axle-sketch-2",
+      "componentId": "example-22-spool-and-axle-part-1",
+      "name": "Turn flanges and hub section",
+      "plane": {
+        "type": "origin",
+        "plane": "XZ"
+      },
+      "timelineStep": 1,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-22-spool-and-axle-point-3": {
+          "type": "point",
+          "id": "example-22-spool-and-axle-point-3",
+          "x": {
+            "expression": "7mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "example-22-spool-and-axle-point-5": {
+          "type": "point",
+          "id": "example-22-spool-and-axle-point-5",
+          "x": {
+            "expression": "30mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "example-22-spool-and-axle-point-7": {
+          "type": "point",
+          "id": "example-22-spool-and-axle-point-7",
+          "x": {
+            "expression": "30mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "4mm",
+            "unit": "mm"
+          }
+        },
+        "example-22-spool-and-axle-point-9": {
+          "type": "point",
+          "id": "example-22-spool-and-axle-point-9",
+          "x": {
+            "expression": "15mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "4mm",
+            "unit": "mm"
+          }
+        },
+        "example-22-spool-and-axle-point-11": {
+          "type": "point",
+          "id": "example-22-spool-and-axle-point-11",
+          "x": {
+            "expression": "15mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "spool_width + 4mm",
+            "unit": "mm",
+            "parameterRefs": {
+              "spool_width": "example-22-spool-and-axle-parameter"
+            }
+          }
+        },
+        "example-22-spool-and-axle-point-13": {
+          "type": "point",
+          "id": "example-22-spool-and-axle-point-13",
+          "x": {
+            "expression": "30mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "spool_width + 4mm",
+            "unit": "mm",
+            "parameterRefs": {
+              "spool_width": "example-22-spool-and-axle-parameter"
+            }
+          }
+        },
+        "example-22-spool-and-axle-point-15": {
+          "type": "point",
+          "id": "example-22-spool-and-axle-point-15",
+          "x": {
+            "expression": "30mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "spool_width + 8mm",
+            "unit": "mm",
+            "parameterRefs": {
+              "spool_width": "example-22-spool-and-axle-parameter"
+            }
+          }
+        },
+        "example-22-spool-and-axle-point-17": {
+          "type": "point",
+          "id": "example-22-spool-and-axle-point-17",
+          "x": {
+            "expression": "7mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "spool_width + 8mm",
+            "unit": "mm",
+            "parameterRefs": {
+              "spool_width": "example-22-spool-and-axle-parameter"
+            }
+          }
+        },
+        "example-22-spool-and-axle-line-19": {
+          "type": "line",
+          "id": "example-22-spool-and-axle-line-19",
+          "startPointId": "example-22-spool-and-axle-point-3",
+          "endPointId": "example-22-spool-and-axle-point-5"
+        },
+        "example-22-spool-and-axle-line-20": {
+          "type": "line",
+          "id": "example-22-spool-and-axle-line-20",
+          "startPointId": "example-22-spool-and-axle-point-5",
+          "endPointId": "example-22-spool-and-axle-point-7"
+        },
+        "example-22-spool-and-axle-line-21": {
+          "type": "line",
+          "id": "example-22-spool-and-axle-line-21",
+          "startPointId": "example-22-spool-and-axle-point-7",
+          "endPointId": "example-22-spool-and-axle-point-9"
+        },
+        "example-22-spool-and-axle-line-22": {
+          "type": "line",
+          "id": "example-22-spool-and-axle-line-22",
+          "startPointId": "example-22-spool-and-axle-point-9",
+          "endPointId": "example-22-spool-and-axle-point-11"
+        },
+        "example-22-spool-and-axle-line-23": {
+          "type": "line",
+          "id": "example-22-spool-and-axle-line-23",
+          "startPointId": "example-22-spool-and-axle-point-11",
+          "endPointId": "example-22-spool-and-axle-point-13"
+        },
+        "example-22-spool-and-axle-line-24": {
+          "type": "line",
+          "id": "example-22-spool-and-axle-line-24",
+          "startPointId": "example-22-spool-and-axle-point-13",
+          "endPointId": "example-22-spool-and-axle-point-15"
+        },
+        "example-22-spool-and-axle-line-25": {
+          "type": "line",
+          "id": "example-22-spool-and-axle-line-25",
+          "startPointId": "example-22-spool-and-axle-point-15",
+          "endPointId": "example-22-spool-and-axle-point-17"
+        },
+        "example-22-spool-and-axle-line-26": {
+          "type": "line",
+          "id": "example-22-spool-and-axle-line-26",
+          "startPointId": "example-22-spool-and-axle-point-17",
+          "endPointId": "example-22-spool-and-axle-point-3"
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-22-spool-and-axle-fixed-4",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-22-spool-and-axle-point-3"
+          ]
+        },
+        {
+          "id": "example-22-spool-and-axle-fixed-6",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-22-spool-and-axle-point-5"
+          ]
+        },
+        {
+          "id": "example-22-spool-and-axle-fixed-8",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-22-spool-and-axle-point-7"
+          ]
+        },
+        {
+          "id": "example-22-spool-and-axle-fixed-10",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-22-spool-and-axle-point-9"
+          ]
+        },
+        {
+          "id": "example-22-spool-and-axle-fixed-12",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-22-spool-and-axle-point-11"
+          ]
+        },
+        {
+          "id": "example-22-spool-and-axle-fixed-14",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-22-spool-and-axle-point-13"
+          ]
+        },
+        {
+          "id": "example-22-spool-and-axle-fixed-16",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-22-spool-and-axle-point-15"
+          ]
+        },
+        {
+          "id": "example-22-spool-and-axle-fixed-18",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-22-spool-and-axle-point-17"
+          ]
+        }
+      ],
+      "dimensions": []
+    },
+    "example-22-spool-and-axle-sketch-29": {
+      "id": "example-22-spool-and-axle-sketch-29",
+      "componentId": "example-22-spool-and-axle-part-28",
+      "name": "Axle shoulder profile",
+      "plane": {
+        "type": "origin",
+        "plane": "XY"
+      },
+      "timelineStep": 3,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-22-spool-and-axle-point-31": {
+          "type": "point",
+          "id": "example-22-spool-and-axle-point-31",
+          "x": {
+            "expression": "44mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "11mm",
+            "unit": "mm"
+          }
+        },
+        "example-22-spool-and-axle-circle-30": {
+          "type": "circle",
+          "id": "example-22-spool-and-axle-circle-30",
+          "centerPointId": "example-22-spool-and-axle-point-31",
+          "radius": {
+            "expression": "9mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-22-spool-and-axle-fixed-32",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-22-spool-and-axle-point-31"
+          ]
+        }
+      ],
+      "dimensions": []
+    },
+    "example-22-spool-and-axle-sketch-35": {
+      "id": "example-22-spool-and-axle-sketch-35",
+      "componentId": "example-22-spool-and-axle-part-34",
+      "name": "Axle journal profile",
+      "plane": {
+        "type": "offset",
+        "base": "XY",
+        "offset": {
+          "expression": "5mm",
+          "unit": "mm"
+        }
+      },
+      "timelineStep": 5,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-22-spool-and-axle-point-37": {
+          "type": "point",
+          "id": "example-22-spool-and-axle-point-37",
+          "x": {
+            "expression": "44mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "11mm",
+            "unit": "mm"
+          }
+        },
+        "example-22-spool-and-axle-circle-36": {
+          "type": "circle",
+          "id": "example-22-spool-and-axle-circle-36",
+          "centerPointId": "example-22-spool-and-axle-point-37",
+          "radius": {
+            "expression": "6.8mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-22-spool-and-axle-fixed-38",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-22-spool-and-axle-point-37"
+          ]
+        }
+      ],
+      "dimensions": []
+    }
+  },
+  "features": [
+    {
+      "id": "example-22-spool-and-axle-feature-27",
+      "name": "Turn flanges and hub",
+      "componentId": "example-22-spool-and-axle-part-1",
+      "timelineStep": 2,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "revolve",
+      "sketchId": "example-22-spool-and-axle-sketch-2",
+      "profileId": "example-22-spool-and-axle-sketch-2:profile:p1ueztjo",
+      "axis": {
+        "type": "origin",
+        "axis": "Z"
+      },
+      "operation": "newBody",
+      "angle": {
+        "expression": "360deg",
+        "unit": "deg"
+      }
+    },
+    {
+      "id": "example-22-spool-and-axle-feature-33",
+      "name": "Axle shoulder",
+      "componentId": "example-22-spool-and-axle-part-28",
+      "timelineStep": 4,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "extrude",
+      "sketchId": "example-22-spool-and-axle-sketch-29",
+      "profileId": "example-22-spool-and-axle-sketch-29:profile:p1y0hjoc",
+      "direction": "positive",
+      "operation": "newBody",
+      "distance": {
+        "expression": "5mm",
+        "unit": "mm"
+      }
+    },
+    {
+      "id": "example-22-spool-and-axle-feature-39",
+      "name": "Axle journal",
+      "componentId": "example-22-spool-and-axle-part-34",
+      "timelineStep": 6,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "extrude",
+      "sketchId": "example-22-spool-and-axle-sketch-35",
+      "profileId": "example-22-spool-and-axle-sketch-35:profile:p1xgicae",
+      "direction": "positive",
+      "operation": "newBody",
+      "distance": {
+        "expression": "spool_width + 14mm",
+        "unit": "mm",
+        "parameterRefs": {
+          "spool_width": "example-22-spool-and-axle-parameter"
+        }
+      }
+    }
+  ]
+}

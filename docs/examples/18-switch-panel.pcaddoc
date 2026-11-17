@@ -1,0 +1,904 @@
+{
+  "schemaVersion": 26,
+  "id": "example-18-switch-panel",
+  "name": "Dual-switch faceplate",
+  "units": "metric",
+  "unitSettings": {
+    "length": "mm",
+    "angle": "deg"
+  },
+  "createdAt": "2026-11-17T12:00:00.000Z",
+  "updatedAt": "2026-11-17T12:00:00.000Z",
+  "rootComponentId": "example-18-switch-panel-root",
+  "components": {
+    "example-18-switch-panel-root": {
+      "id": "example-18-switch-panel-root",
+      "name": "Project reference"
+    },
+    "example-18-switch-panel-part-1": {
+      "id": "example-18-switch-panel-part-1",
+      "name": "Faceplate",
+      "appearance": "aluminum"
+    }
+  },
+  "parameters": {
+    "panel_thickness": {
+      "id": "example-18-switch-panel-parameter",
+      "name": "panel_thickness",
+      "expression": "4mm",
+      "value": 4,
+      "unit": "mm"
+    }
+  },
+  "sketches": {
+    "example-18-switch-panel-sketch-2": {
+      "id": "example-18-switch-panel-sketch-2",
+      "componentId": "example-18-switch-panel-part-1",
+      "name": "Faceplate windows profile",
+      "plane": {
+        "type": "origin",
+        "plane": "XY"
+      },
+      "timelineStep": 1,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-18-switch-panel-point-3": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-3",
+          "x": {
+            "expression": "-49mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-26mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-point-5": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-5",
+          "x": {
+            "expression": "49mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-26mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-point-7": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-7",
+          "x": {
+            "expression": "55mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-20mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-point-9": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-9",
+          "x": {
+            "expression": "55mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "20mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-point-11": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-11",
+          "x": {
+            "expression": "49mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "26mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-point-13": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-13",
+          "x": {
+            "expression": "-49mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "26mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-point-15": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-15",
+          "x": {
+            "expression": "-55mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "20mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-point-17": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-17",
+          "x": {
+            "expression": "-55mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-20mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-line-19": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-19",
+          "startPointId": "example-18-switch-panel-point-3",
+          "endPointId": "example-18-switch-panel-point-5"
+        },
+        "example-18-switch-panel-line-20": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-20",
+          "startPointId": "example-18-switch-panel-point-5",
+          "endPointId": "example-18-switch-panel-point-7"
+        },
+        "example-18-switch-panel-line-21": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-21",
+          "startPointId": "example-18-switch-panel-point-7",
+          "endPointId": "example-18-switch-panel-point-9"
+        },
+        "example-18-switch-panel-line-22": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-22",
+          "startPointId": "example-18-switch-panel-point-9",
+          "endPointId": "example-18-switch-panel-point-11"
+        },
+        "example-18-switch-panel-line-23": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-23",
+          "startPointId": "example-18-switch-panel-point-11",
+          "endPointId": "example-18-switch-panel-point-13"
+        },
+        "example-18-switch-panel-line-24": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-24",
+          "startPointId": "example-18-switch-panel-point-13",
+          "endPointId": "example-18-switch-panel-point-15"
+        },
+        "example-18-switch-panel-line-25": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-25",
+          "startPointId": "example-18-switch-panel-point-15",
+          "endPointId": "example-18-switch-panel-point-17"
+        },
+        "example-18-switch-panel-line-26": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-26",
+          "startPointId": "example-18-switch-panel-point-17",
+          "endPointId": "example-18-switch-panel-point-3"
+        },
+        "example-18-switch-panel-point-27": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-27",
+          "x": {
+            "expression": "-34mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-10mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-point-29": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-29",
+          "x": {
+            "expression": "-10mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-10mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-point-31": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-31",
+          "x": {
+            "expression": "-10mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "10mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-point-33": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-33",
+          "x": {
+            "expression": "-34mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "10mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-line-35": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-35",
+          "startPointId": "example-18-switch-panel-point-27",
+          "endPointId": "example-18-switch-panel-point-29"
+        },
+        "example-18-switch-panel-line-36": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-36",
+          "startPointId": "example-18-switch-panel-point-29",
+          "endPointId": "example-18-switch-panel-point-31"
+        },
+        "example-18-switch-panel-line-37": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-37",
+          "startPointId": "example-18-switch-panel-point-31",
+          "endPointId": "example-18-switch-panel-point-33"
+        },
+        "example-18-switch-panel-line-38": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-38",
+          "startPointId": "example-18-switch-panel-point-33",
+          "endPointId": "example-18-switch-panel-point-27"
+        },
+        "example-18-switch-panel-point-39": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-39",
+          "x": {
+            "expression": "10mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-10mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-point-41": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-41",
+          "x": {
+            "expression": "34mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-10mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-point-43": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-43",
+          "x": {
+            "expression": "34mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "10mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-point-45": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-45",
+          "x": {
+            "expression": "10mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "10mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-line-47": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-47",
+          "startPointId": "example-18-switch-panel-point-39",
+          "endPointId": "example-18-switch-panel-point-41"
+        },
+        "example-18-switch-panel-line-48": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-48",
+          "startPointId": "example-18-switch-panel-point-41",
+          "endPointId": "example-18-switch-panel-point-43"
+        },
+        "example-18-switch-panel-line-49": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-49",
+          "startPointId": "example-18-switch-panel-point-43",
+          "endPointId": "example-18-switch-panel-point-45"
+        },
+        "example-18-switch-panel-line-50": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-50",
+          "startPointId": "example-18-switch-panel-point-45",
+          "endPointId": "example-18-switch-panel-point-39"
+        },
+        "example-18-switch-panel-point-51": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-51",
+          "x": {
+            "expression": "-45mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-18mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-point-53": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-53",
+          "x": {
+            "expression": "-40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-18mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-point-55": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-55",
+          "x": {
+            "expression": "-40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-13mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-point-57": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-57",
+          "x": {
+            "expression": "-45mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-13mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-line-59": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-59",
+          "startPointId": "example-18-switch-panel-point-51",
+          "endPointId": "example-18-switch-panel-point-53"
+        },
+        "example-18-switch-panel-line-60": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-60",
+          "startPointId": "example-18-switch-panel-point-53",
+          "endPointId": "example-18-switch-panel-point-55"
+        },
+        "example-18-switch-panel-line-61": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-61",
+          "startPointId": "example-18-switch-panel-point-55",
+          "endPointId": "example-18-switch-panel-point-57"
+        },
+        "example-18-switch-panel-line-62": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-62",
+          "startPointId": "example-18-switch-panel-point-57",
+          "endPointId": "example-18-switch-panel-point-51"
+        },
+        "example-18-switch-panel-point-63": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-63",
+          "x": {
+            "expression": "-45mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "13mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-point-65": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-65",
+          "x": {
+            "expression": "-40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "13mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-point-67": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-67",
+          "x": {
+            "expression": "-40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "18mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-point-69": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-69",
+          "x": {
+            "expression": "-45mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "18mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-line-71": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-71",
+          "startPointId": "example-18-switch-panel-point-63",
+          "endPointId": "example-18-switch-panel-point-65"
+        },
+        "example-18-switch-panel-line-72": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-72",
+          "startPointId": "example-18-switch-panel-point-65",
+          "endPointId": "example-18-switch-panel-point-67"
+        },
+        "example-18-switch-panel-line-73": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-73",
+          "startPointId": "example-18-switch-panel-point-67",
+          "endPointId": "example-18-switch-panel-point-69"
+        },
+        "example-18-switch-panel-line-74": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-74",
+          "startPointId": "example-18-switch-panel-point-69",
+          "endPointId": "example-18-switch-panel-point-63"
+        },
+        "example-18-switch-panel-point-75": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-75",
+          "x": {
+            "expression": "40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-18mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-point-77": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-77",
+          "x": {
+            "expression": "45mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-18mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-point-79": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-79",
+          "x": {
+            "expression": "45mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-13mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-point-81": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-81",
+          "x": {
+            "expression": "40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-13mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-line-83": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-83",
+          "startPointId": "example-18-switch-panel-point-75",
+          "endPointId": "example-18-switch-panel-point-77"
+        },
+        "example-18-switch-panel-line-84": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-84",
+          "startPointId": "example-18-switch-panel-point-77",
+          "endPointId": "example-18-switch-panel-point-79"
+        },
+        "example-18-switch-panel-line-85": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-85",
+          "startPointId": "example-18-switch-panel-point-79",
+          "endPointId": "example-18-switch-panel-point-81"
+        },
+        "example-18-switch-panel-line-86": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-86",
+          "startPointId": "example-18-switch-panel-point-81",
+          "endPointId": "example-18-switch-panel-point-75"
+        },
+        "example-18-switch-panel-point-87": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-87",
+          "x": {
+            "expression": "40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "13mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-point-89": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-89",
+          "x": {
+            "expression": "45mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "13mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-point-91": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-91",
+          "x": {
+            "expression": "45mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "18mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-point-93": {
+          "type": "point",
+          "id": "example-18-switch-panel-point-93",
+          "x": {
+            "expression": "40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "18mm",
+            "unit": "mm"
+          }
+        },
+        "example-18-switch-panel-line-95": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-95",
+          "startPointId": "example-18-switch-panel-point-87",
+          "endPointId": "example-18-switch-panel-point-89"
+        },
+        "example-18-switch-panel-line-96": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-96",
+          "startPointId": "example-18-switch-panel-point-89",
+          "endPointId": "example-18-switch-panel-point-91"
+        },
+        "example-18-switch-panel-line-97": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-97",
+          "startPointId": "example-18-switch-panel-point-91",
+          "endPointId": "example-18-switch-panel-point-93"
+        },
+        "example-18-switch-panel-line-98": {
+          "type": "line",
+          "id": "example-18-switch-panel-line-98",
+          "startPointId": "example-18-switch-panel-point-93",
+          "endPointId": "example-18-switch-panel-point-87"
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-18-switch-panel-fixed-4",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-3"
+          ]
+        },
+        {
+          "id": "example-18-switch-panel-fixed-6",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-5"
+          ]
+        },
+        {
+          "id": "example-18-switch-panel-fixed-8",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-7"
+          ]
+        },
+        {
+          "id": "example-18-switch-panel-fixed-10",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-9"
+          ]
+        },
+        {
+          "id": "example-18-switch-panel-fixed-12",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-11"
+          ]
+        },
+        {
+          "id": "example-18-switch-panel-fixed-14",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-13"
+          ]
+        },
+        {
+          "id": "example-18-switch-panel-fixed-16",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-15"
+          ]
+        },
+        {
+          "id": "example-18-switch-panel-fixed-18",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-17"
+          ]
+        },
+        {
+          "id": "example-18-switch-panel-fixed-28",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-27"
+          ]
+        },
+        {
+          "id": "example-18-switch-panel-fixed-30",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-29"
+          ]
+        },
+        {
+          "id": "example-18-switch-panel-fixed-32",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-31"
+          ]
+        },
+        {
+          "id": "example-18-switch-panel-fixed-34",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-33"
+          ]
+        },
+        {
+          "id": "example-18-switch-panel-fixed-40",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-39"
+          ]
+        },
+        {
+          "id": "example-18-switch-panel-fixed-42",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-41"
+          ]
+        },
+        {
+          "id": "example-18-switch-panel-fixed-44",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-43"
+          ]
+        },
+        {
+          "id": "example-18-switch-panel-fixed-46",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-45"
+          ]
+        },
+        {
+          "id": "example-18-switch-panel-fixed-52",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-51"
+          ]
+        },
+        {
+          "id": "example-18-switch-panel-fixed-54",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-53"
+          ]
+        },
+        {
+          "id": "example-18-switch-panel-fixed-56",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-55"
+          ]
+        },
+        {
+          "id": "example-18-switch-panel-fixed-58",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-57"
+          ]
+        },
+        {
+          "id": "example-18-switch-panel-fixed-64",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-63"
+          ]
+        },
+        {
+          "id": "example-18-switch-panel-fixed-66",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-65"
+          ]
+        },
+        {
+          "id": "example-18-switch-panel-fixed-68",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-67"
+          ]
+        },
+        {
+          "id": "example-18-switch-panel-fixed-70",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-69"
+          ]
+        },
+        {
+          "id": "example-18-switch-panel-fixed-76",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-75"
+          ]
+        },
+        {
+          "id": "example-18-switch-panel-fixed-78",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-77"
+          ]
+        },
+        {
+          "id": "example-18-switch-panel-fixed-80",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-79"
+          ]
+        },
+        {
+          "id": "example-18-switch-panel-fixed-82",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-81"
+          ]
+        },
+        {
+          "id": "example-18-switch-panel-fixed-88",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-87"
+          ]
+        },
+        {
+          "id": "example-18-switch-panel-fixed-90",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-89"
+          ]
+        },
+        {
+          "id": "example-18-switch-panel-fixed-92",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-91"
+          ]
+        },
+        {
+          "id": "example-18-switch-panel-fixed-94",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-18-switch-panel-point-93"
+          ]
+        }
+      ],
+      "dimensions": []
+    }
+  },
+  "features": [
+    {
+      "id": "example-18-switch-panel-feature-99",
+      "name": "Faceplate windows",
+      "componentId": "example-18-switch-panel-part-1",
+      "timelineStep": 2,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "extrude",
+      "sketchId": "example-18-switch-panel-sketch-2",
+      "profileId": "example-18-switch-panel-sketch-2:profile:p1mq0em",
+      "direction": "positive",
+      "operation": "newBody",
+      "distance": {
+        "expression": "panel_thickness",
+        "unit": "mm",
+        "parameterRefs": {
+          "panel_thickness": "example-18-switch-panel-parameter"
+        }
+      }
+    }
+  ]
+}

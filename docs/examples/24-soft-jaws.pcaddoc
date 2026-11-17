@@ -1,0 +1,952 @@
+{
+  "schemaVersion": 26,
+  "id": "example-24-soft-jaws",
+  "name": "Vise soft-jaw pair",
+  "units": "metric",
+  "unitSettings": {
+    "length": "mm",
+    "angle": "deg"
+  },
+  "createdAt": "2026-11-17T12:00:00.000Z",
+  "updatedAt": "2026-11-17T12:00:00.000Z",
+  "rootComponentId": "example-24-soft-jaws-root",
+  "components": {
+    "example-24-soft-jaws-root": {
+      "id": "example-24-soft-jaws-root",
+      "name": "Project reference"
+    },
+    "example-24-soft-jaws-part-1": {
+      "id": "example-24-soft-jaws-part-1",
+      "name": "Front jaw",
+      "appearance": "aluminum"
+    },
+    "example-24-soft-jaws-part-52": {
+      "id": "example-24-soft-jaws-part-52",
+      "name": "Rear jaw",
+      "appearance": "steel"
+    }
+  },
+  "parameters": {
+    "jaw_depth": {
+      "id": "example-24-soft-jaws-parameter",
+      "name": "jaw_depth",
+      "expression": "14mm",
+      "value": 14,
+      "unit": "mm"
+    }
+  },
+  "sketches": {
+    "example-24-soft-jaws-sketch-2": {
+      "id": "example-24-soft-jaws-sketch-2",
+      "componentId": "example-24-soft-jaws-part-1",
+      "name": "Stepped jaw stock and slots profile",
+      "plane": {
+        "type": "offset",
+        "base": "XZ",
+        "offset": {
+          "expression": "2mm",
+          "unit": "mm"
+        }
+      },
+      "timelineStep": 1,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-24-soft-jaws-point-3": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-3",
+          "x": {
+            "expression": "-38mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-point-5": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-5",
+          "x": {
+            "expression": "38mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-point-7": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-7",
+          "x": {
+            "expression": "38mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "10mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-point-9": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-9",
+          "x": {
+            "expression": "30mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "10mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-point-11": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-11",
+          "x": {
+            "expression": "30mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "23mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-point-13": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-13",
+          "x": {
+            "expression": "-30mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "23mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-point-15": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-15",
+          "x": {
+            "expression": "-30mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "10mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-point-17": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-17",
+          "x": {
+            "expression": "-38mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "10mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-line-19": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-19",
+          "startPointId": "example-24-soft-jaws-point-3",
+          "endPointId": "example-24-soft-jaws-point-5"
+        },
+        "example-24-soft-jaws-line-20": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-20",
+          "startPointId": "example-24-soft-jaws-point-5",
+          "endPointId": "example-24-soft-jaws-point-7"
+        },
+        "example-24-soft-jaws-line-21": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-21",
+          "startPointId": "example-24-soft-jaws-point-7",
+          "endPointId": "example-24-soft-jaws-point-9"
+        },
+        "example-24-soft-jaws-line-22": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-22",
+          "startPointId": "example-24-soft-jaws-point-9",
+          "endPointId": "example-24-soft-jaws-point-11"
+        },
+        "example-24-soft-jaws-line-23": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-23",
+          "startPointId": "example-24-soft-jaws-point-11",
+          "endPointId": "example-24-soft-jaws-point-13"
+        },
+        "example-24-soft-jaws-line-24": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-24",
+          "startPointId": "example-24-soft-jaws-point-13",
+          "endPointId": "example-24-soft-jaws-point-15"
+        },
+        "example-24-soft-jaws-line-25": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-25",
+          "startPointId": "example-24-soft-jaws-point-15",
+          "endPointId": "example-24-soft-jaws-point-17"
+        },
+        "example-24-soft-jaws-line-26": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-26",
+          "startPointId": "example-24-soft-jaws-point-17",
+          "endPointId": "example-24-soft-jaws-point-3"
+        },
+        "example-24-soft-jaws-point-27": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-27",
+          "x": {
+            "expression": "-26mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "3mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-point-29": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-29",
+          "x": {
+            "expression": "-18mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "3mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-point-31": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-31",
+          "x": {
+            "expression": "-18mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "8mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-point-33": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-33",
+          "x": {
+            "expression": "-26mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "8mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-line-35": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-35",
+          "startPointId": "example-24-soft-jaws-point-27",
+          "endPointId": "example-24-soft-jaws-point-29"
+        },
+        "example-24-soft-jaws-line-36": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-36",
+          "startPointId": "example-24-soft-jaws-point-29",
+          "endPointId": "example-24-soft-jaws-point-31"
+        },
+        "example-24-soft-jaws-line-37": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-37",
+          "startPointId": "example-24-soft-jaws-point-31",
+          "endPointId": "example-24-soft-jaws-point-33"
+        },
+        "example-24-soft-jaws-line-38": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-38",
+          "startPointId": "example-24-soft-jaws-point-33",
+          "endPointId": "example-24-soft-jaws-point-27"
+        },
+        "example-24-soft-jaws-point-39": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-39",
+          "x": {
+            "expression": "18mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "3mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-point-41": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-41",
+          "x": {
+            "expression": "26mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "3mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-point-43": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-43",
+          "x": {
+            "expression": "26mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "8mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-point-45": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-45",
+          "x": {
+            "expression": "18mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "8mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-line-47": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-47",
+          "startPointId": "example-24-soft-jaws-point-39",
+          "endPointId": "example-24-soft-jaws-point-41"
+        },
+        "example-24-soft-jaws-line-48": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-48",
+          "startPointId": "example-24-soft-jaws-point-41",
+          "endPointId": "example-24-soft-jaws-point-43"
+        },
+        "example-24-soft-jaws-line-49": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-49",
+          "startPointId": "example-24-soft-jaws-point-43",
+          "endPointId": "example-24-soft-jaws-point-45"
+        },
+        "example-24-soft-jaws-line-50": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-50",
+          "startPointId": "example-24-soft-jaws-point-45",
+          "endPointId": "example-24-soft-jaws-point-39"
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-24-soft-jaws-fixed-4",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-3"
+          ]
+        },
+        {
+          "id": "example-24-soft-jaws-fixed-6",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-5"
+          ]
+        },
+        {
+          "id": "example-24-soft-jaws-fixed-8",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-7"
+          ]
+        },
+        {
+          "id": "example-24-soft-jaws-fixed-10",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-9"
+          ]
+        },
+        {
+          "id": "example-24-soft-jaws-fixed-12",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-11"
+          ]
+        },
+        {
+          "id": "example-24-soft-jaws-fixed-14",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-13"
+          ]
+        },
+        {
+          "id": "example-24-soft-jaws-fixed-16",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-15"
+          ]
+        },
+        {
+          "id": "example-24-soft-jaws-fixed-18",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-17"
+          ]
+        },
+        {
+          "id": "example-24-soft-jaws-fixed-28",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-27"
+          ]
+        },
+        {
+          "id": "example-24-soft-jaws-fixed-30",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-29"
+          ]
+        },
+        {
+          "id": "example-24-soft-jaws-fixed-32",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-31"
+          ]
+        },
+        {
+          "id": "example-24-soft-jaws-fixed-34",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-33"
+          ]
+        },
+        {
+          "id": "example-24-soft-jaws-fixed-40",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-39"
+          ]
+        },
+        {
+          "id": "example-24-soft-jaws-fixed-42",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-41"
+          ]
+        },
+        {
+          "id": "example-24-soft-jaws-fixed-44",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-43"
+          ]
+        },
+        {
+          "id": "example-24-soft-jaws-fixed-46",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-45"
+          ]
+        }
+      ],
+      "dimensions": []
+    },
+    "example-24-soft-jaws-sketch-53": {
+      "id": "example-24-soft-jaws-sketch-53",
+      "componentId": "example-24-soft-jaws-part-52",
+      "name": "Stepped jaw stock and slots profile",
+      "plane": {
+        "type": "offset",
+        "base": "XZ",
+        "offset": {
+          "expression": "-29mm",
+          "unit": "mm"
+        }
+      },
+      "timelineStep": 3,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-24-soft-jaws-point-54": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-54",
+          "x": {
+            "expression": "-38mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-point-56": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-56",
+          "x": {
+            "expression": "38mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-point-58": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-58",
+          "x": {
+            "expression": "38mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "10mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-point-60": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-60",
+          "x": {
+            "expression": "30mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "10mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-point-62": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-62",
+          "x": {
+            "expression": "30mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "23mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-point-64": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-64",
+          "x": {
+            "expression": "-30mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "23mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-point-66": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-66",
+          "x": {
+            "expression": "-30mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "10mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-point-68": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-68",
+          "x": {
+            "expression": "-38mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "10mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-line-70": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-70",
+          "startPointId": "example-24-soft-jaws-point-54",
+          "endPointId": "example-24-soft-jaws-point-56"
+        },
+        "example-24-soft-jaws-line-71": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-71",
+          "startPointId": "example-24-soft-jaws-point-56",
+          "endPointId": "example-24-soft-jaws-point-58"
+        },
+        "example-24-soft-jaws-line-72": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-72",
+          "startPointId": "example-24-soft-jaws-point-58",
+          "endPointId": "example-24-soft-jaws-point-60"
+        },
+        "example-24-soft-jaws-line-73": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-73",
+          "startPointId": "example-24-soft-jaws-point-60",
+          "endPointId": "example-24-soft-jaws-point-62"
+        },
+        "example-24-soft-jaws-line-74": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-74",
+          "startPointId": "example-24-soft-jaws-point-62",
+          "endPointId": "example-24-soft-jaws-point-64"
+        },
+        "example-24-soft-jaws-line-75": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-75",
+          "startPointId": "example-24-soft-jaws-point-64",
+          "endPointId": "example-24-soft-jaws-point-66"
+        },
+        "example-24-soft-jaws-line-76": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-76",
+          "startPointId": "example-24-soft-jaws-point-66",
+          "endPointId": "example-24-soft-jaws-point-68"
+        },
+        "example-24-soft-jaws-line-77": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-77",
+          "startPointId": "example-24-soft-jaws-point-68",
+          "endPointId": "example-24-soft-jaws-point-54"
+        },
+        "example-24-soft-jaws-point-78": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-78",
+          "x": {
+            "expression": "-26mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "3mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-point-80": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-80",
+          "x": {
+            "expression": "-18mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "3mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-point-82": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-82",
+          "x": {
+            "expression": "-18mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "8mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-point-84": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-84",
+          "x": {
+            "expression": "-26mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "8mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-line-86": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-86",
+          "startPointId": "example-24-soft-jaws-point-78",
+          "endPointId": "example-24-soft-jaws-point-80"
+        },
+        "example-24-soft-jaws-line-87": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-87",
+          "startPointId": "example-24-soft-jaws-point-80",
+          "endPointId": "example-24-soft-jaws-point-82"
+        },
+        "example-24-soft-jaws-line-88": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-88",
+          "startPointId": "example-24-soft-jaws-point-82",
+          "endPointId": "example-24-soft-jaws-point-84"
+        },
+        "example-24-soft-jaws-line-89": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-89",
+          "startPointId": "example-24-soft-jaws-point-84",
+          "endPointId": "example-24-soft-jaws-point-78"
+        },
+        "example-24-soft-jaws-point-90": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-90",
+          "x": {
+            "expression": "18mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "3mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-point-92": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-92",
+          "x": {
+            "expression": "26mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "3mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-point-94": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-94",
+          "x": {
+            "expression": "26mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "8mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-point-96": {
+          "type": "point",
+          "id": "example-24-soft-jaws-point-96",
+          "x": {
+            "expression": "18mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "8mm",
+            "unit": "mm"
+          }
+        },
+        "example-24-soft-jaws-line-98": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-98",
+          "startPointId": "example-24-soft-jaws-point-90",
+          "endPointId": "example-24-soft-jaws-point-92"
+        },
+        "example-24-soft-jaws-line-99": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-99",
+          "startPointId": "example-24-soft-jaws-point-92",
+          "endPointId": "example-24-soft-jaws-point-94"
+        },
+        "example-24-soft-jaws-line-100": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-100",
+          "startPointId": "example-24-soft-jaws-point-94",
+          "endPointId": "example-24-soft-jaws-point-96"
+        },
+        "example-24-soft-jaws-line-101": {
+          "type": "line",
+          "id": "example-24-soft-jaws-line-101",
+          "startPointId": "example-24-soft-jaws-point-96",
+          "endPointId": "example-24-soft-jaws-point-90"
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-24-soft-jaws-fixed-55",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-54"
+          ]
+        },
+        {
+          "id": "example-24-soft-jaws-fixed-57",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-56"
+          ]
+        },
+        {
+          "id": "example-24-soft-jaws-fixed-59",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-58"
+          ]
+        },
+        {
+          "id": "example-24-soft-jaws-fixed-61",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-60"
+          ]
+        },
+        {
+          "id": "example-24-soft-jaws-fixed-63",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-62"
+          ]
+        },
+        {
+          "id": "example-24-soft-jaws-fixed-65",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-64"
+          ]
+        },
+        {
+          "id": "example-24-soft-jaws-fixed-67",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-66"
+          ]
+        },
+        {
+          "id": "example-24-soft-jaws-fixed-69",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-68"
+          ]
+        },
+        {
+          "id": "example-24-soft-jaws-fixed-79",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-78"
+          ]
+        },
+        {
+          "id": "example-24-soft-jaws-fixed-81",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-80"
+          ]
+        },
+        {
+          "id": "example-24-soft-jaws-fixed-83",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-82"
+          ]
+        },
+        {
+          "id": "example-24-soft-jaws-fixed-85",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-84"
+          ]
+        },
+        {
+          "id": "example-24-soft-jaws-fixed-91",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-90"
+          ]
+        },
+        {
+          "id": "example-24-soft-jaws-fixed-93",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-92"
+          ]
+        },
+        {
+          "id": "example-24-soft-jaws-fixed-95",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-94"
+          ]
+        },
+        {
+          "id": "example-24-soft-jaws-fixed-97",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-24-soft-jaws-point-96"
+          ]
+        }
+      ],
+      "dimensions": []
+    }
+  },
+  "features": [
+    {
+      "id": "example-24-soft-jaws-feature-51",
+      "name": "Stepped jaw stock and slots",
+      "componentId": "example-24-soft-jaws-part-1",
+      "timelineStep": 2,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "extrude",
+      "sketchId": "example-24-soft-jaws-sketch-2",
+      "profileId": "example-24-soft-jaws-sketch-2:profile:p1w3s66p",
+      "direction": "positive",
+      "operation": "newBody",
+      "distance": {
+        "expression": "jaw_depth",
+        "unit": "mm",
+        "parameterRefs": {
+          "jaw_depth": "example-24-soft-jaws-parameter"
+        }
+      }
+    },
+    {
+      "id": "example-24-soft-jaws-feature-102",
+      "name": "Stepped jaw stock and slots",
+      "componentId": "example-24-soft-jaws-part-52",
+      "timelineStep": 4,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "extrude",
+      "sketchId": "example-24-soft-jaws-sketch-53",
+      "profileId": "example-24-soft-jaws-sketch-53:profile:p14l9v27",
+      "direction": "positive",
+      "operation": "newBody",
+      "distance": {
+        "expression": "jaw_depth",
+        "unit": "mm",
+        "parameterRefs": {
+          "jaw_depth": "example-24-soft-jaws-parameter"
+        }
+      }
+    }
+  ]
+}

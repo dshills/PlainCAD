@@ -69,10 +69,10 @@ flange, fillet/chamfer treatments, a recessed chamber, bearing bore, counterbore
 mounting and cover holes, and relief slots. [Open the editable example](docs/examples/orbit-drive-housing.pcaddoc)
 with **File → Open**, or drop the project file onto the workspace.
 
-Explore the [example gallery](docs/examples/README.md) for editable projects and
-native renders. It includes a two-part cable guide, a 40-part rotary fixture, and
-[four threaded hardware examples](docs/examples/README.md#threaded-hardware).
-The gallery identifies projects that need the OpenCascade comparison build.
+The gallery includes 33 editable projects with rendered covers and a suggested edit
+for each. Try a slotted bench stop, a tapered hose reducer, a sample rack, or a
+40-part rotary fixture. Twenty-seven rebuild with PlainSolid, and six require the
+OpenCascade comparison build. [Example gallery](docs/examples/README.md)
 The original ten designs have recorded [geometry validation](docs/examples/VALIDATION.json)
 and a [workflow usability audit](docs/examples/WORKFLOW_AUDIT.md).
 
@@ -253,13 +253,11 @@ result invalidate Apply. Finish or cancel an active task before starting another
 
 ### Workspace and themes
 
-Open **File → Project gallery** to browse fourteen editable examples with real model
-images, part/feature counts and complexity labels. Enable live previews, then hover or focus a card to
-inspect a bounded native rotation; reduced-motion settings keep it still. Recently
-saved projects are the last five local manual-save copies in browser recovery
-storage, with native cover images where available. Opening a card uses the same
-unsaved-project protection as dropping a project file. The gallery stays out of
-the modeling canvas until you open it.
+Open **File → Project gallery** to search by name or suggested edit, or filter by
+collection, difficulty, and PlainSolid compatibility. Enable **Live native previews**
+to rotate compatible models while you hover or focus **Preview**. The gallery also
+shows up to five manually saved projects from browser recovery storage. Opening an
+example uses the same unsaved-project protection as dropping a project file.
 
 The default **Docked Workbench** places Project/Parameters on the left,
 Task/Properties on the right, and History/AI/Issues in a shared resizable bottom dock. AI input and responses stay in that dock; proposed geometry appears in the main canvas. **Draw**, **Solid**,

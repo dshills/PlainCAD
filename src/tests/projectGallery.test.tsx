@@ -15,14 +15,18 @@ describe("Project gallery", () => {
     render(<ProjectGalleryPanel/>);
     expect(screen.queryByRole("dialog")).toBeNull();
   });
-  it("shows all fourteen real examples and filters by name, complexity or description", async () => {
+  it("shows all 33 editable examples and combines collection, difficulty and search", async () => {
     act(() => beginProjectGallery()); render(<ProjectGalleryPanel/>);
     await waitFor(() => expect(screen.getByText("Save a project to add it here.")).toBeTruthy());
-    expect(screen.getAllByRole("img")).toHaveLength(14);
+    expect(screen.getAllByRole("img")).toHaveLength(33);
     expect(GALLERY_EXAMPLES.every(example => example.projectUrl && example.thumbnail)).toBe(true);
-    fireEvent.change(screen.getByLabelText("Find a project"), { target: { value: "Highly complex" } });
+    fireEvent.change(screen.getByLabelText("Difficulty"), { target: { value: "Highly complex" } });
     expect(screen.getAllByRole("img")).toHaveLength(2);
     expect(screen.queryByRole("button", { name: "Open Cable guide mount" })).toBeNull();
+    fireEvent.change(screen.getByLabelText("Collection"), { target: { value: "Enclosures" } });
+    expect(screen.getByText("No examples match these filters.")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+    fireEvent.change(screen.getByLabelText("Collection"), { target: { value: "Hardware" } });
     fireEvent.change(screen.getByLabelText("Find a project"), { target: { value: "1/4-20" } });
     expect(screen.getAllByRole("img")).toHaveLength(1);
     expect(screen.getByRole("button", { name: "Open Quarter-inch UNC screw and tapped block" })).toBeEnabled();

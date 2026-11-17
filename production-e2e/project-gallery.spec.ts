@@ -10,7 +10,7 @@ test("built gallery serves native assets, previews under CSP, opens an editable 
   await page.goto("/"); await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
   await page.getByText("File", { exact: true }).click(); await page.getByRole("button", { name: "Project gallery", exact: true }).click();
   const gallery = page.getByRole("dialog", { name: "Project gallery", exact: true });
-  await expect(gallery.getByRole("img")).toHaveCount(14);
+  await expect(gallery.getByRole("img")).toHaveCount(33);
   await expect(async () => expect(await gallery.getByRole("img").first().evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(100)).toPass();
   await gallery.getByLabel("Live native previews").check();
   const legacy = gallery.getByRole("button", { name: "Open Angle bracket fixture", exact: true });
@@ -19,6 +19,10 @@ test("built gallery serves native assets, previews under CSP, opens an editable 
     await expect(legacy).toBeDisabled();
     await expect(legacy).toHaveAccessibleDescription(/chamfer on the rounded bracket/);
     await expect(gallery.getByRole("button", { name: "Preview Angle bracket fixture", exact: true })).toBeDisabled();
+    await gallery.getByLabel("Works with PlainSolid").check();
+    await expect(gallery.getByRole("img")).toHaveCount(27);
+    await expect(legacy).toHaveCount(0);
+    await gallery.getByLabel("Works with PlainSolid").uncheck();
   } else {
     await expect(legacy).toBeEnabled();
   }
@@ -41,6 +45,57 @@ test("built gallery serves native assets, previews under CSP, opens an editable 
   expect(errors).toEqual([]);
 });
 
+test("compact gallery filters open the sample rack and its suggested edit rebuilds the native spacing", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".rebuild-pill")).toHaveText("succeeded");
+  await page.getByText("File", { exact: true }).click();
+  await page.getByRole("button", { name: "Project gallery", exact: true }).click();
+  await page.setViewportSize({ width: 390, height: 800 });
+  const gallery = page.getByRole("dialog", { name: "Project gallery", exact: true });
+  await gallery.getByLabel("Collection").selectOption("Shop tools");
+  await gallery.getByLabel("Difficulty").selectOption("Advanced");
+  await gallery.getByLabel("Find a project").fill("rack_clearance");
+  await expect(gallery.getByRole("img")).toHaveCount(1);
+  await expect(gallery.getByText("1 of 33 examples")).toBeVisible();
+  expect(await gallery.evaluate(element => element.scrollWidth)).toBeLessThanOrEqual(
+    await gallery.evaluate(element => element.clientWidth),
+  );
+  await gallery.getByRole("button", { name: "Open Eight-position sample rack" }).click();
+  await expect(gallery).toBeHidden();
+  await expect(page.locator(".project-title")).toHaveText("Eight-position sample rack");
+  const geometry = await page.evaluate(async () => {
+    const commands = window.plaincadCommands;
+    const snapshot = await commands.execute({ command: "runtime.snapshot" });
+    if (!snapshot.ok) throw new Error(snapshot.error.message);
+    const { session, document } = snapshot.value as { session: number; document: { parameters: Record<string, { id: string }> } };
+    async function readGeometry() {
+      const receipt = await commands.execute({ command: "runtime.awaitNative", session });
+      if (!receipt.ok) throw new Error(receipt.error.message);
+      const { rebuild } = receipt.value as { rebuild: { bodies: Array<{
+        bounds: { max: [number, number, number] };
+        assertions: { valid: boolean; solidCount: number; volume: number };
+      }> } };
+      return {
+        solidCounts: rebuild.bodies.map(body => body.assertions.solidCount),
+        height: Math.max(...rebuild.bodies.map(body => body.bounds.max[2])),
+        volume: rebuild.bodies.reduce((sum, body) => sum + body.assertions.volume, 0),
+      };
+    }
+    const original = await readGeometry();
+    const update = await commands.execute({
+      command: "parameter.update", session,
+      arguments: { parameterId: document.parameters.rack_clearance.id, patch: { expression: "36mm" } },
+    });
+    if (!update.ok) throw new Error(update.error.message);
+    return { original, edited: await readGeometry() };
+  });
+  expect(geometry.original.solidCounts).toEqual([1, 1, 1, 1, 1, 1]);
+  expect(geometry.edited.solidCounts).toEqual(geometry.original.solidCounts);
+  expect(geometry.original.height).toBeCloseTo(37, 5);
+  expect(geometry.edited.height).toBeCloseTo(45, 5);
+  expect(geometry.edited.volume - geometry.original.volume).toBeCloseTo(4 * Math.PI * 3 ** 2 * 8, 4);
+});
+
 const threadedExamples = [
   { name: "Trapezoidal lead screw and nut", volumes: [744.073, 628.451], form: "trapezoidal", starts: 4, hand: "right" },
   { name: "Left-hand Acme lead screw and nut", volumes: [1301.638, 790.977], form: "acme", starts: 2, hand: "left" },
@@ -55,9 +110,9 @@ for (const example of threadedExamples) {
     await page.getByText("File", { exact: true }).click();
     await page.getByRole("button", { name: "Project gallery", exact: true }).click();
     const gallery = page.getByRole("dialog", { name: "Project gallery", exact: true });
-    await gallery.getByRole("textbox", { name: "Find a project" }).fill(example.name);
+    await gallery.getByLabel("Find a project").fill(example.name);
     const cover = gallery.getByRole("img", { name: `${example.name} actual native CAD geometry` });
-    await expect.poll(() => cover.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBe(2220);
+    await expect.poll(() => cover.evaluate((image: HTMLImageElement) => [image.naturalWidth, image.naturalHeight])).toEqual([768, 480]);
     await gallery.getByRole("button", { name: `Open ${example.name}`, exact: true }).click();
     await expect(gallery).toBeHidden();
     await expect(page.locator(".project-title")).toHaveText(example.name);

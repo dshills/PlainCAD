@@ -1,0 +1,332 @@
+{
+  "schemaVersion": 26,
+  "id": "example-19-step-gauge",
+  "name": "Four-step setup gauge",
+  "units": "metric",
+  "unitSettings": {
+    "length": "mm",
+    "angle": "deg"
+  },
+  "createdAt": "2026-11-17T12:00:00.000Z",
+  "updatedAt": "2026-11-17T12:00:00.000Z",
+  "rootComponentId": "example-19-step-gauge-root",
+  "components": {
+    "example-19-step-gauge-root": {
+      "id": "example-19-step-gauge-root",
+      "name": "Project reference"
+    },
+    "example-19-step-gauge-part-1": {
+      "id": "example-19-step-gauge-part-1",
+      "name": "Setup gauge",
+      "appearance": "steel"
+    }
+  },
+  "parameters": {
+    "gauge_width": {
+      "id": "example-19-step-gauge-parameter",
+      "name": "gauge_width",
+      "expression": "20mm",
+      "value": 20,
+      "unit": "mm"
+    }
+  },
+  "sketches": {
+    "example-19-step-gauge-sketch-2": {
+      "id": "example-19-step-gauge-sketch-2",
+      "componentId": "example-19-step-gauge-part-1",
+      "name": "Four gauge heights profile",
+      "plane": {
+        "type": "origin",
+        "plane": "XZ"
+      },
+      "timelineStep": 1,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-19-step-gauge-point-3": {
+          "type": "point",
+          "id": "example-19-step-gauge-point-3",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "example-19-step-gauge-point-5": {
+          "type": "point",
+          "id": "example-19-step-gauge-point-5",
+          "x": {
+            "expression": "68mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "example-19-step-gauge-point-7": {
+          "type": "point",
+          "id": "example-19-step-gauge-point-7",
+          "x": {
+            "expression": "68mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "10mm",
+            "unit": "mm"
+          }
+        },
+        "example-19-step-gauge-point-9": {
+          "type": "point",
+          "id": "example-19-step-gauge-point-9",
+          "x": {
+            "expression": "51mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "10mm",
+            "unit": "mm"
+          }
+        },
+        "example-19-step-gauge-point-11": {
+          "type": "point",
+          "id": "example-19-step-gauge-point-11",
+          "x": {
+            "expression": "51mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "20mm",
+            "unit": "mm"
+          }
+        },
+        "example-19-step-gauge-point-13": {
+          "type": "point",
+          "id": "example-19-step-gauge-point-13",
+          "x": {
+            "expression": "34mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "20mm",
+            "unit": "mm"
+          }
+        },
+        "example-19-step-gauge-point-15": {
+          "type": "point",
+          "id": "example-19-step-gauge-point-15",
+          "x": {
+            "expression": "34mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "30mm",
+            "unit": "mm"
+          }
+        },
+        "example-19-step-gauge-point-17": {
+          "type": "point",
+          "id": "example-19-step-gauge-point-17",
+          "x": {
+            "expression": "17mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "30mm",
+            "unit": "mm"
+          }
+        },
+        "example-19-step-gauge-point-19": {
+          "type": "point",
+          "id": "example-19-step-gauge-point-19",
+          "x": {
+            "expression": "17mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "40mm",
+            "unit": "mm"
+          }
+        },
+        "example-19-step-gauge-point-21": {
+          "type": "point",
+          "id": "example-19-step-gauge-point-21",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "40mm",
+            "unit": "mm"
+          }
+        },
+        "example-19-step-gauge-line-23": {
+          "type": "line",
+          "id": "example-19-step-gauge-line-23",
+          "startPointId": "example-19-step-gauge-point-3",
+          "endPointId": "example-19-step-gauge-point-5"
+        },
+        "example-19-step-gauge-line-24": {
+          "type": "line",
+          "id": "example-19-step-gauge-line-24",
+          "startPointId": "example-19-step-gauge-point-5",
+          "endPointId": "example-19-step-gauge-point-7"
+        },
+        "example-19-step-gauge-line-25": {
+          "type": "line",
+          "id": "example-19-step-gauge-line-25",
+          "startPointId": "example-19-step-gauge-point-7",
+          "endPointId": "example-19-step-gauge-point-9"
+        },
+        "example-19-step-gauge-line-26": {
+          "type": "line",
+          "id": "example-19-step-gauge-line-26",
+          "startPointId": "example-19-step-gauge-point-9",
+          "endPointId": "example-19-step-gauge-point-11"
+        },
+        "example-19-step-gauge-line-27": {
+          "type": "line",
+          "id": "example-19-step-gauge-line-27",
+          "startPointId": "example-19-step-gauge-point-11",
+          "endPointId": "example-19-step-gauge-point-13"
+        },
+        "example-19-step-gauge-line-28": {
+          "type": "line",
+          "id": "example-19-step-gauge-line-28",
+          "startPointId": "example-19-step-gauge-point-13",
+          "endPointId": "example-19-step-gauge-point-15"
+        },
+        "example-19-step-gauge-line-29": {
+          "type": "line",
+          "id": "example-19-step-gauge-line-29",
+          "startPointId": "example-19-step-gauge-point-15",
+          "endPointId": "example-19-step-gauge-point-17"
+        },
+        "example-19-step-gauge-line-30": {
+          "type": "line",
+          "id": "example-19-step-gauge-line-30",
+          "startPointId": "example-19-step-gauge-point-17",
+          "endPointId": "example-19-step-gauge-point-19"
+        },
+        "example-19-step-gauge-line-31": {
+          "type": "line",
+          "id": "example-19-step-gauge-line-31",
+          "startPointId": "example-19-step-gauge-point-19",
+          "endPointId": "example-19-step-gauge-point-21"
+        },
+        "example-19-step-gauge-line-32": {
+          "type": "line",
+          "id": "example-19-step-gauge-line-32",
+          "startPointId": "example-19-step-gauge-point-21",
+          "endPointId": "example-19-step-gauge-point-3"
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-19-step-gauge-fixed-4",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-19-step-gauge-point-3"
+          ]
+        },
+        {
+          "id": "example-19-step-gauge-fixed-6",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-19-step-gauge-point-5"
+          ]
+        },
+        {
+          "id": "example-19-step-gauge-fixed-8",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-19-step-gauge-point-7"
+          ]
+        },
+        {
+          "id": "example-19-step-gauge-fixed-10",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-19-step-gauge-point-9"
+          ]
+        },
+        {
+          "id": "example-19-step-gauge-fixed-12",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-19-step-gauge-point-11"
+          ]
+        },
+        {
+          "id": "example-19-step-gauge-fixed-14",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-19-step-gauge-point-13"
+          ]
+        },
+        {
+          "id": "example-19-step-gauge-fixed-16",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-19-step-gauge-point-15"
+          ]
+        },
+        {
+          "id": "example-19-step-gauge-fixed-18",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-19-step-gauge-point-17"
+          ]
+        },
+        {
+          "id": "example-19-step-gauge-fixed-20",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-19-step-gauge-point-19"
+          ]
+        },
+        {
+          "id": "example-19-step-gauge-fixed-22",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-19-step-gauge-point-21"
+          ]
+        }
+      ],
+      "dimensions": []
+    }
+  },
+  "features": [
+    {
+      "id": "example-19-step-gauge-feature-33",
+      "name": "Four gauge heights",
+      "componentId": "example-19-step-gauge-part-1",
+      "timelineStep": 2,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "extrude",
+      "sketchId": "example-19-step-gauge-sketch-2",
+      "profileId": "example-19-step-gauge-sketch-2:profile:p151ec7",
+      "direction": "positive",
+      "operation": "newBody",
+      "distance": {
+        "expression": "gauge_width",
+        "unit": "mm",
+        "parameterRefs": {
+          "gauge_width": "example-19-step-gauge-parameter"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,857 @@
+{
+  "schemaVersion": 26,
+  "id": "example-23-vent-grille",
+  "name": "Louver-slot grille",
+  "units": "metric",
+  "unitSettings": {
+    "length": "mm",
+    "angle": "deg"
+  },
+  "createdAt": "2026-11-17T12:00:00.000Z",
+  "updatedAt": "2026-11-17T12:00:00.000Z",
+  "rootComponentId": "example-23-vent-grille-root",
+  "components": {
+    "example-23-vent-grille-root": {
+      "id": "example-23-vent-grille-root",
+      "name": "Project reference"
+    },
+    "example-23-vent-grille-part-1": {
+      "id": "example-23-vent-grille-part-1",
+      "name": "Vent plate",
+      "appearance": "aluminum"
+    }
+  },
+  "parameters": {
+    "slot_pitch": {
+      "id": "example-23-vent-grille-parameter",
+      "name": "slot_pitch",
+      "expression": "11mm",
+      "value": 11,
+      "unit": "mm"
+    }
+  },
+  "sketches": {
+    "example-23-vent-grille-sketch-2": {
+      "id": "example-23-vent-grille-sketch-2",
+      "componentId": "example-23-vent-grille-part-1",
+      "name": "Vent plate and through-slots profile",
+      "plane": {
+        "type": "origin",
+        "plane": "XY"
+      },
+      "timelineStep": 1,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-23-vent-grille-point-3": {
+          "type": "point",
+          "id": "example-23-vent-grille-point-3",
+          "x": {
+            "expression": "-41mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-23mm",
+            "unit": "mm"
+          }
+        },
+        "example-23-vent-grille-point-5": {
+          "type": "point",
+          "id": "example-23-vent-grille-point-5",
+          "x": {
+            "expression": "41mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-23mm",
+            "unit": "mm"
+          }
+        },
+        "example-23-vent-grille-point-7": {
+          "type": "point",
+          "id": "example-23-vent-grille-point-7",
+          "x": {
+            "expression": "41mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "23mm",
+            "unit": "mm"
+          }
+        },
+        "example-23-vent-grille-point-9": {
+          "type": "point",
+          "id": "example-23-vent-grille-point-9",
+          "x": {
+            "expression": "-41mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "23mm",
+            "unit": "mm"
+          }
+        },
+        "example-23-vent-grille-line-11": {
+          "type": "line",
+          "id": "example-23-vent-grille-line-11",
+          "startPointId": "example-23-vent-grille-point-3",
+          "endPointId": "example-23-vent-grille-point-5"
+        },
+        "example-23-vent-grille-line-12": {
+          "type": "line",
+          "id": "example-23-vent-grille-line-12",
+          "startPointId": "example-23-vent-grille-point-5",
+          "endPointId": "example-23-vent-grille-point-7"
+        },
+        "example-23-vent-grille-line-13": {
+          "type": "line",
+          "id": "example-23-vent-grille-line-13",
+          "startPointId": "example-23-vent-grille-point-7",
+          "endPointId": "example-23-vent-grille-point-9"
+        },
+        "example-23-vent-grille-line-14": {
+          "type": "line",
+          "id": "example-23-vent-grille-line-14",
+          "startPointId": "example-23-vent-grille-point-9",
+          "endPointId": "example-23-vent-grille-point-3"
+        },
+        "example-23-vent-grille-point-15": {
+          "type": "point",
+          "id": "example-23-vent-grille-point-15",
+          "x": {
+            "expression": "-33mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-15mm",
+            "unit": "mm"
+          }
+        },
+        "example-23-vent-grille-point-17": {
+          "type": "point",
+          "id": "example-23-vent-grille-point-17",
+          "x": {
+            "expression": "-28mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-15mm",
+            "unit": "mm"
+          }
+        },
+        "example-23-vent-grille-point-19": {
+          "type": "point",
+          "id": "example-23-vent-grille-point-19",
+          "x": {
+            "expression": "-28mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "15mm",
+            "unit": "mm"
+          }
+        },
+        "example-23-vent-grille-point-21": {
+          "type": "point",
+          "id": "example-23-vent-grille-point-21",
+          "x": {
+            "expression": "-33mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "15mm",
+            "unit": "mm"
+          }
+        },
+        "example-23-vent-grille-line-23": {
+          "type": "line",
+          "id": "example-23-vent-grille-line-23",
+          "startPointId": "example-23-vent-grille-point-15",
+          "endPointId": "example-23-vent-grille-point-17"
+        },
+        "example-23-vent-grille-line-24": {
+          "type": "line",
+          "id": "example-23-vent-grille-line-24",
+          "startPointId": "example-23-vent-grille-point-17",
+          "endPointId": "example-23-vent-grille-point-19"
+        },
+        "example-23-vent-grille-line-25": {
+          "type": "line",
+          "id": "example-23-vent-grille-line-25",
+          "startPointId": "example-23-vent-grille-point-19",
+          "endPointId": "example-23-vent-grille-point-21"
+        },
+        "example-23-vent-grille-line-26": {
+          "type": "line",
+          "id": "example-23-vent-grille-line-26",
+          "startPointId": "example-23-vent-grille-point-21",
+          "endPointId": "example-23-vent-grille-point-15"
+        },
+        "example-23-vent-grille-point-27": {
+          "type": "point",
+          "id": "example-23-vent-grille-point-27",
+          "x": {
+            "expression": "-33mm + 1 * slot_pitch",
+            "unit": "mm",
+            "parameterRefs": {
+              "slot_pitch": "example-23-vent-grille-parameter"
+            }
+          },
+          "y": {
+            "expression": "-15mm",
+            "unit": "mm"
+          }
+        },
+        "example-23-vent-grille-point-29": {
+          "type": "point",
+          "id": "example-23-vent-grille-point-29",
+          "x": {
+            "expression": "-28mm + 1 * slot_pitch",
+            "unit": "mm",
+            "parameterRefs": {
+              "slot_pitch": "example-23-vent-grille-parameter"
+            }
+          },
+          "y": {
+            "expression": "-15mm",
+            "unit": "mm"
+          }
+        },
+        "example-23-vent-grille-point-31": {
+          "type": "point",
+          "id": "example-23-vent-grille-point-31",
+          "x": {
+            "expression": "-28mm + 1 * slot_pitch",
+            "unit": "mm",
+            "parameterRefs": {
+              "slot_pitch": "example-23-vent-grille-parameter"
+            }
+          },
+          "y": {
+            "expression": "15mm",
+            "unit": "mm"
+          }
+        },
+        "example-23-vent-grille-point-33": {
+          "type": "point",
+          "id": "example-23-vent-grille-point-33",
+          "x": {
+            "expression": "-33mm + 1 * slot_pitch",
+            "unit": "mm",
+            "parameterRefs": {
+              "slot_pitch": "example-23-vent-grille-parameter"
+            }
+          },
+          "y": {
+            "expression": "15mm",
+            "unit": "mm"
+          }
+        },
+        "example-23-vent-grille-line-35": {
+          "type": "line",
+          "id": "example-23-vent-grille-line-35",
+          "startPointId": "example-23-vent-grille-point-27",
+          "endPointId": "example-23-vent-grille-point-29"
+        },
+        "example-23-vent-grille-line-36": {
+          "type": "line",
+          "id": "example-23-vent-grille-line-36",
+          "startPointId": "example-23-vent-grille-point-29",
+          "endPointId": "example-23-vent-grille-point-31"
+        },
+        "example-23-vent-grille-line-37": {
+          "type": "line",
+          "id": "example-23-vent-grille-line-37",
+          "startPointId": "example-23-vent-grille-point-31",
+          "endPointId": "example-23-vent-grille-point-33"
+        },
+        "example-23-vent-grille-line-38": {
+          "type": "line",
+          "id": "example-23-vent-grille-line-38",
+          "startPointId": "example-23-vent-grille-point-33",
+          "endPointId": "example-23-vent-grille-point-27"
+        },
+        "example-23-vent-grille-point-39": {
+          "type": "point",
+          "id": "example-23-vent-grille-point-39",
+          "x": {
+            "expression": "-33mm + 2 * slot_pitch",
+            "unit": "mm",
+            "parameterRefs": {
+              "slot_pitch": "example-23-vent-grille-parameter"
+            }
+          },
+          "y": {
+            "expression": "-15mm",
+            "unit": "mm"
+          }
+        },
+        "example-23-vent-grille-point-41": {
+          "type": "point",
+          "id": "example-23-vent-grille-point-41",
+          "x": {
+            "expression": "-28mm + 2 * slot_pitch",
+            "unit": "mm",
+            "parameterRefs": {
+              "slot_pitch": "example-23-vent-grille-parameter"
+            }
+          },
+          "y": {
+            "expression": "-15mm",
+            "unit": "mm"
+          }
+        },
+        "example-23-vent-grille-point-43": {
+          "type": "point",
+          "id": "example-23-vent-grille-point-43",
+          "x": {
+            "expression": "-28mm + 2 * slot_pitch",
+            "unit": "mm",
+            "parameterRefs": {
+              "slot_pitch": "example-23-vent-grille-parameter"
+            }
+          },
+          "y": {
+            "expression": "15mm",
+            "unit": "mm"
+          }
+        },
+        "example-23-vent-grille-point-45": {
+          "type": "point",
+          "id": "example-23-vent-grille-point-45",
+          "x": {
+            "expression": "-33mm + 2 * slot_pitch",
+            "unit": "mm",
+            "parameterRefs": {
+              "slot_pitch": "example-23-vent-grille-parameter"
+            }
+          },
+          "y": {
+            "expression": "15mm",
+            "unit": "mm"
+          }
+        },
+        "example-23-vent-grille-line-47": {
+          "type": "line",
+          "id": "example-23-vent-grille-line-47",
+          "startPointId": "example-23-vent-grille-point-39",
+          "endPointId": "example-23-vent-grille-point-41"
+        },
+        "example-23-vent-grille-line-48": {
+          "type": "line",
+          "id": "example-23-vent-grille-line-48",
+          "startPointId": "example-23-vent-grille-point-41",
+          "endPointId": "example-23-vent-grille-point-43"
+        },
+        "example-23-vent-grille-line-49": {
+          "type": "line",
+          "id": "example-23-vent-grille-line-49",
+          "startPointId": "example-23-vent-grille-point-43",
+          "endPointId": "example-23-vent-grille-point-45"
+        },
+        "example-23-vent-grille-line-50": {
+          "type": "line",
+          "id": "example-23-vent-grille-line-50",
+          "startPointId": "example-23-vent-grille-point-45",
+          "endPointId": "example-23-vent-grille-point-39"
+        },
+        "example-23-vent-grille-point-51": {
+          "type": "point",
+          "id": "example-23-vent-grille-point-51",
+          "x": {
+            "expression": "-33mm + 3 * slot_pitch",
+            "unit": "mm",
+            "parameterRefs": {
+              "slot_pitch": "example-23-vent-grille-parameter"
+            }
+          },
+          "y": {
+            "expression": "-15mm",
+            "unit": "mm"
+          }
+        },
+        "example-23-vent-grille-point-53": {
+          "type": "point",
+          "id": "example-23-vent-grille-point-53",
+          "x": {
+            "expression": "-28mm + 3 * slot_pitch",
+            "unit": "mm",
+            "parameterRefs": {
+              "slot_pitch": "example-23-vent-grille-parameter"
+            }
+          },
+          "y": {
+            "expression": "-15mm",
+            "unit": "mm"
+          }
+        },
+        "example-23-vent-grille-point-55": {
+          "type": "point",
+          "id": "example-23-vent-grille-point-55",
+          "x": {
+            "expression": "-28mm + 3 * slot_pitch",
+            "unit": "mm",
+            "parameterRefs": {
+              "slot_pitch": "example-23-vent-grille-parameter"
+            }
+          },
+          "y": {
+            "expression": "15mm",
+            "unit": "mm"
+          }
+        },
+        "example-23-vent-grille-point-57": {
+          "type": "point",
+          "id": "example-23-vent-grille-point-57",
+          "x": {
+            "expression": "-33mm + 3 * slot_pitch",
+            "unit": "mm",
+            "parameterRefs": {
+              "slot_pitch": "example-23-vent-grille-parameter"
+            }
+          },
+          "y": {
+            "expression": "15mm",
+            "unit": "mm"
+          }
+        },
+        "example-23-vent-grille-line-59": {
+          "type": "line",
+          "id": "example-23-vent-grille-line-59",
+          "startPointId": "example-23-vent-grille-point-51",
+          "endPointId": "example-23-vent-grille-point-53"
+        },
+        "example-23-vent-grille-line-60": {
+          "type": "line",
+          "id": "example-23-vent-grille-line-60",
+          "startPointId": "example-23-vent-grille-point-53",
+          "endPointId": "example-23-vent-grille-point-55"
+        },
+        "example-23-vent-grille-line-61": {
+          "type": "line",
+          "id": "example-23-vent-grille-line-61",
+          "startPointId": "example-23-vent-grille-point-55",
+          "endPointId": "example-23-vent-grille-point-57"
+        },
+        "example-23-vent-grille-line-62": {
+          "type": "line",
+          "id": "example-23-vent-grille-line-62",
+          "startPointId": "example-23-vent-grille-point-57",
+          "endPointId": "example-23-vent-grille-point-51"
+        },
+        "example-23-vent-grille-point-63": {
+          "type": "point",
+          "id": "example-23-vent-grille-point-63",
+          "x": {
+            "expression": "-33mm + 4 * slot_pitch",
+            "unit": "mm",
+            "parameterRefs": {
+              "slot_pitch": "example-23-vent-grille-parameter"
+            }
+          },
+          "y": {
+            "expression": "-15mm",
+            "unit": "mm"
+          }
+        },
+        "example-23-vent-grille-point-65": {
+          "type": "point",
+          "id": "example-23-vent-grille-point-65",
+          "x": {
+            "expression": "-28mm + 4 * slot_pitch",
+            "unit": "mm",
+            "parameterRefs": {
+              "slot_pitch": "example-23-vent-grille-parameter"
+            }
+          },
+          "y": {
+            "expression": "-15mm",
+            "unit": "mm"
+          }
+        },
+        "example-23-vent-grille-point-67": {
+          "type": "point",
+          "id": "example-23-vent-grille-point-67",
+          "x": {
+            "expression": "-28mm + 4 * slot_pitch",
+            "unit": "mm",
+            "parameterRefs": {
+              "slot_pitch": "example-23-vent-grille-parameter"
+            }
+          },
+          "y": {
+            "expression": "15mm",
+            "unit": "mm"
+          }
+        },
+        "example-23-vent-grille-point-69": {
+          "type": "point",
+          "id": "example-23-vent-grille-point-69",
+          "x": {
+            "expression": "-33mm + 4 * slot_pitch",
+            "unit": "mm",
+            "parameterRefs": {
+              "slot_pitch": "example-23-vent-grille-parameter"
+            }
+          },
+          "y": {
+            "expression": "15mm",
+            "unit": "mm"
+          }
+        },
+        "example-23-vent-grille-line-71": {
+          "type": "line",
+          "id": "example-23-vent-grille-line-71",
+          "startPointId": "example-23-vent-grille-point-63",
+          "endPointId": "example-23-vent-grille-point-65"
+        },
+        "example-23-vent-grille-line-72": {
+          "type": "line",
+          "id": "example-23-vent-grille-line-72",
+          "startPointId": "example-23-vent-grille-point-65",
+          "endPointId": "example-23-vent-grille-point-67"
+        },
+        "example-23-vent-grille-line-73": {
+          "type": "line",
+          "id": "example-23-vent-grille-line-73",
+          "startPointId": "example-23-vent-grille-point-67",
+          "endPointId": "example-23-vent-grille-point-69"
+        },
+        "example-23-vent-grille-line-74": {
+          "type": "line",
+          "id": "example-23-vent-grille-line-74",
+          "startPointId": "example-23-vent-grille-point-69",
+          "endPointId": "example-23-vent-grille-point-63"
+        },
+        "example-23-vent-grille-point-75": {
+          "type": "point",
+          "id": "example-23-vent-grille-point-75",
+          "x": {
+            "expression": "-33mm + 5 * slot_pitch",
+            "unit": "mm",
+            "parameterRefs": {
+              "slot_pitch": "example-23-vent-grille-parameter"
+            }
+          },
+          "y": {
+            "expression": "-15mm",
+            "unit": "mm"
+          }
+        },
+        "example-23-vent-grille-point-77": {
+          "type": "point",
+          "id": "example-23-vent-grille-point-77",
+          "x": {
+            "expression": "-28mm + 5 * slot_pitch",
+            "unit": "mm",
+            "parameterRefs": {
+              "slot_pitch": "example-23-vent-grille-parameter"
+            }
+          },
+          "y": {
+            "expression": "-15mm",
+            "unit": "mm"
+          }
+        },
+        "example-23-vent-grille-point-79": {
+          "type": "point",
+          "id": "example-23-vent-grille-point-79",
+          "x": {
+            "expression": "-28mm + 5 * slot_pitch",
+            "unit": "mm",
+            "parameterRefs": {
+              "slot_pitch": "example-23-vent-grille-parameter"
+            }
+          },
+          "y": {
+            "expression": "15mm",
+            "unit": "mm"
+          }
+        },
+        "example-23-vent-grille-point-81": {
+          "type": "point",
+          "id": "example-23-vent-grille-point-81",
+          "x": {
+            "expression": "-33mm + 5 * slot_pitch",
+            "unit": "mm",
+            "parameterRefs": {
+              "slot_pitch": "example-23-vent-grille-parameter"
+            }
+          },
+          "y": {
+            "expression": "15mm",
+            "unit": "mm"
+          }
+        },
+        "example-23-vent-grille-line-83": {
+          "type": "line",
+          "id": "example-23-vent-grille-line-83",
+          "startPointId": "example-23-vent-grille-point-75",
+          "endPointId": "example-23-vent-grille-point-77"
+        },
+        "example-23-vent-grille-line-84": {
+          "type": "line",
+          "id": "example-23-vent-grille-line-84",
+          "startPointId": "example-23-vent-grille-point-77",
+          "endPointId": "example-23-vent-grille-point-79"
+        },
+        "example-23-vent-grille-line-85": {
+          "type": "line",
+          "id": "example-23-vent-grille-line-85",
+          "startPointId": "example-23-vent-grille-point-79",
+          "endPointId": "example-23-vent-grille-point-81"
+        },
+        "example-23-vent-grille-line-86": {
+          "type": "line",
+          "id": "example-23-vent-grille-line-86",
+          "startPointId": "example-23-vent-grille-point-81",
+          "endPointId": "example-23-vent-grille-point-75"
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-23-vent-grille-fixed-4",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-23-vent-grille-point-3"
+          ]
+        },
+        {
+          "id": "example-23-vent-grille-fixed-6",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-23-vent-grille-point-5"
+          ]
+        },
+        {
+          "id": "example-23-vent-grille-fixed-8",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-23-vent-grille-point-7"
+          ]
+        },
+        {
+          "id": "example-23-vent-grille-fixed-10",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-23-vent-grille-point-9"
+          ]
+        },
+        {
+          "id": "example-23-vent-grille-fixed-16",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-23-vent-grille-point-15"
+          ]
+        },
+        {
+          "id": "example-23-vent-grille-fixed-18",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-23-vent-grille-point-17"
+          ]
+        },
+        {
+          "id": "example-23-vent-grille-fixed-20",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-23-vent-grille-point-19"
+          ]
+        },
+        {
+          "id": "example-23-vent-grille-fixed-22",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-23-vent-grille-point-21"
+          ]
+        },
+        {
+          "id": "example-23-vent-grille-fixed-28",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-23-vent-grille-point-27"
+          ]
+        },
+        {
+          "id": "example-23-vent-grille-fixed-30",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-23-vent-grille-point-29"
+          ]
+        },
+        {
+          "id": "example-23-vent-grille-fixed-32",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-23-vent-grille-point-31"
+          ]
+        },
+        {
+          "id": "example-23-vent-grille-fixed-34",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-23-vent-grille-point-33"
+          ]
+        },
+        {
+          "id": "example-23-vent-grille-fixed-40",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-23-vent-grille-point-39"
+          ]
+        },
+        {
+          "id": "example-23-vent-grille-fixed-42",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-23-vent-grille-point-41"
+          ]
+        },
+        {
+          "id": "example-23-vent-grille-fixed-44",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-23-vent-grille-point-43"
+          ]
+        },
+        {
+          "id": "example-23-vent-grille-fixed-46",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-23-vent-grille-point-45"
+          ]
+        },
+        {
+          "id": "example-23-vent-grille-fixed-52",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-23-vent-grille-point-51"
+          ]
+        },
+        {
+          "id": "example-23-vent-grille-fixed-54",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-23-vent-grille-point-53"
+          ]
+        },
+        {
+          "id": "example-23-vent-grille-fixed-56",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-23-vent-grille-point-55"
+          ]
+        },
+        {
+          "id": "example-23-vent-grille-fixed-58",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-23-vent-grille-point-57"
+          ]
+        },
+        {
+          "id": "example-23-vent-grille-fixed-64",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-23-vent-grille-point-63"
+          ]
+        },
+        {
+          "id": "example-23-vent-grille-fixed-66",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-23-vent-grille-point-65"
+          ]
+        },
+        {
+          "id": "example-23-vent-grille-fixed-68",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-23-vent-grille-point-67"
+          ]
+        },
+        {
+          "id": "example-23-vent-grille-fixed-70",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-23-vent-grille-point-69"
+          ]
+        },
+        {
+          "id": "example-23-vent-grille-fixed-76",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-23-vent-grille-point-75"
+          ]
+        },
+        {
+          "id": "example-23-vent-grille-fixed-78",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-23-vent-grille-point-77"
+          ]
+        },
+        {
+          "id": "example-23-vent-grille-fixed-80",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-23-vent-grille-point-79"
+          ]
+        },
+        {
+          "id": "example-23-vent-grille-fixed-82",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-23-vent-grille-point-81"
+          ]
+        }
+      ],
+      "dimensions": []
+    }
+  },
+  "features": [
+    {
+      "id": "example-23-vent-grille-feature-87",
+      "name": "Vent plate and through-slots",
+      "componentId": "example-23-vent-grille-part-1",
+      "timelineStep": 2,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "extrude",
+      "sketchId": "example-23-vent-grille-sketch-2",
+      "profileId": "example-23-vent-grille-sketch-2:profile:p1mufwwl",
+      "direction": "positive",
+      "operation": "newBody",
+      "distance": {
+        "expression": "4mm",
+        "unit": "mm"
+      }
+    }
+  ]
+}

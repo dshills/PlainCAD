@@ -1,0 +1,396 @@
+{
+  "schemaVersion": 26,
+  "id": "example-21-hose-reducer",
+  "name": "Tapered hose reducer",
+  "units": "metric",
+  "unitSettings": {
+    "length": "mm",
+    "angle": "deg"
+  },
+  "createdAt": "2026-11-17T12:00:00.000Z",
+  "updatedAt": "2026-11-17T12:00:00.000Z",
+  "rootComponentId": "example-21-hose-reducer-root",
+  "components": {
+    "example-21-hose-reducer-root": {
+      "id": "example-21-hose-reducer-root",
+      "name": "Project reference"
+    },
+    "example-21-hose-reducer-part-1": {
+      "id": "example-21-hose-reducer-part-1",
+      "name": "Reducer",
+      "appearance": "brass"
+    }
+  },
+  "parameters": {
+    "outlet_length": {
+      "id": "example-21-hose-reducer-parameter",
+      "name": "outlet_length",
+      "expression": "16mm",
+      "value": 16,
+      "unit": "mm"
+    }
+  },
+  "sketches": {
+    "example-21-hose-reducer-sketch-2": {
+      "id": "example-21-hose-reducer-sketch-2",
+      "componentId": "example-21-hose-reducer-part-1",
+      "name": "Turn reducer and internal passage section",
+      "plane": {
+        "type": "origin",
+        "plane": "XZ"
+      },
+      "timelineStep": 1,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-21-hose-reducer-point-3": {
+          "type": "point",
+          "id": "example-21-hose-reducer-point-3",
+          "x": {
+            "expression": "13mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "example-21-hose-reducer-point-5": {
+          "type": "point",
+          "id": "example-21-hose-reducer-point-5",
+          "x": {
+            "expression": "19mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "example-21-hose-reducer-point-7": {
+          "type": "point",
+          "id": "example-21-hose-reducer-point-7",
+          "x": {
+            "expression": "19mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "5mm",
+            "unit": "mm"
+          }
+        },
+        "example-21-hose-reducer-point-9": {
+          "type": "point",
+          "id": "example-21-hose-reducer-point-9",
+          "x": {
+            "expression": "17mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "5mm",
+            "unit": "mm"
+          }
+        },
+        "example-21-hose-reducer-point-11": {
+          "type": "point",
+          "id": "example-21-hose-reducer-point-11",
+          "x": {
+            "expression": "17mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "16mm",
+            "unit": "mm"
+          }
+        },
+        "example-21-hose-reducer-point-13": {
+          "type": "point",
+          "id": "example-21-hose-reducer-point-13",
+          "x": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "25mm",
+            "unit": "mm"
+          }
+        },
+        "example-21-hose-reducer-point-15": {
+          "type": "point",
+          "id": "example-21-hose-reducer-point-15",
+          "x": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "outlet_length + 25mm",
+            "unit": "mm",
+            "parameterRefs": {
+              "outlet_length": "example-21-hose-reducer-parameter"
+            }
+          }
+        },
+        "example-21-hose-reducer-point-17": {
+          "type": "point",
+          "id": "example-21-hose-reducer-point-17",
+          "x": {
+            "expression": "14mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "outlet_length + 25mm",
+            "unit": "mm",
+            "parameterRefs": {
+              "outlet_length": "example-21-hose-reducer-parameter"
+            }
+          }
+        },
+        "example-21-hose-reducer-point-19": {
+          "type": "point",
+          "id": "example-21-hose-reducer-point-19",
+          "x": {
+            "expression": "14mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "outlet_length + 30mm",
+            "unit": "mm",
+            "parameterRefs": {
+              "outlet_length": "example-21-hose-reducer-parameter"
+            }
+          }
+        },
+        "example-21-hose-reducer-point-21": {
+          "type": "point",
+          "id": "example-21-hose-reducer-point-21",
+          "x": {
+            "expression": "8mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "outlet_length + 30mm",
+            "unit": "mm",
+            "parameterRefs": {
+              "outlet_length": "example-21-hose-reducer-parameter"
+            }
+          }
+        },
+        "example-21-hose-reducer-point-23": {
+          "type": "point",
+          "id": "example-21-hose-reducer-point-23",
+          "x": {
+            "expression": "8mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "25mm",
+            "unit": "mm"
+          }
+        },
+        "example-21-hose-reducer-point-25": {
+          "type": "point",
+          "id": "example-21-hose-reducer-point-25",
+          "x": {
+            "expression": "13mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "16mm",
+            "unit": "mm"
+          }
+        },
+        "example-21-hose-reducer-line-27": {
+          "type": "line",
+          "id": "example-21-hose-reducer-line-27",
+          "startPointId": "example-21-hose-reducer-point-3",
+          "endPointId": "example-21-hose-reducer-point-5"
+        },
+        "example-21-hose-reducer-line-28": {
+          "type": "line",
+          "id": "example-21-hose-reducer-line-28",
+          "startPointId": "example-21-hose-reducer-point-5",
+          "endPointId": "example-21-hose-reducer-point-7"
+        },
+        "example-21-hose-reducer-line-29": {
+          "type": "line",
+          "id": "example-21-hose-reducer-line-29",
+          "startPointId": "example-21-hose-reducer-point-7",
+          "endPointId": "example-21-hose-reducer-point-9"
+        },
+        "example-21-hose-reducer-line-30": {
+          "type": "line",
+          "id": "example-21-hose-reducer-line-30",
+          "startPointId": "example-21-hose-reducer-point-9",
+          "endPointId": "example-21-hose-reducer-point-11"
+        },
+        "example-21-hose-reducer-line-31": {
+          "type": "line",
+          "id": "example-21-hose-reducer-line-31",
+          "startPointId": "example-21-hose-reducer-point-11",
+          "endPointId": "example-21-hose-reducer-point-13"
+        },
+        "example-21-hose-reducer-line-32": {
+          "type": "line",
+          "id": "example-21-hose-reducer-line-32",
+          "startPointId": "example-21-hose-reducer-point-13",
+          "endPointId": "example-21-hose-reducer-point-15"
+        },
+        "example-21-hose-reducer-line-33": {
+          "type": "line",
+          "id": "example-21-hose-reducer-line-33",
+          "startPointId": "example-21-hose-reducer-point-15",
+          "endPointId": "example-21-hose-reducer-point-17"
+        },
+        "example-21-hose-reducer-line-34": {
+          "type": "line",
+          "id": "example-21-hose-reducer-line-34",
+          "startPointId": "example-21-hose-reducer-point-17",
+          "endPointId": "example-21-hose-reducer-point-19"
+        },
+        "example-21-hose-reducer-line-35": {
+          "type": "line",
+          "id": "example-21-hose-reducer-line-35",
+          "startPointId": "example-21-hose-reducer-point-19",
+          "endPointId": "example-21-hose-reducer-point-21"
+        },
+        "example-21-hose-reducer-line-36": {
+          "type": "line",
+          "id": "example-21-hose-reducer-line-36",
+          "startPointId": "example-21-hose-reducer-point-21",
+          "endPointId": "example-21-hose-reducer-point-23"
+        },
+        "example-21-hose-reducer-line-37": {
+          "type": "line",
+          "id": "example-21-hose-reducer-line-37",
+          "startPointId": "example-21-hose-reducer-point-23",
+          "endPointId": "example-21-hose-reducer-point-25"
+        },
+        "example-21-hose-reducer-line-38": {
+          "type": "line",
+          "id": "example-21-hose-reducer-line-38",
+          "startPointId": "example-21-hose-reducer-point-25",
+          "endPointId": "example-21-hose-reducer-point-3"
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-21-hose-reducer-fixed-4",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-21-hose-reducer-point-3"
+          ]
+        },
+        {
+          "id": "example-21-hose-reducer-fixed-6",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-21-hose-reducer-point-5"
+          ]
+        },
+        {
+          "id": "example-21-hose-reducer-fixed-8",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-21-hose-reducer-point-7"
+          ]
+        },
+        {
+          "id": "example-21-hose-reducer-fixed-10",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-21-hose-reducer-point-9"
+          ]
+        },
+        {
+          "id": "example-21-hose-reducer-fixed-12",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-21-hose-reducer-point-11"
+          ]
+        },
+        {
+          "id": "example-21-hose-reducer-fixed-14",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-21-hose-reducer-point-13"
+          ]
+        },
+        {
+          "id": "example-21-hose-reducer-fixed-16",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-21-hose-reducer-point-15"
+          ]
+        },
+        {
+          "id": "example-21-hose-reducer-fixed-18",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-21-hose-reducer-point-17"
+          ]
+        },
+        {
+          "id": "example-21-hose-reducer-fixed-20",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-21-hose-reducer-point-19"
+          ]
+        },
+        {
+          "id": "example-21-hose-reducer-fixed-22",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-21-hose-reducer-point-21"
+          ]
+        },
+        {
+          "id": "example-21-hose-reducer-fixed-24",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-21-hose-reducer-point-23"
+          ]
+        },
+        {
+          "id": "example-21-hose-reducer-fixed-26",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-21-hose-reducer-point-25"
+          ]
+        }
+      ],
+      "dimensions": []
+    }
+  },
+  "features": [
+    {
+      "id": "example-21-hose-reducer-feature-39",
+      "name": "Turn reducer and internal passage",
+      "componentId": "example-21-hose-reducer-part-1",
+      "timelineStep": 2,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "revolve",
+      "sketchId": "example-21-hose-reducer-sketch-2",
+      "profileId": "example-21-hose-reducer-sketch-2:profile:pn01eiy",
+      "axis": {
+        "type": "origin",
+        "axis": "Z"
+      },
+      "operation": "newBody",
+      "angle": {
+        "expression": "360deg",
+        "unit": "deg"
+      }
+    }
+  ]
+}

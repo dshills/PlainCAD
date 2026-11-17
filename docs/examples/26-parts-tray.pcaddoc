@@ -1,0 +1,190 @@
+{
+  "schemaVersion": 26,
+  "id": "example-26-parts-tray",
+  "name": "Open parts tray",
+  "units": "metric",
+  "unitSettings": {
+    "length": "mm",
+    "angle": "deg"
+  },
+  "createdAt": "2026-11-17T12:00:00.000Z",
+  "updatedAt": "2026-11-17T12:00:00.000Z",
+  "rootComponentId": "example-26-parts-tray-root",
+  "components": {
+    "example-26-parts-tray-root": {
+      "id": "example-26-parts-tray-root",
+      "name": "Project reference"
+    },
+    "example-26-parts-tray-part-1": {
+      "id": "example-26-parts-tray-part-1",
+      "name": "Tray",
+      "appearance": "polymer"
+    }
+  },
+  "parameters": {
+    "wall_thickness": {
+      "id": "example-26-parts-tray-parameter",
+      "name": "wall_thickness",
+      "expression": "3mm",
+      "value": 3,
+      "unit": "mm"
+    }
+  },
+  "sketches": {
+    "example-26-parts-tray-sketch-2": {
+      "id": "example-26-parts-tray-sketch-2",
+      "componentId": "example-26-parts-tray-part-1",
+      "name": "Tray blank profile",
+      "plane": {
+        "type": "origin",
+        "plane": "XY"
+      },
+      "timelineStep": 1,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-26-parts-tray-point-3": {
+          "type": "point",
+          "id": "example-26-parts-tray-point-3",
+          "x": {
+            "expression": "-34mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-24mm",
+            "unit": "mm"
+          }
+        },
+        "example-26-parts-tray-point-5": {
+          "type": "point",
+          "id": "example-26-parts-tray-point-5",
+          "x": {
+            "expression": "34mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-24mm",
+            "unit": "mm"
+          }
+        },
+        "example-26-parts-tray-point-7": {
+          "type": "point",
+          "id": "example-26-parts-tray-point-7",
+          "x": {
+            "expression": "34mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "24mm",
+            "unit": "mm"
+          }
+        },
+        "example-26-parts-tray-point-9": {
+          "type": "point",
+          "id": "example-26-parts-tray-point-9",
+          "x": {
+            "expression": "-34mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "24mm",
+            "unit": "mm"
+          }
+        },
+        "example-26-parts-tray-line-11": {
+          "type": "line",
+          "id": "example-26-parts-tray-line-11",
+          "startPointId": "example-26-parts-tray-point-3",
+          "endPointId": "example-26-parts-tray-point-5"
+        },
+        "example-26-parts-tray-line-12": {
+          "type": "line",
+          "id": "example-26-parts-tray-line-12",
+          "startPointId": "example-26-parts-tray-point-5",
+          "endPointId": "example-26-parts-tray-point-7"
+        },
+        "example-26-parts-tray-line-13": {
+          "type": "line",
+          "id": "example-26-parts-tray-line-13",
+          "startPointId": "example-26-parts-tray-point-7",
+          "endPointId": "example-26-parts-tray-point-9"
+        },
+        "example-26-parts-tray-line-14": {
+          "type": "line",
+          "id": "example-26-parts-tray-line-14",
+          "startPointId": "example-26-parts-tray-point-9",
+          "endPointId": "example-26-parts-tray-point-3"
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-26-parts-tray-fixed-4",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-26-parts-tray-point-3"
+          ]
+        },
+        {
+          "id": "example-26-parts-tray-fixed-6",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-26-parts-tray-point-5"
+          ]
+        },
+        {
+          "id": "example-26-parts-tray-fixed-8",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-26-parts-tray-point-7"
+          ]
+        },
+        {
+          "id": "example-26-parts-tray-fixed-10",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-26-parts-tray-point-9"
+          ]
+        }
+      ],
+      "dimensions": []
+    }
+  },
+  "features": [
+    {
+      "id": "example-26-parts-tray-feature-15",
+      "name": "Tray blank",
+      "componentId": "example-26-parts-tray-part-1",
+      "timelineStep": 2,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "extrude",
+      "sketchId": "example-26-parts-tray-sketch-2",
+      "profileId": "example-26-parts-tray-sketch-2:profile:p6ci0k5",
+      "direction": "positive",
+      "operation": "newBody",
+      "distance": {
+        "expression": "16mm",
+        "unit": "mm"
+      }
+    },
+    {
+      "id": "example-26-parts-tray-feature-16",
+      "name": "Hollow the open top",
+      "componentId": "example-26-parts-tray-part-1",
+      "timelineStep": 3,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "shell",
+      "sourceFeatureId": "example-26-parts-tray-feature-15",
+      "opening": "endCap",
+      "wallThickness": {
+        "expression": "wall_thickness",
+        "unit": "mm",
+        "parameterRefs": {
+          "wall_thickness": "example-26-parts-tray-parameter"
+        }
+      }
+    }
+  ]
+}

@@ -15,7 +15,7 @@ test("gallery previews actual example geometry without mutating the project, pro
   await page.getByRole("button", { name: "Project gallery", exact: true }).click();
   const gallery = page.getByRole("dialog", { name: "Project gallery", exact: true });
   await expect(gallery).toBeVisible();
-  await expect(gallery.getByRole("img")).toHaveCount(14);
+  await expect(gallery.getByRole("img")).toHaveCount(33);
   const cover = gallery.getByRole("img", { name: "Cable guide mount actual native CAD geometry" });
   await expect(async () => expect(await cover.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(100)).toPass();
   await gallery.getByLabel("Live native previews").check();
@@ -36,6 +36,8 @@ test("gallery previews actual example geometry without mutating the project, pro
   await saved;
   await page.getByText("File", { exact: true }).click(); await page.getByRole("button", { name: "Project gallery", exact: true }).click();
   const recent = gallery.getByRole("region", { name: "Recent saved projects" });
+  await gallery.getByRole("button", { name: "Recent saves" }).click();
+  await expect(recent.getByRole("heading", { name: "Recent saved projects", exact: true })).toBeFocused();
   await expect(recent.getByRole("img")).toHaveCount(1);
   await expect(async () => expect(await recent.getByRole("img").evaluate((image: HTMLImageElement) => image.naturalWidth)).toBe(192)).toPass();
   await gallery.getByRole("button", { name: "Close gallery", exact: true }).click();

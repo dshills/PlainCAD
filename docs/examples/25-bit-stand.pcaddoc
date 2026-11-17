@@ -1,0 +1,1673 @@
+{
+  "schemaVersion": 26,
+  "id": "example-25-bit-stand",
+  "name": "Hex-bit stand",
+  "units": "metric",
+  "unitSettings": {
+    "length": "mm",
+    "angle": "deg"
+  },
+  "createdAt": "2026-11-17T12:00:00.000Z",
+  "updatedAt": "2026-11-17T12:00:00.000Z",
+  "rootComponentId": "example-25-bit-stand-root",
+  "components": {
+    "example-25-bit-stand-root": {
+      "id": "example-25-bit-stand-root",
+      "name": "Project reference"
+    },
+    "example-25-bit-stand-part-1": {
+      "id": "example-25-bit-stand-part-1",
+      "name": "Bit holder",
+      "appearance": "polymer"
+    },
+    "example-25-bit-stand-part-172": {
+      "id": "example-25-bit-stand-part-172",
+      "name": "Bottom plate",
+      "appearance": "aluminum"
+    }
+  },
+  "parameters": {
+    "socket_depth": {
+      "id": "example-25-bit-stand-parameter",
+      "name": "socket_depth",
+      "expression": "12mm",
+      "value": 12,
+      "unit": "mm"
+    }
+  },
+  "sketches": {
+    "example-25-bit-stand-sketch-2": {
+      "id": "example-25-bit-stand-sketch-2",
+      "componentId": "example-25-bit-stand-part-1",
+      "name": "Faceted holder and sockets profile",
+      "plane": {
+        "type": "offset",
+        "base": "XY",
+        "offset": {
+          "expression": "3mm",
+          "unit": "mm"
+        }
+      },
+      "timelineStep": 1,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-25-bit-stand-point-3": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-3",
+          "x": {
+            "expression": "-30mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-18mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-5": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-5",
+          "x": {
+            "expression": "26mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-18mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-7": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-7",
+          "x": {
+            "expression": "33mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-11mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-9": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-9",
+          "x": {
+            "expression": "33mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "11mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-11": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-11",
+          "x": {
+            "expression": "26mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "18mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-13": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-13",
+          "x": {
+            "expression": "-30mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "18mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-15": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-15",
+          "x": {
+            "expression": "-35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "13mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-17": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-17",
+          "x": {
+            "expression": "-35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-13mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-line-19": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-19",
+          "startPointId": "example-25-bit-stand-point-3",
+          "endPointId": "example-25-bit-stand-point-5"
+        },
+        "example-25-bit-stand-line-20": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-20",
+          "startPointId": "example-25-bit-stand-point-5",
+          "endPointId": "example-25-bit-stand-point-7"
+        },
+        "example-25-bit-stand-line-21": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-21",
+          "startPointId": "example-25-bit-stand-point-7",
+          "endPointId": "example-25-bit-stand-point-9"
+        },
+        "example-25-bit-stand-line-22": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-22",
+          "startPointId": "example-25-bit-stand-point-9",
+          "endPointId": "example-25-bit-stand-point-11"
+        },
+        "example-25-bit-stand-line-23": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-23",
+          "startPointId": "example-25-bit-stand-point-11",
+          "endPointId": "example-25-bit-stand-point-13"
+        },
+        "example-25-bit-stand-line-24": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-24",
+          "startPointId": "example-25-bit-stand-point-13",
+          "endPointId": "example-25-bit-stand-point-15"
+        },
+        "example-25-bit-stand-line-25": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-25",
+          "startPointId": "example-25-bit-stand-point-15",
+          "endPointId": "example-25-bit-stand-point-17"
+        },
+        "example-25-bit-stand-line-26": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-26",
+          "startPointId": "example-25-bit-stand-point-17",
+          "endPointId": "example-25-bit-stand-point-3"
+        },
+        "example-25-bit-stand-point-27": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-27",
+          "x": {
+            "expression": "-27mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-8mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-29": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-29",
+          "x": {
+            "expression": "-25mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-11mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-31": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-31",
+          "x": {
+            "expression": "-21mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-11mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-33": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-33",
+          "x": {
+            "expression": "-19mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-8mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-35": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-35",
+          "x": {
+            "expression": "-21mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-5mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-37": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-37",
+          "x": {
+            "expression": "-25mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-5mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-line-39": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-39",
+          "startPointId": "example-25-bit-stand-point-27",
+          "endPointId": "example-25-bit-stand-point-29"
+        },
+        "example-25-bit-stand-line-40": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-40",
+          "startPointId": "example-25-bit-stand-point-29",
+          "endPointId": "example-25-bit-stand-point-31"
+        },
+        "example-25-bit-stand-line-41": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-41",
+          "startPointId": "example-25-bit-stand-point-31",
+          "endPointId": "example-25-bit-stand-point-33"
+        },
+        "example-25-bit-stand-line-42": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-42",
+          "startPointId": "example-25-bit-stand-point-33",
+          "endPointId": "example-25-bit-stand-point-35"
+        },
+        "example-25-bit-stand-line-43": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-43",
+          "startPointId": "example-25-bit-stand-point-35",
+          "endPointId": "example-25-bit-stand-point-37"
+        },
+        "example-25-bit-stand-line-44": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-44",
+          "startPointId": "example-25-bit-stand-point-37",
+          "endPointId": "example-25-bit-stand-point-27"
+        },
+        "example-25-bit-stand-point-45": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-45",
+          "x": {
+            "expression": "-12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-8mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-47": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-47",
+          "x": {
+            "expression": "-10mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-11mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-49": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-49",
+          "x": {
+            "expression": "-6mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-11mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-51": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-51",
+          "x": {
+            "expression": "-4mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-8mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-53": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-53",
+          "x": {
+            "expression": "-6mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-5mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-55": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-55",
+          "x": {
+            "expression": "-10mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-5mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-line-57": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-57",
+          "startPointId": "example-25-bit-stand-point-45",
+          "endPointId": "example-25-bit-stand-point-47"
+        },
+        "example-25-bit-stand-line-58": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-58",
+          "startPointId": "example-25-bit-stand-point-47",
+          "endPointId": "example-25-bit-stand-point-49"
+        },
+        "example-25-bit-stand-line-59": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-59",
+          "startPointId": "example-25-bit-stand-point-49",
+          "endPointId": "example-25-bit-stand-point-51"
+        },
+        "example-25-bit-stand-line-60": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-60",
+          "startPointId": "example-25-bit-stand-point-51",
+          "endPointId": "example-25-bit-stand-point-53"
+        },
+        "example-25-bit-stand-line-61": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-61",
+          "startPointId": "example-25-bit-stand-point-53",
+          "endPointId": "example-25-bit-stand-point-55"
+        },
+        "example-25-bit-stand-line-62": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-62",
+          "startPointId": "example-25-bit-stand-point-55",
+          "endPointId": "example-25-bit-stand-point-45"
+        },
+        "example-25-bit-stand-point-63": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-63",
+          "x": {
+            "expression": "3mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-8mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-65": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-65",
+          "x": {
+            "expression": "5mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-11mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-67": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-67",
+          "x": {
+            "expression": "9mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-11mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-69": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-69",
+          "x": {
+            "expression": "11mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-8mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-71": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-71",
+          "x": {
+            "expression": "9mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-5mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-73": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-73",
+          "x": {
+            "expression": "5mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-5mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-line-75": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-75",
+          "startPointId": "example-25-bit-stand-point-63",
+          "endPointId": "example-25-bit-stand-point-65"
+        },
+        "example-25-bit-stand-line-76": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-76",
+          "startPointId": "example-25-bit-stand-point-65",
+          "endPointId": "example-25-bit-stand-point-67"
+        },
+        "example-25-bit-stand-line-77": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-77",
+          "startPointId": "example-25-bit-stand-point-67",
+          "endPointId": "example-25-bit-stand-point-69"
+        },
+        "example-25-bit-stand-line-78": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-78",
+          "startPointId": "example-25-bit-stand-point-69",
+          "endPointId": "example-25-bit-stand-point-71"
+        },
+        "example-25-bit-stand-line-79": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-79",
+          "startPointId": "example-25-bit-stand-point-71",
+          "endPointId": "example-25-bit-stand-point-73"
+        },
+        "example-25-bit-stand-line-80": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-80",
+          "startPointId": "example-25-bit-stand-point-73",
+          "endPointId": "example-25-bit-stand-point-63"
+        },
+        "example-25-bit-stand-point-81": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-81",
+          "x": {
+            "expression": "18mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-8mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-83": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-83",
+          "x": {
+            "expression": "20mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-11mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-85": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-85",
+          "x": {
+            "expression": "24mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-11mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-87": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-87",
+          "x": {
+            "expression": "26mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-8mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-89": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-89",
+          "x": {
+            "expression": "24mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-5mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-91": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-91",
+          "x": {
+            "expression": "20mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-5mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-line-93": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-93",
+          "startPointId": "example-25-bit-stand-point-81",
+          "endPointId": "example-25-bit-stand-point-83"
+        },
+        "example-25-bit-stand-line-94": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-94",
+          "startPointId": "example-25-bit-stand-point-83",
+          "endPointId": "example-25-bit-stand-point-85"
+        },
+        "example-25-bit-stand-line-95": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-95",
+          "startPointId": "example-25-bit-stand-point-85",
+          "endPointId": "example-25-bit-stand-point-87"
+        },
+        "example-25-bit-stand-line-96": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-96",
+          "startPointId": "example-25-bit-stand-point-87",
+          "endPointId": "example-25-bit-stand-point-89"
+        },
+        "example-25-bit-stand-line-97": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-97",
+          "startPointId": "example-25-bit-stand-point-89",
+          "endPointId": "example-25-bit-stand-point-91"
+        },
+        "example-25-bit-stand-line-98": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-98",
+          "startPointId": "example-25-bit-stand-point-91",
+          "endPointId": "example-25-bit-stand-point-81"
+        },
+        "example-25-bit-stand-point-99": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-99",
+          "x": {
+            "expression": "-27mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "8mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-101": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-101",
+          "x": {
+            "expression": "-25mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "5mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-103": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-103",
+          "x": {
+            "expression": "-21mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "5mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-105": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-105",
+          "x": {
+            "expression": "-19mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "8mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-107": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-107",
+          "x": {
+            "expression": "-21mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "11mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-109": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-109",
+          "x": {
+            "expression": "-25mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "11mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-line-111": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-111",
+          "startPointId": "example-25-bit-stand-point-99",
+          "endPointId": "example-25-bit-stand-point-101"
+        },
+        "example-25-bit-stand-line-112": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-112",
+          "startPointId": "example-25-bit-stand-point-101",
+          "endPointId": "example-25-bit-stand-point-103"
+        },
+        "example-25-bit-stand-line-113": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-113",
+          "startPointId": "example-25-bit-stand-point-103",
+          "endPointId": "example-25-bit-stand-point-105"
+        },
+        "example-25-bit-stand-line-114": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-114",
+          "startPointId": "example-25-bit-stand-point-105",
+          "endPointId": "example-25-bit-stand-point-107"
+        },
+        "example-25-bit-stand-line-115": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-115",
+          "startPointId": "example-25-bit-stand-point-107",
+          "endPointId": "example-25-bit-stand-point-109"
+        },
+        "example-25-bit-stand-line-116": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-116",
+          "startPointId": "example-25-bit-stand-point-109",
+          "endPointId": "example-25-bit-stand-point-99"
+        },
+        "example-25-bit-stand-point-117": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-117",
+          "x": {
+            "expression": "-12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "8mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-119": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-119",
+          "x": {
+            "expression": "-10mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "5mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-121": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-121",
+          "x": {
+            "expression": "-6mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "5mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-123": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-123",
+          "x": {
+            "expression": "-4mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "8mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-125": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-125",
+          "x": {
+            "expression": "-6mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "11mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-127": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-127",
+          "x": {
+            "expression": "-10mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "11mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-line-129": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-129",
+          "startPointId": "example-25-bit-stand-point-117",
+          "endPointId": "example-25-bit-stand-point-119"
+        },
+        "example-25-bit-stand-line-130": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-130",
+          "startPointId": "example-25-bit-stand-point-119",
+          "endPointId": "example-25-bit-stand-point-121"
+        },
+        "example-25-bit-stand-line-131": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-131",
+          "startPointId": "example-25-bit-stand-point-121",
+          "endPointId": "example-25-bit-stand-point-123"
+        },
+        "example-25-bit-stand-line-132": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-132",
+          "startPointId": "example-25-bit-stand-point-123",
+          "endPointId": "example-25-bit-stand-point-125"
+        },
+        "example-25-bit-stand-line-133": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-133",
+          "startPointId": "example-25-bit-stand-point-125",
+          "endPointId": "example-25-bit-stand-point-127"
+        },
+        "example-25-bit-stand-line-134": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-134",
+          "startPointId": "example-25-bit-stand-point-127",
+          "endPointId": "example-25-bit-stand-point-117"
+        },
+        "example-25-bit-stand-point-135": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-135",
+          "x": {
+            "expression": "3mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "8mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-137": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-137",
+          "x": {
+            "expression": "5mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "5mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-139": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-139",
+          "x": {
+            "expression": "9mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "5mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-141": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-141",
+          "x": {
+            "expression": "11mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "8mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-143": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-143",
+          "x": {
+            "expression": "9mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "11mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-145": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-145",
+          "x": {
+            "expression": "5mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "11mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-line-147": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-147",
+          "startPointId": "example-25-bit-stand-point-135",
+          "endPointId": "example-25-bit-stand-point-137"
+        },
+        "example-25-bit-stand-line-148": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-148",
+          "startPointId": "example-25-bit-stand-point-137",
+          "endPointId": "example-25-bit-stand-point-139"
+        },
+        "example-25-bit-stand-line-149": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-149",
+          "startPointId": "example-25-bit-stand-point-139",
+          "endPointId": "example-25-bit-stand-point-141"
+        },
+        "example-25-bit-stand-line-150": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-150",
+          "startPointId": "example-25-bit-stand-point-141",
+          "endPointId": "example-25-bit-stand-point-143"
+        },
+        "example-25-bit-stand-line-151": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-151",
+          "startPointId": "example-25-bit-stand-point-143",
+          "endPointId": "example-25-bit-stand-point-145"
+        },
+        "example-25-bit-stand-line-152": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-152",
+          "startPointId": "example-25-bit-stand-point-145",
+          "endPointId": "example-25-bit-stand-point-135"
+        },
+        "example-25-bit-stand-point-153": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-153",
+          "x": {
+            "expression": "18mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "8mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-155": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-155",
+          "x": {
+            "expression": "20mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "5mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-157": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-157",
+          "x": {
+            "expression": "24mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "5mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-159": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-159",
+          "x": {
+            "expression": "26mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "8mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-161": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-161",
+          "x": {
+            "expression": "24mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "11mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-163": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-163",
+          "x": {
+            "expression": "20mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "11mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-line-165": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-165",
+          "startPointId": "example-25-bit-stand-point-153",
+          "endPointId": "example-25-bit-stand-point-155"
+        },
+        "example-25-bit-stand-line-166": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-166",
+          "startPointId": "example-25-bit-stand-point-155",
+          "endPointId": "example-25-bit-stand-point-157"
+        },
+        "example-25-bit-stand-line-167": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-167",
+          "startPointId": "example-25-bit-stand-point-157",
+          "endPointId": "example-25-bit-stand-point-159"
+        },
+        "example-25-bit-stand-line-168": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-168",
+          "startPointId": "example-25-bit-stand-point-159",
+          "endPointId": "example-25-bit-stand-point-161"
+        },
+        "example-25-bit-stand-line-169": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-169",
+          "startPointId": "example-25-bit-stand-point-161",
+          "endPointId": "example-25-bit-stand-point-163"
+        },
+        "example-25-bit-stand-line-170": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-170",
+          "startPointId": "example-25-bit-stand-point-163",
+          "endPointId": "example-25-bit-stand-point-153"
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-25-bit-stand-fixed-4",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-3"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-6",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-5"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-8",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-7"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-10",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-9"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-12",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-11"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-14",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-13"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-16",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-15"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-18",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-17"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-28",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-27"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-30",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-29"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-32",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-31"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-34",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-33"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-36",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-35"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-38",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-37"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-46",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-45"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-48",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-47"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-50",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-49"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-52",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-51"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-54",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-53"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-56",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-55"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-64",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-63"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-66",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-65"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-68",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-67"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-70",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-69"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-72",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-71"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-74",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-73"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-82",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-81"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-84",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-83"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-86",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-85"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-88",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-87"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-90",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-89"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-92",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-91"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-100",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-99"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-102",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-101"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-104",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-103"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-106",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-105"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-108",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-107"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-110",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-109"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-118",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-117"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-120",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-119"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-122",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-121"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-124",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-123"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-126",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-125"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-128",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-127"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-136",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-135"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-138",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-137"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-140",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-139"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-142",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-141"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-144",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-143"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-146",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-145"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-154",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-153"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-156",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-155"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-158",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-157"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-160",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-159"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-162",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-161"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-164",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-163"
+          ]
+        }
+      ],
+      "dimensions": []
+    },
+    "example-25-bit-stand-sketch-173": {
+      "id": "example-25-bit-stand-sketch-173",
+      "componentId": "example-25-bit-stand-part-172",
+      "name": "Flat rack floor profile",
+      "plane": {
+        "type": "origin",
+        "plane": "XY"
+      },
+      "timelineStep": 3,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-25-bit-stand-point-174": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-174",
+          "x": {
+            "expression": "-35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-18mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-176": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-176",
+          "x": {
+            "expression": "33mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-18mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-178": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-178",
+          "x": {
+            "expression": "33mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "18mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-point-180": {
+          "type": "point",
+          "id": "example-25-bit-stand-point-180",
+          "x": {
+            "expression": "-35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "18mm",
+            "unit": "mm"
+          }
+        },
+        "example-25-bit-stand-line-182": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-182",
+          "startPointId": "example-25-bit-stand-point-174",
+          "endPointId": "example-25-bit-stand-point-176"
+        },
+        "example-25-bit-stand-line-183": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-183",
+          "startPointId": "example-25-bit-stand-point-176",
+          "endPointId": "example-25-bit-stand-point-178"
+        },
+        "example-25-bit-stand-line-184": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-184",
+          "startPointId": "example-25-bit-stand-point-178",
+          "endPointId": "example-25-bit-stand-point-180"
+        },
+        "example-25-bit-stand-line-185": {
+          "type": "line",
+          "id": "example-25-bit-stand-line-185",
+          "startPointId": "example-25-bit-stand-point-180",
+          "endPointId": "example-25-bit-stand-point-174"
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-25-bit-stand-fixed-175",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-174"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-177",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-176"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-179",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-178"
+          ]
+        },
+        {
+          "id": "example-25-bit-stand-fixed-181",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-25-bit-stand-point-180"
+          ]
+        }
+      ],
+      "dimensions": []
+    }
+  },
+  "features": [
+    {
+      "id": "example-25-bit-stand-feature-171",
+      "name": "Faceted holder and sockets",
+      "componentId": "example-25-bit-stand-part-1",
+      "timelineStep": 2,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "extrude",
+      "sketchId": "example-25-bit-stand-sketch-2",
+      "profileId": "example-25-bit-stand-sketch-2:profile:pv17036",
+      "direction": "positive",
+      "operation": "newBody",
+      "distance": {
+        "expression": "socket_depth",
+        "unit": "mm",
+        "parameterRefs": {
+          "socket_depth": "example-25-bit-stand-parameter"
+        }
+      }
+    },
+    {
+      "id": "example-25-bit-stand-feature-186",
+      "name": "Flat rack floor",
+      "componentId": "example-25-bit-stand-part-172",
+      "timelineStep": 4,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "extrude",
+      "sketchId": "example-25-bit-stand-sketch-173",
+      "profileId": "example-25-bit-stand-sketch-173:profile:p1fglqe9",
+      "direction": "positive",
+      "operation": "newBody",
+      "distance": {
+        "expression": "3mm",
+        "unit": "mm"
+      }
+    }
+  ]
+}

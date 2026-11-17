@@ -1,0 +1,955 @@
+{
+  "schemaVersion": 26,
+  "id": "example-27-controller-case",
+  "name": "Controller enclosure and lid",
+  "units": "metric",
+  "unitSettings": {
+    "length": "mm",
+    "angle": "deg"
+  },
+  "createdAt": "2026-11-17T12:00:00.000Z",
+  "updatedAt": "2026-11-17T12:00:00.000Z",
+  "rootComponentId": "example-27-controller-case-root",
+  "components": {
+    "example-27-controller-case-root": {
+      "id": "example-27-controller-case-root",
+      "name": "Project reference"
+    },
+    "example-27-controller-case-part-1": {
+      "id": "example-27-controller-case-part-1",
+      "name": "Lower enclosure",
+      "appearance": "polymer"
+    },
+    "example-27-controller-case-part-17": {
+      "id": "example-27-controller-case-part-17",
+      "name": "Lid",
+      "appearance": "aluminum"
+    }
+  },
+  "parameters": {
+    "case_wall": {
+      "id": "example-27-controller-case-parameter",
+      "name": "case_wall",
+      "expression": "2.5mm",
+      "value": 2.5,
+      "unit": "mm"
+    }
+  },
+  "sketches": {
+    "example-27-controller-case-sketch-2": {
+      "id": "example-27-controller-case-sketch-2",
+      "componentId": "example-27-controller-case-part-1",
+      "name": "Case blank profile",
+      "plane": {
+        "type": "origin",
+        "plane": "XY"
+      },
+      "timelineStep": 1,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-27-controller-case-point-3": {
+          "type": "point",
+          "id": "example-27-controller-case-point-3",
+          "x": {
+            "expression": "-38mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-25mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-point-5": {
+          "type": "point",
+          "id": "example-27-controller-case-point-5",
+          "x": {
+            "expression": "38mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-25mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-point-7": {
+          "type": "point",
+          "id": "example-27-controller-case-point-7",
+          "x": {
+            "expression": "38mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "25mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-point-9": {
+          "type": "point",
+          "id": "example-27-controller-case-point-9",
+          "x": {
+            "expression": "-38mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "25mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-line-11": {
+          "type": "line",
+          "id": "example-27-controller-case-line-11",
+          "startPointId": "example-27-controller-case-point-3",
+          "endPointId": "example-27-controller-case-point-5"
+        },
+        "example-27-controller-case-line-12": {
+          "type": "line",
+          "id": "example-27-controller-case-line-12",
+          "startPointId": "example-27-controller-case-point-5",
+          "endPointId": "example-27-controller-case-point-7"
+        },
+        "example-27-controller-case-line-13": {
+          "type": "line",
+          "id": "example-27-controller-case-line-13",
+          "startPointId": "example-27-controller-case-point-7",
+          "endPointId": "example-27-controller-case-point-9"
+        },
+        "example-27-controller-case-line-14": {
+          "type": "line",
+          "id": "example-27-controller-case-line-14",
+          "startPointId": "example-27-controller-case-point-9",
+          "endPointId": "example-27-controller-case-point-3"
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-27-controller-case-fixed-4",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-3"
+          ]
+        },
+        {
+          "id": "example-27-controller-case-fixed-6",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-5"
+          ]
+        },
+        {
+          "id": "example-27-controller-case-fixed-8",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-7"
+          ]
+        },
+        {
+          "id": "example-27-controller-case-fixed-10",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-9"
+          ]
+        }
+      ],
+      "dimensions": []
+    },
+    "example-27-controller-case-sketch-18": {
+      "id": "example-27-controller-case-sketch-18",
+      "componentId": "example-27-controller-case-part-17",
+      "name": "Lid and connector windows profile",
+      "plane": {
+        "type": "origin",
+        "plane": "XY"
+      },
+      "timelineStep": 4,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-27-controller-case-point-19": {
+          "type": "point",
+          "id": "example-27-controller-case-point-19",
+          "x": {
+            "expression": "-38mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "32mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-point-21": {
+          "type": "point",
+          "id": "example-27-controller-case-point-21",
+          "x": {
+            "expression": "38mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "32mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-point-23": {
+          "type": "point",
+          "id": "example-27-controller-case-point-23",
+          "x": {
+            "expression": "38mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "82mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-point-25": {
+          "type": "point",
+          "id": "example-27-controller-case-point-25",
+          "x": {
+            "expression": "-38mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "82mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-line-27": {
+          "type": "line",
+          "id": "example-27-controller-case-line-27",
+          "startPointId": "example-27-controller-case-point-19",
+          "endPointId": "example-27-controller-case-point-21"
+        },
+        "example-27-controller-case-line-28": {
+          "type": "line",
+          "id": "example-27-controller-case-line-28",
+          "startPointId": "example-27-controller-case-point-21",
+          "endPointId": "example-27-controller-case-point-23"
+        },
+        "example-27-controller-case-line-29": {
+          "type": "line",
+          "id": "example-27-controller-case-line-29",
+          "startPointId": "example-27-controller-case-point-23",
+          "endPointId": "example-27-controller-case-point-25"
+        },
+        "example-27-controller-case-line-30": {
+          "type": "line",
+          "id": "example-27-controller-case-line-30",
+          "startPointId": "example-27-controller-case-point-25",
+          "endPointId": "example-27-controller-case-point-19"
+        },
+        "example-27-controller-case-point-31": {
+          "type": "point",
+          "id": "example-27-controller-case-point-31",
+          "x": {
+            "expression": "-20mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "49mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-point-33": {
+          "type": "point",
+          "id": "example-27-controller-case-point-33",
+          "x": {
+            "expression": "15mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "49mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-point-35": {
+          "type": "point",
+          "id": "example-27-controller-case-point-35",
+          "x": {
+            "expression": "15mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "62mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-point-37": {
+          "type": "point",
+          "id": "example-27-controller-case-point-37",
+          "x": {
+            "expression": "-20mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "62mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-line-39": {
+          "type": "line",
+          "id": "example-27-controller-case-line-39",
+          "startPointId": "example-27-controller-case-point-31",
+          "endPointId": "example-27-controller-case-point-33"
+        },
+        "example-27-controller-case-line-40": {
+          "type": "line",
+          "id": "example-27-controller-case-line-40",
+          "startPointId": "example-27-controller-case-point-33",
+          "endPointId": "example-27-controller-case-point-35"
+        },
+        "example-27-controller-case-line-41": {
+          "type": "line",
+          "id": "example-27-controller-case-line-41",
+          "startPointId": "example-27-controller-case-point-35",
+          "endPointId": "example-27-controller-case-point-37"
+        },
+        "example-27-controller-case-line-42": {
+          "type": "line",
+          "id": "example-27-controller-case-line-42",
+          "startPointId": "example-27-controller-case-point-37",
+          "endPointId": "example-27-controller-case-point-31"
+        },
+        "example-27-controller-case-point-43": {
+          "type": "point",
+          "id": "example-27-controller-case-point-43",
+          "x": {
+            "expression": "20mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "54mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-point-45": {
+          "type": "point",
+          "id": "example-27-controller-case-point-45",
+          "x": {
+            "expression": "29mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "54mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-point-47": {
+          "type": "point",
+          "id": "example-27-controller-case-point-47",
+          "x": {
+            "expression": "29mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "63mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-point-49": {
+          "type": "point",
+          "id": "example-27-controller-case-point-49",
+          "x": {
+            "expression": "20mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "63mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-line-51": {
+          "type": "line",
+          "id": "example-27-controller-case-line-51",
+          "startPointId": "example-27-controller-case-point-43",
+          "endPointId": "example-27-controller-case-point-45"
+        },
+        "example-27-controller-case-line-52": {
+          "type": "line",
+          "id": "example-27-controller-case-line-52",
+          "startPointId": "example-27-controller-case-point-45",
+          "endPointId": "example-27-controller-case-point-47"
+        },
+        "example-27-controller-case-line-53": {
+          "type": "line",
+          "id": "example-27-controller-case-line-53",
+          "startPointId": "example-27-controller-case-point-47",
+          "endPointId": "example-27-controller-case-point-49"
+        },
+        "example-27-controller-case-line-54": {
+          "type": "line",
+          "id": "example-27-controller-case-line-54",
+          "startPointId": "example-27-controller-case-point-49",
+          "endPointId": "example-27-controller-case-point-43"
+        },
+        "example-27-controller-case-point-55": {
+          "type": "point",
+          "id": "example-27-controller-case-point-55",
+          "x": {
+            "expression": "-34mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "36mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-point-57": {
+          "type": "point",
+          "id": "example-27-controller-case-point-57",
+          "x": {
+            "expression": "-30mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "36mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-point-59": {
+          "type": "point",
+          "id": "example-27-controller-case-point-59",
+          "x": {
+            "expression": "-30mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "40mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-point-61": {
+          "type": "point",
+          "id": "example-27-controller-case-point-61",
+          "x": {
+            "expression": "-34mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "40mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-line-63": {
+          "type": "line",
+          "id": "example-27-controller-case-line-63",
+          "startPointId": "example-27-controller-case-point-55",
+          "endPointId": "example-27-controller-case-point-57"
+        },
+        "example-27-controller-case-line-64": {
+          "type": "line",
+          "id": "example-27-controller-case-line-64",
+          "startPointId": "example-27-controller-case-point-57",
+          "endPointId": "example-27-controller-case-point-59"
+        },
+        "example-27-controller-case-line-65": {
+          "type": "line",
+          "id": "example-27-controller-case-line-65",
+          "startPointId": "example-27-controller-case-point-59",
+          "endPointId": "example-27-controller-case-point-61"
+        },
+        "example-27-controller-case-line-66": {
+          "type": "line",
+          "id": "example-27-controller-case-line-66",
+          "startPointId": "example-27-controller-case-point-61",
+          "endPointId": "example-27-controller-case-point-55"
+        },
+        "example-27-controller-case-point-67": {
+          "type": "point",
+          "id": "example-27-controller-case-point-67",
+          "x": {
+            "expression": "-34mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "74mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-point-69": {
+          "type": "point",
+          "id": "example-27-controller-case-point-69",
+          "x": {
+            "expression": "-30mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "74mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-point-71": {
+          "type": "point",
+          "id": "example-27-controller-case-point-71",
+          "x": {
+            "expression": "-30mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "78mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-point-73": {
+          "type": "point",
+          "id": "example-27-controller-case-point-73",
+          "x": {
+            "expression": "-34mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "78mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-line-75": {
+          "type": "line",
+          "id": "example-27-controller-case-line-75",
+          "startPointId": "example-27-controller-case-point-67",
+          "endPointId": "example-27-controller-case-point-69"
+        },
+        "example-27-controller-case-line-76": {
+          "type": "line",
+          "id": "example-27-controller-case-line-76",
+          "startPointId": "example-27-controller-case-point-69",
+          "endPointId": "example-27-controller-case-point-71"
+        },
+        "example-27-controller-case-line-77": {
+          "type": "line",
+          "id": "example-27-controller-case-line-77",
+          "startPointId": "example-27-controller-case-point-71",
+          "endPointId": "example-27-controller-case-point-73"
+        },
+        "example-27-controller-case-line-78": {
+          "type": "line",
+          "id": "example-27-controller-case-line-78",
+          "startPointId": "example-27-controller-case-point-73",
+          "endPointId": "example-27-controller-case-point-67"
+        },
+        "example-27-controller-case-point-79": {
+          "type": "point",
+          "id": "example-27-controller-case-point-79",
+          "x": {
+            "expression": "30mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "36mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-point-81": {
+          "type": "point",
+          "id": "example-27-controller-case-point-81",
+          "x": {
+            "expression": "34mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "36mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-point-83": {
+          "type": "point",
+          "id": "example-27-controller-case-point-83",
+          "x": {
+            "expression": "34mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "40mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-point-85": {
+          "type": "point",
+          "id": "example-27-controller-case-point-85",
+          "x": {
+            "expression": "30mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "40mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-line-87": {
+          "type": "line",
+          "id": "example-27-controller-case-line-87",
+          "startPointId": "example-27-controller-case-point-79",
+          "endPointId": "example-27-controller-case-point-81"
+        },
+        "example-27-controller-case-line-88": {
+          "type": "line",
+          "id": "example-27-controller-case-line-88",
+          "startPointId": "example-27-controller-case-point-81",
+          "endPointId": "example-27-controller-case-point-83"
+        },
+        "example-27-controller-case-line-89": {
+          "type": "line",
+          "id": "example-27-controller-case-line-89",
+          "startPointId": "example-27-controller-case-point-83",
+          "endPointId": "example-27-controller-case-point-85"
+        },
+        "example-27-controller-case-line-90": {
+          "type": "line",
+          "id": "example-27-controller-case-line-90",
+          "startPointId": "example-27-controller-case-point-85",
+          "endPointId": "example-27-controller-case-point-79"
+        },
+        "example-27-controller-case-point-91": {
+          "type": "point",
+          "id": "example-27-controller-case-point-91",
+          "x": {
+            "expression": "30mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "74mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-point-93": {
+          "type": "point",
+          "id": "example-27-controller-case-point-93",
+          "x": {
+            "expression": "34mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "74mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-point-95": {
+          "type": "point",
+          "id": "example-27-controller-case-point-95",
+          "x": {
+            "expression": "34mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "78mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-point-97": {
+          "type": "point",
+          "id": "example-27-controller-case-point-97",
+          "x": {
+            "expression": "30mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "78mm",
+            "unit": "mm"
+          }
+        },
+        "example-27-controller-case-line-99": {
+          "type": "line",
+          "id": "example-27-controller-case-line-99",
+          "startPointId": "example-27-controller-case-point-91",
+          "endPointId": "example-27-controller-case-point-93"
+        },
+        "example-27-controller-case-line-100": {
+          "type": "line",
+          "id": "example-27-controller-case-line-100",
+          "startPointId": "example-27-controller-case-point-93",
+          "endPointId": "example-27-controller-case-point-95"
+        },
+        "example-27-controller-case-line-101": {
+          "type": "line",
+          "id": "example-27-controller-case-line-101",
+          "startPointId": "example-27-controller-case-point-95",
+          "endPointId": "example-27-controller-case-point-97"
+        },
+        "example-27-controller-case-line-102": {
+          "type": "line",
+          "id": "example-27-controller-case-line-102",
+          "startPointId": "example-27-controller-case-point-97",
+          "endPointId": "example-27-controller-case-point-91"
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-27-controller-case-fixed-20",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-19"
+          ]
+        },
+        {
+          "id": "example-27-controller-case-fixed-22",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-21"
+          ]
+        },
+        {
+          "id": "example-27-controller-case-fixed-24",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-23"
+          ]
+        },
+        {
+          "id": "example-27-controller-case-fixed-26",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-25"
+          ]
+        },
+        {
+          "id": "example-27-controller-case-fixed-32",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-31"
+          ]
+        },
+        {
+          "id": "example-27-controller-case-fixed-34",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-33"
+          ]
+        },
+        {
+          "id": "example-27-controller-case-fixed-36",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-35"
+          ]
+        },
+        {
+          "id": "example-27-controller-case-fixed-38",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-37"
+          ]
+        },
+        {
+          "id": "example-27-controller-case-fixed-44",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-43"
+          ]
+        },
+        {
+          "id": "example-27-controller-case-fixed-46",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-45"
+          ]
+        },
+        {
+          "id": "example-27-controller-case-fixed-48",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-47"
+          ]
+        },
+        {
+          "id": "example-27-controller-case-fixed-50",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-49"
+          ]
+        },
+        {
+          "id": "example-27-controller-case-fixed-56",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-55"
+          ]
+        },
+        {
+          "id": "example-27-controller-case-fixed-58",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-57"
+          ]
+        },
+        {
+          "id": "example-27-controller-case-fixed-60",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-59"
+          ]
+        },
+        {
+          "id": "example-27-controller-case-fixed-62",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-61"
+          ]
+        },
+        {
+          "id": "example-27-controller-case-fixed-68",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-67"
+          ]
+        },
+        {
+          "id": "example-27-controller-case-fixed-70",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-69"
+          ]
+        },
+        {
+          "id": "example-27-controller-case-fixed-72",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-71"
+          ]
+        },
+        {
+          "id": "example-27-controller-case-fixed-74",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-73"
+          ]
+        },
+        {
+          "id": "example-27-controller-case-fixed-80",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-79"
+          ]
+        },
+        {
+          "id": "example-27-controller-case-fixed-82",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-81"
+          ]
+        },
+        {
+          "id": "example-27-controller-case-fixed-84",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-83"
+          ]
+        },
+        {
+          "id": "example-27-controller-case-fixed-86",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-85"
+          ]
+        },
+        {
+          "id": "example-27-controller-case-fixed-92",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-91"
+          ]
+        },
+        {
+          "id": "example-27-controller-case-fixed-94",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-93"
+          ]
+        },
+        {
+          "id": "example-27-controller-case-fixed-96",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-95"
+          ]
+        },
+        {
+          "id": "example-27-controller-case-fixed-98",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-27-controller-case-point-97"
+          ]
+        }
+      ],
+      "dimensions": []
+    }
+  },
+  "features": [
+    {
+      "id": "example-27-controller-case-feature-15",
+      "name": "Case blank",
+      "componentId": "example-27-controller-case-part-1",
+      "timelineStep": 2,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "extrude",
+      "sketchId": "example-27-controller-case-sketch-2",
+      "profileId": "example-27-controller-case-sketch-2:profile:p16qb6hh",
+      "direction": "positive",
+      "operation": "newBody",
+      "distance": {
+        "expression": "24mm",
+        "unit": "mm"
+      }
+    },
+    {
+      "id": "example-27-controller-case-feature-16",
+      "name": "Hollow the open top",
+      "componentId": "example-27-controller-case-part-1",
+      "timelineStep": 3,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "shell",
+      "sourceFeatureId": "example-27-controller-case-feature-15",
+      "opening": "endCap",
+      "wallThickness": {
+        "expression": "case_wall",
+        "unit": "mm",
+        "parameterRefs": {
+          "case_wall": "example-27-controller-case-parameter"
+        }
+      }
+    },
+    {
+      "id": "example-27-controller-case-feature-103",
+      "name": "Lid and connector windows",
+      "componentId": "example-27-controller-case-part-17",
+      "timelineStep": 5,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "extrude",
+      "sketchId": "example-27-controller-case-sketch-18",
+      "profileId": "example-27-controller-case-sketch-18:profile:p1lvekke",
+      "direction": "positive",
+      "operation": "newBody",
+      "distance": {
+        "expression": "4mm",
+        "unit": "mm"
+      }
+    }
+  ]
+}

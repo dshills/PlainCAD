@@ -1,0 +1,1029 @@
+{
+  "schemaVersion": 26,
+  "id": "example-30-lab-rack",
+  "name": "Eight-position sample rack",
+  "units": "metric",
+  "unitSettings": {
+    "length": "mm",
+    "angle": "deg"
+  },
+  "createdAt": "2026-11-17T12:00:00.000Z",
+  "updatedAt": "2026-11-17T12:00:00.000Z",
+  "rootComponentId": "example-30-lab-rack-root",
+  "components": {
+    "example-30-lab-rack-root": {
+      "id": "example-30-lab-rack-root",
+      "name": "Project reference"
+    },
+    "example-30-lab-rack-part-1": {
+      "id": "example-30-lab-rack-part-1",
+      "name": "Base deck",
+      "appearance": "polymer"
+    },
+    "example-30-lab-rack-part-34": {
+      "id": "example-30-lab-rack-part-34",
+      "name": "Post 1",
+      "appearance": "steel"
+    },
+    "example-30-lab-rack-part-40": {
+      "id": "example-30-lab-rack-part-40",
+      "name": "Post 2",
+      "appearance": "steel"
+    },
+    "example-30-lab-rack-part-46": {
+      "id": "example-30-lab-rack-part-46",
+      "name": "Post 3",
+      "appearance": "steel"
+    },
+    "example-30-lab-rack-part-52": {
+      "id": "example-30-lab-rack-part-52",
+      "name": "Post 4",
+      "appearance": "steel"
+    },
+    "example-30-lab-rack-part-58": {
+      "id": "example-30-lab-rack-part-58",
+      "name": "Upper deck",
+      "appearance": "polymer"
+    }
+  },
+  "parameters": {
+    "rack_clearance": {
+      "id": "example-30-lab-rack-parameter",
+      "name": "rack_clearance",
+      "expression": "28mm",
+      "value": 28,
+      "unit": "mm"
+    }
+  },
+  "sketches": {
+    "example-30-lab-rack-sketch-2": {
+      "id": "example-30-lab-rack-sketch-2",
+      "componentId": "example-30-lab-rack-part-1",
+      "name": "Lower deck outline profile",
+      "plane": {
+        "type": "origin",
+        "plane": "XY"
+      },
+      "timelineStep": 1,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-30-lab-rack-point-3": {
+          "type": "point",
+          "id": "example-30-lab-rack-point-3",
+          "x": {
+            "expression": "-39mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-21mm",
+            "unit": "mm"
+          }
+        },
+        "example-30-lab-rack-point-5": {
+          "type": "point",
+          "id": "example-30-lab-rack-point-5",
+          "x": {
+            "expression": "39mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-21mm",
+            "unit": "mm"
+          }
+        },
+        "example-30-lab-rack-point-7": {
+          "type": "point",
+          "id": "example-30-lab-rack-point-7",
+          "x": {
+            "expression": "39mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "21mm",
+            "unit": "mm"
+          }
+        },
+        "example-30-lab-rack-point-9": {
+          "type": "point",
+          "id": "example-30-lab-rack-point-9",
+          "x": {
+            "expression": "-39mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "21mm",
+            "unit": "mm"
+          }
+        },
+        "example-30-lab-rack-line-11": {
+          "type": "line",
+          "id": "example-30-lab-rack-line-11",
+          "startPointId": "example-30-lab-rack-point-3",
+          "endPointId": "example-30-lab-rack-point-5"
+        },
+        "example-30-lab-rack-line-12": {
+          "type": "line",
+          "id": "example-30-lab-rack-line-12",
+          "startPointId": "example-30-lab-rack-point-5",
+          "endPointId": "example-30-lab-rack-point-7"
+        },
+        "example-30-lab-rack-line-13": {
+          "type": "line",
+          "id": "example-30-lab-rack-line-13",
+          "startPointId": "example-30-lab-rack-point-7",
+          "endPointId": "example-30-lab-rack-point-9"
+        },
+        "example-30-lab-rack-line-14": {
+          "type": "line",
+          "id": "example-30-lab-rack-line-14",
+          "startPointId": "example-30-lab-rack-point-9",
+          "endPointId": "example-30-lab-rack-point-3"
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-30-lab-rack-fixed-4",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-30-lab-rack-point-3"
+          ]
+        },
+        {
+          "id": "example-30-lab-rack-fixed-6",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-30-lab-rack-point-5"
+          ]
+        },
+        {
+          "id": "example-30-lab-rack-fixed-8",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-30-lab-rack-point-7"
+          ]
+        },
+        {
+          "id": "example-30-lab-rack-fixed-10",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-30-lab-rack-point-9"
+          ]
+        }
+      ],
+      "dimensions": []
+    },
+    "example-30-lab-rack-sketch-16": {
+      "id": "example-30-lab-rack-sketch-16",
+      "componentId": "example-30-lab-rack-part-1",
+      "name": "Eight sample seats centers",
+      "plane": {
+        "type": "offset",
+        "base": "XY",
+        "offset": {
+          "expression": "5mm",
+          "unit": "mm"
+        }
+      },
+      "timelineStep": 3,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-30-lab-rack-point-17": {
+          "type": "point",
+          "id": "example-30-lab-rack-point-17",
+          "x": {
+            "expression": "-26mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-9mm",
+            "unit": "mm"
+          }
+        },
+        "example-30-lab-rack-point-19": {
+          "type": "point",
+          "id": "example-30-lab-rack-point-19",
+          "x": {
+            "expression": "-26mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "9mm",
+            "unit": "mm"
+          }
+        },
+        "example-30-lab-rack-point-21": {
+          "type": "point",
+          "id": "example-30-lab-rack-point-21",
+          "x": {
+            "expression": "-9mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-9mm",
+            "unit": "mm"
+          }
+        },
+        "example-30-lab-rack-point-23": {
+          "type": "point",
+          "id": "example-30-lab-rack-point-23",
+          "x": {
+            "expression": "-9mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "9mm",
+            "unit": "mm"
+          }
+        },
+        "example-30-lab-rack-point-25": {
+          "type": "point",
+          "id": "example-30-lab-rack-point-25",
+          "x": {
+            "expression": "9mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-9mm",
+            "unit": "mm"
+          }
+        },
+        "example-30-lab-rack-point-27": {
+          "type": "point",
+          "id": "example-30-lab-rack-point-27",
+          "x": {
+            "expression": "9mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "9mm",
+            "unit": "mm"
+          }
+        },
+        "example-30-lab-rack-point-29": {
+          "type": "point",
+          "id": "example-30-lab-rack-point-29",
+          "x": {
+            "expression": "26mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-9mm",
+            "unit": "mm"
+          }
+        },
+        "example-30-lab-rack-point-31": {
+          "type": "point",
+          "id": "example-30-lab-rack-point-31",
+          "x": {
+            "expression": "26mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "9mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-30-lab-rack-fixed-18",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-30-lab-rack-point-17"
+          ]
+        },
+        {
+          "id": "example-30-lab-rack-fixed-20",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-30-lab-rack-point-19"
+          ]
+        },
+        {
+          "id": "example-30-lab-rack-fixed-22",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-30-lab-rack-point-21"
+          ]
+        },
+        {
+          "id": "example-30-lab-rack-fixed-24",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-30-lab-rack-point-23"
+          ]
+        },
+        {
+          "id": "example-30-lab-rack-fixed-26",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-30-lab-rack-point-25"
+          ]
+        },
+        {
+          "id": "example-30-lab-rack-fixed-28",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-30-lab-rack-point-27"
+          ]
+        },
+        {
+          "id": "example-30-lab-rack-fixed-30",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-30-lab-rack-point-29"
+          ]
+        },
+        {
+          "id": "example-30-lab-rack-fixed-32",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-30-lab-rack-point-31"
+          ]
+        }
+      ],
+      "dimensions": []
+    },
+    "example-30-lab-rack-sketch-35": {
+      "id": "example-30-lab-rack-sketch-35",
+      "componentId": "example-30-lab-rack-part-34",
+      "name": "Deck spacer profile",
+      "plane": {
+        "type": "offset",
+        "base": "XY",
+        "offset": {
+          "expression": "5mm",
+          "unit": "mm"
+        }
+      },
+      "timelineStep": 5,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-30-lab-rack-point-37": {
+          "type": "point",
+          "id": "example-30-lab-rack-point-37",
+          "x": {
+            "expression": "-33mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-16mm",
+            "unit": "mm"
+          }
+        },
+        "example-30-lab-rack-circle-36": {
+          "type": "circle",
+          "id": "example-30-lab-rack-circle-36",
+          "centerPointId": "example-30-lab-rack-point-37",
+          "radius": {
+            "expression": "3mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-30-lab-rack-fixed-38",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-30-lab-rack-point-37"
+          ]
+        }
+      ],
+      "dimensions": []
+    },
+    "example-30-lab-rack-sketch-41": {
+      "id": "example-30-lab-rack-sketch-41",
+      "componentId": "example-30-lab-rack-part-40",
+      "name": "Deck spacer profile",
+      "plane": {
+        "type": "offset",
+        "base": "XY",
+        "offset": {
+          "expression": "5mm",
+          "unit": "mm"
+        }
+      },
+      "timelineStep": 7,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-30-lab-rack-point-43": {
+          "type": "point",
+          "id": "example-30-lab-rack-point-43",
+          "x": {
+            "expression": "33mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-16mm",
+            "unit": "mm"
+          }
+        },
+        "example-30-lab-rack-circle-42": {
+          "type": "circle",
+          "id": "example-30-lab-rack-circle-42",
+          "centerPointId": "example-30-lab-rack-point-43",
+          "radius": {
+            "expression": "3mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-30-lab-rack-fixed-44",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-30-lab-rack-point-43"
+          ]
+        }
+      ],
+      "dimensions": []
+    },
+    "example-30-lab-rack-sketch-47": {
+      "id": "example-30-lab-rack-sketch-47",
+      "componentId": "example-30-lab-rack-part-46",
+      "name": "Deck spacer profile",
+      "plane": {
+        "type": "offset",
+        "base": "XY",
+        "offset": {
+          "expression": "5mm",
+          "unit": "mm"
+        }
+      },
+      "timelineStep": 9,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-30-lab-rack-point-49": {
+          "type": "point",
+          "id": "example-30-lab-rack-point-49",
+          "x": {
+            "expression": "33mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "16mm",
+            "unit": "mm"
+          }
+        },
+        "example-30-lab-rack-circle-48": {
+          "type": "circle",
+          "id": "example-30-lab-rack-circle-48",
+          "centerPointId": "example-30-lab-rack-point-49",
+          "radius": {
+            "expression": "3mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-30-lab-rack-fixed-50",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-30-lab-rack-point-49"
+          ]
+        }
+      ],
+      "dimensions": []
+    },
+    "example-30-lab-rack-sketch-53": {
+      "id": "example-30-lab-rack-sketch-53",
+      "componentId": "example-30-lab-rack-part-52",
+      "name": "Deck spacer profile",
+      "plane": {
+        "type": "offset",
+        "base": "XY",
+        "offset": {
+          "expression": "5mm",
+          "unit": "mm"
+        }
+      },
+      "timelineStep": 11,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-30-lab-rack-point-55": {
+          "type": "point",
+          "id": "example-30-lab-rack-point-55",
+          "x": {
+            "expression": "-33mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "16mm",
+            "unit": "mm"
+          }
+        },
+        "example-30-lab-rack-circle-54": {
+          "type": "circle",
+          "id": "example-30-lab-rack-circle-54",
+          "centerPointId": "example-30-lab-rack-point-55",
+          "radius": {
+            "expression": "3mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-30-lab-rack-fixed-56",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-30-lab-rack-point-55"
+          ]
+        }
+      ],
+      "dimensions": []
+    },
+    "example-30-lab-rack-sketch-59": {
+      "id": "example-30-lab-rack-sketch-59",
+      "componentId": "example-30-lab-rack-part-58",
+      "name": "Upper deck outline profile",
+      "plane": {
+        "type": "offset",
+        "base": "XY",
+        "offset": {
+          "expression": "rack_clearance + 5mm",
+          "unit": "mm"
+        }
+      },
+      "timelineStep": 13,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-30-lab-rack-point-60": {
+          "type": "point",
+          "id": "example-30-lab-rack-point-60",
+          "x": {
+            "expression": "-39mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-21mm",
+            "unit": "mm"
+          }
+        },
+        "example-30-lab-rack-point-62": {
+          "type": "point",
+          "id": "example-30-lab-rack-point-62",
+          "x": {
+            "expression": "39mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-21mm",
+            "unit": "mm"
+          }
+        },
+        "example-30-lab-rack-point-64": {
+          "type": "point",
+          "id": "example-30-lab-rack-point-64",
+          "x": {
+            "expression": "39mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "21mm",
+            "unit": "mm"
+          }
+        },
+        "example-30-lab-rack-point-66": {
+          "type": "point",
+          "id": "example-30-lab-rack-point-66",
+          "x": {
+            "expression": "-39mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "21mm",
+            "unit": "mm"
+          }
+        },
+        "example-30-lab-rack-line-68": {
+          "type": "line",
+          "id": "example-30-lab-rack-line-68",
+          "startPointId": "example-30-lab-rack-point-60",
+          "endPointId": "example-30-lab-rack-point-62"
+        },
+        "example-30-lab-rack-line-69": {
+          "type": "line",
+          "id": "example-30-lab-rack-line-69",
+          "startPointId": "example-30-lab-rack-point-62",
+          "endPointId": "example-30-lab-rack-point-64"
+        },
+        "example-30-lab-rack-line-70": {
+          "type": "line",
+          "id": "example-30-lab-rack-line-70",
+          "startPointId": "example-30-lab-rack-point-64",
+          "endPointId": "example-30-lab-rack-point-66"
+        },
+        "example-30-lab-rack-line-71": {
+          "type": "line",
+          "id": "example-30-lab-rack-line-71",
+          "startPointId": "example-30-lab-rack-point-66",
+          "endPointId": "example-30-lab-rack-point-60"
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-30-lab-rack-fixed-61",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-30-lab-rack-point-60"
+          ]
+        },
+        {
+          "id": "example-30-lab-rack-fixed-63",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-30-lab-rack-point-62"
+          ]
+        },
+        {
+          "id": "example-30-lab-rack-fixed-65",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-30-lab-rack-point-64"
+          ]
+        },
+        {
+          "id": "example-30-lab-rack-fixed-67",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-30-lab-rack-point-66"
+          ]
+        }
+      ],
+      "dimensions": []
+    },
+    "example-30-lab-rack-sketch-73": {
+      "id": "example-30-lab-rack-sketch-73",
+      "componentId": "example-30-lab-rack-part-58",
+      "name": "Eight sample openings centers",
+      "plane": {
+        "type": "offset",
+        "base": "XY",
+        "offset": {
+          "expression": "rack_clearance + 5mm",
+          "unit": "mm"
+        }
+      },
+      "timelineStep": 15,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-30-lab-rack-point-74": {
+          "type": "point",
+          "id": "example-30-lab-rack-point-74",
+          "x": {
+            "expression": "-26mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-9mm",
+            "unit": "mm"
+          }
+        },
+        "example-30-lab-rack-point-76": {
+          "type": "point",
+          "id": "example-30-lab-rack-point-76",
+          "x": {
+            "expression": "-26mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "9mm",
+            "unit": "mm"
+          }
+        },
+        "example-30-lab-rack-point-78": {
+          "type": "point",
+          "id": "example-30-lab-rack-point-78",
+          "x": {
+            "expression": "-9mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-9mm",
+            "unit": "mm"
+          }
+        },
+        "example-30-lab-rack-point-80": {
+          "type": "point",
+          "id": "example-30-lab-rack-point-80",
+          "x": {
+            "expression": "-9mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "9mm",
+            "unit": "mm"
+          }
+        },
+        "example-30-lab-rack-point-82": {
+          "type": "point",
+          "id": "example-30-lab-rack-point-82",
+          "x": {
+            "expression": "9mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-9mm",
+            "unit": "mm"
+          }
+        },
+        "example-30-lab-rack-point-84": {
+          "type": "point",
+          "id": "example-30-lab-rack-point-84",
+          "x": {
+            "expression": "9mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "9mm",
+            "unit": "mm"
+          }
+        },
+        "example-30-lab-rack-point-86": {
+          "type": "point",
+          "id": "example-30-lab-rack-point-86",
+          "x": {
+            "expression": "26mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-9mm",
+            "unit": "mm"
+          }
+        },
+        "example-30-lab-rack-point-88": {
+          "type": "point",
+          "id": "example-30-lab-rack-point-88",
+          "x": {
+            "expression": "26mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "9mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-30-lab-rack-fixed-75",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-30-lab-rack-point-74"
+          ]
+        },
+        {
+          "id": "example-30-lab-rack-fixed-77",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-30-lab-rack-point-76"
+          ]
+        },
+        {
+          "id": "example-30-lab-rack-fixed-79",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-30-lab-rack-point-78"
+          ]
+        },
+        {
+          "id": "example-30-lab-rack-fixed-81",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-30-lab-rack-point-80"
+          ]
+        },
+        {
+          "id": "example-30-lab-rack-fixed-83",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-30-lab-rack-point-82"
+          ]
+        },
+        {
+          "id": "example-30-lab-rack-fixed-85",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-30-lab-rack-point-84"
+          ]
+        },
+        {
+          "id": "example-30-lab-rack-fixed-87",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-30-lab-rack-point-86"
+          ]
+        },
+        {
+          "id": "example-30-lab-rack-fixed-89",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-30-lab-rack-point-88"
+          ]
+        }
+      ],
+      "dimensions": []
+    }
+  },
+  "features": [
+    {
+      "id": "example-30-lab-rack-feature-15",
+      "name": "Lower deck outline",
+      "componentId": "example-30-lab-rack-part-1",
+      "timelineStep": 2,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "extrude",
+      "sketchId": "example-30-lab-rack-sketch-2",
+      "profileId": "example-30-lab-rack-sketch-2:profile:p4qg5o1",
+      "direction": "positive",
+      "operation": "newBody",
+      "distance": {
+        "expression": "5mm",
+        "unit": "mm"
+      }
+    },
+    {
+      "id": "example-30-lab-rack-feature-33",
+      "name": "Eight sample seats",
+      "componentId": "example-30-lab-rack-part-1",
+      "timelineStep": 4,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "hole",
+      "sketchId": "example-30-lab-rack-sketch-16",
+      "targetBodyIds": [
+        "body:example-30-lab-rack-feature-15"
+      ],
+      "centerPointIds": [
+        "example-30-lab-rack-point-17",
+        "example-30-lab-rack-point-19",
+        "example-30-lab-rack-point-21",
+        "example-30-lab-rack-point-23",
+        "example-30-lab-rack-point-25",
+        "example-30-lab-rack-point-27",
+        "example-30-lab-rack-point-29",
+        "example-30-lab-rack-point-31"
+      ],
+      "diameter": {
+        "expression": "8mm",
+        "unit": "mm"
+      },
+      "direction": "negative",
+      "depth": {
+        "expression": "2mm",
+        "unit": "mm"
+      }
+    },
+    {
+      "id": "example-30-lab-rack-feature-39",
+      "name": "Deck spacer",
+      "componentId": "example-30-lab-rack-part-34",
+      "timelineStep": 6,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "extrude",
+      "sketchId": "example-30-lab-rack-sketch-35",
+      "profileId": "example-30-lab-rack-sketch-35:profile:ph4g7ki",
+      "direction": "positive",
+      "operation": "newBody",
+      "distance": {
+        "expression": "rack_clearance",
+        "unit": "mm",
+        "parameterRefs": {
+          "rack_clearance": "example-30-lab-rack-parameter"
+        }
+      }
+    },
+    {
+      "id": "example-30-lab-rack-feature-45",
+      "name": "Deck spacer",
+      "componentId": "example-30-lab-rack-part-40",
+      "timelineStep": 8,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "extrude",
+      "sketchId": "example-30-lab-rack-sketch-41",
+      "profileId": "example-30-lab-rack-sketch-41:profile:pit23tx",
+      "direction": "positive",
+      "operation": "newBody",
+      "distance": {
+        "expression": "rack_clearance",
+        "unit": "mm",
+        "parameterRefs": {
+          "rack_clearance": "example-30-lab-rack-parameter"
+        }
+      }
+    },
+    {
+      "id": "example-30-lab-rack-feature-51",
+      "name": "Deck spacer",
+      "componentId": "example-30-lab-rack-part-46",
+      "timelineStep": 10,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "extrude",
+      "sketchId": "example-30-lab-rack-sketch-47",
+      "profileId": "example-30-lab-rack-sketch-47:profile:pkgzpzr",
+      "direction": "positive",
+      "operation": "newBody",
+      "distance": {
+        "expression": "rack_clearance",
+        "unit": "mm",
+        "parameterRefs": {
+          "rack_clearance": "example-30-lab-rack-parameter"
+        }
+      }
+    },
+    {
+      "id": "example-30-lab-rack-feature-57",
+      "name": "Deck spacer",
+      "componentId": "example-30-lab-rack-part-52",
+      "timelineStep": 12,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "extrude",
+      "sketchId": "example-30-lab-rack-sketch-53",
+      "profileId": "example-30-lab-rack-sketch-53:profile:php0jk2",
+      "direction": "positive",
+      "operation": "newBody",
+      "distance": {
+        "expression": "rack_clearance",
+        "unit": "mm",
+        "parameterRefs": {
+          "rack_clearance": "example-30-lab-rack-parameter"
+        }
+      }
+    },
+    {
+      "id": "example-30-lab-rack-feature-72",
+      "name": "Upper deck outline",
+      "componentId": "example-30-lab-rack-part-58",
+      "timelineStep": 14,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "extrude",
+      "sketchId": "example-30-lab-rack-sketch-59",
+      "profileId": "example-30-lab-rack-sketch-59:profile:p1ecb61x",
+      "direction": "positive",
+      "operation": "newBody",
+      "distance": {
+        "expression": "4mm",
+        "unit": "mm"
+      }
+    },
+    {
+      "id": "example-30-lab-rack-feature-90",
+      "name": "Eight sample openings",
+      "componentId": "example-30-lab-rack-part-58",
+      "timelineStep": 16,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "hole",
+      "sketchId": "example-30-lab-rack-sketch-73",
+      "targetBodyIds": [
+        "body:example-30-lab-rack-feature-72"
+      ],
+      "centerPointIds": [
+        "example-30-lab-rack-point-74",
+        "example-30-lab-rack-point-76",
+        "example-30-lab-rack-point-78",
+        "example-30-lab-rack-point-80",
+        "example-30-lab-rack-point-82",
+        "example-30-lab-rack-point-84",
+        "example-30-lab-rack-point-86",
+        "example-30-lab-rack-point-88"
+      ],
+      "diameter": {
+        "expression": "11mm",
+        "unit": "mm"
+      },
+      "direction": "positive",
+      "depth": "throughAll"
+    }
+  ]
+}

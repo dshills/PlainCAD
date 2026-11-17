@@ -1,0 +1,292 @@
+{
+  "schemaVersion": 26,
+  "id": "example-20-pulley-blank",
+  "name": "Flanged pulley blank",
+  "units": "metric",
+  "unitSettings": {
+    "length": "mm",
+    "angle": "deg"
+  },
+  "createdAt": "2026-11-17T12:00:00.000Z",
+  "updatedAt": "2026-11-17T12:00:00.000Z",
+  "rootComponentId": "example-20-pulley-blank-root",
+  "components": {
+    "example-20-pulley-blank-root": {
+      "id": "example-20-pulley-blank-root",
+      "name": "Project reference"
+    },
+    "example-20-pulley-blank-part-1": {
+      "id": "example-20-pulley-blank-part-1",
+      "name": "Pulley blank",
+      "appearance": "steel"
+    }
+  },
+  "parameters": {
+    "belt_width": {
+      "id": "example-20-pulley-blank-parameter",
+      "name": "belt_width",
+      "expression": "17mm",
+      "value": 17,
+      "unit": "mm"
+    }
+  },
+  "sketches": {
+    "example-20-pulley-blank-sketch-2": {
+      "id": "example-20-pulley-blank-sketch-2",
+      "componentId": "example-20-pulley-blank-part-1",
+      "name": "Turn both flanges and bore section",
+      "plane": {
+        "type": "origin",
+        "plane": "XZ"
+      },
+      "timelineStep": 1,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-20-pulley-blank-point-3": {
+          "type": "point",
+          "id": "example-20-pulley-blank-point-3",
+          "x": {
+            "expression": "7mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "example-20-pulley-blank-point-5": {
+          "type": "point",
+          "id": "example-20-pulley-blank-point-5",
+          "x": {
+            "expression": "29mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "example-20-pulley-blank-point-7": {
+          "type": "point",
+          "id": "example-20-pulley-blank-point-7",
+          "x": {
+            "expression": "29mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "5mm",
+            "unit": "mm"
+          }
+        },
+        "example-20-pulley-blank-point-9": {
+          "type": "point",
+          "id": "example-20-pulley-blank-point-9",
+          "x": {
+            "expression": "21mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "5mm",
+            "unit": "mm"
+          }
+        },
+        "example-20-pulley-blank-point-11": {
+          "type": "point",
+          "id": "example-20-pulley-blank-point-11",
+          "x": {
+            "expression": "21mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "belt_width + 5mm",
+            "unit": "mm",
+            "parameterRefs": {
+              "belt_width": "example-20-pulley-blank-parameter"
+            }
+          }
+        },
+        "example-20-pulley-blank-point-13": {
+          "type": "point",
+          "id": "example-20-pulley-blank-point-13",
+          "x": {
+            "expression": "29mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "belt_width + 5mm",
+            "unit": "mm",
+            "parameterRefs": {
+              "belt_width": "example-20-pulley-blank-parameter"
+            }
+          }
+        },
+        "example-20-pulley-blank-point-15": {
+          "type": "point",
+          "id": "example-20-pulley-blank-point-15",
+          "x": {
+            "expression": "29mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "belt_width + 10mm",
+            "unit": "mm",
+            "parameterRefs": {
+              "belt_width": "example-20-pulley-blank-parameter"
+            }
+          }
+        },
+        "example-20-pulley-blank-point-17": {
+          "type": "point",
+          "id": "example-20-pulley-blank-point-17",
+          "x": {
+            "expression": "7mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "belt_width + 10mm",
+            "unit": "mm",
+            "parameterRefs": {
+              "belt_width": "example-20-pulley-blank-parameter"
+            }
+          }
+        },
+        "example-20-pulley-blank-line-19": {
+          "type": "line",
+          "id": "example-20-pulley-blank-line-19",
+          "startPointId": "example-20-pulley-blank-point-3",
+          "endPointId": "example-20-pulley-blank-point-5"
+        },
+        "example-20-pulley-blank-line-20": {
+          "type": "line",
+          "id": "example-20-pulley-blank-line-20",
+          "startPointId": "example-20-pulley-blank-point-5",
+          "endPointId": "example-20-pulley-blank-point-7"
+        },
+        "example-20-pulley-blank-line-21": {
+          "type": "line",
+          "id": "example-20-pulley-blank-line-21",
+          "startPointId": "example-20-pulley-blank-point-7",
+          "endPointId": "example-20-pulley-blank-point-9"
+        },
+        "example-20-pulley-blank-line-22": {
+          "type": "line",
+          "id": "example-20-pulley-blank-line-22",
+          "startPointId": "example-20-pulley-blank-point-9",
+          "endPointId": "example-20-pulley-blank-point-11"
+        },
+        "example-20-pulley-blank-line-23": {
+          "type": "line",
+          "id": "example-20-pulley-blank-line-23",
+          "startPointId": "example-20-pulley-blank-point-11",
+          "endPointId": "example-20-pulley-blank-point-13"
+        },
+        "example-20-pulley-blank-line-24": {
+          "type": "line",
+          "id": "example-20-pulley-blank-line-24",
+          "startPointId": "example-20-pulley-blank-point-13",
+          "endPointId": "example-20-pulley-blank-point-15"
+        },
+        "example-20-pulley-blank-line-25": {
+          "type": "line",
+          "id": "example-20-pulley-blank-line-25",
+          "startPointId": "example-20-pulley-blank-point-15",
+          "endPointId": "example-20-pulley-blank-point-17"
+        },
+        "example-20-pulley-blank-line-26": {
+          "type": "line",
+          "id": "example-20-pulley-blank-line-26",
+          "startPointId": "example-20-pulley-blank-point-17",
+          "endPointId": "example-20-pulley-blank-point-3"
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-20-pulley-blank-fixed-4",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-20-pulley-blank-point-3"
+          ]
+        },
+        {
+          "id": "example-20-pulley-blank-fixed-6",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-20-pulley-blank-point-5"
+          ]
+        },
+        {
+          "id": "example-20-pulley-blank-fixed-8",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-20-pulley-blank-point-7"
+          ]
+        },
+        {
+          "id": "example-20-pulley-blank-fixed-10",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-20-pulley-blank-point-9"
+          ]
+        },
+        {
+          "id": "example-20-pulley-blank-fixed-12",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-20-pulley-blank-point-11"
+          ]
+        },
+        {
+          "id": "example-20-pulley-blank-fixed-14",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-20-pulley-blank-point-13"
+          ]
+        },
+        {
+          "id": "example-20-pulley-blank-fixed-16",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-20-pulley-blank-point-15"
+          ]
+        },
+        {
+          "id": "example-20-pulley-blank-fixed-18",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-20-pulley-blank-point-17"
+          ]
+        }
+      ],
+      "dimensions": []
+    }
+  },
+  "features": [
+    {
+      "id": "example-20-pulley-blank-feature-27",
+      "name": "Turn both flanges and bore",
+      "componentId": "example-20-pulley-blank-part-1",
+      "timelineStep": 2,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "revolve",
+      "sketchId": "example-20-pulley-blank-sketch-2",
+      "profileId": "example-20-pulley-blank-sketch-2:profile:p1nmvdbw",
+      "axis": {
+        "type": "origin",
+        "axis": "Z"
+      },
+      "operation": "newBody",
+      "angle": {
+        "expression": "360deg",
+        "unit": "deg"
+      }
+    }
+  ]
+}

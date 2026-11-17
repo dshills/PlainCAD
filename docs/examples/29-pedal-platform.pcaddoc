@@ -1,0 +1,904 @@
+{
+  "schemaVersion": 26,
+  "id": "example-29-pedal-platform",
+  "name": "Open pedal platform",
+  "units": "metric",
+  "unitSettings": {
+    "length": "mm",
+    "angle": "deg"
+  },
+  "createdAt": "2026-11-17T12:00:00.000Z",
+  "updatedAt": "2026-11-17T12:00:00.000Z",
+  "rootComponentId": "example-29-pedal-platform-root",
+  "components": {
+    "example-29-pedal-platform-root": {
+      "id": "example-29-pedal-platform-root",
+      "name": "Project reference"
+    },
+    "example-29-pedal-platform-part-1": {
+      "id": "example-29-pedal-platform-part-1",
+      "name": "Pedal blank",
+      "appearance": "steel"
+    }
+  },
+  "parameters": {
+    "platform_depth": {
+      "id": "example-29-pedal-platform-parameter",
+      "name": "platform_depth",
+      "expression": "11mm",
+      "value": 11,
+      "unit": "mm"
+    }
+  },
+  "sketches": {
+    "example-29-pedal-platform-sketch-2": {
+      "id": "example-29-pedal-platform-sketch-2",
+      "componentId": "example-29-pedal-platform-part-1",
+      "name": "Pedal platform and windows profile",
+      "plane": {
+        "type": "origin",
+        "plane": "XY"
+      },
+      "timelineStep": 1,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-29-pedal-platform-point-3": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-3",
+          "x": {
+            "expression": "-35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-30mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-point-5": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-5",
+          "x": {
+            "expression": "35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-30mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-point-7": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-7",
+          "x": {
+            "expression": "40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-25mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-point-9": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-9",
+          "x": {
+            "expression": "40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "25mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-point-11": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-11",
+          "x": {
+            "expression": "35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "30mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-point-13": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-13",
+          "x": {
+            "expression": "-35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "30mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-point-15": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-15",
+          "x": {
+            "expression": "-40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "25mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-point-17": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-17",
+          "x": {
+            "expression": "-40mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-25mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-line-19": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-19",
+          "startPointId": "example-29-pedal-platform-point-3",
+          "endPointId": "example-29-pedal-platform-point-5"
+        },
+        "example-29-pedal-platform-line-20": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-20",
+          "startPointId": "example-29-pedal-platform-point-5",
+          "endPointId": "example-29-pedal-platform-point-7"
+        },
+        "example-29-pedal-platform-line-21": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-21",
+          "startPointId": "example-29-pedal-platform-point-7",
+          "endPointId": "example-29-pedal-platform-point-9"
+        },
+        "example-29-pedal-platform-line-22": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-22",
+          "startPointId": "example-29-pedal-platform-point-9",
+          "endPointId": "example-29-pedal-platform-point-11"
+        },
+        "example-29-pedal-platform-line-23": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-23",
+          "startPointId": "example-29-pedal-platform-point-11",
+          "endPointId": "example-29-pedal-platform-point-13"
+        },
+        "example-29-pedal-platform-line-24": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-24",
+          "startPointId": "example-29-pedal-platform-point-13",
+          "endPointId": "example-29-pedal-platform-point-15"
+        },
+        "example-29-pedal-platform-line-25": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-25",
+          "startPointId": "example-29-pedal-platform-point-15",
+          "endPointId": "example-29-pedal-platform-point-17"
+        },
+        "example-29-pedal-platform-line-26": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-26",
+          "startPointId": "example-29-pedal-platform-point-17",
+          "endPointId": "example-29-pedal-platform-point-3"
+        },
+        "example-29-pedal-platform-point-27": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-27",
+          "x": {
+            "expression": "-32mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-18mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-point-29": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-29",
+          "x": {
+            "expression": "-28mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-21mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-point-31": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-31",
+          "x": {
+            "expression": "-8mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-21mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-point-33": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-33",
+          "x": {
+            "expression": "-8mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-7mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-point-35": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-35",
+          "x": {
+            "expression": "-28mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-7mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-point-37": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-37",
+          "x": {
+            "expression": "-32mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-10mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-line-39": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-39",
+          "startPointId": "example-29-pedal-platform-point-27",
+          "endPointId": "example-29-pedal-platform-point-29"
+        },
+        "example-29-pedal-platform-line-40": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-40",
+          "startPointId": "example-29-pedal-platform-point-29",
+          "endPointId": "example-29-pedal-platform-point-31"
+        },
+        "example-29-pedal-platform-line-41": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-41",
+          "startPointId": "example-29-pedal-platform-point-31",
+          "endPointId": "example-29-pedal-platform-point-33"
+        },
+        "example-29-pedal-platform-line-42": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-42",
+          "startPointId": "example-29-pedal-platform-point-33",
+          "endPointId": "example-29-pedal-platform-point-35"
+        },
+        "example-29-pedal-platform-line-43": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-43",
+          "startPointId": "example-29-pedal-platform-point-35",
+          "endPointId": "example-29-pedal-platform-point-37"
+        },
+        "example-29-pedal-platform-line-44": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-44",
+          "startPointId": "example-29-pedal-platform-point-37",
+          "endPointId": "example-29-pedal-platform-point-27"
+        },
+        "example-29-pedal-platform-point-45": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-45",
+          "x": {
+            "expression": "8mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-18mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-point-47": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-47",
+          "x": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-21mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-point-49": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-49",
+          "x": {
+            "expression": "32mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-21mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-point-51": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-51",
+          "x": {
+            "expression": "32mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-7mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-point-53": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-53",
+          "x": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-7mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-point-55": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-55",
+          "x": {
+            "expression": "8mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-10mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-line-57": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-57",
+          "startPointId": "example-29-pedal-platform-point-45",
+          "endPointId": "example-29-pedal-platform-point-47"
+        },
+        "example-29-pedal-platform-line-58": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-58",
+          "startPointId": "example-29-pedal-platform-point-47",
+          "endPointId": "example-29-pedal-platform-point-49"
+        },
+        "example-29-pedal-platform-line-59": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-59",
+          "startPointId": "example-29-pedal-platform-point-49",
+          "endPointId": "example-29-pedal-platform-point-51"
+        },
+        "example-29-pedal-platform-line-60": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-60",
+          "startPointId": "example-29-pedal-platform-point-51",
+          "endPointId": "example-29-pedal-platform-point-53"
+        },
+        "example-29-pedal-platform-line-61": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-61",
+          "startPointId": "example-29-pedal-platform-point-53",
+          "endPointId": "example-29-pedal-platform-point-55"
+        },
+        "example-29-pedal-platform-line-62": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-62",
+          "startPointId": "example-29-pedal-platform-point-55",
+          "endPointId": "example-29-pedal-platform-point-45"
+        },
+        "example-29-pedal-platform-point-63": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-63",
+          "x": {
+            "expression": "-32mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "10mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-point-65": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-65",
+          "x": {
+            "expression": "-28mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "7mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-point-67": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-67",
+          "x": {
+            "expression": "-8mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "7mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-point-69": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-69",
+          "x": {
+            "expression": "-8mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "21mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-point-71": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-71",
+          "x": {
+            "expression": "-28mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "21mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-point-73": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-73",
+          "x": {
+            "expression": "-32mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "18mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-line-75": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-75",
+          "startPointId": "example-29-pedal-platform-point-63",
+          "endPointId": "example-29-pedal-platform-point-65"
+        },
+        "example-29-pedal-platform-line-76": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-76",
+          "startPointId": "example-29-pedal-platform-point-65",
+          "endPointId": "example-29-pedal-platform-point-67"
+        },
+        "example-29-pedal-platform-line-77": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-77",
+          "startPointId": "example-29-pedal-platform-point-67",
+          "endPointId": "example-29-pedal-platform-point-69"
+        },
+        "example-29-pedal-platform-line-78": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-78",
+          "startPointId": "example-29-pedal-platform-point-69",
+          "endPointId": "example-29-pedal-platform-point-71"
+        },
+        "example-29-pedal-platform-line-79": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-79",
+          "startPointId": "example-29-pedal-platform-point-71",
+          "endPointId": "example-29-pedal-platform-point-73"
+        },
+        "example-29-pedal-platform-line-80": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-80",
+          "startPointId": "example-29-pedal-platform-point-73",
+          "endPointId": "example-29-pedal-platform-point-63"
+        },
+        "example-29-pedal-platform-point-81": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-81",
+          "x": {
+            "expression": "8mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "10mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-point-83": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-83",
+          "x": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "7mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-point-85": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-85",
+          "x": {
+            "expression": "32mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "7mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-point-87": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-87",
+          "x": {
+            "expression": "32mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "21mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-point-89": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-89",
+          "x": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "21mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-point-91": {
+          "type": "point",
+          "id": "example-29-pedal-platform-point-91",
+          "x": {
+            "expression": "8mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "18mm",
+            "unit": "mm"
+          }
+        },
+        "example-29-pedal-platform-line-93": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-93",
+          "startPointId": "example-29-pedal-platform-point-81",
+          "endPointId": "example-29-pedal-platform-point-83"
+        },
+        "example-29-pedal-platform-line-94": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-94",
+          "startPointId": "example-29-pedal-platform-point-83",
+          "endPointId": "example-29-pedal-platform-point-85"
+        },
+        "example-29-pedal-platform-line-95": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-95",
+          "startPointId": "example-29-pedal-platform-point-85",
+          "endPointId": "example-29-pedal-platform-point-87"
+        },
+        "example-29-pedal-platform-line-96": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-96",
+          "startPointId": "example-29-pedal-platform-point-87",
+          "endPointId": "example-29-pedal-platform-point-89"
+        },
+        "example-29-pedal-platform-line-97": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-97",
+          "startPointId": "example-29-pedal-platform-point-89",
+          "endPointId": "example-29-pedal-platform-point-91"
+        },
+        "example-29-pedal-platform-line-98": {
+          "type": "line",
+          "id": "example-29-pedal-platform-line-98",
+          "startPointId": "example-29-pedal-platform-point-91",
+          "endPointId": "example-29-pedal-platform-point-81"
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-29-pedal-platform-fixed-4",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-3"
+          ]
+        },
+        {
+          "id": "example-29-pedal-platform-fixed-6",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-5"
+          ]
+        },
+        {
+          "id": "example-29-pedal-platform-fixed-8",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-7"
+          ]
+        },
+        {
+          "id": "example-29-pedal-platform-fixed-10",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-9"
+          ]
+        },
+        {
+          "id": "example-29-pedal-platform-fixed-12",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-11"
+          ]
+        },
+        {
+          "id": "example-29-pedal-platform-fixed-14",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-13"
+          ]
+        },
+        {
+          "id": "example-29-pedal-platform-fixed-16",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-15"
+          ]
+        },
+        {
+          "id": "example-29-pedal-platform-fixed-18",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-17"
+          ]
+        },
+        {
+          "id": "example-29-pedal-platform-fixed-28",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-27"
+          ]
+        },
+        {
+          "id": "example-29-pedal-platform-fixed-30",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-29"
+          ]
+        },
+        {
+          "id": "example-29-pedal-platform-fixed-32",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-31"
+          ]
+        },
+        {
+          "id": "example-29-pedal-platform-fixed-34",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-33"
+          ]
+        },
+        {
+          "id": "example-29-pedal-platform-fixed-36",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-35"
+          ]
+        },
+        {
+          "id": "example-29-pedal-platform-fixed-38",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-37"
+          ]
+        },
+        {
+          "id": "example-29-pedal-platform-fixed-46",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-45"
+          ]
+        },
+        {
+          "id": "example-29-pedal-platform-fixed-48",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-47"
+          ]
+        },
+        {
+          "id": "example-29-pedal-platform-fixed-50",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-49"
+          ]
+        },
+        {
+          "id": "example-29-pedal-platform-fixed-52",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-51"
+          ]
+        },
+        {
+          "id": "example-29-pedal-platform-fixed-54",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-53"
+          ]
+        },
+        {
+          "id": "example-29-pedal-platform-fixed-56",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-55"
+          ]
+        },
+        {
+          "id": "example-29-pedal-platform-fixed-64",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-63"
+          ]
+        },
+        {
+          "id": "example-29-pedal-platform-fixed-66",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-65"
+          ]
+        },
+        {
+          "id": "example-29-pedal-platform-fixed-68",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-67"
+          ]
+        },
+        {
+          "id": "example-29-pedal-platform-fixed-70",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-69"
+          ]
+        },
+        {
+          "id": "example-29-pedal-platform-fixed-72",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-71"
+          ]
+        },
+        {
+          "id": "example-29-pedal-platform-fixed-74",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-73"
+          ]
+        },
+        {
+          "id": "example-29-pedal-platform-fixed-82",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-81"
+          ]
+        },
+        {
+          "id": "example-29-pedal-platform-fixed-84",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-83"
+          ]
+        },
+        {
+          "id": "example-29-pedal-platform-fixed-86",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-85"
+          ]
+        },
+        {
+          "id": "example-29-pedal-platform-fixed-88",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-87"
+          ]
+        },
+        {
+          "id": "example-29-pedal-platform-fixed-90",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-89"
+          ]
+        },
+        {
+          "id": "example-29-pedal-platform-fixed-92",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-29-pedal-platform-point-91"
+          ]
+        }
+      ],
+      "dimensions": []
+    }
+  },
+  "features": [
+    {
+      "id": "example-29-pedal-platform-feature-99",
+      "name": "Pedal platform and windows",
+      "componentId": "example-29-pedal-platform-part-1",
+      "timelineStep": 2,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "extrude",
+      "sketchId": "example-29-pedal-platform-sketch-2",
+      "profileId": "example-29-pedal-platform-sketch-2:profile:pgnmzq1",
+      "direction": "positive",
+      "operation": "newBody",
+      "distance": {
+        "expression": "platform_depth",
+        "unit": "mm",
+        "parameterRefs": {
+          "platform_depth": "example-29-pedal-platform-parameter"
+        }
+      }
+    }
+  ]
+}

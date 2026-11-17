@@ -1,0 +1,594 @@
+{
+  "schemaVersion": 26,
+  "id": "example-31-reel-stand",
+  "name": "Reel stand assembly",
+  "units": "metric",
+  "unitSettings": {
+    "length": "mm",
+    "angle": "deg"
+  },
+  "createdAt": "2026-11-17T12:00:00.000Z",
+  "updatedAt": "2026-11-17T12:00:00.000Z",
+  "rootComponentId": "example-31-reel-stand-root",
+  "components": {
+    "example-31-reel-stand-root": {
+      "id": "example-31-reel-stand-root",
+      "name": "Project reference"
+    },
+    "example-31-reel-stand-part-1": {
+      "id": "example-31-reel-stand-part-1",
+      "name": "Base",
+      "appearance": "steel"
+    },
+    "example-31-reel-stand-part-16": {
+      "id": "example-31-reel-stand-part-16",
+      "name": "Left frame",
+      "appearance": "aluminum"
+    },
+    "example-31-reel-stand-part-34": {
+      "id": "example-31-reel-stand-part-34",
+      "name": "Right frame",
+      "appearance": "aluminum"
+    },
+    "example-31-reel-stand-part-52": {
+      "id": "example-31-reel-stand-part-52",
+      "name": "Spindle",
+      "appearance": "brass"
+    }
+  },
+  "parameters": {
+    "stand_width": {
+      "id": "example-31-reel-stand-parameter",
+      "name": "stand_width",
+      "expression": "48mm",
+      "value": 48,
+      "unit": "mm"
+    }
+  },
+  "sketches": {
+    "example-31-reel-stand-sketch-2": {
+      "id": "example-31-reel-stand-sketch-2",
+      "componentId": "example-31-reel-stand-part-1",
+      "name": "Stand footprint profile",
+      "plane": {
+        "type": "origin",
+        "plane": "XY"
+      },
+      "timelineStep": 1,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-31-reel-stand-point-3": {
+          "type": "point",
+          "id": "example-31-reel-stand-point-3",
+          "x": {
+            "expression": "-34mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-35mm",
+            "unit": "mm"
+          }
+        },
+        "example-31-reel-stand-point-5": {
+          "type": "point",
+          "id": "example-31-reel-stand-point-5",
+          "x": {
+            "expression": "34mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-35mm",
+            "unit": "mm"
+          }
+        },
+        "example-31-reel-stand-point-7": {
+          "type": "point",
+          "id": "example-31-reel-stand-point-7",
+          "x": {
+            "expression": "34mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "40mm",
+            "unit": "mm"
+          }
+        },
+        "example-31-reel-stand-point-9": {
+          "type": "point",
+          "id": "example-31-reel-stand-point-9",
+          "x": {
+            "expression": "-34mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "40mm",
+            "unit": "mm"
+          }
+        },
+        "example-31-reel-stand-line-11": {
+          "type": "line",
+          "id": "example-31-reel-stand-line-11",
+          "startPointId": "example-31-reel-stand-point-3",
+          "endPointId": "example-31-reel-stand-point-5"
+        },
+        "example-31-reel-stand-line-12": {
+          "type": "line",
+          "id": "example-31-reel-stand-line-12",
+          "startPointId": "example-31-reel-stand-point-5",
+          "endPointId": "example-31-reel-stand-point-7"
+        },
+        "example-31-reel-stand-line-13": {
+          "type": "line",
+          "id": "example-31-reel-stand-line-13",
+          "startPointId": "example-31-reel-stand-point-7",
+          "endPointId": "example-31-reel-stand-point-9"
+        },
+        "example-31-reel-stand-line-14": {
+          "type": "line",
+          "id": "example-31-reel-stand-line-14",
+          "startPointId": "example-31-reel-stand-point-9",
+          "endPointId": "example-31-reel-stand-point-3"
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-31-reel-stand-fixed-4",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-31-reel-stand-point-3"
+          ]
+        },
+        {
+          "id": "example-31-reel-stand-fixed-6",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-31-reel-stand-point-5"
+          ]
+        },
+        {
+          "id": "example-31-reel-stand-fixed-8",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-31-reel-stand-point-7"
+          ]
+        },
+        {
+          "id": "example-31-reel-stand-fixed-10",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-31-reel-stand-point-9"
+          ]
+        }
+      ],
+      "dimensions": []
+    },
+    "example-31-reel-stand-sketch-17": {
+      "id": "example-31-reel-stand-sketch-17",
+      "componentId": "example-31-reel-stand-part-16",
+      "name": "Upright with spindle opening profile",
+      "plane": {
+        "type": "offset",
+        "base": "XZ",
+        "offset": {
+          "expression": "-stand_width / 2",
+          "unit": "mm"
+        }
+      },
+      "timelineStep": 3,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-31-reel-stand-point-18": {
+          "type": "point",
+          "id": "example-31-reel-stand-point-18",
+          "x": {
+            "expression": "-26mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "4mm",
+            "unit": "mm"
+          }
+        },
+        "example-31-reel-stand-point-20": {
+          "type": "point",
+          "id": "example-31-reel-stand-point-20",
+          "x": {
+            "expression": "26mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "4mm",
+            "unit": "mm"
+          }
+        },
+        "example-31-reel-stand-point-22": {
+          "type": "point",
+          "id": "example-31-reel-stand-point-22",
+          "x": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "41mm",
+            "unit": "mm"
+          }
+        },
+        "example-31-reel-stand-point-24": {
+          "type": "point",
+          "id": "example-31-reel-stand-point-24",
+          "x": {
+            "expression": "-12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "41mm",
+            "unit": "mm"
+          }
+        },
+        "example-31-reel-stand-line-26": {
+          "type": "line",
+          "id": "example-31-reel-stand-line-26",
+          "startPointId": "example-31-reel-stand-point-18",
+          "endPointId": "example-31-reel-stand-point-20"
+        },
+        "example-31-reel-stand-line-27": {
+          "type": "line",
+          "id": "example-31-reel-stand-line-27",
+          "startPointId": "example-31-reel-stand-point-20",
+          "endPointId": "example-31-reel-stand-point-22"
+        },
+        "example-31-reel-stand-line-28": {
+          "type": "line",
+          "id": "example-31-reel-stand-line-28",
+          "startPointId": "example-31-reel-stand-point-22",
+          "endPointId": "example-31-reel-stand-point-24"
+        },
+        "example-31-reel-stand-line-29": {
+          "type": "line",
+          "id": "example-31-reel-stand-line-29",
+          "startPointId": "example-31-reel-stand-point-24",
+          "endPointId": "example-31-reel-stand-point-18"
+        },
+        "example-31-reel-stand-point-31": {
+          "type": "point",
+          "id": "example-31-reel-stand-point-31",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "33mm",
+            "unit": "mm"
+          }
+        },
+        "example-31-reel-stand-circle-30": {
+          "type": "circle",
+          "id": "example-31-reel-stand-circle-30",
+          "centerPointId": "example-31-reel-stand-point-31",
+          "radius": {
+            "expression": "4mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-31-reel-stand-fixed-19",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-31-reel-stand-point-18"
+          ]
+        },
+        {
+          "id": "example-31-reel-stand-fixed-21",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-31-reel-stand-point-20"
+          ]
+        },
+        {
+          "id": "example-31-reel-stand-fixed-23",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-31-reel-stand-point-22"
+          ]
+        },
+        {
+          "id": "example-31-reel-stand-fixed-25",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-31-reel-stand-point-24"
+          ]
+        },
+        {
+          "id": "example-31-reel-stand-fixed-32",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-31-reel-stand-point-31"
+          ]
+        }
+      ],
+      "dimensions": []
+    },
+    "example-31-reel-stand-sketch-35": {
+      "id": "example-31-reel-stand-sketch-35",
+      "componentId": "example-31-reel-stand-part-34",
+      "name": "Upright with spindle opening profile",
+      "plane": {
+        "type": "offset",
+        "base": "XZ",
+        "offset": {
+          "expression": "stand_width / 2 - 5mm",
+          "unit": "mm"
+        }
+      },
+      "timelineStep": 5,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-31-reel-stand-point-36": {
+          "type": "point",
+          "id": "example-31-reel-stand-point-36",
+          "x": {
+            "expression": "-26mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "4mm",
+            "unit": "mm"
+          }
+        },
+        "example-31-reel-stand-point-38": {
+          "type": "point",
+          "id": "example-31-reel-stand-point-38",
+          "x": {
+            "expression": "26mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "4mm",
+            "unit": "mm"
+          }
+        },
+        "example-31-reel-stand-point-40": {
+          "type": "point",
+          "id": "example-31-reel-stand-point-40",
+          "x": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "41mm",
+            "unit": "mm"
+          }
+        },
+        "example-31-reel-stand-point-42": {
+          "type": "point",
+          "id": "example-31-reel-stand-point-42",
+          "x": {
+            "expression": "-12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "41mm",
+            "unit": "mm"
+          }
+        },
+        "example-31-reel-stand-line-44": {
+          "type": "line",
+          "id": "example-31-reel-stand-line-44",
+          "startPointId": "example-31-reel-stand-point-36",
+          "endPointId": "example-31-reel-stand-point-38"
+        },
+        "example-31-reel-stand-line-45": {
+          "type": "line",
+          "id": "example-31-reel-stand-line-45",
+          "startPointId": "example-31-reel-stand-point-38",
+          "endPointId": "example-31-reel-stand-point-40"
+        },
+        "example-31-reel-stand-line-46": {
+          "type": "line",
+          "id": "example-31-reel-stand-line-46",
+          "startPointId": "example-31-reel-stand-point-40",
+          "endPointId": "example-31-reel-stand-point-42"
+        },
+        "example-31-reel-stand-line-47": {
+          "type": "line",
+          "id": "example-31-reel-stand-line-47",
+          "startPointId": "example-31-reel-stand-point-42",
+          "endPointId": "example-31-reel-stand-point-36"
+        },
+        "example-31-reel-stand-point-49": {
+          "type": "point",
+          "id": "example-31-reel-stand-point-49",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "33mm",
+            "unit": "mm"
+          }
+        },
+        "example-31-reel-stand-circle-48": {
+          "type": "circle",
+          "id": "example-31-reel-stand-circle-48",
+          "centerPointId": "example-31-reel-stand-point-49",
+          "radius": {
+            "expression": "4mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-31-reel-stand-fixed-37",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-31-reel-stand-point-36"
+          ]
+        },
+        {
+          "id": "example-31-reel-stand-fixed-39",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-31-reel-stand-point-38"
+          ]
+        },
+        {
+          "id": "example-31-reel-stand-fixed-41",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-31-reel-stand-point-40"
+          ]
+        },
+        {
+          "id": "example-31-reel-stand-fixed-43",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-31-reel-stand-point-42"
+          ]
+        },
+        {
+          "id": "example-31-reel-stand-fixed-50",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-31-reel-stand-point-49"
+          ]
+        }
+      ],
+      "dimensions": []
+    },
+    "example-31-reel-stand-sketch-53": {
+      "id": "example-31-reel-stand-sketch-53",
+      "componentId": "example-31-reel-stand-part-52",
+      "name": "Spindle shaft profile",
+      "plane": {
+        "type": "offset",
+        "base": "XZ",
+        "offset": {
+          "expression": "-stand_width / 2 - 4mm",
+          "unit": "mm"
+        }
+      },
+      "timelineStep": 7,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-31-reel-stand-point-55": {
+          "type": "point",
+          "id": "example-31-reel-stand-point-55",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "33mm",
+            "unit": "mm"
+          }
+        },
+        "example-31-reel-stand-circle-54": {
+          "type": "circle",
+          "id": "example-31-reel-stand-circle-54",
+          "centerPointId": "example-31-reel-stand-point-55",
+          "radius": {
+            "expression": "3.7mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-31-reel-stand-fixed-56",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-31-reel-stand-point-55"
+          ]
+        }
+      ],
+      "dimensions": []
+    }
+  },
+  "features": [
+    {
+      "id": "example-31-reel-stand-feature-15",
+      "name": "Stand footprint",
+      "componentId": "example-31-reel-stand-part-1",
+      "timelineStep": 2,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "extrude",
+      "sketchId": "example-31-reel-stand-sketch-2",
+      "profileId": "example-31-reel-stand-sketch-2:profile:p1i283w1",
+      "direction": "positive",
+      "operation": "newBody",
+      "distance": {
+        "expression": "4mm",
+        "unit": "mm"
+      }
+    },
+    {
+      "id": "example-31-reel-stand-feature-33",
+      "name": "Upright with spindle opening",
+      "componentId": "example-31-reel-stand-part-16",
+      "timelineStep": 4,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "extrude",
+      "sketchId": "example-31-reel-stand-sketch-17",
+      "profileId": "example-31-reel-stand-sketch-17:profile:p144nki1",
+      "direction": "positive",
+      "operation": "newBody",
+      "distance": {
+        "expression": "5mm",
+        "unit": "mm"
+      }
+    },
+    {
+      "id": "example-31-reel-stand-feature-51",
+      "name": "Upright with spindle opening",
+      "componentId": "example-31-reel-stand-part-34",
+      "timelineStep": 6,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "extrude",
+      "sketchId": "example-31-reel-stand-sketch-35",
+      "profileId": "example-31-reel-stand-sketch-35:profile:p1ugaub2",
+      "direction": "positive",
+      "operation": "newBody",
+      "distance": {
+        "expression": "5mm",
+        "unit": "mm"
+      }
+    },
+    {
+      "id": "example-31-reel-stand-feature-57",
+      "name": "Spindle shaft",
+      "componentId": "example-31-reel-stand-part-52",
+      "timelineStep": 8,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "extrude",
+      "sketchId": "example-31-reel-stand-sketch-53",
+      "profileId": "example-31-reel-stand-sketch-53:profile:p1173iej",
+      "direction": "positive",
+      "operation": "newBody",
+      "distance": {
+        "expression": "stand_width + 8mm",
+        "unit": "mm",
+        "parameterRefs": {
+          "stand_width": "example-31-reel-stand-parameter"
+        }
+      }
+    }
+  ]
+}

@@ -1,9 +1,8 @@
 # PlainCAD example projects
 
-The built-in gallery contains fourteen editable projects for learning modeling
-workflows. Eight rebuild with the default PlainSolid kernel, including all four
-threaded examples. The [ORBIT drive housing](orbit-drive-housing.pcaddoc) is a
-separate example that also rebuilds with PlainSolid.
+The built-in gallery contains 33 editable projects, from a one-part bench stop
+to a 40-part rotary fixture. PlainSolid rebuilds 27 of them, including the four
+threaded examples, the ORBIT drive housing, and all 18 newer projects.
 
 For a project marked **Requires the OpenCascade comparison build**, start PlainCAD with
 `VITE_CAD_KERNEL=opencascade npm run dev` and open its original `.pcaddoc` file.
@@ -13,13 +12,15 @@ under PlainSolid. [Kernel setup](../../README.md#plainsolid-backend)
 ## Open and explore
 
 1. In Workbench, choose **File → Project gallery** and open an available project.
-   Or use **Download raw file** on GitHub to download a `.pcaddoc` from this guide.
+   Filter by **Collection**, **Difficulty**, or **Works with PlainSolid**. Search
+   also matches the names of suggested parameters. On GitHub, use **Download raw file**
+   to download a `.pcaddoc` from this guide.
 2. For a downloaded file, choose **File → Open project** or drop it onto the workspace.
 3. Open **Project** on the left. Search for a component, then **Activate** or
    **Isolate** it. Use **All tools → Show All Bodies** to restore the entire design.
-4. For the original ten designs, open **Parameters** and try the edit in the
-   table. For the threaded projects, select a feature in **History** and choose
-   **Edit Feature**. Undo restores the original.
+4. Open **Parameters** to try a suggested parameter edit. For the threaded projects
+   and ORBIT, find the suggested feature in **History** and choose **Edit Feature**.
+   Undo restores the original.
 5. Use **Fit** (or `F`) after opening a dock. On a compact viewport, find **Fit View**
    through **All tools**. Open **History** to inspect sketches and feature steps.
 6. **Save** downloads an editable local project. **File → Export STL** opens body
@@ -42,10 +43,10 @@ supported starting point for editing each design.
 |---|---:|---:|---|---|---|
 | [Cable guide mount](01-cable-guide.pcaddoc) | 2 | 4 / 3 | Beginner | `foot_thickness`: 5 → 6 | PlainSolid |
 | [Precision spacer stack](02-spacer-stack.pcaddoc) | 3 | 3 / 3 | Beginner | `spacer_height`: 20 → 24 | PlainSolid |
-| [Angle bracket fixture](03-angle-fixture.pcaddoc) | 3 | 7 / 6 | Beginner/intermediate | `web_height`: 36 → 40 | Requires OpenCascade for the rounded bracket chamfer |
+| [Angle bracket fixture](03-angle-fixture.pcaddoc) | 3 | 7 / 6 | Beginner | `web_height`: 36 → 40 | Requires OpenCascade for the rounded bracket chamfer |
 | [Elevated instrument panel](04-panel-standoffs.pcaddoc) | 5 | 7 / 7 | Intermediate | `post_height`: 18 → 22 | PlainSolid |
 | [Motor mounting flange](05-motor-flange.pcaddoc) | 6 | 16 / 15 | Intermediate | `flange_thickness`: 8 → 10 | Requires OpenCascade for the curved stock and boss union |
-| [Flanged valve cartridge](06-flanged-valve.pcaddoc) | 8 | 16 / 15 | Intermediate/advanced | `valve_height`: 32 → 36 | Requires OpenCascade for the curved union and side bore |
+| [Flanged valve cartridge](06-flanged-valve.pcaddoc) | 8 | 16 / 15 | Intermediate | `valve_height`: 32 → 36 | Requires OpenCascade for the curved union and side bore |
 | [Parallel robot gripper concept](07-robot-gripper.pcaddoc) | 11 | 22 / 22 | Advanced | `jaw_span`: 56 → 60 | Requires OpenCascade for the actuator pocket |
 | [Twin-pulley drive cassette](08-belt-drive.pcaddoc) | 18 | 29 / 28 | Advanced | `pulley_height`: 10 → 12 | Requires OpenCascade for the stepped pulley unions |
 | [Sixteen-tube heat exchanger](09-heat-exchanger.pcaddoc) | 28 | 37 / 37 | Highly complex | `tube_length`: 148 → 152 | Requires OpenCascade for the side-plane header bores |
@@ -65,8 +66,8 @@ their own expressions and constraints.
 - The rotary platter has 1 mm clearance to the shoulder. Its screw engagement,
   washer/head proportions, support, and retention are illustrative, not qualified.
 
-Preview images come from PlainCAD’s actual project PNG export, with sketch overlays
-hidden. They depict native geometry, not generated illustrations.
+The covers use native mesh renders with the same orthographic camera, lighting,
+framing, and 768 × 480 image size. They use the kernel that rebuilds the project.
 
 ### 1. Cable guide mount
 
@@ -197,3 +198,52 @@ use nominal geometry.
 
 The PlainSolid production gallery acceptance test loads each screenshot and
 rebuilds its project as two valid native solids with the expected volumes.
+
+## New PlainSolid examples
+
+Each example has a named parameter and a suggested edit. The saved model and the
+suggested edit were checked in Chromium with the pinned PlainSolid WASM worker.
+
+| Editable project | Collection | Difficulty | Parts | Try changing | Cover |
+| --- | --- | --- | ---: | --- | --- |
+| [Slotted bench stop](15-bench-stop.pcaddoc) | Fixtures | Beginner | 1 | `stop_height` from 13 to 18 mm | [PNG](images/15-bench-stop.png) |
+| [Five-bore drill guide](16-drill-guide.pcaddoc) | Fixtures | Beginner | 1 | `guide_depth` from 18 to 23 mm | [PNG](images/16-drill-guide.png) |
+| [Triangular shelf gusset](17-shelf-gusset.pcaddoc) | Fixtures | Beginner | 1 | `gusset_width` from 8 to 12 mm | [PNG](images/17-shelf-gusset.png) |
+| [Dual-switch faceplate](18-switch-panel.pcaddoc) | Enclosures | Beginner | 1 | `panel_thickness` from 4 to 6 mm | [PNG](images/18-switch-panel.png) |
+| [Four-step setup gauge](19-step-gauge.pcaddoc) | Fixtures | Beginner | 1 | `gauge_width` from 20 to 26 mm | [PNG](images/19-step-gauge.png) |
+| [Flanged pulley blank](20-pulley-blank.pcaddoc) | Motion | Intermediate | 1 | `belt_width` from 17 to 22 mm | [PNG](images/20-pulley-blank.png) |
+| [Tapered hose reducer](21-hose-reducer.pcaddoc) | Shop tools | Intermediate | 1 | `outlet_length` from 16 to 22 mm | [PNG](images/21-hose-reducer.png) |
+| [Cable spool and axle](22-spool-and-axle.pcaddoc) | Motion | Intermediate | 3 | `spool_width` from 22 to 30 mm | [PNG](images/22-spool-and-axle.png) |
+| [Louver-slot grille](23-vent-grille.pcaddoc) | Enclosures | Intermediate | 1 | `slot_pitch` from 11 to 12 mm | [PNG](images/23-vent-grille.png) |
+| [Vise soft-jaw pair](24-soft-jaws.pcaddoc) | Fixtures | Intermediate | 2 | `jaw_depth` from 14 to 19 mm | [PNG](images/24-soft-jaws.png) |
+| [Hex-bit stand](25-bit-stand.pcaddoc) | Shop tools | Intermediate | 2 | `socket_depth` from 12 to 15 mm | [PNG](images/25-bit-stand.png) |
+| [Open parts tray](26-parts-tray.pcaddoc) | Shop tools | Beginner | 1 | `wall_thickness` from 3 to 4 mm | [PNG](images/26-parts-tray.png) |
+| [Controller enclosure and lid](27-controller-case.pcaddoc) | Enclosures | Intermediate | 2 | `case_wall` from 2.5 to 3.5 mm | [PNG](images/27-controller-case.png) |
+| [DIN rail adapter bracket](28-din-mount.pcaddoc) | Fixtures | Intermediate | 1 | `adapter_width` from 26 to 34 mm | [PNG](images/28-din-mount.png) |
+| [Open pedal platform](29-pedal-platform.pcaddoc) | Motion | Intermediate | 1 | `platform_depth` from 11 to 15 mm | [PNG](images/29-pedal-platform.png) |
+| [Eight-position sample rack](30-lab-rack.pcaddoc) | Shop tools | Advanced | 6 | `rack_clearance` from 28 to 36 mm | [PNG](images/30-lab-rack.png) |
+| [Reel stand assembly](31-reel-stand.pcaddoc) | Motion | Advanced | 4 | `stand_width` from 48 to 56 mm | [PNG](images/31-reel-stand.png) |
+| [Bench bending die set](32-bending-die.pcaddoc) | Fixtures | Advanced | 3 | `die_length` from 34 to 42 mm | [PNG](images/32-bending-die.png) |
+
+[ORBIT drive housing](orbit-drive-housing.pcaddoc) also opens from the gallery.
+Its 16 features include a recessed chamber, bearing bore, and relief slots.
+[ORBIT cover](images/orbit-drive-housing.png)
+
+## Regenerate gallery covers
+
+Install the development dependencies, build the pinned PlainSolid WASM assets,
+and install Chromium. Start the default server on port 5278. For a full refresh,
+also start the OpenCascade comparison server on port 5288.
+
+```sh
+npm run dev
+```
+
+```sh
+VITE_CAD_KERNEL=opencascade npm run dev -- --host 127.0.0.1 --port 5288
+```
+
+With the servers running, run `node scripts/capture-gallery-covers.mjs`. Pass
+one or more example filenames without the `.pcaddoc` suffix to refresh selected
+covers, such as `node scripts/capture-gallery-covers.mjs 30-lab-rack`.
+The capture checks the solid assertions and kernel source before writing each PNG.

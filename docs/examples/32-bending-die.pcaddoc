@@ -1,0 +1,677 @@
+{
+  "schemaVersion": 26,
+  "id": "example-32-bending-die",
+  "name": "Bench bending die set",
+  "units": "metric",
+  "unitSettings": {
+    "length": "mm",
+    "angle": "deg"
+  },
+  "createdAt": "2026-11-17T12:00:00.000Z",
+  "updatedAt": "2026-11-17T12:00:00.000Z",
+  "rootComponentId": "example-32-bending-die-root",
+  "components": {
+    "example-32-bending-die-root": {
+      "id": "example-32-bending-die-root",
+      "name": "Project reference"
+    },
+    "example-32-bending-die-part-1": {
+      "id": "example-32-bending-die-part-1",
+      "name": "Lower die",
+      "appearance": "steel"
+    },
+    "example-32-bending-die-part-25": {
+      "id": "example-32-bending-die-part-25",
+      "name": "Wedge punch",
+      "appearance": "steel"
+    },
+    "example-32-bending-die-part-55": {
+      "id": "example-32-bending-die-part-55",
+      "name": "Blank coupon",
+      "appearance": "brass"
+    }
+  },
+  "parameters": {
+    "die_length": {
+      "id": "example-32-bending-die-parameter",
+      "name": "die_length",
+      "expression": "34mm",
+      "value": 34,
+      "unit": "mm"
+    }
+  },
+  "sketches": {
+    "example-32-bending-die-sketch-2": {
+      "id": "example-32-bending-die-sketch-2",
+      "componentId": "example-32-bending-die-part-1",
+      "name": "V-groove die section profile",
+      "plane": {
+        "type": "offset",
+        "base": "XZ",
+        "offset": {
+          "expression": "-2mm",
+          "unit": "mm"
+        }
+      },
+      "timelineStep": 1,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-32-bending-die-point-3": {
+          "type": "point",
+          "id": "example-32-bending-die-point-3",
+          "x": {
+            "expression": "-29mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "example-32-bending-die-point-5": {
+          "type": "point",
+          "id": "example-32-bending-die-point-5",
+          "x": {
+            "expression": "29mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "example-32-bending-die-point-7": {
+          "type": "point",
+          "id": "example-32-bending-die-point-7",
+          "x": {
+            "expression": "29mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "20mm",
+            "unit": "mm"
+          }
+        },
+        "example-32-bending-die-point-9": {
+          "type": "point",
+          "id": "example-32-bending-die-point-9",
+          "x": {
+            "expression": "16mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "20mm",
+            "unit": "mm"
+          }
+        },
+        "example-32-bending-die-point-11": {
+          "type": "point",
+          "id": "example-32-bending-die-point-11",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "7mm",
+            "unit": "mm"
+          }
+        },
+        "example-32-bending-die-point-13": {
+          "type": "point",
+          "id": "example-32-bending-die-point-13",
+          "x": {
+            "expression": "-16mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "20mm",
+            "unit": "mm"
+          }
+        },
+        "example-32-bending-die-point-15": {
+          "type": "point",
+          "id": "example-32-bending-die-point-15",
+          "x": {
+            "expression": "-29mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "20mm",
+            "unit": "mm"
+          }
+        },
+        "example-32-bending-die-line-17": {
+          "type": "line",
+          "id": "example-32-bending-die-line-17",
+          "startPointId": "example-32-bending-die-point-3",
+          "endPointId": "example-32-bending-die-point-5"
+        },
+        "example-32-bending-die-line-18": {
+          "type": "line",
+          "id": "example-32-bending-die-line-18",
+          "startPointId": "example-32-bending-die-point-5",
+          "endPointId": "example-32-bending-die-point-7"
+        },
+        "example-32-bending-die-line-19": {
+          "type": "line",
+          "id": "example-32-bending-die-line-19",
+          "startPointId": "example-32-bending-die-point-7",
+          "endPointId": "example-32-bending-die-point-9"
+        },
+        "example-32-bending-die-line-20": {
+          "type": "line",
+          "id": "example-32-bending-die-line-20",
+          "startPointId": "example-32-bending-die-point-9",
+          "endPointId": "example-32-bending-die-point-11"
+        },
+        "example-32-bending-die-line-21": {
+          "type": "line",
+          "id": "example-32-bending-die-line-21",
+          "startPointId": "example-32-bending-die-point-11",
+          "endPointId": "example-32-bending-die-point-13"
+        },
+        "example-32-bending-die-line-22": {
+          "type": "line",
+          "id": "example-32-bending-die-line-22",
+          "startPointId": "example-32-bending-die-point-13",
+          "endPointId": "example-32-bending-die-point-15"
+        },
+        "example-32-bending-die-line-23": {
+          "type": "line",
+          "id": "example-32-bending-die-line-23",
+          "startPointId": "example-32-bending-die-point-15",
+          "endPointId": "example-32-bending-die-point-3"
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-32-bending-die-fixed-4",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-32-bending-die-point-3"
+          ]
+        },
+        {
+          "id": "example-32-bending-die-fixed-6",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-32-bending-die-point-5"
+          ]
+        },
+        {
+          "id": "example-32-bending-die-fixed-8",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-32-bending-die-point-7"
+          ]
+        },
+        {
+          "id": "example-32-bending-die-fixed-10",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-32-bending-die-point-9"
+          ]
+        },
+        {
+          "id": "example-32-bending-die-fixed-12",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-32-bending-die-point-11"
+          ]
+        },
+        {
+          "id": "example-32-bending-die-fixed-14",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-32-bending-die-point-13"
+          ]
+        },
+        {
+          "id": "example-32-bending-die-fixed-16",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-32-bending-die-point-15"
+          ]
+        }
+      ],
+      "dimensions": []
+    },
+    "example-32-bending-die-sketch-26": {
+      "id": "example-32-bending-die-sketch-26",
+      "componentId": "example-32-bending-die-part-25",
+      "name": "Punch and mounting shoulder profile",
+      "plane": {
+        "type": "offset",
+        "base": "XZ",
+        "offset": {
+          "expression": "-2mm",
+          "unit": "mm"
+        }
+      },
+      "timelineStep": 3,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-32-bending-die-point-27": {
+          "type": "point",
+          "id": "example-32-bending-die-point-27",
+          "x": {
+            "expression": "-17mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "35mm",
+            "unit": "mm"
+          }
+        },
+        "example-32-bending-die-point-29": {
+          "type": "point",
+          "id": "example-32-bending-die-point-29",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "22mm",
+            "unit": "mm"
+          }
+        },
+        "example-32-bending-die-point-31": {
+          "type": "point",
+          "id": "example-32-bending-die-point-31",
+          "x": {
+            "expression": "17mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "35mm",
+            "unit": "mm"
+          }
+        },
+        "example-32-bending-die-point-33": {
+          "type": "point",
+          "id": "example-32-bending-die-point-33",
+          "x": {
+            "expression": "17mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "48mm",
+            "unit": "mm"
+          }
+        },
+        "example-32-bending-die-point-35": {
+          "type": "point",
+          "id": "example-32-bending-die-point-35",
+          "x": {
+            "expression": "7mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "48mm",
+            "unit": "mm"
+          }
+        },
+        "example-32-bending-die-point-37": {
+          "type": "point",
+          "id": "example-32-bending-die-point-37",
+          "x": {
+            "expression": "7mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "53mm",
+            "unit": "mm"
+          }
+        },
+        "example-32-bending-die-point-39": {
+          "type": "point",
+          "id": "example-32-bending-die-point-39",
+          "x": {
+            "expression": "-7mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "53mm",
+            "unit": "mm"
+          }
+        },
+        "example-32-bending-die-point-41": {
+          "type": "point",
+          "id": "example-32-bending-die-point-41",
+          "x": {
+            "expression": "-7mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "48mm",
+            "unit": "mm"
+          }
+        },
+        "example-32-bending-die-point-43": {
+          "type": "point",
+          "id": "example-32-bending-die-point-43",
+          "x": {
+            "expression": "-17mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "48mm",
+            "unit": "mm"
+          }
+        },
+        "example-32-bending-die-line-45": {
+          "type": "line",
+          "id": "example-32-bending-die-line-45",
+          "startPointId": "example-32-bending-die-point-27",
+          "endPointId": "example-32-bending-die-point-29"
+        },
+        "example-32-bending-die-line-46": {
+          "type": "line",
+          "id": "example-32-bending-die-line-46",
+          "startPointId": "example-32-bending-die-point-29",
+          "endPointId": "example-32-bending-die-point-31"
+        },
+        "example-32-bending-die-line-47": {
+          "type": "line",
+          "id": "example-32-bending-die-line-47",
+          "startPointId": "example-32-bending-die-point-31",
+          "endPointId": "example-32-bending-die-point-33"
+        },
+        "example-32-bending-die-line-48": {
+          "type": "line",
+          "id": "example-32-bending-die-line-48",
+          "startPointId": "example-32-bending-die-point-33",
+          "endPointId": "example-32-bending-die-point-35"
+        },
+        "example-32-bending-die-line-49": {
+          "type": "line",
+          "id": "example-32-bending-die-line-49",
+          "startPointId": "example-32-bending-die-point-35",
+          "endPointId": "example-32-bending-die-point-37"
+        },
+        "example-32-bending-die-line-50": {
+          "type": "line",
+          "id": "example-32-bending-die-line-50",
+          "startPointId": "example-32-bending-die-point-37",
+          "endPointId": "example-32-bending-die-point-39"
+        },
+        "example-32-bending-die-line-51": {
+          "type": "line",
+          "id": "example-32-bending-die-line-51",
+          "startPointId": "example-32-bending-die-point-39",
+          "endPointId": "example-32-bending-die-point-41"
+        },
+        "example-32-bending-die-line-52": {
+          "type": "line",
+          "id": "example-32-bending-die-line-52",
+          "startPointId": "example-32-bending-die-point-41",
+          "endPointId": "example-32-bending-die-point-43"
+        },
+        "example-32-bending-die-line-53": {
+          "type": "line",
+          "id": "example-32-bending-die-line-53",
+          "startPointId": "example-32-bending-die-point-43",
+          "endPointId": "example-32-bending-die-point-27"
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-32-bending-die-fixed-28",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-32-bending-die-point-27"
+          ]
+        },
+        {
+          "id": "example-32-bending-die-fixed-30",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-32-bending-die-point-29"
+          ]
+        },
+        {
+          "id": "example-32-bending-die-fixed-32",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-32-bending-die-point-31"
+          ]
+        },
+        {
+          "id": "example-32-bending-die-fixed-34",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-32-bending-die-point-33"
+          ]
+        },
+        {
+          "id": "example-32-bending-die-fixed-36",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-32-bending-die-point-35"
+          ]
+        },
+        {
+          "id": "example-32-bending-die-fixed-38",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-32-bending-die-point-37"
+          ]
+        },
+        {
+          "id": "example-32-bending-die-fixed-40",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-32-bending-die-point-39"
+          ]
+        },
+        {
+          "id": "example-32-bending-die-fixed-42",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-32-bending-die-point-41"
+          ]
+        },
+        {
+          "id": "example-32-bending-die-fixed-44",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-32-bending-die-point-43"
+          ]
+        }
+      ],
+      "dimensions": []
+    },
+    "example-32-bending-die-sketch-56": {
+      "id": "example-32-bending-die-sketch-56",
+      "componentId": "example-32-bending-die-part-55",
+      "name": "Test strip profile",
+      "plane": {
+        "type": "origin",
+        "plane": "XY"
+      },
+      "timelineStep": 5,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-32-bending-die-point-57": {
+          "type": "point",
+          "id": "example-32-bending-die-point-57",
+          "x": {
+            "expression": "-23mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "13mm",
+            "unit": "mm"
+          }
+        },
+        "example-32-bending-die-point-59": {
+          "type": "point",
+          "id": "example-32-bending-die-point-59",
+          "x": {
+            "expression": "23mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "13mm",
+            "unit": "mm"
+          }
+        },
+        "example-32-bending-die-point-61": {
+          "type": "point",
+          "id": "example-32-bending-die-point-61",
+          "x": {
+            "expression": "23mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "30mm",
+            "unit": "mm"
+          }
+        },
+        "example-32-bending-die-point-63": {
+          "type": "point",
+          "id": "example-32-bending-die-point-63",
+          "x": {
+            "expression": "-23mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "30mm",
+            "unit": "mm"
+          }
+        },
+        "example-32-bending-die-line-65": {
+          "type": "line",
+          "id": "example-32-bending-die-line-65",
+          "startPointId": "example-32-bending-die-point-57",
+          "endPointId": "example-32-bending-die-point-59"
+        },
+        "example-32-bending-die-line-66": {
+          "type": "line",
+          "id": "example-32-bending-die-line-66",
+          "startPointId": "example-32-bending-die-point-59",
+          "endPointId": "example-32-bending-die-point-61"
+        },
+        "example-32-bending-die-line-67": {
+          "type": "line",
+          "id": "example-32-bending-die-line-67",
+          "startPointId": "example-32-bending-die-point-61",
+          "endPointId": "example-32-bending-die-point-63"
+        },
+        "example-32-bending-die-line-68": {
+          "type": "line",
+          "id": "example-32-bending-die-line-68",
+          "startPointId": "example-32-bending-die-point-63",
+          "endPointId": "example-32-bending-die-point-57"
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-32-bending-die-fixed-58",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-32-bending-die-point-57"
+          ]
+        },
+        {
+          "id": "example-32-bending-die-fixed-60",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-32-bending-die-point-59"
+          ]
+        },
+        {
+          "id": "example-32-bending-die-fixed-62",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-32-bending-die-point-61"
+          ]
+        },
+        {
+          "id": "example-32-bending-die-fixed-64",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-32-bending-die-point-63"
+          ]
+        }
+      ],
+      "dimensions": []
+    }
+  },
+  "features": [
+    {
+      "id": "example-32-bending-die-feature-24",
+      "name": "V-groove die section",
+      "componentId": "example-32-bending-die-part-1",
+      "timelineStep": 2,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "extrude",
+      "sketchId": "example-32-bending-die-sketch-2",
+      "profileId": "example-32-bending-die-sketch-2:profile:p9yr7pj",
+      "direction": "positive",
+      "operation": "newBody",
+      "distance": {
+        "expression": "die_length",
+        "unit": "mm",
+        "parameterRefs": {
+          "die_length": "example-32-bending-die-parameter"
+        }
+      }
+    },
+    {
+      "id": "example-32-bending-die-feature-54",
+      "name": "Punch and mounting shoulder",
+      "componentId": "example-32-bending-die-part-25",
+      "timelineStep": 4,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "extrude",
+      "sketchId": "example-32-bending-die-sketch-26",
+      "profileId": "example-32-bending-die-sketch-26:profile:p1sl10g7",
+      "direction": "positive",
+      "operation": "newBody",
+      "distance": {
+        "expression": "die_length",
+        "unit": "mm",
+        "parameterRefs": {
+          "die_length": "example-32-bending-die-parameter"
+        }
+      }
+    },
+    {
+      "id": "example-32-bending-die-feature-69",
+      "name": "Test strip",
+      "componentId": "example-32-bending-die-part-55",
+      "timelineStep": 6,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "extrude",
+      "sketchId": "example-32-bending-die-sketch-56",
+      "profileId": "example-32-bending-die-sketch-56:profile:pgug4cd",
+      "direction": "positive",
+      "operation": "newBody",
+      "distance": {
+        "expression": "1.5mm",
+        "unit": "mm"
+      }
+    }
+  ]
+}

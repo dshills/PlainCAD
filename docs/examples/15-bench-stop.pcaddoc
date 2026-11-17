@@ -1,0 +1,436 @@
+{
+  "schemaVersion": 26,
+  "id": "example-15-bench-stop",
+  "name": "Slotted bench stop",
+  "units": "metric",
+  "unitSettings": {
+    "length": "mm",
+    "angle": "deg"
+  },
+  "createdAt": "2026-11-17T12:00:00.000Z",
+  "updatedAt": "2026-11-17T12:00:00.000Z",
+  "rootComponentId": "example-15-bench-stop-root",
+  "components": {
+    "example-15-bench-stop-root": {
+      "id": "example-15-bench-stop-root",
+      "name": "Project reference"
+    },
+    "example-15-bench-stop-part-1": {
+      "id": "example-15-bench-stop-part-1",
+      "name": "Bench stop",
+      "appearance": "aluminum"
+    }
+  },
+  "parameters": {
+    "stop_height": {
+      "id": "example-15-bench-stop-parameter",
+      "name": "stop_height",
+      "expression": "13mm",
+      "value": 13,
+      "unit": "mm"
+    }
+  },
+  "sketches": {
+    "example-15-bench-stop-sketch-2": {
+      "id": "example-15-bench-stop-sketch-2",
+      "componentId": "example-15-bench-stop-part-1",
+      "name": "Slotted stop profile",
+      "plane": {
+        "type": "origin",
+        "plane": "XY"
+      },
+      "timelineStep": 1,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-15-bench-stop-point-3": {
+          "type": "point",
+          "id": "example-15-bench-stop-point-3",
+          "x": {
+            "expression": "-48mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-14mm",
+            "unit": "mm"
+          }
+        },
+        "example-15-bench-stop-point-5": {
+          "type": "point",
+          "id": "example-15-bench-stop-point-5",
+          "x": {
+            "expression": "42mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-14mm",
+            "unit": "mm"
+          }
+        },
+        "example-15-bench-stop-point-7": {
+          "type": "point",
+          "id": "example-15-bench-stop-point-7",
+          "x": {
+            "expression": "48mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-8mm",
+            "unit": "mm"
+          }
+        },
+        "example-15-bench-stop-point-9": {
+          "type": "point",
+          "id": "example-15-bench-stop-point-9",
+          "x": {
+            "expression": "48mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "14mm",
+            "unit": "mm"
+          }
+        },
+        "example-15-bench-stop-point-11": {
+          "type": "point",
+          "id": "example-15-bench-stop-point-11",
+          "x": {
+            "expression": "-42mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "14mm",
+            "unit": "mm"
+          }
+        },
+        "example-15-bench-stop-point-13": {
+          "type": "point",
+          "id": "example-15-bench-stop-point-13",
+          "x": {
+            "expression": "-48mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "8mm",
+            "unit": "mm"
+          }
+        },
+        "example-15-bench-stop-line-15": {
+          "type": "line",
+          "id": "example-15-bench-stop-line-15",
+          "startPointId": "example-15-bench-stop-point-3",
+          "endPointId": "example-15-bench-stop-point-5"
+        },
+        "example-15-bench-stop-line-16": {
+          "type": "line",
+          "id": "example-15-bench-stop-line-16",
+          "startPointId": "example-15-bench-stop-point-5",
+          "endPointId": "example-15-bench-stop-point-7"
+        },
+        "example-15-bench-stop-line-17": {
+          "type": "line",
+          "id": "example-15-bench-stop-line-17",
+          "startPointId": "example-15-bench-stop-point-7",
+          "endPointId": "example-15-bench-stop-point-9"
+        },
+        "example-15-bench-stop-line-18": {
+          "type": "line",
+          "id": "example-15-bench-stop-line-18",
+          "startPointId": "example-15-bench-stop-point-9",
+          "endPointId": "example-15-bench-stop-point-11"
+        },
+        "example-15-bench-stop-line-19": {
+          "type": "line",
+          "id": "example-15-bench-stop-line-19",
+          "startPointId": "example-15-bench-stop-point-11",
+          "endPointId": "example-15-bench-stop-point-13"
+        },
+        "example-15-bench-stop-line-20": {
+          "type": "line",
+          "id": "example-15-bench-stop-line-20",
+          "startPointId": "example-15-bench-stop-point-13",
+          "endPointId": "example-15-bench-stop-point-3"
+        },
+        "example-15-bench-stop-point-21": {
+          "type": "point",
+          "id": "example-15-bench-stop-point-21",
+          "x": {
+            "expression": "-35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-4mm",
+            "unit": "mm"
+          }
+        },
+        "example-15-bench-stop-point-23": {
+          "type": "point",
+          "id": "example-15-bench-stop-point-23",
+          "x": {
+            "expression": "-13mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-4mm",
+            "unit": "mm"
+          }
+        },
+        "example-15-bench-stop-point-25": {
+          "type": "point",
+          "id": "example-15-bench-stop-point-25",
+          "x": {
+            "expression": "-13mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "4mm",
+            "unit": "mm"
+          }
+        },
+        "example-15-bench-stop-point-27": {
+          "type": "point",
+          "id": "example-15-bench-stop-point-27",
+          "x": {
+            "expression": "-35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "4mm",
+            "unit": "mm"
+          }
+        },
+        "example-15-bench-stop-line-29": {
+          "type": "line",
+          "id": "example-15-bench-stop-line-29",
+          "startPointId": "example-15-bench-stop-point-21",
+          "endPointId": "example-15-bench-stop-point-23"
+        },
+        "example-15-bench-stop-line-30": {
+          "type": "line",
+          "id": "example-15-bench-stop-line-30",
+          "startPointId": "example-15-bench-stop-point-23",
+          "endPointId": "example-15-bench-stop-point-25"
+        },
+        "example-15-bench-stop-line-31": {
+          "type": "line",
+          "id": "example-15-bench-stop-line-31",
+          "startPointId": "example-15-bench-stop-point-25",
+          "endPointId": "example-15-bench-stop-point-27"
+        },
+        "example-15-bench-stop-line-32": {
+          "type": "line",
+          "id": "example-15-bench-stop-line-32",
+          "startPointId": "example-15-bench-stop-point-27",
+          "endPointId": "example-15-bench-stop-point-21"
+        },
+        "example-15-bench-stop-point-33": {
+          "type": "point",
+          "id": "example-15-bench-stop-point-33",
+          "x": {
+            "expression": "13mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-4mm",
+            "unit": "mm"
+          }
+        },
+        "example-15-bench-stop-point-35": {
+          "type": "point",
+          "id": "example-15-bench-stop-point-35",
+          "x": {
+            "expression": "35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-4mm",
+            "unit": "mm"
+          }
+        },
+        "example-15-bench-stop-point-37": {
+          "type": "point",
+          "id": "example-15-bench-stop-point-37",
+          "x": {
+            "expression": "35mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "4mm",
+            "unit": "mm"
+          }
+        },
+        "example-15-bench-stop-point-39": {
+          "type": "point",
+          "id": "example-15-bench-stop-point-39",
+          "x": {
+            "expression": "13mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "4mm",
+            "unit": "mm"
+          }
+        },
+        "example-15-bench-stop-line-41": {
+          "type": "line",
+          "id": "example-15-bench-stop-line-41",
+          "startPointId": "example-15-bench-stop-point-33",
+          "endPointId": "example-15-bench-stop-point-35"
+        },
+        "example-15-bench-stop-line-42": {
+          "type": "line",
+          "id": "example-15-bench-stop-line-42",
+          "startPointId": "example-15-bench-stop-point-35",
+          "endPointId": "example-15-bench-stop-point-37"
+        },
+        "example-15-bench-stop-line-43": {
+          "type": "line",
+          "id": "example-15-bench-stop-line-43",
+          "startPointId": "example-15-bench-stop-point-37",
+          "endPointId": "example-15-bench-stop-point-39"
+        },
+        "example-15-bench-stop-line-44": {
+          "type": "line",
+          "id": "example-15-bench-stop-line-44",
+          "startPointId": "example-15-bench-stop-point-39",
+          "endPointId": "example-15-bench-stop-point-33"
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-15-bench-stop-fixed-4",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-15-bench-stop-point-3"
+          ]
+        },
+        {
+          "id": "example-15-bench-stop-fixed-6",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-15-bench-stop-point-5"
+          ]
+        },
+        {
+          "id": "example-15-bench-stop-fixed-8",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-15-bench-stop-point-7"
+          ]
+        },
+        {
+          "id": "example-15-bench-stop-fixed-10",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-15-bench-stop-point-9"
+          ]
+        },
+        {
+          "id": "example-15-bench-stop-fixed-12",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-15-bench-stop-point-11"
+          ]
+        },
+        {
+          "id": "example-15-bench-stop-fixed-14",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-15-bench-stop-point-13"
+          ]
+        },
+        {
+          "id": "example-15-bench-stop-fixed-22",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-15-bench-stop-point-21"
+          ]
+        },
+        {
+          "id": "example-15-bench-stop-fixed-24",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-15-bench-stop-point-23"
+          ]
+        },
+        {
+          "id": "example-15-bench-stop-fixed-26",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-15-bench-stop-point-25"
+          ]
+        },
+        {
+          "id": "example-15-bench-stop-fixed-28",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-15-bench-stop-point-27"
+          ]
+        },
+        {
+          "id": "example-15-bench-stop-fixed-34",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-15-bench-stop-point-33"
+          ]
+        },
+        {
+          "id": "example-15-bench-stop-fixed-36",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-15-bench-stop-point-35"
+          ]
+        },
+        {
+          "id": "example-15-bench-stop-fixed-38",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-15-bench-stop-point-37"
+          ]
+        },
+        {
+          "id": "example-15-bench-stop-fixed-40",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-15-bench-stop-point-39"
+          ]
+        }
+      ],
+      "dimensions": []
+    }
+  },
+  "features": [
+    {
+      "id": "example-15-bench-stop-feature-45",
+      "name": "Slotted stop",
+      "componentId": "example-15-bench-stop-part-1",
+      "timelineStep": 2,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "extrude",
+      "sketchId": "example-15-bench-stop-sketch-2",
+      "profileId": "example-15-bench-stop-sketch-2:profile:pqpf24a",
+      "direction": "positive",
+      "operation": "newBody",
+      "distance": {
+        "expression": "stop_height",
+        "unit": "mm",
+        "parameterRefs": {
+          "stop_height": "example-15-bench-stop-parameter"
+        }
+      }
+    }
+  ]
+}

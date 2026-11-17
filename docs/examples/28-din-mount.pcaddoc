@@ -1,0 +1,384 @@
+{
+  "schemaVersion": 26,
+  "id": "example-28-din-mount",
+  "name": "DIN rail adapter bracket",
+  "units": "metric",
+  "unitSettings": {
+    "length": "mm",
+    "angle": "deg"
+  },
+  "createdAt": "2026-11-17T12:00:00.000Z",
+  "updatedAt": "2026-11-17T12:00:00.000Z",
+  "rootComponentId": "example-28-din-mount-root",
+  "components": {
+    "example-28-din-mount-root": {
+      "id": "example-28-din-mount-root",
+      "name": "Project reference"
+    },
+    "example-28-din-mount-part-1": {
+      "id": "example-28-din-mount-part-1",
+      "name": "DIN adapter",
+      "appearance": "steel"
+    }
+  },
+  "parameters": {
+    "adapter_width": {
+      "id": "example-28-din-mount-parameter",
+      "name": "adapter_width",
+      "expression": "26mm",
+      "value": 26,
+      "unit": "mm"
+    }
+  },
+  "sketches": {
+    "example-28-din-mount-sketch-2": {
+      "id": "example-28-din-mount-sketch-2",
+      "componentId": "example-28-din-mount-part-1",
+      "name": "Hook and rail clearance profile",
+      "plane": {
+        "type": "origin",
+        "plane": "XZ"
+      },
+      "timelineStep": 1,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-28-din-mount-point-3": {
+          "type": "point",
+          "id": "example-28-din-mount-point-3",
+          "x": {
+            "expression": "-18mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "example-28-din-mount-point-5": {
+          "type": "point",
+          "id": "example-28-din-mount-point-5",
+          "x": {
+            "expression": "18mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "example-28-din-mount-point-7": {
+          "type": "point",
+          "id": "example-28-din-mount-point-7",
+          "x": {
+            "expression": "18mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "6mm",
+            "unit": "mm"
+          }
+        },
+        "example-28-din-mount-point-9": {
+          "type": "point",
+          "id": "example-28-din-mount-point-9",
+          "x": {
+            "expression": "3mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "6mm",
+            "unit": "mm"
+          }
+        },
+        "example-28-din-mount-point-11": {
+          "type": "point",
+          "id": "example-28-din-mount-point-11",
+          "x": {
+            "expression": "3mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "21mm",
+            "unit": "mm"
+          }
+        },
+        "example-28-din-mount-point-13": {
+          "type": "point",
+          "id": "example-28-din-mount-point-13",
+          "x": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "21mm",
+            "unit": "mm"
+          }
+        },
+        "example-28-din-mount-point-15": {
+          "type": "point",
+          "id": "example-28-din-mount-point-15",
+          "x": {
+            "expression": "12mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "17mm",
+            "unit": "mm"
+          }
+        },
+        "example-28-din-mount-point-17": {
+          "type": "point",
+          "id": "example-28-din-mount-point-17",
+          "x": {
+            "expression": "18mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "17mm",
+            "unit": "mm"
+          }
+        },
+        "example-28-din-mount-point-19": {
+          "type": "point",
+          "id": "example-28-din-mount-point-19",
+          "x": {
+            "expression": "18mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "27mm",
+            "unit": "mm"
+          }
+        },
+        "example-28-din-mount-point-21": {
+          "type": "point",
+          "id": "example-28-din-mount-point-21",
+          "x": {
+            "expression": "-4mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "27mm",
+            "unit": "mm"
+          }
+        },
+        "example-28-din-mount-point-23": {
+          "type": "point",
+          "id": "example-28-din-mount-point-23",
+          "x": {
+            "expression": "-4mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "6mm",
+            "unit": "mm"
+          }
+        },
+        "example-28-din-mount-point-25": {
+          "type": "point",
+          "id": "example-28-din-mount-point-25",
+          "x": {
+            "expression": "-18mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "6mm",
+            "unit": "mm"
+          }
+        },
+        "example-28-din-mount-line-27": {
+          "type": "line",
+          "id": "example-28-din-mount-line-27",
+          "startPointId": "example-28-din-mount-point-3",
+          "endPointId": "example-28-din-mount-point-5"
+        },
+        "example-28-din-mount-line-28": {
+          "type": "line",
+          "id": "example-28-din-mount-line-28",
+          "startPointId": "example-28-din-mount-point-5",
+          "endPointId": "example-28-din-mount-point-7"
+        },
+        "example-28-din-mount-line-29": {
+          "type": "line",
+          "id": "example-28-din-mount-line-29",
+          "startPointId": "example-28-din-mount-point-7",
+          "endPointId": "example-28-din-mount-point-9"
+        },
+        "example-28-din-mount-line-30": {
+          "type": "line",
+          "id": "example-28-din-mount-line-30",
+          "startPointId": "example-28-din-mount-point-9",
+          "endPointId": "example-28-din-mount-point-11"
+        },
+        "example-28-din-mount-line-31": {
+          "type": "line",
+          "id": "example-28-din-mount-line-31",
+          "startPointId": "example-28-din-mount-point-11",
+          "endPointId": "example-28-din-mount-point-13"
+        },
+        "example-28-din-mount-line-32": {
+          "type": "line",
+          "id": "example-28-din-mount-line-32",
+          "startPointId": "example-28-din-mount-point-13",
+          "endPointId": "example-28-din-mount-point-15"
+        },
+        "example-28-din-mount-line-33": {
+          "type": "line",
+          "id": "example-28-din-mount-line-33",
+          "startPointId": "example-28-din-mount-point-15",
+          "endPointId": "example-28-din-mount-point-17"
+        },
+        "example-28-din-mount-line-34": {
+          "type": "line",
+          "id": "example-28-din-mount-line-34",
+          "startPointId": "example-28-din-mount-point-17",
+          "endPointId": "example-28-din-mount-point-19"
+        },
+        "example-28-din-mount-line-35": {
+          "type": "line",
+          "id": "example-28-din-mount-line-35",
+          "startPointId": "example-28-din-mount-point-19",
+          "endPointId": "example-28-din-mount-point-21"
+        },
+        "example-28-din-mount-line-36": {
+          "type": "line",
+          "id": "example-28-din-mount-line-36",
+          "startPointId": "example-28-din-mount-point-21",
+          "endPointId": "example-28-din-mount-point-23"
+        },
+        "example-28-din-mount-line-37": {
+          "type": "line",
+          "id": "example-28-din-mount-line-37",
+          "startPointId": "example-28-din-mount-point-23",
+          "endPointId": "example-28-din-mount-point-25"
+        },
+        "example-28-din-mount-line-38": {
+          "type": "line",
+          "id": "example-28-din-mount-line-38",
+          "startPointId": "example-28-din-mount-point-25",
+          "endPointId": "example-28-din-mount-point-3"
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-28-din-mount-fixed-4",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-28-din-mount-point-3"
+          ]
+        },
+        {
+          "id": "example-28-din-mount-fixed-6",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-28-din-mount-point-5"
+          ]
+        },
+        {
+          "id": "example-28-din-mount-fixed-8",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-28-din-mount-point-7"
+          ]
+        },
+        {
+          "id": "example-28-din-mount-fixed-10",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-28-din-mount-point-9"
+          ]
+        },
+        {
+          "id": "example-28-din-mount-fixed-12",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-28-din-mount-point-11"
+          ]
+        },
+        {
+          "id": "example-28-din-mount-fixed-14",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-28-din-mount-point-13"
+          ]
+        },
+        {
+          "id": "example-28-din-mount-fixed-16",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-28-din-mount-point-15"
+          ]
+        },
+        {
+          "id": "example-28-din-mount-fixed-18",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-28-din-mount-point-17"
+          ]
+        },
+        {
+          "id": "example-28-din-mount-fixed-20",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-28-din-mount-point-19"
+          ]
+        },
+        {
+          "id": "example-28-din-mount-fixed-22",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-28-din-mount-point-21"
+          ]
+        },
+        {
+          "id": "example-28-din-mount-fixed-24",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-28-din-mount-point-23"
+          ]
+        },
+        {
+          "id": "example-28-din-mount-fixed-26",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-28-din-mount-point-25"
+          ]
+        }
+      ],
+      "dimensions": []
+    }
+  },
+  "features": [
+    {
+      "id": "example-28-din-mount-feature-39",
+      "name": "Hook and rail clearance",
+      "componentId": "example-28-din-mount-part-1",
+      "timelineStep": 2,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "extrude",
+      "sketchId": "example-28-din-mount-sketch-2",
+      "profileId": "example-28-din-mount-sketch-2:profile:p1hhy4cm",
+      "direction": "positive",
+      "operation": "newBody",
+      "distance": {
+        "expression": "adapter_width",
+        "unit": "mm",
+        "parameterRefs": {
+          "adapter_width": "example-28-din-mount-parameter"
+        }
+      }
+    }
+  ]
+}

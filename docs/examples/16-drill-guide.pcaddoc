@@ -1,0 +1,369 @@
+{
+  "schemaVersion": 26,
+  "id": "example-16-drill-guide",
+  "name": "Five-bore drill guide",
+  "units": "metric",
+  "unitSettings": {
+    "length": "mm",
+    "angle": "deg"
+  },
+  "createdAt": "2026-11-17T12:00:00.000Z",
+  "updatedAt": "2026-11-17T12:00:00.000Z",
+  "rootComponentId": "example-16-drill-guide-root",
+  "components": {
+    "example-16-drill-guide-root": {
+      "id": "example-16-drill-guide-root",
+      "name": "Project reference"
+    },
+    "example-16-drill-guide-part-1": {
+      "id": "example-16-drill-guide-part-1",
+      "name": "Guide block",
+      "appearance": "steel"
+    }
+  },
+  "parameters": {
+    "guide_depth": {
+      "id": "example-16-drill-guide-parameter",
+      "name": "guide_depth",
+      "expression": "18mm",
+      "value": 18,
+      "unit": "mm"
+    }
+  },
+  "sketches": {
+    "example-16-drill-guide-sketch-2": {
+      "id": "example-16-drill-guide-sketch-2",
+      "componentId": "example-16-drill-guide-part-1",
+      "name": "Guide stock profile",
+      "plane": {
+        "type": "origin",
+        "plane": "XY"
+      },
+      "timelineStep": 1,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-16-drill-guide-point-3": {
+          "type": "point",
+          "id": "example-16-drill-guide-point-3",
+          "x": {
+            "expression": "-45mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-14mm",
+            "unit": "mm"
+          }
+        },
+        "example-16-drill-guide-point-5": {
+          "type": "point",
+          "id": "example-16-drill-guide-point-5",
+          "x": {
+            "expression": "37mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-14mm",
+            "unit": "mm"
+          }
+        },
+        "example-16-drill-guide-point-7": {
+          "type": "point",
+          "id": "example-16-drill-guide-point-7",
+          "x": {
+            "expression": "45mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "-6mm",
+            "unit": "mm"
+          }
+        },
+        "example-16-drill-guide-point-9": {
+          "type": "point",
+          "id": "example-16-drill-guide-point-9",
+          "x": {
+            "expression": "45mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "6mm",
+            "unit": "mm"
+          }
+        },
+        "example-16-drill-guide-point-11": {
+          "type": "point",
+          "id": "example-16-drill-guide-point-11",
+          "x": {
+            "expression": "37mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "14mm",
+            "unit": "mm"
+          }
+        },
+        "example-16-drill-guide-point-13": {
+          "type": "point",
+          "id": "example-16-drill-guide-point-13",
+          "x": {
+            "expression": "-45mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "14mm",
+            "unit": "mm"
+          }
+        },
+        "example-16-drill-guide-line-15": {
+          "type": "line",
+          "id": "example-16-drill-guide-line-15",
+          "startPointId": "example-16-drill-guide-point-3",
+          "endPointId": "example-16-drill-guide-point-5"
+        },
+        "example-16-drill-guide-line-16": {
+          "type": "line",
+          "id": "example-16-drill-guide-line-16",
+          "startPointId": "example-16-drill-guide-point-5",
+          "endPointId": "example-16-drill-guide-point-7"
+        },
+        "example-16-drill-guide-line-17": {
+          "type": "line",
+          "id": "example-16-drill-guide-line-17",
+          "startPointId": "example-16-drill-guide-point-7",
+          "endPointId": "example-16-drill-guide-point-9"
+        },
+        "example-16-drill-guide-line-18": {
+          "type": "line",
+          "id": "example-16-drill-guide-line-18",
+          "startPointId": "example-16-drill-guide-point-9",
+          "endPointId": "example-16-drill-guide-point-11"
+        },
+        "example-16-drill-guide-line-19": {
+          "type": "line",
+          "id": "example-16-drill-guide-line-19",
+          "startPointId": "example-16-drill-guide-point-11",
+          "endPointId": "example-16-drill-guide-point-13"
+        },
+        "example-16-drill-guide-line-20": {
+          "type": "line",
+          "id": "example-16-drill-guide-line-20",
+          "startPointId": "example-16-drill-guide-point-13",
+          "endPointId": "example-16-drill-guide-point-3"
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-16-drill-guide-fixed-4",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-16-drill-guide-point-3"
+          ]
+        },
+        {
+          "id": "example-16-drill-guide-fixed-6",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-16-drill-guide-point-5"
+          ]
+        },
+        {
+          "id": "example-16-drill-guide-fixed-8",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-16-drill-guide-point-7"
+          ]
+        },
+        {
+          "id": "example-16-drill-guide-fixed-10",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-16-drill-guide-point-9"
+          ]
+        },
+        {
+          "id": "example-16-drill-guide-fixed-12",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-16-drill-guide-point-11"
+          ]
+        },
+        {
+          "id": "example-16-drill-guide-fixed-14",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-16-drill-guide-point-13"
+          ]
+        }
+      ],
+      "dimensions": []
+    },
+    "example-16-drill-guide-sketch-22": {
+      "id": "example-16-drill-guide-sketch-22",
+      "componentId": "example-16-drill-guide-part-1",
+      "name": "Drill five guide bores centers",
+      "plane": {
+        "type": "origin",
+        "plane": "XY"
+      },
+      "timelineStep": 3,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-16-drill-guide-point-23": {
+          "type": "point",
+          "id": "example-16-drill-guide-point-23",
+          "x": {
+            "expression": "-32mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "example-16-drill-guide-point-25": {
+          "type": "point",
+          "id": "example-16-drill-guide-point-25",
+          "x": {
+            "expression": "-16mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "example-16-drill-guide-point-27": {
+          "type": "point",
+          "id": "example-16-drill-guide-point-27",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "example-16-drill-guide-point-29": {
+          "type": "point",
+          "id": "example-16-drill-guide-point-29",
+          "x": {
+            "expression": "16mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "example-16-drill-guide-point-31": {
+          "type": "point",
+          "id": "example-16-drill-guide-point-31",
+          "x": {
+            "expression": "32mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-16-drill-guide-fixed-24",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-16-drill-guide-point-23"
+          ]
+        },
+        {
+          "id": "example-16-drill-guide-fixed-26",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-16-drill-guide-point-25"
+          ]
+        },
+        {
+          "id": "example-16-drill-guide-fixed-28",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-16-drill-guide-point-27"
+          ]
+        },
+        {
+          "id": "example-16-drill-guide-fixed-30",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-16-drill-guide-point-29"
+          ]
+        },
+        {
+          "id": "example-16-drill-guide-fixed-32",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-16-drill-guide-point-31"
+          ]
+        }
+      ],
+      "dimensions": []
+    }
+  },
+  "features": [
+    {
+      "id": "example-16-drill-guide-feature-21",
+      "name": "Guide stock",
+      "componentId": "example-16-drill-guide-part-1",
+      "timelineStep": 2,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "extrude",
+      "sketchId": "example-16-drill-guide-sketch-2",
+      "profileId": "example-16-drill-guide-sketch-2:profile:przcin3",
+      "direction": "positive",
+      "operation": "newBody",
+      "distance": {
+        "expression": "guide_depth",
+        "unit": "mm",
+        "parameterRefs": {
+          "guide_depth": "example-16-drill-guide-parameter"
+        }
+      }
+    },
+    {
+      "id": "example-16-drill-guide-feature-33",
+      "name": "Drill five guide bores",
+      "componentId": "example-16-drill-guide-part-1",
+      "timelineStep": 4,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "hole",
+      "sketchId": "example-16-drill-guide-sketch-22",
+      "targetBodyIds": [
+        "body:example-16-drill-guide-feature-21"
+      ],
+      "centerPointIds": [
+        "example-16-drill-guide-point-23",
+        "example-16-drill-guide-point-25",
+        "example-16-drill-guide-point-27",
+        "example-16-drill-guide-point-29",
+        "example-16-drill-guide-point-31"
+      ],
+      "diameter": {
+        "expression": "7mm",
+        "unit": "mm"
+      },
+      "direction": "positive",
+      "depth": "throughAll"
+    }
+  ]
+}

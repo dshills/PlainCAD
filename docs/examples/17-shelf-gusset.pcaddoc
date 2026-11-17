@@ -1,0 +1,488 @@
+{
+  "schemaVersion": 26,
+  "id": "example-17-shelf-gusset",
+  "name": "Triangular shelf gusset",
+  "units": "metric",
+  "unitSettings": {
+    "length": "mm",
+    "angle": "deg"
+  },
+  "createdAt": "2026-11-17T12:00:00.000Z",
+  "updatedAt": "2026-11-17T12:00:00.000Z",
+  "rootComponentId": "example-17-shelf-gusset-root",
+  "components": {
+    "example-17-shelf-gusset-root": {
+      "id": "example-17-shelf-gusset-root",
+      "name": "Project reference"
+    },
+    "example-17-shelf-gusset-part-1": {
+      "id": "example-17-shelf-gusset-part-1",
+      "name": "Gusset",
+      "appearance": "aluminum"
+    }
+  },
+  "parameters": {
+    "gusset_width": {
+      "id": "example-17-shelf-gusset-parameter",
+      "name": "gusset_width",
+      "expression": "8mm",
+      "value": 8,
+      "unit": "mm"
+    }
+  },
+  "sketches": {
+    "example-17-shelf-gusset-sketch-2": {
+      "id": "example-17-shelf-gusset-sketch-2",
+      "componentId": "example-17-shelf-gusset-part-1",
+      "name": "Triangular brace profile",
+      "plane": {
+        "type": "origin",
+        "plane": "XZ"
+      },
+      "timelineStep": 1,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "entities": {
+        "example-17-shelf-gusset-point-3": {
+          "type": "point",
+          "id": "example-17-shelf-gusset-point-3",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "example-17-shelf-gusset-point-5": {
+          "type": "point",
+          "id": "example-17-shelf-gusset-point-5",
+          "x": {
+            "expression": "70mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "0mm",
+            "unit": "mm"
+          }
+        },
+        "example-17-shelf-gusset-point-7": {
+          "type": "point",
+          "id": "example-17-shelf-gusset-point-7",
+          "x": {
+            "expression": "70mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "11mm",
+            "unit": "mm"
+          }
+        },
+        "example-17-shelf-gusset-point-9": {
+          "type": "point",
+          "id": "example-17-shelf-gusset-point-9",
+          "x": {
+            "expression": "11mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "58mm",
+            "unit": "mm"
+          }
+        },
+        "example-17-shelf-gusset-point-11": {
+          "type": "point",
+          "id": "example-17-shelf-gusset-point-11",
+          "x": {
+            "expression": "0mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "58mm",
+            "unit": "mm"
+          }
+        },
+        "example-17-shelf-gusset-line-13": {
+          "type": "line",
+          "id": "example-17-shelf-gusset-line-13",
+          "startPointId": "example-17-shelf-gusset-point-3",
+          "endPointId": "example-17-shelf-gusset-point-5"
+        },
+        "example-17-shelf-gusset-line-14": {
+          "type": "line",
+          "id": "example-17-shelf-gusset-line-14",
+          "startPointId": "example-17-shelf-gusset-point-5",
+          "endPointId": "example-17-shelf-gusset-point-7"
+        },
+        "example-17-shelf-gusset-line-15": {
+          "type": "line",
+          "id": "example-17-shelf-gusset-line-15",
+          "startPointId": "example-17-shelf-gusset-point-7",
+          "endPointId": "example-17-shelf-gusset-point-9"
+        },
+        "example-17-shelf-gusset-line-16": {
+          "type": "line",
+          "id": "example-17-shelf-gusset-line-16",
+          "startPointId": "example-17-shelf-gusset-point-9",
+          "endPointId": "example-17-shelf-gusset-point-11"
+        },
+        "example-17-shelf-gusset-line-17": {
+          "type": "line",
+          "id": "example-17-shelf-gusset-line-17",
+          "startPointId": "example-17-shelf-gusset-point-11",
+          "endPointId": "example-17-shelf-gusset-point-3"
+        },
+        "example-17-shelf-gusset-point-18": {
+          "type": "point",
+          "id": "example-17-shelf-gusset-point-18",
+          "x": {
+            "expression": "13mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "13mm",
+            "unit": "mm"
+          }
+        },
+        "example-17-shelf-gusset-point-20": {
+          "type": "point",
+          "id": "example-17-shelf-gusset-point-20",
+          "x": {
+            "expression": "48mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "13mm",
+            "unit": "mm"
+          }
+        },
+        "example-17-shelf-gusset-point-22": {
+          "type": "point",
+          "id": "example-17-shelf-gusset-point-22",
+          "x": {
+            "expression": "13mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "40mm",
+            "unit": "mm"
+          }
+        },
+        "example-17-shelf-gusset-line-24": {
+          "type": "line",
+          "id": "example-17-shelf-gusset-line-24",
+          "startPointId": "example-17-shelf-gusset-point-18",
+          "endPointId": "example-17-shelf-gusset-point-20"
+        },
+        "example-17-shelf-gusset-line-25": {
+          "type": "line",
+          "id": "example-17-shelf-gusset-line-25",
+          "startPointId": "example-17-shelf-gusset-point-20",
+          "endPointId": "example-17-shelf-gusset-point-22"
+        },
+        "example-17-shelf-gusset-line-26": {
+          "type": "line",
+          "id": "example-17-shelf-gusset-line-26",
+          "startPointId": "example-17-shelf-gusset-point-22",
+          "endPointId": "example-17-shelf-gusset-point-18"
+        },
+        "example-17-shelf-gusset-point-27": {
+          "type": "point",
+          "id": "example-17-shelf-gusset-point-27",
+          "x": {
+            "expression": "3mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "46mm",
+            "unit": "mm"
+          }
+        },
+        "example-17-shelf-gusset-point-29": {
+          "type": "point",
+          "id": "example-17-shelf-gusset-point-29",
+          "x": {
+            "expression": "8mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "46mm",
+            "unit": "mm"
+          }
+        },
+        "example-17-shelf-gusset-point-31": {
+          "type": "point",
+          "id": "example-17-shelf-gusset-point-31",
+          "x": {
+            "expression": "8mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "51mm",
+            "unit": "mm"
+          }
+        },
+        "example-17-shelf-gusset-point-33": {
+          "type": "point",
+          "id": "example-17-shelf-gusset-point-33",
+          "x": {
+            "expression": "3mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "51mm",
+            "unit": "mm"
+          }
+        },
+        "example-17-shelf-gusset-line-35": {
+          "type": "line",
+          "id": "example-17-shelf-gusset-line-35",
+          "startPointId": "example-17-shelf-gusset-point-27",
+          "endPointId": "example-17-shelf-gusset-point-29"
+        },
+        "example-17-shelf-gusset-line-36": {
+          "type": "line",
+          "id": "example-17-shelf-gusset-line-36",
+          "startPointId": "example-17-shelf-gusset-point-29",
+          "endPointId": "example-17-shelf-gusset-point-31"
+        },
+        "example-17-shelf-gusset-line-37": {
+          "type": "line",
+          "id": "example-17-shelf-gusset-line-37",
+          "startPointId": "example-17-shelf-gusset-point-31",
+          "endPointId": "example-17-shelf-gusset-point-33"
+        },
+        "example-17-shelf-gusset-line-38": {
+          "type": "line",
+          "id": "example-17-shelf-gusset-line-38",
+          "startPointId": "example-17-shelf-gusset-point-33",
+          "endPointId": "example-17-shelf-gusset-point-27"
+        },
+        "example-17-shelf-gusset-point-39": {
+          "type": "point",
+          "id": "example-17-shelf-gusset-point-39",
+          "x": {
+            "expression": "55mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "3mm",
+            "unit": "mm"
+          }
+        },
+        "example-17-shelf-gusset-point-41": {
+          "type": "point",
+          "id": "example-17-shelf-gusset-point-41",
+          "x": {
+            "expression": "60mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "3mm",
+            "unit": "mm"
+          }
+        },
+        "example-17-shelf-gusset-point-43": {
+          "type": "point",
+          "id": "example-17-shelf-gusset-point-43",
+          "x": {
+            "expression": "60mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "8mm",
+            "unit": "mm"
+          }
+        },
+        "example-17-shelf-gusset-point-45": {
+          "type": "point",
+          "id": "example-17-shelf-gusset-point-45",
+          "x": {
+            "expression": "55mm",
+            "unit": "mm"
+          },
+          "y": {
+            "expression": "8mm",
+            "unit": "mm"
+          }
+        },
+        "example-17-shelf-gusset-line-47": {
+          "type": "line",
+          "id": "example-17-shelf-gusset-line-47",
+          "startPointId": "example-17-shelf-gusset-point-39",
+          "endPointId": "example-17-shelf-gusset-point-41"
+        },
+        "example-17-shelf-gusset-line-48": {
+          "type": "line",
+          "id": "example-17-shelf-gusset-line-48",
+          "startPointId": "example-17-shelf-gusset-point-41",
+          "endPointId": "example-17-shelf-gusset-point-43"
+        },
+        "example-17-shelf-gusset-line-49": {
+          "type": "line",
+          "id": "example-17-shelf-gusset-line-49",
+          "startPointId": "example-17-shelf-gusset-point-43",
+          "endPointId": "example-17-shelf-gusset-point-45"
+        },
+        "example-17-shelf-gusset-line-50": {
+          "type": "line",
+          "id": "example-17-shelf-gusset-line-50",
+          "startPointId": "example-17-shelf-gusset-point-45",
+          "endPointId": "example-17-shelf-gusset-point-39"
+        }
+      },
+      "constraints": [
+        {
+          "id": "example-17-shelf-gusset-fixed-4",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-17-shelf-gusset-point-3"
+          ]
+        },
+        {
+          "id": "example-17-shelf-gusset-fixed-6",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-17-shelf-gusset-point-5"
+          ]
+        },
+        {
+          "id": "example-17-shelf-gusset-fixed-8",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-17-shelf-gusset-point-7"
+          ]
+        },
+        {
+          "id": "example-17-shelf-gusset-fixed-10",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-17-shelf-gusset-point-9"
+          ]
+        },
+        {
+          "id": "example-17-shelf-gusset-fixed-12",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-17-shelf-gusset-point-11"
+          ]
+        },
+        {
+          "id": "example-17-shelf-gusset-fixed-19",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-17-shelf-gusset-point-18"
+          ]
+        },
+        {
+          "id": "example-17-shelf-gusset-fixed-21",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-17-shelf-gusset-point-20"
+          ]
+        },
+        {
+          "id": "example-17-shelf-gusset-fixed-23",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-17-shelf-gusset-point-22"
+          ]
+        },
+        {
+          "id": "example-17-shelf-gusset-fixed-28",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-17-shelf-gusset-point-27"
+          ]
+        },
+        {
+          "id": "example-17-shelf-gusset-fixed-30",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-17-shelf-gusset-point-29"
+          ]
+        },
+        {
+          "id": "example-17-shelf-gusset-fixed-32",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-17-shelf-gusset-point-31"
+          ]
+        },
+        {
+          "id": "example-17-shelf-gusset-fixed-34",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-17-shelf-gusset-point-33"
+          ]
+        },
+        {
+          "id": "example-17-shelf-gusset-fixed-40",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-17-shelf-gusset-point-39"
+          ]
+        },
+        {
+          "id": "example-17-shelf-gusset-fixed-42",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-17-shelf-gusset-point-41"
+          ]
+        },
+        {
+          "id": "example-17-shelf-gusset-fixed-44",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-17-shelf-gusset-point-43"
+          ]
+        },
+        {
+          "id": "example-17-shelf-gusset-fixed-46",
+          "type": "fixed",
+          "entityIds": [],
+          "pointIds": [
+            "example-17-shelf-gusset-point-45"
+          ]
+        }
+      ],
+      "dimensions": []
+    }
+  },
+  "features": [
+    {
+      "id": "example-17-shelf-gusset-feature-51",
+      "name": "Triangular brace",
+      "componentId": "example-17-shelf-gusset-part-1",
+      "timelineStep": 2,
+      "createdAt": "2026-11-17T12:00:00.000Z",
+      "type": "extrude",
+      "sketchId": "example-17-shelf-gusset-sketch-2",
+      "profileId": "example-17-shelf-gusset-sketch-2:profile:p1sagrg1",
+      "direction": "positive",
+      "operation": "newBody",
+      "distance": {
+        "expression": "gusset_width",
+        "unit": "mm",
+        "parameterRefs": {
+          "gusset_width": "example-17-shelf-gusset-parameter"
+        }
+      }
+    }
+  ]
+}
